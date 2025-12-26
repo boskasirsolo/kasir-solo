@@ -26,7 +26,8 @@ import {
   AlertCircle,
   Palette,
   Code,
-  Globe
+  Globe,
+  Lock
 } from 'lucide-react';
 
 // --- Environment & Client Setup ---
@@ -296,8 +297,19 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
               </ul>
             </div>
           </div>
-          <div className="border-t border-white/5 mt-10 pt-6 text-center text-gray-600 text-xs">
-            © {new Date().getFullYear()} PT Mesin Kasir Solo. Solusi Digital Terpercaya di Jawa Tengah.
+          <div className="border-t border-white/5 mt-10 pt-6 flex flex-col items-center gap-2">
+            <p className="text-center text-gray-600 text-xs">
+              © {new Date().getFullYear()} PT Mesin Kasir Solo. Solusi Digital Terpercaya di Jawa Tengah.
+            </p>
+            {/* Secret Admin Button */}
+            <button 
+              onClick={() => setPage('admin')} 
+              className="text-gray-800 hover:text-brand-orange transition-colors p-2"
+              aria-label="Admin Login"
+              title="Admin Login"
+            >
+              <Lock size={12} />
+            </button>
           </div>
         </div>
       </footer>
@@ -532,7 +544,7 @@ const AboutPage = () => (
 
           <div className="bg-brand-dark p-10 rounded-3xl border border-white/10 hover:border-brand-orange/30 transition-all hover:shadow-neon group">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-4">
-               <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-brand-orange group-hover:scale-110 transition-transform">
+               <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-brand-orange group-hover:scale-100 transition-transform">
                 <Phone />
               </div> 
               Layanan Pelanggan
@@ -854,7 +866,11 @@ const App = () => {
 
   // Handle URL path for admin access
   useEffect(() => {
-    if (window.location.pathname === '/master') {
+    // Check both path (for local/clean URLs) and query param (for static hosts to avoid 404)
+    const params = new URLSearchParams(window.location.search);
+    const isMaster = window.location.pathname === '/master' || params.get('page') === 'master';
+    
+    if (isMaster) {
       setCurrentPage('admin');
     }
   }, []);
