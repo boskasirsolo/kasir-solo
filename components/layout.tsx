@@ -208,7 +208,7 @@ const Footer = ({ setPage }: { setPage: (p: string) => void }) => (
         <div>
           <h3 className="text-2xl font-display font-bold text-white mb-4">PT MESIN KASIR SOLO</h3>
           <p className="text-gray-400 mb-6 text-sm leading-relaxed">
-            Mitra strategis digitalisasi bisnis Anda di Solo Raya. Solusi POS, Software, & Web Development.
+            Mitra strategis digitalisasi bisnis Anda di Solo Raya & Blora. Solusi POS, Software, & Web Development.
           </p>
           <div className="flex gap-4">
             <SocialButton icon={Instagram} />
@@ -218,9 +218,18 @@ const Footer = ({ setPage }: { setPage: (p: string) => void }) => (
         
         {/* Contact Section */}
         <div>
-          <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Kontak</h4>
+          <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Kontak & Lokasi</h4>
           <ul className="space-y-4 text-gray-400 text-sm">
-            <li className="flex items-start gap-3"><MapPin className="text-brand-orange shrink-0 mt-1" size={18} /><span>Gumpang, Kartasura, Sukoharjo</span></li>
+            <li className="flex items-start gap-3">
+                <MapPin className="text-brand-orange shrink-0 mt-1" size={18} />
+                <div className="flex flex-col gap-1">
+                    <span className="text-white font-bold text-xs">SOLO (Legal):</span>
+                    <span>Perum Graha Tiara 2 B1, Kartasura</span>
+                    
+                    <span className="text-white font-bold text-xs mt-1">BLORA (Ops):</span>
+                    <span>Gumiring 04/04, Banjarejo</span>
+                </div>
+            </li>
             <li className="flex items-center gap-3"><Phone className="text-brand-orange shrink-0" size={18} /><span>0823 2510 3336</span></li>
           </ul>
         </div>
