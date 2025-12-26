@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { createClient } from '@supabase/supabase-js';
+import { GoogleGenAI } from '@google/genai';
 import { 
   ShoppingCart, 
   Menu, 
@@ -17,8 +19,25 @@ import {
   Edit,
   ArrowRight,
   ChevronRight,
-  Search
+  Search,
+  Sparkles,
+  Loader2,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
+
+// --- Environment & Client Setup ---
+
+// Mengambil variabel environment sesuai screenshot Vercel (Vite Prefix)
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || '';
+
+// Initialize Clients
+const supabase = (SUPABASE_URL && SUPABASE_KEY) 
+  ? createClient(SUPABASE_URL, SUPABASE_KEY) 
+  : null;
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // --- Types ---
 
@@ -45,7 +64,7 @@ interface SiteConfig {
   heroSubtitle: string;
 }
 
-// --- Mock Data (Initial State) ---
+// --- Mock Data (Fallback) ---
 
 const INITIAL_PRODUCTS: Product[] = [
   {
@@ -156,12 +175,7 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
                 {item.label.toUpperCase()}
               </button>
             ))}
-            <button 
-              onClick={() => setPage('admin')}
-              className="px-4 py-2 border border-brand-orange/30 text-brand-orange text-xs rounded hover:bg-brand-orange hover:text-white transition-all duration-300 ml-4"
-            >
-              LOGIN
-            </button>
+            {/* LOGIN button removed for secret access via /master */}
           </div>
 
           {/* Mobile Toggle */}
@@ -191,15 +205,7 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
                   {item.label}
                 </button>
               ))}
-              <button 
-                onClick={() => {
-                  setPage('admin');
-                  setIsMenuOpen(false);
-                }}
-                className="text-left text-brand-orange/70 mt-4 pt-4 border-t border-white/10"
-              >
-                Admin Area
-              </button>
+              {/* Admin Area link removed */}
             </div>
           </div>
         )}
@@ -511,26 +517,67 @@ const AdminDashboard = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'products' | 'articles' | 'settings'>('products');
   
-  // States for forms (Simplified for demo)
+  // States for forms
   const [newProdName, setNewProdName] = useState('');
   const [newProdPrice, setNewProdPrice] = useState('');
+  const [newProdDesc, setNewProdDesc] = useState('');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
-  const addProduct = () => {
-    const newProduct: Product = {
-      id: Date.now(),
+  const addProduct = async () => {
+    const newProduct = {
       name: newProdName || 'Produk Baru',
       price: parseInt(newProdPrice) || 0,
       category: 'Uncategorized',
-      description: 'Deskripsi produk baru...',
-      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800'
+      description: newProdDesc || 'Deskripsi produk baru...',
+      image_url: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800'
     };
-    setProducts([...products, newProduct]);
-    setNewProdName('');
-    setNewProdPrice('');
+
+    // Optimistic Update
+    const tempId = Date.now();
+    setProducts([...products, { ...newProduct, id: tempId, image: newProduct.image_url }]);
+
+    if (supabase) {
+      const { error } = await supabase.from('products').insert([newProduct]);
+      if (error) {
+        alert('Gagal simpan ke database: ' + error.message);
+      } else {
+        // Refresh local data to get real ID if needed, simplified here
+        setNewProdName('');
+        setNewProdPrice('');
+        setNewProdDesc('');
+      }
+    }
   };
 
-  const deleteProduct = (id: number) => {
+  const deleteProduct = async (id: number) => {
     setProducts(products.filter(p => p.id !== id));
+    if (supabase) {
+      await supabase.from('products').delete().eq('id', id);
+    }
+  };
+
+  const generateDescription = async () => {
+    if (!ai) {
+      alert("API Key Gemini belum ditemukan! Cek Environment Variables di Vercel.");
+      return;
+    }
+    if (!newProdName) {
+      alert("Isi nama produk dulu!");
+      return;
+    }
+    setIsGeneratingAI(true);
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `Buatkan deskripsi penjualan singkat, menarik, dan persuasif (maksimal 2 kalimat) untuk mesin kasir tipe: ${newProdName}. Bahasa Indonesia.`,
+      });
+      setNewProdDesc(response.text.trim());
+    } catch (e) {
+      console.error(e);
+      alert("Gagal generate AI. Cek console untuk detail.");
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   return (
@@ -568,25 +615,44 @@ const AdminDashboard = ({
             </div>
             
             {/* Add Form */}
-            <div className="grid md:grid-cols-3 gap-4 mb-8 bg-brand-dark p-4 rounded border border-white/5">
-              <input 
-                value={newProdName}
-                onChange={e => setNewProdName(e.target.value)}
-                placeholder="Nama Produk" 
-                className="bg-brand-card border border-white/10 rounded px-3 py-2 text-white" 
-              />
-              <input 
-                value={newProdPrice}
-                onChange={e => setNewProdPrice(e.target.value)}
-                placeholder="Harga" 
-                type="number"
-                className="bg-brand-card border border-white/10 rounded px-3 py-2 text-white" 
-              />
+            <div className="mb-8 bg-brand-dark p-6 rounded border border-white/5 space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <input 
+                  value={newProdName}
+                  onChange={e => setNewProdName(e.target.value)}
+                  placeholder="Nama Produk" 
+                  className="bg-brand-card border border-white/10 rounded px-3 py-2 text-white w-full" 
+                />
+                <input 
+                  value={newProdPrice}
+                  onChange={e => setNewProdPrice(e.target.value)}
+                  placeholder="Harga" 
+                  type="number"
+                  className="bg-brand-card border border-white/10 rounded px-3 py-2 text-white w-full" 
+                />
+              </div>
+              <div className="flex gap-2">
+                <textarea 
+                  value={newProdDesc}
+                  onChange={e => setNewProdDesc(e.target.value)}
+                  placeholder="Deskripsi Produk..." 
+                  className="bg-brand-card border border-white/10 rounded px-3 py-2 text-white w-full h-20"
+                />
+                <button 
+                  onClick={generateDescription}
+                  disabled={isGeneratingAI}
+                  className="bg-purple-600/20 text-purple-400 border border-purple-500/50 hover:bg-purple-600 hover:text-white px-4 rounded transition-all flex flex-col items-center justify-center gap-1 w-32 shrink-0 text-xs font-bold"
+                >
+                  {isGeneratingAI ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                  {isGeneratingAI ? '...' : 'BANTU AI'}
+                </button>
+              </div>
+              
               <button 
                 onClick={addProduct}
-                className="bg-brand-orange/20 text-brand-orange hover:bg-brand-orange hover:text-white border border-brand-orange/50 rounded px-3 py-2 transition-all flex items-center justify-center gap-2"
+                className="w-full bg-brand-orange/20 text-brand-orange hover:bg-brand-orange hover:text-white border border-brand-orange/50 rounded px-3 py-3 transition-all flex items-center justify-center gap-2 font-bold"
               >
-                <Plus size={16} /> Tambah
+                <Plus size={16} /> TAMBAH PRODUK
               </button>
             </div>
 
@@ -597,6 +663,7 @@ const AdminDashboard = ({
                   <div>
                     <div className="font-bold text-white">{p.name}</div>
                     <div className="text-brand-orange text-sm">{formatRupiah(p.price)}</div>
+                    <div className="text-gray-500 text-xs truncate max-w-md">{p.description}</div>
                   </div>
                   <button 
                     onClick={() => deleteProduct(p.id)}
@@ -612,6 +679,26 @@ const AdminDashboard = ({
 
         {activeTab === 'settings' && (
           <div className="max-w-xl">
+             <h3 className="text-xl font-bold text-white mb-6">Status Sistem & Koneksi</h3>
+             <div className="grid gap-4 mb-8">
+                <div className="flex items-center justify-between p-4 bg-brand-dark border border-white/10 rounded-lg">
+                  <span className="text-white font-medium">Supabase Database</span>
+                  {supabase ? (
+                    <span className="flex items-center gap-2 text-green-400 text-sm font-bold bg-green-400/10 px-3 py-1 rounded-full"><CheckCircle2 size={16} /> Connected</span>
+                  ) : (
+                    <span className="flex items-center gap-2 text-red-400 text-sm font-bold bg-red-400/10 px-3 py-1 rounded-full"><AlertCircle size={16} /> Disconnected</span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between p-4 bg-brand-dark border border-white/10 rounded-lg">
+                  <span className="text-white font-medium">Gemini AI (Vite Key)</span>
+                  {ai ? (
+                    <span className="flex items-center gap-2 text-green-400 text-sm font-bold bg-green-400/10 px-3 py-1 rounded-full"><CheckCircle2 size={16} /> Key Detected</span>
+                  ) : (
+                    <span className="flex items-center gap-2 text-red-400 text-sm font-bold bg-red-400/10 px-3 py-1 rounded-full"><AlertCircle size={16} /> Missing Key</span>
+                  )}
+                </div>
+             </div>
+
              <h3 className="text-xl font-bold text-white mb-6">Tampilan Website</h3>
              <div className="space-y-6">
                 <div>
@@ -629,9 +716,6 @@ const AdminDashboard = ({
                     onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})}
                     className="w-full bg-brand-dark border border-white/20 rounded p-3 text-white focus:border-brand-orange outline-none h-32"
                   />
-                </div>
-                <div className="p-4 bg-brand-orange/10 border border-brand-orange/30 rounded text-brand-orange text-sm">
-                  Perubahan akan langsung terlihat di Halaman Utama.
                 </div>
              </div>
           </div>
@@ -655,13 +739,77 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   
-  // Data State (Simulating Database)
+  // Data State
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
   const [config, setConfig] = useState<SiteConfig>({
     heroTitle: "MESIN KASIR MODERN TERLENGKAP",
     heroSubtitle: "Tingkatkan efisiensi dan profit bisnis Anda dengan solusi POS digital dari PT Mesin Kasir Solo. Layanan purna jual terbaik di Jawa Tengah."
   });
+
+  // Handle URL path for admin access
+  useEffect(() => {
+    if (window.location.pathname === '/master') {
+      setCurrentPage('admin');
+    }
+  }, []);
+
+  // Fetch Data from Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!supabase) return;
+
+      try {
+        // Fetch Products
+        const { data: prodData, error: prodError } = await supabase
+          .from('products')
+          .select('*')
+          .order('id', { ascending: false });
+        
+        if (!prodError && prodData && prodData.length > 0) {
+          // Map supabase data to our interface
+          const mappedProducts = prodData.map(p => ({
+            ...p,
+            image: p.image_url || 'https://via.placeholder.com/400'
+          }));
+          setProducts(mappedProducts);
+        }
+
+        // Fetch Articles
+        const { data: artData, error: artError } = await supabase
+          .from('articles')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!artError && artData && artData.length > 0) {
+          const mappedArticles = artData.map(a => ({
+            ...a,
+            date: new Date(a.created_at).toLocaleDateString('id-ID'),
+            image: a.image_url || 'https://via.placeholder.com/400'
+          }));
+          setArticles(mappedArticles);
+        }
+
+        // Fetch Config (Optional, assuming table site_config exists from previous prompt)
+        const { data: configData } = await supabase
+          .from('site_config')
+          .select('*')
+          .single();
+        
+        if (configData) {
+          setConfig({
+            heroTitle: configData.hero_title || config.heroTitle,
+            heroSubtitle: configData.hero_subtitle || config.heroSubtitle
+          });
+        }
+
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Scroll to top on navigation
   useEffect(() => {
