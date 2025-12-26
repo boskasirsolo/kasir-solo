@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, AlertTriangle } from 'lucide-react';
 
 // --- Atoms ---
@@ -127,10 +128,10 @@ export const ConfirmModal = ({
 }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-      <div className="relative bg-brand-dark border border-white/10 rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center overflow-hidden">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in">
+      <div className="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+      <div className="relative bg-brand-dark border border-white/10 rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center overflow-hidden z-[10000]">
          {/* Glow Effect */}
          <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-[60px] opacity-20 pointer-events-none ${variant === 'danger' ? 'bg-red-500' : 'bg-brand-orange'}`}></div>
          
@@ -147,6 +148,7 @@ export const ConfirmModal = ({
             <Button variant={variant} onClick={onConfirm} className="w-full py-3">{confirmText}</Button>
          </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -180,7 +180,8 @@ const App = () => {
       case 'home': return <HomePage setPage={handlePageChange} config={config} />;
       case 'shop': return <ShopPage products={products} />;
       case 'gallery': return <GalleryPage gallery={gallery} />;
-      case 'articles': return <ArticlesPage articles={articles} />;
+      // Pass products to ArticlesPage
+      case 'articles': return <ArticlesPage articles={articles} products={products} />;
       case 'about': return <AboutPage />;
       case 'innovation': return <InnovationPage config={config} />; 
       case 'checkout': return <CheckoutPage setPage={handlePageChange} />;

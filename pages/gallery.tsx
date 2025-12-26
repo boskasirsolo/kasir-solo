@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Image as ImageIcon, X, PlayCircle, Calendar } from 'lucide-react';
 import { GalleryItem } from '../types';
 import { SectionHeader } from '../components/ui';
@@ -64,96 +65,92 @@ export const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => {
         </div>
       )}
 
-      {/* --- LIGHTBOX (FIXED POSITIONING) --- */}
-      {selectedItem && (
-        <div className="relative z-[100]" aria-labelledby="lightbox-title" role="dialog" aria-modal="true">
-          {/* Backdrop */}
+      {/* --- LIGHTBOX (PORTAL TO BODY) --- */}
+      {selectedItem && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6" aria-labelledby="lightbox-title" role="dialog" aria-modal="true">
+          
+          {/* 1. Backdrop (Fixed Fullscreen) */}
           <div 
             className="fixed inset-0 bg-black/95 backdrop-blur-md transition-opacity"
             onClick={() => setSelectedItem(null)}
-          ></div>
+          />
 
-          {/* Scrollable Wrapper */}
-          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-0 md:p-6 text-center">
-              
-              {/* Modal Container */}
-              <div className="relative transform bg-brand-dark md:rounded-3xl shadow-2xl transition-all w-full max-w-7xl flex flex-col md:flex-row overflow-hidden border border-white/10 min-h-[100vh] md:min-h-0 md:h-auto my-0 md:my-8 animate-fade-in">
+          {/* 2. Modal Panel (Centered & Scrollable Internally) */}
+          <div className="relative w-full max-w-7xl max-h-[90vh] overflow-y-auto rounded-2xl bg-brand-dark shadow-2xl border border-white/10 animate-fade-in flex flex-col md:flex-row z-[10000] custom-scrollbar">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setSelectedItem(null)}
+              className="absolute top-4 right-4 z-50 bg-black/50 p-2 rounded-full text-white backdrop-blur-sm hover:bg-brand-orange transition-colors"
+            >
+              <X size={24} />
+            </button>
+
+            {/* LEFT SIDE: MEDIA */}
+            <div className="w-full md:w-2/3 bg-black flex items-center justify-center relative min-h-[300px] md:min-h-[600px]">
+              {selectedItem.type === 'video' && selectedItem.video_url ? (
+                <iframe 
+                  src={selectedItem.video_url} 
+                  title={selectedItem.title}
+                  className="w-full h-full aspect-video md:h-[500px]"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              ) : (
+                <img 
+                  src={selectedItem.image_url} 
+                  alt={selectedItem.title} 
+                  className="w-full h-auto max-h-[80vh] object-contain"
+                />
+              )}
+            </div>
+
+            {/* RIGHT SIDE: INFO (Sticky on Desktop) */}
+            <div className="w-full md:w-1/3 flex-shrink-0 bg-brand-card/95 backdrop-blur-xl border-t md:border-t-0 md:border-l border-white/10 flex flex-col">
+              {/* Header Info */}
+              <div className="p-8 border-b border-white/10 text-left">
+                <div className="flex items-center gap-2 text-brand-orange text-xs font-bold tracking-widest uppercase mb-3">
+                  <Calendar size={14} /> Dokumentasi
+                </div>
+                <h3 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2 pr-8">
+                  {selectedItem.title}
+                </h3>
+                {selectedItem.type === 'video' && (
+                  <span className="inline-block px-3 py-1 bg-brand-orange/20 border border-brand-orange/50 rounded-full text-brand-orange text-xs font-bold mt-2">
+                    VIDEO DOKUMENTASI
+                  </span>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="p-8 flex-grow text-left overflow-y-auto custom-scrollbar">
+                <p className="text-gray-300 leading-relaxed text-base whitespace-pre-line">
+                  {selectedItem.description || "Belum ada deskripsi untuk dokumentasi ini."}
+                </p>
                 
-                {/* Close Button (Mobile & Desktop) */}
-                <button 
-                  onClick={() => setSelectedItem(null)}
-                  className="absolute top-4 right-4 z-50 bg-black/50 p-2 rounded-full text-white backdrop-blur-sm hover:bg-brand-orange transition-colors"
+                <div className="mt-8 pt-8 border-t border-white/5">
+                  <p className="text-gray-500 text-sm italic">
+                    PT Mesin Kasir Solo berkomitmen memberikan pelayanan terbaik dalam setiap project instalasi.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="p-6 border-t border-white/10 bg-brand-dark/50 mt-auto">
+                <a 
+                  href="https://wa.me/6282325103336" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center justify-center w-full py-3 bg-brand-orange hover:bg-brand-glow text-white rounded-lg font-bold transition-all shadow-neon hover:shadow-neon-strong transform hover:-translate-y-1"
                 >
-                  <X size={24} />
-                </button>
-
-                {/* LEFT SIDE: MEDIA (Image/Video) */}
-                <div className="w-full md:flex-1 bg-black flex items-center justify-center relative min-h-[40vh] md:min-h-[500px]">
-                  {selectedItem.type === 'video' && selectedItem.video_url ? (
-                    <iframe 
-                      src={selectedItem.video_url} 
-                      title={selectedItem.title}
-                      className="w-full h-full aspect-video"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
-                  ) : (
-                    <img 
-                      src={selectedItem.image_url} 
-                      alt={selectedItem.title} 
-                      className="w-full h-auto max-h-[70vh] object-contain"
-                    />
-                  )}
-                </div>
-
-                {/* RIGHT SIDE: INFO & DESCRIPTION */}
-                <div className="w-full md:w-[400px] flex-shrink-0 bg-brand-card/95 backdrop-blur-xl border-t md:border-t-0 md:border-l border-white/10 flex flex-col">
-                  {/* Header Info */}
-                  <div className="p-8 border-b border-white/10 text-left">
-                    <div className="flex items-center gap-2 text-brand-orange text-xs font-bold tracking-widest uppercase mb-3">
-                      <Calendar size={14} /> Dokumentasi
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2 pr-8">
-                      {selectedItem.title}
-                    </h3>
-                    {selectedItem.type === 'video' && (
-                      <span className="inline-block px-3 py-1 bg-brand-orange/20 border border-brand-orange/50 rounded-full text-brand-orange text-xs font-bold mt-2">
-                        VIDEO DOKUMENTASI
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Scrollable Description */}
-                  <div className="p-8 overflow-y-auto flex-grow custom-scrollbar text-left max-h-[300px] md:max-h-none">
-                    <p className="text-gray-300 leading-relaxed text-base md:text-lg whitespace-pre-line">
-                      {selectedItem.description || "Belum ada deskripsi untuk dokumentasi ini."}
-                    </p>
-                    
-                    <div className="mt-8 pt-8 border-t border-white/5">
-                      <p className="text-gray-500 text-sm italic">
-                        PT Mesin Kasir Solo berkomitmen memberikan pelayanan terbaik dalam setiap project instalasi.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <div className="p-6 border-t border-white/10 bg-brand-dark/50 mt-auto">
-                    <a 
-                      href="https://wa.me/6282325103336" 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="flex items-center justify-center w-full py-3 bg-brand-orange hover:bg-brand-glow text-white rounded-lg font-bold transition-all shadow-neon hover:shadow-neon-strong transform hover:-translate-y-1"
-                    >
-                      Konsultasi Sekarang
-                    </a>
-                  </div>
-                </div>
-
+                  Konsultasi Sekarang
+                </a>
               </div>
             </div>
+
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

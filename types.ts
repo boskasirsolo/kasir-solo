@@ -15,6 +15,10 @@ export interface Article {
   content: string;
   date: string;
   image: string;
+  category: string; // New
+  author: string;   // New
+  readTime: string; // New
+  tags?: string[];  // New
 }
 
 export interface GalleryItem {

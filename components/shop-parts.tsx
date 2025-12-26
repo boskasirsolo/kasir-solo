@@ -1,5 +1,6 @@
 
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus } from 'lucide-react';
 import { Product } from '../types';
 import { Badge, Card, Input, Button } from './ui';
@@ -151,7 +152,7 @@ export const ShopPagination = ({
   );
 };
 
-// --- MOLECULE: DETAIL MODAL (FIXED POSITIONING) ---
+// --- MOLECULE: DETAIL MODAL (PORTAL TO BODY) ---
 export const ProductDetailModal = ({ 
   product, 
   onClose 
@@ -166,75 +167,71 @@ export const ProductDetailModal = ({
     return () => { document.body.style.overflow = 'auto'; };
   }, []);
 
-  return (
-    <div className="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      {/* Background Backdrop */}
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      
+      {/* 1. Backdrop (Fixed Fullscreen) */}
       <div 
         className="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
-      ></div>
+      />
 
-      {/* Scrollable Container - Fixes Cutoff Issues */}
-      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-          
-          {/* Modal Panel */}
-          <div className="relative transform bg-brand-dark rounded-2xl border border-white/10 text-left shadow-2xl transition-all w-full max-w-4xl flex flex-col md:flex-row overflow-hidden my-8 animate-fade-in">
-            
-            <button 
-              onClick={onClose}
-              className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-orange transition-colors"
-            >
-              <X size={20} />
-            </button>
+      {/* 2. Modal Panel (Centered & Scrollable Internally) */}
+      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row animate-fade-in z-[10000] custom-scrollbar">
+        
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-orange transition-colors"
+        >
+          <X size={20} />
+        </button>
 
-            {/* Left: Image */}
-            <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-4 md:p-0 h-64 md:h-auto min-h-[300px]">
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  className="w-full h-full object-contain max-h-64 md:max-h-[500px]" 
-                />
-            </div>
+        {/* Left: Image (Full width mobile, Half width desktop) */}
+        <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-6 md:p-0 min-h-[300px] md:min-h-full">
+            <img 
+              src={product.image} 
+              alt={product.name} 
+              className="w-full h-full max-h-[400px] md:max-h-[80vh] object-contain" 
+            />
+        </div>
 
-            {/* Right: Content */}
-            <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col max-h-none md:max-h-[85vh] overflow-y-auto custom-scrollbar">
-              <div className="mb-4">
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange border border-brand-orange/30 px-2 py-1 rounded bg-brand-orange/10 mb-3">
-                    <Tag size={12} /> {product.category}
-                  </span>
-                  <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">{product.name}</h2>
-                  <p className="text-2xl font-bold text-brand-orange">{formatRupiah(product.price)}</p>
-              </div>
-
-              <div className="prose prose-invert prose-sm text-gray-300 mb-8 leading-relaxed border-t border-white/10 pt-4 flex-grow">
-                <p>{product.description}</p>
-              </div>
-
-              <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button 
-                  onClick={() => {
-                    addToCart(product);
-                    onClose();
-                  }}
-                  className="flex items-center justify-center w-full py-4 bg-brand-orange hover:bg-brand-glow text-white rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong gap-2"
-                >
-                  <ShoppingCart size={20} /> Beli
-                </button>
-                <a 
-                  href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center w-full py-4 border border-white/20 hover:border-brand-orange text-white rounded-xl font-bold transition-all gap-2"
-                >
-                  <MessageCircle size={20} /> Chat
-                </a>
-              </div>
-            </div>
+        {/* Right: Content */}
+        <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col bg-brand-dark">
+          <div className="mb-4">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange border border-brand-orange/30 px-2 py-1 rounded bg-brand-orange/10 mb-3">
+                <Tag size={12} /> {product.category}
+              </span>
+              <h2 className="text-2xl md:text-4xl font-display font-bold text-white leading-tight mb-3">{product.name}</h2>
+              <p className="text-3xl font-bold text-brand-orange">{formatRupiah(product.price)}</p>
           </div>
 
+          <div className="prose prose-invert prose-sm text-gray-300 mb-8 leading-relaxed border-t border-white/10 pt-6 flex-grow overflow-y-auto max-h-[30vh] custom-scrollbar">
+            <p>{product.description}</p>
+          </div>
+
+          <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button 
+              onClick={() => {
+                addToCart(product);
+                onClose();
+              }}
+              className="flex items-center justify-center w-full py-4 bg-brand-orange hover:bg-brand-glow text-white rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong gap-2"
+            >
+              <ShoppingCart size={20} /> Beli
+            </button>
+            <a 
+              href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center w-full py-4 border border-white/20 hover:border-brand-orange text-white rounded-xl font-bold transition-all gap-2"
+            >
+              <MessageCircle size={20} /> Chat
+            </a>
+          </div>
         </div>
       </div>
-    </div>
+
+    </div>,
+    document.body
   );
 };
