@@ -33,8 +33,17 @@ export interface GalleryItem {
 export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
-  sibosUrl?: string; // New: Dynamic Link for SIBOS
-  qalamUrl?: string; // New: Dynamic Link for QALAM
+  sibosUrl?: string; 
+  qalamUrl?: string; 
+  // Contact & Footer Config
+  whatsappNumber?: string;
+  addressSolo?: string;
+  addressBlora?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  youtubeUrl?: string;
+  tiktokUrl?: string;
+  linkedinUrl?: string;
 }
 
 // --- E-Commerce Types ---

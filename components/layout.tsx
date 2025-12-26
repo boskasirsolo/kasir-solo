@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart } from 'lucide-react';
+import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video } from 'lucide-react';
 import { useCart } from '../context/cart-context';
+import { SiteConfig } from '../types';
 
 // --- DATA & CONSTANTS ---
 const NAV_ITEMS = [
@@ -79,11 +80,19 @@ const CartButton = ({ count, onClick, mobile = false, id }: { count: number, onC
   </button>
 );
 
-const SocialButton = ({ icon: Icon }: { icon: any }) => (
-  <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon">
-    <Icon size={20} />
-  </a>
-);
+const SocialButton = ({ icon: Icon, href }: { icon: any, href?: string }) => {
+  if (!href) return null;
+  return (
+    <a 
+      href={href} 
+      target="_blank" 
+      rel="noreferrer" 
+      className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon"
+    >
+      <Icon size={20} />
+    </a>
+  );
+};
 
 // --- MOLECULES: Grouped Components ---
 
@@ -205,7 +214,7 @@ const Header = ({
   );
 };
 
-const Footer = ({ setPage }: { setPage: (p: string) => void }) => (
+const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: SiteConfig }) => (
   <footer className="bg-brand-dark border-t border-white/5 py-12 mt-20 relative overflow-hidden">
     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-brand-orange shadow-neon opacity-50"></div>
     <div className="container mx-auto px-4">
@@ -216,9 +225,12 @@ const Footer = ({ setPage }: { setPage: (p: string) => void }) => (
           <p className="text-gray-400 mb-6 text-sm leading-relaxed">
             Mitra strategis digitalisasi bisnis Anda di Seluruh Indonesia. Solusi POS, Software, & Web Development.
           </p>
-          <div className="flex gap-4">
-            <SocialButton icon={Instagram} />
-            <SocialButton icon={Facebook} />
+          <div className="flex gap-4 flex-wrap">
+            <SocialButton icon={Instagram} href={config.instagramUrl} />
+            <SocialButton icon={Facebook} href={config.facebookUrl} />
+            <SocialButton icon={Youtube} href={config.youtubeUrl} />
+            <SocialButton icon={Linkedin} href={config.linkedinUrl} />
+            <SocialButton icon={Video} href={config.tiktokUrl} /> {/* TikTok Placeholder */}
           </div>
         </div>
         
@@ -230,13 +242,18 @@ const Footer = ({ setPage }: { setPage: (p: string) => void }) => (
                 <MapPin className="text-brand-orange shrink-0 mt-1" size={18} />
                 <div className="flex flex-col gap-1">
                     <span className="text-white font-bold text-xs">SOLO (Legal):</span>
-                    <span>Perum Graha Tiara 2 B1, Kartasura</span>
+                    <span>{config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura"}</span>
                     
                     <span className="text-white font-bold text-xs mt-1">BLORA (Ops):</span>
-                    <span>Gumiring 04/04, Banjarejo</span>
+                    <span>{config.addressBlora || "Gumiring 04/04, Banjarejo"}</span>
                 </div>
             </li>
-            <li className="flex items-center gap-3"><Phone className="text-brand-orange shrink-0" size={18} /><span>0823 2510 3336</span></li>
+            <li className="flex items-center gap-3">
+              <Phone className="text-brand-orange shrink-0" size={18} />
+              <a href={`https://wa.me/${config.whatsappNumber}`} target="_blank" rel="noreferrer" className="hover:text-brand-orange transition-colors">
+                {config.whatsappNumber || "0823 2510 3336"}
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -274,11 +291,13 @@ const Footer = ({ setPage }: { setPage: (p: string) => void }) => (
 export const Layout = ({ 
   children, 
   setPage, 
-  currentPage 
+  currentPage,
+  config 
 }: { 
   children?: React.ReactNode, 
   setPage: (p: string) => void, 
-  currentPage: string 
+  currentPage: string,
+  config: SiteConfig
 }) => {
   // --- MODIFICATION: Hide Header/Footer on Admin Page ---
   if (currentPage === 'admin') {
@@ -299,7 +318,7 @@ export const Layout = ({
         {children}
       </main>
 
-      <Footer setPage={setPage} />
+      <Footer setPage={setPage} config={config} />
     </div>
   );
 };

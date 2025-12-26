@@ -36,8 +36,17 @@ const App = () => {
   const [config, setConfig] = useState<SiteConfig>({
     heroTitle: "MESIN KASIR SOLO & DIGITAL AGENCY",
     heroSubtitle: "Pusat penjualan mesin kasir modern (POS) dan jasa pembuatan website profesional untuk digitalisasi bisnis UMKM hingga Korporasi di Seluruh Indonesia.",
-    sibosUrl: "", // Default Empty
-    qalamUrl: ""  // Default Empty
+    sibosUrl: "", 
+    qalamUrl: "",
+    // Default Contact & Footer
+    whatsappNumber: "082325103336",
+    addressSolo: "Perum Graha Tiara 2 B1, Kartasura",
+    addressBlora: "Gumiring 04/04, Banjarejo",
+    instagramUrl: "https://instagram.com",
+    facebookUrl: "https://facebook.com",
+    youtubeUrl: "",
+    tiktokUrl: "",
+    linkedinUrl: ""
   });
 
   // --- 1. NAVIGATION LOGIC (History API) ---
@@ -200,7 +209,7 @@ const App = () => {
 
   return (
     <CartProvider>
-      <Layout setPage={handlePageChange} currentPage={currentPage}>
+      <Layout setPage={handlePageChange} currentPage={currentPage} config={config}>
         {renderPage()}
         
         {/* Custom Logout Alert */}
