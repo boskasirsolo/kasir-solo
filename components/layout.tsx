@@ -64,8 +64,9 @@ const NavLink = ({
   );
 };
 
-const CartButton = ({ count, onClick, mobile = false }: { count: number, onClick: () => void, mobile?: boolean }) => (
+const CartButton = ({ count, onClick, mobile = false, id }: { count: number, onClick: () => void, mobile?: boolean, id?: string }) => (
   <button 
+    id={id}
     onClick={onClick}
     className={`relative p-2 transition-colors group ${mobile ? 'text-brand-orange' : 'text-gray-400 hover:text-brand-orange'}`}
   >
@@ -106,7 +107,7 @@ const DesktopNav = ({
         />
       </React.Fragment>
     ))}
-    <CartButton count={cartCount} onClick={() => setPage('checkout')} />
+    <CartButton id="desktop-cart-btn" count={cartCount} onClick={() => setPage('checkout')} />
   </div>
 );
 
@@ -122,7 +123,7 @@ const MobileNavToggle = ({
   onCartClick: () => void 
 }) => (
   <div className="flex items-center gap-4 md:hidden">
-    <CartButton count={cartCount} onClick={onCartClick} mobile />
+    <CartButton id="mobile-cart-btn" count={cartCount} onClick={onCartClick} mobile />
     <button 
       className="text-brand-orange drop-shadow-neon"
       onClick={onToggle}

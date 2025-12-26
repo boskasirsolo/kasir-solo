@@ -71,16 +71,31 @@ export const renderFormattedText = (text: string) => {
   });
 };
 
+// Updated: Now returns original index to help with pagination jumps
 const extractHeadings = (content: string) => {
-  return content.split('\n').reduce((acc, line) => {
+  const allLines = content.split('\n');
+  // Filter empty lines to match pagination logic indices, but keep track of content
+  const nonEmptyLines = allLines.filter(line => line.trim() !== '');
+  
+  return nonEmptyLines.reduce((acc, line, index) => {
     const trimmed = line.trim();
     if (trimmed.startsWith('# ')) {
-      acc.push({ id: trimmed.replace('# ', '').toLowerCase().replace(/\s+/g, '-'), text: trimmed.replace('# ', ''), level: 1 });
+      acc.push({ 
+        id: trimmed.replace('# ', '').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, ''), 
+        text: trimmed.replace('# ', ''), 
+        level: 1,
+        originalIndex: index 
+      });
     } else if (trimmed.startsWith('## ')) {
-      acc.push({ id: trimmed.replace('## ', '').toLowerCase().replace(/\s+/g, '-'), text: trimmed.replace('## ', ''), level: 2 });
+      acc.push({ 
+        id: trimmed.replace('## ', '').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, ''), 
+        text: trimmed.replace('## ', ''), 
+        level: 2,
+        originalIndex: index
+      });
     }
     return acc;
-  }, [] as { id: string, text: string, level: number }[]);
+  }, [] as { id: string, text: string, level: number, originalIndex: number }[]);
 };
 
 // ==========================================
@@ -234,13 +249,15 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
           const p = paragraph.trim();
           if (!p) return null;
           
+          const cleanId = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+          
           if (p.startsWith('# ')) {
             const text = p.replace('# ', '');
-            return <h1 id={text.toLowerCase().replace(/\s+/g, '-')} key={idx} className="scroll-mt-32 text-3xl font-bold text-white mt-12 mb-6 pb-4 border-b border-white/10">{text}</h1>;
+            return <h1 id={cleanId(text)} key={idx} className="scroll-mt-32 text-3xl font-bold text-white mt-12 mb-6 pb-4 border-b border-white/10 heading-observer">{text}</h1>;
           }
           if (p.startsWith('## ')) {
             const text = p.replace('## ', '');
-            return <h2 id={text.toLowerCase().replace(/\s+/g, '-')} key={idx} className="scroll-mt-32 text-2xl font-bold text-white mt-10 mb-4 border-l-4 border-brand-orange pl-4">{text}</h2>;
+            return <h2 id={cleanId(text)} key={idx} className="scroll-mt-32 text-2xl font-bold text-white mt-10 mb-4 border-l-4 border-brand-orange pl-4 heading-observer">{text}</h2>;
           }
           if (p.startsWith('### ')) return <h3 key={idx} className="text-xl font-bold text-brand-orange mt-8 mb-3">{p.replace('### ', '')}</h3>;
           
@@ -282,7 +299,16 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
 );
 
 // --- SIDEBAR LEFT: Table of Contents & Socials & Comments ---
-const ArticleSidebarLeft = ({ article, scrollToId }: { article: Article, scrollToId: (id: string) => void }) => {
+// Added activeId prop for highlight logic
+const ArticleSidebarLeft = ({ 
+  article, 
+  onHeadingClick, 
+  activeId 
+}: { 
+  article: Article, 
+  onHeadingClick: (h: any) => void,
+  activeId: string 
+}) => {
   const headings = useMemo(() => extractHeadings(article.content), [article.content]);
   const [comments, setComments] = useState<{name: string, text: string, time: string}[]>([
       { name: 'Budi Santoso', text: 'Sangat menginspirasi! Saya juga pake Android POS, memang lebih hemat.', time: '2 jam lalu' }
@@ -319,7 +345,20 @@ const ArticleSidebarLeft = ({ article, scrollToId }: { article: Article, scrollT
             <ul className="space-y-4 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
               {headings.map((h: any, idx: number) => (
                   <li key={idx}>
-                      <button onClick={() => scrollToId(h.id)} className={`text-left text-sm transition-all hover:translate-x-1 ${h.level === 1 ? 'text-white font-bold hover:text-brand-orange' : 'text-gray-500 pl-4 hover:text-gray-300'}`}>{h.text}</button>
+                      <button 
+                        onClick={() => onHeadingClick(h)} 
+                        className={`text-left text-sm transition-all duration-300 block w-full relative ${
+                          h.id === activeId 
+                            ? 'text-brand-orange font-bold translate-x-2' 
+                            : 'text-gray-500 hover:text-gray-300 hover:translate-x-1'
+                        } ${h.level > 1 ? 'pl-4' : ''}`}
+                      >
+                        {/* Indicator dot for active state */}
+                        {h.id === activeId && (
+                          <span className="absolute -left-4 top-1.5 w-1.5 h-1.5 rounded-full bg-brand-orange shadow-neon"></span>
+                        )}
+                        {h.text}
+                      </button>
                   </li>
               ))}
             </ul>
@@ -441,8 +480,10 @@ const ArticleSidebarRight = ({ article, products }: { article: Article, products
 
 export const ArticleReaderModal = ({ article, onClose, products }: { article: Article, onClose: () => void, products: Product[] }) => {
   const { progress, scrollPos, containerRef, handleScroll } = useReadingProgress();
-  const { currentPage, setCurrentPage, totalPages, currentBlocks } = useArticlePagination(article.content);
-
+  const ITEMS_PER_PAGE = 30; // Defined here to share with ToC logic
+  const { currentPage, setCurrentPage, totalPages, currentBlocks } = useArticlePagination(article.content, ITEMS_PER_PAGE);
+  const [activeHeadingId, setActiveHeadingId] = useState<string>('');
+  
   const MAX_HEIGHT = 500;
   const MIN_HEIGHT = 80; 
 
@@ -454,16 +495,84 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
     return () => { document.body.style.overflow = 'auto'; };
   }, []);
 
+  // --- Scroll Spy Logic (Intersection Observer) ---
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Wait for content to render
+    const timeout = setTimeout(() => {
+      const headings = container.querySelectorAll('h1, h2');
+      
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setActiveHeadingId(entry.target.id);
+            }
+          });
+        },
+        {
+          root: container,
+          // Offset penting: Trigger saat elemen melewati bawah header (sekitar 120px dari atas container)
+          // rootMargin: 'top right bottom left'
+          rootMargin: '-120px 0px -80% 0px', 
+          threshold: 0
+        }
+      );
+
+      headings.forEach((h) => observer.observe(h));
+
+      return () => observer.disconnect();
+    }, 500); // Delay to ensure DOM is ready
+
+    return () => clearTimeout(timeout);
+  }, [currentBlocks, currentPage]); // Re-run when page/content changes
+
+
+  // --- Smart Navigation Logic ---
+  const handleToCClick = (heading: { id: string, originalIndex: number }) => {
+    // 1. Hitung heading ini ada di halaman berapa
+    const targetPage = Math.floor(heading.originalIndex / ITEMS_PER_PAGE) + 1;
+
+    // 2. Jika beda halaman, pindah halaman dulu
+    if (targetPage !== currentPage) {
+      setCurrentPage(targetPage);
+      // Tunggu render, baru scroll
+      setTimeout(() => {
+        scrollToId(heading.id);
+      }, 300); // Delay agar DOM sempat render konten halaman baru
+    } else {
+      // Jika halaman sama, langsung scroll
+      scrollToId(heading.id);
+    }
+  };
+
   const scrollToId = (id: string) => {
     const element = document.getElementById(id);
     if (element && containerRef.current) {
         // Karena header sticky, kita perlu offset
         // Offset = Tinggi header saat ini (atau minimalnya) + sedikit buffer
         const headerOffset = 120; 
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + containerRef.current.scrollTop - headerOffset;
+        
+        // Use offsetTop relative to the scroll container
+        // Note: element.offsetTop might be relative to a positioned parent. 
+        // For prose content, usually relative to the container content div.
+        // Safer way: Get bounding rect relative to container
+        
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+        
+        // Calculate position inside the scrollable container
+        // Current Scroll Top + (Element Top relative to Viewport - Container Top relative to Viewport)
+        const relativeTop = containerRef.current.scrollTop + (elementRect.top - containerRect.top);
+        
+        const offsetPosition = relativeTop - headerOffset;
 
         containerRef.current.scrollTo({ top: offsetPosition, behavior: "smooth" });
+        
+        // Manually set active ID for immediate feedback
+        setActiveHeadingId(id);
     }
   };
 
@@ -513,7 +622,11 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
                     {/* Left Sidebar (Desktop Only) */}
                     <div className="hidden lg:block lg:col-span-3">
                         <div className="sticky top-28 space-y-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                          <ArticleSidebarLeft article={article} scrollToId={scrollToId} />
+                          <ArticleSidebarLeft 
+                            article={article} 
+                            onHeadingClick={handleToCClick} // Pass new smart handler
+                            activeId={activeHeadingId} // Pass active state
+                          />
                         </div>
                     </div>
 

@@ -1,7 +1,7 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus, Check } from 'lucide-react';
 import { Product } from '../types';
 import { Badge, Card, Input, Button } from './ui';
 import { formatRupiah } from '../utils';
@@ -51,7 +51,7 @@ export const ProductImage = ({ image, name, category }: { image: string, name: s
 );
 
 export const ProductTitle = ({ title }: { title: string }) => (
-  <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 min-h-[3.5rem]">{title}</h3>
+  <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-brand-orange transition-colors">{title}</h3>
 );
 
 export const ProductDescription = ({ description }: { description: string }) => (
@@ -62,6 +62,44 @@ export const ProductPrice = ({ price }: { price: number }) => (
   <div className="text-2xl font-display font-bold text-brand-orange">{formatRupiah(price)}</div>
 );
 
+// --- COMPONENT: FLYING IMAGE ANIMATION ---
+const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: string, startRect: DOMRect, targetRect: DOMRect, onFinish: () => void }) => {
+  const [style, setStyle] = useState<React.CSSProperties>({
+    position: 'fixed',
+    top: startRect.top,
+    left: startRect.left,
+    width: 60,
+    height: 60,
+    opacity: 1,
+    zIndex: 9999,
+    borderRadius: '8px',
+    objectFit: 'cover',
+    pointerEvents: 'none',
+    transition: 'all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
+    boxShadow: '0 0 15px rgba(255, 95, 31, 0.8)'
+  });
+
+  useEffect(() => {
+    // Trigger animation next frame
+    requestAnimationFrame(() => {
+      setStyle(prev => ({
+        ...prev,
+        top: targetRect.top + 10,
+        left: targetRect.left + 10,
+        width: 20,
+        height: 20,
+        opacity: 0,
+        transform: 'scale(0.5) rotate(360deg)'
+      }));
+    });
+
+    const timer = setTimeout(onFinish, 800);
+    return () => clearTimeout(timer);
+  }, [targetRect, onFinish]);
+
+  return <img src={src} style={style} alt="flying-product" />;
+};
+
 export const ProductActions = ({ 
   product, 
   onDetail 
@@ -70,25 +108,84 @@ export const ProductActions = ({
   onDetail: () => void 
 }) => {
   const { addToCart } = useCart();
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [flyData, setFlyData] = useState<{ start: DOMRect, target: DOMRect } | null>(null);
   
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening modal
+    if (isAnimating) return;
+
+    // 1. Cari tombol cart di layout (Desktop atau Mobile)
+    const cartBtnDesktop = document.getElementById('desktop-cart-btn');
+    const cartBtnMobile = document.getElementById('mobile-cart-btn');
+    
+    // Pilih target yang visible (lebar > 0)
+    const targetEl = (cartBtnMobile && cartBtnMobile.offsetWidth > 0) ? cartBtnMobile : cartBtnDesktop;
+
+    if (buttonRef.current && targetEl) {
+      const startRect = buttonRef.current.getBoundingClientRect();
+      const targetRect = targetEl.getBoundingClientRect();
+      
+      // 2. Start Animation
+      setIsAnimating(true);
+      setFlyData({ start: startRect, target: targetRect });
+      
+      // 3. Add to Cart Logic (Delay sedikit biar pas animasi sampai)
+      setTimeout(() => {
+        addToCart(product);
+        setIsAdded(true);
+      }, 600);
+
+      // 4. Reset Button State
+      setTimeout(() => {
+        setIsAdded(false);
+        setIsAnimating(false);
+        setFlyData(null);
+      }, 2000);
+    } else {
+      // Fallback if elements not found
+      addToCart(product);
+    }
+  };
+
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <button 
-        onClick={onDetail}
-        className="px-4 py-2 rounded-lg border border-white/20 text-gray-300 hover:text-brand-orange hover:border-brand-orange font-bold text-sm transition-all hover:shadow-neon"
-      >
-        Detail
-      </button>
-      <button 
-        onClick={() => {
-          addToCart(product);
-          // Optional toast or feedback
-        }}
-        className="px-4 py-2 rounded-lg bg-brand-orange text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-brand-glow hover:shadow-neon transition-all group/btn"
-      >
-        <Plus size={16} className="group-hover/btn:scale-125 transition-transform"/> Beli
-      </button>
-    </div>
+    <>
+      {flyData && createPortal(
+        <FlyingParticle 
+          src={product.image} 
+          startRect={flyData.start} 
+          targetRect={flyData.target} 
+          onFinish={() => {}} 
+        />, 
+        document.body
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        <button 
+          onClick={(e) => { e.stopPropagation(); onDetail(); }}
+          className="px-4 py-2 rounded-lg border border-white/20 text-gray-300 hover:text-brand-orange hover:border-brand-orange font-bold text-sm transition-all hover:shadow-neon"
+        >
+          Detail
+        </button>
+        <button 
+          ref={buttonRef}
+          onClick={handleAddToCart}
+          className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all group/btn ${
+            isAdded 
+              ? 'bg-green-500 text-white shadow-lg scale-95' 
+              : 'bg-brand-orange text-white hover:bg-brand-glow hover:shadow-neon'
+          }`}
+        >
+          {isAdded ? (
+            <><Check size={16} /> Berhasil</>
+          ) : (
+            <><Plus size={16} className={isAnimating ? "animate-spin" : "group-hover/btn:scale-125 transition-transform"}/> Beli</>
+          )}
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -100,19 +197,22 @@ export const ProductCard = ({
   product: Product, 
   onDetail: (p: Product) => void
 }) => (
-  <Card className="flex flex-col h-full group">
-    <ProductImage image={product.image} name={product.name} category={product.category} />
-    
-    <div className="p-6 flex flex-col flex-grow relative">
-      <ProductTitle title={product.name} />
-      <ProductDescription description={product.description} />
+  // Added onClick here to make the whole card clickable
+  <div onClick={() => onDetail(product)}>
+    <Card className="flex flex-col h-full group cursor-pointer hover:border-brand-orange transition-colors">
+      <ProductImage image={product.image} name={product.name} category={product.category} />
       
-      <div className="mt-auto pt-4 border-t border-white/5 space-y-4">
-        <ProductPrice price={product.price} />
-        <ProductActions product={product} onDetail={() => onDetail(product)} />
+      <div className="p-6 flex flex-col flex-grow relative">
+        <ProductTitle title={product.name} />
+        <ProductDescription description={product.description} />
+        
+        <div className="mt-auto pt-4 border-t border-white/5 space-y-4">
+          <ProductPrice price={product.price} />
+          <ProductActions product={product} onDetail={() => onDetail(product)} />
+        </div>
       </div>
-    </div>
-  </Card>
+    </Card>
+  </div>
 );
 
 // --- ATOM: PAGINATION ---
@@ -161,11 +261,27 @@ export const ProductDetailModal = ({
   onClose: () => void 
 }) => {
   const { addToCart } = useCart();
+  const [isAnimating, setIsAnimating] = useState(false);
   
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'auto'; };
   }, []);
+
+  const handleAddToCart = () => {
+    setIsAnimating(true);
+    addToCart(product);
+    // Tutup modal setelah jeda singkat agar user lihat feedback tombol (opsional), 
+    // atau biarkan user menutup sendiri. Di sini kita biarkan user menutup sendiri
+    // tapi tombol berubah state.
+    setTimeout(() => {
+        setIsAnimating(false);
+        onClose(); // Auto close untuk pengalaman yang lebih cepat? atau stay? 
+        // User request "Fly to cart" usually implies continuing shopping, 
+        // but inside modal "Buy" often leads to stay or checkout.
+        // Let's close it to indicate "Done, continue shopping".
+    }, 500);
+  };
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -211,13 +327,13 @@ export const ProductDetailModal = ({
 
           <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button 
-              onClick={() => {
-                addToCart(product);
-                onClose();
-              }}
-              className="flex items-center justify-center w-full py-4 bg-brand-orange hover:bg-brand-glow text-white rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong gap-2"
+              onClick={handleAddToCart}
+              className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong gap-2 ${
+                  isAnimating ? 'bg-green-500 text-white' : 'bg-brand-orange hover:bg-brand-glow text-white'
+              }`}
             >
-              <ShoppingCart size={20} /> Beli
+              {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} 
+              {isAnimating ? "Berhasil" : "Beli"}
             </button>
             <a 
               href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
