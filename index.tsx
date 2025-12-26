@@ -28,11 +28,35 @@ import {
 
 // --- Environment & Client Setup ---
 
-// FIX: Menggunakan import.meta.env untuk Vite (Client Side)
-// process.env akan menyebabkan crash (blank screen) di browser
-const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL || '';
-const SUPABASE_KEY = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || '';
-const GEMINI_API_KEY = (import.meta as any).env.VITE_GEMINI_API_KEY || '';
+// Helper untuk membaca env variable dengan aman di berbagai environment
+// Mencegah crash jika import.meta.env atau process.env tidak terdefinisi
+const getEnv = (key: string) => {
+  try {
+    // Coba baca dari import.meta.env (Vite)
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+      const val = (import.meta as any).env[key];
+      if (val) return val;
+    }
+  } catch (e) {
+    // Ignore error
+  }
+
+  try {
+    // Coba baca dari process.env (Fallback untuk Webpack/Node/Lainnya)
+    if (typeof process !== 'undefined' && process.env) {
+      const val = process.env[key];
+      if (val) return val;
+    }
+  } catch (e) {
+    // Ignore error
+  }
+
+  return '';
+};
+
+const SUPABASE_URL = getEnv('VITE_SUPABASE_URL');
+const SUPABASE_KEY = getEnv('VITE_SUPABASE_ANON_KEY');
+const GEMINI_API_KEY = getEnv('VITE_GEMINI_API_KEY');
 
 // Initialize Clients
 const supabase = (SUPABASE_URL && SUPABASE_KEY) 
