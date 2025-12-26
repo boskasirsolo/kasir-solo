@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useCart } from '../context/cart-context';
 import { formatRupiah, supabase } from '../utils';
 import { Button, Input, TextArea, Card, SectionHeader, LoadingSpinner } from '../components/ui';
-import { Trash2, Plus, Minus, ArrowLeft, CheckCircle2, Copy } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowLeft, CheckCircle2, Copy, ShoppingBag } from 'lucide-react';
 
 export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
   const { cart, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
@@ -166,9 +166,20 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
       <SectionHeader title="Keranjang" highlight="Belanja" />
       
       {cart.length === 0 ? (
-        <div className="text-center py-20 bg-brand-card/50 rounded-2xl border border-white/5 border-dashed">
-          <p className="text-gray-400 mb-6">Keranjang belanja Anda kosong.</p>
-          <Button onClick={() => setPage('shop')}>Lihat Katalog Produk</Button>
+        <div className="flex flex-col items-center justify-center py-20 min-h-[400px] bg-brand-card/50 rounded-3xl border-2 border-dashed border-white/10">
+          <div className="w-24 h-24 bg-brand-orange/10 rounded-full flex items-center justify-center mb-6 text-brand-orange shadow-neon">
+             <ShoppingBag size={48} />
+          </div>
+          <h3 className="text-2xl font-display font-bold text-white mb-3">Wah, Keranjang Kosong!</h3>
+          <p className="text-gray-400 mb-8 max-w-md text-center leading-relaxed">
+            Sepertinya Anda belum menambahkan produk apapun. Mari temukan mesin kasir terbaik untuk bisnis Anda.
+          </p>
+          <Button 
+             onClick={() => setPage('shop')} 
+             className="px-8 py-4 text-base md:text-lg shadow-neon hover:shadow-neon-strong transition-transform hover:-translate-y-1"
+          >
+             Lihat Katalog Produk
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">

@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 import { 
   ArrowRight, Search, Clock, Calendar, User, Tag, 
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
-  Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp
+  Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
+  ChevronLeft
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { SectionHeader, Input, Button } from '../components/ui';
@@ -105,6 +106,9 @@ const extractHeadings = (content: string) => {
   return headings;
 };
 
+// --- CONSTANTS ---
+const BLOCKS_PER_PAGE = 12; // Jumlah paragraf/blok per halaman
+
 // --- COMPONENT: ARTICLE MODAL ---
 const ArticleDetailModal = ({ 
   article, 
@@ -116,11 +120,26 @@ const ArticleDetailModal = ({
   products: Product[]
 }) => {
   const [scrollPos, setScrollPos] = useState(0);
+  const [readingProgress, setReadingProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Split content into blocks (paragraphs) once
+  const allBlocks = React.useMemo(() => {
+    return article.content.split('\n').filter(line => line.trim() !== '');
+  }, [article.content]);
+
+  const totalPages = Math.ceil(allBlocks.length / BLOCKS_PER_PAGE);
+  
+  // Get current page blocks
+  const currentBlocks = allBlocks.slice(
+    (currentPage - 1) * BLOCKS_PER_PAGE, 
+    currentPage * BLOCKS_PER_PAGE
+  );
 
   // --- LOGIC: PRODUCT RECOMMENDATION ---
-  // 1. Coba cari yang kategorinya mirip (Relevan)
-  // Logic: Cari produk yang category-nya mengandung kata dari category artikel (simple matching)
   let recommendedProducts = products.filter(p => 
     article.category && p.category.toLowerCase().includes(article.category.split(' ')[0].toLowerCase())
   );
@@ -128,27 +147,42 @@ const ArticleDetailModal = ({
   let recommendationTitle = "Produk Relevan";
   let RecommendationIcon = Tag;
 
-  // 2. Fallback: Jika tidak ada yang relevan, tampilkan "Paling Laris" (Ambil 3 produk teratas sebagai simulasi)
   if (recommendedProducts.length === 0) {
     recommendedProducts = products.slice(0, 3);
     recommendationTitle = "Produk Paling Laris";
     RecommendationIcon = TrendingUp;
   } else {
-    // Limit max 3 items
     recommendedProducts = recommendedProducts.slice(0, 3);
   }
 
-  // --- LOGIC: SYNCHRONIZED SCROLLING ---
+  // --- LOGIC: SCROLL & PROGRESS ---
   const MAX_HEIGHT = 450;
   const MIN_HEIGHT = 90; 
   const headerHeight = Math.max(MIN_HEIGHT, MAX_HEIGHT - scrollPos);
   const isCompact = headerHeight <= MIN_HEIGHT + 10; 
   
+  // Extract headings from FULL content for ToC (not just paginated)
   const headings = extractHeadings(article.content);
 
   const handleScroll = () => {
     if (containerRef.current) {
-      setScrollPos(containerRef.current.scrollTop);
+      const currentScroll = containerRef.current.scrollTop;
+      setScrollPos(currentScroll);
+
+      // Calculate Progress Percentage
+      const scrollHeight = containerRef.current.scrollHeight - containerRef.current.clientHeight;
+      // If scrollHeight is 0 (content fits), progress is 100
+      const progress = scrollHeight > 0 ? (currentScroll / scrollHeight) * 100 : 100;
+      setReadingProgress(progress);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    // Scroll to top of content area (not header)
+    if (containerRef.current) {
+       // Smooth scroll slightly below header
+       containerRef.current.scrollTo({ top: MAX_HEIGHT - 60, behavior: 'smooth' });
     }
   };
 
@@ -158,6 +192,9 @@ const ArticleDetailModal = ({
   }, []);
 
   const scrollToId = (id: string) => {
+    // Note: If paginated, the element might not be in DOM. 
+    // For simplicity in this version, ToC jumps to element if visible, 
+    // or does nothing if on another page (Enhancement: could auto-switch page).
     const element = document.getElementById(id);
     if (element && containerRef.current) {
         const offset = 120;
@@ -168,6 +205,9 @@ const ArticleDetailModal = ({
             top: containerRef.current.scrollTop + relativePos - offset,
             behavior: "smooth"
         });
+    } else {
+        // Fallback: If target not found (maybe on other page), just alert or ignore
+        // Or implement logic to find which page the heading belongs to.
     }
   };
 
@@ -179,6 +219,14 @@ const ArticleDetailModal = ({
         className="fixed top-0 left-0 w-full z-50 overflow-hidden border-b border-white/10 shadow-2xl transition-[height] duration-0 ease-linear"
         style={{ height: `${headerHeight}px` }}
       >
+          {/* Progress Bar */}
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10 z-50">
+             <div 
+                className="h-full bg-brand-orange shadow-[0_0_10px_rgba(255,95,31,0.8)] transition-all duration-150 ease-out"
+                style={{ width: `${readingProgress}%` }}
+             ></div>
+          </div>
+
           <button 
             onClick={onClose}
             className="absolute top-6 right-6 z-[60] p-2 bg-black/50 hover:bg-red-500 text-white rounded-full backdrop-blur-md transition-colors border border-white/10 shadow-lg group"
@@ -247,7 +295,7 @@ const ArticleDetailModal = ({
                              <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2">
                                 <Hash size={14}/> Daftar Isi
                              </h4>
-                             <ul className="space-y-4">
+                             <ul className="space-y-4 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
                                 {headings.map((h, idx) => (
                                     <li key={idx}>
                                         <button 
@@ -265,7 +313,7 @@ const ArticleDetailModal = ({
                              </ul>
                         </div>
 
-                        {/* MOVED HERE: Share & Comments */}
+                        {/* Share & Comments */}
                         <div className="border-l border-white/5 pl-5 pt-2">
                              <h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                                 <Share2 size={12}/> Bagikan & Diskusi
@@ -297,13 +345,16 @@ const ArticleDetailModal = ({
                     </div>
                 </div>
 
-                {/* --- KOLOM TENGAH: KONTEN --- */}
+                {/* --- KOLOM TENGAH: KONTEN PAGINATED --- */}
                 <div className="lg:col-span-6 min-h-screen">
                     <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed space-y-6">
-                        {article.content.split('\n').map((paragraph, idx) => {
+                        {currentBlocks.map((paragraph, idx) => {
+                            // Using idx + offset to keep keys consistent across pages if needed, 
+                            // though simple idx is fine for display
                             const p = paragraph.trim();
                             if (!p) return null;
                             
+                            // Headings
                             if (p.startsWith('# ')) {
                                 const text = p.replace('# ', '');
                                 const id = text.toLowerCase().replace(/\s+/g, '-');
@@ -316,7 +367,7 @@ const ArticleDetailModal = ({
                             }
                             if (p.startsWith('### ')) return <h3 key={idx} className="text-xl font-bold text-brand-orange mt-8 mb-3">{p.replace('### ', '')}</h3>;
                             
-                            // Blockquote (with parsing inside)
+                            // Blockquote
                             if (p.startsWith('> ')) {
                                 return (
                                     <blockquote key={idx} className="border-l-4 border-gray-600 bg-white/5 p-6 italic text-gray-300 my-8 rounded-r-xl">
@@ -325,7 +376,7 @@ const ArticleDetailModal = ({
                                 );
                             }
                             
-                            // List Items (Bullet) (with parsing inside)
+                            // List Items
                             if (p.startsWith('* ') || p.startsWith('- ')) {
                                 return (
                                     <div key={idx} className="flex gap-3 ml-2 mb-3">
@@ -335,7 +386,7 @@ const ArticleDetailModal = ({
                                 );
                             }
 
-                            // Numbered List (with parsing inside)
+                            // Numbered List
                             if (/^\d+\.\s/.test(p)) {
                                 const number = p.split('.')[0];
                                 const text = p.substring(p.indexOf('.') + 1).trim();
@@ -347,9 +398,10 @@ const ArticleDetailModal = ({
                                 );
                             }
 
+                            // Divider
                             if (p === '---') return <div key={idx} className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-12" />;
 
-                            // Normal Paragraph (with parsing)
+                            // Standard Paragraph
                             return (
                                 <p key={idx} className="text-lg leading-8 text-gray-300">
                                     {renderFormattedText(p)}
@@ -358,19 +410,48 @@ const ArticleDetailModal = ({
                         })}
                     </div>
                     
-                    {/* Author Box */}
-                    <div className="mt-20 p-8 bg-brand-card rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-                         <div className="w-20 h-20 bg-brand-orange/20 rounded-full flex items-center justify-center text-brand-orange border border-brand-orange/30 shrink-0">
-                            <User size={40} />
-                         </div>
-                         <div>
-                            <p className="text-xs text-gray-500 uppercase font-bold mb-2">Tentang Penulis</p>
-                            <h4 className="text-2xl font-bold text-white mb-2">{article.author || "Tim Redaksi"}</h4>
-                            <p className="text-sm text-gray-400 leading-relaxed">
-                                Expert Consultant di PT Mesin Kasir Solo. Berpengalaman lebih dari 10 tahun membantu digitalisasi ribuan UMKM di Indonesia.
-                            </p>
-                         </div>
-                    </div>
+                    {/* PAGINATION CONTROLS */}
+                    {totalPages > 1 && (
+                      <div className="mt-12 pt-8 border-t border-white/10 flex items-center justify-between">
+                         <Button 
+                            variant="outline" 
+                            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2"
+                         >
+                            <ChevronLeft size={16} /> Sebelumnya
+                         </Button>
+                         
+                         <span className="text-sm font-bold text-gray-400">
+                            Halaman <span className="text-brand-orange">{currentPage}</span> dari {totalPages}
+                         </span>
+
+                         <Button 
+                            variant="primary" 
+                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                            className="px-4 py-2"
+                         >
+                            Selanjutnya <ChevronRight size={16} />
+                         </Button>
+                      </div>
+                    )}
+
+                    {/* Author Box (Shown only on last page) */}
+                    {currentPage === totalPages && (
+                      <div className="mt-20 p-8 bg-brand-card rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left animate-fade-in">
+                           <div className="w-20 h-20 bg-brand-orange/20 rounded-full flex items-center justify-center text-brand-orange border border-brand-orange/30 shrink-0">
+                              <User size={40} />
+                           </div>
+                           <div>
+                              <p className="text-xs text-gray-500 uppercase font-bold mb-2">Tentang Penulis</p>
+                              <h4 className="text-2xl font-bold text-white mb-2">{article.author || "Tim Redaksi"}</h4>
+                              <p className="text-sm text-gray-400 leading-relaxed">
+                                  Expert Consultant di PT Mesin Kasir Solo. Berpengalaman lebih dari 10 tahun membantu digitalisasi ribuan UMKM di Indonesia.
+                              </p>
+                           </div>
+                      </div>
+                    )}
                 </div>
 
                 {/* --- (2) KOLOM KANAN: FULL PRODUCT DISPLAY (Sticky) --- */}

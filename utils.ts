@@ -147,7 +147,7 @@ Sebelum tahun 2012, jika Anda masuk ke Indomaret, Hypermart, atau restoran fast 
 3. **Powerful:** Bisa handle database jutaan barang tanpa lag.
 
 ## Era Android: Sang Penantang Lincah
-Munculnya Gojek dan Grab membawa revolusi. Tablet menjadi murah. Aplikasi kasir berbasis Cloud (SaaS) mulai bermunculan seperti Moka, Pawoon, dan tentu saja solusi kami sendiri.
+Munculnya Gojek dan Grab membawa revolusi. Tablet menjadi murah. Aplikasi kasir berbasis Cloud (SaaS) mulai bermunculan.
 
 **Karakteristik Android POS:**
 1. **Terjangkau:** Modal 2 juta sudah bisa jualan.
@@ -246,7 +246,7 @@ Di PT Mesin Kasir Solo, kami menyediakan keduanya. Konsultasikan kebutuhan spesi
   {
     id: 2,
     title: "Investigasi: 7 Lubang 'Ghaib' Penyebab Kebocoran Uang di Kasir",
-    excerpt: "Bukan tuyul, bukan babi ngepet. Uang Anda hilang karena sistem yang lemah. Bongkar modus operandi fraud karyawan dan cara menutupnya dengan SIBOS.",
+    excerpt: "Bukan tuyul, bukan babi ngepet. Uang Anda hilang karena sistem yang lemah. Bongkar modus operandi fraud karyawan dan cara menutupnya dengan sistem yang tepat.",
     content: `
 # Pendahuluan: Musuh Dalam Selimut
 
@@ -256,7 +256,7 @@ Stok barang habis, tapi uangnya tidak masuk. Apakah ada tuyul?
 
 Berdasarkan data kami menangani 500+ klien di seluruh Indonesia, 80% kehilangan uang di kasir BUKAN karena pencurian eksternal (maling masuk toko), melainkan **Internal Fraud** (kecurangan karyawan).
 
-Mari kita bedah 7 modus operandi paling populer dan cara sistem kami (SIBOS) menangkapnya.
+Mari kita bedah 7 modus operandi paling populer dan cara sistem kasir modern menutup celah tersebut.
 
 ---
 
@@ -271,8 +271,8 @@ Mari kita bedah 7 modus operandi paling populer dan cara sistem kami (SIBOS) men
 6. Uang 30rb masuk ke kantong kasir.
 7. Stok kopi berkurang, tapi biasanya baru ketahuan pas Stok Opname akhir bulan (itu pun dianggap barang rusak/hilang).
 
-**Solusi SIBOS:**
-Di sistem kami, fitur VOID bisa dikunci.
+**Solusi Sistem:**
+Software kasir yang kami rekomendasikan memiliki fitur "Secure Void".
 *   **Level 1:** Kasir tidak bisa Void tanpa Password Supervisor/Owner.
 *   **Level 2:** Jika Void dilakukan, notifikasi langsung masuk ke WA Owner detik itu juga. *"Alert: Kasir A melakukan Void Transaksi #123 senilai 30rb."*
 *   **Level 3:** Laporan "Audit Trail" mencatat semua aktivitas pembatalan yang mencurigakan.
@@ -283,7 +283,7 @@ Di sistem kami, fitur VOID bisa dikunci.
 Teman atau pacar kasir datang belanja. Total belanja 500rb. Kasir menggunakan hak aksesnya untuk memberikan **Diskon Manual 90%** atau mengubah harga barang menjadi Rp 1.
 Temannya cuma bayar receh, barang 500rb melayang.
 
-**Solusi SIBOS:**
+**Solusi Sistem:**
 *   Batasi hak akses diskon. Kasir hanya boleh memilih diskon yang sudah diprogram (misal: Promo Merdeka 10%).
 *   Kasir TIDAK BOLEH mengubah harga jual secara manual.
 *   Laporan "Diskon Abnormal" akan muncul di Dashboard Owner.
@@ -293,7 +293,7 @@ Temannya cuma bayar receh, barang 500rb melayang.
 **Cara Kerja:**
 Mirip Void, tapi dilakukan sore hari. Kasir mengambil struk belanja yang dibuang pelanggan di tempat sampah. Dia melakukan proses "Retur Barang" di sistem seolah-olah pelanggan komplain dan minta uang kembali. Uang diambil dari laci kasir.
 
-**Solusi SIBOS:**
+**Solusi Sistem:**
 *   Retur wajib menyertakan alasan dan input data pelanggan (No HP).
 *   Sistem bisa di-setting agar Retur H+0 (hari yang sama) membutuhkan otorisasi kartu supervisor.
 
@@ -306,7 +306,7 @@ Biasanya kasir akan membiarkan laci terbuka sedikit atau menaruh uang di saku.
 **Solusi:**
 1. **CCTV Integrasi:** Pasang CCTV tepat di atas mesin kasir.
 2. **Mystery Shopper:** Suruh orang lain pura-pura belanja.
-3. **Printer Dapur:** Untuk bisnis F&B, sistem SIBOS mewajibkan input pesanan agar printer bar/dapur mencetak. Kalau tidak diinput, barista/koki tidak akan membuatkan pesanan. Ini memaksa kasir untuk input.
+3. **Printer Dapur:** Untuk bisnis F&B, sistem kami bisa mewajibkan input pesanan agar printer bar/dapur mencetak. Kalau tidak diinput, barista/koki tidak akan membuatkan pesanan. Ini memaksa kasir untuk input.
 
 ---
 
@@ -336,7 +336,7 @@ Jangan berikan password "Admin" ke semua orang.
 Banyak pengusaha enggan membeli software kasir premium seharga 5-7 juta karena merasa mahal. Padahal, kebocoran 50.000 per hari x 30 hari = 1.500.000 per bulan.
 Dalam setahun, Anda kehilangan **18 Juta Rupiah** (seharga motor baru!) hanya karena fraud kecil-kecilan.
 
-Investasi sistem seperti SIBOS bukan pengeluaran. Itu adalah gembok brankas Anda.
+Investasi sistem POS profesional bukan pengeluaran. Itu adalah gembok brankas Anda.
 
 ---
 *Departemen Keamanan & Audit Sistem - PT Mesin Kasir Solo*
@@ -384,7 +384,7 @@ Masalah Pak Budi bukan cuma di kasir, tapi di **Dapur**. Resep tidak baku. Kadan
 
 **Solusi yang Kami Tawarkan:**
 *   **Hardware:** Paket Android Tablet + Printer Bluetooth (Budget 3 Jutaan, karena Pak Budi lagi seret).
-*   **Software:** SIBOS Cloud POS.
+*   **Software:** Aplikasi Kasir Cloud Hybrid (Bisa Online & Offline).
 *   **SOP:** Kami bantu buatkan resep baku (Recipe Management).
 
 ---
@@ -427,12 +427,12 @@ Strategi berubah. Banner depan diganti promo Lychee Tea. Profit naik 40% bulan i
 
 Dengan cashflow yang sehat dan tercatat rapi, Pak Budi memberanikan diri mengajukan KUR (Kredit Usaha Rakyat) ke Bank BRI.
 Syarat utama KUR adalah **Laporan Keuangan**.
-Dulu, Pak Budi bingung bikin laporan. Sekarang? Tinggal klik "Export Laba Rugi" di aplikasi SIBOS, print, serahkan ke Mantri BRI.
+Dulu, Pak Budi bingung bikin laporan. Sekarang? Tinggal klik "Export Laba Rugi" di aplikasi kasirnya, print, serahkan ke Mantri BRI.
 Cair 50 Juta dalam 3 hari.
 
 Tahun 2024 ini, 'Kopi Senja' sudah punya 5 cabang di Solo Raya.
 Apakah Pak Budi pusing ngurus 5 cabang? Tidak.
-Sistem SIBOS-nya sudah **Multi-Outlet**. Dia bisa pantau 5 cabang sekaligus dari 1 layar HP sambil rebahan di rumah.
+Sistem manajemennya sudah **Multi-Outlet**. Dia bisa pantau 5 cabang sekaligus dari 1 layar HP sambil rebahan di rumah.
 
 ---
 
