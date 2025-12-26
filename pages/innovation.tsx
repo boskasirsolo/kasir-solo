@@ -13,11 +13,27 @@ const LossCalculator = () => {
   const [omzet, setOmzet] = useState('');
   const [loss, setLoss] = useState<number | null>(null);
 
+  const handleOmzetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Hapus karakter non-digit
+    const rawValue = e.target.value.replace(/\D/g, '');
+    
+    if (rawValue === '') {
+      setOmzet('');
+      return;
+    }
+
+    // Format ke format ribuan Indonesia
+    const formatted = new Intl.NumberFormat('id-ID').format(parseInt(rawValue));
+    setOmzet(formatted);
+  };
+
   const calculate = () => {
-    const value = parseFloat(omzet);
-    if (!value) return;
+    // Hapus titik sebelum konversi ke number
+    const numericValue = parseFloat(omzet.replace(/\./g, ''));
+    
+    if (!numericValue) return;
     // Asumsi kebocoran rata-rata tanpa sistem = 5% (Fraud, salah hitung, stok hilang)
-    const estimatedLoss = value * 0.05; 
+    const estimatedLoss = numericValue * 0.05; 
     setLoss(estimatedLoss);
   };
 
@@ -39,12 +55,12 @@ const LossCalculator = () => {
           <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Rata-rata Omzet Harian (IDR)</label>
           <Input 
             value={omzet} 
-            onChange={(e) => setOmzet(e.target.value)} 
-            type="number" 
-            placeholder="Contoh: 2000000" 
+            onChange={handleOmzetChange} 
+            type="text" 
+            placeholder="Contoh: 2.000.000" 
           />
         </div>
-        <Button onClick={calculate} className="w-full">HITUNG POTENSI RUGI</Button>
+        <Button onClick={calculate} className="w-full py-4 text-lg shadow-neon hover:shadow-neon-strong">HITUNG POTENSI RUGI</Button>
       </div>
 
       {loss !== null && (
@@ -70,11 +86,7 @@ const SmartLinkButton = ({ url, defaultLabel, waLabel }: { url?: string, default
       href={targetUrl} 
       target="_blank" 
       rel="noreferrer"
-      className={`w-full md:w-auto inline-flex justify-center items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all transform hover:-translate-y-1 ${
-        isLinkActive 
-          ? 'bg-brand-orange text-white hover:bg-brand-glow shadow-neon' 
-          : 'bg-white text-black hover:bg-gray-200 shadow-lg'
-      }`}
+      className="w-full md:w-auto inline-flex justify-center items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all transform hover:-translate-y-1 bg-brand-orange text-white hover:bg-brand-glow shadow-neon hover:shadow-neon-strong"
     >
       {isLinkActive ? defaultLabel : waLabel} 
       {isLinkActive ? <ExternalLink size={18} /> : <ArrowRight size={18} />}
@@ -176,12 +188,7 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             
-            {/* Visual Placeholder (First on Desktop, Top on Mobile for standard flow - or swap for consistency?) 
-                Let's keep standard: Visual Top on Mobile usually looks nice for Apps, 
-                but here let's stick to Text First for consistency with SIBOS if we want a uniform reading experience.
-                However, for "The Heart", maybe visual first is fine. 
-                Let's adjust font sizes and padding only. 
-            */}
+            {/* Visual Placeholder */}
             <div className="relative group order-first lg:order-none">
                <div className="absolute inset-0 bg-teal-500/10 rounded-3xl blur-[40px] group-hover:bg-teal-500/20 transition-all duration-700"></div>
                <div className="relative bg-brand-card border border-teal-500/20 rounded-3xl p-4 md:p-8 h-[400px] md:h-[500px] flex flex-col items-center justify-center overflow-hidden">
