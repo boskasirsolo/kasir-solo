@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus } from 'lucide-react';
 import { Product } from '../types';

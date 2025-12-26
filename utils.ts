@@ -5,6 +5,7 @@ import { Product, Article, GalleryItem } from './types';
 
 // --- Environment Helpers ---
 export const getEnv = (key: string) => {
+  // 1. Try Vite / Modern ESM (Preferred)
   try {
     if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
       const val = (import.meta as any).env[key];
@@ -12,10 +13,12 @@ export const getEnv = (key: string) => {
     }
   } catch (e) {}
 
+  // 2. Safe Global Fallback (avoiding direct 'process' reference which crashes browsers)
   try {
-    if (typeof process !== 'undefined' && process.env) {
-      const val = process.env[key];
-      if (val) return val;
+    // @ts-ignore
+    if (typeof window !== 'undefined' && (window as any).process && (window as any).process.env) {
+      // @ts-ignore
+      return (window as any).process.env[key] || '';
     }
   } catch (e) {}
 
