@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 // --- Atoms ---
 
@@ -25,7 +25,7 @@ export const Button = ({
     primary: "bg-brand-orange text-white hover:bg-brand-glow shadow-neon hover:shadow-neon-strong transform hover:-translate-y-1",
     outline: "border-2 border-white/10 text-white hover:bg-white/5 hover:border-brand-orange/50 hover:shadow-neon",
     ghost: "text-gray-400 hover:text-brand-orange hover:bg-white/5",
-    danger: "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20"
+    danger: "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 shadow-neon-text/20"
   };
 
   return (
@@ -105,3 +105,48 @@ export const Card = ({ children, className = '', hoverEffect = true }: { childre
     {children}
   </div>
 );
+
+export const ConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = "Ya, Lanjutkan",
+  cancelText = "Batal",
+  variant = 'danger'
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: 'primary' | 'danger';
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 animate-fade-in">
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+      <div className="relative bg-brand-dark border border-white/10 rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center overflow-hidden">
+         {/* Glow Effect */}
+         <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-[60px] opacity-20 pointer-events-none ${variant === 'danger' ? 'bg-red-500' : 'bg-brand-orange'}`}></div>
+         
+         {/* Icon */}
+         <div className={`relative w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 border ${variant === 'danger' ? 'bg-red-500/10 border-red-500/30' : 'bg-brand-orange/10 border-brand-orange/30'}`}>
+            <AlertTriangle className={variant === 'danger' ? 'text-red-500' : 'text-brand-orange'} size={32} />
+         </div>
+
+         <h3 className="text-xl font-display font-bold text-white mb-3 relative z-10">{title}</h3>
+         <p className="text-gray-400 text-sm mb-8 leading-relaxed relative z-10">{message}</p>
+         
+         <div className="grid grid-cols-2 gap-4 relative z-10">
+            <Button variant="outline" onClick={onClose} className="border-white/10 hover:bg-white/5 w-full py-3">{cancelText}</Button>
+            <Button variant={variant} onClick={onConfirm} className="w-full py-3">{confirmText}</Button>
+         </div>
+      </div>
+    </div>
+  );
+};

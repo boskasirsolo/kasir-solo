@@ -7,6 +7,7 @@ import { Layout } from './components/layout';
 import { supabase, INITIAL_PRODUCTS, INITIAL_ARTICLES, INITIAL_GALLERY } from './utils';
 import { Product, Article, GalleryItem, SiteConfig } from './types';
 import { CartProvider } from './context/cart-context';
+import { ConfirmModal } from './components/ui';
 
 // Pages
 import { HomePage } from './pages/home';
@@ -22,6 +23,9 @@ import { CheckoutPage } from './pages/checkout'; // New Page
 const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  
+  // Modal State
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   
   // Data State
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
@@ -101,11 +105,17 @@ const App = () => {
   useEffect(() => { window.scrollTo(0, 0); }, [currentPage]);
 
   // --- LOGOUT LOGIC ---
-  const handleLogout = () => {
-    if(confirm("Apakah anda yakin ingin logout dari Dashboard?")) {
-      setIsAdminLoggedIn(false);
-      setCurrentPage('home'); // Redirect ke Home setelah logout agar aman
-    }
+  
+  // 1. Triggered by the button in Admin Dashboard
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  // 2. Triggered by ConfirmModal "Yes" button
+  const performLogout = () => {
+    setIsAdminLoggedIn(false);
+    setShowLogoutConfirm(false);
+    setCurrentPage('home'); // Redirect ke Home
   };
 
   const renderPage = () => {
@@ -122,7 +132,7 @@ const App = () => {
               products={products} setProducts={setProducts}
               gallery={gallery} setGallery={setGallery}
               config={config} setConfig={setConfig}
-              onLogout={handleLogout}
+              onLogout={handleLogoutClick}
             /> 
           : <AdminLogin onLogin={() => setIsAdminLoggedIn(true)} />;
       default: return <HomePage setPage={setCurrentPage} config={config} />;
@@ -133,6 +143,18 @@ const App = () => {
     <CartProvider>
       <Layout setPage={setCurrentPage} currentPage={currentPage}>
         {renderPage()}
+        
+        {/* Custom Logout Alert */}
+        <ConfirmModal 
+          isOpen={showLogoutConfirm}
+          onClose={() => setShowLogoutConfirm(false)}
+          onConfirm={performLogout}
+          title="Konfirmasi Logout"
+          message="Apakah Anda yakin ingin keluar dari Dashboard Admin? Akses sesi akan diakhiri."
+          confirmText="Ya, Logout"
+          cancelText="Batal"
+          variant="danger"
+        />
       </Layout>
     </CartProvider>
   );
