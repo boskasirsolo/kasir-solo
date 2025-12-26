@@ -103,32 +103,32 @@ const INITIAL_PRODUCTS: Product[] = [
     id: 1,
     name: "Paket Kasir Android Lite",
     price: 2500000,
-    category: "Android",
-    description: "Cocok untuk warkop, kedai kopi kecil. Termasuk Tablet 8 inch + Printer Thermal + Stand.",
+    category: "Android POS",
+    description: "Solusi hemat untuk UMKM, Warkop, dan Coffee Shop. Tablet 8 inch + Printer Thermal High Speed + Stand Kokoh. Siap pakai.",
     image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800"
   },
   {
     id: 2,
     name: "Paket Resto Pro Windows",
     price: 7500000,
-    category: "Windows",
-    description: "PC All-in-One Touchscreen, Printer Dapur, Printer Kasir, Laci Uang. Software Resto Full Fitur.",
+    category: "Windows POS",
+    description: "Sistem kasir restoran lengkap. PC All-in-One Touchscreen, Printer Dapur & Kasir, Cash Drawer. Support manajemen meja & inventory.",
     image: "https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&q=80&w=800"
   },
   {
     id: 3,
-    name: "Mesin Kasir Self-Service Kiosk",
+    name: "Kiosk Self-Service Touchscreen",
     price: 15000000,
-    category: "Kiosk",
-    description: "Mesin mandiri layar sentuh 24 inch. Pembayaran QRIS terintegrasi.",
+    category: "Smart Kiosk",
+    description: "Mesin pemesanan mandiri 24 inch untuk efisiensi antrian. Terintegrasi pembayaran QRIS & E-Wallet. Modern & Futuristik.",
     image: "https://images.unsplash.com/photo-1585646397275-84e625a4d46c?auto=format&fit=crop&q=80&w=800"
   },
   {
     id: 4,
-    name: "Paket Retail Minimarket",
+    name: "Paket Retail Minimarket Full",
     price: 5500000,
-    category: "Retail",
-    description: "PC, Scanner Barcode, Printer, Laci Uang. Support manajemen stok ribuan item.",
+    category: "Retail POS",
+    description: "Paket komputer kasir spek tinggi, Scanner Barcode Omnidirectional, Printer Struk. Mampu menangani 10.000+ SKU barang.",
     image: "https://images.unsplash.com/photo-1580569766020-21a48c66060c?auto=format&fit=crop&q=80&w=800"
   }
 ];
@@ -136,16 +136,16 @@ const INITIAL_PRODUCTS: Product[] = [
 const INITIAL_ARTICLES: Article[] = [
   {
     id: 1,
-    title: "Mengapa Bisnis Anda Butuh Laporan Keuangan Real-time?",
-    excerpt: "Kehilangan jejak arus kas adalah penyebab utama kebangkrutan UMKM.",
+    title: "Pentingnya Laporan Keuangan Real-time untuk UMKM",
+    excerpt: "Hindari kebocoran kas dengan sistem POS berbasis cloud. Pelajari bagaimana data real-time menyelamatkan bisnis Anda dari kebangkrutan.",
     content: "Laporan keuangan bukan hanya soal pajak...",
     date: "10 Okt 2023",
     image: "https://images.unsplash.com/photo-1554224155-9727b5394012?auto=format&fit=crop&q=80&w=800"
   },
   {
     id: 2,
-    title: "Tips Memilih Mesin Kasir untuk Coffee Shop",
-    excerpt: "Jangan salah pilih spesifikasi. Simak panduan lengkap memilih POS untuk kedai kopi.",
+    title: "Panduan Memilih Mesin Kasir untuk Coffee Shop",
+    excerpt: "Bingung memilih antara Android atau Windows? Simak tips memilih hardware POS yang tahan cipratan air dan mendukung operasional barista.",
     content: "Kecepatan dan ketahanan terhadap cipratan air...",
     date: "15 Nov 2023",
     image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800"
@@ -188,7 +188,7 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
             </div>
             <div>
               <h1 className="text-xl font-bold font-display tracking-wider text-white">MESIN KASIR <span className="text-brand-orange">SOLO</span></h1>
-              <p className="text-[10px] text-gray-400 tracking-[0.2em] uppercase">Pt. Mesin Kasir Solo</p>
+              <p className="text-[10px] text-gray-400 tracking-[0.2em] uppercase">Digital Solutions Partner</p>
             </div>
           </div>
 
@@ -256,23 +256,28 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
           <div className="grid md:grid-cols-3 gap-10">
             <div>
               <h3 className="text-2xl font-display font-bold text-white mb-4">PT MESIN KASIR SOLO</h3>
-              <p className="text-gray-400 mb-6">Mitra terbaik digitalisasi usaha Anda. Menyediakan hardware dan software kasir terintegrasi serta layanan pengembangan digital.</p>
+              <p className="text-gray-400 mb-6 text-sm leading-relaxed">
+                Mitra strategis digitalisasi bisnis Anda di Solo Raya. Kami menyediakan solusi 
+                <span className="text-gray-300 font-semibold"> Hardware Kasir (POS)</span>, 
+                <span className="text-gray-300 font-semibold"> Software Toko</span>, dan 
+                <span className="text-gray-300 font-semibold"> Jasa Pembuatan Website & Aplikasi</span> profesional.
+              </p>
               <div className="flex gap-4">
-                <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon">
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon" aria-label="Instagram">
                   <Instagram size={20} />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon">
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon" aria-label="Facebook">
                   <Facebook size={20} />
                 </a>
               </div>
             </div>
             
             <div>
-              <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Kontak Kami</h4>
+              <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Kontak & Lokasi</h4>
               <ul className="space-y-4 text-gray-400 text-sm">
                 <li className="flex items-start gap-3">
                   <MapPin className="text-brand-orange shrink-0 mt-1 drop-shadow-neon" size={18} />
-                  <span>Perum Graha Tiara 2 No. B1. Gumpang 07/01, Kartasura Sukoharjo, Jawa Tengah</span>
+                  <span>Perum Graha Tiara 2 No. B1. Gumpang 07/01, Kartasura, Sukoharjo, Jawa Tengah</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Phone className="text-brand-orange shrink-0 drop-shadow-neon" size={18} />
@@ -282,16 +287,17 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
             </div>
 
             <div>
-              <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Navigasi</h4>
+              <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Layanan Kami</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><button onClick={() => setPage('shop')} className="hover:text-brand-orange transition-colors">Produk Kami</button></li>
-                <li><button onClick={() => setPage('articles')} className="hover:text-brand-orange transition-colors">Artikel & Tips</button></li>
-                <li><button onClick={() => setPage('about')} className="hover:text-brand-orange transition-colors">Tentang Perusahaan</button></li>
+                <li><button onClick={() => setPage('shop')} className="hover:text-brand-orange transition-colors">Paket Mesin Kasir</button></li>
+                <li><button onClick={() => setPage('home')} className="hover:text-brand-orange transition-colors">Jasa Pembuatan Website</button></li>
+                <li><button onClick={() => setPage('articles')} className="hover:text-brand-orange transition-colors">Blog & Tips Bisnis</button></li>
+                <li><button onClick={() => setPage('about')} className="hover:text-brand-orange transition-colors">Konsultasi Gratis</button></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-white/5 mt-10 pt-6 text-center text-gray-600 text-xs">
-            © {new Date().getFullYear()} PT Mesin Kasir Solo. All rights reserved.
+            © {new Date().getFullYear()} PT Mesin Kasir Solo. Solusi Digital Terpercaya di Jawa Tengah.
           </div>
         </div>
       </footer>
@@ -313,7 +319,7 @@ const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: S
 
       <div className="container mx-auto px-4 z-10 text-center relative">
         <div className="inline-block px-6 py-2 border border-brand-orange rounded-full bg-brand-orange/10 mb-8 backdrop-blur-md shadow-neon">
-          <span className="text-brand-orange text-xs md:text-sm font-bold tracking-[0.2em] uppercase">Solusi Digital #1 Solo Raya</span>
+          <span className="text-brand-orange text-xs md:text-sm font-bold tracking-[0.2em] uppercase">Pusat Digitalisasi Bisnis Solo Raya</span>
         </div>
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-8 leading-tight drop-shadow-lg">
           {config.heroTitle}
@@ -326,13 +332,13 @@ const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: S
             onClick={() => setPage('shop')}
             className="px-10 py-4 bg-brand-orange text-white font-bold rounded-lg hover:bg-brand-glow transition-all shadow-neon hover:shadow-neon-strong flex items-center justify-center gap-3 transform hover:-translate-y-1"
           >
-            LIHAT PRODUK <ArrowRight size={22} />
+            KATALOG KASIR <ArrowRight size={22} />
           </button>
           <button 
             onClick={() => setPage('about')}
             className="px-10 py-4 border-2 border-white/10 text-white font-bold rounded-lg hover:bg-white/5 hover:border-brand-orange/50 transition-all flex items-center justify-center hover:shadow-neon"
           >
-            HUBUNGI KAMI
+            KONSULTASI GRATIS
           </button>
         </div>
       </div>
@@ -342,14 +348,14 @@ const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: S
     <section className="py-20 bg-brand-card border-t border-white/5">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">Fitur <span className="text-brand-orange">Unggulan</span></h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">Keunggulan hardware dan sistem kasir kami untuk mendukung operasional bisnis Anda.</p>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">Mengapa Memilih <span className="text-brand-orange">Sistem Kami?</span></h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Kami menyediakan infrastruktur teknologi yang stabil, aman, dan mudah digunakan untuk mempercepat pertumbuhan bisnis Anda.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           {[
-            { icon: Zap, title: "Proses Cepat", desc: "Sistem yang dioptimalkan untuk kecepatan transaksi kasir." },
-            { icon: Monitor, title: "Offline & Online", desc: "Tetap jualan meski internet mati. Sinkronisasi otomatis." },
-            { icon: BarChart3, title: "Analisa Bisnis", desc: "Pantau omzet dan stok dari mana saja lewat HP." }
+            { icon: Zap, title: "High Performance POS", desc: "Hardware dan software yang dioptimalkan untuk transaksi super cepat tanpa lag." },
+            { icon: Monitor, title: "Hybrid Cloud System", desc: "Data aman tersimpan di cloud, namun tetap bisa beroperasi saat internet offline." },
+            { icon: BarChart3, title: "Real-time Analytics", desc: "Akses laporan omzet, stok, dan laba rugi dari smartphone Anda kapan saja." }
           ].map((feature, idx) => (
             <div key={idx} className="p-8 border border-white/5 rounded-2xl bg-brand-dark/80 hover:border-brand-orange transition-all duration-300 group hover:shadow-neon hover:-translate-y-2">
               <feature.icon className="w-14 h-14 text-brand-orange mb-6 group-hover:scale-110 transition-transform duration-300 drop-shadow-neon" />
@@ -361,7 +367,7 @@ const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: S
       </div>
     </section>
 
-    {/* Digital Services Section (New) */}
+    {/* Digital Services Section (Updated for SEO) */}
     <section className="py-20 bg-brand-dark border-t border-white/5 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-brand-orange/5 rounded-full blur-[100px] -translate-y-1/2"></div>
@@ -369,9 +375,9 @@ const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: S
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <span className="text-brand-orange text-xs font-bold tracking-widest uppercase mb-2 block">Software House & Digital Agency</span>
-          <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">Layanan <span className="text-brand-orange">Digital</span></h2>
+          <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">Layanan Pengembangan <span className="text-brand-orange">Digital</span></h2>
           <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-            Selain hardware kasir, kami melayani pembuatan sistem digital untuk mengakselerasi pertumbuhan bisnis Anda secara menyeluruh.
+            Tingkatkan kredibilitas dan jangkauan pasar Anda dengan website profesional dan strategi digital marketing yang terukur.
           </p>
         </div>
 
@@ -380,22 +386,22 @@ const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: S
             { 
               icon: Palette, 
               title: "Pembuatan Website", 
-              desc: "Pembuatan website company profile, toko online, dan landing page dengan desain modern, responsif, dan elegan." 
+              desc: "Jasa pembuatan website Company Profile, Toko Online, dan Landing Page yang responsif, cepat, dan SEO-Friendly." 
             },
             { 
               icon: Code, 
               title: "Web App Development", 
-              desc: "Pembuatan aplikasi berbasis web (Web App) custom untuk manajemen internal, SaaS, atau sistem informasi khusus." 
+              desc: "Pengembangan aplikasi berbasis web (SaaS/Internal Tools) custom sesuai kebutuhan operasional bisnis Anda." 
             },
             { 
               icon: Search, 
               title: "Optimasi SEO", 
-              desc: "Jasa optimasi mesin pencari agar website bisnis Anda tampil di halaman pertama Google dan mudah ditemukan pelanggan." 
+              desc: "Strategi SEO (Search Engine Optimization) untuk meningkatkan ranking website Anda di halaman pertama Google." 
             },
             { 
               icon: Settings, 
-              title: "Perawatan Website", 
-              desc: "Layanan maintenance berkala, update konten, pengelolaan server, dan keamanan website agar performa tetap prima." 
+              title: "Perawatan & Maintenance", 
+              desc: "Layanan pengelolaan konten, pemantauan keamanan server, dan update sistem berkala agar website tetap optimal." 
             }
           ].map((service, idx) => (
             <div key={idx} className="bg-brand-card border border-white/5 p-8 rounded-2xl hover:border-brand-orange/50 transition-all hover:-translate-y-2 hover:shadow-neon group flex flex-col items-center text-center">
@@ -416,12 +422,12 @@ const ShopPage = ({ products }: { products: Product[] }) => (
   <div className="container mx-auto px-4 py-10 animate-fade-in">
     <div className="flex justify-between items-end mb-12">
       <div>
-        <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">Katalog <span className="text-brand-orange">Produk</span></h2>
-        <p className="text-gray-400 text-lg">Pilih paket yang sesuai dengan usaha Anda</p>
+        <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">Katalog <span className="text-brand-orange">Mesin Kasir</span></h2>
+        <p className="text-gray-400 text-lg">Pilihan paket POS terbaik untuk Retail, F&B, dan Jasa di Solo Raya</p>
       </div>
       <div className="hidden md:block">
         <div className="relative group">
-          <input type="text" placeholder="Cari produk..." className="bg-brand-card border border-white/10 rounded-full py-3 px-6 pl-12 text-white focus:outline-none focus:border-brand-orange focus:shadow-neon w-80 transition-all" />
+          <input type="text" placeholder="Cari hardware atau paket..." className="bg-brand-card border border-white/10 rounded-full py-3 px-6 pl-12 text-white focus:outline-none focus:border-brand-orange focus:shadow-neon w-80 transition-all" />
           <Search className="absolute left-4 top-3.5 text-gray-500 w-5 h-5 group-hover:text-brand-orange transition-colors" />
         </div>
       </div>
@@ -443,12 +449,12 @@ const ShopPage = ({ products }: { products: Product[] }) => (
             <div className="mt-auto pt-4 border-t border-white/5">
               <div className="text-2xl font-display font-bold text-brand-orange mb-4">{formatRupiah(product.price)}</div>
               <a 
-                href={`https://wa.me/6282325103336?text=Halo, saya tertarik dengan produk ${product.name}`}
+                href={`https://wa.me/6282325103336?text=Halo PT Mesin Kasir Solo, saya tertarik dengan produk ${product.name}. Bisa minta info detailnya?`}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full block text-center py-3 bg-white/5 border border-white/10 hover:bg-brand-orange hover:border-brand-orange text-white rounded-lg font-bold transition-all hover:shadow-neon"
               >
-                Pesan Sekarang
+                Pesan / Tanya Stok
               </a>
             </div>
           </div>
@@ -461,8 +467,8 @@ const ShopPage = ({ products }: { products: Product[] }) => (
 const ArticlesPage = ({ articles }: { articles: Article[] }) => (
   <div className="container mx-auto px-4 py-10 animate-fade-in">
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3 text-center">Artikel & <span className="text-brand-orange">Edukasi</span></h2>
-      <p className="text-gray-400 text-center mb-16 text-lg">Wawasan bisnis untuk pertumbuhan usaha Anda</p>
+      <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3 text-center">Artikel & <span className="text-brand-orange">Wawasan Bisnis</span></h2>
+      <p className="text-gray-400 text-center mb-16 text-lg">Edukasi pengelolaan bisnis modern dan tips teknologi untuk pengusaha</p>
 
       <div className="space-y-10">
         {articles.map((article) => (
@@ -478,7 +484,7 @@ const ArticlesPage = ({ articles }: { articles: Article[] }) => (
               <h3 className="text-3xl font-bold text-white mb-4 hover:text-brand-orange transition-colors cursor-pointer leading-tight">{article.title}</h3>
               <p className="text-gray-400 mb-8 leading-relaxed">{article.excerpt}</p>
               <button className="text-white text-sm font-bold flex items-center gap-2 hover:gap-4 transition-all uppercase tracking-wider group/btn">
-                BACA SELENGKAPNYA <ArrowRight size={18} className="text-brand-orange group-hover/btn:drop-shadow-neon" />
+                BACA ARTIKEL <ArrowRight size={18} className="text-brand-orange group-hover/btn:drop-shadow-neon" />
               </button>
             </div>
           </div>
@@ -494,12 +500,11 @@ const AboutPage = () => (
     <div className="bg-brand-card py-24 border-b border-white/5 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/5 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="container mx-auto px-4 text-center relative z-10">
-        <h2 className="text-5xl md:text-6xl font-display font-bold text-white mb-8">Tentang <span className="text-brand-orange">Kami</span></h2>
+        <h2 className="text-5xl md:text-6xl font-display font-bold text-white mb-8">Tentang <span className="text-brand-orange">PT Mesin Kasir Solo</span></h2>
         <div className="max-w-3xl mx-auto text-xl text-gray-400 leading-relaxed">
           <p>
-            PT MESIN KASIR SOLO berdedikasi untuk membantu UMKM dan perusahaan besar di Solo Raya dan sekitarnya 
-            dalam mendigitalisasi sistem transaksi mereka. Kami percaya teknologi kasir yang tepat dapat 
-            meningkatkan efisiensi dan keuntungan bisnis secara signifikan.
+            Berdiri di jantung Solo Raya, kami adalah perusahaan teknologi yang berfokus pada <strong>Digitalisasi UMKM & Korporasi</strong>. 
+            Kami memadukan perangkat keras kasir (Hardware POS) terbaik dengan layanan pengembangan web & aplikasi untuk menciptakan ekosistem bisnis yang efisien, modern, dan profitabel.
           </p>
         </div>
       </div>
@@ -514,12 +519,13 @@ const AboutPage = () => (
               <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-brand-orange group-hover:scale-110 transition-transform">
                 <MapPin />
               </div> 
-              Lokasi Kantor
+              Kantor Pusat
             </h3>
             <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-              Perum Graha Tiara 2 No. B1.<br/>
+              <strong>Perum Graha Tiara 2 No. B1.</strong><br/>
               Gumpang 07/01, Kartasura<br/>
-              Sukoharjo, Jawa Tengah, Indonesia
+              Sukoharjo, Jawa Tengah, Indonesia<br/>
+              <span className="text-sm text-gray-500 italic mt-2 block">Melayani pengiriman & instalasi seluruh Indonesia</span>
             </p>
             <div className="h-1 w-20 bg-brand-orange rounded-full shadow-neon"></div>
           </div>
@@ -529,10 +535,10 @@ const AboutPage = () => (
                <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-brand-orange group-hover:scale-110 transition-transform">
                 <Phone />
               </div> 
-              Hubungi Kami
+              Layanan Pelanggan
             </h3>
             <p className="text-gray-300 mb-8 text-lg">
-              Siap melayani konsultasi kebutuhan kasir Anda 24/7.
+              Konsultasikan kebutuhan mesin kasir atau website Anda. Tim ahli kami siap membantu 24/7.
             </p>
             <a 
               href="https://wa.me/6282325103336" 
@@ -548,14 +554,15 @@ const AboutPage = () => (
           {/* Using an image as a placeholder for the map */}
           <img 
             src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000" 
-            alt="Map Location" 
+            alt="Peta Lokasi Kartasura Sukoharjo" 
             className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500 group-hover:scale-105"
           />
           <div className="absolute inset-0 flex items-center justify-center">
              <div className="bg-brand-black/90 p-8 rounded-2xl border border-brand-orange text-center backdrop-blur-md shadow-neon transform group-hover:-translate-y-2 transition-transform">
                <MapPin className="text-brand-orange w-12 h-12 mx-auto mb-4 animate-bounce drop-shadow-neon" />
-               <p className="font-bold text-white text-xl">Peta Lokasi</p>
-               <p className="text-sm text-gray-400 mt-2 uppercase tracking-widest">Kartasura, Sukoharjo</p>
+               <p className="font-bold text-white text-xl">Peta Lokasi Google Maps</p>
+               <p className="text-sm text-gray-400 mt-2 uppercase tracking-widest">Gumpang, Kartasura</p>
+               <a href="https://maps.google.com/?q=Perum+Graha+Tiara+2+No.+B1+Gumpang" target="_blank" className="mt-4 inline-block text-xs text-brand-orange hover:text-white underline">Buka di Maps</a>
              </div>
           </div>
         </div>
@@ -664,7 +671,7 @@ const AdminDashboard = ({
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: `Buatkan deskripsi penjualan singkat, menarik, dan persuasif (maksimal 2 kalimat) untuk mesin kasir tipe: ${newProdName}. Bahasa Indonesia.`,
+        contents: `Buatkan deskripsi penjualan singkat (maks 2 kalimat) untuk mesin kasir tipe: ${newProdName}, dengan gaya bahasa marketing yang profesional, menggunakan keyword SEO terkait kasir/POS. Bahasa Indonesia.`,
       });
       setNewProdDesc(response.text?.trim() || '');
     } catch (e) {
@@ -739,7 +746,7 @@ const AdminDashboard = ({
                   className="bg-purple-600/20 text-purple-400 border border-purple-500/50 hover:bg-purple-600 hover:text-white px-4 rounded transition-all flex flex-col items-center justify-center gap-1 w-32 shrink-0 text-xs font-bold"
                 >
                   {isGeneratingAI ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                  {isGeneratingAI ? '...' : 'BANTU AI'}
+                  {isGeneratingAI ? '...' : 'BANTU AI (SEO)'}
                 </button>
               </div>
               
@@ -794,13 +801,13 @@ const AdminDashboard = ({
                 </div>
              </div>
 
-             <h3 className="text-xl font-bold text-white mb-6">Tampilan Website</h3>
+             <h3 className="text-xl font-bold text-white mb-6">Tampilan Website (SEO Config)</h3>
              <p className="text-sm text-gray-500 mb-6 bg-yellow-500/10 border border-yellow-500/20 p-3 rounded">
-               Catatan: Ubah teks di sini jika ingin mengganti tampilan halaman utama. Saat ini menggunakan pengaturan default yang telah disesuaikan.
+               Catatan: Gunakan kata kunci yang relevan untuk judul dan sub-judul agar mudah ditemukan di Google.
              </p>
              <div className="space-y-6">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-2">Judul Hero Utama</label>
+                  <label className="block text-gray-400 text-sm mb-2">Judul Hero Utama (H1)</label>
                   <input 
                     value={config.heroTitle}
                     onChange={(e) => setConfig({...config, heroTitle: e.target.value})}
@@ -808,7 +815,7 @@ const AdminDashboard = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-400 text-sm mb-2">Sub-Judul Hero</label>
+                  <label className="block text-gray-400 text-sm mb-2">Sub-Judul Hero (Deskripsi Singkat)</label>
                   <textarea 
                     value={config.heroSubtitle}
                     onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})}
@@ -841,8 +848,8 @@ const App = () => {
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
   const [config, setConfig] = useState<SiteConfig>({
-    heroTitle: "MESIN KASIR MODERN TERLENGKAP",
-    heroSubtitle: "Tingkatkan efisiensi dan profit bisnis Anda dengan solusi POS digital dari PT Mesin Kasir Solo. Layanan purna jual terbaik di Jawa Tengah."
+    heroTitle: "MESIN KASIR SOLO & DIGITAL AGENCY",
+    heroSubtitle: "Pusat penjualan mesin kasir modern (POS) dan jasa pembuatan website profesional untuk digitalisasi bisnis UMKM hingga Korporasi di Solo Raya."
   });
 
   // Handle URL path for admin access
@@ -886,20 +893,6 @@ const App = () => {
           }));
           setArticles(mappedArticles);
         }
-
-        // NOTE: Sengaja menonaktifkan fetch Config otomatis di awal 
-        // agar tampilan tetap "Keren" (Default) dan tidak tertimpa data lama di DB 
-        // yang mungkin teksnya kurang pas (Solusi Kasir Masa Depan vs MESIN KASIR MODERN TERLENGKAP).
-        // Jika user ingin ubah, bisa lewat dashboard admin.
-        /* 
-        const { data: configData } = await supabase.from('site_config').select('*').single();
-        if (configData) {
-          setConfig({
-            heroTitle: configData.hero_title || config.heroTitle,
-            heroSubtitle: configData.hero_subtitle || config.heroSubtitle
-          });
-        }
-        */
 
       } catch (error) {
         console.error("Error fetching data:", error);
