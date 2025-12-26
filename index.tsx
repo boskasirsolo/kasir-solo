@@ -23,7 +23,10 @@ import {
   Sparkles,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Palette,
+  Code,
+  Globe
 } from 'lucide-react';
 
 // --- Environment & Client Setup ---
@@ -253,7 +256,7 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
           <div className="grid md:grid-cols-3 gap-10">
             <div>
               <h3 className="text-2xl font-display font-bold text-white mb-4">PT MESIN KASIR SOLO</h3>
-              <p className="text-gray-400 mb-6">Mitra terbaik digitalisasi usaha Anda. Menyediakan hardware dan software kasir terintegrasi.</p>
+              <p className="text-gray-400 mb-6">Mitra terbaik digitalisasi usaha Anda. Menyediakan hardware dan software kasir terintegrasi serta layanan pengembangan digital.</p>
               <div className="flex gap-4">
                 <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon">
                   <Instagram size={20} />
@@ -338,6 +341,10 @@ const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: S
     {/* Features */}
     <section className="py-20 bg-brand-card border-t border-white/5">
       <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">Fitur <span className="text-brand-orange">Unggulan</span></h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Keunggulan hardware dan sistem kasir kami untuk mendukung operasional bisnis Anda.</p>
+        </div>
         <div className="grid md:grid-cols-3 gap-8">
           {[
             { icon: Zap, title: "Proses Cepat", desc: "Sistem yang dioptimalkan untuk kecepatan transaksi kasir." },
@@ -348,6 +355,55 @@ const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: S
               <feature.icon className="w-14 h-14 text-brand-orange mb-6 group-hover:scale-110 transition-transform duration-300 drop-shadow-neon" />
               <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
               <p className="text-gray-400 leading-relaxed">{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* Digital Services Section (New) */}
+    <section className="py-20 bg-brand-dark border-t border-white/5 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-brand-orange/5 rounded-full blur-[100px] -translate-y-1/2"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center mb-16">
+          <span className="text-brand-orange text-xs font-bold tracking-widest uppercase mb-2 block">Software House & Digital Agency</span>
+          <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">Layanan <span className="text-brand-orange">Digital</span></h2>
+          <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+            Selain hardware kasir, kami melayani pembuatan sistem digital untuk mengakselerasi pertumbuhan bisnis Anda secara menyeluruh.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { 
+              icon: Palette, 
+              title: "Pembuatan Website", 
+              desc: "Pembuatan website company profile, toko online, dan landing page dengan desain modern, responsif, dan elegan." 
+            },
+            { 
+              icon: Code, 
+              title: "Web App Development", 
+              desc: "Pembuatan aplikasi berbasis web (Web App) custom untuk manajemen internal, SaaS, atau sistem informasi khusus." 
+            },
+            { 
+              icon: Search, 
+              title: "Optimasi SEO", 
+              desc: "Jasa optimasi mesin pencari agar website bisnis Anda tampil di halaman pertama Google dan mudah ditemukan pelanggan." 
+            },
+            { 
+              icon: Settings, 
+              title: "Perawatan Website", 
+              desc: "Layanan maintenance berkala, update konten, pengelolaan server, dan keamanan website agar performa tetap prima." 
+            }
+          ].map((service, idx) => (
+            <div key={idx} className="bg-brand-card border border-white/5 p-8 rounded-2xl hover:border-brand-orange/50 transition-all hover:-translate-y-2 hover:shadow-neon group flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-brand-orange mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all duration-300 shadow-neon">
+                <service.icon size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">{service.title}</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">{service.desc}</p>
             </div>
           ))}
         </div>
