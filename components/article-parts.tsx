@@ -10,6 +10,7 @@ import {
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
 import { formatRupiah } from '../utils';
+import { useCart } from '../context/cart-context';
 
 // ==========================================
 // 1. LOGIC & HOOKS (Controller Layer for UI)
@@ -376,6 +377,8 @@ const ArticleSidebarLeft = ({ article, scrollToId }: { article: Article, scrollT
 
 // --- SIDEBAR RIGHT: Product Recommendations ---
 const ArticleSidebarRight = ({ article, products }: { article: Article, products: Product[] }) => {
+  const { addToCart } = useCart();
+  
   // Logic: Product Recommendation
   let recommendedProducts = products.filter((p: Product) => 
     article.category && p.category.toLowerCase().includes(article.category.split(' ')[0].toLowerCase())
@@ -410,7 +413,12 @@ const ArticleSidebarRight = ({ article, products }: { article: Article, products
                       <div className="p-4 flex flex-col flex-grow">
                           <h6 className="font-bold text-white text-xs line-clamp-2 mb-2 min-h-[2.5rem]">{p.name}</h6>
                           <p className="text-brand-orange font-bold text-sm mb-4">{formatRupiah(p.price)}</p>
-                          <a href={`https://wa.me/6282325103336?text=Halo, saya tertarik dengan produk ${p.name}`} target="_blank" rel="noreferrer" className="mt-auto w-full py-2.5 rounded-lg bg-white/5 hover:bg-brand-orange text-gray-300 hover:text-white text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-2"><ShoppingCart size={14} /> Beli Sekarang</a>
+                          <button 
+                            onClick={() => addToCart(p)}
+                            className="mt-auto w-full py-2.5 rounded-lg bg-white/5 hover:bg-brand-orange text-gray-300 hover:text-white text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-2 group-btn"
+                          >
+                            <ShoppingCart size={14} /> Beli Sekarang
+                          </button>
                       </div>
                   </div>
               ))}
