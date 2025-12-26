@@ -40,15 +40,61 @@ const App = () => {
     qalamUrl: ""  // Default Empty
   });
 
-  // Admin Route Check
+  // --- 1. NAVIGATION LOGIC (History API) ---
+  const handlePageChange = (page: string) => {
+    // Push new state to browser history
+    window.history.pushState({ page }, '', `?page=${page}`);
+    setCurrentPage(page);
+    window.scrollTo(0, 0);
+  };
+
   useEffect(() => {
+    // Handle initial load from URL
     const params = new URLSearchParams(window.location.search);
-    if (window.location.pathname === '/master' || params.get('page') === 'master') {
+    const pageParam = params.get('page');
+    if (pageParam) {
+      setCurrentPage(pageParam);
+    } else if (window.location.pathname === '/master') {
+      // Legacy support
       setCurrentPage('admin');
     }
+
+    // Handle Browser Back Button (PopState)
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.page) {
+        setCurrentPage(event.state.page);
+      } else {
+        // Fallback for initial load state
+        const p = new URLSearchParams(window.location.search).get('page');
+        setCurrentPage(p || 'home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Fetch Data from Supabase & Auto-Seed if Empty
+  // --- 2. AUTH STATE LISTENER (Supabase) ---
+  useEffect(() => {
+    if (!supabase) return;
+
+    // Cek sesi aktif saat load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAdminLoggedIn(!!session);
+    });
+
+    // Dengarkan perubahan auth (login/logout)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdminLoggedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+
+  // --- 3. DATA FETCHING ---
   useEffect(() => {
     const fetchData = async () => {
       if (!supabase) return;
@@ -105,28 +151,29 @@ const App = () => {
     fetchData();
   }, []);
 
-  useEffect(() => { window.scrollTo(0, 0); }, [currentPage]);
-
   // --- LOGOUT LOGIC ---
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
   };
 
-  const performLogout = () => {
-    setIsAdminLoggedIn(false);
+  const performLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    // State setIsAdminLoggedIn akan update otomatis via listener
     setShowLogoutConfirm(false);
-    setCurrentPage('home'); // Redirect ke Home
+    handlePageChange('home');
   };
 
   const renderPage = () => {
     switch(currentPage) {
-      case 'home': return <HomePage setPage={setCurrentPage} config={config} />;
+      case 'home': return <HomePage setPage={handlePageChange} config={config} />;
       case 'shop': return <ShopPage products={products} />;
       case 'gallery': return <GalleryPage gallery={gallery} />;
       case 'articles': return <ArticlesPage articles={articles} />;
       case 'about': return <AboutPage />;
-      case 'innovation': return <InnovationPage config={config} />; // New Route
-      case 'checkout': return <CheckoutPage setPage={setCurrentPage} />;
+      case 'innovation': return <InnovationPage config={config} />; 
+      case 'checkout': return <CheckoutPage setPage={handlePageChange} />;
       case 'admin': 
         return isAdminLoggedIn 
           ? <AdminDashboard 
@@ -135,14 +182,14 @@ const App = () => {
               config={config} setConfig={setConfig}
               onLogout={handleLogoutClick}
             /> 
-          : <AdminLogin onLogin={() => setIsAdminLoggedIn(true)} />;
-      default: return <HomePage setPage={setCurrentPage} config={config} />;
+          : <AdminLogin />; // Login otomatis handle success via auth listener
+      default: return <HomePage setPage={handlePageChange} config={config} />;
     }
   };
 
   return (
     <CartProvider>
-      <Layout setPage={setCurrentPage} currentPage={currentPage}>
+      <Layout setPage={handlePageChange} currentPage={currentPage}>
         {renderPage()}
         
         {/* Custom Logout Alert */}

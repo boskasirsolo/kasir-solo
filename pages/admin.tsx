@@ -1,22 +1,46 @@
 
 import React, { useState } from 'react';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut } from 'lucide-react';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig } from '../types';
-import { Button, Input } from '../components/ui';
+import { Button, Input, LoadingSpinner } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
 import { AdminGallery } from '../components/admin-gallery';
 import { AdminSettings } from '../components/admin-settings';
 import { AdminOrders } from '../components/admin-orders';
+import { supabase } from '../utils';
 
-// --- Login Component ---
-export const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
-  const [pass, setPass] = useState('');
+// --- Login Component (SECURED) ---
+export const AdminLogin = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pass === 'admin123') onLogin();
-    else setErr('Password salah!');
+    if (!supabase) {
+      setErr("Koneksi Supabase belum dikonfigurasi.");
+      return;
+    }
+
+    setLoading(true);
+    setErr('');
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+      // Login sukses, state akan berubah di index.tsx via onAuthStateChange
+    } catch (error: any) {
+      setErr(error.message || "Gagal login. Periksa email dan password.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,10 +52,36 @@ export const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
         onSubmit={handleLogin}
         className="bg-brand-card p-10 rounded-2xl border border-white/10 w-full max-w-md shadow-neon z-10"
       >
-        <h2 className="text-3xl font-bold text-white mb-8 text-center font-display">Admin Login</h2>
-        <Input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Masukkan Password" className="mb-6" />
-        {err && <p className="text-red-500 text-sm mb-4 text-center">{err}</p>}
-        <Button type="submit" className="w-full py-4">MASUK DASHBOARD</Button>
+        <h2 className="text-3xl font-bold text-white mb-8 text-center font-display">Admin Portal</h2>
+        
+        <div className="space-y-4 mb-6">
+          <div className="relative">
+             <Mail className="absolute left-4 top-3.5 text-gray-500" size={18} />
+             <Input 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                placeholder="Email Administrator" 
+                className="pl-12"
+              />
+          </div>
+          <div className="relative">
+             <Lock className="absolute left-4 top-3.5 text-gray-500" size={18} />
+             <Input 
+                type="password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                placeholder="Password" 
+                className="pl-12"
+              />
+          </div>
+        </div>
+
+        {err && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded text-red-500 text-sm mb-6 text-center">{err}</div>}
+        
+        <Button type="submit" className="w-full py-4" disabled={loading}>
+          {loading ? <LoadingSpinner /> : "MASUK DASHBOARD"}
+        </Button>
       </form>
     </div>
   );

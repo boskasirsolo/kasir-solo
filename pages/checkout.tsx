@@ -16,11 +16,26 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<{ id: number, total: number } | null>(null);
 
+  // --- VALIDATION HELPERS ---
+  const validatePhone = (phone: string) => {
+    // Regex: 08xx atau 62xx, panjang 9-14 digit
+    const regex = /^(\+62|62|0)8[1-9][0-9]{6,11}$/;
+    return regex.test(phone);
+  };
+
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) return;
+    
+    // 1. Basic Empty Validation
     if (!formData.name || !formData.phone || !formData.address) {
       alert("Mohon lengkapi Nama, No. HP, dan Alamat.");
+      return;
+    }
+
+    // 2. Strict Phone Validation
+    if (!validatePhone(formData.phone)) {
+      alert("Format Nomor WhatsApp tidak valid. Gunakan format 08xx atau 628xx.");
       return;
     }
 
@@ -197,7 +212,8 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp (Wajib)</label>
-                  <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="08..." type="tel" />
+                  <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="Contoh: 081234567890" type="tel" />
+                  <p className="text-[10px] text-gray-500 mt-1">Gunakan format 08xx atau 62xx</p>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alamat Lengkap</label>
