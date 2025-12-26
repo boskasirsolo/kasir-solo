@@ -1,9 +1,10 @@
 
 import React, { useEffect } from 'react';
-import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus } from 'lucide-react';
 import { Product } from '../types';
-import { Badge, Card, Input } from './ui';
+import { Badge, Card, Input, Button } from './ui';
 import { formatRupiah } from '../utils';
+import { useCart } from '../context/cart-context';
 
 // --- ATOM: SEARCH HEADER ---
 export const ShopHeader = ({ 
@@ -61,29 +62,34 @@ export const ProductPrice = ({ price }: { price: number }) => (
 );
 
 export const ProductActions = ({ 
-  productName, 
+  product, 
   onDetail 
 }: { 
-  productName: string, 
+  product: Product, 
   onDetail: () => void 
-}) => (
-  <div className="grid grid-cols-2 gap-3">
-    <button 
-      onClick={onDetail}
-      className="px-4 py-2 rounded-lg border border-white/20 text-gray-300 hover:text-brand-orange hover:border-brand-orange font-bold text-sm transition-all hover:shadow-neon"
-    >
-      Detail
-    </button>
-    <a 
-      href={`https://wa.me/6282325103336?text=Halo PT Mesin Kasir Solo, saya mau tanya produk: ${productName}`}
-      target="_blank"
-      rel="noreferrer"
-      className="px-4 py-2 rounded-lg bg-brand-orange text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-brand-glow hover:shadow-neon transition-all"
-    >
-      <MessageCircle size={16} /> Tanya
-    </a>
-  </div>
-);
+}) => {
+  const { addToCart } = useCart();
+  
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <button 
+        onClick={onDetail}
+        className="px-4 py-2 rounded-lg border border-white/20 text-gray-300 hover:text-brand-orange hover:border-brand-orange font-bold text-sm transition-all hover:shadow-neon"
+      >
+        Detail
+      </button>
+      <button 
+        onClick={() => {
+          addToCart(product);
+          // Optional toast or feedback
+        }}
+        className="px-4 py-2 rounded-lg bg-brand-orange text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-brand-glow hover:shadow-neon transition-all group/btn"
+      >
+        <Plus size={16} className="group-hover/btn:scale-125 transition-transform"/> Beli
+      </button>
+    </div>
+  );
+}
 
 // --- MOLECULE: PRODUCT CARD ---
 export const ProductCard = ({ 
@@ -102,7 +108,7 @@ export const ProductCard = ({
       
       <div className="mt-auto pt-4 border-t border-white/5 space-y-4">
         <ProductPrice price={product.price} />
-        <ProductActions productName={product.name} onDetail={() => onDetail(product)} />
+        <ProductActions product={product} onDetail={() => onDetail(product)} />
       </div>
     </div>
   </Card>
@@ -153,7 +159,8 @@ export const ProductDetailModal = ({
   product: Product, 
   onClose: () => void 
 }) => {
-  // Lock body scroll inside the component (encapsulated logic)
+  const { addToCart } = useCart();
+  
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'auto'; };
@@ -161,13 +168,11 @@ export const ProductDetailModal = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/90 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 
-      {/* Modal Content */}
       <div className="relative w-full max-w-4xl bg-brand-dark rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
         <button 
           onClick={onClose}
@@ -176,7 +181,6 @@ export const ProductDetailModal = ({
           <X size={20} />
         </button>
 
-        {/* Left: Image */}
         <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-4 md:p-0">
             <img 
             src={product.image} 
@@ -185,7 +189,6 @@ export const ProductDetailModal = ({
             />
         </div>
 
-        {/* Right: Info */}
         <div className="w-full md:w-1/2 p-8 flex flex-col overflow-y-auto">
           <div className="mb-4">
               <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange border border-brand-orange/30 px-2 py-1 rounded bg-brand-orange/10 mb-3">
@@ -197,20 +200,26 @@ export const ProductDetailModal = ({
 
           <div className="prose prose-invert prose-sm text-gray-300 mb-8 leading-relaxed border-t border-white/10 pt-4 flex-grow">
             <p>{product.description}</p>
-            <p className="mt-4 text-gray-500 italic text-xs">
-              *Harga dapat berubah sewaktu-waktu. Hubungi admin untuk ketersediaan stok terbaru dan promo paket bundling.
-            </p>
           </div>
 
-          <div className="mt-auto">
+          <div className="mt-auto grid grid-cols-2 gap-4">
+            <button 
+              onClick={() => {
+                addToCart(product);
+                onClose();
+              }}
+              className="flex items-center justify-center w-full py-4 bg-brand-orange hover:bg-brand-glow text-white rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong gap-2"
+            >
+              <ShoppingCart size={20} /> Masuk Keranjang
+            </button>
             <a 
-                href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}. Apakah stok tersedia?`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-center w-full py-4 bg-brand-orange hover:bg-brand-glow text-white rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong transform hover:-translate-y-1 gap-2"
-              >
-                <MessageCircle size={20} /> Hubungi Admin via WhatsApp
-              </a>
+              href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center w-full py-4 border border-white/20 hover:border-brand-orange text-white rounded-xl font-bold transition-all gap-2"
+            >
+              <MessageCircle size={20} /> Chat Admin
+            </a>
           </div>
         </div>
       </div>

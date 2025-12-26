@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock } from 'lucide-react';
+import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart } from 'lucide-react';
+import { useCart } from '../context/cart-context';
 
 export const Layout = ({ 
   children, 
@@ -12,6 +13,7 @@ export const Layout = ({
   currentPage: string 
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { totalItems } = useCart();
 
   const navItems = [
     { id: 'home', label: 'Beranda' },
@@ -55,15 +57,41 @@ export const Layout = ({
                 {item.label.toUpperCase()}
               </button>
             ))}
+            
+            {/* Cart Button */}
+            <button 
+              onClick={() => setPage('checkout')}
+              className="relative p-2 text-gray-400 hover:text-brand-orange transition-colors group"
+            >
+              <ShoppingCart size={24} className="group-hover:drop-shadow-neon" />
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 bg-brand-orange text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border border-black shadow-neon">
+                  {totalItems}
+                </span>
+              )}
+            </button>
           </div>
 
-          {/* Mobile Toggle */}
-          <button 
-            className="md:hidden text-brand-orange drop-shadow-neon"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
+          {/* Mobile Toggle & Cart */}
+          <div className="flex items-center gap-4 md:hidden">
+            <button 
+              onClick={() => setPage('checkout')}
+              className="relative p-2 text-brand-orange"
+            >
+              <ShoppingCart size={24} />
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 bg-white text-brand-orange text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-brand-orange">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+            <button 
+              className="text-brand-orange drop-shadow-neon"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}

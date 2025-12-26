@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { Layout } from './components/layout';
 import { supabase, INITIAL_PRODUCTS, INITIAL_ARTICLES, INITIAL_GALLERY } from './utils';
 import { Product, Article, GalleryItem, SiteConfig } from './types';
+import { CartProvider } from './context/cart-context';
 
 // Pages
 import { HomePage } from './pages/home';
@@ -14,6 +15,7 @@ import { GalleryPage } from './pages/gallery';
 import { ArticlesPage } from './pages/articles';
 import { AboutPage } from './pages/about';
 import { AdminLogin, AdminDashboard } from './pages/admin';
+import { CheckoutPage } from './pages/checkout'; // New Page
 
 // --- Main App Controller ---
 
@@ -67,6 +69,7 @@ const App = () => {
       case 'gallery': return <GalleryPage gallery={gallery} />;
       case 'articles': return <ArticlesPage articles={articles} />;
       case 'about': return <AboutPage />;
+      case 'checkout': return <CheckoutPage setPage={setCurrentPage} />;
       case 'admin': 
         return isAdminLoggedIn 
           ? <AdminDashboard 
@@ -80,9 +83,11 @@ const App = () => {
   };
 
   return (
-    <Layout setPage={setCurrentPage} currentPage={currentPage}>
-      {renderPage()}
-    </Layout>
+    <CartProvider>
+      <Layout setPage={setCurrentPage} currentPage={currentPage}>
+        {renderPage()}
+      </Layout>
+    </CartProvider>
   );
 };
 

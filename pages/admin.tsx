@@ -5,6 +5,7 @@ import { Button, Input } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
 import { AdminGallery } from '../components/admin-gallery';
 import { AdminSettings } from '../components/admin-settings';
+import { AdminOrders } from '../components/admin-orders';
 
 // --- Login Component ---
 export const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
@@ -42,29 +43,33 @@ export const AdminDashboard = ({
   gallery: GalleryItem[], setGallery: any,
   config: SiteConfig, setConfig: any
 }) => {
-  const [activeTab, setActiveTab] = useState<'products' | 'gallery' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'gallery' | 'settings'>('orders');
 
   return (
     <div className="container mx-auto px-4 py-10">
       <h2 className="text-3xl font-bold text-white mb-8 border-b border-white/10 pb-4">Dashboard Admin</h2>
       
       <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
-        {['products', 'gallery', 'settings'].map(tab => (
+        {['orders', 'products', 'gallery', 'settings'].map(tab => (
            <button 
              key={tab} 
              onClick={() => setActiveTab(tab as any)} 
-             className={`px-6 py-2 rounded-full font-medium capitalize transition-all ${
+             className={`px-6 py-2 rounded-full font-medium capitalize transition-all whitespace-nowrap ${
                activeTab === tab 
                  ? 'bg-brand-orange text-white shadow-neon-text' 
                  : 'bg-brand-card text-gray-400 hover:text-white hover:bg-white/5'
              }`}
            >
-             {tab}
+             {tab === 'orders' ? 'Pesanan Masuk' : tab}
            </button>
         ))}
       </div>
 
-      <div className="bg-brand-card border border-white/10 rounded-2xl p-8 min-h-[600px]">
+      <div className="bg-brand-card border border-white/10 rounded-2xl p-4 md:p-8 min-h-[600px]">
+        {activeTab === 'orders' && (
+          <AdminOrders />
+        )}
+
         {activeTab === 'products' && (
           <AdminProducts products={products} setProducts={setProducts} />
         )}
