@@ -19,19 +19,23 @@ export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('mks_cart');
-    if (savedCart) {
-      try {
+    try {
+      const savedCart = localStorage.getItem('mks_cart');
+      if (savedCart) {
         setCart(JSON.parse(savedCart));
-      } catch (e) {
-        console.error("Failed to parse cart", e);
       }
+    } catch (e) {
+      console.warn("Failed to access localStorage (Cart load):", e);
     }
   }, []);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('mks_cart', JSON.stringify(cart));
+    try {
+      localStorage.setItem('mks_cart', JSON.stringify(cart));
+    } catch (e) {
+      console.warn("Failed to access localStorage (Cart save):", e);
+    }
   }, [cart]);
 
   const addToCart = (product: Product) => {

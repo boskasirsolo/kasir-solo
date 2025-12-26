@@ -43,9 +43,19 @@ const App = () => {
   // --- 1. NAVIGATION LOGIC (History API) ---
   const handlePageChange = (page: string) => {
     // Push new state to browser history
-    window.history.pushState({ page }, '', `?page=${page}`);
+    try {
+      window.history.pushState({ page }, '', `?page=${page}`);
+    } catch (e) {
+      console.warn("History pushState failed (likely due to environment restrictions):", e);
+    }
+    
     setCurrentPage(page);
-    window.scrollTo(0, 0);
+    
+    try {
+      window.scrollTo(0, 0);
+    } catch (e) {
+      // Ignore scroll errors
+    }
   };
 
   useEffect(() => {
