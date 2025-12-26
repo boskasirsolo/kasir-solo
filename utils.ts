@@ -82,6 +82,38 @@ export const INITIAL_PRODUCTS: Product[] = [
     category: "Retail POS",
     description: "Paket komputer kasir spek tinggi, Scanner Barcode Omnidirectional, Printer Struk. Mampu menangani 10.000+ SKU barang.",
     image: "https://images.unsplash.com/photo-1580569766020-21a48c66060c?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    id: 5,
+    name: "Printer Thermal Bluetooth Portable",
+    price: 350000,
+    category: "Hardware",
+    description: "Printer struk mini ukuran 58mm. Koneksi bluetooth ke HP Android/iOS. Cocok untuk kasir keliling atau food truck.",
+    image: "https://images.unsplash.com/photo-1622675235450-482a59a72175?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    id: 6,
+    name: "Scanner Barcode Wireless 2D",
+    price: 850000,
+    category: "Hardware",
+    description: "Scanner barcode tanpa kabel, jangkauan hingga 50 meter. Bisa scan QR Code (e-wallet) dan Barcode batang biasa.",
+    image: "https://images.unsplash.com/photo-1579707248386-7a85df71665a?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    id: 7,
+    name: "Cash Drawer Besi RJ11",
+    price: 450000,
+    category: "Hardware",
+    description: "Laci uang bahan metal kokoh. Terbuka otomatis saat struk keluar. Kompatibel dengan semua jenis printer kasir.",
+    image: "https://images.unsplash.com/photo-1556742031-c6961e8560b0?auto=format&fit=crop&q=80&w=800"
+  },
+  {
+    id: 8,
+    name: "Paket Tablet Kasir Ekonomis",
+    price: 1800000,
+    category: "Android POS",
+    description: "Paket starter kit untuk usaha kecil. Tablet 7 inch + Aplikasi Kasir Gratis + Printer Bluetooth. Mudah digunakan.",
+    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca4?auto=format&fit=crop&q=80&w=800"
   }
 ];
 
@@ -122,9 +154,9 @@ export const INITIAL_GALLERY: GalleryItem[] = [
   { 
     id: 3, 
     title: "Demo Mesin Kiosk Mandiri", 
-    type: 'video', // Tipe Video
-    image_url: "https://images.unsplash.com/photo-1594911772125-07fc7a2d8d1f?auto=format&fit=crop&q=80&w=800", // Thumbnail Video
-    video_url: "https://www.youtube.com/embed/lxT1B-XhF7k?si=123", // Contoh Link Youtube Embed
+    type: 'video', 
+    image_url: "https://images.unsplash.com/photo-1594911772125-07fc7a2d8d1f?auto=format&fit=crop&q=80&w=800", 
+    video_url: "https://www.youtube.com/embed/lxT1B-XhF7k?si=123", 
     description: "Video demonstrasi penggunaan Mesin Kiosk Self-Service terbaru kami. Fitur ini memungkinkan pelanggan untuk memilih menu, melakukan kustomisasi pesanan (misal: less sugar, extra shot), dan melakukan pembayaran non-tunai secara mandiri tanpa perlu antri di kasir. Cocok untuk restoran cepat saji yang mengutamakan kecepatan pelayanan."
   },
   { 
@@ -134,4 +166,32 @@ export const INITIAL_GALLERY: GalleryItem[] = [
     image_url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800",
     description: "Partisipasi PT Mesin Kasir Solo dalam ajang Solo Great Sale & Expo UMKM. Booth kami dikunjungi oleh lebih dari 500 pelaku usaha yang berkonsultasi mengenai digitalisasi bisnis. Kami mendemokan bagaimana sebuah warung kelontong kecil bisa memiliki manajemen stok setara minimarket modern hanya dengan menggunakan aplikasi kasir Android kami."
   },
+  {
+    id: 5,
+    title: "Setup Toko Baju Distro",
+    type: 'image',
+    image_url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800",
+    description: "Implementasi sistem kasir barcode untuk distro clothing di area Manahan. Sistem ini membantu owner memantau stok size dan warna baju secara real-time. Dilengkapi dengan scanner barcode 2D untuk mempercepat proses checkout saat event diskon besar-besaran."
+  },
+  {
+    id: 6,
+    title: "Pemasangan Resto Seafood",
+    type: 'image',
+    image_url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800",
+    description: "Instalasi 3 titik kasir dan 2 printer dapur untuk restoran seafood keluarga yang luas. Sistem mendukung split bill, open bill, dan manajemen reservasi meja. Hardware menggunakan PC All-in-One yang tahan cipratan air dan minyak."
+  },
+  {
+    id: 7,
+    title: "Training Staff Apotek",
+    type: 'image',
+    image_url: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&q=80&w=800",
+    description: "Pelatihan khusus untuk staff apotek dalam mengelola masa kadaluarsa (expired date) obat dan stok opname obat-obatan keras. Sistem kami memiliki fitur notifikasi otomatis jika ada obat yang hampir kadaluarsa, sangat membantu manajemen inventory apotek."
+  },
+  {
+    id: 8,
+    title: "Maintenance Rutin Klien",
+    type: 'image',
+    image_url: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=800",
+    description: "Tim teknis kami melakukan kunjungan rutin untuk pengecekan hardware dan update software di salah satu klien korporat. Layanan after-sales adalah prioritas utama kami untuk memastikan bisnis klien berjalan tanpa hambatan teknis."
+  }
 ];

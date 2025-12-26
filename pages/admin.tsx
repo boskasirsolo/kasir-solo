@@ -68,7 +68,7 @@ export const AdminDashboard = ({
   const [isGeneratingGalleryAI, setIsGeneratingGalleryAI] = useState(false);
   const [galleryPage, setGalleryPage] = useState(1);
   
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 6;
 
   // ==========================
   // LOGIC: PRODUCT
