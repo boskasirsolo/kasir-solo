@@ -173,12 +173,12 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
   return (
     <div className="min-h-screen flex flex-col font-sans bg-brand-black text-gray-200">
       {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 bg-brand-black/90 backdrop-blur-md border-b border-white/10">
+      <nav className="fixed top-0 w-full z-50 bg-brand-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           {/* Logo */}
           <div 
             onClick={() => setPage('home')} 
-            className="cursor-pointer flex items-center gap-2 group"
+            className="cursor-pointer flex items-center gap-3 group"
           >
             <div className="w-10 h-10 border-2 border-brand-orange rounded bg-brand-dark flex items-center justify-center shadow-neon group-hover:shadow-neon-strong transition-all duration-300">
               <Monitor className="text-brand-orange w-6 h-6" />
@@ -195,10 +195,10 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
               <button
                 key={item.id}
                 onClick={() => setPage(item.id)}
-                className={`text-sm font-medium tracking-wide transition-colors duration-300 ${
+                className={`text-sm font-bold tracking-wide transition-all duration-300 ${
                   currentPage === item.id 
-                    ? 'text-brand-orange drop-shadow-[0_0_5px_rgba(255,95,31,0.8)]' 
-                    : 'text-gray-400 hover:text-white'
+                    ? 'text-brand-orange drop-shadow-[0_0_8px_rgba(255,95,31,0.8)] scale-105' 
+                    : 'text-gray-400 hover:text-white hover:drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]'
                 }`}
               >
                 {item.label.toUpperCase()}
@@ -209,16 +209,16 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
 
           {/* Mobile Toggle */}
           <button 
-            className="md:hidden text-brand-orange"
+            className="md:hidden text-brand-orange drop-shadow-neon"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X /> : <Menu />}
+            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden bg-brand-dark border-b border-brand-orange/20 p-4 absolute w-full">
+          <div className="md:hidden bg-brand-dark border-b border-brand-orange/20 p-4 absolute w-full shadow-2xl animate-fade-in">
             <div className="flex flex-col gap-4">
               {navItems.map((item) => (
                 <button
@@ -227,8 +227,8 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
                     setPage(item.id);
                     setIsMenuOpen(false);
                   }}
-                  className={`text-left text-lg font-medium ${
-                    currentPage === item.id ? 'text-brand-orange' : 'text-gray-400'
+                  className={`text-left text-lg font-bold p-2 rounded hover:bg-white/5 transition-all ${
+                    currentPage === item.id ? 'text-brand-orange pl-4 border-l-2 border-brand-orange' : 'text-gray-400'
                   }`}
                 >
                   {item.label}
@@ -255,10 +255,10 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
               <h3 className="text-2xl font-display font-bold text-white mb-4">PT MESIN KASIR SOLO</h3>
               <p className="text-gray-400 mb-6">Mitra terbaik digitalisasi usaha Anda. Menyediakan hardware dan software kasir terintegrasi.</p>
               <div className="flex gap-4">
-                <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors">
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon">
                   <Instagram size={20} />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors">
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon">
                   <Facebook size={20} />
                 </a>
               </div>
@@ -268,11 +268,11 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
               <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Kontak Kami</h4>
               <ul className="space-y-4 text-gray-400 text-sm">
                 <li className="flex items-start gap-3">
-                  <MapPin className="text-brand-orange shrink-0 mt-1" size={18} />
+                  <MapPin className="text-brand-orange shrink-0 mt-1 drop-shadow-neon" size={18} />
                   <span>Perum Graha Tiara 2 No. B1. Gumpang 07/01, Kartasura Sukoharjo, Jawa Tengah</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Phone className="text-brand-orange shrink-0" size={18} />
+                  <Phone className="text-brand-orange shrink-0 drop-shadow-neon" size={18} />
                   <span>0823 2510 3336</span>
                 </li>
               </ul>
@@ -301,33 +301,33 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
 const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: SiteConfig }) => (
   <div className="animate-fade-in">
     {/* Hero Section */}
-    <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
-      {/* Background Effect */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-orange/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-orange/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+    <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+      {/* Background Effect - INTENSIFIED */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-orange/20 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2 animate-pulse-slow"></div>
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-orange/15 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2"></div>
       </div>
 
       <div className="container mx-auto px-4 z-10 text-center relative">
-        <div className="inline-block px-4 py-1 border border-brand-orange/50 rounded-full bg-brand-orange/10 mb-6 backdrop-blur-sm">
-          <span className="text-brand-orange text-xs font-bold tracking-widest uppercase">Solusi Digital #1 Solo Raya</span>
+        <div className="inline-block px-6 py-2 border border-brand-orange rounded-full bg-brand-orange/10 mb-8 backdrop-blur-md shadow-neon">
+          <span className="text-brand-orange text-xs md:text-sm font-bold tracking-[0.2em] uppercase">Solusi Digital #1 Solo Raya</span>
         </div>
-        <h1 className="text-5xl md:text-7xl font-display font-bold text-white mb-6 leading-tight">
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-8 leading-tight drop-shadow-lg">
           {config.heroTitle}
         </h1>
-        <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
+        <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
           {config.heroSubtitle}
         </p>
-        <div className="flex flex-col md:flex-row gap-4 justify-center">
+        <div className="flex flex-col md:flex-row gap-6 justify-center">
           <button 
             onClick={() => setPage('shop')}
-            className="px-8 py-4 bg-brand-orange text-white font-bold rounded hover:bg-brand-glow transition-all shadow-neon hover:shadow-neon-strong flex items-center justify-center gap-2"
+            className="px-10 py-4 bg-brand-orange text-white font-bold rounded-lg hover:bg-brand-glow transition-all shadow-neon hover:shadow-neon-strong flex items-center justify-center gap-3 transform hover:-translate-y-1"
           >
-            LIHAT PRODUK <ArrowRight size={20} />
+            LIHAT PRODUK <ArrowRight size={22} />
           </button>
           <button 
             onClick={() => setPage('about')}
-            className="px-8 py-4 border border-white/20 text-white font-bold rounded hover:bg-white/5 transition-all flex items-center justify-center"
+            className="px-10 py-4 border-2 border-white/10 text-white font-bold rounded-lg hover:bg-white/5 hover:border-brand-orange/50 transition-all flex items-center justify-center hover:shadow-neon"
           >
             HUBUNGI KAMI
           </button>
@@ -336,7 +336,7 @@ const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: S
     </section>
 
     {/* Features */}
-    <section className="py-20 bg-brand-card">
+    <section className="py-20 bg-brand-card border-t border-white/5">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-3 gap-8">
           {[
@@ -344,10 +344,10 @@ const HomePage = ({ setPage, config }: { setPage: (p: string) => void, config: S
             { icon: Monitor, title: "Offline & Online", desc: "Tetap jualan meski internet mati. Sinkronisasi otomatis." },
             { icon: BarChart3, title: "Analisa Bisnis", desc: "Pantau omzet dan stok dari mana saja lewat HP." }
           ].map((feature, idx) => (
-            <div key={idx} className="p-8 border border-white/5 rounded-2xl bg-brand-dark/50 hover:border-brand-orange/50 transition-colors group">
-              <feature.icon className="w-12 h-12 text-brand-orange mb-6 group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_8px_rgba(255,95,31,0.5)]" />
-              <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-              <p className="text-gray-400">{feature.desc}</p>
+            <div key={idx} className="p-8 border border-white/5 rounded-2xl bg-brand-dark/80 hover:border-brand-orange transition-all duration-300 group hover:shadow-neon hover:-translate-y-2">
+              <feature.icon className="w-14 h-14 text-brand-orange mb-6 group-hover:scale-110 transition-transform duration-300 drop-shadow-neon" />
+              <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
+              <p className="text-gray-400 leading-relaxed">{feature.desc}</p>
             </div>
           ))}
         </div>
@@ -360,36 +360,37 @@ const ShopPage = ({ products }: { products: Product[] }) => (
   <div className="container mx-auto px-4 py-10 animate-fade-in">
     <div className="flex justify-between items-end mb-12">
       <div>
-        <h2 className="text-4xl font-display font-bold text-white mb-2">Katalog <span className="text-brand-orange">Produk</span></h2>
-        <p className="text-gray-400">Pilih paket yang sesuai dengan usaha Anda</p>
+        <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">Katalog <span className="text-brand-orange">Produk</span></h2>
+        <p className="text-gray-400 text-lg">Pilih paket yang sesuai dengan usaha Anda</p>
       </div>
       <div className="hidden md:block">
-        <div className="relative">
-          <input type="text" placeholder="Cari produk..." className="bg-brand-card border border-white/10 rounded-full py-2 px-5 pl-10 text-white focus:outline-none focus:border-brand-orange w-64" />
-          <Search className="absolute left-3 top-2.5 text-gray-500 w-4 h-4" />
+        <div className="relative group">
+          <input type="text" placeholder="Cari produk..." className="bg-brand-card border border-white/10 rounded-full py-3 px-6 pl-12 text-white focus:outline-none focus:border-brand-orange focus:shadow-neon w-80 transition-all" />
+          <Search className="absolute left-4 top-3.5 text-gray-500 w-5 h-5 group-hover:text-brand-orange transition-colors" />
         </div>
       </div>
     </div>
 
     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
       {products.map((product) => (
-        <div key={product.id} className="group bg-brand-card rounded-xl overflow-hidden border border-white/5 hover:border-brand-orange transition-all duration-300 hover:shadow-neon flex flex-col">
-          <div className="relative h-48 overflow-hidden">
-            <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-            <div className="absolute top-2 right-2 bg-brand-black/80 px-2 py-1 rounded text-xs font-bold text-brand-orange border border-brand-orange/20">
+        <div key={product.id} className="group bg-brand-card rounded-2xl overflow-hidden border border-white/5 hover:border-brand-orange transition-all duration-300 hover:shadow-neon flex flex-col hover:-translate-y-2">
+          <div className="relative h-56 overflow-hidden">
+            <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-60"></div>
+            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-brand-orange border border-brand-orange/30">
               {product.category}
             </div>
           </div>
-          <div className="p-6 flex flex-col flex-grow">
-            <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{product.name}</h3>
-            <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">{product.description}</p>
-            <div className="mt-auto">
+          <div className="p-6 flex flex-col flex-grow relative">
+            <h3 className="text-xl font-bold text-white mb-2 line-clamp-2">{product.name}</h3>
+            <p className="text-gray-400 text-sm mb-6 line-clamp-2 flex-grow">{product.description}</p>
+            <div className="mt-auto pt-4 border-t border-white/5">
               <div className="text-2xl font-display font-bold text-brand-orange mb-4">{formatRupiah(product.price)}</div>
               <a 
                 href={`https://wa.me/6282325103336?text=Halo, saya tertarik dengan produk ${product.name}`}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full block text-center py-3 bg-white/10 hover:bg-brand-orange text-white rounded font-semibold transition-colors"
+                className="w-full block text-center py-3 bg-white/5 border border-white/10 hover:bg-brand-orange hover:border-brand-orange text-white rounded-lg font-bold transition-all hover:shadow-neon"
               >
                 Pesan Sekarang
               </a>
@@ -404,21 +405,24 @@ const ShopPage = ({ products }: { products: Product[] }) => (
 const ArticlesPage = ({ articles }: { articles: Article[] }) => (
   <div className="container mx-auto px-4 py-10 animate-fade-in">
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-4xl font-display font-bold text-white mb-2 text-center">Artikel & <span className="text-brand-orange">Edukasi</span></h2>
-      <p className="text-gray-400 text-center mb-12">Wawasan bisnis untuk pertumbuhan usaha Anda</p>
+      <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3 text-center">Artikel & <span className="text-brand-orange">Edukasi</span></h2>
+      <p className="text-gray-400 text-center mb-16 text-lg">Wawasan bisnis untuk pertumbuhan usaha Anda</p>
 
-      <div className="space-y-8">
+      <div className="space-y-10">
         {articles.map((article) => (
-          <div key={article.id} className="bg-brand-card rounded-2xl overflow-hidden border border-white/5 flex flex-col md:flex-row hover:border-brand-orange/30 transition-colors">
-            <div className="md:w-1/3 h-48 md:h-auto">
-              <img src={article.image} alt={article.title} className="w-full h-full object-cover" />
+          <div key={article.id} className="bg-brand-card rounded-3xl overflow-hidden border border-white/5 flex flex-col md:flex-row hover:border-brand-orange/50 transition-all hover:shadow-neon group">
+            <div className="md:w-2/5 h-64 md:h-auto overflow-hidden relative">
+              <img src={article.image} alt={article.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-brand-orange/10 mix-blend-overlay group-hover:bg-transparent transition-colors"></div>
             </div>
-            <div className="p-8 md:w-2/3 flex flex-col justify-center">
-              <div className="text-brand-orange text-xs font-bold tracking-wider mb-2 uppercase">{article.date}</div>
-              <h3 className="text-2xl font-bold text-white mb-3 hover:text-brand-orange transition-colors cursor-pointer">{article.title}</h3>
-              <p className="text-gray-400 mb-6">{article.excerpt}</p>
-              <button className="text-white text-sm font-semibold flex items-center gap-2 hover:gap-3 transition-all">
-                BACA SELENGKAPNYA <ArrowRight size={16} className="text-brand-orange" />
+            <div className="p-10 md:w-3/5 flex flex-col justify-center">
+              <div className="text-brand-orange text-xs font-bold tracking-widest mb-3 uppercase flex items-center gap-2">
+                 <div className="w-8 h-[2px] bg-brand-orange"></div> {article.date}
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-4 hover:text-brand-orange transition-colors cursor-pointer leading-tight">{article.title}</h3>
+              <p className="text-gray-400 mb-8 leading-relaxed">{article.excerpt}</p>
+              <button className="text-white text-sm font-bold flex items-center gap-2 hover:gap-4 transition-all uppercase tracking-wider group/btn">
+                BACA SELENGKAPNYA <ArrowRight size={18} className="text-brand-orange group-hover/btn:drop-shadow-neon" />
               </button>
             </div>
           </div>
@@ -431,10 +435,11 @@ const ArticlesPage = ({ articles }: { articles: Article[] }) => (
 const AboutPage = () => (
   <div className="animate-fade-in">
     {/* Header */}
-    <div className="bg-brand-card py-20 border-b border-white/5">
-      <div className="container mx-auto px-4 text-center">
-        <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">Tentang <span className="text-brand-orange">Kami</span></h2>
-        <div className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed">
+    <div className="bg-brand-card py-24 border-b border-white/5 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/5 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="container mx-auto px-4 text-center relative z-10">
+        <h2 className="text-5xl md:text-6xl font-display font-bold text-white mb-8">Tentang <span className="text-brand-orange">Kami</span></h2>
+        <div className="max-w-3xl mx-auto text-xl text-gray-400 leading-relaxed">
           <p>
             PT MESIN KASIR SOLO berdedikasi untuk membantu UMKM dan perusahaan besar di Solo Raya dan sekitarnya 
             dalam mendigitalisasi sistem transaksi mereka. Kami percaya teknologi kasir yang tepat dapat 
@@ -444,32 +449,38 @@ const AboutPage = () => (
       </div>
     </div>
 
-    <div className="container mx-auto px-4 py-16">
-      <div className="grid md:grid-cols-2 gap-12 items-center">
+    <div className="container mx-auto px-4 py-20">
+      <div className="grid md:grid-cols-2 gap-16 items-center">
         {/* Contact Info */}
-        <div className="space-y-8">
-          <div className="bg-brand-dark p-8 rounded-2xl border border-white/10">
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <MapPin className="text-brand-orange" /> Lokasi Kantor
+        <div className="space-y-10">
+          <div className="bg-brand-dark p-10 rounded-3xl border border-white/10 hover:border-brand-orange/30 transition-all hover:shadow-neon group">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-4">
+              <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-brand-orange group-hover:scale-110 transition-transform">
+                <MapPin />
+              </div> 
+              Lokasi Kantor
             </h3>
-            <p className="text-gray-300 mb-4">
+            <p className="text-gray-300 mb-6 text-lg leading-relaxed">
               Perum Graha Tiara 2 No. B1.<br/>
               Gumpang 07/01, Kartasura<br/>
               Sukoharjo, Jawa Tengah, Indonesia
             </p>
-            <div className="h-2 w-20 bg-brand-orange/50 rounded-full"></div>
+            <div className="h-1 w-20 bg-brand-orange rounded-full shadow-neon"></div>
           </div>
 
-          <div className="bg-brand-dark p-8 rounded-2xl border border-white/10">
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <Phone className="text-brand-orange" /> Hubungi Kami
+          <div className="bg-brand-dark p-10 rounded-3xl border border-white/10 hover:border-brand-orange/30 transition-all hover:shadow-neon group">
+            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-4">
+               <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-brand-orange group-hover:scale-110 transition-transform">
+                <Phone />
+              </div> 
+              Hubungi Kami
             </h3>
-            <p className="text-gray-300 mb-6">
+            <p className="text-gray-300 mb-8 text-lg">
               Siap melayani konsultasi kebutuhan kasir Anda 24/7.
             </p>
             <a 
               href="https://wa.me/6282325103336" 
-              className="inline-flex items-center gap-3 text-2xl font-bold text-brand-orange hover:text-white transition-colors"
+              className="inline-flex items-center gap-4 text-3xl font-bold text-brand-orange hover:text-white transition-colors drop-shadow-neon"
             >
               0823 2510 3336
             </a>
@@ -477,18 +488,18 @@ const AboutPage = () => (
         </div>
 
         {/* Map Placeholder */}
-        <div className="h-[400px] bg-gray-800 rounded-2xl overflow-hidden relative border border-brand-orange/30 shadow-neon">
+        <div className="h-[500px] bg-gray-800 rounded-3xl overflow-hidden relative border border-brand-orange/30 shadow-neon-strong group">
           {/* Using an image as a placeholder for the map */}
           <img 
             src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000" 
             alt="Map Location" 
-            className="w-full h-full object-cover opacity-50"
+            className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500 group-hover:scale-105"
           />
           <div className="absolute inset-0 flex items-center justify-center">
-             <div className="bg-brand-black/80 p-6 rounded-xl border border-brand-orange text-center backdrop-blur-md">
-               <MapPin className="text-brand-orange w-10 h-10 mx-auto mb-2 animate-bounce" />
-               <p className="font-bold text-white">Peta Lokasi</p>
-               <p className="text-xs text-gray-400">Kartasura, Sukoharjo</p>
+             <div className="bg-brand-black/90 p-8 rounded-2xl border border-brand-orange text-center backdrop-blur-md shadow-neon transform group-hover:-translate-y-2 transition-transform">
+               <MapPin className="text-brand-orange w-12 h-12 mx-auto mb-4 animate-bounce drop-shadow-neon" />
+               <p className="font-bold text-white text-xl">Peta Lokasi</p>
+               <p className="text-sm text-gray-400 mt-2 uppercase tracking-widest">Kartasura, Sukoharjo</p>
              </div>
           </div>
         </div>
@@ -513,21 +524,21 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="bg-brand-card p-8 rounded-xl border border-white/10 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">Admin Login</h2>
+      <div className="bg-brand-card p-10 rounded-2xl border border-white/10 w-full max-w-md shadow-neon">
+        <h2 className="text-3xl font-bold text-white mb-8 text-center font-display">Admin Login</h2>
         <input 
           type="password" 
           value={pass}
           onChange={(e) => setPass(e.target.value)}
           placeholder="Masukkan Password"
-          className="w-full bg-brand-dark border border-white/20 rounded p-3 text-white focus:border-brand-orange outline-none mb-4"
+          className="w-full bg-brand-dark border border-white/20 rounded-lg p-4 text-white focus:border-brand-orange outline-none mb-6 transition-colors"
         />
-        {err && <p className="text-red-500 text-sm mb-4">{err}</p>}
+        {err && <p className="text-red-500 text-sm mb-4 bg-red-500/10 p-2 rounded border border-red-500/20 text-center">{err}</p>}
         <button 
           onClick={handleLogin}
-          className="w-full bg-brand-orange text-white font-bold py-3 rounded hover:bg-brand-glow transition-all"
+          className="w-full bg-brand-orange text-white font-bold py-4 rounded-lg hover:bg-brand-glow transition-all shadow-neon hover:shadow-neon-strong"
         >
-          MASUK
+          MASUK DASHBOARD
         </button>
       </div>
     </div>
@@ -616,26 +627,26 @@ const AdminDashboard = ({
       <div className="flex gap-4 mb-8 overflow-x-auto">
         <button 
           onClick={() => setActiveTab('products')}
-          className={`px-6 py-2 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === 'products' ? 'bg-brand-orange text-white' : 'bg-brand-card text-gray-400'}`}
+          className={`px-6 py-2 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === 'products' ? 'bg-brand-orange text-white shadow-neon' : 'bg-brand-card text-gray-400 hover:text-white'}`}
         >
           Kelola Produk
         </button>
         <button 
           onClick={() => setActiveTab('articles')}
-          className={`px-6 py-2 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === 'articles' ? 'bg-brand-orange text-white' : 'bg-brand-card text-gray-400'}`}
+          className={`px-6 py-2 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === 'articles' ? 'bg-brand-orange text-white shadow-neon' : 'bg-brand-card text-gray-400 hover:text-white'}`}
         >
           Kelola Artikel
         </button>
         <button 
           onClick={() => setActiveTab('settings')}
-          className={`px-6 py-2 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === 'settings' ? 'bg-brand-orange text-white' : 'bg-brand-card text-gray-400'}`}
+          className={`px-6 py-2 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === 'settings' ? 'bg-brand-orange text-white shadow-neon' : 'bg-brand-card text-gray-400 hover:text-white'}`}
         >
           Pengaturan Situs
         </button>
       </div>
 
       {/* Content */}
-      <div className="bg-brand-card border border-white/10 rounded-2xl p-6 min-h-[400px]">
+      <div className="bg-brand-card border border-white/10 rounded-2xl p-8 min-h-[400px]">
         {activeTab === 'products' && (
           <div>
             <div className="flex justify-between items-center mb-6">
@@ -643,20 +654,20 @@ const AdminDashboard = ({
             </div>
             
             {/* Add Form */}
-            <div className="mb-8 bg-brand-dark p-6 rounded border border-white/5 space-y-4">
+            <div className="mb-8 bg-brand-dark p-6 rounded-xl border border-white/5 space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <input 
                   value={newProdName}
                   onChange={e => setNewProdName(e.target.value)}
                   placeholder="Nama Produk" 
-                  className="bg-brand-card border border-white/10 rounded px-3 py-2 text-white w-full" 
+                  className="bg-brand-card border border-white/10 rounded px-4 py-3 text-white w-full focus:border-brand-orange outline-none" 
                 />
                 <input 
                   value={newProdPrice}
                   onChange={e => setNewProdPrice(e.target.value)}
                   placeholder="Harga" 
                   type="number"
-                  className="bg-brand-card border border-white/10 rounded px-3 py-2 text-white w-full" 
+                  className="bg-brand-card border border-white/10 rounded px-4 py-3 text-white w-full focus:border-brand-orange outline-none" 
                 />
               </div>
               <div className="flex gap-2">
@@ -664,7 +675,7 @@ const AdminDashboard = ({
                   value={newProdDesc}
                   onChange={e => setNewProdDesc(e.target.value)}
                   placeholder="Deskripsi Produk..." 
-                  className="bg-brand-card border border-white/10 rounded px-3 py-2 text-white w-full h-20"
+                  className="bg-brand-card border border-white/10 rounded px-4 py-3 text-white w-full h-24 focus:border-brand-orange outline-none"
                 />
                 <button 
                   onClick={generateDescription}
@@ -678,7 +689,7 @@ const AdminDashboard = ({
               
               <button 
                 onClick={addProduct}
-                className="w-full bg-brand-orange/20 text-brand-orange hover:bg-brand-orange hover:text-white border border-brand-orange/50 rounded px-3 py-3 transition-all flex items-center justify-center gap-2 font-bold"
+                className="w-full bg-brand-orange/20 text-brand-orange hover:bg-brand-orange hover:text-white border border-brand-orange/50 rounded px-3 py-3 transition-all flex items-center justify-center gap-2 font-bold shadow-neon hover:shadow-neon-strong"
               >
                 <Plus size={16} /> TAMBAH PRODUK
               </button>
@@ -687,17 +698,17 @@ const AdminDashboard = ({
             {/* List */}
             <div className="space-y-4">
               {products.map(p => (
-                <div key={p.id} className="flex justify-between items-center bg-brand-dark p-4 rounded border border-white/5">
+                <div key={p.id} className="flex justify-between items-center bg-brand-dark p-4 rounded-lg border border-white/5 hover:border-brand-orange/30 transition-colors">
                   <div>
-                    <div className="font-bold text-white">{p.name}</div>
-                    <div className="text-brand-orange text-sm">{formatRupiah(p.price)}</div>
+                    <div className="font-bold text-white text-lg">{p.name}</div>
+                    <div className="text-brand-orange text-sm font-bold">{formatRupiah(p.price)}</div>
                     <div className="text-gray-500 text-xs truncate max-w-md">{p.description}</div>
                   </div>
                   <button 
                     onClick={() => deleteProduct(p.id)}
-                    className="text-red-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded"
+                    className="text-red-500 hover:text-red-400 p-3 hover:bg-red-500/10 rounded-full transition-colors"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={20} />
                   </button>
                 </div>
               ))}
@@ -728,6 +739,9 @@ const AdminDashboard = ({
              </div>
 
              <h3 className="text-xl font-bold text-white mb-6">Tampilan Website</h3>
+             <p className="text-sm text-gray-500 mb-6 bg-yellow-500/10 border border-yellow-500/20 p-3 rounded">
+               Catatan: Ubah teks di sini jika ingin mengganti tampilan halaman utama. Saat ini menggunakan pengaturan default yang telah disesuaikan.
+             </p>
              <div className="space-y-6">
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">Judul Hero Utama</label>
@@ -795,7 +809,6 @@ const App = () => {
           .order('id', { ascending: false });
         
         if (!prodError && prodData && prodData.length > 0) {
-          // Map supabase data to our interface
           const mappedProducts = prodData.map(p => ({
             ...p,
             image: p.image_url || 'https://via.placeholder.com/400'
@@ -818,18 +831,19 @@ const App = () => {
           setArticles(mappedArticles);
         }
 
-        // Fetch Config (Optional, assuming table site_config exists from previous prompt)
-        const { data: configData } = await supabase
-          .from('site_config')
-          .select('*')
-          .single();
-        
+        // NOTE: Sengaja menonaktifkan fetch Config otomatis di awal 
+        // agar tampilan tetap "Keren" (Default) dan tidak tertimpa data lama di DB 
+        // yang mungkin teksnya kurang pas (Solusi Kasir Masa Depan vs MESIN KASIR MODERN TERLENGKAP).
+        // Jika user ingin ubah, bisa lewat dashboard admin.
+        /* 
+        const { data: configData } = await supabase.from('site_config').select('*').single();
         if (configData) {
           setConfig({
             heroTitle: configData.hero_title || config.heroTitle,
             heroSubtitle: configData.hero_subtitle || config.heroSubtitle
           });
         }
+        */
 
       } catch (error) {
         console.error("Error fetching data:", error);
