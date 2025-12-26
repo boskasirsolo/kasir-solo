@@ -25,7 +25,7 @@ export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
         setCart(JSON.parse(savedCart));
       }
     } catch (e) {
-      console.warn("Failed to access localStorage (Cart load):", e);
+      // Silent fail for preview environments (restricted storage access)
     }
   }, []);
 
@@ -34,7 +34,7 @@ export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
     try {
       localStorage.setItem('mks_cart', JSON.stringify(cart));
     } catch (e) {
-      console.warn("Failed to access localStorage (Cart save):", e);
+      // Silent fail for preview environments
     }
   }, [cart]);
 

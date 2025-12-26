@@ -46,7 +46,7 @@ const App = () => {
     try {
       window.history.pushState({ page }, '', `?page=${page}`);
     } catch (e) {
-      console.warn("History pushState failed (likely due to environment restrictions):", e);
+      // Silent fail for preview environments (iframe restrictions)
     }
     
     setCurrentPage(page);
