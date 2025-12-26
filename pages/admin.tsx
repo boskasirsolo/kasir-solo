@@ -10,19 +10,23 @@ export const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
   const [pass, setPass] = useState('');
   const [err, setErr] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault(); // Mencegah reload halaman standar
     if (pass === 'admin123') onLogin();
     else setErr('Password salah!');
   };
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="bg-brand-card p-10 rounded-2xl border border-white/10 w-full max-w-md shadow-neon">
+      <form 
+        onSubmit={handleLogin}
+        className="bg-brand-card p-10 rounded-2xl border border-white/10 w-full max-w-md shadow-neon"
+      >
         <h2 className="text-3xl font-bold text-white mb-8 text-center font-display">Admin Login</h2>
         <Input type="password" value={pass} onChange={(e) => setPass(e.target.value)} placeholder="Masukkan Password" className="mb-6" />
         {err && <p className="text-red-500 text-sm mb-4 text-center">{err}</p>}
-        <Button onClick={handleLogin} className="w-full py-4">MASUK DASHBOARD</Button>
-      </div>
+        <Button type="submit" className="w-full py-4">MASUK DASHBOARD</Button>
+      </form>
     </div>
   );
 };

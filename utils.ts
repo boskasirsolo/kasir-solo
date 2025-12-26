@@ -105,7 +105,33 @@ export const INITIAL_ARTICLES: Article[] = [
 ];
 
 export const INITIAL_GALLERY: GalleryItem[] = [
-  { id: 1, title: "Instalasi Cafe Solo Baru", image_url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800" },
-  { id: 2, title: "Training Staff Minimarket", image_url: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=800" },
-  { id: 3, title: "Pameran UMKM 2023", image_url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800" },
+  { 
+    id: 1, 
+    title: "Instalasi Cafe Solo Baru", 
+    type: 'image',
+    image_url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800",
+    description: "Proses instalasi sistem POS full-set di salah satu klien kami, 'Kopi Senja', yang berlokasi di kawasan bisnis Solo Baru. Tantangan utama dalam proyek ini adalah integrasi sistem pesanan dapur (Kitchen Display System) dengan kasir depan agar meminimalisir kesalahan pesanan saat jam sibuk. Kami menggunakan topologi jaringan LAN hybrid untuk memastikan koneksi tetap stabil meskipun wifi pengunjung sedang penuh. Pengerjaan selesai dalam waktu 4 jam termasuk training karyawan."
+  },
+  { 
+    id: 2, 
+    title: "Training Staff Minimarket", 
+    type: 'image',
+    image_url: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=800",
+    description: "Sesi pelatihan intensif bagi staff kasir 'Mart Jaya' di Kartasura. Kami percaya bahwa teknologi canggih harus didukung oleh SDM yang kompeten. Materi training mencakup cara input barang, penanganan retur, pembayaran via QRIS, dan troubleshooting dasar jika printer macet. Antusiasme peserta sangat tinggi, dan mereka bisa langsung mengoperasikan mesin kasir mandiri dalam waktu kurang dari 30 menit."
+  },
+  { 
+    id: 3, 
+    title: "Demo Mesin Kiosk Mandiri", 
+    type: 'video', // Tipe Video
+    image_url: "https://images.unsplash.com/photo-1594911772125-07fc7a2d8d1f?auto=format&fit=crop&q=80&w=800", // Thumbnail Video
+    video_url: "https://www.youtube.com/embed/lxT1B-XhF7k?si=123", // Contoh Link Youtube Embed
+    description: "Video demonstrasi penggunaan Mesin Kiosk Self-Service terbaru kami. Fitur ini memungkinkan pelanggan untuk memilih menu, melakukan kustomisasi pesanan (misal: less sugar, extra shot), dan melakukan pembayaran non-tunai secara mandiri tanpa perlu antri di kasir. Cocok untuk restoran cepat saji yang mengutamakan kecepatan pelayanan."
+  },
+  { 
+    id: 4, 
+    title: "Pameran UMKM 2023", 
+    type: 'image',
+    image_url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800",
+    description: "Partisipasi PT Mesin Kasir Solo dalam ajang Solo Great Sale & Expo UMKM. Booth kami dikunjungi oleh lebih dari 500 pelaku usaha yang berkonsultasi mengenai digitalisasi bisnis. Kami mendemokan bagaimana sebuah warung kelontong kecil bisa memiliki manajemen stok setara minimarket modern hanya dengan menggunakan aplikasi kasir Android kami."
+  },
 ];

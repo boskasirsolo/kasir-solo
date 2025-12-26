@@ -21,6 +21,9 @@ export interface GalleryItem {
   id: number;
   title: string;
   image_url: string;
+  description?: string;     // Tambahan: Deskripsi panjang
+  type?: 'image' | 'video'; // Tambahan: Tipe konten
+  video_url?: string;       // Tambahan: Link video (jika type='video')
 }
 
 export interface SiteConfig {
