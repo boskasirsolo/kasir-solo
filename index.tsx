@@ -41,19 +41,57 @@ const App = () => {
     }
   }, []);
 
-  // Fetch Data from Supabase
+  // Fetch Data from Supabase & Auto-Seed if Empty
   useEffect(() => {
     const fetchData = async () => {
       if (!supabase) return;
       try {
+        // 1. PRODUCTS FETCH & SEED
         const { data: prodData } = await supabase.from('products').select('*').order('id', { ascending: false });
-        if (prodData && prodData.length > 0) setProducts(prodData.map(p => ({...p, image: p.image_url || 'https://via.placeholder.com/400'})));
+        
+        if (prodData && prodData.length > 0) {
+          // Database ada isinya, pakai data dari DB
+          setProducts(prodData.map(p => ({
+            ...p, 
+            image: p.image_url || 'https://via.placeholder.com/400'
+          })));
+        } else {
+          // Database KOSONG? Isi otomatis (Seeding) biar checkout gak error FK
+          console.log("Database kosong. Melakukan Auto-Seeding produk...");
+          const seedProducts = INITIAL_PRODUCTS.map(p => ({
+            id: p.id, // Paksa ID sama biar sinkron sama cache keranjang user
+            name: p.name,
+            price: p.price,
+            category: p.category,
+            description: p.description,
+            image_url: p.image
+          }));
+          
+          const { data: seededData, error: seedError } = await supabase.from('products').insert(seedProducts).select();
+          
+          if (seededData && !seedError) {
+             setProducts(seededData.map(p => ({ ...p, image: p.image_url })));
+             console.log("Auto-seeding sukses!");
+          } else {
+             console.error("Gagal auto-seeding (mungkin RLS aktif/ID conflict):", seedError);
+          }
+        }
 
+        // 2. ARTICLES FETCH
         const { data: artData } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
-        if (artData && artData.length > 0) setArticles(artData.map(a => ({...a, date: new Date(a.created_at).toLocaleDateString('id-ID'), image: a.image_url || 'https://via.placeholder.com/400'})));
+        if (artData && artData.length > 0) {
+          setArticles(artData.map(a => ({
+            ...a, 
+            date: new Date(a.created_at).toLocaleDateString('id-ID'), 
+            image: a.image_url || 'https://via.placeholder.com/400'
+          })));
+        }
 
+        // 3. GALLERY FETCH
         const { data: galData } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
-        if (galData && galData.length > 0) setGallery(galData);
+        if (galData && galData.length > 0) {
+          setGallery(galData);
+        }
 
       } catch (error) { console.error("Error fetching data:", error); }
     };

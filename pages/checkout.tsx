@@ -29,10 +29,7 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
     try {
       if (!supabase) {
         console.warn("Database connection missing. Running in demo mode.");
-        // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Mock success
         setOrderSuccess({ id: Date.now(), total: totalPrice });
         clearCart();
         return;
@@ -68,7 +65,11 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
         .from('order_items')
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        // If items fail, delete the order head to prevent orphan records
+        await supabase.from('orders').delete().eq('id', orderData.id);
+        throw itemsError;
+      }
 
       // Success!
       setOrderSuccess({ id: orderData.id, total: totalPrice });
@@ -76,7 +77,16 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
 
     } catch (error: any) {
       console.error(error);
-      alert(`Terjadi kesalahan saat memproses pesanan: ${error.message || "Unknown error"}. Silakan coba lagi atau hubungi admin via WA.`);
+      
+      // Handle Specific Foreign Key Error (Product ID mismatch) or other integrity errors
+      if (error.message?.includes('foreign key constraint') || error.code === '23503') {
+        alert("Sistem mendeteksi perubahan data produk. Keranjang Anda akan diperbarui otomatis untuk menyesuaikan dengan database terbaru. Silakan coba checkout ulang.");
+        clearCart();
+        setPage('shop');
+      } else {
+        // Fallback error message (simpler for user)
+        alert(`Gagal membuat pesanan (${error.message}). Silakan hubungi admin via WA jika masalah berlanjut.`);
+      }
     } finally {
       setIsSubmitting(false);
     }
