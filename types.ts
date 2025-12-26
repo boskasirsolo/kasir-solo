@@ -29,6 +29,8 @@ export interface GalleryItem {
 export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
+  sibosUrl?: string; // New: Dynamic Link for SIBOS
+  qalamUrl?: string; // New: Dynamic Link for QALAM
 }
 
 // --- E-Commerce Types ---

@@ -15,7 +15,7 @@ export const HomePage = ({ setPage, config }: { setPage: (p: string) => void, co
 
       <div className="container mx-auto px-4 z-10 text-center relative">
         <div className="inline-block px-6 py-2 border border-brand-orange rounded-full bg-brand-orange/10 mb-8 backdrop-blur-md shadow-neon">
-          <span className="text-brand-orange text-xs md:text-sm font-bold tracking-[0.2em] uppercase">Pusat Digitalisasi Bisnis Solo Raya</span>
+          <span className="text-brand-orange text-xs md:text-sm font-bold tracking-[0.2em] uppercase">Melayani Bisnis di Seluruh Indonesia</span>
         </div>
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-8 leading-tight drop-shadow-lg">
           {config.heroTitle}

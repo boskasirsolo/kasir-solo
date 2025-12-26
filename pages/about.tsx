@@ -10,7 +10,7 @@ export const AboutPage = () => (
       <div className="container mx-auto px-4 text-center relative z-10">
         <h2 className="text-5xl md:text-6xl font-display font-bold text-white mb-6">Tentang <span className="text-brand-orange">Kami</span></h2>
         <p className="max-w-3xl mx-auto text-xl text-gray-400 leading-relaxed">
-          Lebih dari sekadar perusahaan teknologi. Ini adalah kisah tentang ketahanan, inovasi, dan tekad untuk bangkit kembali.
+          Lebih dari sekadar perusahaan teknologi. Ini adalah kisah tentang ketahanan, inovasi, dan tekad untuk bangkit kembali dari titik nol.
         </p>
       </div>
     </div>
@@ -26,8 +26,8 @@ export const AboutPage = () => (
            <div className="w-full md:w-1/2 md:text-right order-2 md:order-1">
               <h3 className="text-3xl font-display font-bold text-white mb-2">2015: Sang Single Fighter</h3>
               <p className="text-gray-400 leading-relaxed">
-                Diinisiasi oleh <strong className="text-brand-orange">Amin Maghfuri</strong>. Tanpa tim, tanpa kantor mewah. 
-                Memulai langkah berat sebagai <em>single fighter</em>, berjalan dari pintu ke pintu, menawarkan mesin kasir modern kepada pemilik usaha yang kala itu masih asing dengan teknologi. Penolakan adalah makanan sehari-hari, namun visi digitalisasi UMKM menjadi bahan bakarnya.
+                Diinisiasi oleh <strong className="text-brand-orange">Amin Maghfuri</strong>. Tanpa tim, tanpa investor. 
+                Memulai langkah berat sebagai <em>single fighter</em>, berjalan dari pintu ke pintu (door-to-door), menawarkan mesin kasir modern. Penolakan adalah sarapan pagi, namun visi digitalisasi UMKM menjadi bahan bakar yang tak pernah padam.
               </p>
            </div>
            <div className="relative order-1 md:order-2 flex justify-center items-center">
@@ -38,7 +38,7 @@ export const AboutPage = () => (
            <div className="w-full md:w-1/2 order-3"></div>
         </div>
 
-        {/* 2019-2020: The Rise & SIBOS */}
+        {/* 2019-2020: The Rise (National Scale) */}
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 group">
            <div className="w-full md:w-1/2 order-3 md:order-1"></div>
            <div className="relative order-1 md:order-2 flex justify-center items-center">
@@ -47,23 +47,26 @@ export const AboutPage = () => (
               </div>
            </div>
            <div className="w-full md:w-1/2 order-2 md:order-3">
-              <h3 className="text-3xl font-display font-bold text-white mb-2">2019 - 2020: Embrio SIBOS</h3>
+              <h3 className="text-3xl font-display font-bold text-white mb-2">2019 - 2020: Ekspansi Nasional</h3>
               <p className="text-gray-400 leading-relaxed">
-                Usaha keras membuahkan hasil. Tim manajemen mulai terbentuk. Pada 2020, sebuah mimpi besar dirancang: 
-                <strong className="text-white"> SIBOS (Smart Integrated Back Office System)</strong>. 
-                Sistem yang digadang-gadang menjadi tulang punggung digitalisasi bisnis. Namun, takdir berkata lain. Pandemi menghantam, memaksa pengembangan SIBOS berhenti total di tengah jalan.
+                Kerja keras terbayar. Lewat strategi <strong>Digital Marketing</strong> yang agresif, jangkauan kami meledak. 
+                Klien kami tak lagi hanya di Solo Raya, tapi merambah ke <strong>seluruh Indonesia</strong>. Tim manajemen terbentuk solid. 
+                Mimpi besar bernama <strong className="text-white">SIBOS</strong> (Smart Integrated Back Office System) mulai dikembangkan. Kami berada di puncak optimisme.
               </p>
            </div>
         </div>
 
-        {/* 2022: The Fall */}
+        {/* 2022: The Fall (Domain Loss) */}
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 group">
            <div className="w-full md:w-1/2 md:text-right order-2 md:order-1">
-              <h3 className="text-3xl font-display font-bold text-red-500 mb-2">2022: Titik Nadir</h3>
+              <h3 className="text-3xl font-display font-bold text-red-500 mb-2">2022: Kehilangan Segalanya</h3>
               <p className="text-gray-400 leading-relaxed">
-                Tahun tergelap. Kami kehilangan segalanya. Aset digital yang dibangun bertahun-tahun lenyap. 
-                Domain <span className="text-red-400 line-through">kasirsolo.com</span> dan <span className="text-red-400 line-through">sibos.id</span> hilang. 
-                Puncaknya, Profil Google Bisnis—jantung reputasi kami—disuspend oleh Google. Identitas kami dihapus paksa dari peta digital. Hampir saja kami mengibarkan bendera putih.
+                Pandemi menghantam fondasi kami. Cashflow terhenti. Kami sampai pada titik di mana kami 
+                <strong> tak sanggup lagi membayar biaya langganan</strong> infrastruktur digital.
+                <br/><br/>
+                Akibatnya fatal. Domain legendaris <span className="text-red-400 line-through">kasirsolo.com</span> dan <span className="text-red-400 line-through">sibos.id</span> 
+                hangus dan langsung <strong>diambil alih (dibeli) oleh orang lain</strong>. Profil Google Bisnis kami disuspend. 
+                Reputasi nasional yang dibangun bertahun-tahun, lenyap dalam sekejap.
               </p>
            </div>
            <div className="relative order-1 md:order-2 flex justify-center items-center">
@@ -83,14 +86,13 @@ export const AboutPage = () => (
               </div>
            </div>
            <div className="w-full md:w-1/2 order-2 md:order-3">
-              <h3 className="text-3xl font-display font-bold text-brand-orange mb-2">2025: Kebangkitan</h3>
+              <h3 className="text-3xl font-display font-bold text-brand-orange mb-2">2025: The Rebirth</h3>
               <p className="text-gray-300 leading-relaxed border-l-2 border-brand-orange pl-4">
-                "Kami menolak untuk mati."
+                "Kami kehilangan domain, tapi tidak kehilangan visi."
               </p>
               <p className="text-gray-400 leading-relaxed mt-3">
-                Dengan semangat baru, PT Mesin Kasir Solo bangkit kembali. Kami meneruskan pengembangan <strong>SIBOS</strong> yang sempat tertidur. 
-                Tak hanya itu, kami melahirkan inovasi baru: <strong className="text-white">QALAM</strong> (Aplikasi Manajemen TPA), 
-                sebagai wujud dedikasi kami untuk umat dan teknologi. Kami kembali, lebih kuat dari sebelumnya.
+                Dengan sisa semangat yang ada, PT Mesin Kasir Solo bangkit kembali. Kami meneruskan pengembangan <strong>SIBOS</strong> dan melahirkan inovasi baru: 
+                <strong className="text-white"> QALAM</strong> (Aplikasi Manajemen TPA). Kami kembali untuk merebut apa yang pernah menjadi milik kami, dengan pondasi yang lebih kuat.
               </p>
            </div>
         </div>

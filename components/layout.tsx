@@ -6,6 +6,7 @@ import { useCart } from '../context/cart-context';
 // --- DATA & CONSTANTS ---
 const NAV_ITEMS = [
   { id: 'home', label: 'Beranda' },
+  { id: 'innovation', label: 'Inovasi' }, // New Menu Item
   { id: 'shop', label: 'Toko' },
   { id: 'gallery', label: 'Galeri' },
   { id: 'articles', label: 'Artikel' },
@@ -208,7 +209,7 @@ const Footer = ({ setPage }: { setPage: (p: string) => void }) => (
         <div>
           <h3 className="text-2xl font-display font-bold text-white mb-4">PT MESIN KASIR SOLO</h3>
           <p className="text-gray-400 mb-6 text-sm leading-relaxed">
-            Mitra strategis digitalisasi bisnis Anda di Solo Raya & Blora. Solusi POS, Software, & Web Development.
+            Mitra strategis digitalisasi bisnis Anda di Seluruh Indonesia. Solusi POS, Software, & Web Development.
           </p>
           <div className="flex gap-4">
             <SocialButton icon={Instagram} />
@@ -238,13 +239,13 @@ const Footer = ({ setPage }: { setPage: (p: string) => void }) => (
         <div>
           <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Menu</h4>
           <ul className="space-y-2 text-gray-400 text-sm">
-            {['shop', 'gallery', 'about'].map((link) => (
+            {['shop', 'gallery', 'about', 'innovation'].map((link) => (
               <li key={link}>
                 <button 
                   onClick={() => setPage(link)} 
                   className="hover:text-brand-orange capitalize transition-colors"
                 >
-                  {link === 'shop' ? 'Produk' : link === 'about' ? 'Kontak' : link}
+                  {link === 'shop' ? 'Produk' : link === 'about' ? 'Kontak' : link === 'innovation' ? 'Software' : link}
                 </button>
               </li>
             ))}

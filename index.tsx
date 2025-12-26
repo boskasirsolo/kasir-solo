@@ -16,7 +16,8 @@ import { GalleryPage } from './pages/gallery';
 import { ArticlesPage } from './pages/articles';
 import { AboutPage } from './pages/about';
 import { AdminLogin, AdminDashboard } from './pages/admin';
-import { CheckoutPage } from './pages/checkout'; // New Page
+import { CheckoutPage } from './pages/checkout';
+import { InnovationPage } from './pages/innovation'; // New Page Import
 
 // --- Main App Controller ---
 
@@ -34,7 +35,9 @@ const App = () => {
   
   const [config, setConfig] = useState<SiteConfig>({
     heroTitle: "MESIN KASIR SOLO & DIGITAL AGENCY",
-    heroSubtitle: "Pusat penjualan mesin kasir modern (POS) dan jasa pembuatan website profesional untuk digitalisasi bisnis UMKM hingga Korporasi di Solo Raya."
+    heroSubtitle: "Pusat penjualan mesin kasir modern (POS) dan jasa pembuatan website profesional untuk digitalisasi bisnis UMKM hingga Korporasi di Seluruh Indonesia.",
+    sibosUrl: "", // Default Empty
+    qalamUrl: ""  // Default Empty
   });
 
   // Admin Route Check
@@ -105,13 +108,10 @@ const App = () => {
   useEffect(() => { window.scrollTo(0, 0); }, [currentPage]);
 
   // --- LOGOUT LOGIC ---
-  
-  // 1. Triggered by the button in Admin Dashboard
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
   };
 
-  // 2. Triggered by ConfirmModal "Yes" button
   const performLogout = () => {
     setIsAdminLoggedIn(false);
     setShowLogoutConfirm(false);
@@ -125,6 +125,7 @@ const App = () => {
       case 'gallery': return <GalleryPage gallery={gallery} />;
       case 'articles': return <ArticlesPage articles={articles} />;
       case 'about': return <AboutPage />;
+      case 'innovation': return <InnovationPage config={config} />; // New Route
       case 'checkout': return <CheckoutPage setPage={setCurrentPage} />;
       case 'admin': 
         return isAdminLoggedIn 
