@@ -28,16 +28,21 @@ import {
 
 // --- Environment & Client Setup ---
 
-// Mengambil variabel environment sesuai screenshot Vercel (Vite Prefix)
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
-const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || '';
+// FIX: Menggunakan import.meta.env untuk Vite (Client Side)
+// process.env akan menyebabkan crash (blank screen) di browser
+const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL || '';
+const SUPABASE_KEY = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || '';
+const GEMINI_API_KEY = (import.meta as any).env.VITE_GEMINI_API_KEY || '';
 
 // Initialize Clients
 const supabase = (SUPABASE_URL && SUPABASE_KEY) 
   ? createClient(SUPABASE_URL, SUPABASE_KEY) 
   : null;
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize Gemini hanya jika API Key tersedia
+const ai = GEMINI_API_KEY 
+  ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) 
+  : null;
 
 // --- Types ---
 
@@ -175,7 +180,7 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
                 {item.label.toUpperCase()}
               </button>
             ))}
-            {/* LOGIN button removed for secret access via /master */}
+            {/* Login button hidden for public */}
           </div>
 
           {/* Mobile Toggle */}
@@ -205,7 +210,6 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
                   {item.label}
                 </button>
               ))}
-              {/* Admin Area link removed */}
             </div>
           </div>
         )}
@@ -571,7 +575,7 @@ const AdminDashboard = ({
         model: 'gemini-3-flash-preview',
         contents: `Buatkan deskripsi penjualan singkat, menarik, dan persuasif (maksimal 2 kalimat) untuk mesin kasir tipe: ${newProdName}. Bahasa Indonesia.`,
       });
-      setNewProdDesc(response.text.trim());
+      setNewProdDesc(response.text?.trim() || '');
     } catch (e) {
       console.error(e);
       alert("Gagal generate AI. Cek console untuk detail.");
