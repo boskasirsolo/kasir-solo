@@ -1,12 +1,283 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon } from 'lucide-react';
 import { GalleryItem } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, ai, CONFIG } from '../utils';
 
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 6; // Menampilkan 6 kartu per halaman (Grid 2x3)
 
+// --- LOGIC: Custom Hook ---
+const useGalleryManager = (
+    gallery: GalleryItem[], 
+    setGallery: (g: GalleryItem[]) => void
+) => {
+    const [form, setForm] = useState({
+        id: null as number | null,
+        title: '',
+        shortDesc: '', // For AI Trigger
+        longDesc: '',
+        imagePreview: '',
+        uploadFile: null as File | null
+    });
+
+    const [loadingState, setLoadingState] = useState({
+        generatingAI: false,
+        uploading: false
+    });
+
+    const [page, setPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const resetForm = () => {
+        setForm({
+            id: null,
+            title: '',
+            shortDesc: '',
+            longDesc: '',
+            imagePreview: '',
+            uploadFile: null
+        });
+    };
+
+    const handleEditClick = (item: GalleryItem) => {
+        setForm({
+            id: item.id,
+            title: item.title,
+            shortDesc: '',
+            longDesc: item.description || '',
+            imagePreview: item.image_url,
+            uploadFile: null
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top for sticky form
+    };
+
+    const generateAINarrative = async () => {
+        if (!ai) return alert("API Key Gemini belum ditemukan!");
+        if (!form.title || !form.shortDesc) return alert("Isi Judul dan Keyword Fitur dulu.");
+        
+        setLoadingState(prev => ({ ...prev, generatingAI: true }));
+        try {
+            const prompt = `
+            Bertindaklah sebagai Copywriter Portofolio Profesional.
+            Tugas: Buat deskripsi proyek (Case Study) yang menarik.
+            Proyek: ${form.title}
+            Konteks/Keyword: ${form.shortDesc}
+            Output: HANYA teks narasi (2 paragraf). Bahasa Indonesia.
+            `;
+            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+            setForm(prev => ({ ...prev, longDesc: response.text?.trim() || '' }));
+        } catch (e) { alert("AI Error"); } 
+        finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
+    };
+
+    const handleSubmit = async () => {
+        if (!CONFIG.CLOUDINARY_CLOUD_NAME) return alert("Cloudinary Config Missing");
+        
+        // Validasi simpel: kalau edit gak wajib upload, kalau baru wajib upload/ada preview
+        if (!form.id && !form.uploadFile && !form.imagePreview) return alert("Pilih gambar dulu!");
+
+        setLoadingState(prev => ({ ...prev, uploading: true }));
+        try {
+            let finalImageUrl = form.imagePreview;
+
+            if (form.uploadFile) {
+                const formData = new FormData();
+                formData.append('file', form.uploadFile);
+                formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.secure_url) finalImageUrl = data.secure_url;
+            }
+
+            const dbData = {
+                title: form.title,
+                description: form.longDesc,
+                image_url: finalImageUrl,
+                type: 'image' as const
+            };
+
+            if (form.id) {
+                // Update
+                setGallery(gallery.map(g => g.id === form.id ? { ...g, ...dbData } : g));
+                if (supabase) await supabase.from('gallery').update(dbData).eq('id', form.id);
+            } else {
+                // Create
+                const newId = Date.now();
+                setGallery([{ ...dbData, id: newId }, ...gallery]);
+                if (supabase) await supabase.from('gallery').insert([dbData]);
+            }
+            resetForm();
+            alert("Galeri berhasil disimpan!");
+        } catch (e) { console.error(e); alert("Gagal menyimpan."); }
+        finally { setLoadingState(prev => ({ ...prev, uploading: false })); }
+    };
+
+    const deleteItem = async (id: number) => {
+        if(!confirm("Hapus galeri ini?")) return;
+        setGallery(gallery.filter(g => g.id !== id));
+        if (supabase) await supabase.from('gallery').delete().eq('id', id);
+        if (form.id === id) resetForm();
+    };
+
+    // Filter & Pagination Logic
+    const filtered = gallery.filter(g => g.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+    return {
+        form, setForm,
+        loadingState,
+        handleSubmit,
+        handleEditClick,
+        resetForm,
+        deleteItem,
+        generateAINarrative,
+        listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
+    };
+};
+
+// --- ATOMIC COMPONENT: Gallery Form (Right Side) ---
+const GalleryForm = ({ 
+    form, setForm, loading, onSubmit, onReset, onGenerateAI 
+}: {
+    form: any, setForm: any, loading: any, onSubmit: any, onReset: any, onGenerateAI: any
+}) => (
+    <div className="bg-brand-dark p-6 rounded-xl border border-white/5 h-fit sticky top-6">
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                {form.id ? <Edit size={18} className="text-brand-orange"/> : <ImageIcon size={18} className="text-brand-orange"/>}
+                {form.id ? "Edit Galeri" : "Upload Baru"}
+            </h3>
+            {form.id && (
+                <button onClick={onReset} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
+                    <XIcon size={12} /> Batal
+                </button>
+            )}
+        </div>
+
+        {/* Image Upload Area */}
+        <div className="mb-4">
+             {form.imagePreview && (
+               <div className="mb-3 relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
+                  <img src={form.imagePreview} alt="Preview" className="w-full h-full object-contain" />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <p className="text-white text-xs font-bold">Ganti Gambar</p>
+                    </div>
+               </div>
+             )}
+             <div className="border border-dashed border-white/20 rounded-lg p-4 text-center hover:border-brand-orange/50 transition-colors bg-brand-card/30">
+              <input type="file" accept="image/*" onChange={(e) => {
+                const file = e.target.files ? e.target.files[0] : null;
+                if (file) setForm((prev:any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
+              }} className="hidden" id="gallery-upload" />
+              <label htmlFor="gallery-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                {!form.imagePreview && <UploadCloud size={24} className="text-gray-400" />}
+                <span className="text-gray-400 text-xs font-bold">{form.uploadFile ? form.uploadFile.name : (form.id ? "Klik untuk ganti" : "Pilih Foto Project")}</span>
+              </label>
+            </div>
+        </div>
+
+        <div className="space-y-4">
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Judul Project</label>
+              <Input value={form.title} onChange={e => setForm((prev:any) => ({...prev, title: e.target.value}))} placeholder="Contoh: Instalasi Cafe..." className="py-2 text-sm"/>
+            </div>
+
+            {/* AI Section */}
+            <div className="p-3 bg-brand-orange/5 rounded-lg border border-brand-orange/20">
+               <div className="flex justify-between items-center mb-2">
+                  <label className="text-[10px] text-brand-orange uppercase font-bold tracking-wider flex items-center gap-1"><Sparkles size={12} /> AI Storyteller</label>
+               </div>
+               <div className="flex gap-2">
+                  <input 
+                        value={form.shortDesc} 
+                        onChange={e => setForm((prev:any) => ({...prev, shortDesc: e.target.value}))} 
+                        placeholder="Keyword: outdoor, wifi kencang..." 
+                        className="bg-brand-card border border-white/10 rounded px-3 text-xs w-full focus:outline-none focus:border-brand-orange"
+                    />
+                  <button onClick={onGenerateAI} disabled={loading.generatingAI} className="bg-brand-orange text-white rounded px-3 py-1 flex items-center justify-center hover:bg-brand-glow disabled:opacity-50">
+                    {loading.generatingAI ? <LoadingSpinner /> : <Sparkles size={16} />}
+                  </button>
+               </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Deskripsi (Story)</label>
+              <TextArea value={form.longDesc} onChange={e => setForm((prev:any) => ({...prev, longDesc: e.target.value}))} placeholder="Ceritakan project ini..." className="h-32 text-sm leading-relaxed" />
+            </div>
+            
+            <Button onClick={onSubmit} disabled={loading.uploading} className="w-full py-2.5 text-sm">
+              {loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={16}/> Simpan Perubahan</> : <><Plus size={16}/> Upload Galeri</>)}
+            </Button>
+        </div>
+    </div>
+);
+
+// --- ATOMIC COMPONENT: Gallery List (Left Side - Grid View) ---
+const GalleryList = ({ 
+    data, onEdit, onDelete 
+}: { 
+    data: any, onEdit: any, onDelete: any 
+}) => (
+    <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden">
+        {/* Header & Search */}
+        <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
+            <div className="relative flex-grow">
+                <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
+                <input 
+                    type="text" 
+                    value={data.searchTerm}
+                    onChange={(e) => data.setSearchTerm(e.target.value)}
+                    placeholder="Cari project..." 
+                    className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange"
+                />
+             </div>
+             <span className="text-[10px] font-bold text-gray-500 uppercase">Total: {data.paginated.length}</span>
+        </div>
+        
+        {/* Grid Items */}
+        <div className="flex-grow overflow-y-auto p-4 custom-scrollbar min-h-[500px]">
+            {data.paginated.length === 0 ? (
+                <div className="text-center py-20 text-gray-500 text-xs">Data galeri tidak ditemukan.</div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {data.paginated.map((item: GalleryItem) => (
+                        <div key={item.id} className="group relative bg-brand-card border border-white/5 rounded-lg overflow-hidden hover:border-brand-orange transition-all hover:shadow-neon-text/20">
+                            {/* Image Aspect Ratio Container */}
+                            <div className="relative aspect-video bg-black overflow-hidden">
+                                <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                {/* Overlay Actions */}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                    <button onClick={() => onEdit(item)} className="p-2 bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500 hover:text-white transition-colors"><Edit size={16} /></button>
+                                    <button onClick={() => onDelete(item.id)} className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-colors"><Trash2 size={16} /></button>
+                                </div>
+                            </div>
+                            {/* Info */}
+                            <div className="p-3">
+                                <h5 className="text-sm font-bold text-white truncate mb-1" title={item.title}>{item.title}</h5>
+                                <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">
+                                    {item.description || "Belum ada deskripsi."}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+
+        {/* Pagination */}
+        {data.totalPages > 1 && (
+            <div className="p-3 border-t border-white/10 bg-black/20 flex justify-center items-center gap-4">
+                <button onClick={() => data.setPage((p:number) => Math.max(1, p - 1))} disabled={data.page === 1} className="text-gray-400 hover:text-white disabled:opacity-30"><ChevronLeft size={16} /></button>
+                <span className="text-xs font-bold text-brand-orange">{data.page} / {data.totalPages}</span>
+                <button onClick={() => data.setPage((p:number) => Math.min(data.totalPages, p + 1))} disabled={data.page === data.totalPages} className="text-gray-400 hover:text-white disabled:opacity-30"><ChevronRight size={16} /></button>
+            </div>
+        )}
+    </div>
+);
+
+// --- MAIN COMPONENT ---
 export const AdminGallery = ({ 
   gallery, 
   setGallery 
@@ -14,191 +285,24 @@ export const AdminGallery = ({
   gallery: GalleryItem[], 
   setGallery: (g: GalleryItem[]) => void 
 }) => {
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [galleryTitle, setGalleryTitle] = useState('');
-  const [galleryShortDesc, setGalleryShortDesc] = useState('');
-  const [galleryLongDesc, setGalleryLongDesc] = useState('');
-  const [galleryImagePreview, setGalleryImagePreview] = useState('');
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isGeneratingGalleryAI, setIsGeneratingGalleryAI] = useState(false);
-  const [galleryPage, setGalleryPage] = useState(1);
-
-  const resetGalleryForm = () => {
-    setUploadFile(null);
-    setGalleryTitle('');
-    setGalleryShortDesc('');
-    setGalleryLongDesc('');
-    setGalleryImagePreview('');
-    setEditingId(null);
-  };
-
-  const generateGalleryNarrative = async () => {
-    if (!ai) return alert("API Key Gemini belum ditemukan!");
-    if (!galleryTitle || !galleryShortDesc) return alert("Mohon isi Judul dan Deskripsi Singkat sebagai trigger AI.");
-    setIsGeneratingGalleryAI(true);
-    try {
-      const prompt = `
-        Bertindaklah sebagai spesialis SEO dan Copywriter Senior.
-        Tugas: Buat narasi deskripsi panjang (storytelling) untuk portofolio/galeri.
-        Project: ${galleryTitle}
-        Keyword: ${galleryShortDesc}
-        Instruksi: Storytelling natural, SEO friendly. Output: HANYA teks narasi.
-      `;
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-      });
-      setGalleryLongDesc(response.text?.trim() || '');
-    } catch (e) { alert("Gagal generate Narasi AI"); } 
-    finally { setIsGeneratingGalleryAI(false); }
-  };
-
-  const handleGallerySubmit = async () => {
-    if (!CONFIG.CLOUDINARY_CLOUD_NAME) return alert("Config Cloudinary Missing!");
-    setIsUploading(true);
-    try {
-      let finalImageUrl = galleryImagePreview;
-      if (uploadFile) {
-        const formData = new FormData();
-        formData.append('file', uploadFile);
-        formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
-        const data = await res.json();
-        if (data.secure_url) finalImageUrl = data.secure_url;
-      } else if (!editingId && !uploadFile) {
-         alert("Pilih gambar dulu!"); setIsUploading(false); return;
-      }
-      const itemData = { title: galleryTitle, image_url: finalImageUrl, description: galleryLongDesc, type: 'image' as const };
-      if (editingId) {
-        setGallery(gallery.map(g => g.id === editingId ? { ...g, ...itemData } : g));
-        if (supabase) await supabase.from('gallery').update(itemData).eq('id', editingId);
-        alert("Galeri diupdate!");
-      } else {
-        const newItem = { ...itemData, id: Date.now() };
-        setGallery([newItem, ...gallery]);
-        if (supabase) await supabase.from('gallery').insert([itemData]);
-        alert("Galeri ditambahkan!");
-      }
-      resetGalleryForm();
-    } catch (error) { console.error(error); alert("Proses gagal."); } 
-    finally { setIsUploading(false); }
-  };
-
-  const handleEditClick = (item: GalleryItem) => {
-    setEditingId(item.id);
-    setGalleryTitle(item.title);
-    setGalleryLongDesc(item.description || '');
-    setGalleryImagePreview(item.image_url);
-    setGalleryShortDesc(''); 
-    window.scrollTo({ top: 100, behavior: 'smooth' });
-  };
-
-  const deleteGalleryItem = async (id: number) => {
-    if(!confirm("Yakin hapus?")) return;
-    setGallery(gallery.filter(g => g.id !== id));
-    if (supabase) await supabase.from('gallery').delete().eq('id', id);
-    if (editingId === id) resetGalleryForm();
-  };
-
-  const totalPages = Math.ceil(gallery.length / ITEMS_PER_PAGE);
-  const paginatedGallery = gallery.slice((galleryPage - 1) * ITEMS_PER_PAGE, galleryPage * ITEMS_PER_PAGE);
+  const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteItem, generateAINarrative, listData } = useGalleryManager(gallery, setGallery);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      {/* Editor Column */}
-      <div className="lg:col-span-8 space-y-6">
-        <div className="bg-brand-dark p-6 rounded-xl border border-white/5">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              {editingId ? <Edit size={20} className="text-brand-orange"/> : <UploadCloud size={20} className="text-brand-orange"/>}
-              {editingId ? "Edit Galeri" : "Upload Baru"}
-            </h3>
-            {editingId && (
-              <button onClick={resetGalleryForm} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1">
-                <XIcon size={14} /> Batal Edit
-              </button>
-            )}
-          </div>
-
-          <div className="mb-4">
-             {galleryImagePreview && (
-               <div className="mb-4 relative w-full h-48 bg-black/50 rounded-lg overflow-hidden border border-white/10">
-                  <img src={galleryImagePreview} alt="Preview" className="w-full h-full object-contain" />
-               </div>
-             )}
-             <div className="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-brand-orange/50 transition-colors">
-              <input type="file" accept="image/*" onChange={(e) => {
-                const file = e.target.files ? e.target.files[0] : null;
-                setUploadFile(file);
-                if (file) setGalleryImagePreview(URL.createObjectURL(file));
-              }} className="hidden" id="gallery-upload" />
-              <label htmlFor="gallery-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                <UploadCloud size={32} className="text-gray-400" />
-                <span className="text-gray-300 font-bold text-sm">{uploadFile ? uploadFile.name : (editingId ? "Ganti Gambar (Opsional)" : "Pilih Gambar")}</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Judul Project</label>
-              <Input value={galleryTitle} onChange={e => setGalleryTitle(e.target.value)} placeholder="Contoh: Instalasi Cafe Kopi Senja" />
-            </div>
-
-            <div className="p-4 bg-brand-card/50 rounded-lg border border-brand-orange/20 relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-2 opacity-10"><Sparkles size={100} className="text-brand-orange" /></div>
-               <label className="text-xs text-brand-orange uppercase font-bold tracking-wider mb-2 block flex items-center gap-2"><Sparkles size={14} /> AI Magic Trigger</label>
-               <div className="flex gap-2">
-                  <TextArea value={galleryShortDesc} onChange={e => setGalleryShortDesc(e.target.value)} placeholder="Trigger AI: kafe outdoor, wifi kencang..." className="h-20 text-sm" />
-                  <button onClick={generateGalleryNarrative} disabled={isGeneratingGalleryAI} className="w-32 bg-gradient-to-br from-purple-600 to-blue-600 text-white font-bold rounded-lg flex flex-col items-center justify-center gap-1 hover:brightness-110 shadow-lg">
-                    {isGeneratingGalleryAI ? <LoadingSpinner /> : <><Sparkles size={20} /> <span className="text-[10px]">GENERATE</span></>}
-                  </button>
-               </div>
-            </div>
-
-            <div>
-              <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Deskripsi Lengkap (SEO Optimized)</label>
-              <TextArea value={galleryLongDesc} onChange={e => setGalleryLongDesc(e.target.value)} placeholder="Hasil generate AI akan muncul di sini." className="h-48 text-base leading-relaxed" />
-            </div>
-            
-            <Button onClick={handleGallerySubmit} disabled={isUploading} className="w-full py-3">
-              {isUploading ? <LoadingSpinner /> : (editingId ? <><Save size={18}/> SIMPAN PERUBAHAN</> : <><Plus size={18}/> UPLOAD GALERI</>)}
-            </Button>
-          </div>
-        </div>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* 60% Width for List (Left) */}
+      <div className="lg:col-span-7">
+        <GalleryList data={listData} onEdit={handleEditClick} onDelete={deleteItem} />
       </div>
-
-      {/* List Column */}
-      <div className="lg:col-span-4 flex flex-col h-full">
-        <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden">
-          <div className="p-4 border-b border-white/10 bg-black/20">
-            <h4 className="font-bold text-white text-sm uppercase tracking-wider">Daftar Galeri</h4>
-            <p className="text-xs text-gray-500">Total: {gallery.length} Item</p>
-          </div>
-          
-          <div className="flex-grow overflow-y-auto p-4 space-y-3 custom-scrollbar">
-            {paginatedGallery.map(item => (
-              <div key={item.id} onClick={() => handleEditClick(item)} className={`relative flex gap-3 p-3 rounded-lg border cursor-pointer transition-all group ${editingId === item.id ? 'bg-brand-orange/10 border-brand-orange shadow-neon-text' : 'bg-black/40 border-white/5 hover:bg-white/5 hover:border-white/20'}`}>
-                <img src={item.image_url} alt={item.title} className="w-16 h-16 object-cover rounded bg-black" />
-                <div className="flex-1 min-w-0">
-                   <h5 className="text-sm font-bold text-white truncate group-hover:text-brand-orange transition-colors">{item.title}</h5>
-                   <p className="text-xs text-gray-500 line-clamp-2 mt-1">{item.description || "Tanpa deskripsi"}</p>
-                </div>
-                <button onClick={(e) => { e.stopPropagation(); deleteGalleryItem(item.id); }} className="self-start text-gray-600 hover:text-red-500 transition-colors p-1"><Trash2 size={16} /></button>
-              </div>
-            ))}
-            {gallery.length === 0 && <p className="text-center text-gray-500 text-sm py-4">Belum ada data.</p>}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="p-4 border-t border-white/10 bg-black/20 flex justify-between items-center">
-              <button onClick={() => setGalleryPage(p => Math.max(1, p - 1))} disabled={galleryPage === 1} className="p-2 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white"><ChevronLeft size={16} /></button>
-              <span className="text-xs font-bold text-brand-orange">Page {galleryPage} of {totalPages}</span>
-              <button onClick={() => setGalleryPage(p => Math.min(totalPages, p + 1))} disabled={galleryPage === totalPages} className="p-2 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white"><ChevronRight size={16} /></button>
-            </div>
-          )}
-        </div>
+      {/* 40% Width for Form (Right) */}
+      <div className="lg:col-span-5">
+        <GalleryForm 
+            form={form} 
+            setForm={setForm} 
+            loading={loadingState} 
+            onSubmit={handleSubmit} 
+            onReset={resetForm} 
+            onGenerateAI={generateAINarrative}
+        />
       </div>
     </div>
   );

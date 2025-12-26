@@ -100,6 +100,14 @@ const App = () => {
 
   useEffect(() => { window.scrollTo(0, 0); }, [currentPage]);
 
+  // --- LOGOUT LOGIC ---
+  const handleLogout = () => {
+    if(confirm("Apakah anda yakin ingin logout dari Dashboard?")) {
+      setIsAdminLoggedIn(false);
+      setCurrentPage('home'); // Redirect ke Home setelah logout agar aman
+    }
+  };
+
   const renderPage = () => {
     switch(currentPage) {
       case 'home': return <HomePage setPage={setCurrentPage} config={config} />;
@@ -114,6 +122,7 @@ const App = () => {
               products={products} setProducts={setProducts}
               gallery={gallery} setGallery={setGallery}
               config={config} setConfig={setConfig}
+              onLogout={handleLogout}
             /> 
           : <AdminLogin onLogin={() => setIsAdminLoggedIn(true)} />;
       default: return <HomePage setPage={setCurrentPage} config={config} />;
