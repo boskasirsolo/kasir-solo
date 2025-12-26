@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from '@google/genai';
@@ -27,33 +27,27 @@ import {
   Palette,
   Code,
   Globe,
-  Lock
+  Lock,
+  Image as ImageIcon,
+  UploadCloud
 } from 'lucide-react';
 
 // --- Environment & Client Setup ---
 
-// Helper untuk membaca env variable dengan aman di berbagai environment
-// Mencegah crash jika import.meta.env atau process.env tidak terdefinisi
 const getEnv = (key: string) => {
   try {
-    // Coba baca dari import.meta.env (Vite)
     if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
       const val = (import.meta as any).env[key];
       if (val) return val;
     }
-  } catch (e) {
-    // Ignore error
-  }
+  } catch (e) {}
 
   try {
-    // Coba baca dari process.env (Fallback untuk Webpack/Node/Lainnya)
     if (typeof process !== 'undefined' && process.env) {
       const val = process.env[key];
       if (val) return val;
     }
-  } catch (e) {
-    // Ignore error
-  }
+  } catch (e) {}
 
   return '';
 };
@@ -61,13 +55,14 @@ const getEnv = (key: string) => {
 const SUPABASE_URL = getEnv('VITE_SUPABASE_URL');
 const SUPABASE_KEY = getEnv('VITE_SUPABASE_ANON_KEY');
 const GEMINI_API_KEY = getEnv('VITE_GEMINI_API_KEY');
+const CLOUDINARY_CLOUD_NAME = getEnv('VITE_CLOUDINARY_CLOUD_NAME');
+const CLOUDINARY_PRESET = getEnv('VITE_CLOUDINARY_UPLOAD_PRESET');
 
 // Initialize Clients
 const supabase = (SUPABASE_URL && SUPABASE_KEY) 
   ? createClient(SUPABASE_URL, SUPABASE_KEY) 
   : null;
 
-// Initialize Gemini hanya jika API Key tersedia
 const ai = GEMINI_API_KEY 
   ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) 
   : null;
@@ -90,6 +85,12 @@ interface Article {
   content: string;
   date: string;
   image: string;
+}
+
+interface GalleryItem {
+  id: number;
+  title: string;
+  image_url: string;
 }
 
 interface SiteConfig {
@@ -153,6 +154,12 @@ const INITIAL_ARTICLES: Article[] = [
   }
 ];
 
+const INITIAL_GALLERY: GalleryItem[] = [
+  { id: 1, title: "Instalasi Cafe Solo Baru", image_url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800" },
+  { id: 2, title: "Training Staff Minimarket", image_url: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=800" },
+  { id: 3, title: "Pameran UMKM 2023", image_url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800" },
+];
+
 // --- Components ---
 
 const formatRupiah = (number: number) => {
@@ -170,6 +177,7 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
   const navItems = [
     { id: 'home', label: 'Beranda' },
     { id: 'shop', label: 'Toko' },
+    { id: 'gallery', label: 'Galeri' }, // New Menu Item
     { id: 'articles', label: 'Artikel' },
     { id: 'about', label: 'Tentang' },
   ];
@@ -208,7 +216,6 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
                 {item.label.toUpperCase()}
               </button>
             ))}
-            {/* Login button hidden for public */}
           </div>
 
           {/* Mobile Toggle */}
@@ -292,7 +299,7 @@ const Layout = ({ children, setPage, currentPage }: { children?: React.ReactNode
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li><button onClick={() => setPage('shop')} className="hover:text-brand-orange transition-colors">Paket Mesin Kasir</button></li>
                 <li><button onClick={() => setPage('home')} className="hover:text-brand-orange transition-colors">Jasa Pembuatan Website</button></li>
-                <li><button onClick={() => setPage('articles')} className="hover:text-brand-orange transition-colors">Blog & Tips Bisnis</button></li>
+                <li><button onClick={() => setPage('gallery')} className="hover:text-brand-orange transition-colors">Galeri Dokumentasi</button></li>
                 <li><button onClick={() => setPage('about')} className="hover:text-brand-orange transition-colors">Konsultasi Gratis</button></li>
               </ul>
             </div>
@@ -476,6 +483,38 @@ const ShopPage = ({ products }: { products: Product[] }) => (
   </div>
 );
 
+const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => (
+  <div className="container mx-auto px-4 py-10 animate-fade-in">
+    <div className="text-center mb-12">
+      <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">Galeri <span className="text-brand-orange">Dokumentasi</span></h2>
+      <p className="text-gray-400 text-lg max-w-2xl mx-auto">Portofolio instalasi mesin kasir, aktivitas kantor, dan event terbaru kami.</p>
+    </div>
+
+    {gallery.length === 0 ? (
+      <div className="text-center py-20 bg-brand-card rounded-2xl border border-white/5 border-dashed">
+        <ImageIcon className="mx-auto w-16 h-16 text-gray-600 mb-4" />
+        <p className="text-gray-400">Belum ada foto di galeri saat ini.</p>
+      </div>
+    ) : (
+      <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+        {gallery.map((item) => (
+          <div key={item.id} className="break-inside-avoid relative group rounded-2xl overflow-hidden border border-white/5 hover:border-brand-orange transition-all duration-500">
+            <img 
+              src={item.image_url} 
+              alt={item.title} 
+              className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+              <h3 className="text-white font-bold text-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{item.title}</h3>
+              <div className="w-10 h-1 bg-brand-orange mt-2 rounded-full shadow-neon"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
 const ArticlesPage = ({ articles }: { articles: Article[] }) => (
   <div className="container mx-auto px-4 py-10 animate-fade-in">
     <div className="max-w-4xl mx-auto">
@@ -623,19 +662,26 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
 const AdminDashboard = ({ 
   products, setProducts, 
   articles, setArticles,
+  gallery, setGallery,
   config, setConfig 
 }: { 
   products: Product[], setProducts: any,
   articles: Article[], setArticles: any,
+  gallery: GalleryItem[], setGallery: any,
   config: SiteConfig, setConfig: any
 }) => {
-  const [activeTab, setActiveTab] = useState<'products' | 'articles' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'articles' | 'gallery' | 'settings'>('products');
   
   // States for forms
   const [newProdName, setNewProdName] = useState('');
   const [newProdPrice, setNewProdPrice] = useState('');
   const [newProdDesc, setNewProdDesc] = useState('');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  // States for Gallery Upload
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [galleryTitle, setGalleryTitle] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
   const addProduct = async () => {
     const newProduct = {
@@ -646,7 +692,6 @@ const AdminDashboard = ({
       image_url: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800'
     };
 
-    // Optimistic Update
     const tempId = Date.now();
     setProducts([...products, { ...newProduct, id: tempId, image: newProduct.image_url }]);
 
@@ -655,7 +700,6 @@ const AdminDashboard = ({
       if (error) {
         alert('Gagal simpan ke database: ' + error.message);
       } else {
-        // Refresh local data to get real ID if needed, simplified here
         setNewProdName('');
         setNewProdPrice('');
         setNewProdDesc('');
@@ -694,17 +738,81 @@ const AdminDashboard = ({
     }
   };
 
+  // --- Cloudinary Upload Logic ---
+  const handleImageUpload = async () => {
+    if (!uploadFile) {
+      alert("Pilih file gambar dulu!");
+      return;
+    }
+    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_PRESET) {
+      alert("Config Cloudinary belum lengkap di Environment Variables!");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      formData.append('upload_preset', CLOUDINARY_PRESET);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.secure_url) {
+        const newItem = {
+          title: galleryTitle || "Dokumentasi",
+          image_url: data.secure_url
+        };
+
+        // Optimistic Update
+        const tempId = Date.now();
+        setGallery([{...newItem, id: tempId}, ...gallery]);
+
+        if (supabase) {
+          await supabase.from('gallery').insert([newItem]);
+        }
+
+        setUploadFile(null);
+        setGalleryTitle('');
+        alert("Upload Berhasil!");
+      } else {
+        throw new Error("Gagal upload ke Cloudinary");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Upload gagal. Cek console.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const deleteGalleryItem = async (id: number) => {
+    setGallery(gallery.filter(g => g.id !== id));
+    if (supabase) {
+      await supabase.from('gallery').delete().eq('id', id);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-10">
       <h2 className="text-3xl font-bold text-white mb-8 border-b border-white/10 pb-4">Dashboard Admin</h2>
       
       {/* Tabs */}
-      <div className="flex gap-4 mb-8 overflow-x-auto">
+      <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
         <button 
           onClick={() => setActiveTab('products')}
           className={`px-6 py-2 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === 'products' ? 'bg-brand-orange text-white shadow-neon' : 'bg-brand-card text-gray-400 hover:text-white'}`}
         >
           Kelola Produk
+        </button>
+        <button 
+          onClick={() => setActiveTab('gallery')}
+          className={`px-6 py-2 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === 'gallery' ? 'bg-brand-orange text-white shadow-neon' : 'bg-brand-card text-gray-400 hover:text-white'}`}
+        >
+          Kelola Galeri
         </button>
         <button 
           onClick={() => setActiveTab('articles')}
@@ -791,6 +899,70 @@ const AdminDashboard = ({
           </div>
         )}
 
+        {activeTab === 'gallery' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-white">Upload Galeri (Cloudinary)</h3>
+            </div>
+
+            {/* Upload Form */}
+            <div className="mb-8 bg-brand-dark p-6 rounded-xl border border-white/5 space-y-4">
+              <div className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center hover:border-brand-orange transition-colors">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => setUploadFile(e.target.files ? e.target.files[0] : null)}
+                  className="hidden" 
+                  id="file-upload"
+                />
+                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                  <UploadCloud size={40} className="text-gray-400" />
+                  <span className="text-gray-300 font-bold">{uploadFile ? uploadFile.name : "Klik untuk pilih foto"}</span>
+                  <span className="text-xs text-gray-500">Mendukung JPG, PNG, WEBP</span>
+                </label>
+              </div>
+              
+              <input 
+                value={galleryTitle}
+                onChange={e => setGalleryTitle(e.target.value)}
+                placeholder="Judul / Caption Foto" 
+                className="bg-brand-card border border-white/10 rounded px-4 py-3 text-white w-full focus:border-brand-orange outline-none" 
+              />
+              
+              <button 
+                onClick={handleImageUpload}
+                disabled={isUploading}
+                className="w-full bg-brand-orange/20 text-brand-orange hover:bg-brand-orange hover:text-white border border-brand-orange/50 rounded px-3 py-3 transition-all flex items-center justify-center gap-2 font-bold shadow-neon hover:shadow-neon-strong disabled:opacity-50"
+              >
+                {isUploading ? <Loader2 className="animate-spin" /> : <Plus size={16} />} 
+                {isUploading ? 'MENGUPLOAD...' : 'UPLOAD KE GALERI'}
+              </button>
+              
+              {!CLOUDINARY_CLOUD_NAME && (
+                <p className="text-xs text-red-400 text-center">Warning: API Key Cloudinary belum diset di .env</p>
+              )}
+            </div>
+
+            {/* Gallery List */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+               {gallery.map(g => (
+                 <div key={g.id} className="relative group rounded-lg overflow-hidden border border-white/10">
+                   <img src={g.image_url} alt={g.title} className="w-full h-32 object-cover" />
+                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                      <p className="text-xs text-white px-2 text-center">{g.title}</p>
+                      <button 
+                        onClick={() => deleteGalleryItem(g.id)}
+                        className="p-2 bg-red-500 rounded-full text-white hover:bg-red-600"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                   </div>
+                 </div>
+               ))}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'settings' && (
           <div className="max-w-xl">
              <h3 className="text-xl font-bold text-white mb-6">Status Sistem & Koneksi</h3>
@@ -804,19 +976,24 @@ const AdminDashboard = ({
                   )}
                 </div>
                 <div className="flex items-center justify-between p-4 bg-brand-dark border border-white/10 rounded-lg">
-                  <span className="text-white font-medium">Gemini AI (Vite Key)</span>
+                  <span className="text-white font-medium">Gemini AI</span>
                   {ai ? (
-                    <span className="flex items-center gap-2 text-green-400 text-sm font-bold bg-green-400/10 px-3 py-1 rounded-full"><CheckCircle2 size={16} /> Key Detected</span>
+                    <span className="flex items-center gap-2 text-green-400 text-sm font-bold bg-green-400/10 px-3 py-1 rounded-full"><CheckCircle2 size={16} /> Ready</span>
                   ) : (
                     <span className="flex items-center gap-2 text-red-400 text-sm font-bold bg-red-400/10 px-3 py-1 rounded-full"><AlertCircle size={16} /> Missing Key</span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between p-4 bg-brand-dark border border-white/10 rounded-lg">
+                  <span className="text-white font-medium">Cloudinary Storage</span>
+                  {CLOUDINARY_CLOUD_NAME && CLOUDINARY_PRESET ? (
+                    <span className="flex items-center gap-2 text-green-400 text-sm font-bold bg-green-400/10 px-3 py-1 rounded-full"><CheckCircle2 size={16} /> Configured</span>
+                  ) : (
+                    <span className="flex items-center gap-2 text-red-400 text-sm font-bold bg-red-400/10 px-3 py-1 rounded-full"><AlertCircle size={16} /> Missing Config</span>
                   )}
                 </div>
              </div>
 
              <h3 className="text-xl font-bold text-white mb-6">Tampilan Website (SEO Config)</h3>
-             <p className="text-sm text-gray-500 mb-6 bg-yellow-500/10 border border-yellow-500/20 p-3 rounded">
-               Catatan: Gunakan kata kunci yang relevan untuk judul dan sub-judul agar mudah ditemukan di Google.
-             </p>
              <div className="space-y-6">
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">Judul Hero Utama (H1)</label>
@@ -859,6 +1036,8 @@ const App = () => {
   // Data State
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
+  const [gallery, setGallery] = useState<GalleryItem[]>(INITIAL_GALLERY);
+  
   const [config, setConfig] = useState<SiteConfig>({
     heroTitle: "MESIN KASIR SOLO & DIGITAL AGENCY",
     heroSubtitle: "Pusat penjualan mesin kasir modern (POS) dan jasa pembuatan website profesional untuk digitalisasi bisnis UMKM hingga Korporasi di Solo Raya."
@@ -910,6 +1089,16 @@ const App = () => {
           setArticles(mappedArticles);
         }
 
+        // Fetch Gallery
+        const { data: galData, error: galError } = await supabase
+          .from('gallery')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (!galError && galData && galData.length > 0) {
+          setGallery(galData);
+        }
+
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -927,6 +1116,7 @@ const App = () => {
     switch(currentPage) {
       case 'home': return <HomePage setPage={setCurrentPage} config={config} />;
       case 'shop': return <ShopPage products={products} />;
+      case 'gallery': return <GalleryPage gallery={gallery} />;
       case 'articles': return <ArticlesPage articles={articles} />;
       case 'about': return <AboutPage />;
       case 'admin': 
@@ -934,6 +1124,7 @@ const App = () => {
           ? <AdminDashboard 
               products={products} setProducts={setProducts}
               articles={articles} setArticles={setArticles}
+              gallery={gallery} setGallery={setGallery}
               config={config} setConfig={setConfig}
             /> 
           : <AdminLogin onLogin={() => setIsAdminLoggedIn(true)} />;
