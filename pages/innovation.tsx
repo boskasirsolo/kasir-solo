@@ -70,7 +70,7 @@ const SmartLinkButton = ({ url, defaultLabel, waLabel }: { url?: string, default
       href={targetUrl} 
       target="_blank" 
       rel="noreferrer"
-      className={`inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all transform hover:-translate-y-1 ${
+      className={`w-full md:w-auto inline-flex justify-center items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all transform hover:-translate-y-1 ${
         isLinkActive 
           ? 'bg-brand-orange text-white hover:bg-brand-glow shadow-neon' 
           : 'bg-white text-black hover:bg-gray-200 shadow-lg'
@@ -88,7 +88,7 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
     <div className="animate-fade-in">
       
       {/* HERO SECTION */}
-      <section className="relative py-24 md:py-32 overflow-hidden border-b border-white/5">
+      <section className="relative py-20 md:py-32 overflow-hidden border-b border-white/5">
         <div className="absolute inset-0 z-0">
           {/* SIBOS SIDE (Left) */}
           <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-br from-brand-orange/5 to-transparent blur-[100px]"></div>
@@ -100,29 +100,30 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
           <div className="inline-block px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-6">
             <span className="text-xs font-bold text-gray-300 tracking-[0.2em] uppercase">Software Division</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-display font-bold text-white mb-6">
+          <h1 className="text-4xl md:text-7xl font-display font-bold text-white mb-6 leading-tight">
             The Brain <span className="text-brand-orange">&</span> The Heart
           </h1>
-          <p className="max-w-2xl mx-auto text-xl text-gray-400 leading-relaxed mb-10">
+          <p className="max-w-2xl mx-auto text-base md:text-xl text-gray-400 leading-relaxed mb-10">
             Dari kegagalan masa lalu, lahir inovasi masa depan. Kami membangun ekosistem digital bukan hanya untuk profit, tapi untuk peradaban.
           </p>
         </div>
       </section>
 
       {/* SIBOS SECTION (The Brain) */}
-      <section className="py-20 relative bg-brand-black">
+      <section className="py-12 md:py-20 relative bg-brand-black">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          {/* Updated Grid: Changed order so Text comes first on mobile */}
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             
-            {/* Content */}
-            <div className="order-2 lg:order-1">
+            {/* Content (Now First on Mobile) */}
+            <div>
               <div className="flex items-center gap-3 mb-4">
-                <Cpu className="text-brand-orange" size={32} />
-                <h2 className="text-4xl font-display font-bold text-white">SIBOS</h2>
+                <Cpu className="text-brand-orange" size={28} /> {/* Responsive Icon Size */}
+                <h2 className="text-3xl md:text-4xl font-display font-bold text-white">SIBOS</h2>
               </div>
-              <p className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-6">Smart Integrated Back Office System</p>
+              <p className="text-brand-orange font-bold text-xs md:text-sm tracking-widest uppercase mb-6">Smart Integrated Back Office System</p>
               
-              <div className="prose prose-invert prose-lg text-gray-400 mb-8">
+              <div className="prose prose-invert prose-sm md:prose-lg text-gray-400 mb-8 leading-relaxed">
                 <p>
                   <strong className="text-white">The Phoenix Project.</strong> Sempat mati suri di 2020. Hilang total di 2022. Kini lahir kembali sebagai sistem saraf pusat bisnis Anda.
                 </p>
@@ -132,20 +133,20 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
                 </p>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-6 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-10">
                 {[
                   { icon: ShieldCheck, title: "Anti-Fraud", desc: "Deteksi manipulasi stok & kasir." },
                   { icon: Cloud, title: "Hybrid Cloud", desc: "Internet mati? Jualan jalan terus." },
                   { icon: Smartphone, title: "Owner Eye", desc: "Pantau omzet real-time dari HP." },
                   { icon: TrendingUp, title: "Smart Analytic", desc: "Prediksi tren penjualan otomatis." },
                 ].map((item, idx) => (
-                  <div key={idx} className="flex gap-4">
+                  <div key={idx} className="flex gap-4 p-3 md:p-0 rounded-lg md:rounded-none bg-white/5 md:bg-transparent border md:border-none border-white/5">
                     <div className="w-10 h-10 rounded bg-brand-orange/10 flex items-center justify-center text-brand-orange shrink-0">
                       <item.icon size={20} />
                     </div>
                     <div>
                       <h4 className="font-bold text-white text-sm">{item.title}</h4>
-                      <p className="text-gray-500 text-xs">{item.desc}</p>
+                      <p className="text-gray-500 text-xs leading-snug">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -158,8 +159,8 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
               />
             </div>
 
-            {/* Visual / Calculator */}
-            <div className="order-1 lg:order-2">
+            {/* Visual / Calculator (Now Second on Mobile) */}
+            <div className="mt-4 md:mt-0">
               <LossCalculator />
             </div>
 
@@ -171,18 +172,23 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
       <div className="h-px bg-gradient-to-r from-brand-orange via-gray-800 to-teal-500 opacity-30"></div>
 
       {/* QALAM SECTION (The Heart) */}
-      <section className="py-20 relative bg-[#0a0f0f]"> {/* Slightly different dark tone */}
+      <section className="py-12 md:py-20 relative bg-[#0a0f0f]">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             
-            {/* Visual Placeholder */}
-            <div className="relative group">
+            {/* Visual Placeholder (First on Desktop, Top on Mobile for standard flow - or swap for consistency?) 
+                Let's keep standard: Visual Top on Mobile usually looks nice for Apps, 
+                but here let's stick to Text First for consistency with SIBOS if we want a uniform reading experience.
+                However, for "The Heart", maybe visual first is fine. 
+                Let's adjust font sizes and padding only. 
+            */}
+            <div className="relative group order-first lg:order-none">
                <div className="absolute inset-0 bg-teal-500/10 rounded-3xl blur-[40px] group-hover:bg-teal-500/20 transition-all duration-700"></div>
-               <div className="relative bg-brand-card border border-teal-500/20 rounded-3xl p-8 h-[500px] flex flex-col items-center justify-center overflow-hidden">
+               <div className="relative bg-brand-card border border-teal-500/20 rounded-3xl p-4 md:p-8 h-[400px] md:h-[500px] flex flex-col items-center justify-center overflow-hidden">
                   <div className="absolute top-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
                   
                   {/* Mockup Illustration */}
-                  <div className="w-64 h-[450px] bg-black border-4 border-gray-800 rounded-[3rem] shadow-2xl relative overflow-hidden transform group-hover:scale-105 transition-transform duration-500">
+                  <div className="w-56 md:w-64 h-full bg-black border-4 border-gray-800 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl relative overflow-hidden transform group-hover:scale-105 transition-transform duration-500">
                      <div className="absolute top-0 w-full h-6 bg-gray-800 flex justify-center items-center">
                         <div className="w-20 h-3 bg-black rounded-b-lg"></div>
                      </div>
@@ -192,13 +198,13 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
                            <div className="w-8 h-8 rounded-full bg-teal-500"></div>
                            <div className="w-20 h-2 bg-gray-700 rounded"></div>
                         </div>
-                        <div className="w-full h-32 bg-teal-500/10 rounded-xl mb-4 border border-teal-500/30 flex items-center justify-center">
+                        <div className="w-full h-24 md:h-32 bg-teal-500/10 rounded-xl mb-4 border border-teal-500/30 flex items-center justify-center">
                            <p className="text-teal-500 text-xs font-bold">Grafik Hafalan Santri</p>
                         </div>
                         <div className="space-y-2">
-                           <div className="w-full h-12 bg-gray-800/50 rounded-lg"></div>
-                           <div className="w-full h-12 bg-gray-800/50 rounded-lg"></div>
-                           <div className="w-full h-12 bg-gray-800/50 rounded-lg"></div>
+                           <div className="w-full h-10 md:h-12 bg-gray-800/50 rounded-lg"></div>
+                           <div className="w-full h-10 md:h-12 bg-gray-800/50 rounded-lg"></div>
+                           <div className="w-full h-10 md:h-12 bg-gray-800/50 rounded-lg"></div>
                         </div>
                      </div>
                   </div>
@@ -206,14 +212,14 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
             </div>
 
             {/* Content */}
-            <div>
+            <div className="mt-4 md:mt-0">
               <div className="flex items-center gap-3 mb-4">
-                <Heart className="text-teal-500" size={32} />
-                <h2 className="text-4xl font-display font-bold text-white">QALAM</h2>
+                <Heart className="text-teal-500" size={28} />
+                <h2 className="text-3xl md:text-4xl font-display font-bold text-white">QALAM</h2>
               </div>
-              <p className="text-teal-500 font-bold text-sm tracking-widest uppercase mb-6">Aplikasi Manajemen TPA & Pendidikan</p>
+              <p className="text-teal-500 font-bold text-xs md:text-sm tracking-widest uppercase mb-6">Aplikasi Manajemen TPA & Pendidikan</p>
               
-              <div className="prose prose-invert prose-lg text-gray-400 mb-8">
+              <div className="prose prose-invert prose-sm md:prose-lg text-gray-400 mb-8 leading-relaxed">
                 <p>
                   <strong className="text-white">Digitalisasi Generasi Qur'ani.</strong> Teknologi bukan hanya untuk mengejar profit duniawi. QALAM adalah wujud bakti kami.
                 </p>
@@ -222,34 +228,22 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
                 </p>
               </div>
 
-              <div className="space-y-6 mb-10">
-                 <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500 shrink-0">
-                       <BookOpen size={24} />
+              <div className="space-y-4 md:space-y-6 mb-10">
+                 {[
+                    {icon: BookOpen, title: "Digital Raport", desc: "Orang tua memantau progres hafalan anak real-time."},
+                    {icon: Users, title: "SPP & Infaq Management", desc: "Transparansi keuangan lembaga yang akuntabel."},
+                    {icon: Award, title: "Gamification Santri", desc: "Sistem poin dan reward untuk semangat belajar."}
+                 ].map((item, idx) => (
+                    <div key={idx} className="flex gap-4 p-3 md:p-0 rounded-lg md:rounded-none bg-white/5 md:bg-transparent border md:border-none border-white/5">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500 shrink-0">
+                           <item.icon size={20} />
+                        </div>
+                        <div>
+                           <h4 className="text-white font-bold text-sm md:text-lg">{item.title}</h4>
+                           <p className="text-gray-500 text-xs md:text-sm leading-snug">{item.desc}</p>
+                        </div>
                     </div>
-                    <div>
-                       <h4 className="text-white font-bold text-lg">Digital Raport</h4>
-                       <p className="text-gray-500 text-sm">Orang tua memantau progres hafalan anak real-time.</p>
-                    </div>
-                 </div>
-                 <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500 shrink-0">
-                       <Users size={24} />
-                    </div>
-                    <div>
-                       <h4 className="text-white font-bold text-lg">SPP & Infaq Management</h4>
-                       <p className="text-gray-500 text-sm">Transparansi keuangan lembaga yang akuntabel.</p>
-                    </div>
-                 </div>
-                 <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500 shrink-0">
-                       <Award size={24} />
-                    </div>
-                    <div>
-                       <h4 className="text-white font-bold text-lg">Gamification Santri</h4>
-                       <p className="text-gray-500 text-sm">Sistem poin dan reward untuk semangat belajar.</p>
-                    </div>
-                 </div>
+                 ))}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">

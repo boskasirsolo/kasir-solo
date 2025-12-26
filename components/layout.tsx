@@ -36,7 +36,8 @@ const NavLink = ({
   label: string, 
   active: boolean, 
   onClick: () => void, 
-  mobile?: boolean 
+  mobile?: boolean,
+  key?: any
 }) => {
   if (mobile) {
     return (

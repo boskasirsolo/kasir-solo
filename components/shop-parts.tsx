@@ -97,7 +97,8 @@ export const ProductCard = ({
   onDetail 
 }: { 
   product: Product, 
-  onDetail: (p: Product) => void 
+  onDetail: (p: Product) => void,
+  key?: any
 }) => (
   <Card className="flex flex-col h-full group">
     <ProductImage image={product.image} name={product.name} category={product.category} />

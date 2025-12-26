@@ -12,7 +12,7 @@ export const Button = ({
   disabled = false,
   type = 'button'
 }: { 
-  children: React.ReactNode, 
+  children?: React.ReactNode, 
   variant?: 'primary' | 'outline' | 'ghost' | 'danger', 
   onClick?: () => void, 
   className?: string,
@@ -81,7 +81,7 @@ export const TextArea = ({
   />
 );
 
-export const Badge = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
+export const Badge = ({ children, className = '' }: { children?: React.ReactNode, className?: string }) => (
   <span className={`px-3 py-1 rounded-full text-xs font-bold text-brand-orange border border-brand-orange/30 bg-black/60 backdrop-blur-sm ${className}`}>
     {children}
   </span>
@@ -100,7 +100,7 @@ export const LoadingSpinner = () => <Loader2 className="animate-spin" />;
 
 // --- Molecules ---
 
-export const Card = ({ children, className = '', hoverEffect = true }: { children: React.ReactNode, className?: string, hoverEffect?: boolean }) => (
+export const Card = ({ children, className = '', hoverEffect = true }: { children?: React.ReactNode, className?: string, hoverEffect?: boolean, key?: any }) => (
   <div className={`bg-brand-card border border-white/5 rounded-2xl overflow-hidden ${hoverEffect ? 'hover:border-brand-orange transition-all duration-300 hover:shadow-neon hover:-translate-y-2 group' : ''} ${className}`}>
     {children}
   </div>

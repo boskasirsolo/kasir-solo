@@ -159,13 +159,15 @@ const OrderCard = ({
     expanded, 
     onToggle, 
     items,
-    onStatusUpdate 
+    onStatusUpdate,
+    key
 }: { 
     order: Order, 
     expanded: boolean, 
     onToggle: () => void,
     items: OrderItem[],
-    onStatusUpdate: (id: number, status: string) => void
+    onStatusUpdate: (id: number, status: string) => void,
+    key?: any
 }) => (
     <div className={`bg-brand-dark border transition-all rounded-xl overflow-hidden mb-3 ${expanded ? 'border-brand-orange/50 shadow-neon-text/10' : 'border-white/5 hover:border-white/20'}`}>
         <div 

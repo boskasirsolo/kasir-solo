@@ -14,7 +14,7 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider = ({ children }: { children: React.ReactNode }) => {
+export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
 
   // Load cart from localStorage on mount
