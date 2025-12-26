@@ -1,0 +1,107 @@
+
+import React from 'react';
+import { Loader2 } from 'lucide-react';
+
+// --- Atoms ---
+
+export const Button = ({ 
+  children, 
+  variant = 'primary', 
+  onClick, 
+  className = '', 
+  disabled = false,
+  type = 'button'
+}: { 
+  children: React.ReactNode, 
+  variant?: 'primary' | 'outline' | 'ghost' | 'danger', 
+  onClick?: () => void, 
+  className?: string,
+  disabled?: boolean,
+  type?: 'button' | 'submit'
+}) => {
+  const baseStyles = "rounded-lg font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  
+  const variants = {
+    primary: "bg-brand-orange text-white hover:bg-brand-glow shadow-neon hover:shadow-neon-strong transform hover:-translate-y-1",
+    outline: "border-2 border-white/10 text-white hover:bg-white/5 hover:border-brand-orange/50 hover:shadow-neon",
+    ghost: "text-gray-400 hover:text-brand-orange hover:bg-white/5",
+    danger: "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20"
+  };
+
+  return (
+    <button 
+      type={type}
+      onClick={onClick} 
+      disabled={disabled}
+      className={`${baseStyles} ${variants[variant]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+export const Input = ({
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  className = ""
+}: {
+  value: string | number,
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
+  placeholder?: string,
+  type?: string,
+  className?: string
+}) => (
+  <input 
+    type={type}
+    value={value}
+    onChange={onChange}
+    placeholder={placeholder}
+    className={`bg-brand-card border border-white/10 rounded-lg px-4 py-3 text-white w-full focus:border-brand-orange outline-none transition-colors focus:shadow-neon-text/20 ${className}`} 
+  />
+);
+
+export const TextArea = ({
+  value,
+  onChange,
+  placeholder,
+  className = ""
+}: {
+  value: string,
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void,
+  placeholder?: string,
+  className?: string
+}) => (
+  <textarea 
+    value={value}
+    onChange={onChange}
+    placeholder={placeholder}
+    className={`bg-brand-card border border-white/10 rounded-lg px-4 py-3 text-white w-full focus:border-brand-orange outline-none transition-colors focus:shadow-neon-text/20 ${className}`} 
+  />
+);
+
+export const Badge = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
+  <span className={`px-3 py-1 rounded-full text-xs font-bold text-brand-orange border border-brand-orange/30 bg-black/60 backdrop-blur-sm ${className}`}>
+    {children}
+  </span>
+);
+
+export const SectionHeader = ({ title, subtitle, highlight }: { title: string, subtitle?: string, highlight: string }) => (
+  <div className="text-center mb-12">
+    <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
+      {title} <span className="text-brand-orange">{highlight}</span>
+    </h2>
+    {subtitle && <p className="text-gray-400 text-lg max-w-2xl mx-auto">{subtitle}</p>}
+  </div>
+);
+
+export const LoadingSpinner = () => <Loader2 className="animate-spin" />;
+
+// --- Molecules ---
+
+export const Card = ({ children, className = '', hoverEffect = true }: { children: React.ReactNode, className?: string, hoverEffect?: boolean }) => (
+  <div className={`bg-brand-card border border-white/5 rounded-2xl overflow-hidden ${hoverEffect ? 'hover:border-brand-orange transition-all duration-300 hover:shadow-neon hover:-translate-y-2 group' : ''} ${className}`}>
+    {children}
+  </div>
+);
