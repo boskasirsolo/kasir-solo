@@ -75,8 +75,8 @@ export const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => {
             onClick={() => setSelectedItem(null)}
           />
 
-          {/* 2. Modal Panel (Centered & Scrollable Internally) */}
-          <div className="relative w-full max-w-7xl max-h-[90vh] overflow-y-auto rounded-2xl bg-brand-dark shadow-2xl border border-white/10 animate-fade-in flex flex-col md:flex-row z-[10000] custom-scrollbar">
+          {/* 2. Modal Panel (Fixed Height Container with Hidden Overflow) */}
+          <div className="relative w-full max-w-7xl h-[90vh] rounded-2xl bg-brand-dark shadow-2xl border border-white/10 animate-fade-in flex flex-col md:flex-row z-[10000] overflow-hidden">
             
             {/* Close Button */}
             <button 
@@ -86,13 +86,13 @@ export const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => {
               <X size={24} />
             </button>
 
-            {/* LEFT SIDE: MEDIA */}
-            <div className="w-full md:w-2/3 bg-black flex items-center justify-center relative min-h-[300px] md:min-h-[600px]">
+            {/* LEFT SIDE: MEDIA (Fixed Height on Mobile, Full Height on Desktop) */}
+            <div className="w-full md:w-2/3 h-[40%] md:h-full bg-black flex items-center justify-center relative border-b md:border-b-0 md:border-r border-white/10">
               {selectedItem.type === 'video' && selectedItem.video_url ? (
                 <iframe 
                   src={selectedItem.video_url} 
                   title={selectedItem.title}
-                  className="w-full h-full aspect-video md:h-[500px]"
+                  className="w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 ></iframe>
@@ -100,15 +100,16 @@ export const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => {
                 <img 
                   src={selectedItem.image_url} 
                   alt={selectedItem.title} 
-                  className="w-full h-auto max-h-[80vh] object-contain"
+                  className="w-full h-full object-contain p-4 md:p-0"
                 />
               )}
             </div>
 
-            {/* RIGHT SIDE: INFO (Sticky on Desktop) */}
-            <div className="w-full md:w-1/3 flex-shrink-0 bg-brand-card/95 backdrop-blur-xl border-t md:border-t-0 md:border-l border-white/10 flex flex-col">
-              {/* Header Info */}
-              <div className="p-8 border-b border-white/10 text-left">
+            {/* RIGHT SIDE: INFO (Takes remaining height) */}
+            <div className="w-full md:w-1/3 h-[60%] md:h-full flex flex-col bg-brand-card/95 backdrop-blur-xl">
+              
+              {/* Header Info (Fixed) */}
+              <div className="p-6 md:p-8 border-b border-white/10 text-left shrink-0">
                 <div className="flex items-center gap-2 text-brand-orange text-xs font-bold tracking-widest uppercase mb-3">
                   <Calendar size={14} /> Dokumentasi
                 </div>
@@ -122,8 +123,8 @@ export const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => {
                 )}
               </div>
 
-              {/* Description */}
-              <div className="p-8 flex-grow text-left overflow-y-auto custom-scrollbar">
+              {/* Description (Scrollable) */}
+              <div className="p-6 md:p-8 flex-grow overflow-y-auto custom-scrollbar text-left">
                 <p className="text-gray-300 leading-relaxed text-base whitespace-pre-line">
                   {selectedItem.description || "Belum ada deskripsi untuk dokumentasi ini."}
                 </p>
@@ -135,8 +136,8 @@ export const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => {
                 </div>
               </div>
 
-              {/* Action Button */}
-              <div className="p-6 border-t border-white/10 bg-brand-dark/50 mt-auto">
+              {/* Action Button (Fixed Bottom) */}
+              <div className="p-6 border-t border-white/10 bg-brand-dark/50 shrink-0">
                 <a 
                   href="https://wa.me/6282325103336" 
                   target="_blank" 

@@ -5,12 +5,13 @@ import {
   ArrowRight, Clock, Calendar, User, Tag, 
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
   Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
-  ChevronLeft, Send, ThumbsUp
+  ChevronLeft, Send, Plus, Check
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
 import { formatRupiah } from '../utils';
 import { useCart } from '../context/cart-context';
+import { ProductDetailModal } from './shop-parts'; // Import Modal Detail Produk
 
 // ==========================================
 // 1. LOGIC & HOOKS (Controller Layer for UI)
@@ -36,7 +37,6 @@ export const useReadingProgress = () => {
   return { progress, scrollPos, containerRef, handleScroll };
 };
 
-// Ubah default itemsPerPage jadi 30 agar halaman tidak terlalu banyak (Max 3-4 halaman)
 export const useArticlePagination = (content: string, itemsPerPage: number = 30) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -71,10 +71,8 @@ export const renderFormattedText = (text: string) => {
   });
 };
 
-// Updated: Now returns original index to help with pagination jumps
 const extractHeadings = (content: string) => {
   const allLines = content.split('\n');
-  // Filter empty lines to match pagination logic indices, but keep track of content
   const nonEmptyLines = allLines.filter(line => line.trim() !== '');
   
   return nonEmptyLines.reduce((acc, line, index) => {
@@ -185,7 +183,7 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
     <div 
       className="fixed top-0 left-0 w-full z-50 overflow-hidden border-b border-white/10 shadow-2xl will-change-[height]" 
       style={{ height: `${currentHeight}px`, transition: 'none' }}
-      onWheel={onWheelProxy} // PROXY SCROLL KE CONTAINER UTAMA
+      onWheel={onWheelProxy}
     >
         {/* Progress Bar */}
         <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10 z-50">
@@ -203,7 +201,7 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
               src={article.image} 
               alt={article.title} 
               className="w-full h-full object-cover" 
-              style={{ filter: `brightness(${0.4 + (expandRatio * 0.4)})` }} // Gelap saat shrink
+              style={{ filter: `brightness(${0.4 + (expandRatio * 0.4)})` }}
             />
             {/* Overlay Gradient untuk compact mode */}
             <div className="absolute inset-0 bg-brand-black" style={{ opacity: collapseRatio * 0.9 }}></div>
@@ -214,7 +212,7 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
         {/* Content Container */}
         <div className="container mx-auto px-4 h-full relative z-10 max-w-7xl pointer-events-none">
             
-            {/* Compact State Title (Muncul saat discroll ke bawah) */}
+            {/* Compact State Title */}
             <div 
               className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 flex items-center"
               style={{ opacity: collapseRatio, pointerEvents: collapseRatio > 0.5 ? 'auto' : 'none' }}
@@ -222,7 +220,7 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
                <h2 className="text-lg md:text-xl font-bold text-white line-clamp-1 max-w-xl drop-shadow-md">{article.title}</h2>
             </div>
 
-            {/* Expanded State Content (Hilang saat discroll ke bawah) */}
+            {/* Expanded State Content */}
             <div 
               className="absolute bottom-10 left-4 md:left-8 origin-bottom-left"
               style={{ 
@@ -284,7 +282,7 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
         </div>
       )}
 
-      {/* Author Box (Last Page) */}
+      {/* Author Box */}
       {currentPage === totalPages && (
         <div className="mt-20 p-8 bg-brand-card rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left animate-fade-in">
               <div className="w-20 h-20 bg-brand-orange/20 rounded-full flex items-center justify-center text-brand-orange border border-brand-orange/30 shrink-0"><User size={40} /></div>
@@ -298,8 +296,6 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
   </div>
 );
 
-// --- SIDEBAR LEFT: Table of Contents & Socials & Comments ---
-// Added activeId prop for highlight logic
 const ArticleSidebarLeft = ({ 
   article, 
   onHeadingClick, 
@@ -373,7 +369,6 @@ const ArticleSidebarLeft = ({
                 <button onClick={() => handleShare('copy')} className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><LinkIcon size={16} /></button>
             </div>
             
-            {/* Comment Section */}
             {!showCommentForm ? (
                 <button 
                     onClick={() => setShowCommentForm(true)}
@@ -397,7 +392,6 @@ const ArticleSidebarLeft = ({
                 </div>
             )}
 
-            {/* Comment List (Preview) */}
             <div className="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
                 {comments.map((c, i) => (
                     <div key={i} className="bg-black/20 p-3 rounded-lg border border-white/5">
@@ -414,10 +408,171 @@ const ArticleSidebarLeft = ({
   );
 };
 
-// --- SIDEBAR RIGHT: Product Recommendations ---
-const ArticleSidebarRight = ({ article, products }: { article: Article, products: Product[] }) => {
+// --- SIDEBAR RIGHT: COMPONENTS ---
+
+// 1. Flying Particle Animation (Copied locally to ensure self-containment for the modal context)
+const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: string, startRect: DOMRect, targetRect: DOMRect, onFinish: () => void }) => {
+  const [style, setStyle] = useState<React.CSSProperties>({
+    position: 'fixed',
+    top: startRect.top,
+    left: startRect.left,
+    width: 60,
+    height: 60,
+    opacity: 1,
+    zIndex: 99999, // Super high z-index for modal overlay
+    borderRadius: '8px',
+    objectFit: 'cover',
+    pointerEvents: 'none',
+    transition: 'all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
+    boxShadow: '0 0 15px rgba(255, 95, 31, 0.8)'
+  });
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      setStyle(prev => ({
+        ...prev,
+        top: targetRect.top + 10,
+        left: targetRect.left + 10,
+        width: 20,
+        height: 20,
+        opacity: 0,
+        transform: 'scale(0.5) rotate(360deg)'
+      }));
+    });
+    const timer = setTimeout(onFinish, 800);
+    return () => clearTimeout(timer);
+  }, [targetRect, onFinish]);
+
+  return <img src={src} style={style} alt="flying-product" />;
+};
+
+// 2. Sidebar Product Card (Matches Shop Card Design but Compact)
+const SidebarProductCard = ({ 
+  product, 
+  onDetail 
+}: { 
+  product: Product, 
+  onDetail: () => void 
+}) => {
   const { addToCart } = useCart();
-  
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [flyData, setFlyData] = useState<{ start: DOMRect, target: DOMRect } | null>(null);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop propagation to prevent opening the modal when clicking 'Buy'
+    if (isAnimating) return;
+
+    // Find cart target (prioritize mobile button in modal if existing, else desktop main layout)
+    const cartBtnDesktop = document.getElementById('desktop-cart-btn');
+    const cartBtnMobile = document.getElementById('mobile-cart-btn');
+    const targetEl = (cartBtnMobile && cartBtnMobile.offsetWidth > 0) ? cartBtnMobile : cartBtnDesktop;
+
+    if (buttonRef.current && targetEl) {
+      const startRect = buttonRef.current.getBoundingClientRect();
+      const targetRect = targetEl.getBoundingClientRect();
+      
+      setIsAnimating(true);
+      setFlyData({ start: startRect, target: targetRect });
+      
+      setTimeout(() => {
+        addToCart(product);
+        setIsAdded(true);
+      }, 600);
+
+      setTimeout(() => {
+        setIsAdded(false);
+        setIsAnimating(false);
+        setFlyData(null);
+      }, 2000);
+    } else {
+      addToCart(product);
+    }
+  };
+
+  return (
+    <>
+      {flyData && createPortal(
+        <FlyingParticle 
+          src={product.image} 
+          startRect={flyData.start} 
+          targetRect={flyData.target} 
+          onFinish={() => {}} 
+        />, 
+        document.body
+      )}
+
+      <div 
+        onClick={onDetail}
+        className="bg-brand-card border border-white/10 rounded-xl overflow-hidden hover:border-brand-orange transition-all shadow-lg hover:shadow-neon flex flex-col group cursor-pointer"
+      >
+        {/* Image Section - Compact Height */}
+        <div className="relative h-28 w-full bg-black border-b border-white/5 overflow-hidden">
+          <img 
+            src={product.image} 
+            alt={product.name} 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-60"></div>
+          <div className="absolute top-2 right-2">
+            <span className="bg-brand-orange text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">{product.category}</span>
+          </div>
+        </div>
+
+        {/* Content Section - Compact Padding */}
+        <div className="p-3 flex flex-col">
+          <h6 className="font-bold text-white text-xs line-clamp-2 leading-snug mb-2 group-hover:text-brand-orange transition-colors min-h-[2.5em]">
+            {product.name}
+          </h6>
+          
+          <div className="mt-1">
+            <p className="text-brand-orange font-bold text-sm mb-2 font-display">{formatRupiah(product.price)}</p>
+            
+            {/* Action Buttons: Chat & Buy */}
+            <div className="grid grid-cols-2 gap-2">
+              <a 
+                href={`https://wa.me/6282325103336?text=Halo, saya tertarik dengan produk ${product.name} yang ada di artikel.`}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()} // Prevent opening modal when clicking chat
+                className="px-2 py-1.5 rounded-lg border border-white/20 text-gray-300 hover:text-brand-orange hover:border-brand-orange font-bold text-[10px] transition-all hover:shadow-neon flex items-center justify-center gap-1"
+              >
+                <MessageCircle size={12} /> Chat
+              </a>
+              
+              <button 
+                ref={buttonRef}
+                onClick={handleAddToCart}
+                className={`px-2 py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 transition-all group/btn ${
+                  isAdded 
+                    ? 'bg-green-500 text-white shadow-lg' 
+                    : 'bg-brand-orange text-white hover:bg-brand-glow hover:shadow-neon'
+                }`}
+              >
+                {isAdded ? (
+                  <><Check size={12} /> OK</>
+                ) : (
+                  <><Plus size={12} className={isAnimating ? "animate-spin" : "group-hover/btn:scale-125 transition-transform"}/> Beli</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const ArticleSidebarRight = ({ 
+  article, 
+  products, 
+  onProductClick 
+}: { 
+  article: Article, 
+  products: Product[], 
+  onProductClick: (p: Product) => void 
+}) => {
   // Logic: Product Recommendation
   let recommendedProducts = products.filter((p: Product) => 
     article.category && p.category.toLowerCase().includes(article.category.split(' ')[0].toLowerCase())
@@ -441,25 +596,15 @@ const ArticleSidebarRight = ({ article, products }: { article: Article, products
               <h5 className="text-xs font-bold text-white uppercase tracking-widest">{recTitle}</h5>
             </div>
             
-            {/* Product Cards */}
+            {/* Product Cards Grid */}
             <div className="space-y-4">
               {recommendedProducts.map((p: Product) => (
-                  <div key={p.id} className="group bg-brand-card border border-white/10 rounded-2xl overflow-hidden hover:border-brand-orange transition-all shadow-lg hover:shadow-neon flex flex-col">
-                      <div className="relative h-32 w-full bg-black border-b border-white/5">
-                          <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                          <div className="absolute top-2 right-2"><span className="bg-brand-orange text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">{p.category}</span></div>
-                      </div>
-                      <div className="p-4 flex flex-col flex-grow">
-                          <h6 className="font-bold text-white text-xs line-clamp-2 mb-2 min-h-[2.5rem]">{p.name}</h6>
-                          <p className="text-brand-orange font-bold text-sm mb-4">{formatRupiah(p.price)}</p>
-                          <button 
-                            onClick={() => addToCart(p)}
-                            className="mt-auto w-full py-2.5 rounded-lg bg-white/5 hover:bg-brand-orange text-gray-300 hover:text-white text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-2 group-btn"
-                          >
-                            <ShoppingCart size={14} /> Beli Sekarang
-                          </button>
-                      </div>
-                  </div>
+                  <React.Fragment key={p.id}>
+                    <SidebarProductCard 
+                      product={p} 
+                      onDetail={() => onProductClick(p)} 
+                    />
+                  </React.Fragment>
               ))}
             </div>
 
@@ -483,11 +628,11 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
   const ITEMS_PER_PAGE = 30; // Defined here to share with ToC logic
   const { currentPage, setCurrentPage, totalPages, currentBlocks } = useArticlePagination(article.content, ITEMS_PER_PAGE);
   const [activeHeadingId, setActiveHeadingId] = useState<string>('');
+  const [selectedSidebarProduct, setSelectedSidebarProduct] = useState<Product | null>(null);
   
   const MAX_HEIGHT = 500;
   const MIN_HEIGHT = 80; 
 
-  // Hitung tinggi header secara dinamis berdasarkan scrollPos
   const currentHeaderHeight = Math.max(MIN_HEIGHT, MAX_HEIGHT - scrollPos);
 
   useEffect(() => {
@@ -495,12 +640,11 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
     return () => { document.body.style.overflow = 'auto'; };
   }, []);
 
-  // --- Scroll Spy Logic (Intersection Observer) ---
+  // --- Scroll Spy Logic ---
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Wait for content to render
     const timeout = setTimeout(() => {
       const headings = container.querySelectorAll('h1, h2');
       
@@ -514,36 +658,29 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
         },
         {
           root: container,
-          // Offset penting: Trigger saat elemen melewati bawah header (sekitar 120px dari atas container)
-          // rootMargin: 'top right bottom left'
           rootMargin: '-120px 0px -80% 0px', 
           threshold: 0
         }
       );
 
       headings.forEach((h) => observer.observe(h));
-
       return () => observer.disconnect();
-    }, 500); // Delay to ensure DOM is ready
+    }, 500);
 
     return () => clearTimeout(timeout);
-  }, [currentBlocks, currentPage]); // Re-run when page/content changes
+  }, [currentBlocks, currentPage]);
 
 
   // --- Smart Navigation Logic ---
   const handleToCClick = (heading: { id: string, originalIndex: number }) => {
-    // 1. Hitung heading ini ada di halaman berapa
     const targetPage = Math.floor(heading.originalIndex / ITEMS_PER_PAGE) + 1;
 
-    // 2. Jika beda halaman, pindah halaman dulu
     if (targetPage !== currentPage) {
       setCurrentPage(targetPage);
-      // Tunggu render, baru scroll
       setTimeout(() => {
         scrollToId(heading.id);
-      }, 300); // Delay agar DOM sempat render konten halaman baru
+      }, 300);
     } else {
-      // Jika halaman sama, langsung scroll
       scrollToId(heading.id);
     }
   };
@@ -551,38 +688,22 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
   const scrollToId = (id: string) => {
     const element = document.getElementById(id);
     if (element && containerRef.current) {
-        // Karena header sticky, kita perlu offset
-        // Offset = Tinggi header saat ini (atau minimalnya) + sedikit buffer
         const headerOffset = 120; 
-        
-        // Use offsetTop relative to the scroll container
-        // Note: element.offsetTop might be relative to a positioned parent. 
-        // For prose content, usually relative to the container content div.
-        // Safer way: Get bounding rect relative to container
-        
         const containerRect = containerRef.current.getBoundingClientRect();
         const elementRect = element.getBoundingClientRect();
-        
-        // Calculate position inside the scrollable container
-        // Current Scroll Top + (Element Top relative to Viewport - Container Top relative to Viewport)
         const relativeTop = containerRef.current.scrollTop + (elementRect.top - containerRect.top);
-        
         const offsetPosition = relativeTop - headerOffset;
 
         containerRef.current.scrollTo({ top: offsetPosition, behavior: "smooth" });
-        
-        // Manually set active ID for immediate feedback
         setActiveHeadingId(id);
     }
   };
 
   const handlePageChange = (page: number) => {
      setCurrentPage(page);
-     // Scroll ke titik tepat di bawah header
      if(containerRef.current) containerRef.current.scrollTo({ top: MAX_HEIGHT - MIN_HEIGHT, behavior: 'smooth' });
   }
 
-  // Handle Wheel Event from Header Proxy
   const handleHeaderWheelProxy = (e: React.WheelEvent) => {
     if (containerRef.current) {
         containerRef.current.scrollTop += e.deltaY;
@@ -592,8 +713,6 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
   return createPortal(
     <div className="fixed inset-0 z-[9999] bg-brand-black" aria-modal="true" role="dialog">
       
-      {/* Header Statis yang ukurannya berubah via prop */}
-      {/* Added onWheelProxy to handle scroll when mouse is over fixed header */}
       <ReaderHeader 
         article={article} 
         progress={progress} 
@@ -604,33 +723,27 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
         onWheelProxy={handleHeaderWheelProxy}
       />
 
-      {/* Main Scroll Container */}
-      {/* Container ini 'full height' tapi kontennya di-push ke bawah menggunakan spacer div */}
       <div 
         ref={containerRef} 
         onScroll={handleScroll} 
         className="h-full w-full overflow-y-auto custom-scrollbar relative bg-brand-black"
       >
-        {/* Spacer Div: Memastikan konten mulai DI BAWAH header yang besar */}
         <div style={{ height: `${MAX_HEIGHT}px` }} className="w-full bg-transparent pointer-events-none"></div>
 
-        {/* Content Area */}
         <div className="bg-brand-black relative z-10 border-t border-white/5 min-h-[100vh]">
             <div className="container mx-auto px-4 pb-20 max-w-7xl">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 pt-12 relative">
                     
-                    {/* Left Sidebar (Desktop Only) */}
                     <div className="hidden lg:block lg:col-span-3">
                         <div className="sticky top-28 space-y-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
                           <ArticleSidebarLeft 
                             article={article} 
-                            onHeadingClick={handleToCClick} // Pass new smart handler
-                            activeId={activeHeadingId} // Pass active state
+                            onHeadingClick={handleToCClick} 
+                            activeId={activeHeadingId}
                           />
                         </div>
                     </div>
 
-                    {/* Main Content */}
                     <div className="lg:col-span-6 min-h-screen">
                         <ReaderContent 
                           blocks={currentBlocks} 
@@ -641,10 +754,13 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
                         />
                     </div>
 
-                    {/* Right Sidebar (Product Recommendations) */}
                     <div className="hidden lg:block lg:col-span-3">
                          <div className="sticky top-28 space-y-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                            <ArticleSidebarRight article={article} products={products} />
+                            <ArticleSidebarRight 
+                              article={article} 
+                              products={products} 
+                              onProductClick={setSelectedSidebarProduct}
+                            />
                          </div>
                     </div>
 
@@ -652,6 +768,14 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
             </div>
         </div>
       </div>
+
+      {/* RENDER PRODUCT DETAIL MODAL ON TOP IF SELECTED */}
+      {selectedSidebarProduct && (
+        <ProductDetailModal 
+          product={selectedSidebarProduct} 
+          onClose={() => setSelectedSidebarProduct(null)} 
+        />
+      )}
     </div>,
     document.body
   );
