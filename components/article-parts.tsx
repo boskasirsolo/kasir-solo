@@ -5,10 +5,10 @@ import {
   ArrowRight, Clock, Calendar, User, Tag, 
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
   Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
-  ChevronLeft
+  ChevronLeft, Send, ThumbsUp
 } from 'lucide-react';
 import { Article, Product } from '../types';
-import { Button } from './ui';
+import { Button, Input, TextArea } from './ui';
 import { formatRupiah } from '../utils';
 
 // ==========================================
@@ -160,16 +160,16 @@ export const FeaturedArticleHero = ({ article, onClick }: { article: Article, on
 
 // --- Sub-Components for Reader Modal ---
 
-const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, onClose }: any) => {
+const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, onClose, onWheelProxy }: any) => {
   // Hitung opacity berdasarkan tinggi saat ini
-  // Range: 1 (saat expanded) -> 0 (saat collapsed)
   const expandRatio = Math.max(0, (currentHeight - minHeight) / (maxHeight - minHeight));
   const collapseRatio = 1 - expandRatio;
 
   return (
     <div 
       className="fixed top-0 left-0 w-full z-50 overflow-hidden border-b border-white/10 shadow-2xl will-change-[height]" 
-      style={{ height: `${currentHeight}px`, transition: 'none' }} // Transition none agar sync dengan scroll
+      style={{ height: `${currentHeight}px`, transition: 'none' }}
+      onWheel={onWheelProxy} // PROXY SCROLL KE CONTAINER UTAMA
     >
         {/* Progress Bar */}
         <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10 z-50">
@@ -196,7 +196,7 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
         </div>
 
         {/* Content Container */}
-        <div className="container mx-auto px-4 h-full relative z-10 max-w-7xl">
+        <div className="container mx-auto px-4 h-full relative z-10 max-w-7xl pointer-events-none">
             
             {/* Compact State Title (Muncul saat discroll ke bawah) */}
             <div 
@@ -280,9 +280,36 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
   </div>
 );
 
-// --- SIDEBAR LEFT: Table of Contents & Socials ---
+// --- SIDEBAR LEFT: Table of Contents & Socials & Comments ---
 const ArticleSidebarLeft = ({ article, scrollToId }: { article: Article, scrollToId: (id: string) => void }) => {
   const headings = useMemo(() => extractHeadings(article.content), [article.content]);
+  const [comments, setComments] = useState<{name: string, text: string, time: string}[]>([
+      { name: 'Budi Santoso', text: 'Sangat menginspirasi! Saya juga pake Android POS, memang lebih hemat.', time: '2 jam lalu' }
+  ]);
+  const [newComment, setNewComment] = useState('');
+  const [showCommentForm, setShowCommentForm] = useState(false);
+
+  const handleShare = (platform: 'fb' | 'twitter' | 'linkedin' | 'copy') => {
+    const url = window.location.href;
+    const text = `Baca artikel menarik ini: ${article.title}`;
+    
+    switch(platform) {
+        case 'fb': window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank'); break;
+        case 'twitter': window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank'); break;
+        case 'linkedin': window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank'); break;
+        case 'copy': 
+            navigator.clipboard.writeText(url);
+            alert('Link artikel berhasil disalin!');
+            break;
+    }
+  };
+
+  const submitComment = () => {
+      if(!newComment.trim()) return;
+      setComments([{ name: 'Pengunjung', text: newComment, time: 'Baru saja' }, ...comments]);
+      setNewComment('');
+      setShowCommentForm(false);
+  };
 
   return (
     <>
@@ -300,15 +327,48 @@ const ArticleSidebarLeft = ({ article, scrollToId }: { article: Article, scrollT
       <div className="border-l border-white/5 pl-5 pt-2 mb-10">
             <h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Share2 size={12}/> Bagikan & Diskusi</h5>
             <div className="grid grid-cols-4 gap-2 mb-6">
-                {[Facebook, Twitter, Linkedin, LinkIcon].map((Icon, i) => (
-                  <button key={i} className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><Icon size={16} /></button>
+                <button onClick={() => handleShare('fb')} className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1877F2] transition-all"><Facebook size={16} /></button>
+                <button onClick={() => handleShare('twitter')} className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1DA1F2] transition-all"><Twitter size={16} /></button>
+                <button onClick={() => handleShare('linkedin')} className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#0A66C2] transition-all"><Linkedin size={16} /></button>
+                <button onClick={() => handleShare('copy')} className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><LinkIcon size={16} /></button>
+            </div>
+            
+            {/* Comment Section */}
+            {!showCommentForm ? (
+                <button 
+                    onClick={() => setShowCommentForm(true)}
+                    className="w-full py-3 rounded-lg bg-white/5 border border-white/10 hover:border-brand-orange hover:bg-brand-orange/10 text-gray-400 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 group mb-6"
+                >
+                    <MessageCircle size={14} className="group-hover:text-brand-orange"/> 
+                    <span>Tulis Komentar ({comments.length})</span>
+                </button>
+            ) : (
+                <div className="bg-brand-card border border-white/10 rounded-lg p-3 mb-6 animate-fade-in">
+                    <TextArea 
+                        value={newComment} 
+                        onChange={(e) => setNewComment(e.target.value)} 
+                        placeholder="Tulis pendapat Anda..." 
+                        className="text-xs min-h-[80px] mb-2"
+                    />
+                    <div className="flex gap-2">
+                        <Button onClick={() => setShowCommentForm(false)} variant="outline" className="flex-1 py-1 text-xs">Batal</Button>
+                        <Button onClick={submitComment} className="flex-1 py-1 text-xs"><Send size={12}/> Kirim</Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Comment List (Preview) */}
+            <div className="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                {comments.map((c, i) => (
+                    <div key={i} className="bg-black/20 p-3 rounded-lg border border-white/5">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-brand-orange font-bold text-xs">{c.name}</span>
+                            <span className="text-[10px] text-gray-600">{c.time}</span>
+                        </div>
+                        <p className="text-gray-400 text-xs leading-relaxed">{c.text}</p>
+                    </div>
                 ))}
             </div>
-            {/* Comment Placeholder Button */}
-             <button className="w-full py-3 rounded-lg bg-white/5 border border-white/10 hover:border-brand-orange hover:bg-brand-orange/10 text-gray-400 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 group">
-                <MessageCircle size={14} className="group-hover:text-brand-orange"/> 
-                <span>Tulis Komentar</span>
-             </button>
       </div>
     </>
   );
@@ -405,10 +465,18 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
      if(containerRef.current) containerRef.current.scrollTo({ top: MAX_HEIGHT - MIN_HEIGHT, behavior: 'smooth' });
   }
 
+  // Handle Wheel Event from Header Proxy
+  const handleHeaderWheelProxy = (e: React.WheelEvent) => {
+    if (containerRef.current) {
+        containerRef.current.scrollTop += e.deltaY;
+    }
+  };
+
   return createPortal(
     <div className="fixed inset-0 z-[9999] bg-brand-black" aria-modal="true" role="dialog">
       
       {/* Header Statis yang ukurannya berubah via prop */}
+      {/* Added onWheelProxy to handle scroll when mouse is over fixed header */}
       <ReaderHeader 
         article={article} 
         progress={progress} 
@@ -416,6 +484,7 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
         maxHeight={MAX_HEIGHT}
         minHeight={MIN_HEIGHT}
         onClose={onClose} 
+        onWheelProxy={handleHeaderWheelProxy}
       />
 
       {/* Main Scroll Container */}
