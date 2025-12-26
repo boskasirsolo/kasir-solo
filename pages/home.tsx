@@ -70,13 +70,16 @@ export const HomePage = ({ setPage, config }: { setPage: (p: string) => void, co
             { icon: Search, title: "Optimasi SEO", desc: "Strategi SEO untuk ranking 1 Google." },
             { icon: Settings, title: "Maintenance", desc: "Pengelolaan konten & keamanan server." }
           ].map((service, idx) => (
-            <Card key={idx} className="p-8 flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-brand-orange mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all duration-300 shadow-neon">
-                <service.icon size={32} />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-3">{service.title}</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">{service.desc}</p>
-            </Card>
+            // Fixed: Wrapped in React.Fragment to resolve key prop type error
+            <React.Fragment key={idx}>
+              <Card className="p-8 flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-brand-orange mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all duration-300 shadow-neon">
+                  <service.icon size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">{service.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{service.desc}</p>
+              </Card>
+            </React.Fragment>
           ))}
         </div>
       </div>

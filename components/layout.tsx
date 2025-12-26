@@ -36,8 +36,7 @@ const NavLink = ({
   label: string, 
   active: boolean, 
   onClick: () => void, 
-  mobile?: boolean,
-  key?: any
+  mobile?: boolean
 }) => {
   if (mobile) {
     return (
@@ -98,12 +97,14 @@ const DesktopNav = ({
 }) => (
   <div className="hidden md:flex items-center gap-8">
     {NAV_ITEMS.map((item) => (
-      <NavLink 
-        key={item.id} 
-        label={item.label} 
-        active={current === item.id} 
-        onClick={() => setPage(item.id)} 
-      />
+      // Fixed: Wrapped in React.Fragment to resolve key prop type error
+      <React.Fragment key={item.id}>
+        <NavLink 
+          label={item.label} 
+          active={current === item.id} 
+          onClick={() => setPage(item.id)} 
+        />
+      </React.Fragment>
     ))}
     <CartButton count={cartCount} onClick={() => setPage('checkout')} />
   </div>
@@ -147,13 +148,15 @@ const MobileMenuOverlay = ({
     <div className="md:hidden bg-brand-dark border-b border-brand-orange/20 p-4 absolute w-full shadow-2xl animate-fade-in z-40">
       <div className="flex flex-col gap-4">
         {NAV_ITEMS.map((item) => (
-          <NavLink 
-            key={item.id} 
-            label={item.label} 
-            active={current === item.id} 
-            onClick={() => { setPage(item.id); onClose(); }} 
-            mobile 
-          />
+          // Fixed: Wrapped in React.Fragment to resolve key prop type error
+          <React.Fragment key={item.id}>
+            <NavLink 
+              label={item.label} 
+              active={current === item.id} 
+              onClick={() => { setPage(item.id); onClose(); }} 
+              mobile 
+            />
+          </React.Fragment>
         ))}
       </div>
     </div>

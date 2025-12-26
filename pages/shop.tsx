@@ -41,11 +41,13 @@ export const ShopPage = ({ products }: { products: Product[] }) => {
       {displayedProducts.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {displayedProducts.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              onDetail={setSelectedProduct} 
-            />
+            // Fixed: Wrapped in React.Fragment to resolve key prop type error
+            <React.Fragment key={product.id}>
+              <ProductCard 
+                product={product} 
+                onDetail={setSelectedProduct} 
+              />
+            </React.Fragment>
           ))}
         </div>
       ) : (

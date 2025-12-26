@@ -159,15 +159,13 @@ const OrderCard = ({
     expanded, 
     onToggle, 
     items,
-    onStatusUpdate,
-    key
+    onStatusUpdate
 }: { 
     order: Order, 
     expanded: boolean, 
     onToggle: () => void,
     items: OrderItem[],
-    onStatusUpdate: (id: number, status: string) => void,
-    key?: any
+    onStatusUpdate: (id: number, status: string) => void
 }) => (
     <div className={`bg-brand-dark border transition-all rounded-xl overflow-hidden mb-3 ${expanded ? 'border-brand-orange/50 shadow-neon-text/10' : 'border-white/5 hover:border-white/20'}`}>
         <div 
@@ -226,14 +224,16 @@ export const AdminOrders = () => {
               <span className="text-xs text-brand-orange bg-brand-orange/10 px-2 py-1 rounded border border-brand-orange/20">Total: {orders.length}</span>
            </div>
            {orders.map((order) => (
-             <OrderCard 
-               key={order.id}
-               order={order}
-               expanded={expandedOrderId === order.id}
-               onToggle={() => fetchOrderItems(order.id)}
-               items={orderItems[order.id]}
-               onStatusUpdate={updateStatus}
-             />
+             // Fixed: Wrapped in React.Fragment to resolve key prop type error
+             <React.Fragment key={order.id}>
+               <OrderCard 
+                 order={order}
+                 expanded={expandedOrderId === order.id}
+                 onToggle={() => fetchOrderItems(order.id)}
+                 items={orderItems[order.id]}
+                 onStatusUpdate={updateStatus}
+               />
+             </React.Fragment>
            ))}
         </div>
       )}

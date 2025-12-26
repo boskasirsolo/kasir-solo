@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus } from 'lucide-react';
 import { Product } from '../types';
@@ -96,8 +97,7 @@ export const ProductCard = ({
   onDetail 
 }: { 
   product: Product, 
-  onDetail: (p: Product) => void,
-  key?: any
+  onDetail: (p: Product) => void
 }) => (
   <Card className="flex flex-col h-full group">
     <ProductImage image={product.image} name={product.name} category={product.category} />
@@ -151,7 +151,7 @@ export const ShopPagination = ({
   );
 };
 
-// --- MOLECULE: DETAIL MODAL ---
+// --- MOLECULE: DETAIL MODAL (FIXED POSITIONING) ---
 export const ProductDetailModal = ({ 
   product, 
   onClose 
@@ -167,60 +167,72 @@ export const ProductDetailModal = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
+    <div className="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      {/* Background Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
       ></div>
 
-      <div className="relative w-full max-w-4xl bg-brand-dark rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-orange transition-colors"
-        >
-          <X size={20} />
-        </button>
-
-        <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-4 md:p-0">
-            <img 
-            src={product.image} 
-            alt={product.name} 
-            className="w-full h-full object-cover md:object-contain max-h-64 md:max-h-full" 
-            />
-        </div>
-
-        <div className="w-full md:w-1/2 p-8 flex flex-col overflow-y-auto">
-          <div className="mb-4">
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange border border-brand-orange/30 px-2 py-1 rounded bg-brand-orange/10 mb-3">
-                <Tag size={12} /> {product.category}
-              </span>
-              <h2 className="text-3xl font-display font-bold text-white leading-tight mb-2">{product.name}</h2>
-              <p className="text-2xl font-bold text-brand-orange">{formatRupiah(product.price)}</p>
-          </div>
-
-          <div className="prose prose-invert prose-sm text-gray-300 mb-8 leading-relaxed border-t border-white/10 pt-4 flex-grow">
-            <p>{product.description}</p>
-          </div>
-
-          <div className="mt-auto grid grid-cols-2 gap-4">
+      {/* Scrollable Container - Fixes Cutoff Issues */}
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+          
+          {/* Modal Panel */}
+          <div className="relative transform bg-brand-dark rounded-2xl border border-white/10 text-left shadow-2xl transition-all w-full max-w-4xl flex flex-col md:flex-row overflow-hidden my-8 animate-fade-in">
+            
             <button 
-              onClick={() => {
-                addToCart(product);
-                onClose();
-              }}
-              className="flex items-center justify-center w-full py-4 bg-brand-orange hover:bg-brand-glow text-white rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong gap-2"
+              onClick={onClose}
+              className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-orange transition-colors"
             >
-              <ShoppingCart size={20} /> Masuk Keranjang
+              <X size={20} />
             </button>
-            <a 
-              href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center w-full py-4 border border-white/20 hover:border-brand-orange text-white rounded-xl font-bold transition-all gap-2"
-            >
-              <MessageCircle size={20} /> Chat Admin
-            </a>
+
+            {/* Left: Image */}
+            <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-4 md:p-0 h-64 md:h-auto min-h-[300px]">
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  className="w-full h-full object-contain max-h-64 md:max-h-[500px]" 
+                />
+            </div>
+
+            {/* Right: Content */}
+            <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col max-h-none md:max-h-[85vh] overflow-y-auto custom-scrollbar">
+              <div className="mb-4">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange border border-brand-orange/30 px-2 py-1 rounded bg-brand-orange/10 mb-3">
+                    <Tag size={12} /> {product.category}
+                  </span>
+                  <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">{product.name}</h2>
+                  <p className="text-2xl font-bold text-brand-orange">{formatRupiah(product.price)}</p>
+              </div>
+
+              <div className="prose prose-invert prose-sm text-gray-300 mb-8 leading-relaxed border-t border-white/10 pt-4 flex-grow">
+                <p>{product.description}</p>
+              </div>
+
+              <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button 
+                  onClick={() => {
+                    addToCart(product);
+                    onClose();
+                  }}
+                  className="flex items-center justify-center w-full py-4 bg-brand-orange hover:bg-brand-glow text-white rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong gap-2"
+                >
+                  <ShoppingCart size={20} /> Beli
+                </button>
+                <a 
+                  href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center w-full py-4 border border-white/20 hover:border-brand-orange text-white rounded-xl font-bold transition-all gap-2"
+                >
+                  <MessageCircle size={20} /> Chat
+                </a>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
