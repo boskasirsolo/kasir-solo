@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from '@google/genai';
 import { Product, Article, GalleryItem } from './types';
@@ -36,10 +35,13 @@ export const supabase = (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_KEY)
   ? createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY) 
   : null;
 
-export const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Safe init for AI to prevent white screen if key is missing
+const apiKey = process.env.API_KEY || "dummy_key_to_prevent_crash";
+export const ai = new GoogleGenAI({ apiKey });
 
 // --- Formatters ---
 export const formatRupiah = (number: number) => {
+  if (typeof number !== 'number') return 'Rp 0';
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -116,12 +118,27 @@ export const INITIAL_PRODUCTS: Product[] = [
 ];
 
 export const INITIAL_ARTICLES: Article[] = [
-  // ... (Artikel tetap sama, disingkat untuk brevity XML jika tidak ada perubahan, tapi user minta full content di utils, jadi saya pertahankan)
   {
     id: 1,
     title: "Battle Royale: Android POS vs Windows POS, Mana Raja Sebenarnya?",
-    excerpt: "Analisis mendalam 5000 kata membedah kelebihan, kekurangan, dan biaya tersembunyi antara Kasir Android vs Windows PC untuk bisnis 2024.",
-    content: `...`, // (Keeping content short for this specific xml block to save space, assuming no change in articles)
+    excerpt: "Analisis mendalam membedah kelebihan, kekurangan, dan biaya tersembunyi antara Kasir Android vs Windows PC untuk bisnis 2024.",
+    content: `# Battle Royale: Android POS vs Windows POS
+
+## Pendahuluan
+Memilih mesin kasir bukan sekadar beli alat, tapi investasi jangka panjang. Salah pilih, operasional berantakan.
+
+## 1. Android POS: Si Lincah yang Hemat Energi
+Kelebihan utama Android POS adalah efisiensi. Hemat listrik, bentuk compact, dan harga software yang biasanya lebih terjangkau (SaaS).
+
+**Cocok untuk:** Coffee Shop, Booth Makanan, Salon.
+
+## 2. Windows POS: Si Pekerja Berat
+Windows menang di kompatibilitas hardware. Printer dot matrix, timbangan digital, hingga scanner omnidirectional bekerja lebih stabil di Windows.
+
+**Cocok untuk:** Minimarket, Grosir, Restoran Besar.
+
+## Kesimpulan
+Jika Anda butuh mobilitas dan estetika, pilih Android. Jika Anda butuh performa berat dan integrasi hardware kompleks, Windows jawabannya.`,
     date: "14 Feb 2024",
     image: "https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&q=80&w=1200",
     category: "Hardware Review",
@@ -129,7 +146,50 @@ export const INITIAL_ARTICLES: Article[] = [
     readTime: "15 min read",
     tags: ["Perbandingan", "Investasi", "Teknologi"]
   },
-  // ... (Other articles same)
+  {
+    id: 2,
+    title: "5 Tanda Kasir Anda 'Mencuri' Tanpa Anda Sadari (Fraud Detection)",
+    excerpt: "Kebocoran omzet seringkali bukan dari orang luar, tapi dari celah sistem yang dimanfaatkan karyawan nakal.",
+    content: `# 5 Tanda Fraud di Kasir
+
+## 1. Void Berlebihan
+Perhatikan laporan void/cancel transaksi. Jika terlalu sering terjadi saat jam ramai, bisa jadi uang diterima tapi struk dibatalkan.
+
+## 2. No Sale (Laci Terbuka Tanpa Transaksi)
+Fitur 'Open Drawer' harus dipantau ketat. Kenapa laci terbuka jika tidak ada pembayaran?
+
+## 3. Diskon Manual yang Mencurigakan
+Pastikan hak akses pemberian diskon hanya dipegang oleh supervisor atau owner.
+
+> "Sistem yang baik tidak hanya mencatat penjualan, tapi juga mengamankan aset."`,
+    date: "10 Jan 2024",
+    image: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=1200",
+    category: "Bisnis Tips",
+    author: "Amin Maghfuri",
+    readTime: "10 min read",
+    tags: ["Keamanan", "Manajemen", "Tips"]
+  },
+  {
+    id: 3,
+    title: "Membangun Loyalitas Pelanggan dengan Membership Digital",
+    excerpt: "Kartu member fisik sudah kuno. Pelajari cara integrasi membership digital via WhatsApp untuk retensi pelanggan.",
+    content: `# Membership Digital
+
+Zaman sekarang orang malas bawa kartu fisik. Solusinya? Membership digital.
+
+### Kenapa Efektif?
+1. **Database Real:** Anda punya data kontak asli pelanggan.
+2. **Hemat Biaya Cetak:** Tidak perlu cetak kartu PVC.
+3. **Notifikasi Promo:** Bisa broadcast promo langsung ke WA.
+
+Implementasi ini bisa menaikkan *Repeat Order* hingga 40%.`,
+    date: "05 Mar 2024",
+    image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=1200",
+    category: "Digital Marketing",
+    author: "Team SIBOS",
+    readTime: "7 min read",
+    tags: ["Marketing", "Loyalty", "Software"]
+  }
 ];
 
 // --- UPDATED GALLERY DATA (HYBRID PORTFOLIO) ---
