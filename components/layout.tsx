@@ -2,12 +2,14 @@
 import React, { useState } from 'react';
 import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video } from 'lucide-react';
 import { useCart } from '../context/cart-context';
-import { SiteConfig } from '../types';
+import { SiteConfig, Product } from '../types';
+import { SibosWidget } from './sibos-core'; // Import SIBOS
+import { INITIAL_PRODUCTS } from '../utils'; // Fallback data
 
 // --- DATA & CONSTANTS ---
 const NAV_ITEMS = [
   { id: 'home', label: 'Beranda' },
-  { id: 'innovation', label: 'Inovasi' }, // New Menu Item
+  { id: 'innovation', label: 'Inovasi' }, 
   { id: 'shop', label: 'Toko' },
   { id: 'gallery', label: 'Galeri' },
   { id: 'articles', label: 'Artikel' },
@@ -107,7 +109,6 @@ const DesktopNav = ({
 }) => (
   <div className="hidden md:flex items-center gap-8">
     {NAV_ITEMS.map((item) => (
-      // Fixed: Wrapped in React.Fragment to resolve key prop type error
       <React.Fragment key={item.id}>
         <NavLink 
           label={item.label} 
@@ -158,7 +159,6 @@ const MobileMenuOverlay = ({
     <div className="md:hidden bg-brand-dark border-b border-brand-orange/20 p-4 absolute w-full shadow-2xl animate-fade-in z-40">
       <div className="flex flex-col gap-4">
         {NAV_ITEMS.map((item) => (
-          // Fixed: Wrapped in React.Fragment to resolve key prop type error
           <React.Fragment key={item.id}>
             <NavLink 
               label={item.label} 
@@ -183,7 +183,7 @@ const Header = ({
   setPage: (p: string) => void 
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { totalItems } = useCart(); // Logic cart ada di sini
+  const { totalItems } = useCart(); 
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-brand-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl">
@@ -230,7 +230,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
             <SocialButton icon={Facebook} href={config.facebookUrl} />
             <SocialButton icon={Youtube} href={config.youtubeUrl} />
             <SocialButton icon={Linkedin} href={config.linkedinUrl} />
-            <SocialButton icon={Video} href={config.tiktokUrl} /> {/* TikTok Placeholder */}
+            <SocialButton icon={Video} href={config.tiktokUrl} /> 
           </div>
         </div>
         
@@ -299,7 +299,7 @@ export const Layout = ({
   currentPage: string,
   config: SiteConfig
 }) => {
-  // --- MODIFICATION: Hide Header/Footer on Admin Page ---
+  // Hide Header/Footer on Admin Page
   if (currentPage === 'admin') {
     return (
       <div className="min-h-screen flex flex-col font-sans bg-brand-black text-gray-200">
@@ -319,6 +319,9 @@ export const Layout = ({
       </main>
 
       <Footer setPage={setPage} config={config} />
+      
+      {/* SIBOS AI WIDGET */}
+      <SibosWidget products={INITIAL_PRODUCTS} />
     </div>
   );
 };
