@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
-import { Send, Sparkles, Eraser, ShieldCheck, Terminal } from 'lucide-react';
-import { ChatBubble, TypingIndicator } from './atoms';
+import { Send, Sparkles, Eraser, ShieldCheck, Terminal, ImagePlus } from 'lucide-react';
+import { ChatBubble, TypingIndicator, ImagePreview } from './atoms';
 import { Message } from './logic';
 
 // --- 1. CHAT HEADER ---
@@ -38,7 +38,7 @@ export const ChatHeader = ({
               ? 'bg-red-500/20 text-red-200 border-red-500/40' 
               : 'bg-teal-500/20 text-teal-400 border-teal-500/30'
           }`}>
-            {isAdmin ? 'ADMIN MODE' : 'AI BETA'}
+            {isAdmin ? 'ADMIN GOD MODE' : 'AI ASSISTANT'}
           </span>
         </h3>
         <p className="text-[10px] text-gray-400">
@@ -83,6 +83,7 @@ export const MessageList = ({
             role={msg.role} 
             text={msg.text} 
             time={msg.time} 
+            image={msg.image}
           />
         </React.Fragment>
       ))}
@@ -93,18 +94,26 @@ export const MessageList = ({
   );
 };
 
-// --- 3. INPUT AREA ---
+// --- 3. INPUT AREA (Updated with Image Support) ---
 export const ChatInputArea = ({ 
   input, 
   setInput, 
   onSend,
-  disabled
+  disabled,
+  onImageSelect,
+  selectedImage,
+  onClearImage
 }: { 
   input: string, 
   setInput: (v: string) => void, 
   onSend: () => void,
-  disabled: boolean
+  disabled: boolean,
+  onImageSelect: (file: File) => void,
+  selectedImage: string | null,
+  onClearImage: () => void
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -113,28 +122,58 @@ export const ChatInputArea = ({
   };
 
   return (
-    <div className="p-3 bg-brand-dark border-t border-white/10 shrink-0 rounded-b-2xl">
-      <div className="relative flex items-end gap-2 bg-black/40 border border-white/10 rounded-xl p-2 focus-within:border-brand-orange/50 transition-colors">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Tanya harga atau konsultasi..."
+    <div className="pb-3 pt-1 bg-brand-dark border-t border-white/10 shrink-0 rounded-b-2xl">
+      {/* Image Preview Area */}
+      {selectedImage && (
+        <ImagePreview image={selectedImage} onRemove={onClearImage} />
+      )}
+
+      <div className="px-3 flex items-end gap-2">
+        {/* Image Button */}
+        <button 
+          onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
-          className="w-full bg-transparent text-sm text-white placeholder-gray-500 resize-none outline-none max-h-24 py-2 px-2 custom-scrollbar disabled:opacity-50"
-          rows={1}
-          style={{ minHeight: '40px' }}
-        />
+          className="p-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-brand-orange hover:bg-white/10 transition-colors disabled:opacity-50"
+          title="Kirim Gambar"
+        >
+          <ImagePlus size={20} />
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files?.[0]) onImageSelect(e.target.files[0]);
+            }}
+          />
+        </button>
+
+        {/* Text Area */}
+        <div className="flex-1 relative bg-black/40 border border-white/10 rounded-xl focus-within:border-brand-orange/50 transition-colors flex items-end">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={selectedImage ? "Tambahkan keterangan..." : "Tanya sesuatu..."}
+            disabled={disabled}
+            className="w-full bg-transparent text-sm text-white placeholder-gray-500 resize-none outline-none max-h-24 py-3 px-3 custom-scrollbar disabled:opacity-50"
+            rows={1}
+            style={{ minHeight: '44px' }}
+          />
+        </div>
+
+        {/* Send Button */}
         <button 
           onClick={onSend}
-          disabled={!input.trim() || disabled}
-          className="p-2 bg-brand-orange text-white rounded-lg hover:bg-brand-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-neon mb-0.5"
+          disabled={(!input.trim() && !selectedImage) || disabled}
+          className="p-3 bg-brand-orange text-white rounded-xl hover:bg-brand-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-neon"
         >
-          <Send size={18} />
+          <Send size={20} />
         </button>
       </div>
+      
       <div className="text-center mt-2">
-        <p className="text-[9px] text-gray-600">SIBOS bisa membuat kesalahan. Cek kembali informasi penting.</p>
+        <p className="text-[9px] text-gray-600">SIBOS Mode: {selectedImage ? 'Vision Active' : 'Text Active'}</p>
       </div>
     </div>
   );

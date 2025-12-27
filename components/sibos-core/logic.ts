@@ -1,223 +1,308 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Product } from '../../types';
-import { ai, formatRupiah } from '../../utils';
-import { GenerateContentResponse } from "@google/genai";
+import { ai, formatRupiah, supabase } from '../../utils';
+import { FunctionDeclaration, Type } from "@google/genai";
 
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
   text: string;
   time: string;
+  image?: string; // Support visual history
 }
 
-export const useSibosChat = (products: Product[], isAdmin: boolean = false) => {
+export const useSibosChat = (products: Product[], isAdmin: boolean = false, currentPage: string = 'home') => {
   const [isOpen, setIsOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasGreeted, setHasGreeted] = useState(false);
-  
-  // Ref untuk menyimpan history chat
+  const [attachment, setAttachment] = useState<{file: File, base64: string} | null>(null);
+  const [hasTriggeredCheckout, setHasTriggeredCheckout] = useState(false);
+
+  // Ref untuk history chat context
   const chatHistoryRef = useRef<any[]>([]);
 
-  // --- 1. SYSTEM INSTRUCTION BUILDER (DUAL PERSONA) ---
+  // --- HELPER: IMAGE TO BASE64 ---
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result); 
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  // --- TOOLS DEFINITION (Sama seperti sebelumnya) ---
+  const adminTools: FunctionDeclaration[] = [
+    {
+      name: 'get_recent_orders',
+      description: 'Melihat 5 pesanan terbaru dari database untuk laporan ke owner.',
+      parameters: { type: Type.OBJECT, properties: { limit: { type: Type.NUMBER } } }
+    },
+    {
+      name: 'update_product_price',
+      description: 'Mengupdate harga produk di database.',
+      parameters: { type: Type.OBJECT, properties: { productName: { type: Type.STRING }, newPrice: { type: Type.NUMBER } }, required: ['productName', 'newPrice'] }
+    },
+    {
+      name: 'search_products_db',
+      description: 'Mencari detail produk spesifik di database.',
+      parameters: { type: Type.OBJECT, properties: { query: { type: Type.STRING } }, required: ['query'] }
+    },
+    {
+      name: 'create_article',
+      description: 'Membuat dan memposting artikel blog baru.',
+      parameters: { type: Type.OBJECT, properties: { title: { type: Type.STRING }, category: { type: Type.STRING }, content: { type: Type.STRING }, excerpt: { type: Type.STRING } }, required: ['title', 'content', 'category', 'excerpt'] }
+    },
+    {
+      name: 'delete_content',
+      description: 'Menghapus konten (Produk, Artikel, Galeri).',
+      parameters: { type: Type.OBJECT, properties: { contentType: { type: Type.STRING, enum: ['products', 'articles', 'gallery'] }, titleKeyword: { type: Type.STRING } }, required: ['contentType', 'titleKeyword'] }
+    }
+  ];
+
+  const executeTool = async (name: string, args: any) => {
+    if (!supabase) return "Error: Database connection missing.";
+    try {
+      if (name === 'get_recent_orders') {
+        const { data, error } = await supabase.from('orders').select('id, customer_name, total_amount, status, created_at').order('created_at', { ascending: false }).limit(args.limit || 5);
+        if (error) throw error;
+        return JSON.stringify(data);
+      }
+      if (name === 'search_products_db') {
+        const { data, error } = await supabase.from('products').select('*').ilike('name', `%${args.query}%`).limit(3);
+        if (error) throw error;
+        return JSON.stringify(data);
+      }
+      if (name === 'update_product_price') {
+        const { data: products } = await supabase.from('products').select('id, name, price').ilike('name', `%${args.productName}%`).limit(1);
+        if (!products || products.length === 0) return `Produk "${args.productName}" tidak ditemukan.`;
+        const { error } = await supabase.from('products').update({ price: args.newPrice }).eq('id', products[0].id);
+        if (error) throw error;
+        return `Sukses! Harga "${products[0].name}" jadi ${formatRupiah(args.newPrice)}.`;
+      }
+      if (name === 'create_article') {
+        const randomImage = "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=1200";
+        const { error } = await supabase.from('articles').insert([{ title: args.title, category: args.category, content: args.content, excerpt: args.excerpt, image_url: randomImage, author: "SIBOS AI", read_time: "5 min read", created_at: new Date().toISOString() }]);
+        if (error) throw error;
+        return `Artikel "${args.title}" berhasil diposting!`;
+      }
+      if (name === 'delete_content') {
+        const table = args.contentType;
+        const column = table === 'gallery' || table === 'articles' ? 'title' : 'name';
+        const { data: items } = await supabase.from(table).select(`id, ${column}`).ilike(column, `%${args.titleKeyword}%`).limit(1);
+        if (!items || items.length === 0) return `Item "${args.titleKeyword}" tidak ditemukan.`;
+        const { error } = await supabase.from(table).delete().eq('id', items[0].id);
+        if (error) throw error;
+        return `Item berhasil dihapus.`;
+      }
+    } catch (err: any) { return `Tool Error: ${err.message}`; }
+    return "Tool not found.";
+  };
+
   const buildSystemInstruction = useCallback(() => {
-    // Context Produk untuk kedua mode
-    const productContext = products.map(p => 
-      `- ${p.name} (Harga: ${formatRupiah(p.price)}). Kategori: ${p.category}. Deskripsi: ${p.description}`
-    ).join('\n');
+    const productContext = products.map(p => `- ${p.name} (${formatRupiah(p.price)}).`).join('\n');
 
-    // --- MODE ADMIN (SUPER ASSISTANT) ---
     if (isAdmin) {
-      return `
-      Kamu adalah "SIBOS PRO", Asisten Pribadi Khusus Owner PT Mesin Kasir Solo.
-      User yang bicara padamu adalah PEMILIK BISNIS (The Boss).
-
-      KEMAMPUAN SPESIALMU (ADMIN MODE):
-      
-      1. **MARKETING MASTER (ONLINE & OFFLINE):**
-         - **Online:** Pakar SEO, Ads (FB/TikTok/Google), Copywriting, Funneling.
-         - **Offline:** Strategi Kanvasing, Branding Toko, Event/Pameran, Psikologi Sales Tatap Muka.
-         - Berikan strategi yang "High Impact, Low Cost".
-
-      2. **Fullstack Developer & Tech Lead:** 
-         - Menguasai Frontend (React, Tailwind), Backend, Database, dan Security.
-         - Berikan kode production-ready jika diminta.
-
-      3. **Business Strategist:** 
-         - Analisa Cashflow, Ekspansi Cabang, SOP Karyawan, dan Pencegahan Fraud Internal.
-
-      GAYA BICARA (ADMIN):
-      - Panggil user "Bos" atau "Chief".
-      - Fokus pada PROFIT, EFISIENSI, dan PERTUMBUHAN.
-      - To-the-point, teknis, dan loyal.
-
-      DATA PRODUK TOKO:
-      ${productContext}
-      `;
+      return `Kamu adalah SIBOS PRO (Admin Mode). Fokus: Data, Profit, Efisiensi. Panggil "Chief". Akses Database Aktif.`;
     }
 
-    // --- MODE PUBLIK (SALES CONSULTANT & BUSINESS ADVISOR) ---
     return `
-    Kamu adalah SIBOS, "Partner Digital" dan Asisten AI dari PT Mesin Kasir Solo.
-    Target audiencemu adalah PENGUSAHA / UMKM / CALON PEMBELI.
-
-    MISI UTAMA:
-    Membuat pengunjung merasa terbantu secara bisnis, lalu meyakinkan mereka bahwa Sistem Kasir kita adalah solusi terbaik untuk masalah mereka.
-
-    KEMAMPUANMU (PUBLIC MODE):
-    1. **Business Analyst (UMKM Friendly):**
-       - Bisa bantu hitung HPP (Harga Pokok Penjualan) & Margin Profit sederhana.
-       - Bisa kasih saran manajemen stok biar gak boncos.
-       - Bisa kasih tips mencegah kecurangan karyawan.
+    Kamu adalah SIBOS (Sales Consultant PT Mesin Kasir Solo).
     
-    2. **Marketing Strategist:**
-       - Paham strategi promo (Diskon, Bundling, Member Card) untuk menarik pelanggan.
-       - Paham cara main di GrabFood/GoFood/ShopeeFood.
-       - Paham cara branding toko offline biar menarik.
-
-    3. **Product Expert (Salesman):**
-       - Hafal spesifikasi produk di bawah ini.
-       - Jago "Consultative Selling". Jual solusi, bukan cuma jual barang.
-
-    POLA PIKIR & CARA JAWAB:
-    - **Berikan Value Dulu:** Jika user tanya tips bisnis, jawab dengan ilmu daging dulu.
-    - **Bridge to Product:** Setelah kasih tips, SELALU sambungkan dengan fitur produk kita.
-      *Contoh:* "Strategi diskon Happy Hour itu ampuh banget, Juragan. Nah, biar kasir gak pusing ngitung manual, Software Kasir kami bisa setting diskon otomatis jam tertentu lho..."
-    - **Sapaan:** Gunakan "Juragan", "Kak", atau "Bos". Ramah, asik, dan suportif.
-    - **Closing:** Jika user mulai tertarik beli, arahkan ke WhatsApp Admin (0823 2510 3336).
-
-    DATA PRODUK TOKO:
+    1. **VISION (Dokter Gadget):** Jika user kirim foto barang rusak/kuno, analisan modelnya (misal: "Wah ini Epson TM-U220 lama ya Bos"). Berikan solusi upgrade ke produk kita yang lebih modern. Tunjukkan empati teknis.
+    2. **SALES:** Bantu UMKM pilih kasir. Panggil "Juragan".
+    
+    DATA PRODUK:
     ${productContext}
-
-    Jawablah dalam Bahasa Indonesia yang natural, luwes, dan memotivasi.
     `;
   }, [products, isAdmin]);
 
-  // --- 2. GREETING LOGIC ---
-  const getGreeting = useCallback(() => {
-    const hours = new Date().getHours();
-    
-    if (isAdmin) {
-      // Greeting khusus Admin
-      return "Selamat datang di Dashboard, Chief. \n\nAda strategi marketing (Online/Offline) yang mau dibedah? Atau mau cek kodingan website?";
+  // --- 1. MEMORY OF ELEPHANT (Load History) ---
+  useEffect(() => {
+    // Hanya load history untuk user publik (bukan admin) biar privasi admin terjaga per sesi
+    if (!isAdmin) {
+      const savedHistory = localStorage.getItem('sibos_public_history');
+      if (savedHistory) {
+        try {
+          const parsed = JSON.parse(savedHistory);
+          // Cek kalau history udah kadaluarsa (misal > 7 hari), clear aja biar gak berat
+          // Untuk simpelnya kita load semua dulu
+          if (parsed.length > 0) {
+            setMessages(parsed);
+            setHasGreeted(true);
+            
+            // Reconstruct minimal context for AI (Text only for simplicity)
+            const restoredContext = parsed.map((m: Message) => ({
+              role: m.role === 'assistant' ? 'model' : 'user',
+              parts: [{ text: m.text }]
+            }));
+            chatHistoryRef.current = restoredContext;
+          }
+        } catch (e) {
+          console.error("Failed to load history", e);
+        }
+      }
     }
-
-    // Greeting Publik (Updated)
-    let greeting = "Assalamualaikum Juragan!";
-    if (hours >= 4 && hours < 10) greeting = "Selamat Pagi Juragan! Semangat jemput rezeki ☕";
-    else if (hours >= 10 && hours < 15) greeting = "Halo Juragan, selamat siang. Toko lancar?";
-    else if (hours >= 15 && hours < 19) greeting = "Sore Juragan! Gimana omzet hari ini?";
-    else greeting = "Malam Juragan. Lembur ya? SIBOS siap nemenin diskusi.";
-
-    return `${greeting} \n\nSaya SIBOS. Selain info harga mesin kasir, saya juga bisa diajak diskusi **Strategi Marketing** atau **Hitung Profit Bisnis** lho. Mau bahas apa?`;
   }, [isAdmin]);
 
-  // Trigger greeting
+  // --- 2. MEMORY OF ELEPHANT (Save History) ---
   useEffect(() => {
-    // Reset state jika mode berubah (misal dari home login ke admin)
-    if (messages.length === 0 && !hasGreeted) {
+    if (!isAdmin && messages.length > 0) {
+      localStorage.setItem('sibos_public_history', JSON.stringify(messages));
+    }
+  }, [messages, isAdmin]);
+
+  // --- 3. BEHAVIORAL TRIGGER (Si Sales Peka) ---
+  useEffect(() => {
+    // Reset trigger kalau pindah halaman selain checkout
+    if (currentPage !== 'checkout') {
+      setHasTriggeredCheckout(false);
+      return;
+    }
+
+    // Jika di halaman checkout dan belum ditrigger
+    if (currentPage === 'checkout' && !hasTriggeredCheckout && !isAdmin) {
       const timer = setTimeout(() => {
-        const text = getGreeting();
-        const initialMsg: Message = {
-          id: 'init-1',
+        const triggerMsg: Message = {
+          id: 'trigger-checkout',
           role: 'assistant',
-          text: text,
+          text: "Ragu sama ongkirnya ya Juragan? Atau bingung cara transfernya? Sini SIBOS bantu cek ongkir termurah atau pandu pembayarannya. Santai aja...",
           time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
         };
-        setMessages([initialMsg]);
-        setHasGreeted(true);
-        chatHistoryRef.current = [{ role: 'model', parts: [{ text: text }] }];
         
-        if (!isOpen) setUnreadCount(1);
+        setMessages(prev => [...prev, triggerMsg]);
+        setUnreadCount(prev => prev + 1);
+        setHasTriggeredCheckout(true);
+        
+        // Add to history context
+        chatHistoryRef.current.push({ role: 'model', parts: [{ text: triggerMsg.text }] });
+        
+        // Play sound effect (optional/advanced, skip for now)
+      }, 8000); // 8 detik bengong di checkout -> Trigger SIBOS
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentPage, hasTriggeredCheckout, isAdmin]);
+
+  // --- 4. DEFAULT GREETING ---
+  const getGreeting = useCallback(() => {
+    if (isAdmin) return "SIBOS PRO Online. Database Access Ready.";
+    
+    // Greeting yang lebih personal kalo ada history
+    if (messages.length > 0) return null; // Udah ada history, gak usah greeting ulang
+
+    const hours = new Date().getHours();
+    let greeting = "Assalamualaikum Juragan!";
+    if (hours >= 4 && hours < 10) greeting = "Pagi Juragan!";
+    else if (hours >= 10 && hours < 15) greeting = "Siang Juragan. Toko rame?";
+    else greeting = "Malam Juragan.";
+    return `${greeting} \n\nAda yang bisa SIBOS bantu soal mesin kasir hari ini?`;
+  }, [isAdmin, messages.length]);
+
+  useEffect(() => {
+    if (messages.length === 0 && !hasGreeted && !hasTriggeredCheckout) {
+      const timer = setTimeout(() => {
+        const text = getGreeting();
+        if (text) {
+          const initialMsg: Message = {
+            id: 'init-1',
+            role: 'assistant',
+            text: text,
+            time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+          };
+          setMessages([initialMsg]);
+          chatHistoryRef.current = [{ role: 'model', parts: [{ text: text }] }];
+          if (!isOpen) setUnreadCount(1);
+        }
+        setHasGreeted(true);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [hasGreeted, getGreeting, isOpen, messages.length, isAdmin]); // Added isAdmin dependency
-
-  // Reset chat when switching modes (optional, but cleaner)
-  useEffect(() => {
-    setMessages([]);
-    setHasGreeted(false);
-    chatHistoryRef.current = [];
-  }, [isAdmin]);
+  }, [hasGreeted, getGreeting, isOpen, messages.length, hasTriggeredCheckout]);
 
 
-  // --- 3. SEND MESSAGE LOGIC ---
+  // --- 5. SEND MESSAGE (Sama seperti sebelumnya) ---
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() && !attachment) return;
 
     const userText = inputValue.trim();
+    const currentAttachment = attachment;
+    
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
       text: userText,
-      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      image: currentAttachment?.base64
     };
 
     setMessages(prev => [...prev, userMsg]);
     setInputValue('');
+    setAttachment(null);
     setIsTyping(true);
 
     try {
-      const historyForApi = chatHistoryRef.current.map(h => ({
-        role: h.role,
-        parts: h.parts
-      }));
+      const userParts: any[] = [];
+      if (currentAttachment) {
+        const base64Data = currentAttachment.base64.split(',')[1];
+        userParts.push({ inlineData: { mimeType: currentAttachment.file.type, data: base64Data } });
+      }
+      if (userText) userParts.push({ text: userText });
 
-      chatHistoryRef.current.push({ role: 'user', parts: [{ text: userText }] });
+      const historyForApi = chatHistoryRef.current.map(h => ({ role: h.role, parts: h.parts }));
+      chatHistoryRef.current.push({ role: 'user', parts: userParts });
 
-      const responseStream = await ai.models.generateContentStream({
+      const result = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: [...historyForApi, { role: 'user', parts: [{ text: userText }] }],
+        contents: [...historyForApi, { role: 'user', parts: userParts }],
         config: {
           systemInstruction: buildSystemInstruction(),
-          tools: [{ googleSearch: {} }],
-          maxOutputTokens: 2000, // Lebih panjang untuk admin mode (coding/analisis)
-          temperature: isAdmin ? 0.5 : 0.7, // Admin mode lebih presisi/kreatif terkontrol
+          tools: isAdmin ? [{ functionDeclarations: adminTools }] : [{ googleSearch: {} }],
         }
       });
 
-      let fullResponseText = "";
-      const botMsgId = (Date.now() + 1).toString();
+      const responseContent = result.candidates?.[0]?.content;
+      if (!responseContent) throw new Error("No response");
+
+      const functionCalls = responseContent.parts?.filter(p => p.functionCall).map(p => p.functionCall);
       
-      setMessages(prev => [...prev, {
-        id: botMsgId,
-        role: 'assistant',
-        text: "",
-        time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-      }]);
+      if (functionCalls && functionCalls.length > 0) {
+        let toolOutputs: string[] = [];
+        for (const call of functionCalls) {
+           if (call && call.name && call.args) {
+             const toolResult = await executeTool(call.name, call.args);
+             toolOutputs.push(toolResult);
+             
+             chatHistoryRef.current.push({ role: 'model', parts: [{ functionCall: call }] });
+             chatHistoryRef.current.push({ role: 'function', parts: [{ functionResponse: { name: call.name, response: { result: toolResult } } }] });
+           }
+        }
+        const finalResult = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: chatHistoryRef.current,
+            config: { systemInstruction: buildSystemInstruction() }
+        });
+        const finalText = finalResult.text || "Perintah dijalankan.";
+        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: finalText, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }]);
+        chatHistoryRef.current.push({ role: 'model', parts: [{ text: finalText }] });
 
-      setIsTyping(false);
-
-      for await (const chunk of responseStream) {
-        const chunkText = chunk.text || "";
-        fullResponseText += chunkText;
-
-        setMessages(prev => prev.map(msg => 
-          msg.id === botMsgId 
-            ? { ...msg, text: fullResponseText }
-            : msg
-        ));
+      } else {
+        const text = result.text || "";
+        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: text, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }]);
+        chatHistoryRef.current.push({ role: 'model', parts: [{ text: text }] });
       }
-
-      chatHistoryRef.current.push({ role: 'model', parts: [{ text: fullResponseText }] });
 
     } catch (error) {
       console.error("SIBOS Error:", error);
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: "Maaf Chief/Juragan, sistem sedang sibuk.", time: new Date().toLocaleTimeString('id-ID') }]);
+    } finally {
       setIsTyping(false);
-      
-      const errorMsg: Message = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        text: isAdmin 
-          ? "System Error: Connection failed. Check console logs, Chief." 
-          : "Waduh, koneksi saya agak gangguan Bos. Coba tanya lagi ya.",
-        time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, errorMsg]);
     }
   };
 
@@ -230,17 +315,24 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false) => {
     setMessages([]);
     chatHistoryRef.current = [];
     setHasGreeted(false); 
+    setAttachment(null);
+    localStorage.removeItem('sibos_public_history'); // Hapus ingatan gajah juga
+  };
+
+  const handleImageSelect = async (file: File) => {
+    try {
+      const base64 = await fileToBase64(file);
+      setAttachment({ file, base64 });
+    } catch (error) {
+      console.error("Image upload failed:", error);
+    }
+  };
+
+  const handleClearImage = () => {
+    setAttachment(null);
   };
 
   return {
-    isOpen,
-    toggleChat,
-    unreadCount,
-    messages,
-    isTyping,
-    inputValue,
-    setInputValue,
-    handleSendMessage,
-    clearChat
+    isOpen, toggleChat, unreadCount, messages, isTyping, inputValue, setInputValue, handleSendMessage, clearChat, handleImageSelect, selectedImage: attachment ? attachment.base64 : null, handleClearImage
   };
 };

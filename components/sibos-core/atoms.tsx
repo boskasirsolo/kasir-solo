@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { MessageSquare, X, Send, Bot, User as UserIcon, ExternalLink } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User as UserIcon, ExternalLink, Image as ImageIcon } from 'lucide-react';
 
 // --- HELPER: MARKDOWN & LINK RENDERER ---
 const renderFormattedText = (text: string) => {
+  if (!text) return null;
   // 1. Split by newlines
   return text.split('\n').map((line, lineIdx) => {
     // 2. Split by bold markers (**)
@@ -18,7 +19,6 @@ const renderFormattedText = (text: string) => {
           }
 
           // Handle URLs inside normal text
-          // Regex menangkap http/https/www
           const urlRegex = /((?:https?:\/\/|www\.)[^\s]+)/g;
           const subParts = part.split(urlRegex);
 
@@ -80,11 +80,13 @@ export const SibosTrigger = ({
 export const ChatBubble = ({ 
   role, 
   text, 
-  time 
+  time,
+  image
 }: { 
   role: 'user' | 'assistant', 
   text: string, 
-  time: string 
+  time: string,
+  image?: string
 }) => {
   const isUser = role === 'user';
   
@@ -101,11 +103,16 @@ export const ChatBubble = ({
 
         {/* Bubble Content */}
         <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-          <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
+          <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm flex flex-col gap-2 ${
             isUser 
               ? 'bg-brand-orange text-white rounded-tr-none' 
               : 'bg-white/10 text-gray-200 border border-white/5 rounded-tl-none backdrop-blur-sm'
           }`}>
+             {image && (
+               <div className="mb-2 rounded-lg overflow-hidden border border-white/20">
+                 <img src={image} alt="User upload" className="max-w-full h-auto max-h-40 object-cover" />
+               </div>
+             )}
              {isUser ? text : renderFormattedText(text)}
           </div>
           <span className="text-[10px] text-gray-500 mt-1 px-1">{time}</span>
@@ -129,5 +136,26 @@ export const TypingIndicator = () => (
         <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
       </div>
     </div>
+  </div>
+);
+
+// --- 4. IMAGE PREVIEW (NEW) ---
+export const ImagePreview = ({ 
+  image, 
+  onRemove 
+}: { 
+  image: string, 
+  onRemove: () => void 
+}) => (
+  <div className="mx-4 mb-2 p-2 bg-brand-dark/80 border border-white/10 rounded-lg flex items-center justify-between animate-fade-in">
+    <div className="flex items-center gap-3 overflow-hidden">
+      <div className="w-10 h-10 rounded bg-black border border-white/10 overflow-hidden shrink-0">
+        <img src={image} alt="Preview" className="w-full h-full object-cover" />
+      </div>
+      <span className="text-xs text-brand-orange font-bold truncate">Gambar terlampir</span>
+    </div>
+    <button onClick={onRemove} className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-red-500 transition-colors">
+      <X size={16} />
+    </button>
   </div>
 );

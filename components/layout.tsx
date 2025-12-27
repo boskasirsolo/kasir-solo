@@ -307,7 +307,7 @@ export const Layout = ({
           {children}
         </main>
         {/* SIBOS AI WIDGET (ADMIN MODE) */}
-        <SibosWidget products={INITIAL_PRODUCTS} isAdmin={true} />
+        <SibosWidget products={INITIAL_PRODUCTS} isAdmin={true} currentPage={currentPage} />
       </div>
     );
   }
@@ -322,8 +322,8 @@ export const Layout = ({
 
       <Footer setPage={setPage} config={config} />
       
-      {/* SIBOS AI WIDGET (PUBLIC MODE) */}
-      <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} />
+      {/* SIBOS AI WIDGET (PUBLIC MODE) - Pass currentPage for Behavioral Trigger */}
+      <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} currentPage={currentPage} />
     </div>
   );
 };

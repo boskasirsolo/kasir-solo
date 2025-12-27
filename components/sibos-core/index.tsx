@@ -7,10 +7,12 @@ import { Product } from '../../types';
 
 export const SibosWidget = ({ 
   products, 
-  isAdmin = false 
+  isAdmin = false,
+  currentPage
 }: { 
   products: Product[], 
-  isAdmin?: boolean 
+  isAdmin?: boolean,
+  currentPage?: string
 }) => {
   const {
     isOpen,
@@ -21,8 +23,11 @@ export const SibosWidget = ({
     inputValue,
     setInputValue,
     handleSendMessage,
-    clearChat
-  } = useSibosChat(products, isAdmin);
+    clearChat,
+    handleImageSelect,
+    selectedImage,
+    handleClearImage
+  } = useSibosChat(products, isAdmin, currentPage);
 
   return (
     <>
@@ -39,6 +44,9 @@ export const SibosWidget = ({
           setInput={setInputValue} 
           onSend={handleSendMessage} 
           disabled={isTyping}
+          onImageSelect={handleImageSelect}
+          selectedImage={selectedImage}
+          onClearImage={handleClearImage}
         />
       </div>
 
