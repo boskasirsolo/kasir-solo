@@ -132,9 +132,8 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
       
       ROLE: General Manager Virtual PT Mesin Kasir Solo.
       
-      CAPABILITIES (Update):
+      CAPABILITIES:
       1. **DATABASE (Internal):** Cek stok, edit harga, hapus konten. Gunakan tool database.
-      2. **COMPETITOR SPY (External):** Kamu punya akses "googleSearch". Jika Chief tanya "Cek harga printer di Tokopedia", GUNAKAN Google Search untuk cari harga pasar terbaru, lalu bandingkan dengan harga di database kita.
       
       GAYA BICARA: Taktis, Data-driven, Loyal. Panggil "Chief".
       `;
@@ -207,7 +206,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
   }, [currentPage, hasTriggeredCheckout, isAdmin]);
 
   const getGreeting = useCallback(() => {
-    if (isAdmin) return "SIBOS PRO Online. \n\nFitur 'Competitor Spy' Aktif: Saya siap browsing harga pasar untuk perbandingan, Chief.";
+    if (isAdmin) return "SIBOS PRO Online. \n\nMode: Administrator. Saya siap mengelola database dan memantau operasional, Chief.";
     if (messages.length > 0) return null;
 
     const hours = new Date().getHours();
@@ -285,17 +284,16 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
       const historyForApi = chatHistoryRef.current.map(h => ({ role: h.role, parts: h.parts }));
       chatHistoryRef.current.push({ role: 'user', parts: userParts });
 
+      // FIX: Only use functionDeclarations, DO NOT mix with googleSearch in the same request to prevent API error
       let activeTools: any[] = [];
       
       if (isAdmin) {
         activeTools = [
-            { functionDeclarations: [...dbTools, ...crmTools] },
-            { googleSearch: {} }
+            { functionDeclarations: [...dbTools, ...crmTools] }
         ];
       } else {
         activeTools = [
-            { functionDeclarations: crmTools }, 
-            { googleSearch: {} }
+            { functionDeclarations: crmTools }
         ];
       }
 
@@ -309,7 +307,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
       });
 
       const responseContent = result.candidates?.[0]?.content;
-      if (!responseContent) throw new Error("No response");
+      if (!responseContent) throw new Error("No response content from AI");
 
       const functionCalls = responseContent.parts?.filter(p => p.functionCall).map(p => p.functionCall);
       
@@ -336,14 +334,20 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: finalText }] });
 
       } else {
-        const text = result.text || "";
+        const text = result.text || "Maaf, saya tidak mengerti.";
         setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: text, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }]);
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: text }] });
       }
 
-    } catch (error) {
-      console.error("SIBOS Error:", error);
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: "Maaf Chief/Juragan, sistem sedang sibuk (Koneksi AI Terputus).", time: new Date().toLocaleTimeString('id-ID') }]);
+    } catch (error: any) {
+      console.error("SIBOS Error Full:", error);
+      let errorMessage = "Maaf Chief/Juragan, sistem sedang sibuk (Koneksi AI Terputus).";
+      
+      // Provide more specific error hint if possible
+      if (error.message?.includes('400')) errorMessage = "Maaf, ada gangguan teknis pada server AI (Error 400). Coba lagi nanti.";
+      if (error.message?.includes('API key')) errorMessage = "API Key bermasalah. Silakan refresh halaman.";
+
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: errorMessage, time: new Date().toLocaleTimeString('id-ID') }]);
     } finally {
       setIsTyping(false);
     }
