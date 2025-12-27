@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Plus, Trash2, CheckCircle2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, ai, CONFIG, formatRupiah } from '../utils';
+import { supabase, CONFIG, formatRupiah, ensureAPIKey } from '../utils';
+import { GoogleGenAI } from "@google/genai";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -36,10 +37,11 @@ export const AdminProducts = ({
   };
 
   const generateProductDescription = async () => {
-    if (!ai) return alert("API Key Gemini belum ditemukan!");
     if (!newProdName || !prodShortDesc) return alert("Isi Nama Produk dan Keyword Fitur sebagai trigger.");
     setIsGeneratingProdAI(true);
     try {
+      await ensureAPIKey();
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `
         Bertindaklah sebagai Senior Copywriter untuk produk teknologi kasir (POS).
         Tugas: Buat deskripsi penjualan (Sales Copy) yang persuasif.
@@ -251,10 +253,11 @@ export const AdminGallery = ({
   };
 
   const generateGalleryNarrative = async () => {
-    if (!ai) return alert("API Key Gemini belum ditemukan!");
     if (!galleryTitle || !galleryShortDesc) return alert("Mohon isi Judul dan Deskripsi Singkat sebagai trigger AI.");
     setIsGeneratingGalleryAI(true);
     try {
+      await ensureAPIKey();
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `
         Bertindaklah sebagai spesialis SEO dan Copywriter Senior.
         Tugas: Buat narasi deskripsi panjang (storytelling) untuk portofolio/galeri.

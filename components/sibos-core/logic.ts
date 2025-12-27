@@ -1,15 +1,14 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Product } from '../../types';
-import { ai, formatRupiah, supabase } from '../../utils';
-import { FunctionDeclaration, Type } from "@google/genai";
+import { formatRupiah, supabase, ensureAPIKey } from '../../utils';
+import { FunctionDeclaration, Type, GoogleGenAI } from "@google/genai";
 
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
   text: string;
   time: string;
-  image?: string; // Support visual history
+  image?: string; 
 }
 
 export const useSibosChat = (products: Product[], isAdmin: boolean = false, currentPage: string = 'home') => {
@@ -22,10 +21,8 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
   const [attachment, setAttachment] = useState<{file: File, base64: string} | null>(null);
   const [hasTriggeredCheckout, setHasTriggeredCheckout] = useState(false);
 
-  // Ref untuk history chat context
   const chatHistoryRef = useRef<any[]>([]);
 
-  // --- HELPER: IMAGE TO BASE64 ---
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -38,9 +35,6 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     });
   };
 
-  // --- 1. DEFINISI TOOLS (THE HANDS) ---
-  
-  // A. Database Tools (Admin Only)
   const dbTools: FunctionDeclaration[] = [
     {
       name: 'get_recent_orders',
@@ -69,7 +63,6 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     }
   ];
 
-  // B. CRM Tools (Public & Admin - Lead Scoring)
   const crmTools: FunctionDeclaration[] = [
     {
       name: 'log_hot_lead',
@@ -86,12 +79,9 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     }
   ];
 
-  // --- 2. EXECUTE TOOLS ---
   const executeTool = async (name: string, args: any) => {
-    // Handling CRM Tool (Simulasi)
     if (name === 'log_hot_lead') {
         console.log("🔥 HOT LEAD DETECTED:", args);
-        // Di real app, ini akan kirim ke API CRM atau WA Gateway
         return `[SYSTEM]: Hot Lead tercatat! Notifikasi prioritas sudah dikirim ke WhatsApp Owner. Segera minta kontak WA user untuk follow-up.`;
     }
 
@@ -133,7 +123,6 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     return "Tool not found.";
   };
 
-  // --- 3. SYSTEM INSTRUCTION (OTAK BARU) ---
   const buildSystemInstruction = useCallback(() => {
     const productContext = products.map(p => `- ${p.name} (${formatRupiah(p.price)}).`).join('\n');
 
@@ -167,7 +156,6 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     `;
   }, [products, isAdmin]);
 
-  // --- 4. MEMORY OF ELEPHANT (Load History) ---
   useEffect(() => {
     if (!isAdmin) {
       const savedHistory = localStorage.getItem('sibos_public_history');
@@ -190,14 +178,12 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     }
   }, [isAdmin]);
 
-  // --- 5. MEMORY OF ELEPHANT (Save History) ---
   useEffect(() => {
     if (!isAdmin && messages.length > 0) {
       localStorage.setItem('sibos_public_history', JSON.stringify(messages));
     }
   }, [messages, isAdmin]);
 
-  // --- 6. BEHAVIORAL TRIGGER (Si Sales Peka) ---
   useEffect(() => {
     if (currentPage !== 'checkout') {
       setHasTriggeredCheckout(false);
@@ -220,7 +206,6 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     }
   }, [currentPage, hasTriggeredCheckout, isAdmin]);
 
-  // --- 7. DEFAULT GREETING ---
   const getGreeting = useCallback(() => {
     if (isAdmin) return "SIBOS PRO Online. \n\nFitur 'Competitor Spy' Aktif: Saya siap browsing harga pasar untuk perbandingan, Chief.";
     if (messages.length > 0) return null;
@@ -267,7 +252,6 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     setAttachment(null);
   };
 
-  // --- 8. SEND MESSAGE (CORE LOGIC) ---
   const handleSendMessage = async () => {
     if (!inputValue.trim() && !attachment) return;
 
@@ -288,6 +272,9 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     setIsTyping(true);
 
     try {
+      await ensureAPIKey(); // Ensure key
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      
       const userParts: any[] = [];
       if (currentAttachment) {
         const base64Data = currentAttachment.base64.split(',')[1];
@@ -298,17 +285,14 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
       const historyForApi = chatHistoryRef.current.map(h => ({ role: h.role, parts: h.parts }));
       chatHistoryRef.current.push({ role: 'user', parts: userParts });
 
-      // --- KONFIGURASI TOOLS DINAMIS ---
       let activeTools: any[] = [];
       
       if (isAdmin) {
-        // ADMIN: Dapat Database Tools + CRM + Google Search (Competitor Spy)
         activeTools = [
             { functionDeclarations: [...dbTools, ...crmTools] },
             { googleSearch: {} }
         ];
       } else {
-        // PUBLIC: Dapat CRM (untuk Lead Scoring) + Google Search
         activeTools = [
             { functionDeclarations: crmTools }, 
             { googleSearch: {} }
@@ -329,7 +313,6 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
 
       const functionCalls = responseContent.parts?.filter(p => p.functionCall).map(p => p.functionCall);
       
-      // Jika ada Function Call (Database Action atau CRM Logging)
       if (functionCalls && functionCalls.length > 0) {
         let toolOutputs: string[] = [];
         for (const call of functionCalls) {
@@ -342,7 +325,6 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
            }
         }
         
-        // Generate respon akhir setelah tool dieksekusi
         const finalResult = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: chatHistoryRef.current,
@@ -354,22 +336,14 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: finalText }] });
 
       } else {
-        // Respon Teks Biasa (termasuk hasil Google Search yang otomatis di-inject model ke text response)
         const text = result.text || "";
-        
-        // Jika ada grounding metadata (hasil search), biasanya model sudah merangkumnya di text.
-        // Tapi kita bisa cek console log untuk debug link-nya.
-        if (result.candidates?.[0]?.groundingMetadata) {
-             console.log("Grounding Source:", result.candidates?.[0]?.groundingMetadata);
-        }
-
         setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: text, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }]);
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: text }] });
       }
 
     } catch (error) {
       console.error("SIBOS Error:", error);
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: "Maaf Chief/Juragan, sistem sedang sibuk.", time: new Date().toLocaleTimeString('id-ID') }]);
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: "Maaf Chief/Juragan, sistem sedang sibuk (Koneksi AI Terputus).", time: new Date().toLocaleTimeString('id-ID') }]);
     } finally {
       setIsTyping(false);
     }

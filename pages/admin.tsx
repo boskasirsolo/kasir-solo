@@ -1,13 +1,12 @@
-
 import React, { useState } from 'react';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock } from 'lucide-react';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
 import { AdminGallery } from '../components/admin-gallery';
 import { AdminSettings } from '../components/admin-settings';
 import { AdminOrders } from '../components/admin-orders';
-import { supabase } from '../utils';
+import { supabase, ensureAPIKey } from '../utils';
 
 // --- Login Component (SECURED) ---
 export const AdminLogin = () => {
@@ -35,7 +34,6 @@ export const AdminLogin = () => {
       if (error) {
         throw error;
       }
-      // Login sukses, state akan berubah di index.tsx via onAuthStateChange
     } catch (error: any) {
       setErr(error.message || "Gagal login. Periksa email dan password.");
     } finally {
@@ -45,7 +43,6 @@ export const AdminLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center animate-fade-in bg-brand-dark relative overflow-hidden">
-      {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-orange/10 rounded-full blur-[150px] animate-pulse-slow"></div>
       
       <form 
@@ -99,10 +96,7 @@ export const AdminDashboard = ({
   config: SiteConfig, setConfig: any,
   onLogout: () => void
 }) => {
-  // Main Tabs: Produk (Store), Gallery, Settings
   const [activeTab, setActiveTab] = useState<'store' | 'gallery' | 'settings'>('store');
-  
-  // Sub Tabs for Store: Orders vs Catalog
   const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog'>('orders');
 
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
@@ -119,6 +113,17 @@ export const AdminDashboard = ({
     </button>
   );
 
+  const connectAI = async () => {
+      // @ts-ignore
+      if (window.aistudio) {
+          // @ts-ignore
+          await window.aistudio.openSelectKey();
+          alert("Koneksi API Key diperbarui.");
+      } else {
+          alert("Fitur ini hanya tersedia di environment Google AI Studio.");
+      }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
       <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between mb-6 pb-6 border-b border-white/10 gap-6">
@@ -127,7 +132,6 @@ export const AdminDashboard = ({
           <p className="text-gray-400 text-xs mt-1">Kelola konten dan operasional bisnis.</p>
         </div>
         
-        {/* Top Level Navigation & Logout */}
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-wrap gap-2">
             <TabButton id="store" label="PRODUK & PESANAN" icon={ShoppingBag} />
@@ -137,6 +141,14 @@ export const AdminDashboard = ({
           
           <div className="w-px h-8 bg-white/10 hidden md:block"></div>
           
+          <button 
+             onClick={connectAI}
+             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500 hover:text-white transition-colors"
+             title="Hubungkan ulang API Key Gemini"
+          >
+             <Zap size={16} /> <span className="hidden md:inline">Connect AI</span>
+          </button>
+
           <button 
             onClick={onLogout}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-colors"
@@ -149,12 +161,10 @@ export const AdminDashboard = ({
       </div>
 
       <div className="bg-brand-card border border-white/10 rounded-2xl p-4 md:p-6 min-h-[600px] shadow-2xl relative overflow-hidden">
-        {/* Decorative Glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-orange/5 rounded-full blur-[80px] pointer-events-none"></div>
 
         {activeTab === 'store' && (
           <div className="animate-fade-in relative z-10">
-             {/* Sub-Tab Navigation for Store */}
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/5">
                 <div className="bg-brand-dark p-1 rounded-lg inline-flex border border-white/10">
                    <button 
@@ -185,7 +195,6 @@ export const AdminDashboard = ({
                 </div>
              </div>
 
-             {/* Render Content Based on Sub-Tab */}
              {storeSubTab === 'orders' ? (
                 <AdminOrders />
              ) : (

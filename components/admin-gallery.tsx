@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer } from 'lucide-react';
 import { GalleryItem } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, ai, CONFIG } from '../utils';
+import { supabase, CONFIG, ensureAPIKey } from '../utils';
+import { GoogleGenAI } from "@google/genai";
 
 const ITEMS_PER_PAGE = 6; 
 
@@ -15,13 +15,12 @@ const useGalleryManager = (
     const [form, setForm] = useState({
         id: null as number | null,
         title: '',
-        category_type: 'physical' as 'physical' | 'digital', // NEW
-        platform: 'web' as 'web' | 'mobile' | 'desktop', // NEW
-        client_url: '', // NEW
-        tech_stack_str: '', // NEW (String input, converted to array)
+        category_type: 'physical' as 'physical' | 'digital',
+        platform: 'web' as 'web' | 'mobile' | 'desktop',
+        client_url: '',
+        tech_stack_str: '',
         shortDesc: '', 
-        longDesc: '', // Normal description
-        // Case Study Fields
+        longDesc: '',
         cs_challenge: '',
         cs_solution: '',
         cs_result: '',
@@ -75,13 +74,14 @@ const useGalleryManager = (
     };
 
     const generateAINarrative = async () => {
-        if (!ai) return alert("API Key Gemini belum ditemukan!");
-        if (!form.title || !form.shortDesc) return alert("Isi Judul dan Keyword Fitur dulu.");
+        if (!form.title || !form.shortDesc) return alert("Mohon isi Judul dan Context (Trigger) dulu.");
         
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
+            await ensureAPIKey(); // Ensure key is selected
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            
             if (form.category_type === 'digital') {
-                 // Generate STAR Case Study
                  const prompt = `
                  Role: Tech Copywriter. Project: ${form.title}. Context: ${form.shortDesc}.
                  Task: Create a mini case study (STAR method).
@@ -90,7 +90,7 @@ const useGalleryManager = (
                  `;
                  const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
                  const rawText = response.text?.trim() || '{}';
-                 // Try parsing JSON (Simple regex fallback if not pure JSON)
+                 
                  try {
                      const jsonStart = rawText.indexOf('{');
                      const jsonEnd = rawText.lastIndexOf('}') + 1;
@@ -103,11 +103,10 @@ const useGalleryManager = (
                         cs_result: parsed.result || ''
                      }));
                  } catch (e) {
-                     setForm(prev => ({...prev, longDesc: rawText})); // Fallback to long desc
+                     setForm(prev => ({...prev, longDesc: rawText}));
                  }
 
             } else {
-                 // Generate Normal Description
                  const prompt = `
                  Role: Copywriter. Project: ${form.title}. Context: ${form.shortDesc}.
                  Task: Write a compelling description (2 paragraphs). Bahasa Indonesia.
@@ -115,12 +114,15 @@ const useGalleryManager = (
                  const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
                  setForm(prev => ({ ...prev, longDesc: response.text?.trim() || '' }));
             }
-        } catch (e) { alert("AI Error"); } 
+        } catch (e: any) { 
+            console.error(e);
+            alert(`AI Error: ${e.message || "Gagal menghubungi layanan AI."}`); 
+        } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };
 
     const handleSubmit = async () => {
-        if (!CONFIG.CLOUDINARY_CLOUD_NAME) return alert("Cloudinary Config Missing");
+        if (!CONFIG.CLOUDINARY_CLOUD_NAME) return alert("Config Cloudinary Missing");
         if (!form.id && !form.uploadFile && !form.imagePreview) return alert("Pilih gambar dulu!");
 
         setLoadingState(prev => ({ ...prev, uploading: true }));
@@ -141,10 +143,9 @@ const useGalleryManager = (
                 image_url: finalImageUrl,
                 type: 'image',
                 category_type: form.category_type,
-                description: form.longDesc, // Used for physical
+                description: form.longDesc, 
             };
 
-            // Add Digital Specifics
             if (form.category_type === 'digital') {
                 dbData.platform = form.platform;
                 dbData.client_url = form.client_url;
@@ -157,12 +158,10 @@ const useGalleryManager = (
             }
 
             if (form.id) {
-                // Update
                 const updatedItem = { ...gallery.find(g => g.id === form.id)!, ...dbData };
                 setGallery(gallery.map(g => g.id === form.id ? updatedItem : g));
                 if (supabase) await supabase.from('gallery').update(dbData).eq('id', form.id);
             } else {
-                // Create
                 const newId = Date.now();
                 const newItem = { ...dbData, id: newId } as GalleryItem;
                 setGallery([newItem, ...gallery]);
@@ -181,7 +180,6 @@ const useGalleryManager = (
         if (form.id === id) resetForm();
     };
 
-    // Filter & Pagination Logic
     const filtered = gallery.filter(g => g.title.toLowerCase().includes(searchTerm.toLowerCase()));
     const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
     const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -198,7 +196,6 @@ const useGalleryManager = (
     };
 };
 
-// --- ATOMIC COMPONENT: Gallery Form (Right Side) ---
 const GalleryForm = ({ 
     form, setForm, loading, onSubmit, onReset, onGenerateAI 
 }: {
@@ -217,7 +214,6 @@ const GalleryForm = ({
             )}
         </div>
 
-        {/* TYPE SELECTOR */}
         <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-black/40 rounded-lg border border-white/5">
             <button 
                 onClick={() => setForm((prev:any) => ({...prev, category_type: 'physical'}))}
@@ -237,7 +233,6 @@ const GalleryForm = ({
             </button>
         </div>
 
-        {/* Image Upload Area */}
         <div className="mb-4">
              {form.imagePreview && (
                <div className="mb-3 relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
@@ -266,7 +261,6 @@ const GalleryForm = ({
               <Input value={form.title} onChange={e => setForm((prev:any) => ({...prev, title: e.target.value}))} placeholder="Contoh: Instalasi Cafe..." className="py-2 text-sm"/>
             </div>
 
-            {/* DIGITAL SPECIFIC FIELDS */}
             {form.category_type === 'digital' && (
                 <div className="space-y-4 p-4 bg-white/5 rounded-lg border border-white/5">
                     <div className="grid grid-cols-2 gap-4">
@@ -294,7 +288,6 @@ const GalleryForm = ({
                 </div>
             )}
 
-            {/* AI TRIGGER */}
             <div className="p-3 bg-brand-orange/5 rounded-lg border border-brand-orange/20">
                <div className="flex justify-between items-center mb-2">
                   <label className="text-[10px] text-brand-orange uppercase font-bold tracking-wider flex items-center gap-1"><Sparkles size={12} /> AI Generator</label>
@@ -313,7 +306,6 @@ const GalleryForm = ({
                </div>
             </div>
 
-            {/* DESCRIPTION AREAS */}
             {form.category_type === 'digital' ? (
                 <div className="space-y-3">
                     <div>
@@ -343,14 +335,12 @@ const GalleryForm = ({
     </div>
 );
 
-// --- ATOMIC COMPONENT: Gallery List (Left Side - Grid View) ---
 const GalleryList = ({ 
     data, onEdit, onDelete 
 }: { 
     data: any, onEdit: any, onDelete: any 
 }) => (
     <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden">
-        {/* Header & Search */}
         <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
             <div className="relative flex-grow">
                 <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
@@ -365,7 +355,6 @@ const GalleryList = ({
              <span className="text-[10px] font-bold text-gray-500 uppercase">Total: {data.paginated.length}</span>
         </div>
         
-        {/* Grid Items */}
         <div className="flex-grow overflow-y-auto p-4 custom-scrollbar min-h-[500px]">
             {data.paginated.length === 0 ? (
                 <div className="text-center py-20 text-gray-500 text-xs">Data galeri tidak ditemukan.</div>
@@ -373,22 +362,18 @@ const GalleryList = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {data.paginated.map((item: GalleryItem) => (
                         <div key={item.id} className="group relative bg-brand-card border border-white/5 rounded-lg overflow-hidden hover:border-brand-orange transition-all hover:shadow-neon-text/20">
-                            {/* Image Aspect Ratio Container */}
                             <div className="relative aspect-video bg-black overflow-hidden border-b border-white/5">
                                 <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                {/* Overlay Actions */}
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                     <button onClick={() => onEdit(item)} className="p-2 bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500 hover:text-white transition-colors"><Edit size={16} /></button>
                                     <button onClick={() => onDelete(item.id)} className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-colors"><Trash2 size={16} /></button>
                                 </div>
-                                {/* Badge Type */}
                                 <div className="absolute top-2 right-2">
                                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${item.category_type === 'digital' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white'}`}>
                                         {item.category_type === 'digital' ? 'DIGITAL' : 'FISIK'}
                                     </span>
                                 </div>
                             </div>
-                            {/* Info */}
                             <div className="p-3">
                                 <h5 className="text-sm font-bold text-white truncate mb-1" title={item.title}>{item.title}</h5>
                                 <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">
@@ -401,7 +386,6 @@ const GalleryList = ({
             )}
         </div>
 
-        {/* Pagination */}
         {data.totalPages > 1 && (
             <div className="p-3 border-t border-white/10 bg-black/20 flex justify-center items-center gap-4">
                 <button onClick={() => data.setPage((p:number) => Math.max(1, p - 1))} disabled={data.page === 1} className="text-gray-400 hover:text-white disabled:opacity-30"><ChevronLeft size={16} /></button>
@@ -412,7 +396,6 @@ const GalleryList = ({
     </div>
 );
 
-// --- MAIN COMPONENT ---
 export const AdminGallery = ({ 
   gallery, 
   setGallery 
@@ -424,11 +407,9 @@ export const AdminGallery = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      {/* 60% Width for List (Left) */}
       <div className="lg:col-span-7">
         <GalleryList data={listData} onEdit={handleEditClick} onDelete={deleteItem} />
       </div>
-      {/* 40% Width for Form (Right) */}
       <div className="lg:col-span-5">
         <GalleryForm 
             form={form} 

@@ -1,13 +1,12 @@
-
 import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, ai, CONFIG, formatRupiah } from '../utils';
+import { supabase, CONFIG, formatRupiah, ensureAPIKey } from '../utils';
+import { GoogleGenAI } from "@google/genai";
 
-const ITEMS_PER_PAGE = 6; // Disesuaikan untuk grid 2 kolom (3 baris)
+const ITEMS_PER_PAGE = 6; 
 
-// --- LOGIC: Custom Hook ---
 const useProductManager = (
     products: Product[], 
     setProducts: (p: Product[]) => void
@@ -17,7 +16,7 @@ const useProductManager = (
         name: '',
         price: '',
         desc: '',
-        shortDesc: '', // For AI Trigger
+        shortDesc: '',
         imagePreview: '',
         uploadFile: null as File | null
     });
@@ -56,15 +55,20 @@ const useProductManager = (
     };
 
     const generateAIDesc = async () => {
-        if (!ai) return alert("API Key Gemini belum ditemukan!");
         if (!form.name || !form.shortDesc) return alert("Isi Nama dan Keyword Fitur dulu.");
         
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
+            await ensureAPIKey(); // Ensure key
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            
             const prompt = `Buat deskripsi penjualan (Sales Copy) persuasif bahasa Indonesia untuk produk POS: ${form.name}. Fitur: ${form.shortDesc}. Max 3 paragraf.`;
             const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
             setForm(prev => ({ ...prev, desc: response.text?.trim() || '' }));
-        } catch (e) { alert("AI Error"); } 
+        } catch (e: any) { 
+            console.error(e);
+            alert(`AI Error: ${e.message}`); 
+        } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };
 
@@ -94,11 +98,9 @@ const useProductManager = (
             };
 
             if (form.id) {
-                // Update
                 setProducts(products.map(p => p.id === form.id ? { ...p, ...dbData, image: finalImageUrl } : p));
                 if (supabase) await supabase.from('products').update(dbData).eq('id', form.id);
             } else {
-                // Create
                 const newId = Date.now();
                 setProducts([{ ...dbData, id: newId, image: finalImageUrl }, ...products]);
                 if (supabase) await supabase.from('products').insert([dbData]);
@@ -116,7 +118,6 @@ const useProductManager = (
         if (form.id === id) resetForm();
     };
 
-    // Filter & Pagination Logic
     const filtered = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
     const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
     const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -133,14 +134,12 @@ const useProductManager = (
     };
 };
 
-// --- ATOMIC COMPONENT: Product Form ---
 const ProductForm = ({ 
     form, setForm, loading, onSubmit, onReset, onGenerateAI 
 }: {
     form: any, setForm: any, loading: any, onSubmit: any, onReset: any, onGenerateAI: any
 }) => (
     <div className="bg-brand-dark p-6 rounded-xl border border-white/5 h-fit sticky top-6">
-        {/* Header Form */}
         <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 {form.id ? <Edit size={18} className="text-brand-orange"/> : <Tag size={18} className="text-brand-orange"/>}
@@ -153,7 +152,6 @@ const ProductForm = ({
             )}
         </div>
 
-        {/* Image Upload */}
         <div className="mb-4">
             {form.imagePreview && (
                 <div className="mb-3 relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
@@ -175,7 +173,6 @@ const ProductForm = ({
             </div>
         </div>
 
-        {/* Inputs */}
         <div className="space-y-4">
             <div>
                 <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Nama Produk</label>
@@ -189,7 +186,6 @@ const ProductForm = ({
                 </div>
             </div>
 
-            {/* AI Section */}
             <div className="p-3 bg-brand-orange/5 rounded-lg border border-brand-orange/20">
                 <div className="flex justify-between items-center mb-2">
                     <label className="text-[10px] text-brand-orange uppercase font-bold tracking-wider flex items-center gap-1"><Sparkles size={12} /> AI Copywriter</label>
@@ -223,14 +219,12 @@ const ProductForm = ({
     </div>
 );
 
-// --- ATOMIC COMPONENT: Product List ---
 const ProductList = ({ 
     data, onEdit, onDelete 
 }: { 
     data: any, onEdit: any, onDelete: any 
 }) => (
     <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden">
-        {/* List Header */}
         <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
              <div className="relative flex-grow">
                 <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
@@ -245,7 +239,6 @@ const ProductList = ({
              <span className="text-[10px] font-bold text-gray-500 uppercase">Total: {data.paginated.length}</span>
         </div>
         
-        {/* Grid Items (Cards) */}
         <div className="flex-grow overflow-y-auto p-4 custom-scrollbar min-h-[400px]">
             {data.paginated.length === 0 ? (
                 <div className="text-center py-10 text-gray-500 text-xs">Produk tidak ditemukan.</div>
@@ -253,10 +246,8 @@ const ProductList = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {data.paginated.map((p: Product) => (
                         <div key={p.id} className="group relative bg-brand-card border border-white/5 rounded-lg overflow-hidden hover:border-brand-orange transition-all hover:shadow-neon-text/20">
-                            {/* Image Aspect Ratio */}
                             <div className="relative h-32 bg-black overflow-hidden border-b border-white/5">
                                 <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                {/* Overlay Actions */}
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                     <button onClick={() => onEdit(p)} className="p-2 bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500 hover:text-white transition-colors"><Edit size={16} /></button>
                                     <button onClick={() => onDelete(p.id)} className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-colors"><Trash2 size={16} /></button>
@@ -265,7 +256,6 @@ const ProductList = ({
                                      <span className="bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-white border border-white/10">{formatRupiah(p.price)}</span>
                                 </div>
                             </div>
-                            {/* Info */}
                             <div className="p-3">
                                 <h5 className="text-sm font-bold text-white truncate mb-1" title={p.name}>{p.name}</h5>
                                 <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed h-8">
@@ -278,7 +268,6 @@ const ProductList = ({
             )}
         </div>
 
-        {/* Pagination */}
         {data.totalPages > 1 && (
             <div className="p-3 border-t border-white/10 bg-black/20 flex justify-center items-center gap-4">
                 <button onClick={() => data.setPage((p:number) => Math.max(1, p - 1))} disabled={data.page === 1} className="text-gray-400 hover:text-white disabled:opacity-30"><ChevronLeft size={16} /></button>
@@ -289,7 +278,6 @@ const ProductList = ({
     </div>
 );
 
-// --- MAIN COMPONENT ---
 export const AdminProducts = ({ 
   products, 
   setProducts 
@@ -301,11 +289,9 @@ export const AdminProducts = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      {/* List on the Left (60%) */}
       <div className="lg:col-span-7">
          <ProductList data={listData} onEdit={handleEditClick} onDelete={deleteProduct} />
       </div>
-      {/* Form on the Right (40%) */}
       <div className="lg:col-span-5">
          <ProductForm 
             form={form} 

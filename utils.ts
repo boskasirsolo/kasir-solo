@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenAI } from '@google/genai';
 import { Product, Article, GalleryItem } from './types';
 
 // --- Environment Helpers ---
@@ -35,9 +34,24 @@ export const supabase = (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_KEY)
   ? createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY) 
   : null;
 
-// Safe init for AI to prevent white screen if key is missing
-const apiKey = process.env.API_KEY || "dummy_key_to_prevent_crash";
-export const ai = new GoogleGenAI({ apiKey });
+// Helper to ensure API Key is selected (For Google AI Studio environments)
+export const ensureAPIKey = async () => {
+  try {
+    // @ts-ignore
+    if (window.aistudio) {
+      // @ts-ignore
+      const hasKey = await window.aistudio.hasSelectedApiKey();
+      if (!hasKey) {
+         // @ts-ignore
+         await window.aistudio.openSelectKey();
+      }
+      return true;
+    }
+  } catch (e) {
+    console.warn("AIStudio check failed", e);
+  }
+  return false;
+};
 
 // --- Formatters ---
 export const formatRupiah = (number: number) => {
@@ -194,13 +208,12 @@ Implementasi ini bisa menaikkan *Repeat Order* hingga 40%.`,
 
 // --- UPDATED GALLERY DATA (HYBRID PORTFOLIO) ---
 export const INITIAL_GALLERY: GalleryItem[] = [
-  // 1. Digital Project: Website E-Commerce
   {
     id: 101,
     title: "Kopi Senja: E-Commerce & Membership",
     category_type: 'digital',
     platform: 'web',
-    image_url: "https://cdn.dribbble.com/users/1615584/screenshots/15710288/media/6c7a695e5d4f0a94792a106d5bc0eb6d.jpg?resize=1200x900&vertical=center", // Mockup website coffee shop
+    image_url: "https://cdn.dribbble.com/users/1615584/screenshots/15710288/media/6c7a695e5d4f0a94792a106d5bc0eb6d.jpg?resize=1200x900&vertical=center", 
     description: "Website pemesanan online terintegrasi dengan sistem poin membership.",
     client_url: "https://kopisenja.com",
     tech_stack: ["React", "Next.js", "Supabase", "Midtrans"],
@@ -211,7 +224,6 @@ export const INITIAL_GALLERY: GalleryItem[] = [
     },
     type: 'image'
   },
-  // 2. Physical Project: Cafe Installation
   { 
     id: 1, 
     title: "Instalasi Full-Set Cafe Solo Baru", 
@@ -220,13 +232,12 @@ export const INITIAL_GALLERY: GalleryItem[] = [
     image_url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800",
     description: "Proses instalasi sistem POS full-set di salah satu klien kami, 'Kopi Senja'. Topologi jaringan LAN hybrid untuk memastikan koneksi tetap stabil meskipun wifi pengunjung penuh."
   },
-  // 3. Digital Project: Company Profile
   {
     id: 102,
     title: "PT. Maju Logistik Indonesia",
     category_type: 'digital',
     platform: 'web',
-    image_url: "https://cdn.dribbble.com/users/418188/screenshots/16361453/media/4c02931d68352b2c28c869ba0029b35e.png?resize=1200x900&vertical=center", // Mockup logistic web
+    image_url: "https://cdn.dribbble.com/users/418188/screenshots/16361453/media/4c02931d68352b2c28c869ba0029b35e.png?resize=1200x900&vertical=center",
     description: "Redesign website korporat dengan fokus pada SEO dan Lead Generation.",
     client_url: "https://majulogistik.co.id",
     tech_stack: ["Wordpress Custom", "Elementor", "Yoast SEO"],
@@ -237,7 +248,6 @@ export const INITIAL_GALLERY: GalleryItem[] = [
     },
     type: 'image'
   },
-  // 4. Physical Project: Minimarket
   { 
     id: 2, 
     title: "Setup Kasir Minimarket 'Mart Jaya'", 
@@ -246,13 +256,12 @@ export const INITIAL_GALLERY: GalleryItem[] = [
     image_url: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=800",
     description: "Sesi pelatihan intensif bagi staff kasir. Materi training mencakup input barang, retur, dan pembayaran QRIS."
   },
-  // 5. Digital Project: Mobile App
   {
     id: 103,
     title: "QALAM: Manajemen Pendidikan TPA",
     category_type: 'digital',
     platform: 'mobile',
-    image_url: "https://cdn.dribbble.com/userupload/12586737/file/original-b18361099e099684128540445d07c082.png?resize=1200x900", // Mockup mobile app education
+    image_url: "https://cdn.dribbble.com/userupload/12586737/file/original-b18361099e099684128540445d07c082.png?resize=1200x900",
     description: "Aplikasi Android & iOS untuk memantau hafalan santri secara real-time.",
     client_url: "https://qalam.id",
     tech_stack: ["Flutter", "Firebase", "Node.js"],
