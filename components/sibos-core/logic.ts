@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Product } from '../../types';
 import { ai, formatRupiah, supabase } from '../../utils';
@@ -37,8 +38,10 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     });
   };
 
-  // --- TOOLS DEFINITION (Sama seperti sebelumnya) ---
-  const adminTools: FunctionDeclaration[] = [
+  // --- 1. DEFINISI TOOLS (THE HANDS) ---
+  
+  // A. Database Tools (Admin Only)
+  const dbTools: FunctionDeclaration[] = [
     {
       name: 'get_recent_orders',
       description: 'Melihat 5 pesanan terbaru dari database untuk laporan ke owner.',
@@ -51,7 +54,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     },
     {
       name: 'search_products_db',
-      description: 'Mencari detail produk spesifik di database.',
+      description: 'Mencari detail produk spesifik di database internal.',
       parameters: { type: Type.OBJECT, properties: { query: { type: Type.STRING } }, required: ['query'] }
     },
     {
@@ -66,7 +69,32 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     }
   ];
 
+  // B. CRM Tools (Public & Admin - Lead Scoring)
+  const crmTools: FunctionDeclaration[] = [
+    {
+      name: 'log_hot_lead',
+      description: 'Mencatat prospek panas (Hot Lead) jika user berniat beli banyak, proyek besar, tender, atau franchise.',
+      parameters: { 
+        type: Type.OBJECT, 
+        properties: { 
+          customerInterest: { type: Type.STRING, description: 'Produk/Paket yang diminati' }, 
+          potentialValue: { type: Type.STRING, description: 'Estimasi nilai (High/Medium) atau jumlah unit' }, 
+          notes: { type: Type.STRING, description: 'Catatan singkat untuk owner (misal: butuh penawaran resmi)' } 
+        }, 
+        required: ['customerInterest', 'potentialValue'] 
+      }
+    }
+  ];
+
+  // --- 2. EXECUTE TOOLS ---
   const executeTool = async (name: string, args: any) => {
+    // Handling CRM Tool (Simulasi)
+    if (name === 'log_hot_lead') {
+        console.log("🔥 HOT LEAD DETECTED:", args);
+        // Di real app, ini akan kirim ke API CRM atau WA Gateway
+        return `[SYSTEM]: Hot Lead tercatat! Notifikasi prioritas sudah dikirim ke WhatsApp Owner. Segera minta kontak WA user untuk follow-up.`;
+    }
+
     if (!supabase) return "Error: Database connection missing.";
     try {
       if (name === 'get_recent_orders') {
@@ -105,39 +133,50 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     return "Tool not found.";
   };
 
+  // --- 3. SYSTEM INSTRUCTION (OTAK BARU) ---
   const buildSystemInstruction = useCallback(() => {
     const productContext = products.map(p => `- ${p.name} (${formatRupiah(p.price)}).`).join('\n');
 
     if (isAdmin) {
-      return `Kamu adalah SIBOS PRO (Admin Mode). Fokus: Data, Profit, Efisiensi. Panggil "Chief". Akses Database Aktif.`;
+      return `
+      Kamu adalah SIBOS PRO (Admin Mode). 
+      
+      ROLE: General Manager Virtual PT Mesin Kasir Solo.
+      
+      CAPABILITIES (Update):
+      1. **DATABASE (Internal):** Cek stok, edit harga, hapus konten. Gunakan tool database.
+      2. **COMPETITOR SPY (External):** Kamu punya akses "googleSearch". Jika Chief tanya "Cek harga printer di Tokopedia", GUNAKAN Google Search untuk cari harga pasar terbaru, lalu bandingkan dengan harga di database kita.
+      
+      GAYA BICARA: Taktis, Data-driven, Loyal. Panggil "Chief".
+      `;
     }
 
     return `
     Kamu adalah SIBOS (Sales Consultant PT Mesin Kasir Solo).
     
-    1. **VISION (Dokter Gadget):** Jika user kirim foto barang rusak/kuno, analisan modelnya (misal: "Wah ini Epson TM-U220 lama ya Bos"). Berikan solusi upgrade ke produk kita yang lebih modern. Tunjukkan empati teknis.
-    2. **SALES:** Bantu UMKM pilih kasir. Panggil "Juragan".
+    ROLE: Melayani customer, memberikan solusi teknis, dan CLOSING penjualan.
+    
+    CAPABILITIES:
+    1. **VISION (Dokter Gadget):** Analisa foto alat rusak user, beri solusi upgrade.
+    2. **LEAD SCORING (Insting Sales):** 
+       - Jika user menunjukkan minat beli jumlah banyak, proyek franchise, atau tender > 10 juta -> PANGGIL tool 'log_hot_lead'.
+       - Setelah log lead, minta Nama & No WA mereka dengan sopan untuk penawaran resmi.
     
     DATA PRODUK:
     ${productContext}
     `;
   }, [products, isAdmin]);
 
-  // --- 1. MEMORY OF ELEPHANT (Load History) ---
+  // --- 4. MEMORY OF ELEPHANT (Load History) ---
   useEffect(() => {
-    // Hanya load history untuk user publik (bukan admin) biar privasi admin terjaga per sesi
     if (!isAdmin) {
       const savedHistory = localStorage.getItem('sibos_public_history');
       if (savedHistory) {
         try {
           const parsed = JSON.parse(savedHistory);
-          // Cek kalau history udah kadaluarsa (misal > 7 hari), clear aja biar gak berat
-          // Untuk simpelnya kita load semua dulu
           if (parsed.length > 0) {
             setMessages(parsed);
             setHasGreeted(true);
-            
-            // Reconstruct minimal context for AI (Text only for simplicity)
             const restoredContext = parsed.map((m: Message) => ({
               role: m.role === 'assistant' ? 'model' : 'user',
               parts: [{ text: m.text }]
@@ -151,22 +190,19 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     }
   }, [isAdmin]);
 
-  // --- 2. MEMORY OF ELEPHANT (Save History) ---
+  // --- 5. MEMORY OF ELEPHANT (Save History) ---
   useEffect(() => {
     if (!isAdmin && messages.length > 0) {
       localStorage.setItem('sibos_public_history', JSON.stringify(messages));
     }
   }, [messages, isAdmin]);
 
-  // --- 3. BEHAVIORAL TRIGGER (Si Sales Peka) ---
+  // --- 6. BEHAVIORAL TRIGGER (Si Sales Peka) ---
   useEffect(() => {
-    // Reset trigger kalau pindah halaman selain checkout
     if (currentPage !== 'checkout') {
       setHasTriggeredCheckout(false);
       return;
     }
-
-    // Jika di halaman checkout dan belum ditrigger
     if (currentPage === 'checkout' && !hasTriggeredCheckout && !isAdmin) {
       const timer = setTimeout(() => {
         const triggerMsg: Message = {
@@ -175,27 +211,19 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
           text: "Ragu sama ongkirnya ya Juragan? Atau bingung cara transfernya? Sini SIBOS bantu cek ongkir termurah atau pandu pembayarannya. Santai aja...",
           time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
         };
-        
         setMessages(prev => [...prev, triggerMsg]);
         setUnreadCount(prev => prev + 1);
         setHasTriggeredCheckout(true);
-        
-        // Add to history context
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: triggerMsg.text }] });
-        
-        // Play sound effect (optional/advanced, skip for now)
-      }, 8000); // 8 detik bengong di checkout -> Trigger SIBOS
-
+      }, 8000);
       return () => clearTimeout(timer);
     }
   }, [currentPage, hasTriggeredCheckout, isAdmin]);
 
-  // --- 4. DEFAULT GREETING ---
+  // --- 7. DEFAULT GREETING ---
   const getGreeting = useCallback(() => {
-    if (isAdmin) return "SIBOS PRO Online. Database Access Ready.";
-    
-    // Greeting yang lebih personal kalo ada history
-    if (messages.length > 0) return null; // Udah ada history, gak usah greeting ulang
+    if (isAdmin) return "SIBOS PRO Online. \n\nFitur 'Competitor Spy' Aktif: Saya siap browsing harga pasar untuk perbandingan, Chief.";
+    if (messages.length > 0) return null;
 
     const hours = new Date().getHours();
     let greeting = "Assalamualaikum Juragan!";
@@ -226,8 +254,20 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     }
   }, [hasGreeted, getGreeting, isOpen, messages.length, hasTriggeredCheckout]);
 
+  const handleImageSelect = async (file: File) => {
+    try {
+      const base64 = await fileToBase64(file);
+      setAttachment({ file, base64 });
+    } catch (error) {
+      console.error("Image upload failed:", error);
+    }
+  };
 
-  // --- 5. SEND MESSAGE (Sama seperti sebelumnya) ---
+  const handleClearImage = () => {
+    setAttachment(null);
+  };
+
+  // --- 8. SEND MESSAGE (CORE LOGIC) ---
   const handleSendMessage = async () => {
     if (!inputValue.trim() && !attachment) return;
 
@@ -258,12 +298,29 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
       const historyForApi = chatHistoryRef.current.map(h => ({ role: h.role, parts: h.parts }));
       chatHistoryRef.current.push({ role: 'user', parts: userParts });
 
+      // --- KONFIGURASI TOOLS DINAMIS ---
+      let activeTools: any[] = [];
+      
+      if (isAdmin) {
+        // ADMIN: Dapat Database Tools + CRM + Google Search (Competitor Spy)
+        activeTools = [
+            { functionDeclarations: [...dbTools, ...crmTools] },
+            { googleSearch: {} }
+        ];
+      } else {
+        // PUBLIC: Dapat CRM (untuk Lead Scoring) + Google Search
+        activeTools = [
+            { functionDeclarations: crmTools }, 
+            { googleSearch: {} }
+        ];
+      }
+
       const result = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: [...historyForApi, { role: 'user', parts: userParts }],
         config: {
           systemInstruction: buildSystemInstruction(),
-          tools: isAdmin ? [{ functionDeclarations: adminTools }] : [{ googleSearch: {} }],
+          tools: activeTools,
         }
       });
 
@@ -272,6 +329,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
 
       const functionCalls = responseContent.parts?.filter(p => p.functionCall).map(p => p.functionCall);
       
+      // Jika ada Function Call (Database Action atau CRM Logging)
       if (functionCalls && functionCalls.length > 0) {
         let toolOutputs: string[] = [];
         for (const call of functionCalls) {
@@ -283,17 +341,28 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
              chatHistoryRef.current.push({ role: 'function', parts: [{ functionResponse: { name: call.name, response: { result: toolResult } } }] });
            }
         }
+        
+        // Generate respon akhir setelah tool dieksekusi
         const finalResult = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: chatHistoryRef.current,
             config: { systemInstruction: buildSystemInstruction() }
         });
+        
         const finalText = finalResult.text || "Perintah dijalankan.";
         setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: finalText, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }]);
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: finalText }] });
 
       } else {
+        // Respon Teks Biasa (termasuk hasil Google Search yang otomatis di-inject model ke text response)
         const text = result.text || "";
+        
+        // Jika ada grounding metadata (hasil search), biasanya model sudah merangkumnya di text.
+        // Tapi kita bisa cek console log untuk debug link-nya.
+        if (result.candidates?.[0]?.groundingMetadata) {
+             console.log("Grounding Source:", result.candidates?.[0]?.groundingMetadata);
+        }
+
         setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: text, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }]);
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: text }] });
       }
@@ -316,20 +385,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     chatHistoryRef.current = [];
     setHasGreeted(false); 
     setAttachment(null);
-    localStorage.removeItem('sibos_public_history'); // Hapus ingatan gajah juga
-  };
-
-  const handleImageSelect = async (file: File) => {
-    try {
-      const base64 = await fileToBase64(file);
-      setAttachment({ file, base64 });
-    } catch (error) {
-      console.error("Image upload failed:", error);
-    }
-  };
-
-  const handleClearImage = () => {
-    setAttachment(null);
+    localStorage.removeItem('sibos_public_history');
   };
 
   return {

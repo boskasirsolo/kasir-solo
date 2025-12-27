@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer } from 'lucide-react';
 import { GalleryItem } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, ai, CONFIG } from '../utils';
 
-const ITEMS_PER_PAGE = 6; // Menampilkan 6 kartu per halaman (Grid 2x3)
+const ITEMS_PER_PAGE = 6; 
 
 // --- LOGIC: Custom Hook ---
 const useGalleryManager = (
@@ -15,8 +15,16 @@ const useGalleryManager = (
     const [form, setForm] = useState({
         id: null as number | null,
         title: '',
-        shortDesc: '', // For AI Trigger
-        longDesc: '',
+        category_type: 'physical' as 'physical' | 'digital', // NEW
+        platform: 'web' as 'web' | 'mobile' | 'desktop', // NEW
+        client_url: '', // NEW
+        tech_stack_str: '', // NEW (String input, converted to array)
+        shortDesc: '', 
+        longDesc: '', // Normal description
+        // Case Study Fields
+        cs_challenge: '',
+        cs_solution: '',
+        cs_result: '',
         imagePreview: '',
         uploadFile: null as File | null
     });
@@ -33,8 +41,15 @@ const useGalleryManager = (
         setForm({
             id: null,
             title: '',
+            category_type: 'physical',
+            platform: 'web',
+            client_url: '',
+            tech_stack_str: '',
             shortDesc: '',
             longDesc: '',
+            cs_challenge: '',
+            cs_solution: '',
+            cs_result: '',
             imagePreview: '',
             uploadFile: null
         });
@@ -44,12 +59,19 @@ const useGalleryManager = (
         setForm({
             id: item.id,
             title: item.title,
+            category_type: item.category_type || 'physical',
+            platform: item.platform || 'web',
+            client_url: item.client_url || '',
+            tech_stack_str: item.tech_stack ? item.tech_stack.join(', ') : '',
             shortDesc: '',
             longDesc: item.description || '',
+            cs_challenge: item.case_study?.challenge || '',
+            cs_solution: item.case_study?.solution || '',
+            cs_result: item.case_study?.result || '',
             imagePreview: item.image_url,
             uploadFile: null
         });
-        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top for sticky form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const generateAINarrative = async () => {
@@ -58,23 +80,47 @@ const useGalleryManager = (
         
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
-            const prompt = `
-            Bertindaklah sebagai Copywriter Portofolio Profesional.
-            Tugas: Buat deskripsi proyek (Case Study) yang menarik.
-            Proyek: ${form.title}
-            Konteks/Keyword: ${form.shortDesc}
-            Output: HANYA teks narasi (2 paragraf). Bahasa Indonesia.
-            `;
-            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
-            setForm(prev => ({ ...prev, longDesc: response.text?.trim() || '' }));
+            if (form.category_type === 'digital') {
+                 // Generate STAR Case Study
+                 const prompt = `
+                 Role: Tech Copywriter. Project: ${form.title}. Context: ${form.shortDesc}.
+                 Task: Create a mini case study (STAR method).
+                 Output JSON format: { "challenge": "...", "solution": "...", "result": "..." }
+                 Bahasa Indonesia. No markdown.
+                 `;
+                 const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+                 const rawText = response.text?.trim() || '{}';
+                 // Try parsing JSON (Simple regex fallback if not pure JSON)
+                 try {
+                     const jsonStart = rawText.indexOf('{');
+                     const jsonEnd = rawText.lastIndexOf('}') + 1;
+                     const jsonStr = rawText.substring(jsonStart, jsonEnd);
+                     const parsed = JSON.parse(jsonStr);
+                     setForm(prev => ({
+                        ...prev,
+                        cs_challenge: parsed.challenge || '',
+                        cs_solution: parsed.solution || '',
+                        cs_result: parsed.result || ''
+                     }));
+                 } catch (e) {
+                     setForm(prev => ({...prev, longDesc: rawText})); // Fallback to long desc
+                 }
+
+            } else {
+                 // Generate Normal Description
+                 const prompt = `
+                 Role: Copywriter. Project: ${form.title}. Context: ${form.shortDesc}.
+                 Task: Write a compelling description (2 paragraphs). Bahasa Indonesia.
+                 `;
+                 const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+                 setForm(prev => ({ ...prev, longDesc: response.text?.trim() || '' }));
+            }
         } catch (e) { alert("AI Error"); } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };
 
     const handleSubmit = async () => {
         if (!CONFIG.CLOUDINARY_CLOUD_NAME) return alert("Cloudinary Config Missing");
-        
-        // Validasi simpel: kalau edit gak wajib upload, kalau baru wajib upload/ada preview
         if (!form.id && !form.uploadFile && !form.imagePreview) return alert("Pilih gambar dulu!");
 
         setLoadingState(prev => ({ ...prev, uploading: true }));
@@ -90,21 +136,36 @@ const useGalleryManager = (
                 if (data.secure_url) finalImageUrl = data.secure_url;
             }
 
-            const dbData = {
+            const dbData: Partial<GalleryItem> = {
                 title: form.title,
-                description: form.longDesc,
                 image_url: finalImageUrl,
-                type: 'image' as const
+                type: 'image',
+                category_type: form.category_type,
+                description: form.longDesc, // Used for physical
             };
+
+            // Add Digital Specifics
+            if (form.category_type === 'digital') {
+                dbData.platform = form.platform;
+                dbData.client_url = form.client_url;
+                dbData.tech_stack = form.tech_stack_str.split(',').map(s => s.trim()).filter(s => s);
+                dbData.case_study = {
+                    challenge: form.cs_challenge,
+                    solution: form.cs_solution,
+                    result: form.cs_result
+                };
+            }
 
             if (form.id) {
                 // Update
-                setGallery(gallery.map(g => g.id === form.id ? { ...g, ...dbData } : g));
+                const updatedItem = { ...gallery.find(g => g.id === form.id)!, ...dbData };
+                setGallery(gallery.map(g => g.id === form.id ? updatedItem : g));
                 if (supabase) await supabase.from('gallery').update(dbData).eq('id', form.id);
             } else {
                 // Create
                 const newId = Date.now();
-                setGallery([{ ...dbData, id: newId }, ...gallery]);
+                const newItem = { ...dbData, id: newId } as GalleryItem;
+                setGallery([newItem, ...gallery]);
                 if (supabase) await supabase.from('gallery').insert([dbData]);
             }
             resetForm();
@@ -156,11 +217,31 @@ const GalleryForm = ({
             )}
         </div>
 
+        {/* TYPE SELECTOR */}
+        <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-black/40 rounded-lg border border-white/5">
+            <button 
+                onClick={() => setForm((prev:any) => ({...prev, category_type: 'physical'}))}
+                className={`py-2 text-xs font-bold rounded flex items-center justify-center gap-2 transition-all ${
+                    form.category_type === 'physical' ? 'bg-brand-orange text-white shadow-lg' : 'text-gray-500 hover:text-white'
+                }`}
+            >
+                <Hammer size={14} /> Fisik / Hardware
+            </button>
+            <button 
+                onClick={() => setForm((prev:any) => ({...prev, category_type: 'digital'}))}
+                className={`py-2 text-xs font-bold rounded flex items-center justify-center gap-2 transition-all ${
+                    form.category_type === 'digital' ? 'bg-brand-orange text-white shadow-lg' : 'text-gray-500 hover:text-white'
+                }`}
+            >
+                <Monitor size={14} /> Digital / Web
+            </button>
+        </div>
+
         {/* Image Upload Area */}
         <div className="mb-4">
              {form.imagePreview && (
                <div className="mb-3 relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
-                  <img src={form.imagePreview} alt="Preview" className="w-full h-full object-contain" />
+                  <img src={form.imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <p className="text-white text-xs font-bold">Ganti Gambar</p>
                     </div>
@@ -176,6 +257,7 @@ const GalleryForm = ({
                 <span className="text-gray-400 text-xs font-bold">{form.uploadFile ? form.uploadFile.name : (form.id ? "Klik untuk ganti" : "Pilih Foto Project")}</span>
               </label>
             </div>
+            {form.category_type === 'digital' && <p className="text-[10px] text-gray-500 mt-1 text-center">*Gunakan screenshot full page untuk efek scroll</p>}
         </div>
 
         <div className="space-y-4">
@@ -184,16 +266,45 @@ const GalleryForm = ({
               <Input value={form.title} onChange={e => setForm((prev:any) => ({...prev, title: e.target.value}))} placeholder="Contoh: Instalasi Cafe..." className="py-2 text-sm"/>
             </div>
 
-            {/* AI Section */}
+            {/* DIGITAL SPECIFIC FIELDS */}
+            {form.category_type === 'digital' && (
+                <div className="space-y-4 p-4 bg-white/5 rounded-lg border border-white/5">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Platform</label>
+                            <select 
+                                value={form.platform} 
+                                onChange={(e) => setForm((prev:any) => ({...prev, platform: e.target.value}))}
+                                className="w-full bg-brand-card border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-brand-orange"
+                            >
+                                <option value="web">Website</option>
+                                <option value="mobile">Mobile App</option>
+                                <option value="desktop">Desktop App</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Client URL</label>
+                            <Input value={form.client_url} onChange={e => setForm((prev:any) => ({...prev, client_url: e.target.value}))} placeholder="https://..." className="py-2 text-sm"/>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Tech Stack (Comma Separated)</label>
+                        <Input value={form.tech_stack_str} onChange={e => setForm((prev:any) => ({...prev, tech_stack_str: e.target.value}))} placeholder="React, Supabase, Tailwind" className="py-2 text-sm"/>
+                    </div>
+                </div>
+            )}
+
+            {/* AI TRIGGER */}
             <div className="p-3 bg-brand-orange/5 rounded-lg border border-brand-orange/20">
                <div className="flex justify-between items-center mb-2">
-                  <label className="text-[10px] text-brand-orange uppercase font-bold tracking-wider flex items-center gap-1"><Sparkles size={12} /> AI Storyteller</label>
+                  <label className="text-[10px] text-brand-orange uppercase font-bold tracking-wider flex items-center gap-1"><Sparkles size={12} /> AI Generator</label>
+                  <span className="text-[9px] text-brand-orange">{form.category_type === 'digital' ? 'Generates Case Study' : 'Generates Description'}</span>
                </div>
                <div className="flex gap-2">
                   <input 
                         value={form.shortDesc} 
                         onChange={e => setForm((prev:any) => ({...prev, shortDesc: e.target.value}))} 
-                        placeholder="Keyword: outdoor, wifi kencang..." 
+                        placeholder={form.category_type === 'digital' ? "Context: website lambat, butuh SEO..." : "Context: kafe outdoor, wifi kencang..."}
                         className="bg-brand-card border border-white/10 rounded px-3 text-xs w-full focus:outline-none focus:border-brand-orange"
                     />
                   <button onClick={onGenerateAI} disabled={loading.generatingAI} className="bg-brand-orange text-white rounded px-3 py-1 flex items-center justify-center hover:bg-brand-glow disabled:opacity-50">
@@ -202,10 +313,28 @@ const GalleryForm = ({
                </div>
             </div>
 
-            <div>
-              <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Deskripsi (Story)</label>
-              <TextArea value={form.longDesc} onChange={e => setForm((prev:any) => ({...prev, longDesc: e.target.value}))} placeholder="Ceritakan project ini..." className="h-32 text-sm leading-relaxed" />
-            </div>
+            {/* DESCRIPTION AREAS */}
+            {form.category_type === 'digital' ? (
+                <div className="space-y-3">
+                    <div>
+                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Challenge</label>
+                        <TextArea value={form.cs_challenge} onChange={e => setForm((prev:any) => ({...prev, cs_challenge: e.target.value}))} className="h-20 text-xs"/>
+                    </div>
+                    <div>
+                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Solution</label>
+                        <TextArea value={form.cs_solution} onChange={e => setForm((prev:any) => ({...prev, cs_solution: e.target.value}))} className="h-20 text-xs"/>
+                    </div>
+                    <div>
+                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Result</label>
+                        <TextArea value={form.cs_result} onChange={e => setForm((prev:any) => ({...prev, cs_result: e.target.value}))} className="h-20 text-xs"/>
+                    </div>
+                </div>
+            ) : (
+                <div>
+                  <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Deskripsi</label>
+                  <TextArea value={form.longDesc} onChange={e => setForm((prev:any) => ({...prev, longDesc: e.target.value}))} placeholder="Ceritakan project ini..." className="h-32 text-sm leading-relaxed" />
+                </div>
+            )}
             
             <Button onClick={onSubmit} disabled={loading.uploading} className="w-full py-2.5 text-sm">
               {loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={16}/> Simpan Perubahan</> : <><Plus size={16}/> Upload Galeri</>)}
@@ -245,19 +374,25 @@ const GalleryList = ({
                     {data.paginated.map((item: GalleryItem) => (
                         <div key={item.id} className="group relative bg-brand-card border border-white/5 rounded-lg overflow-hidden hover:border-brand-orange transition-all hover:shadow-neon-text/20">
                             {/* Image Aspect Ratio Container */}
-                            <div className="relative aspect-video bg-black overflow-hidden">
+                            <div className="relative aspect-video bg-black overflow-hidden border-b border-white/5">
                                 <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                 {/* Overlay Actions */}
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                     <button onClick={() => onEdit(item)} className="p-2 bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500 hover:text-white transition-colors"><Edit size={16} /></button>
                                     <button onClick={() => onDelete(item.id)} className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-colors"><Trash2 size={16} /></button>
                                 </div>
+                                {/* Badge Type */}
+                                <div className="absolute top-2 right-2">
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${item.category_type === 'digital' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white'}`}>
+                                        {item.category_type === 'digital' ? 'DIGITAL' : 'FISIK'}
+                                    </span>
+                                </div>
                             </div>
                             {/* Info */}
                             <div className="p-3">
                                 <h5 className="text-sm font-bold text-white truncate mb-1" title={item.title}>{item.title}</h5>
                                 <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">
-                                    {item.description || "Belum ada deskripsi."}
+                                    {item.category_type === 'digital' ? `Tech: ${item.tech_stack?.join(', ')}` : (item.description || "Belum ada deskripsi.")}
                                 </p>
                             </div>
                         </div>

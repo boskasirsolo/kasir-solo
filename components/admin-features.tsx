@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Trash2, CheckCircle2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig } from '../types';
@@ -287,7 +286,13 @@ export const AdminGallery = ({
       } else if (!editingId && !uploadFile) {
          alert("Pilih gambar dulu!"); setIsUploading(false); return;
       }
-      const itemData = { title: galleryTitle, image_url: finalImageUrl, description: galleryLongDesc, type: 'image' as const };
+      const itemData = { 
+        title: galleryTitle, 
+        image_url: finalImageUrl, 
+        description: galleryLongDesc, 
+        type: 'image' as const,
+        category_type: 'physical' as const 
+      };
       if (editingId) {
         setGallery(gallery.map(g => g.id === editingId ? { ...g, ...itemData } : g));
         if (supabase) await supabase.from('gallery').update(itemData).eq('id', editingId);

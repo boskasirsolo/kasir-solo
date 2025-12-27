@@ -15,10 +15,10 @@ export interface Article {
   content: string;
   date: string;
   image: string;
-  category: string; // New
-  author: string;   // New
-  readTime: string; // New
-  tags?: string[];  // New
+  category: string; 
+  author: string;   
+  readTime: string; 
+  tags?: string[];  
 }
 
 export interface GalleryItem {
@@ -27,7 +27,18 @@ export interface GalleryItem {
   image_url: string;
   description?: string;     
   type?: 'image' | 'video'; 
-  video_url?: string;       
+  video_url?: string;
+  
+  // --- NEW PORTFOLIO FIELDS ---
+  category_type: 'physical' | 'digital'; // Pemisah utama
+  platform?: 'web' | 'mobile' | 'desktop'; // Khusus digital
+  client_url?: string; // Link ke live site
+  tech_stack?: string[]; // e.g., ['React', 'Supabase']
+  case_study?: {
+    challenge: string;
+    solution: string;
+    result: string;
+  };
 }
 
 export interface SiteConfig {
