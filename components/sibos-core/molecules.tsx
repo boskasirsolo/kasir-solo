@@ -1,22 +1,49 @@
 
 import React, { useRef, useEffect } from 'react';
-import { Send, Sparkles, MoreHorizontal, Eraser } from 'lucide-react';
+import { Send, Sparkles, Eraser, ShieldCheck, Terminal } from 'lucide-react';
 import { ChatBubble, TypingIndicator } from './atoms';
 import { Message } from './logic';
 
 // --- 1. CHAT HEADER ---
-export const ChatHeader = ({ onClear }: { onClear: () => void }) => (
-  <div className="h-16 bg-brand-dark/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-4 shrink-0 rounded-t-2xl">
+export const ChatHeader = ({ 
+  onClear, 
+  isAdmin = false 
+}: { 
+  onClear: () => void, 
+  isAdmin?: boolean 
+}) => (
+  <div className={`h-16 backdrop-blur-md border-b flex items-center justify-between px-4 shrink-0 rounded-t-2xl transition-colors ${
+    isAdmin 
+      ? 'bg-red-950/90 border-red-500/30' 
+      : 'bg-brand-dark/95 border-white/10'
+  }`}>
     <div className="flex items-center gap-3">
       <div className="relative">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-600 to-teal-400 flex items-center justify-center shadow-lg">
-          <Sparkles className="text-white w-5 h-5 animate-pulse" />
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
+          isAdmin 
+            ? 'bg-gradient-to-tr from-red-600 to-orange-600' 
+            : 'bg-gradient-to-tr from-teal-600 to-teal-400'
+        }`}>
+          {isAdmin ? <Terminal className="text-white w-5 h-5" /> : <Sparkles className="text-white w-5 h-5 animate-pulse" />}
         </div>
-        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-brand-dark rounded-full"></div>
+        <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-brand-dark rounded-full ${
+          isAdmin ? 'bg-blue-400 animate-pulse' : 'bg-green-500'
+        }`}></div>
       </div>
       <div>
-        <h3 className="font-display font-bold text-white text-base">SIBOS <span className="text-[10px] bg-teal-500/20 text-teal-400 px-1.5 py-0.5 rounded ml-1 border border-teal-500/30">AI BETA</span></h3>
-        <p className="text-[10px] text-gray-400">Asisten Pintar Mesin Kasir Solo</p>
+        <h3 className="font-display font-bold text-white text-base flex items-center gap-2">
+          {isAdmin ? 'SIBOS PRO' : 'SIBOS'} 
+          <span className={`text-[9px] px-1.5 py-0.5 rounded border ${
+            isAdmin 
+              ? 'bg-red-500/20 text-red-200 border-red-500/40' 
+              : 'bg-teal-500/20 text-teal-400 border-teal-500/30'
+          }`}>
+            {isAdmin ? 'ADMIN MODE' : 'AI BETA'}
+          </span>
+        </h3>
+        <p className="text-[10px] text-gray-400">
+          {isAdmin ? 'Private Super Assistant' : 'Asisten Pintar Mesin Kasir Solo'}
+        </p>
       </div>
     </div>
     <button 

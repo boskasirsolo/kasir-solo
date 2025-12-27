@@ -29,7 +29,7 @@ export const getEnv = (key: string) => {
 export const CONFIG = {
   SUPABASE_URL: getEnv('VITE_SUPABASE_URL'),
   SUPABASE_KEY: getEnv('VITE_SUPABASE_ANON_KEY'),
-  GEMINI_API_KEY: getEnv('VITE_GEMINI_API_KEY'),
+  // Gemini API Key is accessed directly via process.env.API_KEY
   CLOUDINARY_CLOUD_NAME: getEnv('VITE_CLOUDINARY_CLOUD_NAME'),
   CLOUDINARY_PRESET: getEnv('VITE_CLOUDINARY_UPLOAD_PRESET'),
 };
@@ -39,9 +39,7 @@ export const supabase = (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_KEY)
   ? createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY) 
   : null;
 
-export const ai = CONFIG.GEMINI_API_KEY 
-  ? new GoogleGenAI({ apiKey: CONFIG.GEMINI_API_KEY }) 
-  : null;
+export const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // --- Formatters ---
 export const formatRupiah = (number: number) => {

@@ -306,6 +306,8 @@ export const Layout = ({
         <main className="flex-grow">
           {children}
         </main>
+        {/* SIBOS AI WIDGET (ADMIN MODE) */}
+        <SibosWidget products={INITIAL_PRODUCTS} isAdmin={true} />
       </div>
     );
   }
@@ -320,8 +322,8 @@ export const Layout = ({
 
       <Footer setPage={setPage} config={config} />
       
-      {/* SIBOS AI WIDGET */}
-      <SibosWidget products={INITIAL_PRODUCTS} />
+      {/* SIBOS AI WIDGET (PUBLIC MODE) */}
+      <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} />
     </div>
   );
 };

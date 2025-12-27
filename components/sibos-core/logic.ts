@@ -11,7 +11,7 @@ export interface Message {
   time: string;
 }
 
-export const useSibosChat = (products: Product[]) => {
+export const useSibosChat = (products: Product[], isAdmin: boolean = false) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -19,54 +19,91 @@ export const useSibosChat = (products: Product[]) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasGreeted, setHasGreeted] = useState(false);
   
-  // Ref untuk menyimpan history chat agar tidak reset saat re-render
-  // Kita simpan format { role: 'user' | 'model', parts: [{ text: string }] }
+  // Ref untuk menyimpan history chat
   const chatHistoryRef = useRef<any[]>([]);
 
-  // --- 1. SYSTEM INSTRUCTION BUILDER ---
+  // --- 1. SYSTEM INSTRUCTION BUILDER (DUAL PERSONA) ---
   const buildSystemInstruction = useCallback(() => {
-    // Convert product data to a readable string context
+    // Context Produk untuk kedua mode
     const productContext = products.map(p => 
       `- ${p.name} (Harga: ${formatRupiah(p.price)}). Kategori: ${p.category}. Deskripsi: ${p.description}`
     ).join('\n');
 
+    // --- MODE ADMIN (SUPER ASSISTANT) ---
+    if (isAdmin) {
+      return `
+      Kamu adalah "SIBOS PRO", Asisten Pribadi Khusus Owner PT Mesin Kasir Solo.
+      User yang bicara padamu adalah PEMILIK BISNIS (The Boss).
+
+      KEMAMPUAN SPESIALMU (ADMIN MODE):
+      1. **Fullstack Developer Expert:** Kamu jago React, TypeScript, Tailwind, Supabase, dan Integrasi API. Jika Bos minta kode, berikan kode clean & production-ready.
+      2. **SEO & Marketing Strategist:** Kamu ahli Google Trends, Keyword Research, Copywriting, dan strategi konten.
+      3. **Business Analyst:** Kamu bisa analisa peluang bisnis, hitung margin, dan strategi pricing.
+      4. **Cyber Security:** Kamu paham celah keamanan web dan fraud prevention.
+
+      GAYA BICARA (ADMIN):
+      - To-the-point, teknis, cerdas, dan loyal.
+      - Panggil user "Bos" atau "Chief".
+      - Jangan bertingkah seperti salesman. Bertingkah seperti CTO (Chief Technology Officer) atau CMO (Chief Marketing Officer).
+      - Jika diminta riset, gunakan Google Search secara mendalam.
+
+      DATA PRODUK TOKO:
+      ${productContext}
+      `;
+    }
+
+    // --- MODE PUBLIK (SALESMAN) ---
     return `
     Kamu adalah SIBOS, asisten AI pintar dari "PT Mesin Kasir Solo".
+    Target audiencemu adalah CALON PEMBELI (Customer).
     
     KARAKTERMU:
-    - Profesional tapi santai, gunakan sapaan "Bos" atau "Juragan".
+    - Profesional tapi santai, gunakan sapaan "Juragan" atau "Kak".
     - Solutif dan to-the-point. Jangan bertele-tele.
-    - Kamu ahli dalam hardware kasir (POS) dan software manajemen.
-    - Jika ditanya harga, jawab sesuai DATA PRODUK di bawah. Jangan mengarang harga.
-    - Gunakan formatting **tebal** untuk nama produk dan harga agar mudah dibaca.
-    - Jika user bertanya hal di luar konteks bisnis/kasir, alihkan kembali ke topik jualan dengan sopan.
+    - Kamu ahli dalam hardware kasir (POS), software manajemen, dan TRENS BISNIS terkini.
+    - Jika ditanya harga produk internal, jawab sesuai DATA PRODUK di bawah.
+    
+    TOOLS:
+    1. **Google Search**: Gunakan untuk riset keyword/tren jika diminta.
+    2. **Analisa Link**: Pahami konteks URL yang dikirim user.
+    
+    ATURAN JAWAB:
+    - Tujuan utamamu adalah CLOSING PENJUALAN atau membantu user memilih produk.
+    - Gunakan formatting **tebal** untuk poin penting.
     - Jika user butuh nego atau pembelian partai besar, arahkan ke WhatsApp Admin (0823 2510 3336).
 
-    DATA PRODUK TOKO (Gunakan ini sebagai acuan fakta):
+    DATA PRODUK TOKO:
     ${productContext}
 
     Jawablah dalam Bahasa Indonesia yang natural dan ramah.
     `;
-  }, [products]);
+  }, [products, isAdmin]);
 
   // --- 2. GREETING LOGIC ---
   const getGreeting = useCallback(() => {
     const hours = new Date().getHours();
-    let greeting = "Assalamualaikum Bos!";
     
+    if (isAdmin) {
+      // Greeting khusus Admin
+      return "Selamat datang di Dashboard, Chief. Ada bug yang perlu di-fix atau mau riset strategi marketing baru hari ini?";
+    }
+
+    // Greeting Publik
+    let greeting = "Assalamualaikum Bos!";
     if (hours >= 4 && hours < 10) greeting = "Selamat Pagi Bos! Semangat cari cuan ☕";
     else if (hours >= 10 && hours < 15) greeting = "Halo Bos, selamat siang. Ada yang bisa dibantu?";
     else if (hours >= 15 && hours < 19) greeting = "Sore Bos! Toko rame hari ini?";
     else greeting = "Malam Bos. Lembur ya? SIBOS siap nemenin.";
 
-    return greeting;
-  }, []);
+    return `${greeting} \n\nSaya SIBOS. Mau cari paket kasir, konsultasi software, atau **riset tren bisnis** terbaru?`;
+  }, [isAdmin]);
 
   // Trigger greeting
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!hasGreeted) {
-        const text = `${getGreeting()} \n\nSaya SIBOS. Mau cari paket kasir murah atau konsultasi software?`;
+    // Reset state jika mode berubah (misal dari home login ke admin)
+    if (messages.length === 0 && !hasGreeted) {
+      const timer = setTimeout(() => {
+        const text = getGreeting();
         const initialMsg: Message = {
           id: 'init-1',
           role: 'assistant',
@@ -75,21 +112,26 @@ export const useSibosChat = (products: Product[]) => {
         };
         setMessages([initialMsg]);
         setHasGreeted(true);
-        // Add to history ref
-        chatHistoryRef.current.push({ role: 'model', parts: [{ text: text }] });
+        chatHistoryRef.current = [{ role: 'model', parts: [{ text: text }] }];
         
         if (!isOpen) setUnreadCount(1);
-      }
-    }, 2000);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [hasGreeted, getGreeting, isOpen, messages.length, isAdmin]); // Added isAdmin dependency
 
-    return () => clearTimeout(timer);
-  }, [hasGreeted, getGreeting, isOpen]);
+  // Reset chat when switching modes (optional, but cleaner)
+  useEffect(() => {
+    setMessages([]);
+    setHasGreeted(false);
+    chatHistoryRef.current = [];
+  }, [isAdmin]);
 
-  // --- 3. SEND MESSAGE LOGIC (CONNECTED TO GEMINI) ---
+
+  // --- 3. SEND MESSAGE LOGIC ---
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
-    // 1. Add User Message to UI
     const userText = inputValue.trim();
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -102,39 +144,28 @@ export const useSibosChat = (products: Product[]) => {
     setInputValue('');
     setIsTyping(true);
 
-    // 2. Prepare API Call
     try {
-      if (!ai) {
-        throw new Error("API Key belum disetting.");
-      }
-
-      // Prepare History for API (Gemini format)
-      // Note: We don't send the entire history if it gets too long to save tokens, 
-      // but for this widget, last 10 turns is usually fine.
       const historyForApi = chatHistoryRef.current.map(h => ({
         role: h.role,
         parts: h.parts
       }));
 
-      // Add current user message to history ref
       chatHistoryRef.current.push({ role: 'user', parts: [{ text: userText }] });
 
-      // 3. Call Gemini Stream
       const responseStream = await ai.models.generateContentStream({
         model: 'gemini-3-flash-preview',
         contents: [...historyForApi, { role: 'user', parts: [{ text: userText }] }],
         config: {
           systemInstruction: buildSystemInstruction(),
-          maxOutputTokens: 500, // Limit response length for chat widget
-          temperature: 0.7, // Creative but focused
+          tools: [{ googleSearch: {} }],
+          maxOutputTokens: 2000, // Lebih panjang untuk admin mode (coding/analisis)
+          temperature: isAdmin ? 0.5 : 0.7, // Admin mode lebih presisi/kreatif terkontrol
         }
       });
 
-      // 4. Handle Streaming Response
       let fullResponseText = "";
       const botMsgId = (Date.now() + 1).toString();
       
-      // Create placeholder message
       setMessages(prev => [...prev, {
         id: botMsgId,
         role: 'assistant',
@@ -142,13 +173,12 @@ export const useSibosChat = (products: Product[]) => {
         time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
       }]);
 
-      setIsTyping(false); // Stop typing indicator, start streaming text
+      setIsTyping(false);
 
       for await (const chunk of responseStream) {
         const chunkText = chunk.text || "";
         fullResponseText += chunkText;
 
-        // Update UI with accumulated text
         setMessages(prev => prev.map(msg => 
           msg.id === botMsgId 
             ? { ...msg, text: fullResponseText }
@@ -156,7 +186,6 @@ export const useSibosChat = (products: Product[]) => {
         ));
       }
 
-      // Add full response to history ref
       chatHistoryRef.current.push({ role: 'model', parts: [{ text: fullResponseText }] });
 
     } catch (error) {
@@ -166,7 +195,9 @@ export const useSibosChat = (products: Product[]) => {
       const errorMsg: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        text: "Waduh, koneksi saya agak gangguan Bos. Coba tanya lagi ya atau WA admin aja biar cepat.",
+        text: isAdmin 
+          ? "System Error: Connection failed. Check console logs, Chief." 
+          : "Waduh, koneksi saya agak gangguan Bos. Coba tanya lagi ya.",
         time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, errorMsg]);

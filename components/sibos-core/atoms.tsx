@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { MessageSquare, X, Send, Bot, User as UserIcon } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User as UserIcon, ExternalLink } from 'lucide-react';
 
-// --- HELPER: SIMPLE MARKDOWN RENDERER ---
+// --- HELPER: MARKDOWN & LINK RENDERER ---
 const renderFormattedText = (text: string) => {
   // 1. Split by newlines
   return text.split('\n').map((line, lineIdx) => {
@@ -12,10 +12,37 @@ const renderFormattedText = (text: string) => {
     return (
       <div key={lineIdx} className={`${line.trim() === '' ? 'h-2' : 'min-h-[1.2em]'}`}>
         {parts.map((part, partIdx) => {
+          // Handle Bold
           if (part.startsWith('**') && part.endsWith('**')) {
             return <strong key={partIdx} className="font-bold text-brand-orange">{part.slice(2, -2)}</strong>;
           }
-          return <span key={partIdx}>{part}</span>;
+
+          // Handle URLs inside normal text
+          // Regex menangkap http/https/www
+          const urlRegex = /((?:https?:\/\/|www\.)[^\s]+)/g;
+          const subParts = part.split(urlRegex);
+
+          return (
+            <span key={partIdx}>
+              {subParts.map((subPart, subIdx) => {
+                if (urlRegex.test(subPart)) {
+                   const href = subPart.startsWith('www.') ? `http://${subPart}` : subPart;
+                   return (
+                     <a 
+                       key={subIdx} 
+                       href={href} 
+                       target="_blank" 
+                       rel="noreferrer" 
+                       className="text-blue-400 hover:text-blue-300 underline underline-offset-2 break-all inline-flex items-center gap-0.5"
+                     >
+                       {subPart} <ExternalLink size={10} />
+                     </a>
+                   );
+                }
+                return subPart;
+              })}
+            </span>
+          );
         })}
       </div>
     );
