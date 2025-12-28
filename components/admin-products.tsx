@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, formatRupiah, ensureAPIKey } from '../utils';
+import { supabase, CONFIG, formatRupiah, ensureAPIKey, getEnv } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
 const ITEMS_PER_PAGE = 6; 
@@ -60,15 +60,27 @@ const useProductManager = (
         
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
-            await ensureAPIKey(); // Ensure key
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            await ensureAPIKey(); // Ensure key in IDX
+            
+            // Flexible Key Retrieval
+            const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
+            
+            if (!apiKey) {
+                console.warn("No API Key detected in Environment. Trying anyway (IDX might inject).");
+            }
+
+            const ai = new GoogleGenAI({ apiKey: apiKey || '' });
             
             const prompt = `Buat deskripsi penjualan (Sales Copy) persuasif bahasa Indonesia untuk produk POS: ${form.name}. Fitur: ${form.shortDesc}. Max 3 paragraf.`;
             const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
             setForm(prev => ({ ...prev, desc: response.text?.trim() || '' }));
         } catch (e: any) { 
             console.error(e);
-            alert(`AI Error: ${e.message}`); 
+            if (e.message?.includes("API key")) {
+                alert("Gagal: API Key tidak ditemukan. Pastikan VITE_GEMINI_API_KEY diset di environment variables.");
+            } else {
+                alert(`AI Error: ${e.message}`); 
+            }
         } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };

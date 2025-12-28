@@ -1,6 +1,7 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Product } from '../../types';
-import { formatRupiah, supabase, ensureAPIKey } from '../../utils';
+import { formatRupiah, supabase, ensureAPIKey, getEnv } from '../../utils';
 import { FunctionDeclaration, Type, GoogleGenAI } from "@google/genai";
 
 export interface Message {
@@ -272,7 +273,10 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
 
     try {
       await ensureAPIKey(); // Ensure key
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      // UPDATED: Check for VITE_GEMINI_API_KEY
+      const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
+      
+      const ai = new GoogleGenAI({ apiKey: apiKey || '' });
       
       const userParts: any[] = [];
       if (currentAttachment) {
@@ -345,7 +349,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
       
       // Provide more specific error hint if possible
       if (error.message?.includes('400')) errorMessage = "Maaf, ada gangguan teknis pada server AI (Error 400). Coba lagi nanti.";
-      if (error.message?.includes('API key')) errorMessage = "API Key bermasalah. Silakan refresh halaman.";
+      if (error.message?.includes('API key')) errorMessage = "API Key bermasalah. Silakan cek konfigurasi VITE_GEMINI_API_KEY.";
 
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: errorMessage, time: new Date().toLocaleTimeString('id-ID') }]);
     } finally {

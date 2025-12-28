@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, PlayCircle } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, ensureAPIKey } from '../utils';
+import { supabase, CONFIG, ensureAPIKey, getEnv } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
 const ITEMS_PER_PAGE = 8; 
@@ -129,16 +129,17 @@ const useIntegratedGalleryManager = (
         if (!form.title || !form.shortDesc) return alert("Isi Judul & Context dulu.");
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
-            // Check for API Key explicitly
-            if (!process.env.API_KEY) {
-                // Try to use window.aistudio flow if available, otherwise warn user
-                const hasKey = await ensureAPIKey();
-                if (!hasKey && !process.env.API_KEY) {
-                    throw new Error("API Key tidak ditemukan. Pastikan 'process.env.API_KEY' diset atau hubungkan via Google AI Studio.");
-                }
+            // Attempt to ensure key is available (IDX flow)
+            await ensureAPIKey(); 
+            
+            // Get Key from standard process or fallback to VITE/NEXT env vars
+            const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
+            
+            if (!apiKey) {
+                console.warn("API Key not found. Trying IDX injection.");
             }
 
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenAI({ apiKey: apiKey || '' });
             
             // Generate Project Description
             if (form.category_type === 'digital') {
@@ -165,7 +166,12 @@ const useIntegratedGalleryManager = (
 
         } catch (e: any) { 
             console.error(e); 
-            alert(`AI Error: ${e.message || "Gagal menghubungi Gemini AI."}`); 
+            const msg = e.message || "Gagal menghubungi AI.";
+            if (msg.includes("API key")) {
+                alert("API Key bermasalah. Pastikan VITE_GEMINI_API_KEY diset di Environment Variables Vercel.");
+            } else {
+                alert(`AI Error: ${msg}`);
+            }
         } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };
