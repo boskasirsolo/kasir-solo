@@ -11,7 +11,7 @@ import { Layout } from './components/layout';
 import { HomePage } from './pages/home';
 import { ShopPage } from './pages/shop';
 import { GalleryPage } from './pages/gallery';
-import { ArticlesPage } from './pages/articles';
+import { ArticlesPage, ArticleDetailPage } from './pages/articles';
 import { AboutPage } from './pages/about';
 import { AdminDashboard, AdminLogin } from './pages/admin';
 import { CheckoutPage } from './pages/checkout';
@@ -116,6 +116,8 @@ const AppContent = () => {
           <Route path="/shop" element={<ShopPage products={products} />} />
           <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
           <Route path="/articles" element={<ArticlesPage articles={articles} products={products} />} />
+          <Route path="/articles/:slug" element={<ArticleDetailPage articles={articles} products={products} />} />
+          
           <Route path="/about" element={<AboutPage />} />
           <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
           <Route path="/innovation" element={<InnovationPage config={config} />} />

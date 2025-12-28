@@ -623,7 +623,7 @@ const ArticleSidebarRight = ({
 // 4. ORGANISMS (Complex Components)
 // ==========================================
 
-export const ArticleReaderModal = ({ article, onClose, products }: { article: Article, onClose: () => void, products: Product[] }) => {
+export const ArticleReaderView = ({ article, onClose, products }: { article: Article, onClose: () => void, products: Product[] }) => {
   const { progress, scrollPos, containerRef, handleScroll } = useReadingProgress();
   const ITEMS_PER_PAGE = 30; // Defined here to share with ToC logic
   const { currentPage, setCurrentPage, totalPages, currentBlocks } = useArticlePagination(article.content, ITEMS_PER_PAGE);
@@ -634,11 +634,6 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
   const MIN_HEIGHT = 80; 
 
   const currentHeaderHeight = Math.max(MIN_HEIGHT, MAX_HEIGHT - scrollPos);
-
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'auto'; };
-  }, []);
 
   // --- Scroll Spy Logic ---
   useEffect(() => {
@@ -710,7 +705,7 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
     }
   };
 
-  return createPortal(
+  return (
     <div className="fixed inset-0 z-[9999] bg-brand-black" aria-modal="true" role="dialog">
       
       <ReaderHeader 
@@ -776,7 +771,6 @@ export const ArticleReaderModal = ({ article, onClose, products }: { article: Ar
           onClose={() => setSelectedSidebarProduct(null)} 
         />
       )}
-    </div>,
-    document.body
+    </div>
   );
 };

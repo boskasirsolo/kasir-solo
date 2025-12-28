@@ -7,8 +7,30 @@ import {
   CategoryTab, 
   FeaturedArticleHero, 
   ArticleGridCard, 
-  ArticleReaderModal 
+  ArticleReaderView
 } from '../components/article-parts';
+import { useParams, useNavigate } from 'react-router-dom';
+import { slugify } from '../utils';
+import { NotFoundPage } from './not-found';
+
+export const ArticleDetailPage = ({ articles, products }: { articles: Article[], products: Product[] }) => {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  // Find article by matching slugified title
+  const article = articles.find(a => slugify(a.title) === slug);
+
+  if (!article) {
+    return <NotFoundPage setPage={() => navigate('/')} />;
+  }
+
+  return (
+    <ArticleReaderView
+      article={article}
+      products={products}
+      onClose={() => navigate('/articles')}
+    />
+  );
+};
 
 export const ArticlesPage = ({ 
   articles,
@@ -17,10 +39,10 @@ export const ArticlesPage = ({
   articles: Article[], 
   products: Product[] 
 }) => {
+  const navigate = useNavigate();
   // --- STATE MANAGEMENT (Controller) ---
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
   // --- DATA PROCESSING ---
   // 1. Extract Categories
@@ -36,6 +58,10 @@ export const ArticlesPage = ({
 
   const featuredArticle = filteredArticles.length > 0 ? filteredArticles[0] : null;
   const gridArticles = filteredArticles.length > 0 ? filteredArticles.slice(1) : [];
+
+  const handleArticleClick = (article: Article) => {
+    navigate(`/articles/${slugify(article.title)}`);
+  };
 
   // --- RENDER (View Composition) ---
   return (
@@ -83,7 +109,7 @@ export const ArticlesPage = ({
           {featuredArticle && (
              <FeaturedArticleHero 
                article={featuredArticle} 
-               onClick={() => setSelectedArticle(featuredArticle)} 
+               onClick={() => handleArticleClick(featuredArticle)} 
              />
           )}
 
@@ -93,22 +119,13 @@ export const ArticlesPage = ({
                 <React.Fragment key={article.id}>
                   <ArticleGridCard 
                     article={article}
-                    onClick={() => setSelectedArticle(article)}
+                    onClick={() => handleArticleClick(article)}
                   />
                 </React.Fragment>
               ))}
             </div>
           )}
         </>
-      )}
-
-      {/* Detail Modal Overlay */}
-      {selectedArticle && (
-        <ArticleReaderModal 
-          article={selectedArticle} 
-          products={products}
-          onClose={() => setSelectedArticle(null)} 
-        />
       )}
 
     </div>

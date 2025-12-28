@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Product, Article, GalleryItem, Testimonial } from './types';
 
@@ -61,6 +62,16 @@ export const formatRupiah = (number: number) => {
     currency: 'IDR',
     minimumFractionDigits: 0
   }).format(number);
+};
+
+export const slugify = (text: string) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')     // Replace spaces with -
+    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+    .replace(/\-\-+/g, '-');  // Replace multiple - with single -
 };
 
 // --- Mock Data ---
