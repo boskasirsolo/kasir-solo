@@ -306,11 +306,35 @@ const ArticleSidebarLeft = ({
   activeId: string 
 }) => {
   const headings = useMemo(() => extractHeadings(article.content), [article.content]);
-  const [comments, setComments] = useState<{name: string, text: string, time: string}[]>([
-      { name: 'Budi Santoso', text: 'Sangat menginspirasi! Saya juga pake Android POS, memang lebih hemat.', time: '2 jam lalu' }
-  ]);
+  
+  // FIXED: Comments separated by Article ID
+  const [comments, setComments] = useState<{name: string, text: string, time: string}[]>([]);
   const [newComment, setNewComment] = useState('');
   const [showCommentForm, setShowCommentForm] = useState(false);
+
+  // Load comments specific to this article
+  useEffect(() => {
+    // Try load from local storage
+    const storageKey = `mks_comments_${article.id}`;
+    const saved = localStorage.getItem(storageKey);
+    
+    if (saved) {
+        try {
+            setComments(JSON.parse(saved));
+        } catch (e) {
+            setComments([]);
+        }
+    } else {
+        // Mock data specifically ONLY for Article ID 1
+        if (article.id === 1) {
+            setComments([
+                { name: 'Budi Santoso', text: 'Sangat menginspirasi! Saya juga pake Android POS, memang lebih hemat.', time: '2 jam lalu' }
+            ]);
+        } else {
+            setComments([]);
+        }
+    }
+  }, [article.id]);
 
   const handleShare = (platform: 'fb' | 'twitter' | 'linkedin' | 'copy') => {
     const url = window.location.href;
@@ -329,7 +353,15 @@ const ArticleSidebarLeft = ({
 
   const submitComment = () => {
       if(!newComment.trim()) return;
-      setComments([{ name: 'Pengunjung', text: newComment, time: 'Baru saja' }, ...comments]);
+      
+      const newEntry = { name: 'Pengunjung', text: newComment, time: 'Baru saja' };
+      const updatedList = [newEntry, ...comments];
+      
+      setComments(updatedList);
+      
+      // Persist to LocalStorage unique to this article
+      localStorage.setItem(`mks_comments_${article.id}`, JSON.stringify(updatedList));
+      
       setNewComment('');
       setShowCommentForm(false);
   };
@@ -393,6 +425,9 @@ const ArticleSidebarLeft = ({
             )}
 
             <div className="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                {comments.length === 0 && (
+                    <p className="text-gray-500 text-xs italic">Belum ada komentar. Jadilah yang pertama!</p>
+                )}
                 {comments.map((c, i) => (
                     <div key={i} className="bg-black/20 p-3 rounded-lg border border-white/5">
                         <div className="flex justify-between items-center mb-1">

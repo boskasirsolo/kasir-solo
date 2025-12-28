@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey } from '../utils';
@@ -66,20 +66,19 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
 };
 
 // --- COMPONENT: PROGRESS BAR ---
-const GenerationProgress = ({ percent, message }: { percent: number, message: string }) => (
-    <div className="w-full bg-brand-dark border border-brand-orange/30 rounded-lg p-3 relative overflow-hidden animate-fade-in">
+const GenerationProgress = ({ percent, message, color = 'orange' }: { percent: number, message: string, color?: 'orange' | 'blue' }) => (
+    <div className={`w-full bg-brand-dark border rounded-lg p-3 relative overflow-hidden animate-fade-in ${color === 'orange' ? 'border-brand-orange/30' : 'border-blue-500/30'}`}>
         <div className="flex justify-between items-center mb-2 relative z-10">
-            <span className="text-xs font-bold text-brand-orange animate-pulse">{message}</span>
+            <span className={`text-xs font-bold animate-pulse ${color === 'orange' ? 'text-brand-orange' : 'text-blue-400'}`}>{message}</span>
             <span className="text-xs font-mono text-gray-400">{percent}%</span>
         </div>
         <div className="w-full h-2 bg-black/50 rounded-full overflow-hidden border border-white/5 relative z-10">
             <div 
-                className="h-full bg-gradient-to-r from-brand-orange to-brand-action transition-all duration-500 ease-out" 
+                className={`h-full transition-all duration-500 ease-out ${color === 'orange' ? 'bg-gradient-to-r from-brand-orange to-brand-action' : 'bg-gradient-to-r from-blue-600 to-blue-400'}`}
                 style={{ width: `${percent}%` }}
             ></div>
         </div>
-        {/* Background Glow */}
-        <div className="absolute inset-0 bg-brand-orange/5 z-0"></div>
+        <div className={`absolute inset-0 z-0 opacity-10 ${color === 'orange' ? 'bg-brand-orange' : 'bg-blue-500'}`}></div>
     </div>
 );
 
@@ -115,14 +114,16 @@ const useArticleManager = (
         imageStyle: 'cinematic'
     });
 
-    // Enhanced Loading State for Progress
+    // Loading & Progress States (Split)
     const [loading, setLoading] = useState({
         uploading: false,
         researching: false,
-        generatingContent: false
+        generatingText: false,
+        generatingImage: false
     });
     
-    const [progress, setProgress] = useState({ percent: 0, message: '' });
+    const [textProgress, setTextProgress] = useState({ percent: 0, message: '' });
+    const [imageProgress, setImageProgress] = useState({ percent: 0, message: '' });
 
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
@@ -145,7 +146,8 @@ const useArticleManager = (
         setKeywords([]);
         setSelectedKeyword(null);
         setSelectedPresets([]);
-        setProgress({ percent: 0, message: '' });
+        setTextProgress({ percent: 0, message: '' });
+        setImageProgress({ percent: 0, message: '' });
     };
 
     const togglePreset = (label: string) => {
@@ -174,94 +176,34 @@ const useArticleManager = (
     // --- UTILS: IMAGE GENERATOR ---
     const getAIImageUrl = (prompt: string, style: string) => {
         const seed = Math.floor(Math.random() * 999999);
-        // Clean prompt for URL safety
         const safePrompt = prompt.replace(/[^a-zA-Z0-9\s,]/g, '').trim();
-        
         let styleKeywords = "";
         switch(style) {
-            case 'cinematic': styleKeywords = "cinematic lighting, dramatic, 8k, highly detailed, photorealistic"; break;
-            case 'cyberpunk': styleKeywords = "cyberpunk city, neon lights, futuristic, purple and orange, high tech"; break;
-            case 'corporate': styleKeywords = "modern office, professional, bright, clean, corporate photography, success"; break;
-            case 'studio': styleKeywords = "studio lighting, product photography, solid background, minimal, sharp focus"; break;
-            case 'minimalist': styleKeywords = "minimalist, flat design, vector art, simple shapes, pastel colors"; break;
+            case 'cinematic': styleKeywords = "cinematic lighting, dramatic, 8k, highly detailed, photorealistic, movie scene"; break;
+            case 'cyberpunk': styleKeywords = "cyberpunk city, neon lights, futuristic, purple and orange, high tech, blade runner style"; break;
+            case 'corporate': styleKeywords = "modern office, professional, bright, clean, corporate photography, success, business meeting"; break;
+            case 'studio': styleKeywords = "studio lighting, product photography, solid background, minimal, sharp focus, 4k"; break;
+            case 'minimalist': styleKeywords = "minimalist, flat design, vector art, simple shapes, pastel colors, clean lines"; break;
             default: styleKeywords = "high quality, professional, award winning";
         }
-
         const finalPrompt = `${safePrompt}, ${styleKeywords}`;
         return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1024&height=576&model=flux&nologo=true&seed=${seed}`;
     };
 
-    const regenerateCoverImage = async () => {
-        if (!form.title) return alert("Judul artikel kosong.");
-        
-        // Manual Trigger uses a simpler flow
-        const prompt = form.title; 
-        setForm(prev => ({
-            ...prev,
-            imagePreview: getAIImageUrl(prompt, genConfig.imageStyle)
-        }));
-    };
-
-    // --- AI STEP 1: RESEARCH ---
-    const researchKeywords = async () => {
-        setLoading(prev => ({ ...prev, researching: true }));
-        try {
-            await ensureAPIKey();
-            const apiKey = getSmartApiKey();
-            if (!apiKey) throw new Error("API Key habis atau tidak ditemukan.");
-
-            const ai = new GoogleGenAI({ apiKey });
-            
-            const contextTopics = selectedPresets.length > 0 
-                ? selectedPresets.join(', ') 
-                : "Bisnis UMKM, Mesin Kasir, dan Manajemen Toko";
-
-            const prompt = `
-            Act as an Expert Business Consultant for Indonesia.
-            FOCUS TOPICS: ${contextTopics}
-            
-            Task: Generate 10 engaging, High-CTR Article Titles/Topics.
-            Mix between: Trending, Evergreen, and Niche problems.
-            
-            RETURN JSON ARRAY ONLY:
-            [
-              { "keyword": "Full Article Title Here", "volume": "High/Med", "competition": "Low/Med", "type": "Topic" }
-            ]
-            `;
-            
-            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
-            const rawText = response.text?.replace(/```json|```/g, '').trim() || '[]';
-            const data = JSON.parse(rawText);
-            
-            setKeywords(data);
-            setAiStep(1);
-        } catch (e: any) {
-            alert("Gagal riset topik: " + e.message);
-        } finally {
-            setLoading(prev => ({ ...prev, researching: false }));
-        }
-    };
-
-    const selectTopic = (keywordData: KeywordData) => {
-        setSelectedKeyword(keywordData);
-        setForm(prev => ({ ...prev, title: keywordData.keyword }));
-        setAiStep(2); 
-    };
-
-    // --- AI STEP 3: SEQUENTIAL GENERATION (ARTICLE FIRST -> THEN IMAGE) ---
-    const generatePillarContent = async () => {
+    // --- ACTION: GENERATE TEXT ONLY ---
+    const generateTextContent = async () => {
         if (!form.title) return alert("Pilih judul terlebih dahulu.");
         
-        setLoading(prev => ({ ...prev, generatingContent: true }));
-        setProgress({ percent: 10, message: 'Menyiapkan Konteks AI...' });
+        setLoading(prev => ({ ...prev, generatingText: true }));
+        setTextProgress({ percent: 10, message: 'Menyiapkan outline...' });
 
         try {
             await ensureAPIKey();
             const apiKey = getSmartApiKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
-            // --- PHASE 1: GENERATE ARTICLE CONTENT ---
-            setProgress({ percent: 30, message: 'Menulis Artikel (Drafting)...' });
+            // 1. Generate Content
+            setTextProgress({ percent: 40, message: 'Menulis artikel lengkap...' });
             
             const contentPrompt = `
             Role: Expert Business Consultant & Copywriter (Indonesian Market).
@@ -282,50 +224,24 @@ const useArticleManager = (
                 contents: contentPrompt,
                 config: { maxOutputTokens: 8192 }
             });
-            
-            const generatedContent = contentResponse.text || '# Error generating content.';
-            
-            // --- PHASE 2: GENERATE METADATA & IMAGE PROMPT (BASED ON CONTENT) ---
-            setProgress({ percent: 60, message: 'Menganalisa Visual & Meta...' });
+            const generatedContent = contentResponse.text || '# Error.';
 
-            const analysisPrompt = `
-            Based on this article content:
-            "${generatedContent.substring(0, 1000)}..." (truncated)
-
-            Task: 
-            1. Create a 150-char excerpt/summary.
-            2. Determine the best Category.
-            3. Create a **HIGHLY DETAILED** English image prompt for the cover image that represents the essence of this article. Describe the subject, lighting, and mood.
-
-            OUTPUT JSON:
-            { "excerpt": "...", "category": "...", "image_prompt": "..." }
+            // 2. Generate Metadata
+            setTextProgress({ percent: 80, message: 'Membuat metadata...' });
+            const metaPrompt = `
+            Based on this text: "${generatedContent.substring(0, 1000)}..."
+            Generate JSON: { "excerpt": "150 chars summary", "category": "Business/Tech", "author": "Amin Maghfuri" }
             `;
-
             const metaResponse = await ai.models.generateContent({
                 model: 'gemini-3-flash-preview',
-                contents: analysisPrompt,
+                contents: metaPrompt,
                 config: { responseMimeType: "application/json" }
             });
-
-            let metaData = { excerpt: "", category: "Business", image_prompt: form.title };
-            try {
-                const metaText = metaResponse.text?.replace(/```json|```/g, '').trim() || '{}';
-                metaData = JSON.parse(metaText);
-            } catch (e) { console.warn("Meta parse failed, falling back."); }
-
-            // --- PHASE 3: GENERATE IMAGE (USING CONTEXTUAL PROMPT) ---
-            setProgress({ percent: 80, message: 'Merender Gambar (AI Vision)...' });
             
-            // Use the AI-generated specific prompt OR fallback to title if empty
-            const visualPrompt = metaData.image_prompt || form.title;
-            const generatedImageUrl = genConfig.autoImage 
-                ? getAIImageUrl(visualPrompt, genConfig.imageStyle) 
-                : form.imagePreview;
+            let metaData = { excerpt: "", category: "Business", author: "Amin Maghfuri" };
+            try { metaData = JSON.parse(metaResponse.text || '{}'); } catch(e) {}
 
-            // --- PHASE 4: FINALIZE ---
-            setProgress({ percent: 100, message: 'Selesai!' });
-            
-            // Small delay to let user see 100%
+            setTextProgress({ percent: 100, message: 'Selesai!' });
             await new Promise(r => setTimeout(r, 500));
 
             setForm(prev => ({
@@ -333,24 +249,58 @@ const useArticleManager = (
                 content: generatedContent,
                 excerpt: metaData.excerpt || prev.excerpt,
                 category: genConfig.autoCategory ? metaData.category : prev.category,
-                author: genConfig.autoAuthor ? "Amin Maghfuri" : prev.author,
-                readTime: "5 min read", // Simplified estimate
-                imagePreview: generatedImageUrl,
-                status: 'draft' 
+                author: genConfig.autoAuthor ? metaData.author : prev.author,
+                readTime: "5 min read"
             }));
 
-            setAiStep(3); // Done
-
         } catch (e: any) {
-            console.error(e);
-            alert(`Gagal generate: ${e.message}`);
-            setProgress({ percent: 0, message: 'Gagal' });
+            alert("Gagal generate teks: " + e.message);
+            setTextProgress({ percent: 0, message: 'Error' });
         } finally {
-            setLoading(prev => ({ ...prev, generatingContent: false }));
+            setLoading(prev => ({ ...prev, generatingText: false }));
         }
     };
 
-    // --- SUBMIT ---
+    // --- ACTION: GENERATE IMAGE ONLY (CONTEXT AWARE) ---
+    const generateImageContent = async () => {
+        if (!form.content && !form.title) return alert("Konten artikel belum ada.");
+
+        setLoading(prev => ({ ...prev, generatingImage: true }));
+        setImageProgress({ percent: 20, message: 'Menganalisa konteks artikel...' });
+
+        try {
+            await ensureAPIKey();
+            const apiKey = getSmartApiKey();
+            const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+
+            const analysisPrompt = `
+            Context: "${form.content.substring(0, 800)}..."
+            Task: Create a highly detailed English image prompt for a cover image.
+            Focus: Professional, Business, Technology.
+            Output: JUST THE PROMPT TEXT.
+            `;
+
+            const promptResponse = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: analysisPrompt });
+            const visualPrompt = promptResponse.text || form.title;
+
+            setImageProgress({ percent: 60, message: 'Rendering visual...' });
+            const imageUrl = getAIImageUrl(visualPrompt, genConfig.imageStyle);
+
+            // Fake delay for UX to show progress bar moving
+            await new Promise(r => setTimeout(r, 800)); 
+            setImageProgress({ percent: 100, message: 'Gambar siap!' });
+            await new Promise(r => setTimeout(r, 300));
+
+            setForm(prev => ({ ...prev, imagePreview: imageUrl }));
+
+        } catch (e: any) {
+            alert("Gagal generate gambar: " + e.message);
+            setImageProgress({ percent: 0, message: 'Error' });
+        } finally {
+            setLoading(prev => ({ ...prev, generatingImage: false }));
+        }
+    };
+
     const handleSubmit = async () => {
         if (!form.title || !form.content) return alert("Judul dan Konten wajib diisi.");
         
@@ -360,14 +310,12 @@ const useArticleManager = (
 
             if (form.uploadFile) {
                 if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Konfigurasi Cloudinary belum diset.");
-                
                 const formData = new FormData();
                 formData.append('file', form.uploadFile);
                 formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.secure_url) finalImageUrl = data.secure_url;
-                else throw new Error("Gagal upload gambar.");
             }
 
             const dbData = {
@@ -382,41 +330,26 @@ const useArticleManager = (
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null
             };
 
+            const localUpdateData = {
+                ...dbData,
+                image: finalImageUrl,
+                readTime: form.readTime,
+                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+            };
+
             if (form.id) {
                 const existing = articles.find(a => a.id === form.id);
                 if (existing) {
-                    // Update local state immediately
-                    const updatedItem: Article = { 
-                        ...existing, 
-                        ...dbData, 
-                        image: finalImageUrl, // Map back for frontend
-                        readTime: form.readTime,
-                        date: existing.date 
-                    };
-                    setArticles(articles.map(a => a.id === form.id ? updatedItem : a));
+                    setArticles(articles.map(a => a.id === form.id ? { ...existing, ...localUpdateData, id: form.id } : a));
                 }
-                if (supabase) {
-                    const { error } = await supabase.from('articles').update(dbData).eq('id', form.id);
-                    if (error) throw error;
-                }
+                if (supabase) await supabase.from('articles').update(dbData).eq('id', form.id);
             } else {
                 const newId = Date.now();
-                const newItem: Article = { 
-                    ...dbData, 
-                    id: newId, 
-                    image: finalImageUrl,
-                    readTime: form.readTime,
-                    date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-                    tags: [] 
-                };
-                setArticles([newItem, ...articles]);
-                if (supabase) {
-                     const { error } = await supabase.from('articles').insert([dbData]);
-                    if (error) throw error;
-                }
+                setArticles([{ ...localUpdateData, id: newId, tags: [] }, ...articles]);
+                if (supabase) await supabase.from('articles').insert([dbData]);
             }
             resetForm();
-            alert(`Artikel berhasil disimpan sebagai ${form.status.toUpperCase()}!`);
+            alert(`Artikel berhasil disimpan!`);
         } catch (e: any) { 
             console.error(e); 
             alert(`Gagal menyimpan: ${e.message}`); 
@@ -432,6 +365,57 @@ const useArticleManager = (
         if (form.id === id) resetForm();
     };
 
+    // --- ACTION: RESEARCH KEYWORDS ---
+    const researchKeywords = async () => {
+        if (selectedPresets.length === 0) return alert("Pilih minimal satu topik.");
+        
+        setLoading(prev => ({ ...prev, researching: true }));
+        try {
+            await ensureAPIKey();
+            const apiKey = getSmartApiKey();
+            const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+
+            const prompt = `
+            Role: SEO Content Strategist (Indonesian Market).
+            Context: We sell POS Systems (Kasir) & Software.
+            Task: Generate 5 high-potential article titles/keywords based on topics: ${selectedPresets.join(', ')}.
+            Target Audience: UMKM Owners, Business Starters.
+            Format: JSON Array of objects: [{ "keyword": "Title Idea", "volume": "Search Volume (e.g. 10k/mo)", "competition": "Low/Medium/High", "type": "Trend/Evergreen" }]
+            STRICT: Return ONLY JSON.
+            `;
+
+            const response = await ai.models.generateContent({ 
+                model: 'gemini-3-flash-preview', 
+                contents: prompt,
+                config: { responseMimeType: "application/json" }
+            });
+
+            const text = response.text || '[]';
+            let data: KeywordData[] = [];
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error("Failed to parse JSON", text);
+                data = [
+                    { keyword: `Strategi ${selectedPresets[0]} untuk Pemula`, volume: "Unknown", competition: "Low", type: "Evergreen" }
+                ];
+            }
+            
+            setKeywords(data);
+            setAiStep(1); 
+        } catch (e: any) {
+            alert("Gagal research keyword: " + e.message);
+        } finally {
+            setLoading(prev => ({ ...prev, researching: false }));
+        }
+    };
+
+    const selectTopic = (k: KeywordData) => {
+        setSelectedKeyword(k);
+        setForm(prev => ({ ...prev, title: k.keyword }));
+        setAiStep(2); 
+    };
+
     const filtered = articles.filter(a => a.title.toLowerCase().includes(searchTerm.toLowerCase()));
     const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
     const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -439,9 +423,9 @@ const useArticleManager = (
     return {
         form, setForm,
         loading,
-        progress,
+        progress: { text: textProgress, image: imageProgress },
         aiState: { step: aiStep, setStep: setAiStep, keywords, selectedKeyword, genConfig, setGenConfig, selectedPresets, togglePreset },
-        actions: { researchKeywords, selectTopic, generatePillarContent, handleSubmit, handleEditClick, resetForm, deleteItem, regenerateCoverImage },
+        actions: { researchKeywords, selectTopic, generateTextContent, generateImageContent, handleSubmit, handleEditClick, resetForm, deleteItem },
         listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
     };
 };
@@ -564,7 +548,7 @@ export const AdminArticles = ({
                     {aiState.step >= 1 && (
                         <div className={`transition-all ${aiState.step > 1 ? 'opacity-50 pointer-events-none' : 'animate-fade-in'}`}>
                             <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 2: Pilih Judul/Topik</label>
-                            <div className="grid grid-cols-1 gap-1.5">
+                            <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto custom-scrollbar">
                                 {aiState.keywords.map((k: KeywordData, i: number) => (
                                     <button key={i} onClick={() => actions.selectTopic(k)} className="text-left p-2.5 rounded border border-white/10 hover:border-brand-orange hover:bg-brand-orange/10 transition-all flex justify-between items-center group">
                                         <div>
@@ -578,32 +562,61 @@ export const AdminArticles = ({
                         </div>
                     )}
 
-                    {/* STEP 3: CONFIG & GENERATE */}
+                    {/* STEP 3 & 4 SPLIT CONTAINER */}
                     {aiState.step >= 2 && form.title && (
-                        <div className="animate-fade-in border-t border-white/5 pt-4">
-                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 3: Konfigurasi & Generate</label>
+                        <div className="animate-fade-in border-t border-white/5 pt-4 space-y-6">
                             
-                            <div className="mb-3">
-                                <label className="text-[10px] text-gray-500 mb-1 block">Gaya Gambar (Visual Style)</label>
-                                <div className="grid grid-cols-2 gap-1">
-                                    {(['cinematic', 'cyberpunk', 'corporate', 'studio', 'minimalist'] as const).map((style) => (
-                                        <button 
-                                            key={style}
-                                            onClick={() => aiState.setGenConfig({...aiState.genConfig, imageStyle: style})}
-                                            className={`py-1 text-[9px] uppercase border rounded ${aiState.genConfig.imageStyle === style ? 'bg-brand-orange text-white border-brand-orange' : 'bg-transparent text-gray-500 border-white/10'}`}
-                                        >
-                                            {style}
-                                        </button>
-                                    ))}
-                                </div>
+                            {/* BLOCK A: GENERATE TEXT */}
+                            <div>
+                                <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
+                                    <FileText size={12}/> Step 3: Tulis Konten Artikel
+                                </label>
+                                {loading.generatingText ? (
+                                    <GenerationProgress percent={progress.text.percent} message={progress.text.message} color="orange" />
+                                ) : (
+                                    <Button onClick={actions.generateTextContent} disabled={loading.generatingText || !!form.content} className={`w-full py-3 text-xs ${form.content ? 'bg-green-600 hover:bg-green-500 opacity-50' : 'bg-brand-orange hover:bg-brand-glow'}`}>
+                                        {form.content ? <><Check size={14}/> ARTIKEL SELESAI</> : <><Sparkles size={14}/> GENERATE TEXT DRAFT</>}
+                                    </Button>
+                                )}
                             </div>
 
-                            {loading.generatingContent ? (
-                                <GenerationProgress percent={progress.percent} message={progress.message} />
-                            ) : (
-                                <Button onClick={actions.generatePillarContent} disabled={loading.generatingContent} className="w-full py-3 text-xs bg-gradient-to-r from-brand-orange to-red-500 hover:from-brand-glow hover:to-red-400 shadow-action">
-                                    <Sparkles size={14}/> GENERATE FULL ARTICLE (SEQUENTIAL)
-                                </Button>
+                            {/* BLOCK B: GENERATE IMAGE */}
+                            <div className={`transition-all ${!form.content ? 'opacity-30 pointer-events-none grayscale' : ''}`}>
+                                <label className="text-[10px] text-blue-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
+                                    <Palette size={12}/> Step 4: Desain Visual
+                                </label>
+                                
+                                <div className="mb-3">
+                                    <label className="text-[9px] text-gray-500 mb-1 block">Style Gambar</label>
+                                    <div className="grid grid-cols-2 gap-1">
+                                        {(['cinematic', 'cyberpunk', 'corporate', 'studio', 'minimalist'] as const).map((style) => (
+                                            <button 
+                                                key={style}
+                                                onClick={() => aiState.setGenConfig({...aiState.genConfig, imageStyle: style})}
+                                                className={`py-1 text-[9px] uppercase border rounded ${aiState.genConfig.imageStyle === style ? 'bg-blue-500 text-white border-blue-500' : 'bg-transparent text-gray-500 border-white/10'}`}
+                                            >
+                                                {style}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {loading.generatingImage ? (
+                                    <GenerationProgress percent={progress.image.percent} message={progress.image.message} color="blue" />
+                                ) : (
+                                    <Button onClick={actions.generateImageContent} disabled={loading.generatingImage} className="w-full py-3 text-xs bg-blue-600 hover:bg-blue-500 border-none shadow-lg">
+                                        <ImageIcon size={14}/> GENERATE CONTEXTUAL IMAGE
+                                    </Button>
+                                )}
+                            </div>
+
+                            {/* FINISH BUTTON */}
+                            {form.content && form.imagePreview && (
+                                <div className="pt-2 animate-fade-in">
+                                    <Button onClick={() => actions.handleEditClick({...form, date: '', readTime: '', image: form.imagePreview} as any)} className="w-full py-2 bg-white/10 hover:bg-white/20 text-xs border border-white/20">
+                                        <Edit size={12}/> Edit Manual & Finalisasi
+                                    </Button>
+                                </div>
                             )}
                         </div>
                     )}
@@ -621,17 +634,27 @@ export const AdminArticles = ({
                         ) : (
                             <div className="flex items-center justify-center h-full text-gray-600"><ImageIcon size={24}/></div>
                         )}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            <button onClick={actions.regenerateCoverImage} className="px-2 py-1 bg-brand-orange text-white text-[10px] rounded flex items-center gap-1 shadow-lg hover:bg-brand-glow">
-                                <Wand2 size={10} /> Re-Imagine
-                            </button>
-                            <label className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white text-[10px] rounded cursor-pointer border border-white/20">
-                                Upload
-                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                                    const file = e.target.files ? e.target.files[0] : null;
-                                    if(file) setForm((p:any) => ({...p, uploadFile: file, imagePreview: URL.createObjectURL(file)}));
-                                }} />
-                            </label>
+                        
+                        {/* Overlay Controls */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
+                            {loading.generatingImage ? (
+                                <div className="w-full">
+                                    <GenerationProgress percent={progress.image.percent} message={progress.image.message} color="blue" />
+                                </div>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <button onClick={actions.generateImageContent} className="px-2 py-1 bg-blue-500 text-white text-[10px] rounded flex items-center gap-1 shadow-lg hover:bg-blue-400">
+                                        <Wand2 size={10} /> Re-Imagine
+                                    </button>
+                                    <label className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white text-[10px] rounded cursor-pointer border border-white/20">
+                                        Upload
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                            const file = e.target.files ? e.target.files[0] : null;
+                                            if(file) setForm((p:any) => ({...p, uploadFile: file, imagePreview: URL.createObjectURL(file)}));
+                                        }} />
+                                    </label>
+                                </div>
+                            )}
                         </div>
                     </div>
 
