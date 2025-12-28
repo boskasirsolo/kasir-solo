@@ -6,7 +6,7 @@ import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
-const ITEMS_PER_PAGE = 10; // Increased for dense list
+const ITEMS_PER_PAGE = 10;
 
 // --- INTERFACES FOR AI FLOW ---
 interface KeywordData {
@@ -29,13 +29,14 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
     return (
         <div className="prose prose-invert prose-sm max-w-none space-y-4">
             {content.split('\n').map((line, i) => {
-                if (line.startsWith('# ')) return <h1 key={i} className="text-3xl font-bold text-white mt-6 mb-4">{line.replace('# ', '')}</h1>;
-                if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold text-brand-orange mt-5 mb-3">{line.replace('## ', '')}</h2>;
-                if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold text-gray-200 mt-4 mb-2">{line.replace('### ', '')}</h3>;
-                if (line.startsWith('- ')) return <li key={i} className="ml-4 list-disc text-gray-300">{line.replace('- ', '')}</li>;
-                if (line.startsWith('1. ')) return <li key={i} className="ml-4 list-decimal text-gray-300">{line.replace(/^\d+\.\s/, '')}</li>;
+                if (line.startsWith('# ')) return <h1 key={i} className="text-3xl font-bold text-white mt-6 mb-4 border-b border-brand-orange/30 pb-2">{line.replace('# ', '')}</h1>;
+                if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold text-brand-orange mt-8 mb-3">{line.replace('## ', '')}</h2>;
+                if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold text-gray-200 mt-6 mb-2">{line.replace('### ', '')}</h3>;
+                if (line.startsWith('- ')) return <li key={i} className="ml-4 list-disc text-gray-300 pl-2">{line.replace('- ', '')}</li>;
+                if (line.startsWith('1. ')) return <li key={i} className="ml-4 list-decimal text-gray-300 pl-2">{line.replace(/^\d+\.\s/, '')}</li>;
+                if (line.startsWith('> ')) return <blockquote key={i} className="border-l-4 border-brand-orange pl-4 italic text-gray-400 my-4 bg-white/5 py-2 pr-2 rounded-r">{line.replace('> ', '')}</blockquote>;
                 if (line === '') return <div key={i} className="h-2"></div>;
-                return <p key={i} className="text-gray-300 leading-relaxed">{line}</p>;
+                return <p key={i} className="text-gray-300 leading-relaxed text-justify">{line}</p>;
             })}
         </div>
     );
@@ -54,7 +55,7 @@ const useArticleManager = (
         content: '',
         category: '',
         author: 'Admin',
-        readTime: '20 min read', // Default longer read time
+        readTime: '25 min read', 
         imagePreview: '',
         uploadFile: null as File | null,
         status: 'draft' as 'published' | 'draft' | 'scheduled',
@@ -91,7 +92,7 @@ const useArticleManager = (
             content: '',
             category: '',
             author: 'Admin',
-            readTime: '20 min read',
+            readTime: '25 min read',
             imagePreview: '',
             uploadFile: null,
             status: 'draft',
@@ -127,10 +128,10 @@ const useArticleManager = (
         
         let styleKeywords = "";
         switch(style) {
-            case 'cinematic': styleKeywords = "cinematic lighting, dramatic atmosphere, 8k, unreal engine 5 render, highly detailed, depth of field"; break;
-            case 'cyberpunk': styleKeywords = "cyberpunk city, neon lights, futuristic, high contrast, purple and orange tones, glowing"; break;
-            case 'corporate': styleKeywords = "modern office, professional, bright, clean lines, corporate photography, 4k"; break;
-            case 'studio': styleKeywords = "studio lighting, product photography, solid background, sharp focus, minimal"; break;
+            case 'cinematic': styleKeywords = "cinematic lighting, dramatic atmosphere, 8k, unreal engine 5 render, highly detailed, depth of field, blockbuster movie look"; break;
+            case 'cyberpunk': styleKeywords = "cyberpunk city, neon lights, futuristic, high contrast, purple and orange tones, glowing, tech noir"; break;
+            case 'corporate': styleKeywords = "modern office, professional, bright, clean lines, corporate photography, 4k, success, business meeting"; break;
+            case 'studio': styleKeywords = "studio lighting, product photography, solid background, sharp focus, minimal, advertising standard"; break;
             default: styleKeywords = "high quality, professional";
         }
 
@@ -220,7 +221,7 @@ const useArticleManager = (
         }
     };
 
-    // --- AI: STEP 3 - PILLAR CONTENT GENERATION (7000 WORDS TARGET) ---
+    // --- AI: STEP 3 - PILLAR CONTENT GENERATION (5000 WORDS TARGET) ---
     const generatePillarContent = async () => {
         if (!form.title) return alert("Pilih judul terlebih dahulu.");
         
@@ -232,7 +233,7 @@ const useArticleManager = (
 
             const prompt = `
             Role: Expert Business Consultant & Senior Copywriter (Amin Maghfuri).
-            Task: Write an ULTRA-COMPREHENSIVE, DEEP DIVE PILLAR ARTICLE (Target: 7000 words quality equivalent).
+            Task: Write a MONSTER PILLAR ARTICLE (Target: 5000+ Words Quality Equivalent).
             Title: "${form.title}"
             Keyword: "${selectedKeyword?.keyword || form.title}"
             
@@ -240,24 +241,27 @@ const useArticleManager = (
             - Auto Category: ${genConfig.autoCategory}
             - Auto Author: ${genConfig.autoAuthor} (Set to 'Amin Maghfuri' or 'Tim Riset SIBOS')
             
-            EXTREME LENGTH INSTRUCTIONS:
-            1. Do NOT summarize. Expand every point into multiple paragraphs.
-            2. Use a "Book Chapter" structure. Create at least 7-10 main sections (H2).
-            3. Inside each section, use subsections (H3), bullet points, and detailed explanations.
-            4. Include "Real World Scenarios", "Data Analysis", "Step-by-Step Implementation", and "Common Pitfalls".
-            5. Tone: Authoritative, Experienced, yet Accessible (Indonesian Business Context).
-            6. Explain concepts like you are teaching a Masterclass.
+            EXTREME LENGTH & DEPTH INSTRUCTIONS:
+            1. **Exhaustive Detail**: Do NOT summarize. Explain every concept like a university lecture.
+            2. **Structure**: Create at least 12-15 Main Chapters (H2).
+            3. **Sub-Chapters**: Inside every H2, include 3-5 Sub-Chapters (H3).
+            4. **Elaboration**: Every H3 must have multiple paragraphs.
+            5. **Examples**: Provide "Real World Scenarios" and "Case Studies" for every major point.
+            6. **Tone**: Authoritative, Experienced, yet Accessible (Indonesian Business Context).
+            7. **Formatting**: Use bolding, lists, and quotes frequently to break up the massive text.
             
-            STRUCTURE:
-            1. **Introduction**: Hook the reader, state the problem, promise the ultimate solution. (Min 500 words)
-            2. **Deep Dive Sections**: Thorough breakdown of the topic. (The meat of the article)
-            3. **Case Studies**: "Studi Kasus Lapangan" (Fictionalized but realistic examples).
-            4. **Actionable Checklist**: What to do next.
-            5. **Conclusion**: Inspiring closing.
+            REQUIRED SECTIONS:
+            1. **Introduction**: 500 words minimum. Hook, Problem, Thesis.
+            2. **The Fundamentals**: Definitions, History, Context.
+            3. **Core Analysis**: The meat of the article (Chapters 3-10).
+            4. **Implementation Guide**: Step-by-step how-to.
+            5. **Common Pitfalls**: What to avoid.
+            6. **Future Trends**: Predictions for next 5 years.
+            7. **Conclusion**: Inspiring closing.
             
             OUTPUT JSON ONLY:
             {
-               "content": "# Title... (The entire markdown content, make it as long as possible)",
+               "content": "# Title... (The entire markdown content, make it EXTREMELY LONG)",
                "excerpt": "Compelling summary (max 150 chars)",
                "category": "Suggested Category",
                "author": "Amin Maghfuri",
@@ -265,14 +269,12 @@ const useArticleManager = (
             }
             `;
 
-            // Using gemini-1.5-pro-latest if available for larger context output, otherwise fallback
-            // Note: In this environment we use gemini-3-pro-preview or flash. Pro is better for long output.
             const response = await ai.models.generateContent({ 
-                model: 'gemini-3-pro-preview', // Switching to PRO for length
+                model: 'gemini-3-pro-preview', // Using Pro for larger context window
                 contents: prompt,
                 config: {
-                    maxOutputTokens: 8192, // Max out the tokens
-                    thinkingConfig: { thinkingBudget: 1024 } // Give it some thought
+                    maxOutputTokens: 8192, // Maximized for length
+                    thinkingConfig: { thinkingBudget: 2048 } // Deep thinking for structure
                 }
             });
             
@@ -282,14 +284,14 @@ const useArticleManager = (
             try {
                 data = JSON.parse(rawText);
             } catch (jsonErr) {
-                // Fallback: simple text extraction if JSON fails
+                // Fallback: simple text extraction if JSON fails (likely due to length cut-off or format)
                 console.warn("JSON Parse failed, using raw text as content");
                 data = {
-                    content: response.text,
+                    content: response.text, // Use raw text if JSON fails
                     excerpt: "Artikel mendalam tentang " + form.title,
                     category: "General",
                     author: "Admin",
-                    image_search_query: "business"
+                    image_search_query: "business technology"
                 };
             }
 
@@ -300,7 +302,7 @@ const useArticleManager = (
                 excerpt: data.excerpt,
                 category: genConfig.autoCategory ? data.category : prev.category,
                 author: genConfig.autoAuthor ? data.author : prev.author,
-                readTime: "35 min read", // Update read time for long content
+                readTime: "45 min read", // Update read time for monster content
                 imagePreview: genConfig.autoImage 
                     ? getAIImageUrl(data.image_search_query || `${form.title} dramatic cinematic`, genConfig.imageStyle) 
                     : prev.imagePreview,
@@ -423,7 +425,7 @@ export const AdminArticles = ({
     <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b">
       
       {/* 1. LEFT COLUMN: LIST (20%) */}
-      <div className="w-[20%] border-r border-white/5 bg-brand-dark flex flex-col">
+      <div className="w-[20%] border-r border-white/5 bg-brand-dark flex flex-col min-w-[250px]">
          <div className="p-4 border-b border-white/5">
             <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <List size={12}/> Arsip Artikel
@@ -479,11 +481,11 @@ export const AdminArticles = ({
       </div>
 
       {/* 2. CENTER COLUMN: EDITOR / AI STUDIO (30%) */}
-      <div className="w-[30%] border-r border-white/5 bg-brand-dark flex flex-col">
+      <div className="w-[30%] border-r border-white/5 bg-brand-dark flex flex-col min-w-[350px]">
          <div className="p-4 border-b border-white/5 flex justify-between items-center">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 {form.id ? <Edit size={14} className="text-brand-orange"/> : <Sparkles size={14} className="text-brand-orange"/>}
-                {form.id ? "Edit Mode" : "AI Studio"}
+                {form.id ? "Editor" : "AI Studio"}
             </h3>
             {form.id || aiState.step > 0 ? (
                 <button onClick={actions.resetForm} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1">
@@ -534,7 +536,7 @@ export const AdminArticles = ({
                     {/* STEP 3: CONFIG */}
                     {aiState.step >= 2 && form.title && (
                         <div className="animate-fade-in border-t border-white/5 pt-4">
-                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 3: Generate Pillar Content</label>
+                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 3: Generate 5000+ Words</label>
                             
                             <div className="mb-3">
                                 <label className="text-[10px] text-gray-500 mb-1 block">Image Style</label>
@@ -551,10 +553,10 @@ export const AdminArticles = ({
                                 </div>
                             </div>
 
-                            <Button onClick={actions.generatePillarContent} disabled={loading.generatingContent} className="w-full py-3 text-xs bg-gradient-to-r from-brand-orange to-red-500 hover:from-brand-glow hover:to-red-400">
-                                {loading.generatingContent ? <LoadingSpinner size={14} /> : <><Sparkles size={14}/> GENERATE 7000 WORDS (DEEP DIVE)</>}
+                            <Button onClick={actions.generatePillarContent} disabled={loading.generatingContent} className="w-full py-3 text-xs bg-gradient-to-r from-brand-orange to-red-500 hover:from-brand-glow hover:to-red-400 shadow-action">
+                                {loading.generatingContent ? <LoadingSpinner size={14} /> : <><Sparkles size={14}/> GENERATE MONSTER CONTENT</>}
                             </Button>
-                            <p className="text-[9px] text-center text-gray-500 mt-2">Mode: Ultra-Comprehensive • Deep Dive • Semantic SEO</p>
+                            <p className="text-[9px] text-center text-gray-500 mt-2">Target: 5000 Words • Deep Dive • Semantic SEO</p>
                         </div>
                     )}
                 </div>
@@ -562,7 +564,7 @@ export const AdminArticles = ({
 
             {/* MANUAL EDITOR */}
             {(form.id || aiState.step === 3) && (
-                <div className="space-y-4 animate-fade-in">
+                <div className="space-y-4 animate-fade-in pb-10">
                     
                     {/* Image */}
                     <div className="relative w-full h-32 bg-black rounded-lg border border-white/10 overflow-hidden group">
@@ -593,11 +595,11 @@ export const AdminArticles = ({
                             <Input value={form.author} onChange={e => setForm((p:any) => ({...p, author: e.target.value}))} placeholder="Penulis" className="text-[10px] py-1.5"/>
                         </div>
                         <TextArea value={form.excerpt} onChange={e => setForm((p:any) => ({...p, excerpt: e.target.value}))} placeholder="Ringkasan..." className="text-[10px] h-16"/>
-                        <TextArea value={form.content} onChange={e => setForm((p:any) => ({...p, content: e.target.value}))} placeholder="# Konten Markdown..." className="text-[10px] h-60 font-mono"/>
+                        <TextArea value={form.content} onChange={e => setForm((p:any) => ({...p, content: e.target.value}))} placeholder="# Konten Markdown..." className="text-[10px] h-96 font-mono custom-scrollbar"/>
                     </div>
 
                     {/* Actions */}
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5">
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 sticky bottom-0 bg-brand-dark pb-2">
                         <select 
                             value={form.status} 
                             onChange={(e) => setForm((p:any) => ({...p, status: e.target.value}))}
@@ -620,9 +622,11 @@ export const AdminArticles = ({
       <div className="w-[50%] bg-black flex flex-col relative overflow-hidden">
          <div className="p-4 border-b border-white/10 bg-brand-dark/50 flex justify-between items-center backdrop-blur-sm z-10 sticky top-0">
             <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                <Eye size={12} /> Live Preview
+                <Eye size={12} /> Live Preview (Desktop)
             </h4>
-            <span className="text-[10px] text-gray-600 bg-white/5 px-2 py-0.5 rounded border border-white/5">Desktop View</span>
+            <div className="flex gap-2">
+                <Badge className="bg-green-500/10 text-green-400 border-green-500/20">{form.content.split(' ').length} Kata</Badge>
+            </div>
          </div>
 
          <div className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
