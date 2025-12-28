@@ -26,17 +26,28 @@ interface GenConfig {
 const SimpleMarkdown = ({ content }: { content: string }) => {
     if (!content) return <div className="text-gray-600 italic">Preview konten akan muncul di sini...</div>;
     
+    // Helper to parse bold text **text** -> <strong>text</strong>
+    const renderInline = (text: string) => {
+        const parts = text.split(/(\*\*.*?\*\*)/g);
+        return parts.map((part, i) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+                return <strong key={i} className="text-brand-orange font-bold">{part.slice(2, -2)}</strong>;
+            }
+            return part;
+        });
+    };
+
     return (
         <div className="prose prose-invert prose-sm max-w-none space-y-4">
             {content.split('\n').map((line, i) => {
                 if (line.startsWith('# ')) return <h1 key={i} className="text-3xl font-bold text-white mt-6 mb-4 border-b border-brand-orange/30 pb-2">{line.replace('# ', '')}</h1>;
                 if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold text-brand-orange mt-8 mb-3">{line.replace('## ', '')}</h2>;
                 if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold text-gray-200 mt-6 mb-2">{line.replace('### ', '')}</h3>;
-                if (line.startsWith('- ')) return <li key={i} className="ml-4 list-disc text-gray-300 pl-2">{line.replace('- ', '')}</li>;
-                if (line.startsWith('1. ')) return <li key={i} className="ml-4 list-decimal text-gray-300 pl-2">{line.replace(/^\d+\.\s/, '')}</li>;
-                if (line.startsWith('> ')) return <blockquote key={i} className="border-l-4 border-brand-orange pl-4 italic text-gray-400 my-4 bg-white/5 py-2 pr-2 rounded-r">{line.replace('> ', '')}</blockquote>;
+                if (line.startsWith('- ')) return <li key={i} className="ml-4 list-disc text-gray-300 pl-2">{renderInline(line.replace('- ', ''))}</li>;
+                if (line.startsWith('1. ')) return <li key={i} className="ml-4 list-decimal text-gray-300 pl-2">{renderInline(line.replace(/^\d+\.\s/, ''))}</li>;
+                if (line.startsWith('> ')) return <blockquote key={i} className="border-l-4 border-brand-orange pl-4 italic text-gray-400 my-4 bg-white/5 py-2 pr-2 rounded-r">{renderInline(line.replace('> ', ''))}</blockquote>;
                 if (line === '') return <div key={i} className="h-2"></div>;
-                return <p key={i} className="text-gray-300 leading-relaxed text-justify">{line}</p>;
+                return <p key={i} className="text-gray-300 leading-relaxed text-justify">{renderInline(line)}</p>;
             })}
         </div>
     );
