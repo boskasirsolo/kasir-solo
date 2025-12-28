@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, PlayCircle } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, PlayCircle, Laptop } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv } from '../utils';
@@ -20,7 +20,7 @@ const useIntegratedGalleryManager = (
         id: null as number | null,
         title: '',
         category_type: 'physical' as 'physical' | 'digital',
-        platform: 'web' as 'web' | 'mobile' | 'desktop',
+        platform: 'web' as 'web' | 'mobile' | 'desktop', // Default fallback
         client_url: '',
         tech_stack_str: '',
         shortDesc: '', 
@@ -125,71 +125,67 @@ const useIntegratedGalleryManager = (
         }
     };
 
+    // Helper to handle Dropdown Change (Updates both Category and Platform)
+    const handleTypeChange = (val: string) => {
+        if (val === 'hardware') {
+            setForm(p => ({ ...p, category_type: 'physical', platform: 'desktop' })); // Default platform for hardware irrelevant but kept clean
+        } else {
+            setForm(p => ({ ...p, category_type: 'digital', platform: val as any }));
+        }
+    };
+
+    // Helper to get current dropdown value based on state
+    const getCurrentType = () => {
+        if (form.category_type === 'physical') return 'hardware';
+        return form.platform; // web, mobile, desktop
+    };
+
     const generateAINarrative = async () => {
         if (!form.title || !form.shortDesc) return alert("Isi Judul & Context dulu.");
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
-            // Attempt to ensure key is available (IDX flow)
             await ensureAPIKey(); 
-            
-            // Get Key from standard process or fallback to VITE/NEXT env vars
             const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
             
-            if (!apiKey) {
-                console.warn("API Key not found. Trying IDX injection.");
-            }
+            if (!apiKey) console.warn("API Key not found. Trying IDX injection.");
 
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
             
-            // Generate Project Description
-            if (form.category_type === 'digital') {
-                 const prompt = `
-                 Role: Senior Tech Copywriter & SEO Specialist.
-                 Task: Create a Case Study breakdown for a digital portfolio.
-                 Project Name: ${form.title}
-                 Context/Keywords: ${form.shortDesc}
-                 
-                 Instructions:
-                 1. Language: Indonesian (Professional, Insightful).
-                 2. Output Format: STRICT JSON ONLY. No markdown, no intro text.
-                 3. Structure: { "challenge": "...", "solution": "...", "result": "..." }
-                 4. SEO Focus: Use problem-solution keywords relevant to software development.
-                 `;
-                 
-                 const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
-                 const rawText = response.text?.trim() || '{}';
-                 try {
-                     const jsonStr = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
-                     const parsed = JSON.parse(jsonStr);
-                     setForm(prev => ({ ...prev, cs_challenge: parsed.challenge || '', cs_solution: parsed.solution || '', cs_result: parsed.result || '' }));
-                 } catch (e) { setForm(prev => ({...prev, longDesc: rawText})); }
-            } else {
-                 const prompt = `
-                 Role: Senior SEO Content Writer for Business/Retail Tech.
-                 Task: Write a portfolio description.
-                 Project Name: ${form.title}
-                 Context: ${form.shortDesc}
-                 
-                 STRICT RULES:
-                 1. DIRECT OUTPUT ONLY: Do NOT use phrases like "Tentu", "Berikut adalah", "Draft deskripsi". Start directly with the content.
-                 2. SEO: Use natural semantic keywords (LSI) related to the industry.
-                 3. Tone: Professional, Authority, Result-Oriented.
-                 4. Length: 2 Paragraphs.
-                 5. Language: Indonesian.
-                 `;
-                 const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
-                 setForm(prev => ({ ...prev, longDesc: response.text?.trim() || '' }));
+            // Unified Prompt for both Hardware and Digital (Since user wants Digital format for all)
+            const prompt = `
+            Role: Senior Tech Copywriter & SEO Specialist.
+            Task: Create a Case Study breakdown for a portfolio item.
+            Project Name: ${form.title}
+            Type: ${form.category_type === 'physical' ? 'Hardware Installation' : 'Software Development'}
+            Context/Keywords: ${form.shortDesc}
+            
+            Instructions:
+            1. Language: Indonesian (Professional, Insightful).
+            2. Output Format: STRICT JSON ONLY. No markdown, no intro text.
+            3. Structure: { "challenge": "...", "solution": "...", "result": "..." }
+            4. SEO Focus: Use problem-solution keywords.
+            `;
+            
+            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+            const rawText = response.text?.trim() || '{}';
+            try {
+                const jsonStr = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+                const parsed = JSON.parse(jsonStr);
+                setForm(prev => ({ ...prev, cs_challenge: parsed.challenge || '', cs_solution: parsed.solution || '', cs_result: parsed.result || '' }));
+            } catch (e) { 
+                // Fallback if JSON fails
+                setForm(prev => ({...prev, longDesc: rawText})); 
             }
 
-            // Also Generate Testimonial Draft if empty
+            // Testimonial Draft
             if (!testiForm.content && testiForm.hasTestimonial) {
                  const testiPrompt = `
                  Role: Happy Customer.
                  Task: Write a short, natural testimonial (1-2 sentences).
                  Business: ${form.title}
-                 Service Received: ${form.shortDesc}
+                 Service: ${form.shortDesc}
                  Language: Indonesian (Casual/Semi-formal).
-                 STRICT: Output ONLY the testimonial text. No quotes, no intro.
+                 STRICT: Output ONLY the testimonial text. No quotes.
                  `;
                  const testiResponse = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: testiPrompt });
                  setTestiForm(prev => ({...prev, content: testiResponse.text?.trim() || ''}));
@@ -199,7 +195,7 @@ const useIntegratedGalleryManager = (
             console.error(e); 
             const msg = e.message || "Gagal menghubungi AI.";
             if (msg.includes("API key")) {
-                alert("API Key bermasalah. Pastikan VITE_GEMINI_API_KEY diset di Environment Variables Vercel.");
+                alert("API Key bermasalah. Pastikan VITE_GEMINI_API_KEY diset.");
             } else {
                 alert(`AI Error: ${msg}`);
             }
@@ -213,7 +209,6 @@ const useIntegratedGalleryManager = (
 
         setLoadingState(prev => ({ ...prev, uploading: true }));
         try {
-            // 1. Handle Gallery Image Upload
             let finalImageUrl = form.imagePreview;
             if (form.uploadFile) {
                 const formData = new FormData();
@@ -224,24 +219,22 @@ const useIntegratedGalleryManager = (
                 if (data.secure_url) finalImageUrl = data.secure_url;
             }
 
+            // Always save extensive data (Digital Format)
             const dbData: Partial<GalleryItem> = {
                 title: form.title,
                 image_url: finalImageUrl || 'https://via.placeholder.com/800x600',
                 type: 'image',
                 category_type: form.category_type,
-                description: form.longDesc, 
-            };
-
-            if (form.category_type === 'digital') {
-                dbData.platform = form.platform;
-                dbData.client_url = form.client_url;
-                dbData.tech_stack = form.tech_stack_str.split(',').map(s => s.trim()).filter(s => s);
-                dbData.case_study = {
+                description: form.longDesc || form.cs_solution, // Fallback desc
+                platform: form.platform,
+                client_url: form.client_url,
+                tech_stack: form.tech_stack_str.split(',').map(s => s.trim()).filter(s => s),
+                case_study: {
                     challenge: form.cs_challenge,
                     solution: form.cs_solution,
                     result: form.cs_result
-                };
-            }
+                }
+            };
 
             // Save Gallery Item
             if (form.id) {
@@ -255,7 +248,7 @@ const useIntegratedGalleryManager = (
                 if (supabase) await supabase.from('gallery').insert([dbData]);
             }
 
-            // 2. Handle Testimonial Save (If enabled)
+            // Handle Testimonial Save
             if (testiForm.hasTestimonial && testiForm.client_name) {
                 let finalTestiImage = testiForm.imagePreview;
                 if (testiForm.uploadFile) {
@@ -269,7 +262,7 @@ const useIntegratedGalleryManager = (
 
                 const testiData = {
                     client_name: testiForm.client_name,
-                    business_name: form.title, // LINK BY NAME
+                    business_name: form.title,
                     content: testiForm.content,
                     rating: testiForm.rating,
                     image_url: finalTestiImage,
@@ -289,7 +282,7 @@ const useIntegratedGalleryManager = (
             }
 
             resetForm();
-            alert("Project & Testimoni berhasil disimpan!");
+            alert("Berhasil disimpan!");
         } catch (e) { console.error(e); alert("Gagal menyimpan."); }
         finally { setLoadingState(prev => ({ ...prev, uploading: false })); }
     };
@@ -314,6 +307,8 @@ const useIntegratedGalleryManager = (
         resetForm,
         deleteItem,
         generateAINarrative,
+        handleTypeChange,
+        getCurrentType,
         listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
     };
 };
@@ -327,7 +322,7 @@ export const AdminGallery = ({
   const { 
     form, setForm, 
     testiForm, setTestiForm,
-    loadingState, handleSubmit, handleEditClick, resetForm, deleteItem, generateAINarrative, listData 
+    loadingState, handleSubmit, handleEditClick, resetForm, deleteItem, generateAINarrative, handleTypeChange, getCurrentType, listData 
   } = useIntegratedGalleryManager(gallery, setGallery, testimonials, setTestimonials);
 
   return (
@@ -369,7 +364,7 @@ export const AdminGallery = ({
                     <div className="flex-1 min-w-0">
                        <h5 className="text-xs font-bold text-white truncate">{item.title}</h5>
                        <span className={`text-[9px] px-1 rounded ${item.category_type === 'digital' ? 'text-blue-400 bg-blue-400/10' : 'text-green-400 bg-green-400/10'}`}>
-                          {item.category_type === 'digital' ? 'DIGITAL' : 'HARDWARE'}
+                          {item.category_type === 'digital' ? 'SOFTWARE' : 'HARDWARE'}
                        </span>
                     </div>
                     <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} className="text-gray-600 hover:text-red-500">
@@ -393,14 +388,11 @@ export const AdminGallery = ({
          
          {/* Top Half: Project Editor (65% Height) */}
          <div className="h-[65%] overflow-y-auto p-4 border-b border-white/10 custom-scrollbar">
-             <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2"><Edit size={12}/> Project Details</h4>
+             <div className="flex justify-between items-center mb-3">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Edit size={12}/> Project Details</h4>
+             </div>
              
              <div className="space-y-3">
-                 <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => setForm(p => ({...p, category_type: 'physical'}))} className={`py-1.5 text-[10px] font-bold rounded border ${form.category_type === 'physical' ? 'bg-brand-action text-white border-brand-action' : 'border-white/10 text-gray-500'}`}>HARDWARE</button>
-                    <button onClick={() => setForm(p => ({...p, category_type: 'digital'}))} className={`py-1.5 text-[10px] font-bold rounded border ${form.category_type === 'digital' ? 'bg-brand-action text-white border-brand-action' : 'border-white/10 text-gray-500'}`}>DIGITAL</button>
-                 </div>
-                 
                  <div className="flex gap-2 items-center bg-black/20 p-2 rounded border border-white/5">
                     <div className="w-10 h-10 bg-black rounded overflow-hidden shrink-0 border border-white/10 relative group">
                         {form.imagePreview && <img src={form.imagePreview} className="w-full h-full object-cover" />}
@@ -420,22 +412,28 @@ export const AdminGallery = ({
                     </div>
                  </div>
 
-                 <TextArea value={form.longDesc} onChange={e => setForm(p => ({...p, longDesc: e.target.value}))} placeholder="Deskripsi..." className="text-xs h-20" />
+                 {/* Digital Format Inputs (Available for ALL types now) */}
+                 <div className="space-y-2 bg-white/5 p-2 rounded">
+                     {/* Unified Category & Platform Selector */}
+                     <select 
+                        value={getCurrentType()} 
+                        onChange={e => handleTypeChange(e.target.value)} 
+                        className="w-full bg-black text-white text-xs p-1.5 rounded border border-white/10 mb-1 focus:border-brand-orange outline-none"
+                     >
+                         <option value="hardware">Hardware / Instalasi Fisik</option>
+                         <option value="web">Software - Website / Web App</option>
+                         <option value="mobile">Software - Mobile App (Android/iOS)</option>
+                         <option value="desktop">Software - Desktop System</option>
+                     </select>
 
-                 {/* Digital Specifics */}
-                 {form.category_type === 'digital' && (
-                     <div className="space-y-2 bg-white/5 p-2 rounded">
-                         <select value={form.platform} onChange={e => setForm(p => ({...p, platform: e.target.value as any}))} className="w-full bg-black text-white text-xs p-1 rounded border border-white/10">
-                             <option value="web">Website</option><option value="mobile">Mobile App</option>
-                         </select>
-                         <Input value={form.client_url} onChange={e => setForm(p => ({...p, client_url: e.target.value}))} placeholder="URL" className="text-xs py-1 h-7" />
-                         <div className="grid grid-cols-3 gap-1">
-                             <input value={form.cs_challenge} onChange={e => setForm(p => ({...p, cs_challenge: e.target.value}))} placeholder="Challenge" className="bg-black text-white text-[9px] p-1 rounded border border-white/10" />
-                             <input value={form.cs_solution} onChange={e => setForm(p => ({...p, cs_solution: e.target.value}))} placeholder="Solution" className="bg-black text-white text-[9px] p-1 rounded border border-white/10" />
-                             <input value={form.cs_result} onChange={e => setForm(p => ({...p, cs_result: e.target.value}))} placeholder="Result" className="bg-black text-white text-[9px] p-1 rounded border border-white/10" />
-                         </div>
+                     <Input value={form.client_url} onChange={e => setForm(p => ({...p, client_url: e.target.value}))} placeholder="URL Project / Live Link" className="text-xs py-1 h-7" />
+                     
+                     <div className="grid grid-cols-1 gap-2 mt-2">
+                         <input value={form.cs_challenge} onChange={e => setForm(p => ({...p, cs_challenge: e.target.value}))} placeholder="Challenge (Tantangan Klien)" className="bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
+                         <input value={form.cs_solution} onChange={e => setForm(p => ({...p, cs_solution: e.target.value}))} placeholder="Solution (Solusi Kami)" className="bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
+                         <input value={form.cs_result} onChange={e => setForm(p => ({...p, cs_result: e.target.value}))} placeholder="Result (Hasil Akhir)" className="bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
                      </div>
-                 )}
+                 </div>
              </div>
          </div>
 
@@ -483,48 +481,42 @@ export const AdminGallery = ({
       <div className="w-[40%] bg-black flex items-center justify-center p-8 overflow-hidden relative">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
           
-          {/* Mockup Card */}
+          {/* Mockup Card - Unified Style (Digital Style for All) */}
           <div className="w-full max-w-sm">
              <div className="text-center mb-4">
-                <span className="text-[10px] text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Live Preview Card</span>
+                <span className="text-[10px] text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Live Preview (Unified)</span>
              </div>
 
-             {/* PREVIEW COMPONENT LOGIC */}
-             {form.category_type === 'digital' ? (
-                 <div className="group relative bg-brand-card border border-white/5 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-auto">
-                    <div className="relative bg-gray-900 pt-4 px-4 pb-0 border-b border-white/5">
-                        <div className="relative rounded-t-xl bg-black border-[4px] border-gray-800 border-b-0 overflow-hidden aspect-[16/10]">
-                            {form.imagePreview ? <img src={form.imagePreview} className="w-full h-full object-cover object-top" /> : <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-600 text-xs">No Image</div>}
-                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                                <div className="bg-black/60 p-2 rounded-full border border-white/10">
-                                   {form.platform === 'mobile' ? <Smartphone size={16} className="text-white"/> : <Globe size={16} className="text-white"/>}
-                                </div>
+             <div className="group relative bg-brand-card border border-white/5 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-auto">
+                <div className="relative bg-gray-900 pt-4 px-4 pb-0 border-b border-white/5">
+                    <div className="relative rounded-t-xl bg-black border-[4px] border-gray-800 border-b-0 overflow-hidden aspect-[16/10]">
+                        {form.imagePreview ? <img src={form.imagePreview} className="w-full h-full object-cover object-top" /> : <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-600 text-xs">No Image</div>}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                            <div className="bg-black/60 p-2 rounded-full border border-white/10">
+                               {form.category_type === 'physical' ? <Hammer size={16} className="text-white"/> : form.platform === 'mobile' ? <Smartphone size={16} className="text-white"/> : <Globe size={16} className="text-white"/>}
                             </div>
                         </div>
                     </div>
-                    <div className="p-4 flex flex-col">
-                        <div className="flex flex-wrap gap-1 mb-2">
-                           {form.tech_stack_str.split(',').slice(0,3).map((t,i) => t && <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-gray-400 border border-white/5">{t}</span>)}
-                        </div>
-                        <h3 className="text-lg font-bold text-white mb-1">{form.title || 'Judul Project'}</h3>
-                        <p className="text-gray-400 text-xs line-clamp-2 mb-3">{form.longDesc || 'Deskripsi project akan muncul di sini...'}</p>
-                        <div className="flex items-center text-brand-orange text-[10px] font-bold uppercase tracking-widest gap-1 mt-auto">Lihat Case Study <ChevronRight size={12}/></div>
+                </div>
+                <div className="p-4 flex flex-col">
+                    <div className="flex flex-wrap gap-1 mb-2">
+                       {/* Show Category Chip */}
+                       <span className={`text-[9px] px-1.5 py-0.5 rounded border border-white/5 ${form.category_type === 'physical' ? 'bg-green-500/10 text-green-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                           {form.category_type === 'physical' ? 'HARDWARE' : 'SOFTWARE'}
+                       </span>
                     </div>
-                 </div>
-             ) : (
-                 <div className="group relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
-                    <div className="aspect-[4/3] bg-black relative">
-                         {form.imagePreview ? <img src={form.imagePreview} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-600 text-xs">No Image</div>}
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                            <h3 className="text-white font-bold text-lg">{form.title || 'Judul Project'}</h3>
-                            <div className="w-8 h-1 bg-brand-orange mt-2 rounded-full"></div>
-                         </div>
-                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <PlayCircle size={32} className="text-white/20"/> 
-                         </div>
+                    <h3 className="text-lg font-bold text-white mb-1">{form.title || 'Judul Project'}</h3>
+                    <div className="space-y-1 mt-2">
+                        {form.cs_challenge && (
+                            <p className="text-[10px] text-gray-400 line-clamp-1"><span className="text-red-400 font-bold">Challenge:</span> {form.cs_challenge}</p>
+                        )}
+                        {form.cs_solution && (
+                            <p className="text-[10px] text-gray-400 line-clamp-1"><span className="text-blue-400 font-bold">Solution:</span> {form.cs_solution}</p>
+                        )}
                     </div>
-                 </div>
-             )}
+                    <div className="flex items-center text-brand-orange text-[10px] font-bold uppercase tracking-widest gap-1 mt-3 pt-3 border-t border-white/5">Lihat Case Study <ChevronRight size={12}/></div>
+                </div>
+             </div>
 
              {/* PREVIEW TESTIMONIAL FOOTER */}
              <div className="mt-4 bg-brand-dark border border-white/10 rounded-xl p-3 flex items-center gap-3">
