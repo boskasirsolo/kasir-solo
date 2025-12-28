@@ -99,13 +99,21 @@ const AppContent = () => {
     }
 
     const fetchData = async () => {
+      // 1. Fetch Products & Map Image URL
       const { data: prodData } = await supabase.from('products').select('*');
-      if (prodData && prodData.length > 0) setProducts(prodData);
+      if (prodData && prodData.length > 0) {
+        const mappedProducts = prodData.map((item: any) => ({
+          ...item,
+          // FIX: Map DB column 'image_url' to Frontend 'image' property
+          image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800'
+        }));
+        setProducts(mappedProducts);
+      }
 
       const { data: galData } = await supabase.from('gallery').select('*');
       if (galData && galData.length > 0) setGallery(galData);
 
-      // Fetch Articles & Sort
+      // 2. Fetch Articles & Sort
       const { data: artData } = await supabase.from('articles').select('*');
       if (artData && artData.length > 0) {
         const mappedArticles = artData.map((item: any) => ({
