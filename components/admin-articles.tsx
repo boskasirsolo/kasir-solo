@@ -822,7 +822,7 @@ export const AdminArticles = ({
                                                 onClick={() => actions.handleEditClick(cluster)}
                                                 className={`p-2 rounded border border-white/5 hover:border-brand-orange/30 cursor-pointer flex gap-2 items-center group transition-colors ${form.id === cluster.id ? 'bg-brand-orange/10 border-brand-orange' : 'bg-white/5'}`}
                                             >
-                                                <div className="w-1 h-full bg-blue-500 rounded-full"></div>
+                                                <img src={cluster.image} className="w-8 h-8 rounded object-cover bg-black" />
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-[10px] text-gray-300 truncate group-hover:text-brand-orange transition-colors">{cluster.title}</p>
                                                     <div className="flex justify-between items-center mt-0.5">
