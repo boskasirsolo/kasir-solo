@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2 } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey } from '../utils';
@@ -20,7 +20,7 @@ const PRESET_TOPICS = [
     { id: 'scam', label: 'Keamanan & Fraud' }
 ];
 
-// --- INTERFACES FOR AI FLOW ---
+// --- INTERFACES ---
 interface KeywordData {
     keyword: string;
     volume: string;
@@ -32,14 +32,13 @@ interface GenConfig {
     autoImage: boolean;
     autoCategory: boolean;
     autoAuthor: boolean;
-    imageStyle: 'cinematic' | 'cyberpunk' | 'corporate' | 'studio';
+    imageStyle: 'cinematic' | 'cyberpunk' | 'corporate' | 'studio' | 'minimalist';
 }
 
-// --- HELPER: MARKDOWN RENDERER (SIMPLE) ---
+// --- HELPER: MARKDOWN RENDERER ---
 const SimpleMarkdown = ({ content }: { content: string }) => {
     if (!content) return <div className="text-gray-600 italic">Preview konten akan muncul di sini...</div>;
     
-    // Helper to parse bold text **text** -> <strong>text</strong>
     const renderInline = (text: string) => {
         const parts = text.split(/(\*\*.*?\*\*)/g);
         return parts.map((part, i) => {
@@ -65,6 +64,24 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
         </div>
     );
 };
+
+// --- COMPONENT: PROGRESS BAR ---
+const GenerationProgress = ({ percent, message }: { percent: number, message: string }) => (
+    <div className="w-full bg-brand-dark border border-brand-orange/30 rounded-lg p-3 relative overflow-hidden animate-fade-in">
+        <div className="flex justify-between items-center mb-2 relative z-10">
+            <span className="text-xs font-bold text-brand-orange animate-pulse">{message}</span>
+            <span className="text-xs font-mono text-gray-400">{percent}%</span>
+        </div>
+        <div className="w-full h-2 bg-black/50 rounded-full overflow-hidden border border-white/5 relative z-10">
+            <div 
+                className="h-full bg-gradient-to-r from-brand-orange to-brand-action transition-all duration-500 ease-out" 
+                style={{ width: `${percent}%` }}
+            ></div>
+        </div>
+        {/* Background Glow */}
+        <div className="absolute inset-0 bg-brand-orange/5 z-0"></div>
+    </div>
+);
 
 // --- LOGIC: Custom Hook ---
 const useArticleManager = (
@@ -98,11 +115,14 @@ const useArticleManager = (
         imageStyle: 'cinematic'
     });
 
+    // Enhanced Loading State for Progress
     const [loading, setLoading] = useState({
         uploading: false,
         researching: false,
         generatingContent: false
     });
+    
+    const [progress, setProgress] = useState({ percent: 0, message: '' });
 
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
@@ -125,6 +145,7 @@ const useArticleManager = (
         setKeywords([]);
         setSelectedKeyword(null);
         setSelectedPresets([]);
+        setProgress({ percent: 0, message: '' });
     };
 
     const togglePreset = (label: string) => {
@@ -147,36 +168,41 @@ const useArticleManager = (
             status: item.status || 'published',
             scheduled_for: item.scheduled_for || ''
         });
-        // No scroll needed in split view
         setAiStep(3); 
     };
 
-    // --- UTILS: IMAGE GENERATOR (FIXED) ---
+    // --- UTILS: IMAGE GENERATOR ---
     const getAIImageUrl = (prompt: string, style: string) => {
         const seed = Math.floor(Math.random() * 999999);
-        const safePrompt = prompt.replace(/[^a-zA-Z0-9\s]/g, '').split(' ').slice(0, 12).join(' ');
+        // Clean prompt for URL safety
+        const safePrompt = prompt.replace(/[^a-zA-Z0-9\s,]/g, '').trim();
+        
         let styleKeywords = "";
         switch(style) {
-            case 'cinematic': styleKeywords = "cinematic lighting dramatic 8k highly detailed"; break;
-            case 'cyberpunk': styleKeywords = "cyberpunk neon futuristic purple orange tech"; break;
-            case 'corporate': styleKeywords = "modern office professional bright clean corporate"; break;
-            case 'studio': styleKeywords = "studio lighting product photography solid background minimal"; break;
-            default: styleKeywords = "high quality professional";
+            case 'cinematic': styleKeywords = "cinematic lighting, dramatic, 8k, highly detailed, photorealistic"; break;
+            case 'cyberpunk': styleKeywords = "cyberpunk city, neon lights, futuristic, purple and orange, high tech"; break;
+            case 'corporate': styleKeywords = "modern office, professional, bright, clean, corporate photography, success"; break;
+            case 'studio': styleKeywords = "studio lighting, product photography, solid background, minimal, sharp focus"; break;
+            case 'minimalist': styleKeywords = "minimalist, flat design, vector art, simple shapes, pastel colors"; break;
+            default: styleKeywords = "high quality, professional, award winning";
         }
-        const finalPrompt = `${safePrompt} ${styleKeywords}`;
+
+        const finalPrompt = `${safePrompt}, ${styleKeywords}`;
         return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1024&height=576&model=flux&nologo=true&seed=${seed}`;
     };
 
-    const regenerateCoverImage = () => {
+    const regenerateCoverImage = async () => {
         if (!form.title) return alert("Judul artikel kosong.");
-        const prompt = `${form.title}`;
+        
+        // Manual Trigger uses a simpler flow
+        const prompt = form.title; 
         setForm(prev => ({
             ...prev,
             imagePreview: getAIImageUrl(prompt, genConfig.imageStyle)
         }));
     };
 
-    // --- AI: STEP 1 - TOPIC RESEARCH (UPDATED) ---
+    // --- AI STEP 1: RESEARCH ---
     const researchKeywords = async () => {
         setLoading(prev => ({ ...prev, researching: true }));
         try {
@@ -186,7 +212,6 @@ const useArticleManager = (
 
             const ai = new GoogleGenAI({ apiKey });
             
-            // Context from presets
             const contextTopics = selectedPresets.length > 0 
                 ? selectedPresets.join(', ') 
                 : "Bisnis UMKM, Mesin Kasir, dan Manajemen Toko";
@@ -217,57 +242,39 @@ const useArticleManager = (
         }
     };
 
-    // --- AI: STEP 2 - SELECT TOPIC (Simplified) ---
     const selectTopic = (keywordData: KeywordData) => {
         setSelectedKeyword(keywordData);
         setForm(prev => ({ ...prev, title: keywordData.keyword }));
-        setAiStep(2); // Jump directly to Config/Generation
+        setAiStep(2); 
     };
 
-    // --- AI: STEP 3 - CONTENT GENERATION ---
+    // --- AI STEP 3: SEQUENTIAL GENERATION (ARTICLE FIRST -> THEN IMAGE) ---
     const generatePillarContent = async () => {
         if (!form.title) return alert("Pilih judul terlebih dahulu.");
         
         setLoading(prev => ({ ...prev, generatingContent: true }));
+        setProgress({ percent: 10, message: 'Menyiapkan Konteks AI...' });
+
         try {
             await ensureAPIKey();
             const apiKey = getSmartApiKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
-            // --- 1. METADATA ---
-            const metaPrompt = `
-            Role: Editor.
-            Task: Generate metadata for: "${form.title}".
-            Language: Indonesian.
-            Output JSON: { "excerpt": "Summary 150 chars", "category": "Business/Tech/Tips", "author": "Amin Maghfuri", "image_search_query": "English visual description" }
-            `;
+            // --- PHASE 1: GENERATE ARTICLE CONTENT ---
+            setProgress({ percent: 30, message: 'Menulis Artikel (Drafting)...' });
             
-            const metaResponse = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview', 
-                contents: metaPrompt,
-                config: { responseMimeType: "application/json" }
-            });
-            
-            let metaData = { excerpt: "", category: "Business", author: "Admin", image_search_query: "business" };
-            try { 
-                const metaText = metaResponse.text?.replace(/```json|```/g, '').trim() || '{}';
-                metaData = JSON.parse(metaText); 
-            } catch(e) { console.warn("Meta parse failed"); }
-
-            // --- 2. CONTENT ---
             const contentPrompt = `
-            Role: Expert Business Consultant (Amin Maghfuri).
-            Task: Write a COMPREHENSIVE ARTICLE about: "${form.title}"
+            Role: Expert Business Consultant & Copywriter (Indonesian Market).
+            Task: Write a COMPREHENSIVE ARTICLE based on title: "${form.title}"
             
-            INSTRUCTIONS:
-            1. **Tone**: Authoritative, Empathetic, Actionable (Indonesian).
-            2. **Structure**: 
-               - # Title
-               - Intro (Hook)
-               - Core Concepts
-               - Practical Steps (Bullets)
-               - Conclusion
-            3. **Length**: Deep Dive.
+            STRUCTURE:
+            1. **Headline**: # ${form.title}
+            2. **Intro**: Hook the reader (Problem/Solution).
+            3. **Body**: 3-5 Subheadings (H2) with deep explanation. Use bullet points.
+            4. **Conclusion**: Summary and Call to Action.
+            
+            TONE: Professional, Empathetic, Actionable.
+            FORMAT: Markdown.
             `;
 
             const contentResponse = await ai.models.generateContent({ 
@@ -276,30 +283,74 @@ const useArticleManager = (
                 config: { maxOutputTokens: 8192 }
             });
             
-            const contentText = contentResponse.text || '# Error generating content.';
+            const generatedContent = contentResponse.text || '# Error generating content.';
+            
+            // --- PHASE 2: GENERATE METADATA & IMAGE PROMPT (BASED ON CONTENT) ---
+            setProgress({ percent: 60, message: 'Menganalisa Visual & Meta...' });
+
+            const analysisPrompt = `
+            Based on this article content:
+            "${generatedContent.substring(0, 1000)}..." (truncated)
+
+            Task: 
+            1. Create a 150-char excerpt/summary.
+            2. Determine the best Category.
+            3. Create a **HIGHLY DETAILED** English image prompt for the cover image that represents the essence of this article. Describe the subject, lighting, and mood.
+
+            OUTPUT JSON:
+            { "excerpt": "...", "category": "...", "image_prompt": "..." }
+            `;
+
+            const metaResponse = await ai.models.generateContent({
+                model: 'gemini-3-flash-preview',
+                contents: analysisPrompt,
+                config: { responseMimeType: "application/json" }
+            });
+
+            let metaData = { excerpt: "", category: "Business", image_prompt: form.title };
+            try {
+                const metaText = metaResponse.text?.replace(/```json|```/g, '').trim() || '{}';
+                metaData = JSON.parse(metaText);
+            } catch (e) { console.warn("Meta parse failed, falling back."); }
+
+            // --- PHASE 3: GENERATE IMAGE (USING CONTEXTUAL PROMPT) ---
+            setProgress({ percent: 80, message: 'Merender Gambar (AI Vision)...' });
+            
+            // Use the AI-generated specific prompt OR fallback to title if empty
+            const visualPrompt = metaData.image_prompt || form.title;
+            const generatedImageUrl = genConfig.autoImage 
+                ? getAIImageUrl(visualPrompt, genConfig.imageStyle) 
+                : form.imagePreview;
+
+            // --- PHASE 4: FINALIZE ---
+            setProgress({ percent: 100, message: 'Selesai!' });
+            
+            // Small delay to let user see 100%
+            await new Promise(r => setTimeout(r, 500));
 
             setForm(prev => ({
                 ...prev,
-                content: contentText,
+                content: generatedContent,
                 excerpt: metaData.excerpt || prev.excerpt,
                 category: genConfig.autoCategory ? metaData.category : prev.category,
-                author: genConfig.autoAuthor ? metaData.author : prev.author,
-                readTime: "10 min read",
-                imagePreview: genConfig.autoImage 
-                    ? getAIImageUrl(metaData.image_search_query || `${form.title}`, genConfig.imageStyle) 
-                    : prev.imagePreview,
+                author: genConfig.autoAuthor ? "Amin Maghfuri" : prev.author,
+                readTime: "5 min read", // Simplified estimate
+                imagePreview: generatedImageUrl,
                 status: 'draft' 
             }));
 
             setAiStep(3); // Done
+
         } catch (e: any) {
             console.error(e);
-            alert(`Gagal generate konten: ${e.message}`);
+            alert(`Gagal generate: ${e.message}`);
+            setProgress({ percent: 0, message: 'Gagal' });
         } finally {
             setLoading(prev => ({ ...prev, generatingContent: false }));
         }
     };
 
+    // --- SUBMIT ---
     const handleSubmit = async () => {
         if (!form.title || !form.content) return alert("Judul dan Konten wajib diisi.");
         
@@ -331,23 +382,17 @@ const useArticleManager = (
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null
             };
 
-            const localUpdateData = {
-                title: form.title,
-                excerpt: form.excerpt,
-                content: form.content,
-                category: form.category,
-                author: form.author,
-                readTime: form.readTime,
-                image: finalImageUrl,
-                status: form.status,
-                scheduled_for: form.status === 'scheduled' ? form.scheduled_for : undefined,
-                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) 
-            };
-
             if (form.id) {
                 const existing = articles.find(a => a.id === form.id);
                 if (existing) {
-                    const updatedItem: Article = { ...existing, ...localUpdateData, id: form.id };
+                    // Update local state immediately
+                    const updatedItem: Article = { 
+                        ...existing, 
+                        ...dbData, 
+                        image: finalImageUrl, // Map back for frontend
+                        readTime: form.readTime,
+                        date: existing.date 
+                    };
                     setArticles(articles.map(a => a.id === form.id ? updatedItem : a));
                 }
                 if (supabase) {
@@ -356,7 +401,14 @@ const useArticleManager = (
                 }
             } else {
                 const newId = Date.now();
-                const newItem: Article = { ...localUpdateData, id: newId, tags: [] };
+                const newItem: Article = { 
+                    ...dbData, 
+                    id: newId, 
+                    image: finalImageUrl,
+                    readTime: form.readTime,
+                    date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+                    tags: [] 
+                };
                 setArticles([newItem, ...articles]);
                 if (supabase) {
                      const { error } = await supabase.from('articles').insert([dbData]);
@@ -387,6 +439,7 @@ const useArticleManager = (
     return {
         form, setForm,
         loading,
+        progress,
         aiState: { step: aiStep, setStep: setAiStep, keywords, selectedKeyword, genConfig, setGenConfig, selectedPresets, togglePreset },
         actions: { researchKeywords, selectTopic, generatePillarContent, handleSubmit, handleEditClick, resetForm, deleteItem, regenerateCoverImage },
         listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
@@ -400,7 +453,7 @@ export const AdminArticles = ({
   articles: Article[], 
   setArticles: (a: Article[]) => void 
 }) => {
-  const { form, setForm, loading, aiState, actions, listData } = useArticleManager(articles, setArticles);
+  const { form, setForm, loading, progress, aiState, actions, listData } = useArticleManager(articles, setArticles);
 
   return (
     <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b">
@@ -479,7 +532,7 @@ export const AdminArticles = ({
             {/* AI WIZARD */}
             {!form.id && aiState.step < 3 && (
                 <div className="space-y-6">
-                    {/* STEP 1: PRESET CATEGORIES (NEW) */}
+                    {/* STEP 1: PRESET CATEGORIES */}
                     <div className={`transition-all ${aiState.step > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
                         <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-3">Step 1: Pilih Fokus Topik</label>
                         <div className="grid grid-cols-2 gap-2 mb-4">
@@ -507,7 +560,7 @@ export const AdminArticles = ({
                         </Button>
                     </div>
 
-                    {/* STEP 2: SELECT TOPIC/TITLE (Combined) */}
+                    {/* STEP 2: SELECT TOPIC/TITLE */}
                     {aiState.step >= 1 && (
                         <div className={`transition-all ${aiState.step > 1 ? 'opacity-50 pointer-events-none' : 'animate-fade-in'}`}>
                             <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 2: Pilih Judul/Topik</label>
@@ -531,9 +584,9 @@ export const AdminArticles = ({
                             <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 3: Konfigurasi & Generate</label>
                             
                             <div className="mb-3">
-                                <label className="text-[10px] text-gray-500 mb-1 block">Gaya Gambar</label>
+                                <label className="text-[10px] text-gray-500 mb-1 block">Gaya Gambar (Visual Style)</label>
                                 <div className="grid grid-cols-2 gap-1">
-                                    {(['cinematic', 'cyberpunk', 'corporate', 'studio'] as const).map((style) => (
+                                    {(['cinematic', 'cyberpunk', 'corporate', 'studio', 'minimalist'] as const).map((style) => (
                                         <button 
                                             key={style}
                                             onClick={() => aiState.setGenConfig({...aiState.genConfig, imageStyle: style})}
@@ -545,9 +598,13 @@ export const AdminArticles = ({
                                 </div>
                             </div>
 
-                            <Button onClick={actions.generatePillarContent} disabled={loading.generatingContent} className="w-full py-3 text-xs bg-gradient-to-r from-brand-orange to-red-500 hover:from-brand-glow hover:to-red-400 shadow-action">
-                                {loading.generatingContent ? <LoadingSpinner size={14} /> : <><Sparkles size={14}/> GENERATE FULL ARTICLE</>}
-                            </Button>
+                            {loading.generatingContent ? (
+                                <GenerationProgress percent={progress.percent} message={progress.message} />
+                            ) : (
+                                <Button onClick={actions.generatePillarContent} disabled={loading.generatingContent} className="w-full py-3 text-xs bg-gradient-to-r from-brand-orange to-red-500 hover:from-brand-glow hover:to-red-400 shadow-action">
+                                    <Sparkles size={14}/> GENERATE FULL ARTICLE (SEQUENTIAL)
+                                </Button>
+                            )}
                         </div>
                     )}
                 </div>
