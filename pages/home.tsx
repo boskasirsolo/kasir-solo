@@ -1,8 +1,88 @@
 
 import React from 'react';
-import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink } from 'lucide-react';
+import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink, User } from 'lucide-react';
 import { SiteConfig, GalleryItem, Testimonial } from '../types';
 import { Button, Card, Badge } from '../components/ui';
+
+// Helper to find matching testimonial or return placeholder
+const getTestimonialForProject = (projectTitle: string, testimonials: Testimonial[]) => {
+  return testimonials.find(t => 
+    projectTitle.toLowerCase().includes(t.business_name.toLowerCase()) || 
+    t.business_name.toLowerCase().includes(projectTitle.toLowerCase())
+  ) || {
+    // Placeholder data if no specific testimonial found
+    client_name: "Klien Prioritas",
+    content: "Pelayanan sangat memuaskan, tim teknis responsif dan sistem berjalan lancar sesuai kebutuhan bisnis kami.",
+    rating: 5,
+    image_url: "" 
+  };
+};
+
+// Component for the "Combined Card" (Project + Testimonial)
+const CombinedCard = ({ item, testimonials, setPage }: { item: GalleryItem, testimonials: Testimonial[], setPage: (p: string) => void }) => {
+  const testimonial = getTestimonialForProject(item.title, testimonials);
+  
+  return (
+    <div 
+      onClick={() => setPage('gallery')}
+      className="w-[350px] md:w-[450px] shrink-0 flex flex-col gap-4 group/container cursor-pointer"
+    >
+      {/* TOP: Project Card */}
+      <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 group-hover/container:border-brand-orange transition-all shadow-lg group-hover/container:shadow-neon">
+          <img 
+            src={item.image_url} 
+            alt={item.title} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover/container:scale-105" 
+          />
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
+          
+          {/* Content Overlay */}
+          <div className="absolute bottom-5 left-5 right-5">
+              <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-3 border ${item.category_type === 'physical' ? 'bg-brand-orange text-white border-brand-orange' : 'bg-blue-600 text-white border-blue-500'}`}>
+                {item.category_type === 'physical' ? 'Hardware' : 'Software'}
+              </span>
+              <h3 className="text-xl font-bold text-white leading-tight mb-1 truncate drop-shadow-md">
+                {item.title}
+              </h3>
+              <p className="text-gray-300 text-xs truncate opacity-80">
+                {item.client_url || "Project Installation"}
+              </p>
+          </div>
+      </div>
+
+      {/* BOTTOM: Testimonial Card */}
+      <div className="bg-brand-card/80 backdrop-blur-sm border border-white/5 rounded-xl p-5 relative mt-auto hover:bg-brand-card transition-colors">
+          {/* Quote Icon */}
+          <div className="absolute -top-3 left-6 bg-brand-dark p-1 rounded-full border border-white/10 text-brand-orange">
+             <Quote size={16} fill="currentColor" />
+          </div>
+          
+          <p className="text-gray-400 text-sm italic mb-4 leading-relaxed line-clamp-2">
+             "{testimonial.content}"
+          </p>
+          
+          <div className="flex items-center gap-3 pt-3 border-t border-white/5">
+              <div className="w-8 h-8 rounded-full bg-brand-dark border border-brand-orange/30 overflow-hidden flex items-center justify-center shrink-0">
+                 {testimonial.image_url ? (
+                   <img src={testimonial.image_url} className="w-full h-full object-cover" />
+                 ) : (
+                   <User size={14} className="text-gray-500"/>
+                 )}
+              </div>
+              <div>
+                 <p className="text-white text-xs font-bold">{testimonial.client_name}</p>
+                 <div className="flex gap-0.5 mt-0.5">
+                    {[...Array(5)].map((_,i) => (
+                      <Star key={i} size={8} className={`${i < testimonial.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-700'}`} />
+                    ))}
+                 </div>
+              </div>
+          </div>
+      </div>
+    </div>
+  );
+};
 
 export const HomePage = ({ 
   setPage, 
@@ -16,12 +96,9 @@ export const HomePage = ({
   testimonials: Testimonial[]
 }) => {
   
-  // Logic: Get 4 Latest Gallery Items
-  const featuredGallery = gallery.slice(0, 4);
+  // Logic: Get 6 Latest Gallery Items for Marquee
+  const featuredGallery = gallery.slice(0, 6);
   
-  // Logic: Get Featured Testimonials (Limit 3)
-  const featuredTestimonials = testimonials.filter(t => t.is_featured).slice(0, 3);
-
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
@@ -75,114 +152,49 @@ export const HomePage = ({
         </div>
       </section>
 
-      {/* --- NEW SECTION: GALLERY HIGHLIGHTS --- */}
+      {/* --- REVISED SECTION: GALLERY & TESTIMONIALS (SLOW MARQUEE) --- */}
       {featuredGallery.length > 0 && (
-        <section className="py-20 bg-brand-dark border-t border-white/5 relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
-           
-           <div className="container mx-auto px-4 relative z-10">
-              <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-                  <div>
-                    <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">
+        <section className="py-24 bg-brand-black border-t border-white/5 relative overflow-hidden">
+           {/* Header Layout */}
+           <div className="container mx-auto px-4 relative z-10 mb-12">
+              <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+                  <div className="max-w-xl">
+                    <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
                       Karya & Instalasi <span className="text-brand-orange">Terbaru</span>
                     </h2>
-                    <p className="text-gray-400">Bukti nyata dedikasi kami dalam mendigitalisasi UMKM.</p>
+                    <p className="text-gray-400 text-base">Bukti nyata dedikasi kami dalam mendigitalisasi UMKM Indonesia dengan standar kualitas terbaik.</p>
                   </div>
-                  <Button variant="outline" onClick={() => setPage('gallery')} className="hidden md:flex">
-                    Lihat Semua Portfolio <ArrowRight size={16} />
-                  </Button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                 {featuredGallery.map((item) => (
-                   <React.Fragment key={item.id}>
-                     <div 
-                        onClick={() => setPage('gallery')}
-                        className="group relative h-80 rounded-2xl overflow-hidden cursor-pointer border border-white/10 hover:border-brand-orange transition-all hover:shadow-neon"
-                     >
-                        <img 
-                          src={item.image_url} 
-                          alt={item.title} 
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
-                        
-                        <div className="absolute bottom-0 left-0 p-6 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                           <Badge className="mb-3 bg-brand-orange/20 text-brand-orange border-brand-orange/40 backdrop-blur-md">
-                              {item.category_type === 'physical' ? 'Hardware' : 'Software'}
-                           </Badge>
-                           <h3 className="text-lg font-bold text-white leading-tight mb-1 group-hover:text-brand-orange transition-colors">
-                              {item.title}
-                           </h3>
-                           <div className="h-0 group-hover:h-auto overflow-hidden transition-all duration-300">
-                              <p className="text-gray-400 text-xs mt-2 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
-                                {item.description || "Klik untuk melihat detail project ini."}
-                              </p>
-                           </div>
-                        </div>
-                     </div>
-                   </React.Fragment>
-                 ))}
-              </div>
-
-              <div className="md:hidden text-center">
-                 <Button variant="outline" onClick={() => setPage('gallery')} className="w-full">
-                    Lihat Semua Portfolio <ArrowRight size={16} />
+                  {/* Styled Orange Button (MATCHING HERO BUTTON STYLE) */}
+                  <Button 
+                    onClick={() => setPage('gallery')}
+                    className="px-8 py-4 text-base font-bold shadow-action hover:shadow-action-strong transition-transform hover:-translate-y-1"
+                  >
+                    LIHAT SEMUA PORTFOLIO <ArrowRight size={20} />
                   </Button>
               </div>
            </div>
-        </section>
-      )}
 
-      {/* --- NEW SECTION: TESTIMONIALS (Wall of Love) --- */}
-      {featuredTestimonials.length > 0 && (
-        <section className="py-20 bg-brand-card border-t border-white/5 relative">
-           <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/20 text-brand-orange text-xs font-bold uppercase tracking-widest mb-4">
-                    <Star size={12} fill="currentColor" /> Terpercaya
-                 </div>
-                 <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4">
-                    Kata Mitra <span className="text-brand-orange">Bisnis Kami</span>
-                 </h2>
-                 <p className="text-gray-400 max-w-2xl mx-auto">
-                    Kepuasan pelanggan adalah parameter keberhasilan utama kami.
-                 </p>
-              </div>
+           {/* Infinite Scroll Marquee */}
+           <div className="relative w-full overflow-hidden group">
+             {/* Gradient Fade Edges */}
+             <div className="absolute left-0 top-0 bottom-0 w-12 md:w-40 bg-gradient-to-r from-brand-black to-transparent z-20 pointer-events-none"></div>
+             <div className="absolute right-0 top-0 bottom-0 w-12 md:w-40 bg-gradient-to-l from-brand-black to-transparent z-20 pointer-events-none"></div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                 {featuredTestimonials.map((testi) => (
-                    <React.Fragment key={testi.id}>
-                       <div className="bg-brand-dark p-8 rounded-3xl border border-white/5 relative group hover:-translate-y-2 transition-transform duration-300 hover:border-brand-orange/30 hover:shadow-neon">
-                          <Quote className="absolute top-8 right-8 text-white/5 group-hover:text-brand-orange/10 transition-colors w-16 h-16 transform rotate-12" />
-                          
-                          <div className="flex items-center gap-4 mb-6 relative z-10">
-                             <div className="w-14 h-14 rounded-full border-2 border-brand-orange/20 p-1 group-hover:border-brand-orange transition-colors">
-                                <img 
-                                  src={testi.image_url || "https://via.placeholder.com/150"} 
-                                  alt={testi.client_name} 
-                                  className="w-full h-full rounded-full object-cover" 
-                                />
-                             </div>
-                             <div>
-                                <h4 className="text-white font-bold text-lg">{testi.client_name}</h4>
-                                <p className="text-brand-orange text-xs font-bold uppercase tracking-wider">{testi.business_name}</p>
-                             </div>
-                          </div>
-
-                          <div className="flex gap-1 mb-4">
-                             {[...Array(5)].map((_, i) => (
-                                <Star key={i} size={14} className={`${i < testi.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-700'}`} />
-                             ))}
-                          </div>
-
-                          <p className="text-gray-300 italic leading-relaxed relative z-10">
-                             "{testi.content}"
-                          </p>
-                       </div>
-                    </React.Fragment>
-                 ))}
-              </div>
+             <div className="flex w-full gap-8">
+                {/* Loop 1 */}
+                <div className="flex min-w-full shrink-0 animate-marquee gap-8 justify-around items-stretch py-4">
+                  {featuredGallery.map((item) => (
+                    <CombinedCard key={`orig-${item.id}`} item={item} testimonials={testimonials} setPage={setPage} />
+                  ))}
+                </div>
+                
+                {/* Loop 2 (Clone for Seamless Effect) */}
+                <div className="flex min-w-full shrink-0 animate-marquee gap-8 justify-around items-stretch py-4" aria-hidden="true">
+                  {featuredGallery.map((item) => (
+                    <CombinedCard key={`clone-${item.id}`} item={item} testimonials={testimonials} setPage={setPage} />
+                  ))}
+                </div>
+             </div>
            </div>
         </section>
       )}
