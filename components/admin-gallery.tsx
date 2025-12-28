@@ -129,7 +129,15 @@ const useIntegratedGalleryManager = (
         if (!form.title || !form.shortDesc) return alert("Isi Judul & Context dulu.");
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
-            await ensureAPIKey(); 
+            // Check for API Key explicitly
+            if (!process.env.API_KEY) {
+                // Try to use window.aistudio flow if available, otherwise warn user
+                const hasKey = await ensureAPIKey();
+                if (!hasKey && !process.env.API_KEY) {
+                    throw new Error("API Key tidak ditemukan. Pastikan 'process.env.API_KEY' diset atau hubungkan via Google AI Studio.");
+                }
+            }
+
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             
             // Generate Project Description
@@ -155,7 +163,10 @@ const useIntegratedGalleryManager = (
                  setTestiForm(prev => ({...prev, content: testiResponse.text?.trim() || ''}));
             }
 
-        } catch (e) { console.error(e); alert("AI Error."); } 
+        } catch (e: any) { 
+            console.error(e); 
+            alert(`AI Error: ${e.message || "Gagal menghubungi Gemini AI."}`); 
+        } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };
 
@@ -342,8 +353,9 @@ export const AdminGallery = ({
 
       {/* COLUMN 2: EDITORS (30%) */}
       <div className="w-[30%] border-r border-white/5 flex flex-col bg-brand-dark">
-         {/* Top Half: Project Editor */}
-         <div className="h-1/2 overflow-y-auto p-4 border-b border-white/10 custom-scrollbar">
+         
+         {/* Top Half: Project Editor (65% Height) */}
+         <div className="h-[65%] overflow-y-auto p-4 border-b border-white/10 custom-scrollbar">
              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2"><Edit size={12}/> Project Details</h4>
              
              <div className="space-y-3">
@@ -390,9 +402,9 @@ export const AdminGallery = ({
              </div>
          </div>
 
-         {/* Bottom Half: Testimonial Editor */}
-         <div className="h-1/2 overflow-y-auto p-4 bg-black/40 custom-scrollbar flex flex-col">
-             <div className="flex justify-between items-center mb-3">
+         {/* Bottom Half: Testimonial Editor (35% Height) */}
+         <div className="h-[35%] overflow-y-auto p-4 bg-black/40 custom-scrollbar flex flex-col border-t border-white/5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
+             <div className="flex justify-between items-center mb-2">
                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Quote size={12}/> Testimoni</h4>
                  <label className="flex items-center gap-2 cursor-pointer">
                      <span className="text-[10px] text-gray-400">Include?</span>
@@ -401,28 +413,28 @@ export const AdminGallery = ({
              </div>
              
              {testiForm.hasTestimonial ? (
-                 <div className="space-y-3 flex-grow">
+                 <div className="space-y-2 flex-grow">
                      <div className="flex gap-2 items-center">
                         <div className="w-8 h-8 rounded-full bg-brand-card border border-white/10 overflow-hidden relative group shrink-0">
                             {testiForm.imagePreview ? <img src={testiForm.imagePreview} className="w-full h-full object-cover"/> : <User size={16} className="text-gray-500 m-auto mt-2"/>}
                             <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setTestiForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
                         </div>
-                        <Input value={testiForm.client_name} onChange={e => setTestiForm(p => ({...p, client_name: e.target.value}))} placeholder="Nama Klien" className="text-xs py-1 h-8" />
+                        <Input value={testiForm.client_name} onChange={e => setTestiForm(p => ({...p, client_name: e.target.value}))} placeholder="Nama Klien" className="text-xs py-1 h-7" />
                      </div>
                      <div className="flex gap-1">
                          {[1,2,3,4,5].map(s => (
-                             <Star key={s} size={12} className={`cursor-pointer ${s <= testiForm.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} onClick={() => setTestiForm(p => ({...p, rating: s}))} />
+                             <Star key={s} size={10} className={`cursor-pointer ${s <= testiForm.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} onClick={() => setTestiForm(p => ({...p, rating: s}))} />
                          ))}
                      </div>
-                     <TextArea value={testiForm.content} onChange={e => setTestiForm(p => ({...p, content: e.target.value}))} placeholder="Isi testimoni..." className="text-xs h-20 bg-brand-card" />
+                     <TextArea value={testiForm.content} onChange={e => setTestiForm(p => ({...p, content: e.target.value}))} placeholder="Isi testimoni..." className="text-xs h-16 bg-brand-card" />
                  </div>
              ) : (
-                 <div className="flex-grow flex items-center justify-center text-gray-600 text-xs italic">
+                 <div className="flex-grow flex items-center justify-center text-gray-600 text-xs italic bg-white/5 rounded border border-white/5 border-dashed">
                      Tanpa testimoni khusus (Default Verified)
                  </div>
              )}
 
-             <div className="mt-3 pt-3 border-t border-white/10">
+             <div className="mt-2 pt-2 border-t border-white/10">
                  <Button onClick={handleSubmit} disabled={loadingState.uploading} className="w-full py-2 text-xs">
                     {loadingState.uploading ? <LoadingSpinner /> : <><Save size={14} /> SIMPAN SEMUA</>}
                  </Button>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig, Testimonial } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
@@ -101,6 +101,15 @@ export const AdminDashboard = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'store' | 'gallery' | 'settings'>('store');
   const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog'>('orders');
+  const [showConnectAI, setShowConnectAI] = useState(false);
+
+  useEffect(() => {
+    // Only show 'Connect AI' if in Google IDX environment
+    // @ts-ignore
+    if (typeof window !== 'undefined' && window.aistudio) {
+        setShowConnectAI(true);
+    }
+  }, []);
 
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
     <button 
@@ -122,8 +131,6 @@ export const AdminDashboard = ({
           // @ts-ignore
           await window.aistudio.openSelectKey();
           alert("Koneksi API Key diperbarui.");
-      } else {
-          alert("Fitur ini hanya tersedia di environment Google AI Studio.");
       }
   };
 
@@ -144,13 +151,15 @@ export const AdminDashboard = ({
           
           <div className="w-px h-8 bg-white/10 hidden md:block"></div>
           
-          <button 
-             onClick={connectAI}
-             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500 hover:text-white transition-colors"
-             title="Hubungkan ulang API Key Gemini"
-          >
-             <Zap size={16} /> <span className="hidden md:inline">Connect AI</span>
-          </button>
+          {showConnectAI && (
+            <button 
+               onClick={connectAI}
+               className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500 hover:text-white transition-colors"
+               title="Hubungkan ulang API Key Gemini (IDX Only)"
+            >
+               <Zap size={16} /> <span className="hidden md:inline">Connect AI</span>
+            </button>
+          )}
 
           <button 
             onClick={onLogout}
