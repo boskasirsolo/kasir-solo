@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS } from './utils';
 import { Product, Article, GalleryItem, SiteConfig, Testimonial } from './types';
 import { CartProvider } from './context/cart-context';
@@ -47,6 +47,7 @@ const AppContent = () => {
   // --- Router Bridge ---
   // Convert URL path to a simplified "Page ID" string for Layout props
   const getCurrentPageId = () => {
+    // HashRouter puts path in hash, but useLocation returns the path portion
     const path = location.pathname.replace('/', '') || 'home';
     return path;
   };
@@ -141,9 +142,9 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <BrowserRouter>
+  <HashRouter>
     <AppContent />
-  </BrowserRouter>
+  </HashRouter>
 );
 
 const root = createRoot(document.getElementById('root')!);
