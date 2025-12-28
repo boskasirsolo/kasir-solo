@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
-import { Send, Sparkles, Eraser, ShieldCheck, Terminal, ImagePlus } from 'lucide-react';
+import { Send, Sparkles, Eraser, ShieldCheck, Terminal, ImagePlus, UserCircle } from 'lucide-react';
 import { ChatBubble, TypingIndicator, ImagePreview } from './atoms';
 import { Message } from './logic';
 
@@ -22,9 +22,9 @@ export const ChatHeader = ({
         <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
           isAdmin 
             ? 'bg-gradient-to-tr from-red-600 to-orange-600' 
-            : 'bg-gradient-to-tr from-teal-600 to-teal-400'
+            : 'bg-gradient-to-tr from-brand-orange to-red-500'
         }`}>
-          {isAdmin ? <Terminal className="text-white w-5 h-5" /> : <Sparkles className="text-white w-5 h-5 animate-pulse" />}
+          {isAdmin ? <Terminal className="text-white w-5 h-5" /> : <UserCircle className="text-white w-6 h-6" />}
         </div>
         <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-brand-dark rounded-full ${
           isAdmin ? 'bg-blue-400 animate-pulse' : 'bg-green-500'
@@ -32,17 +32,17 @@ export const ChatHeader = ({
       </div>
       <div>
         <h3 className="font-display font-bold text-white text-base flex items-center gap-2">
-          {isAdmin ? 'SIBOS PRO' : 'SIBOS'} 
+          {isAdmin ? 'ADMIN CONTROL' : 'Mas Amin & Tim'} 
           <span className={`text-[9px] px-1.5 py-0.5 rounded border ${
             isAdmin 
               ? 'bg-red-500/20 text-red-200 border-red-500/40' 
-              : 'bg-teal-500/20 text-teal-400 border-teal-500/30'
+              : 'bg-green-500/20 text-green-400 border-green-500/30'
           }`}>
-            {isAdmin ? 'ADMIN GOD MODE' : 'AI ASSISTANT'}
+            {isAdmin ? 'GOD MODE' : 'ONLINE'}
           </span>
         </h3>
         <p className="text-[10px] text-gray-400">
-          {isAdmin ? 'Private Super Assistant' : 'Asisten Pintar Mesin Kasir Solo'}
+          {isAdmin ? 'Private Super Assistant' : 'Owner & Technical Support'}
         </p>
       </div>
     </div>
@@ -154,7 +154,7 @@ export const ChatInputArea = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={selectedImage ? "Tambahkan keterangan..." : "Tanya sesuatu..."}
+            placeholder={selectedImage ? "Tambahkan keterangan..." : "Konsultasi langsung..."}
             disabled={disabled}
             className="w-full bg-transparent text-sm text-white placeholder-gray-500 resize-none outline-none max-h-24 py-3 px-3 custom-scrollbar disabled:opacity-50"
             rows={1}
@@ -174,7 +174,7 @@ export const ChatInputArea = ({
       </div>
       
       <div className="text-center mt-2">
-        <p className="text-[9px] text-gray-600">SIBOS Mode: {selectedImage ? 'Vision Active' : 'Text Active'}</p>
+        <p className="text-[9px] text-gray-600">Terhubung langsung dengan Manajemen PT Mesin Kasir Solo</p>
       </div>
     </div>
   );

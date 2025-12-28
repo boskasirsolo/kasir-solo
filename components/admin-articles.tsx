@@ -144,7 +144,10 @@ const useArticleManager = (
 
             const prompt = `
             Based on keyword: "${keywordData.keyword}"
-            Generate 3 viral, click-worthy, SEO-optimized Article Titles (Long-tail).
+            Act as Amin Maghfuri (Business Owner & Tech Expert).
+            Generate 3 viral, click-worthy Article Titles.
+            Style: Sharing experiences, secrets, or direct tips to fellow business owners.
+            Example: "Rahasia Saya Mengelola...", "Jangan Beli Mesin Kasir Sebelum...", "Cara Tim Kami..."
             Target Audience: Business Owners (UMKM) in Indonesia.
             Language: Indonesian.
             
@@ -176,32 +179,34 @@ const useArticleManager = (
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
             const prompt = `
-            Role: Expert Business Consultant & Tech Reviewer (Persona: "SIBOS Expert").
-            Task: Write a PILLAR ARTICLE (Comprehensive, Long-form).
+            Role: Amin Maghfuri (Founder PT Mesin Kasir Solo).
+            Tone: Experienced, Personal, 'Street-smart', Encouraging.
+            Task: Write a PILLAR ARTICLE based on the title.
             Title: "${form.title}"
             Keyword: "${selectedKeyword?.keyword || form.title}"
             
             CONFIG:
             - Auto Category: ${genConfig.autoCategory}
-            - Auto Author: ${genConfig.autoAuthor}
+            - Auto Author: ${genConfig.autoAuthor} (Set to 'Amin Maghfuri' or 'Tim Teknis')
+            
+            WRITING STYLE GUIDELINES:
+            1. **Perspective**: Use "Saya" (I) or "Kami" (We/Team). Share personal insights as a business owner.
+            2. **Empathy**: Acknowledge the struggles of managing a shop/business.
+            3. **Authenticity**: Avoid robotic AI language. Use natural Indonesian business terms (Omzet, HPP, Boncos, Cuan).
+            4. **Actionable**: Don't just explain 'what', explain 'how'. Give tips that can be applied immediately.
             
             STRUCTURE:
-            1. **Hook (Intro)**: Empathize with owner problems.
-            2. **Deep Dive (Body)**: Use H2 (##) and H3 (###). Min 4-5 sections.
-            3. **Actionable Tips**: Bullet points.
-            4. **Conclusion**: Strong Call to Action.
-            
-            STYLE:
-            - Language: Indonesian (Professional but flowing).
-            - Formatting: Markdown.
-            - Length: Minimum 800 words (Pillar Content).
+            1. **Hook (Intro)**: Start with a relatable problem or a personal story about the topic.
+            2. **The Core (Body)**: Use H2 (##) for main points. Break down complex tech into simple benefits.
+            3. **Real World Application**: Mention "Di lapangan, sering terjadi..." or "Klien kami biasanya..."
+            4. **Conclusion**: A warm closing encouraging them to upgrade their system or mindset.
             
             OUTPUT JSON ONLY:
             {
                "content": "# Title... (markdown body)",
                "excerpt": "Short summary (max 150 chars)",
                "category": "Suggested Category",
-               "author": "Suggested Author Name (e.g., Amin Maghfuri / Tim SIBOS)",
+               "author": "Amin Maghfuri",
                "image_search_query": "English keyword for Unsplash image search"
             }
             `;
@@ -234,19 +239,21 @@ const useArticleManager = (
 
     const handleSubmit = async () => {
         if (!form.title || !form.content) return alert("Judul dan Konten wajib diisi.");
-        if (!CONFIG.CLOUDINARY_CLOUD_NAME) return alert("Config Cloudinary Missing");
-
+        
         setLoading(prev => ({ ...prev, uploading: true }));
         try {
             let finalImageUrl = form.imagePreview || 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=1200';
 
             if (form.uploadFile) {
+                if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Konfigurasi Cloudinary belum diset.");
+                
                 const formData = new FormData();
                 formData.append('file', form.uploadFile);
                 formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.secure_url) finalImageUrl = data.secure_url;
+                else throw new Error("Gagal upload gambar.");
             }
 
             // Data structure for Database (Snake Case)
@@ -315,8 +322,15 @@ const useArticleManager = (
             }
             resetForm();
             alert(`Artikel berhasil disimpan sebagai ${form.status.toUpperCase()}!`);
-        } catch (e) { console.error(e); alert("Gagal menyimpan."); }
-        finally { setLoading(prev => ({ ...prev, uploading: false })); }
+        } catch (e: any) { 
+            console.error(e); 
+            // Enhanced error message
+            let msg = e.message || JSON.stringify(e);
+            if (msg.includes('column')) msg += "\n(TIP: Kemungkinan kolom 'status' atau 'scheduled_for' belum ada di database.)";
+            alert(`Gagal menyimpan:\n${msg}`); 
+        } finally { 
+            setLoading(prev => ({ ...prev, uploading: false })); 
+        }
     };
 
     const deleteItem = async (id: number) => {
@@ -339,7 +353,7 @@ const useArticleManager = (
     };
 };
 
-// ... (Rest of the file remains unchanged, i.e., ArticleForm, ArticleList, AdminArticles)
+// ... (Rest of component remains same)
 const ArticleForm = ({ 
     form, setForm, loading, aiState, actions
 }: {

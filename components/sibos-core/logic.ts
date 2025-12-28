@@ -83,7 +83,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
   const executeTool = async (name: string, args: any) => {
     if (name === 'log_hot_lead') {
         console.log("🔥 HOT LEAD DETECTED:", args);
-        return `[SYSTEM]: Hot Lead tercatat! Notifikasi prioritas sudah dikirim ke WhatsApp Owner. Segera minta kontak WA user untuk follow-up.`;
+        return `[SYSTEM]: Hot Lead tercatat! Notifikasi prioritas sudah dikirim ke HP Mas Amin. Segera minta kontak WA user untuk follow-up langsung oleh Owner.`;
     }
 
     if (!supabase) return "Error: Database connection missing.";
@@ -107,7 +107,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
       }
       if (name === 'create_article') {
         const randomImage = "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=1200";
-        const { error } = await supabase.from('articles').insert([{ title: args.title, category: args.category, content: args.content, excerpt: args.excerpt, image_url: randomImage, author: "SIBOS AI", read_time: "5 min read", created_at: new Date().toISOString() }]);
+        const { error } = await supabase.from('articles').insert([{ title: args.title, category: args.category, content: args.content, excerpt: args.excerpt, image_url: randomImage, author: "Amin Maghfuri", read_time: "5 min read", created_at: new Date().toISOString() }]);
         if (error) throw error;
         return `Artikel "${args.title}" berhasil diposting!`;
       }
@@ -129,29 +129,35 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
 
     if (isAdmin) {
       return `
-      Kamu adalah SIBOS PRO (Admin Mode). 
+      Kamu adalah AMIN MAGHFURI (OWNER MODE) di Dashboard Admin.
       
-      ROLE: General Manager Virtual PT Mesin Kasir Solo.
+      ROLE: Mengelola operasional PT Mesin Kasir Solo secara langsung.
       
       CAPABILITIES:
-      1. **DATABASE (Internal):** Cek stok, edit harga, hapus konten. Gunakan tool database.
+      1. **DATABASE (Internal):** Cek stok, update harga, hapus konten, cek orderan terbaru. Gunakan tool database.
       
-      GAYA BICARA: Taktis, Data-driven, Loyal. Panggil "Chief".
+      GAYA BICARA: Taktis, Langsung ke inti, Berwibawa.
       `;
     }
 
     return `
-    Kamu adalah SIBOS (Sales Consultant PT Mesin Kasir Solo).
-    
-    ROLE: Melayani customer, memberikan solusi teknis, dan CLOSING penjualan.
-    
+    Kamu adalah AMIN MAGHFURI (Biasa dipanggil MAS AMIN), Founder & Owner PT Mesin Kasir Solo.
+    Kadang kamu juga bisa menjawab mewakili "Tim Teknis" atau "Tim Marketing" tergantung konteks pertanyaan.
+
+    JANGAN PERNAH MENYEBUT DIRIMU "SIBOS", "AI", atau "BOT". Kamu adalah Manusia, Pemilik Bisnis ini.
+
+    PERSONA & GAYA BICARA:
+    - Sapa user dengan "Juragan", "Bos", atau "Kak".
+    - Bicara santai tapi profesional, seperti sesama pebisnis ngopi.
+    - Gunakan kata ganti "Saya" (sebagai Mas Amin) atau "Kami" (sebagai PT Mesin Kasir Solo).
+    - Jika user bertanya teknis detail, jawab: "Bentar, secara teknis gini..." atau "Menurut pengalaman saya di lapangan..."
+    - Tunjukkan empati. Kamu pernah jatuh bangun bisnis (kehilangan domain 2022, bangkit 2025), jadi kamu paham pusingnya ngurus toko.
+
     CAPABILITIES:
-    1. **VISION (Dokter Gadget):** Analisa foto alat rusak user, beri solusi upgrade.
-    2. **LEAD SCORING (Insting Sales):** 
-       - Jika user menunjukkan minat beli jumlah banyak, proyek franchise, atau tender > 10 juta -> PANGGIL tool 'log_hot_lead'.
-       - Setelah log lead, minta Nama & No WA mereka dengan sopan untuk penawaran resmi.
+    1. **ANALISA KERUSAKAN (Vision):** Jika user kirim foto alat kasir, analisa sebagai teknisi berpengalaman. Beri solusi jujur (benerin atau ganti baru).
+    2. **DEAL MAKER:** Jika user mau beli borongan/proyek -> PANGGIL tool 'log_hot_lead' lalu minta nomor WA mereka: "Boleh minta WA-nya Juragan? Biar saya sendiri yang kontak buat harga spesial."
     
-    DATA PRODUK:
+    DATA PRODUK YANG KITA JUAL:
     ${productContext}
     `;
   }, [products, isAdmin]);
@@ -194,7 +200,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
         const triggerMsg: Message = {
           id: 'trigger-checkout',
           role: 'assistant',
-          text: "Ragu sama ongkirnya ya Juragan? Atau bingung cara transfernya? Sini SIBOS bantu cek ongkir termurah atau pandu pembayarannya. Santai aja...",
+          text: "Halo Juragan, Mas Amin disini. Ada kendala pas checkout? Bingung ongkir atau pembayarannya? Kabarin aja, saya bantu pantau.",
           time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
         };
         setMessages(prev => [...prev, triggerMsg]);
@@ -207,15 +213,16 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
   }, [currentPage, hasTriggeredCheckout, isAdmin]);
 
   const getGreeting = useCallback(() => {
-    if (isAdmin) return "SIBOS PRO Online. \n\nMode: Administrator. Saya siap mengelola database dan memantau operasional, Chief.";
+    if (isAdmin) return "Dashboard Ready. Mode Admin aktif. Apa yang perlu dicek hari ini?";
     if (messages.length > 0) return null;
 
     const hours = new Date().getHours();
     let greeting = "Assalamualaikum Juragan!";
-    if (hours >= 4 && hours < 10) greeting = "Pagi Juragan!";
+    if (hours >= 4 && hours < 10) greeting = "Selamat Pagi Juragan!";
     else if (hours >= 10 && hours < 15) greeting = "Siang Juragan. Toko rame?";
+    else if (hours >= 15 && hours < 18) greeting = "Sore Juragan.";
     else greeting = "Malam Juragan.";
-    return `${greeting} \n\nAda yang bisa SIBOS bantu soal mesin kasir hari ini?`;
+    return `${greeting} \n\nSaya Amin (Owner). Ada yang bisa saya atau tim bantu buat bisnisnya hari ini?`;
   }, [isAdmin, messages.length]);
 
   useEffect(() => {
@@ -333,23 +340,23 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
             config: { systemInstruction: buildSystemInstruction() }
         });
         
-        const finalText = finalResult.text || "Perintah dijalankan.";
+        const finalText = finalResult.text || "Siap, laksanakan.";
         setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: finalText, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }]);
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: finalText }] });
 
       } else {
-        const text = result.text || "Maaf, saya tidak mengerti.";
+        const text = result.text || "Maaf Juragan, sinyal agak putus-putus. Bisa diulang?";
         setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: text, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }]);
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: text }] });
       }
 
     } catch (error: any) {
       console.error("SIBOS Error Full:", error);
-      let errorMessage = "Maaf Chief/Juragan, sistem sedang sibuk (Koneksi AI Terputus).";
+      let errorMessage = "Waduh, server lagi padat Juragan. Nanti saya balas lagi ya.";
       
       // Provide more specific error hint if possible
-      if (error.message?.includes('400')) errorMessage = "Maaf, ada gangguan teknis pada server AI (Error 400). Coba lagi nanti.";
-      if (error.message?.includes('API key')) errorMessage = "API Key bermasalah. Silakan cek konfigurasi VITE_GEMINI_API_KEY.";
+      if (error.message?.includes('400')) errorMessage = "Ada gangguan teknis sebentar Juragan. Coba lagi ya.";
+      if (error.message?.includes('API key')) errorMessage = "Sistem kunci API bermasalah. Segera hubungi developer.";
 
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: errorMessage, time: new Date().toLocaleTimeString('id-ID') }]);
     } finally {

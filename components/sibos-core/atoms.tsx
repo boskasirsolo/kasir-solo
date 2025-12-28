@@ -2,51 +2,154 @@
 import React from 'react';
 import { MessageSquare, X, Send, Bot, User as UserIcon, ExternalLink, Image as ImageIcon } from 'lucide-react';
 
-// --- HELPER: MARKDOWN & LINK RENDERER ---
+// --- HELPER: INLINE TEXT PARSER (Bold, Links) ---
+const parseCellContent = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return (
+    <>
+      {parts.map((part, partIdx) => {
+        // Handle Bold
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={partIdx} className="font-bold text-brand-orange">{part.slice(2, -2)}</strong>;
+        }
+
+        // Handle URLs inside normal text
+        const urlRegex = /((?:https?:\/\/|www\.)[^\s]+)/g;
+        const subParts = part.split(urlRegex);
+
+        return (
+          <span key={partIdx}>
+            {subParts.map((subPart, subIdx) => {
+              if (urlRegex.test(subPart)) {
+                 const href = subPart.startsWith('www.') ? `http://${subPart}` : subPart;
+                 return (
+                   <a 
+                     key={subIdx} 
+                     href={href} 
+                     target="_blank" 
+                     rel="noreferrer" 
+                     className="text-blue-400 hover:text-blue-300 underline underline-offset-2 break-all inline-flex items-center gap-0.5"
+                   >
+                     {subPart} <ExternalLink size={10} />
+                   </a>
+                 );
+              }
+              return subPart;
+            })}
+          </span>
+        );
+      })}
+    </>
+  );
+};
+
+// --- HELPER: MARKDOWN TABLE COMPONENT ---
+const MarkdownTable = ({ lines }: { lines: string[] }) => {
+  if (lines.length < 2) return null;
+
+  // Header is usually the first row
+  const headerLine = lines[0];
+  // Separator is the second row (e.g., |---|---|)
+  const separatorLine = lines[1];
+
+  // Helper to split row by pipe, handling escaped pipes if necessary (simple version here)
+  const splitRow = (row: string) => {
+    return row.split('|').map(c => c.trim()).filter((c, i, arr) => {
+      // Filter out empty strings at start/end often caused by | start | end |
+      if (i === 0 && c === '') return false;
+      if (i === arr.length - 1 && c === '') return false;
+      return true;
+    });
+  };
+
+  const headers = splitRow(headerLine);
+  
+  // Basic validation: Separator should contain dashes
+  if (!separatorLine.includes('-')) {
+     return (
+       <div className="whitespace-pre-wrap font-mono text-xs bg-black/20 p-2 rounded mb-2">
+         {lines.join('\n')}
+       </div>
+     );
+  }
+
+  const bodyRows = lines.slice(2);
+
+  return (
+    <div className="my-3 overflow-x-auto rounded-lg border border-white/10 shadow-sm">
+      <table className="w-full text-sm text-left border-collapse min-w-max">
+        <thead className="bg-white/5 text-brand-orange uppercase text-[10px] font-bold tracking-wider">
+          <tr>
+            {headers.map((h, i) => (
+              <th key={i} className="px-3 py-2 border-b border-white/10 whitespace-nowrap">
+                {parseCellContent(h)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-white/5">
+          {bodyRows.map((row, rIdx) => {
+            const cells = splitRow(row);
+            return (
+              <tr key={rIdx} className="hover:bg-white/5 transition-colors">
+                {cells.map((c, cIdx) => (
+                  <td key={cIdx} className="px-3 py-2 border-r border-white/5 last:border-0 align-top text-gray-300">
+                    {parseCellContent(c)}
+                  </td>
+                ))}
+                {/* Fill empty cells if row is short */}
+                {cells.length < headers.length && 
+                   [...Array(headers.length - cells.length)].map((_, i) => <td key={`empty-${i}`} className="px-3 py-2 border-r border-white/5"></td>)
+                }
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// --- HELPER: MAIN RENDERER ---
 const renderFormattedText = (text: string) => {
   if (!text) return null;
-  // 1. Split by newlines
-  return text.split('\n').map((line, lineIdx) => {
-    // 2. Split by bold markers (**)
-    const parts = line.split(/(\*\*.*?\*\*)/g);
+  
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let tableBuffer: string[] = [];
+  
+  const flushTable = () => {
+    if (tableBuffer.length > 0) {
+       elements.push(<MarkdownTable key={`table-${elements.length}`} lines={tableBuffer} />);
+       tableBuffer = [];
+    }
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
     
-    return (
-      <div key={lineIdx} className={`${line.trim() === '' ? 'h-2' : 'min-h-[1.2em]'}`}>
-        {parts.map((part, partIdx) => {
-          // Handle Bold
-          if (part.startsWith('**') && part.endsWith('**')) {
-            return <strong key={partIdx} className="font-bold text-brand-orange">{part.slice(2, -2)}</strong>;
-          }
+    // Detect Table Row: Starts with | and has another | somewhere, or is a separator |---|
+    // Simple Heuristic: Starts with | and ends with | (ignoring spaces)
+    if (line.startsWith('|') && (line.endsWith('|') || line.length > 2)) {
+      tableBuffer.push(line);
+    } else {
+      flushTable();
+      
+      // Render normal line (handle empty lines as spacing)
+      if (lines[i].trim() === '') {
+        elements.push(<div key={`line-${i}`} className="h-2"></div>);
+      } else {
+        elements.push(
+          <div key={`line-${i}`} className="min-h-[1.2em] break-words">
+            {parseCellContent(lines[i])}
+          </div>
+        );
+      }
+    }
+  }
+  flushTable(); // Flush any remaining table at the end
 
-          // Handle URLs inside normal text
-          const urlRegex = /((?:https?:\/\/|www\.)[^\s]+)/g;
-          const subParts = part.split(urlRegex);
-
-          return (
-            <span key={partIdx}>
-              {subParts.map((subPart, subIdx) => {
-                if (urlRegex.test(subPart)) {
-                   const href = subPart.startsWith('www.') ? `http://${subPart}` : subPart;
-                   return (
-                     <a 
-                       key={subIdx} 
-                       href={href} 
-                       target="_blank" 
-                       rel="noreferrer" 
-                       className="text-blue-400 hover:text-blue-300 underline underline-offset-2 break-all inline-flex items-center gap-0.5"
-                     >
-                       {subPart} <ExternalLink size={10} />
-                     </a>
-                   );
-                }
-                return subPart;
-              })}
-            </span>
-          );
-        })}
-      </div>
-    );
-  });
+  return elements;
 };
 
 // --- 1. FLOATING TRIGGER BUTTON ---
@@ -97,21 +200,15 @@ export const ChatBubble = ({
         
         {/* Avatar */}
         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${
-          // User Avatar: Orange (Amber/Action split). Let's use brand-orange (Amber) to match the general theme, or brand-action for consistency?
-          // Since it's passive, brand-orange (Amber) fits better as a theme color, but brand-action fits the user bubble below.
-          // Let's use brand-orange (Amber) for avatars.
           isUser ? 'bg-brand-orange/20 border-brand-orange/50 text-brand-orange' : 'bg-teal-500/20 border-teal-500/50 text-teal-500'
         }`}>
           {isUser ? <UserIcon size={14} /> : <Bot size={16} />}
         </div>
 
         {/* Bubble Content */}
-        <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-          <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm flex flex-col gap-2 ${
+        <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} min-w-0 max-w-full`}>
+          <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm flex flex-col gap-2 w-full overflow-hidden ${
             isUser 
-              // User Bubble: Use brand-orange (Amber). This looks Premium. 
-              // If you want Neon Orange, use brand-action. 
-              // "Komponen lainnya... pke amber". A chat bubble is a component, not a button. Amber is consistent.
               ? 'bg-brand-orange text-white rounded-tr-none' 
               : 'bg-white/10 text-gray-200 border border-white/5 rounded-tl-none backdrop-blur-sm'
           }`}>
@@ -120,7 +217,10 @@ export const ChatBubble = ({
                  <img src={image} alt="User upload" className="max-w-full h-auto max-h-40 object-cover" />
                </div>
              )}
-             {isUser ? text : renderFormattedText(text)}
+             {/* Text Content */}
+             <div className="w-full">
+               {isUser ? text : renderFormattedText(text)}
+             </div>
           </div>
           <span className="text-[10px] text-gray-500 mt-1 px-1">{time}</span>
         </div>
@@ -146,7 +246,7 @@ export const TypingIndicator = () => (
   </div>
 );
 
-// --- 4. IMAGE PREVIEW (NEW) ---
+// --- 4. IMAGE PREVIEW ---
 export const ImagePreview = ({ 
   image, 
   onRemove 
