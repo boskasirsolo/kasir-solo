@@ -389,8 +389,23 @@ const useArticleManager = (
             // Update State & DB
             setArticles([...newArticles, ...articles]);
             
-            // Note: In real app, we would insert many to Supabase here
-            // await supabase.from('articles').insert(newArticles);
+            if (supabase) {
+                // Bulk insert to Supabase
+                const dbInserts = newArticles.map(a => ({
+                    title: a.title,
+                    excerpt: a.excerpt,
+                    content: a.content,
+                    category: a.category,
+                    author: a.author,
+                    read_time: a.readTime,
+                    image_url: a.image,
+                    status: a.status,
+                    scheduled_for: a.scheduled_for,
+                    type: a.type,
+                    pillar_id: a.pillar_id
+                }));
+                await supabase.from('articles').insert(dbInserts);
+            }
 
             alert(`Berhasil menjadwalkan ${newArticles.length} artikel cluster!\nCek di daftar artikel dengan status 'Scheduled'.`);
             
