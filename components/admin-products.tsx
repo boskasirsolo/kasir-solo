@@ -71,7 +71,23 @@ const useProductManager = (
 
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
             
-            const prompt = `Buat deskripsi penjualan (Sales Copy) persuasif bahasa Indonesia untuk produk POS: ${form.name}. Fitur: ${form.shortDesc}. Max 3 paragraf.`;
+            const prompt = `
+            Role: Expert E-commerce Copywriter & SEO Specialist.
+            Task: Write a high-converting product description (Sales Copy).
+            Product: ${form.name}
+            Features/Context: ${form.shortDesc}
+            
+            STRICT RULES:
+            1. DIRECT OUTPUT ONLY: Do NOT use "Tentu", "Berikut draf", "Ini deskripsinya". Start directly with the hook.
+            2. Language: Indonesian (Persuasive, Benefit-driven).
+            3. Structure: 
+               - Hook (Problem/Solution)
+               - Key Benefits (Bulleted or short sentences)
+               - Closing/Call to Action
+            4. SEO: Include transactional keywords relevant to POS/Kasir.
+            5. Length: Max 3 paragraphs.
+            `;
+            
             const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
             setForm(prev => ({ ...prev, desc: response.text?.trim() || '' }));
         } catch (e: any) { 

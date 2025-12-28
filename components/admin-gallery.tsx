@@ -143,7 +143,19 @@ const useIntegratedGalleryManager = (
             
             // Generate Project Description
             if (form.category_type === 'digital') {
-                 const prompt = `Role: Tech Copywriter. Project: ${form.title}. Context: ${form.shortDesc}. Output JSON: { "challenge": "...", "solution": "...", "result": "..." }. Bahasa Indonesia.`;
+                 const prompt = `
+                 Role: Senior Tech Copywriter & SEO Specialist.
+                 Task: Create a Case Study breakdown for a digital portfolio.
+                 Project Name: ${form.title}
+                 Context/Keywords: ${form.shortDesc}
+                 
+                 Instructions:
+                 1. Language: Indonesian (Professional, Insightful).
+                 2. Output Format: STRICT JSON ONLY. No markdown, no intro text.
+                 3. Structure: { "challenge": "...", "solution": "...", "result": "..." }
+                 4. SEO Focus: Use problem-solution keywords relevant to software development.
+                 `;
+                 
                  const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
                  const rawText = response.text?.trim() || '{}';
                  try {
@@ -152,14 +164,33 @@ const useIntegratedGalleryManager = (
                      setForm(prev => ({ ...prev, cs_challenge: parsed.challenge || '', cs_solution: parsed.solution || '', cs_result: parsed.result || '' }));
                  } catch (e) { setForm(prev => ({...prev, longDesc: rawText})); }
             } else {
-                 const prompt = `Role: Copywriter. Project: ${form.title}. Context: ${form.shortDesc}. Write description (2 paragraphs). Bahasa Indonesia.`;
+                 const prompt = `
+                 Role: Senior SEO Content Writer for Business/Retail Tech.
+                 Task: Write a portfolio description.
+                 Project Name: ${form.title}
+                 Context: ${form.shortDesc}
+                 
+                 STRICT RULES:
+                 1. DIRECT OUTPUT ONLY: Do NOT use phrases like "Tentu", "Berikut adalah", "Draft deskripsi". Start directly with the content.
+                 2. SEO: Use natural semantic keywords (LSI) related to the industry.
+                 3. Tone: Professional, Authority, Result-Oriented.
+                 4. Length: 2 Paragraphs.
+                 5. Language: Indonesian.
+                 `;
                  const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
                  setForm(prev => ({ ...prev, longDesc: response.text?.trim() || '' }));
             }
 
             // Also Generate Testimonial Draft if empty
             if (!testiForm.content && testiForm.hasTestimonial) {
-                 const testiPrompt = `Buat testimoni singkat (1 kalimat positif) dari klien pemilik bisnis "${form.title}" yang puas dengan layanan "${form.shortDesc}".`;
+                 const testiPrompt = `
+                 Role: Happy Customer.
+                 Task: Write a short, natural testimonial (1-2 sentences).
+                 Business: ${form.title}
+                 Service Received: ${form.shortDesc}
+                 Language: Indonesian (Casual/Semi-formal).
+                 STRICT: Output ONLY the testimonial text. No quotes, no intro.
+                 `;
                  const testiResponse = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: testiPrompt });
                  setTestiForm(prev => ({...prev, content: testiResponse.text?.trim() || ''}));
             }
