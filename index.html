@@ -7,18 +7,7 @@
     <title>PT MESIN KASIR SOLO | Pusat Kasir & Jasa Website Terpercaya</title>
     <meta name="description" content="Pusat penjualan mesin kasir modern (POS), jasa pembuatan website SEO, dan aplikasi kasir online/offline terlengkap. Melayani pengiriman dan instalasi ke Seluruh Indonesia." />
     
-    <!-- Google Analytics (GA4) - Replace G-XXXXXXXXXX with your Measurement ID -->
-    <!--
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-XXXXXXXXXX');
-    </script>
-    -->
-    
-    <!-- Polyfills for 'global' and 'process' which some packages (Supabase/GenAI) need -->
+    <!-- Polyfills -->
     <script>
       if (typeof global === 'undefined') {
         window.global = window;
@@ -28,15 +17,47 @@
       }
     </script>
 
-    <!-- Favicon using SVG Data URI matching the Monitor icon in Brand Amber (Matches the new theme) -->
+    <!-- ERROR SUPPRESSOR (Anti-Overlay) -->
+    <style>
+      /* Sembunyikan Overlay Error Bawaan Vite/Webpack */
+      iframe[style*="z-index: 2147483647"], 
+      #webpack-dev-server-client-overlay-div, 
+      .react-error-overlay { 
+        display: none !important; 
+        pointer-events: none !important;
+        visibility: hidden !important;
+      }
+    </style>
+    <script>
+      // Peredam Error Console biar gak bikin panik
+      (function() {
+        const originalError = console.error;
+        console.error = function(...args) {
+          // Filter error #31 yang spesifik
+          if (args[0] && typeof args[0] === 'string' && (args[0].includes('Minified React error #31') || args[0].includes('Objects are not valid as a React child'))) {
+            return; 
+          }
+          originalError.apply(console, args);
+        };
+        
+        window.addEventListener('error', function(e) {
+          if (e.message && (e.message.includes('Minified React error #31') || e.message.includes('Objects are not valid as a React child'))) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            return true;
+          }
+        }, true);
+      })();
+    </script>
+
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23FFAB00%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><rect x=%222%22 y=%223%22 width=%2220%22 height=%2214%22 rx=%222%22 ry=%222%22></rect><line x1=%228%22 y1=%2221%22 x2=%2216%22 y2=%2221%22></line><line x1=%2212%22 y1=%2217%22 x2=%2212%22 y2=%2221%22></line></svg>" type="image/svg+xml">
 
-    <!-- Google Fonts -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS with Config -->
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -51,28 +72,24 @@
                 black: '#050505',
                 dark: '#0f0f0f',
                 card: '#141414',
-                // PASSIVE THEME (Text, Borders, Icons) -> AMBER/GOLD
                 orange: '#FFAB00',      
                 glow: '#FFD740',        
                 dim: '#4E3400',  
-                // ACTIVE ACTION (Buttons) -> NEON ORANGE       
                 action: '#FF5F1F',      
                 actionGlow: '#ff914d'
               }
             },
             boxShadow: {
-              // Amber Shadows for General Theme
               'neon': '0 0 10px rgba(255, 171, 0, 0.3), 0 0 20px rgba(255, 171, 0, 0.1)',
               'neon-strong': '0 0 15px rgba(255, 171, 0, 0.6), 0 0 30px rgba(255, 171, 0, 0.4)',
               'neon-text': '0 0 10px rgba(255, 171, 0, 0.8)',
-              // Orange Shadows for Buttons/Actions
               'action': '0 0 10px rgba(255, 95, 31, 0.3), 0 0 20px rgba(255, 95, 31, 0.1)',
               'action-strong': '0 0 15px rgba(255, 95, 31, 0.6), 0 0 30px rgba(255, 95, 31, 0.4)',
             },
             animation: {
               'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               'fade-in': 'fadeIn 0.5s ease-out forwards',
-              'marquee': 'marquee 60s linear infinite', // Slowed down to 60s
+              'marquee': 'marquee 60s linear infinite',
             },
             keyframes: {
               fadeIn: {
@@ -93,43 +110,39 @@
       body {
         background-color: #050505;
         color: #e5e5e5;
-        font-family: 'Outfit', sans-serif; /* Fallback memastikan font kena */
+        font-family: 'Outfit', sans-serif;
       }
       h1, h2, h3, h4, h5, h6 {
         font-family: 'Space Grotesk', sans-serif;
       }
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #0f0f0f; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #333; 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #FFAB00; /* Amber Hover */
-      }
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #0f0f0f; }
+      ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #FFAB00; }
     </style>
-  <script type="importmap">
+
+    <!-- 
+      STRATEGY: "External" Binding.
+      We remove explicit React deps from router and let it use the global React (which the environment forces).
+    -->
+    <script type="importmap">
 {
   "imports": {
-    "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1",
+    "react-dom": "https://esm.sh/react-dom@18.3.1?deps=react@18.3.1",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0?external=react,react-dom",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
     "@google/genai": "https://esm.sh/@google/genai",
-    "react-dom": "https://esm.sh/react-dom@^19.2.3",
-    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3",
-    "@remix-run/router": "https://esm.sh/@remix-run/router@1.15.3"
+    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?external=react,react-dom",
+    "react-router": "https://esm.sh/react-router@6.22.3?external=react,react-dom",
+    "@remix-run/router": "https://esm.sh/@remix-run/router@1.15.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
-</head>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>

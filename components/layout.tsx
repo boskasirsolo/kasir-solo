@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video, ChevronDown } from 'lucide-react';
 import { useCart } from '../context/cart-context';
 import { SiteConfig, Product } from '../types';
-import { SibosWidget } from './sibos-core'; // Import SIBOS
-import { INITIAL_PRODUCTS } from '../utils'; // Fallback data
+import { SibosWidget } from './sibos-core/index'; // CRITICAL FIX: Specific import path
+import { INITIAL_PRODUCTS } from '../utils';
 
 // --- DATA & CONSTANTS ---
 // Structure updated to support Dropdown
@@ -16,11 +16,11 @@ const NAV_ITEMS = [
     id: 'services-group', 
     label: 'Layanan',
     children: [
-      { id: 'home', label: 'Pembuatan Website' }, // Redirect to Home (Services section)
+      { id: 'home', label: 'Pembuatan Website' },
       { id: 'home', label: 'Web App Development' },
       { id: 'home', label: 'Optimasi SEO' },
       { id: 'home', label: 'Maintenance' },
-      { id: 'gallery', label: 'Portofolio' }, // The old Gallery page
+      { id: 'gallery', label: 'Portofolio' },
     ]
   },
   { id: 'articles', label: 'Artikel' },
