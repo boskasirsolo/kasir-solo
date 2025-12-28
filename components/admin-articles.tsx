@@ -255,7 +255,7 @@ const useArticleManager = (
             // --- 2. CONTENT GENERATION (Heavy & Long - Plain Text/Markdown) ---
             const contentPrompt = `
             Role: Expert Business Consultant & Senior Copywriter (Amin Maghfuri).
-            Task: Write a MONSTER PILLAR ARTICLE (Target: 5000 Words Quality Equivalent).
+            Task: Write a MONSTER PILLAR ARTICLE (Target: 3000-5000 Words Quality Equivalent).
             Title: "${form.title}"
             Keyword: "${selectedKeyword?.keyword || form.title}"
             
@@ -263,28 +263,28 @@ const useArticleManager = (
             1. **Exhaustive Detail**: Explain every concept like a university lecture.
             2. **Structure**: 
                - Start directly with "# ${form.title}"
-               - Create at least 12-15 Main Chapters (H2).
-               - Inside every H2, include 3-5 Sub-Chapters (H3).
+               - Create at least 10 Main Chapters (H2).
+               - Inside every H2, include 2-3 Sub-Chapters (H3).
             3. **Tone**: Authoritative, Experienced, yet Accessible (Indonesian Business Context).
             4. **Output**: PURE MARKDOWN only. Do not wrap in JSON.
             
             REQUIRED SECTIONS:
             - Introduction (Hook, Problem, Thesis)
             - The Fundamentals (Definitions, History)
-            - Core Analysis (The meat of the article - Chapters 3-10)
+            - Core Analysis (The meat of the article - Chapters 3-8)
             - Implementation Guide (Step-by-step)
             - Common Pitfalls (What to avoid)
             - Future Trends (Predictions)
             - Conclusion (Inspiring closing)
             `;
 
-            // Use Pro for context window, but output PLAIN TEXT to avoid JSON cut-off errors
+            // Use FLASH instead of PRO to avoid Quota Exceeded (429) errors on Free Tier
             const contentResponse = await ai.models.generateContent({ 
-                model: 'gemini-3-pro-preview', 
+                model: 'gemini-3-flash-preview', 
                 contents: contentPrompt,
                 config: {
                     maxOutputTokens: 8192, 
-                    thinkingConfig: { thinkingBudget: 1024 } // Reduced budget to avoid timeout
+                    // removed thinkingConfig to save tokens/complexity on Flash model
                 }
             });
             
@@ -307,7 +307,14 @@ const useArticleManager = (
             setAiStep(3); // Done
         } catch (e: any) {
             console.error(e);
-            alert(`Gagal generate konten: ${e.message}. Coba lagi atau gunakan judul yang lebih spesifik.`);
+            let msg = e.message || "Unknown error";
+            // Translate common API errors to user friendly messages
+            if (msg.includes("429") || msg.includes("Quota")) {
+                msg = "Kuota Harian AI Habis (Limit 429). Tunggu beberapa saat atau ganti API Key.";
+            } else if (msg.includes("API key")) {
+                msg = "API Key tidak valid atau belum diset.";
+            }
+            alert(`Gagal generate konten: ${msg}`);
         } finally {
             setLoading(prev => ({ ...prev, generatingContent: false }));
         }
