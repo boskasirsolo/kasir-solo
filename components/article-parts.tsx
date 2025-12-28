@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { 
   ArrowRight, Clock, Calendar, User, Tag, 
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
@@ -85,15 +86,50 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
 // ==========================================
 
 export const renderFormattedText = (text: string) => {
-  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+  // 1. Split by Links [text](url) - Robust regex allowing spaces between ] and (
+  const parts = text.split(/(\[.*?\]\s*\(.*?\))/g);
+
   return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} className="text-white font-bold bg-brand-orange/10 px-1 rounded">{part.slice(2, -2)}</strong>;
+    // Check if part is a link
+    const linkMatch = part.match(/^\[(.*?)\]\s*\((.*?)\)$/);
+    if (linkMatch) {
+      const label = linkMatch[1];
+      const url = linkMatch[2];
+      const isInternal = url.startsWith('/') || url.startsWith('#');
+
+      const className = "text-brand-orange hover:text-white underline decoration-brand-orange/50 hover:decoration-white transition-colors font-medium break-words";
+
+      if (isInternal) {
+          return <Link key={i} to={url} className={className}>{label}</Link>;
+      }
+      return <a key={i} href={url} target="_blank" rel="noreferrer" className={className}>{label}</a>;
     }
-    if (part.startsWith('*') && part.endsWith('*')) {
-      return <em key={i} className="text-gray-400">{part.slice(1, -1)}</em>;
-    }
-    return part;
+
+    // 2. Process Bold (**text**)
+    const boldParts = part.split(/(\*\*.*?\*\*)/g);
+    return (
+        <span key={i}>
+            {boldParts.map((subPart, j) => {
+                if (subPart.startsWith('**') && subPart.endsWith('**')) {
+                    return <strong key={j} className="text-white font-bold bg-brand-orange/10 px-1 rounded">{subPart.slice(2, -2)}</strong>;
+                }
+                
+                // 3. Process Italics (*text*) inside non-bold parts
+                const italicParts = subPart.split(/(\*.*?\*)/g);
+                return (
+                    <span key={j}>
+                        {italicParts.map((innerPart, k) => {
+                             // Ensure it's not just a single asterisk or unrelated text
+                             if (innerPart.startsWith('*') && innerPart.endsWith('*') && innerPart.length > 2) {
+                                return <em key={k} className="text-gray-400 italic">{innerPart.slice(1, -1)}</em>;
+                             }
+                             return innerPart;
+                        })}
+                    </span>
+                );
+            })}
+        </span>
+    );
   });
 };
 
