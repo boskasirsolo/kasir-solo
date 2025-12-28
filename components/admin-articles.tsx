@@ -365,7 +365,7 @@ const ArticleForm = ({
             <div className="mb-8 space-y-6">
                 
                 {/* STEP 1: KEYWORD RESEARCH */}
-                <div className={`transition-all duration-300 ${aiState.step > 0 ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                <div className={`transition-all duration-300 ${aiState.step > 1 ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-xs text-brand-orange font-bold uppercase tracking-wider flex items-center gap-2">
                             <Target size={14} /> Step 1: Riset Topik
