@@ -145,9 +145,14 @@ const useArticleManager = (
             const prompt = `
             Based on keyword: "${keywordData.keyword}"
             Act as Amin Maghfuri (Business Owner & Tech Expert).
-            Generate 3 viral, click-worthy Article Titles.
-            Style: Sharing experiences, secrets, or direct tips to fellow business owners.
-            Example: "Rahasia Saya Mengelola...", "Jangan Beli Mesin Kasir Sebelum...", "Cara Tim Kami..."
+            Generate 3 Article Titles with DIFFERENT angles.
+            
+            Angles:
+            1. Case Study / Success Story (e.g., "Bagaimana Toko X Naik Omzet...")
+            2. Educational / Warning (e.g., "5 Kesalahan Fatal...", "Jangan Beli Sebelum Tahu Ini")
+            3. Future Trend / Strategy (e.g., "Masa Depan Kasir di 2025...")
+
+            IMPORTANT: The subject does NOT have to be "Saya" or "Kami" in the title. Focus on the reader's problem or the client's story.
             Target Audience: Business Owners (UMKM) in Indonesia.
             Language: Indonesian.
             
@@ -180,7 +185,6 @@ const useArticleManager = (
 
             const prompt = `
             Role: Amin Maghfuri (Founder PT Mesin Kasir Solo).
-            Tone: Experienced, Personal, 'Street-smart', Encouraging.
             Task: Write a PILLAR ARTICLE based on the title.
             Title: "${form.title}"
             Keyword: "${selectedKeyword?.keyword || form.title}"
@@ -190,16 +194,18 @@ const useArticleManager = (
             - Auto Author: ${genConfig.autoAuthor} (Set to 'Amin Maghfuri' or 'Tim Teknis')
             
             WRITING STYLE GUIDELINES:
-            1. **Perspective**: Use "Saya" (I) or "Kami" (We/Team). Share personal insights as a business owner.
-            2. **Empathy**: Acknowledge the struggles of managing a shop/business.
-            3. **Authenticity**: Avoid robotic AI language. Use natural Indonesian business terms (Omzet, HPP, Boncos, Cuan).
+            1. **Voice**: You are the narrator (Amin/Team). Use "Saya" (I) when giving opinions/advice, but the *subject* of the story can be a client, a general situation, or a specific case study.
+            2. **Perspective**: 
+               - If it's a case study: Tell the story of the client ("Klien kami, Pak Budi...", "Saya pernah menemui kasus...").
+               - If it's a tip: Speak directly to the reader ("Anda mungkin pernah mengalami...").
+            3. **Authenticity**: Use natural Indonesian business terms (Omzet, HPP, Boncos, Cuan).
             4. **Actionable**: Don't just explain 'what', explain 'how'. Give tips that can be applied immediately.
             
             STRUCTURE:
-            1. **Hook (Intro)**: Start with a relatable problem or a personal story about the topic.
-            2. **The Core (Body)**: Use H2 (##) for main points. Break down complex tech into simple benefits.
-            3. **Real World Application**: Mention "Di lapangan, sering terjadi..." or "Klien kami biasanya..."
-            4. **Conclusion**: A warm closing encouraging them to upgrade their system or mindset.
+            1. **Hook (Intro)**: Start with a relatable problem or a story.
+            2. **The Core (Body)**: Use H2 (##) for main points. 
+            3. **Real World Application**: Mention "Di lapangan..." or "Berdasarkan pengalaman kami..."
+            4. **Conclusion**: A warm closing.
             
             OUTPUT JSON ONLY:
             {
@@ -257,6 +263,8 @@ const useArticleManager = (
             }
 
             // Data structure for Database (Snake Case)
+            // FIX: Removed 'date' field to prevent "Column not found" error. 
+            // Supabase should handle 'created_at' automatically.
             const dbData = {
                 title: form.title,
                 excerpt: form.excerpt,
@@ -266,12 +274,9 @@ const useArticleManager = (
                 read_time: form.readTime,
                 image_url: finalImageUrl,
                 status: form.status,
-                scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
-                date: form.id ? undefined : new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null
+                // date: REMOVED
             };
-
-            // Remove undefined fields
-            if (!dbData.date) delete dbData.date;
 
             // Prepare object for Local State (Camel Case matching Article interface)
             const localUpdateData = {
@@ -283,7 +288,8 @@ const useArticleManager = (
                 readTime: form.readTime,
                 image: finalImageUrl,
                 status: form.status,
-                scheduled_for: form.status === 'scheduled' ? form.scheduled_for : undefined
+                scheduled_for: form.status === 'scheduled' ? form.scheduled_for : undefined,
+                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) // Local only
             };
 
             if (form.id) {
@@ -309,7 +315,6 @@ const useArticleManager = (
                 const newItem: Article = { 
                     ...localUpdateData, 
                     id: newId, 
-                    date: dbData.date || 'Today',
                     tags: [] 
                 };
                 setArticles([newItem, ...articles]);
@@ -324,9 +329,7 @@ const useArticleManager = (
             alert(`Artikel berhasil disimpan sebagai ${form.status.toUpperCase()}!`);
         } catch (e: any) { 
             console.error(e); 
-            // Enhanced error message
             let msg = e.message || JSON.stringify(e);
-            if (msg.includes('column')) msg += "\n(TIP: Kemungkinan kolom 'status' atau 'scheduled_for' belum ada di database.)";
             alert(`Gagal menyimpan:\n${msg}`); 
         } finally { 
             setLoading(prev => ({ ...prev, uploading: false })); 

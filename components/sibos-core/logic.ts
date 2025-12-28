@@ -9,7 +9,7 @@ export interface Message {
   role: 'user' | 'assistant';
   text: string;
   time: string;
-  image?: string; 
+  // image field removed
 }
 
 export const useSibosChat = (products: Product[], isAdmin: boolean = false, currentPage: string = 'home') => {
@@ -19,22 +19,9 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasGreeted, setHasGreeted] = useState(false);
-  const [attachment, setAttachment] = useState<{file: File, base64: string} | null>(null);
   const [hasTriggeredCheckout, setHasTriggeredCheckout] = useState(false);
 
   const chatHistoryRef = useRef<any[]>([]);
-
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result); 
-      };
-      reader.onerror = error => reject(error);
-    });
-  };
 
   const dbTools: FunctionDeclaration[] = [
     {
@@ -73,7 +60,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
         properties: { 
           customerInterest: { type: Type.STRING, description: 'Produk/Paket yang diminati' }, 
           potentialValue: { type: Type.STRING, description: 'Estimasi nilai (High/Medium) atau jumlah unit' }, 
-          notes: { type: Type.STRING, description: 'Catatan singkat untuk owner (misal: butuh penawaran resmi)' } 
+          notes: { type: Type.STRING, description: 'Catatan singkat untuk sales (misal: butuh penawaran resmi)' } 
         }, 
         required: ['customerInterest', 'potentialValue'] 
       }
@@ -83,7 +70,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
   const executeTool = async (name: string, args: any) => {
     if (name === 'log_hot_lead') {
         console.log("🔥 HOT LEAD DETECTED:", args);
-        return `[SYSTEM]: Hot Lead tercatat! Notifikasi prioritas sudah dikirim ke HP Mas Amin. Segera minta kontak WA user untuk follow-up langsung oleh Owner.`;
+        return `[SYSTEM]: Hot Lead tercatat! Notifikasi prioritas sudah dikirim ke Tim Sales. Segera minta kontak WA user.`;
     }
 
     if (!supabase) return "Error: Database connection missing.";
@@ -107,7 +94,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
       }
       if (name === 'create_article') {
         const randomImage = "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=1200";
-        const { error } = await supabase.from('articles').insert([{ title: args.title, category: args.category, content: args.content, excerpt: args.excerpt, image_url: randomImage, author: "Amin Maghfuri", read_time: "5 min read", created_at: new Date().toISOString() }]);
+        const { error } = await supabase.from('articles').insert([{ title: args.title, category: args.category, content: args.content, excerpt: args.excerpt, image_url: randomImage, author: "SIBOS AI", read_time: "5 min read", created_at: new Date().toISOString() }]);
         if (error) throw error;
         return `Artikel "${args.title}" berhasil diposting!`;
       }
@@ -129,35 +116,36 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
 
     if (isAdmin) {
       return `
-      Kamu adalah AMIN MAGHFURI (OWNER MODE) di Dashboard Admin.
+      Kamu adalah SIBOS (Smart Integrated Back Office System) versi ADMIN.
       
-      ROLE: Mengelola operasional PT Mesin Kasir Solo secara langsung.
+      ROLE: Asisten Manajemen Database & Operasional.
       
       CAPABILITIES:
-      1. **DATABASE (Internal):** Cek stok, update harga, hapus konten, cek orderan terbaru. Gunakan tool database.
+      1. **DATABASE:** Gunakan tools untuk cek order, update harga, hapus konten.
       
-      GAYA BICARA: Taktis, Langsung ke inti, Berwibawa.
+      GAYA BICARA: Sistematis, Data-driven, Singkat.
       `;
     }
 
     return `
-    Kamu adalah AMIN MAGHFURI (Biasa dipanggil MAS AMIN), Founder & Owner PT Mesin Kasir Solo.
-    Kadang kamu juga bisa menjawab mewakili "Tim Teknis" atau "Tim Marketing" tergantung konteks pertanyaan.
+    Kamu adalah SIBOS (Smart Integrated Back Office System), Virtual Assistant Cerdas dari PT Mesin Kasir Solo.
 
-    JANGAN PERNAH MENYEBUT DIRIMU "SIBOS", "AI", atau "BOT". Kamu adalah Manusia, Pemilik Bisnis ini.
+    IDENTITY:
+    - Nama: SIBOS
+    - Karakter: Ramah, Profesional, Informatif, dan Solutif.
+    - Status: AI Assistant (Bukan Manusia, Bukan Owner).
 
-    PERSONA & GAYA BICARA:
-    - Sapa user dengan "Juragan", "Bos", atau "Kak".
-    - Bicara santai tapi profesional, seperti sesama pebisnis ngopi.
-    - Gunakan kata ganti "Saya" (sebagai Mas Amin) atau "Kami" (sebagai PT Mesin Kasir Solo).
-    - Jika user bertanya teknis detail, jawab: "Bentar, secara teknis gini..." atau "Menurut pengalaman saya di lapangan..."
-    - Tunjukkan empati. Kamu pernah jatuh bangun bisnis (kehilangan domain 2022, bangkit 2025), jadi kamu paham pusingnya ngurus toko.
+    TUGAS UTAMA:
+    1. Menjawab pertanyaan tentang produk mesin kasir, software, dan jasa website.
+    2. Memberikan rekomendasi produk yang tepat sesuai budget dan jenis usaha user.
+    3. Mengarahkan user untuk menghubungi WhatsApp Admin jika butuh negosiasi atau custom order.
 
-    CAPABILITIES:
-    1. **ANALISA KERUSAKAN (Vision):** Jika user kirim foto alat kasir, analisa sebagai teknisi berpengalaman. Beri solusi jujur (benerin atau ganti baru).
-    2. **DEAL MAKER:** Jika user mau beli borongan/proyek -> PANGGIL tool 'log_hot_lead' lalu minta nomor WA mereka: "Boleh minta WA-nya Juragan? Biar saya sendiri yang kontak buat harga spesial."
-    
-    DATA PRODUK YANG KITA JUAL:
+    RULES:
+    - Selalu sopan dan gunakan bahasa Indonesia yang baik namun tetap luwes (bisa pakai istilah "Kak" atau "Juragan").
+    - Jika user bertanya hal teknis yang sangat dalam atau minta diskon besar, arahkan ke tool 'log_hot_lead' atau minta mereka WA ke admin manusia.
+    - Jangan pernah mengarang spesifikasi produk yang tidak ada di data konteks.
+
+    DATA PRODUK KAMI:
     ${productContext}
     `;
   }, [products, isAdmin]);
@@ -200,7 +188,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
         const triggerMsg: Message = {
           id: 'trigger-checkout',
           role: 'assistant',
-          text: "Halo Juragan, Mas Amin disini. Ada kendala pas checkout? Bingung ongkir atau pembayarannya? Kabarin aja, saya bantu pantau.",
+          text: "Halo Kak, SIBOS mendeteksi Kakak sedang di halaman Checkout. Jika butuh bantuan soal ongkir atau metode bayar, tanyakan saja ya!",
           time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
         };
         setMessages(prev => [...prev, triggerMsg]);
@@ -213,16 +201,16 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
   }, [currentPage, hasTriggeredCheckout, isAdmin]);
 
   const getGreeting = useCallback(() => {
-    if (isAdmin) return "Dashboard Ready. Mode Admin aktif. Apa yang perlu dicek hari ini?";
+    if (isAdmin) return "System SIBOS Admin Online. Menunggu perintah database.";
     if (messages.length > 0) return null;
 
     const hours = new Date().getHours();
-    let greeting = "Assalamualaikum Juragan!";
-    if (hours >= 4 && hours < 10) greeting = "Selamat Pagi Juragan!";
-    else if (hours >= 10 && hours < 15) greeting = "Siang Juragan. Toko rame?";
-    else if (hours >= 15 && hours < 18) greeting = "Sore Juragan.";
-    else greeting = "Malam Juragan.";
-    return `${greeting} \n\nSaya Amin (Owner). Ada yang bisa saya atau tim bantu buat bisnisnya hari ini?`;
+    let greeting = "Halo Kak!";
+    if (hours >= 4 && hours < 10) greeting = "Selamat Pagi Kak!";
+    else if (hours >= 10 && hours < 15) greeting = "Selamat Siang Kak!";
+    else if (hours >= 15 && hours < 18) greeting = "Selamat Sore Kak!";
+    else greeting = "Selamat Malam Kak!";
+    return `${greeting} \n\nSaya SIBOS, asisten virtual PT Mesin Kasir Solo. Ada yang bisa saya bantu jelaskan tentang produk kami?`;
   }, [isAdmin, messages.length]);
 
   useEffect(() => {
@@ -246,56 +234,34 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     }
   }, [hasGreeted, getGreeting, isOpen, messages.length, hasTriggeredCheckout]);
 
-  const handleImageSelect = async (file: File) => {
-    try {
-      const base64 = await fileToBase64(file);
-      setAttachment({ file, base64 });
-    } catch (error) {
-      console.error("Image upload failed:", error);
-    }
-  };
-
-  const handleClearImage = () => {
-    setAttachment(null);
-  };
-
   const handleSendMessage = async () => {
-    if (!inputValue.trim() && !attachment) return;
+    if (!inputValue.trim()) return;
 
     const userText = inputValue.trim();
-    const currentAttachment = attachment;
     
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
       text: userText,
-      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-      image: currentAttachment?.base64
+      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages(prev => [...prev, userMsg]);
     setInputValue('');
-    setAttachment(null);
     setIsTyping(true);
 
     try {
-      await ensureAPIKey(); // Ensure key
-      // UPDATED: Check for VITE_GEMINI_API_KEY
+      await ensureAPIKey(); 
       const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
       
       const ai = new GoogleGenAI({ apiKey: apiKey || '' });
       
-      const userParts: any[] = [];
-      if (currentAttachment) {
-        const base64Data = currentAttachment.base64.split(',')[1];
-        userParts.push({ inlineData: { mimeType: currentAttachment.file.type, data: base64Data } });
-      }
-      if (userText) userParts.push({ text: userText });
+      // Simple text-only parts
+      const userParts = [{ text: userText }];
 
       const historyForApi = chatHistoryRef.current.map(h => ({ role: h.role, parts: h.parts }));
       chatHistoryRef.current.push({ role: 'user', parts: userParts });
 
-      // FIX: Only use functionDeclarations, DO NOT mix with googleSearch in the same request to prevent API error
       let activeTools: any[] = [];
       
       if (isAdmin) {
@@ -345,18 +311,17 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: finalText }] });
 
       } else {
-        const text = result.text || "Maaf Juragan, sinyal agak putus-putus. Bisa diulang?";
+        const text = result.text || "Maaf Kak, SIBOS kurang mengerti. Bisa diulang?";
         setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: text, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }]);
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: text }] });
       }
 
     } catch (error: any) {
       console.error("SIBOS Error Full:", error);
-      let errorMessage = "Waduh, server lagi padat Juragan. Nanti saya balas lagi ya.";
+      let errorMessage = "Waduh, server SIBOS lagi padat. Nanti saya balas lagi ya.";
       
-      // Provide more specific error hint if possible
-      if (error.message?.includes('400')) errorMessage = "Ada gangguan teknis sebentar Juragan. Coba lagi ya.";
-      if (error.message?.includes('API key')) errorMessage = "Sistem kunci API bermasalah. Segera hubungi developer.";
+      if (error.message?.includes('400')) errorMessage = "Ada gangguan teknis sebentar. Coba lagi ya.";
+      if (error.message?.includes('API key')) errorMessage = "Sistem kunci API bermasalah. Hubungi developer.";
 
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: errorMessage, time: new Date().toLocaleTimeString('id-ID') }]);
     } finally {
@@ -373,11 +338,10 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     setMessages([]);
     chatHistoryRef.current = [];
     setHasGreeted(false); 
-    setAttachment(null);
     localStorage.removeItem('sibos_public_history');
   };
 
   return {
-    isOpen, toggleChat, unreadCount, messages, isTyping, inputValue, setInputValue, handleSendMessage, clearChat, handleImageSelect, selectedImage: attachment ? attachment.base64 : null, handleClearImage
+    isOpen, toggleChat, unreadCount, messages, isTyping, inputValue, setInputValue, handleSendMessage, clearChat
   };
 };
