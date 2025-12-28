@@ -221,14 +221,18 @@ const useArticleManager = (
             let strategyContext = "";
             let lengthReq = "Minimum 1000 words";
             let clusterInstruction = "";
+            let structureInstruction = "Create 5-7 Major Subheadings (H2).";
             
             if (form.type === 'pillar') {
                 strategyContext = `
                 STRATEGY: This is a **PILLAR PAGE** (Cornerstone Content). 
-                - It must be extremely comprehensive, covering "What", "Why", and "How" extensively.
-                - It serves as the ultimate guide for this topic.
+                - It must be EXTREMELY COMPREHENSIVE (Mega-Guide).
+                - Cover definitions, benefits, strategies, comparisons, technical details, case studies, and future trends.
+                - It serves as the ultimate authority resource for this topic.
                 `;
-                lengthReq = "Minimum 2000-3000 words";
+                lengthReq = "Minimum 6000 words (Mandatory)";
+                structureInstruction = "Create 12-15 Major Subheadings (H2) to satisfy the 6000-word requirement. Each section must be very detailed.";
+                
                 // Instruction to generate clusters IN THE SAME CALL to save time/tokens context
                 clusterInstruction = `
                 BONUS TASK: At the very end of your response, after the conclusion, please provide a JSON block (and ONLY the JSON block) containing 10 specific, high-potential 'Cluster Article Titles' that should link back to this Pillar Page. 
@@ -242,10 +246,10 @@ const useArticleManager = (
                 - Focus deeply on the specific sub-topic.
                 - **MANDATORY**: Include a natural link/reference to the Pillar Page: "${pillarTitle}".
                 `;
-                lengthReq = "Minimum 800-1200 words";
+                lengthReq = "Minimum 1000 words";
             }
 
-            setTextProgress({ percent: 20, message: `Menulis Artikel ${form.type === 'pillar' ? 'Pilar (3000+ Kata)' : 'Cluster'}...` });
+            setTextProgress({ percent: 20, message: `Menulis Artikel ${form.type === 'pillar' ? 'Pilar (6000+ Kata)' : 'Cluster (1000+ Kata)'}...` });
             
             const contentPrompt = `
             Role: Senior SEO Content Strategist (Indonesian Market).
@@ -256,12 +260,13 @@ const useArticleManager = (
             STRUCTURE:
             1. **Headline**: # ${form.title}
             2. **Introduction**: Hook & Context.
-            3. **Deep Dive**: 5-7 H2 Subheadings with detailed paragraphs.
-            4. **FAQ**: 3-5 Q&A.
+            3. **Deep Dive**: ${structureInstruction}
+               - Use detailed paragraphs, bullet points, data tables, and real-world examples.
+            4. **FAQ**: 5-8 Q&A.
             5. **Conclusion**: Summary & CTA.
             
             REQUIREMENTS:
-            - **LENGTH**: ${lengthReq}.
+            - **LENGTH**: ${lengthReq}. (CRITICAL: Do not write short content).
             - **FORMAT**: Clean Markdown.
             
             ${clusterInstruction}
