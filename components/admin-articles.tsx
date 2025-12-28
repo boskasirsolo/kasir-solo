@@ -48,12 +48,12 @@ interface GenConfig {
 
 // --- HELPER: TEXT RENDERER (Shared - Supports Bold & Links) ---
 const renderInline = (text: string) => {
-    // 1. Split by Links [text](url)
-    const linkParts = text.split(/(\[.*?\]\(.*?\))/g);
+    // 1. Split by Links [text](url) - Allow optional whitespace \s* between ] and (
+    const linkParts = text.split(/(\[.*?\]\s*\(.*?\))/g);
     
     return linkParts.map((part, i) => {
-        // Handle Link
-        const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+        // Handle Link - Regex also allows optional whitespace
+        const linkMatch = part.match(/^\[(.*?)\]\s*\((.*?)\)$/);
         if (linkMatch) {
             return (
                 <Link key={i} to={linkMatch[2]} className="text-brand-orange hover:text-white underline decoration-brand-orange/50 hover:decoration-white transition-all font-medium">
@@ -377,6 +377,7 @@ const useArticleManager = (
                 - Focus: Deep dive into this specific sub-topic. Do NOT be generic.
                 - **MANDATORY INTERNAL LINKING**: You MUST include a Markdown link to the Pillar Page in the Introduction or first section. 
                   **Format MUST be exactly**: [${pillarTitle}](${pillarLink})
+                  **IMPORTANT**: Do NOT put spaces between the bracket ] and parenthesis (. It must be ](url).
                 `;
                 lengthReq = "STRICTLY MINIMUM 1000 WORDS. Do not write short content.";
                 structureInstruction = "Create 6-8 Detailed Subheadings (H2) covering 'What', 'Why', 'How', 'Examples', 'Common Mistakes', and 'Advanced Tips'.";
@@ -402,6 +403,7 @@ const useArticleManager = (
             - **LENGTH**: ${lengthReq}.
             - **FORMAT**: Clean Markdown. Use Bold for emphasis.
             - **TONE**: Professional, Authoritative, yet Accessible.
+            - **LINKS**: Ensure links are formatted as [Text](URL) with NO spaces between parts.
             
             ${clusterInstruction}
             `;
@@ -1234,6 +1236,19 @@ export const AdminArticles = ({
                             {loading.uploading ? <LoadingSpinner size={12}/> : <><Save size={12}/> SIMPAN</>}
                         </Button>
                     </div>
+
+                    {/* MANUAL DATE PICKER (Conditional) */}
+                    {form.status === 'scheduled' && (
+                        <div className="mt-2 animate-fade-in bg-white/5 p-2 rounded border border-white/10">
+                            <label className="text-[9px] text-gray-400 block mb-1">Jadwal Tayang:</label>
+                            <input 
+                                type="datetime-local" 
+                                value={form.scheduled_for || ''}
+                                onChange={(e) => setForm(p => ({...p, scheduled_for: e.target.value}))}
+                                className="w-full bg-black text-white text-xs border border-white/10 rounded px-2 py-1 focus:border-brand-orange outline-none"
+                            />
+                        </div>
+                    )}
                 </div>
             )}
          </div>
