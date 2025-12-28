@@ -100,7 +100,9 @@ export const SectionHeader = ({ title, subtitle, highlight }: { title: string, s
   </div>
 );
 
-export const LoadingSpinner = () => <Loader2 className="animate-spin" />;
+export const LoadingSpinner = ({ size = 24, className = '' }: { size?: number, className?: string }) => (
+  <Loader2 size={size} className={`animate-spin ${className}`} />
+);
 
 // --- Molecules ---
 

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS } from './utils';
 import { Product, Article, GalleryItem, SiteConfig, Testimonial } from './types';
 import { CartProvider } from './context/cart-context';
@@ -17,8 +18,10 @@ import { CheckoutPage } from './pages/checkout';
 import { InnovationPage } from './pages/innovation';
 import { NotFoundPage } from './pages/not-found';
 
-const App = () => {
-  const [currentPage, setCurrentPage] = useState('home');
+const AppContent = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [session, setSession] = useState<any>(null);
   
   // Data State
@@ -41,90 +44,106 @@ const App = () => {
     linkedinUrl: "https://linkedin.com/"
   });
 
+  // --- Router Bridge ---
+  // Convert URL path to a simplified "Page ID" string for Layout props
+  const getCurrentPageId = () => {
+    const path = location.pathname.replace('/', '') || 'home';
+    return path;
+  };
+
+  // Convert old "setPage" calls to Router "navigate"
+  const handleNavigation = (pageId: string) => {
+    if (pageId === 'home') navigate('/');
+    else navigate(`/${pageId}`);
+    
+    window.scrollTo(0, 0);
+  };
+
   // --- Initial Data Fetching ---
   useEffect(() => {
-    // Only attempt fetch if Supabase client exists
     if (!supabase) return;
 
     const fetchData = async () => {
-      // Products
       const { data: prodData } = await supabase.from('products').select('*');
       if (prodData && prodData.length > 0) setProducts(prodData);
 
-      // Gallery
       const { data: galData } = await supabase.from('gallery').select('*');
       if (galData && galData.length > 0) setGallery(galData);
 
-      // Articles
       const { data: artData } = await supabase.from('articles').select('*');
       if (artData && artData.length > 0) setArticles(artData);
       
-      // Testimonials
       const { data: testiData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
       if (testiData && testiData.length > 0) setTestimonials(testiData);
     };
 
     fetchData();
 
-    // Check Auth Session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // --- Router ---
-  const renderPage = () => {
-    switch(currentPage) {
-      case 'home': 
-        return (
-          <HomePage 
-            setPage={setCurrentPage} 
-            config={config} 
-            gallery={gallery} 
-            testimonials={testimonials} 
-          />
-        );
-      case 'shop': return <ShopPage products={products} />;
-      case 'gallery': return <GalleryPage gallery={gallery} testimonials={testimonials} />;
-      case 'articles': return <ArticlesPage articles={articles} products={products} />;
-      case 'about': return <AboutPage />;
-      case 'checkout': return <CheckoutPage setPage={setCurrentPage} />;
-      case 'innovation': return <InnovationPage config={config} />;
-      case 'admin': 
-        return session ? (
-          <AdminDashboard 
-            products={products} setProducts={setProducts}
-            gallery={gallery} setGallery={setGallery}
-            testimonials={testimonials} setTestimonials={setTestimonials}
-            config={config} setConfig={setConfig}
-            onLogout={() => supabase?.auth.signOut()}
-          />
-        ) : (
-          <AdminLogin />
-        );
-      default: 
-        return (
-          <NotFoundPage setPage={setCurrentPage} />
-        );
-    }
-  };
-
   return (
     <CartProvider>
-      <Layout setPage={setCurrentPage} currentPage={currentPage} config={config}>
-        {renderPage()}
+      <Layout setPage={handleNavigation} currentPage={getCurrentPageId()} config={config}>
+        <Routes>
+          <Route path="/" element={
+            <HomePage 
+              setPage={handleNavigation} 
+              config={config} 
+              gallery={gallery} 
+              testimonials={testimonials} 
+            />
+          } />
+          <Route path="/home" element={
+            <HomePage 
+              setPage={handleNavigation} 
+              config={config} 
+              gallery={gallery} 
+              testimonials={testimonials} 
+            />
+          } />
+          
+          <Route path="/shop" element={<ShopPage products={products} />} />
+          <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
+          <Route path="/articles" element={<ArticlesPage articles={articles} products={products} />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
+          <Route path="/innovation" element={<InnovationPage config={config} />} />
+          
+          <Route path="/admin" element={
+            session ? (
+              <AdminDashboard 
+                products={products} setProducts={setProducts}
+                gallery={gallery} setGallery={setGallery}
+                testimonials={testimonials} setTestimonials={setTestimonials}
+                config={config} setConfig={setConfig}
+                onLogout={() => supabase?.auth.signOut()}
+              />
+            ) : (
+              <AdminLogin />
+            )
+          } />
+
+          <Route path="*" element={<NotFoundPage setPage={handleNavigation} />} />
+        </Routes>
       </Layout>
     </CartProvider>
   );
 };
+
+const App = () => (
+  <BrowserRouter>
+    <AppContent />
+  </BrowserRouter>
+);
 
 const root = createRoot(document.getElementById('root')!);
 root.render(<App />);
