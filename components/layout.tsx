@@ -1,17 +1,28 @@
 
 import React, { useState } from 'react';
-import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video } from 'lucide-react';
+import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video, ChevronDown } from 'lucide-react';
 import { useCart } from '../context/cart-context';
 import { SiteConfig, Product } from '../types';
 import { SibosWidget } from './sibos-core'; // Import SIBOS
 import { INITIAL_PRODUCTS } from '../utils'; // Fallback data
 
 // --- DATA & CONSTANTS ---
+// Structure updated to support Dropdown
 const NAV_ITEMS = [
   { id: 'home', label: 'Beranda' },
   { id: 'innovation', label: 'Inovasi' }, 
   { id: 'shop', label: 'Toko' },
-  { id: 'gallery', label: 'Galeri' },
+  { 
+    id: 'services-group', 
+    label: 'Layanan',
+    children: [
+      { id: 'home', label: 'Pembuatan Website' }, // Redirect to Home (Services section)
+      { id: 'home', label: 'Web App Development' },
+      { id: 'home', label: 'Optimasi SEO' },
+      { id: 'home', label: 'Maintenance' },
+      { id: 'gallery', label: 'Portofolio' }, // The old Gallery page
+    ]
+  },
   { id: 'articles', label: 'Artikel' },
   { id: 'about', label: 'Tentang' },
 ];
@@ -30,24 +41,28 @@ const Logo = ({ onClick, className = "" }: { onClick: () => void, className?: st
   </div>
 );
 
-const NavLink = ({ 
+interface NavLinkProps {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  mobile?: boolean;
+  isChild?: boolean;
+}
+
+const NavLink: React.FC<NavLinkProps> = ({ 
   label, 
   active, 
   onClick, 
-  mobile = false 
-}: { 
-  label: string, 
-  active: boolean, 
-  onClick: () => void, 
-  mobile?: boolean
+  mobile = false,
+  isChild = false
 }) => {
   if (mobile) {
     return (
       <button
         onClick={onClick}
-        className={`text-left text-lg font-bold p-2 rounded hover:bg-white/5 transition-all ${
-          active ? 'text-brand-orange pl-4 border-l-2 border-brand-orange' : 'text-gray-400'
-        }`}
+        className={`text-left font-bold p-2 rounded hover:bg-white/5 transition-all ${
+          active ? 'text-brand-orange border-l-2 border-brand-orange' : 'text-gray-400'
+        } ${isChild ? 'pl-8 text-sm font-normal' : 'text-lg'}`}
       >
         {label}
       </button>
@@ -110,11 +125,44 @@ const DesktopNav = ({
   <div className="hidden md:flex items-center gap-8">
     {NAV_ITEMS.map((item) => (
       <React.Fragment key={item.id}>
-        <NavLink 
-          label={item.label} 
-          active={current === item.id} 
-          onClick={() => setPage(item.id)} 
-        />
+        {item.children ? (
+          // DROPDOWN MENU
+          <div className="relative group">
+            <button className={`flex items-center gap-1 text-sm font-bold tracking-wide transition-all duration-300 ${
+              item.children.some(child => child.id === current)
+                ? 'text-brand-orange' 
+                : 'text-gray-400 hover:text-white'
+            }`}>
+              {item.label.toUpperCase()} <ChevronDown size={14} />
+            </button>
+            
+            {/* Dropdown Content */}
+            <div className="absolute left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 z-50 min-w-[200px]">
+               <div className="bg-brand-dark border border-white/10 rounded-xl shadow-2xl p-2 flex flex-col gap-1 overflow-hidden">
+                  {item.children.map((child, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => setPage(child.id)}
+                      className={`text-left px-4 py-3 rounded-lg text-sm font-bold transition-colors ${
+                        current === child.id && child.id !== 'home' 
+                          ? 'bg-brand-orange text-white' 
+                          : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      {child.label.toUpperCase()}
+                    </button>
+                  ))}
+               </div>
+            </div>
+          </div>
+        ) : (
+          // STANDARD LINK
+          <NavLink 
+            label={item.label} 
+            active={current === item.id} 
+            onClick={() => setPage(item.id)} 
+          />
+        )}
       </React.Fragment>
     ))}
     <CartButton id="desktop-cart-btn" count={cartCount} onClick={() => setPage('checkout')} />
@@ -156,16 +204,35 @@ const MobileMenuOverlay = ({
 }) => {
   if (!isOpen) return null;
   return (
-    <div className="md:hidden bg-brand-dark border-b border-brand-orange/20 p-4 absolute w-full shadow-2xl animate-fade-in z-40">
-      <div className="flex flex-col gap-4">
+    <div className="md:hidden bg-brand-dark border-b border-brand-orange/20 p-4 absolute w-full shadow-2xl animate-fade-in z-40 max-h-[80vh] overflow-y-auto">
+      <div className="flex flex-col gap-2">
         {NAV_ITEMS.map((item) => (
           <React.Fragment key={item.id}>
-            <NavLink 
-              label={item.label} 
-              active={current === item.id} 
-              onClick={() => { setPage(item.id); onClose(); }} 
-              mobile 
-            />
+             {item.children ? (
+                // Group Header & Children for Mobile
+                <div className="flex flex-col gap-1">
+                   <div className="text-left text-gray-500 text-xs font-bold uppercase tracking-widest mt-2 mb-1 px-2 border-b border-white/5 pb-1">
+                      {item.label}
+                   </div>
+                   {item.children.map((child, idx) => (
+                      <NavLink 
+                        key={idx}
+                        label={child.label} 
+                        active={current === child.id && child.id !== 'home'} 
+                        onClick={() => { setPage(child.id); onClose(); }} 
+                        mobile
+                        isChild
+                      />
+                   ))}
+                </div>
+             ) : (
+                <NavLink 
+                  label={item.label} 
+                  active={current === item.id} 
+                  onClick={() => { setPage(item.id); onClose(); }} 
+                  mobile 
+                />
+             )}
           </React.Fragment>
         ))}
       </div>
@@ -267,7 +334,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
                   onClick={() => setPage(link)} 
                   className="hover:text-brand-orange capitalize transition-colors"
                 >
-                  {link === 'shop' ? 'Produk' : link === 'about' ? 'Kontak' : link === 'innovation' ? 'Software' : link}
+                  {link === 'shop' ? 'Produk' : link === 'about' ? 'Kontak' : link === 'innovation' ? 'Software' : link === 'gallery' ? 'Portofolio' : link}
                 </button>
               </li>
             ))}

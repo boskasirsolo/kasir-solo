@@ -15,6 +15,7 @@ import { AboutPage } from './pages/about';
 import { AdminDashboard, AdminLogin } from './pages/admin';
 import { CheckoutPage } from './pages/checkout';
 import { InnovationPage } from './pages/innovation';
+import { NotFoundPage } from './pages/not-found';
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
@@ -111,12 +112,7 @@ const App = () => {
         );
       default: 
         return (
-          <HomePage 
-            setPage={setCurrentPage} 
-            config={config} 
-            gallery={gallery} 
-            testimonials={testimonials} 
-          />
+          <NotFoundPage setPage={setCurrentPage} />
         );
     }
   };

@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink, User } from 'lucide-react';
 import { SiteConfig, GalleryItem, Testimonial } from '../types';
 import { Button, Card, Badge } from '../components/ui';
+import { ProjectDetailModal } from '../components/gallery-modal'; // Import Modal
 
 // Helper to find matching testimonial or return placeholder
 const getTestimonialForProject = (projectTitle: string, testimonials: Testimonial[]) => {
@@ -19,12 +20,20 @@ const getTestimonialForProject = (projectTitle: string, testimonials: Testimonia
 };
 
 // Component for the "Combined Card" (Project + Testimonial)
-const CombinedCard = ({ item, testimonials, setPage }: { item: GalleryItem, testimonials: Testimonial[], setPage: (p: string) => void }) => {
+const CombinedCard = ({ 
+  item, 
+  testimonials, 
+  onClick 
+}: { 
+  item: GalleryItem, 
+  testimonials: Testimonial[], 
+  onClick: (item: GalleryItem) => void 
+}) => {
   const testimonial = getTestimonialForProject(item.title, testimonials);
   
   return (
     <div 
-      onClick={() => setPage('gallery')}
+      onClick={() => onClick(item)}
       className="w-[350px] md:w-[450px] shrink-0 flex flex-col gap-4 group/container cursor-pointer"
     >
       {/* TOP: Project Card */}
@@ -95,9 +104,9 @@ export const HomePage = ({
   gallery: GalleryItem[],
   testimonials: Testimonial[]
 }) => {
-  
   // Logic: Get 6 Latest Gallery Items for Marquee
   const featuredGallery = gallery.slice(0, 6);
+  const [selectedProject, setSelectedProject] = useState<GalleryItem | null>(null);
   
   return (
     <div className="animate-fade-in">
@@ -129,18 +138,36 @@ export const HomePage = ({
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-20 bg-brand-card border-t border-white/5">
+      {/* Features / Services Section */}
+      <section className="py-24 bg-brand-card border-t border-white/5">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">Mengapa Memilih <span className="text-brand-orange">Sistem Kami?</span></h2>
-              <p className="text-gray-400 max-w-2xl mx-auto">Infrastruktur teknologi stabil, aman, dan mudah digunakan.</p>
+              <div className="max-w-3xl mx-auto">
+                <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
+                  Mengapa Memilih <span className="text-brand-orange">Layanan Kami?</span>
+                </h2>
+                <p className="text-gray-400 text-base">
+                  Kami bukan sekadar penjual alat. Kami adalah partner teknis yang menjamin kelancaran operasional bisnis Anda jangka panjang.
+                </p>
+              </div>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: Zap, title: "High Performance POS", desc: "Hardware dan software yang dioptimalkan untuk transaksi super cepat." },
-              { icon: Monitor, title: "Hybrid Cloud System", desc: "Data aman di cloud, tetap beroperasi saat internet offline." },
-              { icon: BarChart3, title: "Real-time Analytics", desc: "Akses laporan omzet dan stok dari smartphone kapan saja." }
+              { 
+                icon: Zap, 
+                title: "Instalasi & Training", 
+                desc: "Layanan pemasangan perangkat keras dan pelatihan penggunaan software langsung di lokasi Anda sampai staff mahir." 
+              },
+              { 
+                icon: Monitor, 
+                title: "Technical Support", 
+                desc: "Tim support standby untuk membantu kendala teknis, klaim garansi, dan maintenance sistem kapanpun dibutuhkan." 
+              },
+              { 
+                icon: BarChart3, 
+                title: "Konsultasi Solusi", 
+                desc: "Analisis kebutuhan bisnis secara mendalam untuk memberikan rekomendasi sistem yang paling efisien dan hemat biaya." 
+              }
             ].map((feature, idx) => (
               <div key={idx} className="p-8 border border-white/5 rounded-2xl bg-brand-dark/80 hover:border-brand-orange transition-all duration-300 group hover:shadow-neon hover:-translate-y-2">
                 <feature.icon className="w-14 h-14 text-brand-orange mb-6 group-hover:scale-110 transition-transform duration-300 drop-shadow-neon" />
@@ -155,46 +182,59 @@ export const HomePage = ({
       {/* --- REVISED SECTION: GALLERY & TESTIMONIALS (SLOW MARQUEE) --- */}
       {featuredGallery.length > 0 && (
         <section className="py-24 bg-brand-black border-t border-white/5 relative overflow-hidden">
-           {/* Header Layout */}
-           <div className="container mx-auto px-4 relative z-10 mb-12">
-              <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-                  <div className="max-w-xl">
-                    <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
-                      Karya & Instalasi <span className="text-brand-orange">Terbaru</span>
-                    </h2>
-                    <p className="text-gray-400 text-base">Bukti nyata dedikasi kami dalam mendigitalisasi UMKM Indonesia dengan standar kualitas terbaik.</p>
-                  </div>
-                  {/* Styled Orange Button (MATCHING HERO BUTTON STYLE) */}
-                  <Button 
-                    onClick={() => setPage('gallery')}
-                    className="px-8 py-4 text-base font-bold shadow-action hover:shadow-action-strong transition-transform hover:-translate-y-1"
-                  >
-                    LIHAT SEMUA PORTFOLIO <ArrowRight size={20} />
-                  </Button>
+           {/* Header Layout - CENTERED */}
+           <div className="container mx-auto px-4 relative z-10 mb-12 text-center">
+              <div className="max-w-3xl mx-auto">
+                <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
+                  Karya & Instalasi <span className="text-brand-orange">Terbaru</span>
+                </h2>
+                <p className="text-gray-400 text-base">Bukti nyata dedikasi kami dalam mendigitalisasi UMKM Indonesia dengan standar kualitas terbaik.</p>
               </div>
            </div>
 
-           {/* Infinite Scroll Marquee */}
-           <div className="relative w-full overflow-hidden group">
+           {/* Infinite Scroll Marquee with PAUSE on HOVER/ACTIVE */}
+           <div className="relative w-full overflow-hidden group/marquee mb-12">
              {/* Gradient Fade Edges */}
              <div className="absolute left-0 top-0 bottom-0 w-12 md:w-40 bg-gradient-to-r from-brand-black to-transparent z-20 pointer-events-none"></div>
              <div className="absolute right-0 top-0 bottom-0 w-12 md:w-40 bg-gradient-to-l from-brand-black to-transparent z-20 pointer-events-none"></div>
 
              <div className="flex w-full gap-8">
-                {/* Loop 1 */}
-                <div className="flex min-w-full shrink-0 animate-marquee gap-8 justify-around items-stretch py-4">
+                {/* Loop 1 with Pause States */}
+                <div className="flex min-w-full shrink-0 animate-marquee gap-8 justify-around items-stretch py-4 group-hover/marquee:[animation-play-state:paused] group-active/marquee:[animation-play-state:paused]">
                   {featuredGallery.map((item) => (
-                    <CombinedCard key={`orig-${item.id}`} item={item} testimonials={testimonials} setPage={setPage} />
+                    <React.Fragment key={`orig-${item.id}`}>
+                      <CombinedCard 
+                        item={item} 
+                        testimonials={testimonials} 
+                        onClick={setSelectedProject} 
+                      />
+                    </React.Fragment>
                   ))}
                 </div>
                 
-                {/* Loop 2 (Clone for Seamless Effect) */}
-                <div className="flex min-w-full shrink-0 animate-marquee gap-8 justify-around items-stretch py-4" aria-hidden="true">
+                {/* Loop 2 (Clone for Seamless Effect) with Pause States */}
+                <div className="flex min-w-full shrink-0 animate-marquee gap-8 justify-around items-stretch py-4 group-hover/marquee:[animation-play-state:paused] group-active/marquee:[animation-play-state:paused]" aria-hidden="true">
                   {featuredGallery.map((item) => (
-                    <CombinedCard key={`clone-${item.id}`} item={item} testimonials={testimonials} setPage={setPage} />
+                    <React.Fragment key={`clone-${item.id}`}>
+                      <CombinedCard 
+                        item={item} 
+                        testimonials={testimonials} 
+                        onClick={setSelectedProject} 
+                      />
+                    </React.Fragment>
                   ))}
                 </div>
              </div>
+           </div>
+
+           {/* Styled Orange Button (MOVED BELOW MARQUEE & CENTERED) */}
+           <div className="relative z-10 text-center">
+             <Button 
+                onClick={() => setPage('gallery')}
+                className="px-8 py-4 text-base font-bold shadow-action hover:shadow-action-strong transition-transform hover:-translate-y-1 mx-auto"
+             >
+                LIHAT SEMUA PORTFOLIO <ArrowRight size={20} />
+             </Button>
            </div>
         </section>
       )}
@@ -225,6 +265,15 @@ export const HomePage = ({
           </div>
         </div>
       </section>
+
+      {/* RENDER MODAL */}
+      {selectedProject && (
+        <ProjectDetailModal 
+          item={selectedProject} 
+          testimonials={testimonials} 
+          onClose={() => setSelectedProject(null)} 
+        />
+      )}
     </div>
   );
 };
