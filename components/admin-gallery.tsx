@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, PlayCircle, Laptop, Link as LinkIcon } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv } from '../utils';
@@ -388,7 +388,7 @@ export const AdminGallery = ({
           )}
       </div>
 
-      {/* COLUMN 2: EDITOR FORM (30%) - REDESIGNED */}
+      {/* COLUMN 2: EDITOR FORM (30%) - REDESIGNED VERTICAL */}
       <div className="w-[30%] border-r border-white/5 flex flex-col bg-brand-dark">
          <div className="flex-grow overflow-y-auto p-4 custom-scrollbar">
              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
@@ -482,7 +482,7 @@ export const AdminGallery = ({
                              </div>
                              {/* Client Info */}
                              <div className="flex-1 space-y-1">
-                                 {/* Using Menu Dropdown concept as just Project Title/Business Context for now as per logic */}
+                                 {/* Contextual Tag */}
                                  <div className="bg-black/50 border border-white/10 text-[9px] text-gray-400 px-2 py-1 rounded truncate">
                                      {form.title || "Project Context"}
                                  </div>
