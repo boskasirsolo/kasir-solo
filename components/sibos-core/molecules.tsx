@@ -166,7 +166,8 @@ export const ChatInputArea = ({
         <button 
           onClick={onSend}
           disabled={(!input.trim() && !selectedImage) || disabled}
-          className="p-3 bg-brand-orange text-white rounded-xl hover:bg-brand-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-neon"
+          // UPDATED: bg-brand-action (Orange) for Send button
+          className="p-3 bg-brand-action text-white rounded-xl hover:bg-brand-actionGlow disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-action"
         >
           <Send size={20} />
         </button>

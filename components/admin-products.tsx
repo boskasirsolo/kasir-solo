@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search } from 'lucide-react';
 import { Product } from '../types';
@@ -200,7 +201,8 @@ const ProductForm = ({
                     <button 
                         onClick={onGenerateAI} 
                         disabled={loading.generatingAI} 
-                        className="bg-brand-orange text-white rounded px-3 py-1 flex items-center justify-center hover:bg-brand-glow disabled:opacity-50"
+                        // UPDATED: Use brand-action (Orange) for manual AI button
+                        className="bg-brand-action text-white rounded px-3 py-1 flex items-center justify-center hover:bg-brand-actionGlow disabled:opacity-50"
                     >
                         {loading.generatingAI ? <LoadingSpinner /> : <Sparkles size={16} />}
                     </button>

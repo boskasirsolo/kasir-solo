@@ -23,9 +23,10 @@ export const Button = ({
   const baseStyles = "rounded-lg font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
-    primary: "bg-brand-orange text-white hover:bg-brand-glow shadow-neon hover:shadow-neon-strong transform hover:-translate-y-1",
-    outline: "border-2 border-white/10 text-white hover:bg-white/5 hover:border-brand-orange/50 hover:shadow-neon",
-    ghost: "text-gray-400 hover:text-brand-orange hover:bg-white/5",
+    // UPDATED: Use brand-action (Orange) for buttons
+    primary: "bg-brand-action text-white hover:bg-brand-actionGlow shadow-action hover:shadow-action-strong transform hover:-translate-y-1",
+    outline: "border-2 border-white/10 text-white hover:bg-white/5 hover:border-brand-action/50 hover:shadow-action",
+    ghost: "text-gray-400 hover:text-brand-action hover:bg-white/5",
     danger: "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 shadow-neon-text/20"
   };
 
@@ -54,6 +55,7 @@ export const Input = ({
   type?: string,
   className?: string
 }) => (
+  // Use brand-orange (Amber) for focus state borders
   <input 
     type={type}
     value={value}
@@ -83,6 +85,7 @@ export const TextArea = ({
 );
 
 export const Badge = ({ children, className = '' }: { children?: React.ReactNode, className?: string }) => (
+  // Badge remains Amber (brand-orange) for status/tags
   <span className={`px-3 py-1 rounded-full text-xs font-bold text-brand-orange border border-brand-orange/30 bg-black/60 backdrop-blur-sm ${className}`}>
     {children}
   </span>

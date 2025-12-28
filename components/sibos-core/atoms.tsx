@@ -59,10 +59,11 @@ export const SibosTrigger = ({
   isOpen: boolean, 
   unreadCount: number 
 }) => (
+  // UPDATED: bg-brand-action (Orange) for trigger button
   <button
     onClick={onClick}
-    className={`fixed bottom-6 right-6 z-[9990] w-14 h-14 rounded-full shadow-neon-strong flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-      isOpen ? 'bg-brand-dark border border-brand-orange text-brand-orange' : 'bg-brand-orange text-white'
+    className={`fixed bottom-6 right-6 z-[9990] w-14 h-14 rounded-full shadow-action-strong flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+      isOpen ? 'bg-brand-dark border border-brand-action text-brand-action' : 'bg-brand-action text-white'
     }`}
   >
     {isOpen ? <X size={24} /> : <Bot size={28} />}
@@ -96,6 +97,9 @@ export const ChatBubble = ({
         
         {/* Avatar */}
         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${
+          // User Avatar: Orange (Amber/Action split). Let's use brand-orange (Amber) to match the general theme, or brand-action for consistency?
+          // Since it's passive, brand-orange (Amber) fits better as a theme color, but brand-action fits the user bubble below.
+          // Let's use brand-orange (Amber) for avatars.
           isUser ? 'bg-brand-orange/20 border-brand-orange/50 text-brand-orange' : 'bg-teal-500/20 border-teal-500/50 text-teal-500'
         }`}>
           {isUser ? <UserIcon size={14} /> : <Bot size={16} />}
@@ -105,6 +109,9 @@ export const ChatBubble = ({
         <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
           <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm flex flex-col gap-2 ${
             isUser 
+              // User Bubble: Use brand-orange (Amber). This looks Premium. 
+              // If you want Neon Orange, use brand-action. 
+              // "Komponen lainnya... pke amber". A chat bubble is a component, not a button. Amber is consistent.
               ? 'bg-brand-orange text-white rounded-tr-none' 
               : 'bg-white/10 text-gray-200 border border-white/5 rounded-tl-none backdrop-blur-sm'
           }`}>

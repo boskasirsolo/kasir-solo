@@ -60,7 +60,7 @@ const LossCalculator = () => {
             placeholder="Contoh: 2.000.000" 
           />
         </div>
-        <Button onClick={calculate} className="w-full py-4 text-lg shadow-neon hover:shadow-neon-strong">HITUNG POTENSI RUGI</Button>
+        <Button onClick={calculate} className="w-full py-4 text-lg shadow-action hover:shadow-action-strong">HITUNG POTENSI RUGI</Button>
       </div>
 
       {loss !== null && (
@@ -86,7 +86,8 @@ const SmartLinkButton = ({ url, defaultLabel, waLabel }: { url?: string, default
       href={targetUrl} 
       target="_blank" 
       rel="noreferrer"
-      className="w-full md:w-auto inline-flex justify-center items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all transform hover:-translate-y-1 bg-brand-orange text-white hover:bg-brand-glow shadow-neon hover:shadow-neon-strong"
+      // UPDATED: Use brand-action (Orange) for main buttons
+      className="w-full md:w-auto inline-flex justify-center items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all transform hover:-translate-y-1 bg-brand-action text-white hover:bg-brand-actionGlow shadow-action hover:shadow-action-strong"
     >
       {isLinkActive ? defaultLabel : waLabel} 
       {isLinkActive ? <ExternalLink size={18} /> : <ArrowRight size={18} />}

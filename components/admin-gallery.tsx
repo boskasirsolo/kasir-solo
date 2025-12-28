@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer } from 'lucide-react';
 import { GalleryItem } from '../types';
@@ -217,8 +218,9 @@ const GalleryForm = ({
         <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-black/40 rounded-lg border border-white/5">
             <button 
                 onClick={() => setForm((prev:any) => ({...prev, category_type: 'physical'}))}
+                // UPDATED: Use brand-action (Orange) for active toggle state
                 className={`py-2 text-xs font-bold rounded flex items-center justify-center gap-2 transition-all ${
-                    form.category_type === 'physical' ? 'bg-brand-orange text-white shadow-lg' : 'text-gray-500 hover:text-white'
+                    form.category_type === 'physical' ? 'bg-brand-action text-white shadow-lg' : 'text-gray-500 hover:text-white'
                 }`}
             >
                 <Hammer size={14} /> Fisik / Hardware
@@ -226,7 +228,7 @@ const GalleryForm = ({
             <button 
                 onClick={() => setForm((prev:any) => ({...prev, category_type: 'digital'}))}
                 className={`py-2 text-xs font-bold rounded flex items-center justify-center gap-2 transition-all ${
-                    form.category_type === 'digital' ? 'bg-brand-orange text-white shadow-lg' : 'text-gray-500 hover:text-white'
+                    form.category_type === 'digital' ? 'bg-brand-action text-white shadow-lg' : 'text-gray-500 hover:text-white'
                 }`}
             >
                 <Monitor size={14} /> Digital / Web
@@ -300,7 +302,7 @@ const GalleryForm = ({
                         placeholder={form.category_type === 'digital' ? "Context: website lambat, butuh SEO..." : "Context: kafe outdoor, wifi kencang..."}
                         className="bg-brand-card border border-white/10 rounded px-3 text-xs w-full focus:outline-none focus:border-brand-orange"
                     />
-                  <button onClick={onGenerateAI} disabled={loading.generatingAI} className="bg-brand-orange text-white rounded px-3 py-1 flex items-center justify-center hover:bg-brand-glow disabled:opacity-50">
+                  <button onClick={onGenerateAI} disabled={loading.generatingAI} className="bg-brand-action text-white rounded px-3 py-1 flex items-center justify-center hover:bg-brand-actionGlow disabled:opacity-50">
                     {loading.generatingAI ? <LoadingSpinner /> : <Sparkles size={16} />}
                   </button>
                </div>

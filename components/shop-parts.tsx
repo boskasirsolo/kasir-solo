@@ -59,6 +59,7 @@ export const ProductDescription = ({ description }: { description: string }) => 
 );
 
 export const ProductPrice = ({ price }: { price: number }) => (
+  // Price uses Amber (Premium)
   <div className="text-2xl font-display font-bold text-brand-orange">{formatRupiah(price)}</div>
 );
 
@@ -172,10 +173,11 @@ export const ProductActions = ({
         <button 
           ref={buttonRef}
           onClick={handleAddToCart}
+          // UPDATED: Use brand-action (Orange) for Buy button
           className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all group/btn ${
             isAdded 
               ? 'bg-green-500 text-white shadow-lg scale-95' 
-              : 'bg-brand-orange text-white hover:bg-brand-glow hover:shadow-neon'
+              : 'bg-brand-action text-white hover:bg-brand-actionGlow hover:shadow-action'
           }`}
         >
           {isAdded ? (
@@ -271,15 +273,9 @@ export const ProductDetailModal = ({
   const handleAddToCart = () => {
     setIsAnimating(true);
     addToCart(product);
-    // Tutup modal setelah jeda singkat agar user lihat feedback tombol (opsional), 
-    // atau biarkan user menutup sendiri. Di sini kita biarkan user menutup sendiri
-    // tapi tombol berubah state.
     setTimeout(() => {
         setIsAnimating(false);
-        onClose(); // Auto close untuk pengalaman yang lebih cepat? atau stay? 
-        // User request "Fly to cart" usually implies continuing shopping, 
-        // but inside modal "Buy" often leads to stay or checkout.
-        // Let's close it to indicate "Done, continue shopping".
+        onClose(); 
     }, 500);
   };
 
@@ -297,7 +293,7 @@ export const ProductDetailModal = ({
         
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-orange transition-colors"
+          className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-action transition-colors"
         >
           <X size={20} />
         </button>
@@ -328,8 +324,9 @@ export const ProductDetailModal = ({
           <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button 
               onClick={handleAddToCart}
-              className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong gap-2 ${
-                  isAnimating ? 'bg-green-500 text-white' : 'bg-brand-orange hover:bg-brand-glow text-white'
+              // UPDATED: Buy button -> brand-action
+              className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${
+                  isAnimating ? 'bg-green-500 text-white' : 'bg-brand-action hover:bg-brand-actionGlow text-white'
               }`}
             >
               {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} 
@@ -339,7 +336,7 @@ export const ProductDetailModal = ({
               href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center w-full py-4 border border-white/20 hover:border-brand-orange text-white rounded-xl font-bold transition-all gap-2"
+              className="flex items-center justify-center w-full py-4 border border-white/20 hover:border-brand-action text-white rounded-xl font-bold transition-all gap-2"
             >
               <MessageCircle size={20} /> Chat
             </a>

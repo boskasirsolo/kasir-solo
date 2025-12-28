@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -19,6 +20,7 @@ const FilterTab = ({
   onClick: () => void,
   icon: any
 }) => (
+  // Tab remains using brand-orange (Amber) as it's a navigational/state element
   <button 
     onClick={onClick}
     className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all whitespace-nowrap border ${
@@ -248,7 +250,8 @@ export const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => {
                     href="https://wa.me/6282325103336" 
                     target="_blank" 
                     rel="noreferrer"
-                    className="flex-1 flex items-center justify-center py-3 bg-brand-orange hover:bg-brand-glow text-white rounded-lg font-bold transition-all shadow-neon hover:shadow-neon-strong"
+                    // UPDATED: Primary action -> brand-action
+                    className="flex-1 flex items-center justify-center py-3 bg-brand-action hover:bg-brand-actionGlow text-white rounded-lg font-bold transition-all shadow-action hover:shadow-action-strong"
                  >
                     Hubungi Sales
                  </a>
