@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, PlayCircle, Laptop } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, PlayCircle, Laptop, Link as LinkIcon } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv } from '../utils';
@@ -23,7 +23,7 @@ const useIntegratedGalleryManager = (
         platform: 'web' as 'web' | 'mobile' | 'desktop', // Default fallback
         client_url: '',
         tech_stack_str: '',
-        shortDesc: '', 
+        shortDesc: '', // Used as AI Context internally
         longDesc: '',
         cs_challenge: '',
         cs_solution: '',
@@ -128,7 +128,7 @@ const useIntegratedGalleryManager = (
     // Helper to handle Dropdown Change (Updates both Category and Platform)
     const handleTypeChange = (val: string) => {
         if (val === 'hardware') {
-            setForm(p => ({ ...p, category_type: 'physical', platform: 'desktop' })); // Default platform for hardware irrelevant but kept clean
+            setForm(p => ({ ...p, category_type: 'physical', platform: 'desktop' })); 
         } else {
             setForm(p => ({ ...p, category_type: 'digital', platform: val as any }));
         }
@@ -141,7 +141,18 @@ const useIntegratedGalleryManager = (
     };
 
     const generateAINarrative = async () => {
-        if (!form.title || !form.shortDesc) return alert("Isi Judul & Context dulu.");
+        // Validasi input minimal untuk konteks AI
+        if (!form.title) return alert("Isi Judul Proyek dulu agar AI mengerti konteksnya.");
+        
+        // Buat konteks dari field yang sudah diisi manual
+        const contextString = `
+            Project: ${form.title}
+            Type: ${form.category_type}
+            Challenge: ${form.cs_challenge}
+            Solution: ${form.cs_solution}
+            Result: ${form.cs_result}
+        `;
+
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
             await ensureAPIKey(); 
@@ -151,44 +162,37 @@ const useIntegratedGalleryManager = (
 
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
             
-            // Unified Prompt for both Hardware and Digital (Since user wants Digital format for all)
-            const prompt = `
-            Role: Senior Tech Copywriter & SEO Specialist.
-            Task: Create a Case Study breakdown for a portfolio item.
-            Project Name: ${form.title}
-            Type: ${form.category_type === 'physical' ? 'Hardware Installation' : 'Software Development'}
-            Context/Keywords: ${form.shortDesc}
+            // 1. Generate Main Description
+            const mainPrompt = `
+            Role: Senior Portfolio Copywriter.
+            Task: Write a compelling project description (Case Study Summary).
+            Context Data: ${contextString}
             
-            Instructions:
-            1. Language: Indonesian (Professional, Insightful).
-            2. Output Format: STRICT JSON ONLY. No markdown, no intro text.
-            3. Structure: { "challenge": "...", "solution": "...", "result": "..." }
-            4. SEO Focus: Use problem-solution keywords.
+            STRICT RULES:
+            1. Language: Indonesian (Professional, Result-Oriented).
+            2. Format: Plain text, 2 paragraphs max.
+            3. Content: Blend the challenge, solution, and result into a narrative.
+            4. NO INTRO like "Here is the text". Just the text.
             `;
             
-            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
-            const rawText = response.text?.trim() || '{}';
-            try {
-                const jsonStr = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
-                const parsed = JSON.parse(jsonStr);
-                setForm(prev => ({ ...prev, cs_challenge: parsed.challenge || '', cs_solution: parsed.solution || '', cs_result: parsed.result || '' }));
-            } catch (e) { 
-                // Fallback if JSON fails
-                setForm(prev => ({...prev, longDesc: rawText})); 
-            }
+            const mainResponse = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: mainPrompt });
+            setForm(prev => ({ ...prev, longDesc: mainResponse.text?.trim() || '' }));
 
-            // Testimonial Draft
-            if (!testiForm.content && testiForm.hasTestimonial) {
+            // 2. Generate Testimonial (Only if checkbox is checked)
+            if (testiForm.hasTestimonial) {
                  const testiPrompt = `
-                 Role: Happy Customer.
-                 Task: Write a short, natural testimonial (1-2 sentences).
-                 Business: ${form.title}
-                 Service: ${form.shortDesc}
+                 Role: A satisfied client owner.
+                 Task: Write a short testimonial (1-2 sentences) about the project "${form.title}".
+                 Context: We are happy because ${form.cs_result || "the service was excellent"}.
                  Language: Indonesian (Casual/Semi-formal).
-                 STRICT: Output ONLY the testimonial text. No quotes.
+                 STRICT: Output ONLY the testimonial text. No quotes, no intro.
                  `;
                  const testiResponse = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: testiPrompt });
-                 setTestiForm(prev => ({...prev, content: testiResponse.text?.trim() || ''}));
+                 setTestiForm(prev => ({
+                     ...prev, 
+                     content: testiResponse.text?.trim() || '',
+                     client_name: prev.client_name || "Nama Klien (Edit)", // Placeholder if empty
+                 }));
             }
 
         } catch (e: any) { 
@@ -209,6 +213,7 @@ const useIntegratedGalleryManager = (
 
         setLoadingState(prev => ({ ...prev, uploading: true }));
         try {
+            // 1. Upload Project Image
             let finalImageUrl = form.imagePreview;
             if (form.uploadFile) {
                 const formData = new FormData();
@@ -219,16 +224,17 @@ const useIntegratedGalleryManager = (
                 if (data.secure_url) finalImageUrl = data.secure_url;
             }
 
-            // Always save extensive data (Digital Format)
+            // 2. Prepare Gallery Data
             const dbData: Partial<GalleryItem> = {
                 title: form.title,
                 image_url: finalImageUrl || 'https://via.placeholder.com/800x600',
                 type: 'image',
                 category_type: form.category_type,
-                description: form.longDesc || form.cs_solution, // Fallback desc
+                description: form.longDesc || form.cs_solution, 
                 platform: form.platform,
                 client_url: form.client_url,
-                tech_stack: form.tech_stack_str.split(',').map(s => s.trim()).filter(s => s),
+                // Default stack if empty, split by comma if string
+                tech_stack: form.tech_stack_str ? form.tech_stack_str.split(',').map(s => s.trim()) : ['Solusi Bisnis'],
                 case_study: {
                     challenge: form.cs_challenge,
                     solution: form.cs_solution,
@@ -236,7 +242,7 @@ const useIntegratedGalleryManager = (
                 }
             };
 
-            // Save Gallery Item
+            // 3. Save Gallery Item
             if (form.id) {
                 const updatedItem = { ...gallery.find(g => g.id === form.id)!, ...dbData };
                 setGallery(gallery.map(g => g.id === form.id ? updatedItem : g));
@@ -248,8 +254,8 @@ const useIntegratedGalleryManager = (
                 if (supabase) await supabase.from('gallery').insert([dbData]);
             }
 
-            // Handle Testimonial Save
-            if (testiForm.hasTestimonial && testiForm.client_name) {
+            // 4. Handle Testimonial Save
+            if (testiForm.hasTestimonial) {
                 let finalTestiImage = testiForm.imagePreview;
                 if (testiForm.uploadFile) {
                     const formData = new FormData();
@@ -261,8 +267,8 @@ const useIntegratedGalleryManager = (
                 }
 
                 const testiData = {
-                    client_name: testiForm.client_name,
-                    business_name: form.title,
+                    client_name: testiForm.client_name || "Pelanggan Puas",
+                    business_name: form.title, // LINKED BY PROJECT TITLE
                     content: testiForm.content,
                     rating: testiForm.rating,
                     image_url: finalTestiImage,
@@ -326,7 +332,7 @@ export const AdminGallery = ({
   } = useIntegratedGalleryManager(gallery, setGallery, testimonials, setTestimonials);
 
   return (
-    <div className="flex h-[800px] border-t border-white/5">
+    <div className="flex h-[850px] border-t border-white/5">
       
       {/* COLUMN 1: LIST (30%) */}
       <div className="w-[30%] border-r border-white/5 bg-black/20 flex flex-col">
@@ -373,7 +379,6 @@ export const AdminGallery = ({
                  </div>
              ))}
           </div>
-          {/* Pagination Simple */}
           {listData.totalPages > 1 && (
              <div className="p-3 border-t border-white/5 flex justify-between items-center bg-brand-dark">
                 <button onClick={() => listData.setPage(p => Math.max(1, p-1))} disabled={listData.page===1} className="text-gray-400 disabled:opacity-30"><ChevronLeft size={16}/></button>
@@ -383,95 +388,123 @@ export const AdminGallery = ({
           )}
       </div>
 
-      {/* COLUMN 2: EDITORS (30%) */}
+      {/* COLUMN 2: EDITOR FORM (30%) - REDESIGNED */}
       <div className="w-[30%] border-r border-white/5 flex flex-col bg-brand-dark">
-         
-         {/* Top Half: Project Editor (65% Height) */}
-         <div className="h-[65%] overflow-y-auto p-4 border-b border-white/10 custom-scrollbar">
-             <div className="flex justify-between items-center mb-3">
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Edit size={12}/> Project Details</h4>
-             </div>
+         <div className="flex-grow overflow-y-auto p-4 custom-scrollbar">
+             <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
+                <Edit size={12}/> Project Details
+             </h4>
              
              <div className="space-y-3">
-                 <div className="flex gap-2 items-center bg-black/20 p-2 rounded border border-white/5">
-                    <div className="w-10 h-10 bg-black rounded overflow-hidden shrink-0 border border-white/10 relative group">
-                        {form.imagePreview && <img src={form.imagePreview} className="w-full h-full object-cover" />}
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
-                           <UploadCloud size={14} className="text-white"/>
-                           <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
+                 {/* 1. Image Upload */}
+                 <div className="w-full h-32 bg-black rounded-lg border border-white/10 relative group overflow-hidden">
+                    {form.imagePreview ? (
+                        <img src={form.imagePreview} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-2">
+                            <UploadCloud size={24} />
+                            <span className="text-[10px]">Upload Foto Proyek</span>
                         </div>
-                    </div>
-                    <Input value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} placeholder="Judul Project" className="text-xs py-1.5 h-8" />
+                    )}
+                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
                  </div>
 
-                 {/* AI Trigger */}
-                 <div className="p-2 bg-brand-orange/5 rounded border border-brand-orange/20">
-                    <div className="flex gap-1 mb-1">
-                        <Input value={form.shortDesc} onChange={e => setForm(p => ({...p, shortDesc: e.target.value}))} placeholder="AI Trigger: konteks project..." className="text-xs py-1 h-7 bg-transparent border-none focus:ring-0 px-0" />
-                        <button onClick={generateAINarrative} disabled={loadingState.generatingAI} className="bg-brand-orange text-white px-2 rounded text-[9px] font-bold hover:bg-brand-glow">{loadingState.generatingAI ? '...' : 'AI'}</button>
-                    </div>
-                 </div>
-
-                 {/* Digital Format Inputs (Available for ALL types now) */}
-                 <div className="space-y-2 bg-white/5 p-2 rounded">
-                     {/* Unified Category & Platform Selector */}
+                 {/* 2. Type & URL */}
+                 <div className="grid grid-cols-2 gap-2">
                      <select 
                         value={getCurrentType()} 
                         onChange={e => handleTypeChange(e.target.value)} 
-                        className="w-full bg-black text-white text-xs p-1.5 rounded border border-white/10 mb-1 focus:border-brand-orange outline-none"
+                        className="bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none"
                      >
-                         <option value="hardware">Hardware / Instalasi Fisik</option>
-                         <option value="web">Software - Website / Web App</option>
-                         <option value="mobile">Software - Mobile App (Android/iOS)</option>
-                         <option value="desktop">Software - Desktop System</option>
+                         <option value="hardware">Hardware / Fisik</option>
+                         <option value="web">Website</option>
+                         <option value="mobile">Mobile App</option>
+                         <option value="desktop">Desktop App</option>
                      </select>
-
-                     <Input value={form.client_url} onChange={e => setForm(p => ({...p, client_url: e.target.value}))} placeholder="URL Project / Live Link" className="text-xs py-1 h-7" />
-                     
-                     <div className="grid grid-cols-1 gap-2 mt-2">
-                         <input value={form.cs_challenge} onChange={e => setForm(p => ({...p, cs_challenge: e.target.value}))} placeholder="Challenge (Tantangan Klien)" className="bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
-                         <input value={form.cs_solution} onChange={e => setForm(p => ({...p, cs_solution: e.target.value}))} placeholder="Solution (Solusi Kami)" className="bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
-                         <input value={form.cs_result} onChange={e => setForm(p => ({...p, cs_result: e.target.value}))} placeholder="Result (Hasil Akhir)" className="bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
+                     <div className="relative">
+                        <LinkIcon size={12} className="absolute left-2 top-2.5 text-gray-500" />
+                        <input value={form.client_url} onChange={e => setForm(p => ({...p, client_url: e.target.value}))} placeholder="Link URL" className="w-full bg-black text-white text-[10px] py-2 pl-6 pr-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
                      </div>
                  </div>
-             </div>
-         </div>
 
-         {/* Bottom Half: Testimonial Editor (35% Height) */}
-         <div className="h-[35%] overflow-y-auto p-4 bg-black/40 custom-scrollbar flex flex-col border-t border-white/5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
-             <div className="flex justify-between items-center mb-2">
-                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Quote size={12}/> Testimoni</h4>
-                 <label className="flex items-center gap-2 cursor-pointer">
-                     <span className="text-[10px] text-gray-400">Include?</span>
-                     <input type="checkbox" checked={testiForm.hasTestimonial} onChange={e => setTestiForm(p => ({...p, hasTestimonial: e.target.checked}))} className="accent-brand-orange" />
-                 </label>
-             </div>
-             
-             {testiForm.hasTestimonial ? (
-                 <div className="space-y-2 flex-grow">
-                     <div className="flex gap-2 items-center">
-                        <div className="w-8 h-8 rounded-full bg-brand-card border border-white/10 overflow-hidden relative group shrink-0">
-                            {testiForm.imagePreview ? <img src={testiForm.imagePreview} className="w-full h-full object-cover"/> : <User size={16} className="text-gray-500 m-auto mt-2"/>}
-                            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setTestiForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
+                 {/* 3. Title */}
+                 <input value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} placeholder="Judul Proyek" className="w-full bg-black text-white text-xs font-bold py-2 px-3 rounded border border-white/10 focus:border-brand-orange outline-none" />
+
+                 {/* 4. Case Study Fields */}
+                 <div className="space-y-2">
+                     <input value={form.cs_challenge} onChange={e => setForm(p => ({...p, cs_challenge: e.target.value}))} placeholder="Tantangan (Challenge)" className="w-full bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
+                     <input value={form.cs_solution} onChange={e => setForm(p => ({...p, cs_solution: e.target.value}))} placeholder="Solusi (Solution)" className="w-full bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
+                     <input value={form.cs_result} onChange={e => setForm(p => ({...p, cs_result: e.target.value}))} placeholder="Hasil (Result)" className="w-full bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
+                 </div>
+
+                 {/* 5. Separator & Testimonial Toggle */}
+                 <div className="py-2 flex items-center justify-between">
+                     <label className="flex items-center gap-2 cursor-pointer select-none">
+                         <input type="checkbox" checked={testiForm.hasTestimonial} onChange={e => setTestiForm(p => ({...p, hasTestimonial: e.target.checked}))} className="accent-brand-orange w-3 h-3" />
+                         <span className="text-[10px] font-bold text-white uppercase tracking-wider">Include Testimoni?</span>
+                     </label>
+                 </div>
+
+                 {/* 6. AI & Stars Row */}
+                 <div className="flex gap-2">
+                    <button 
+                        onClick={generateAINarrative} 
+                        disabled={loadingState.generatingAI}
+                        className="flex-1 bg-brand-orange text-white py-2 rounded text-[10px] font-bold hover:bg-brand-glow flex items-center justify-center gap-2 transition-all shadow-action"
+                    >
+                        {loadingState.generatingAI ? <LoadingSpinner size={14}/> : <><Sparkles size={14}/> MAGIC AI</>}
+                    </button>
+                    {testiForm.hasTestimonial && (
+                        <div className="flex bg-black/40 border border-white/10 rounded px-2 items-center gap-1">
+                            {[1,2,3,4,5].map(s => (
+                                <Star key={s} size={10} className={`cursor-pointer ${s <= testiForm.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-700'}`} onClick={() => setTestiForm(p => ({...p, rating: s}))} />
+                            ))}
                         </div>
-                        <Input value={testiForm.client_name} onChange={e => setTestiForm(p => ({...p, client_name: e.target.value}))} placeholder="Nama Klien" className="text-xs py-1 h-7" />
-                     </div>
-                     <div className="flex gap-1">
-                         {[1,2,3,4,5].map(s => (
-                             <Star key={s} size={10} className={`cursor-pointer ${s <= testiForm.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} onClick={() => setTestiForm(p => ({...p, rating: s}))} />
-                         ))}
-                     </div>
-                     <TextArea value={testiForm.content} onChange={e => setTestiForm(p => ({...p, content: e.target.value}))} placeholder="Isi testimoni..." className="text-xs h-16 bg-brand-card" />
+                    )}
                  </div>
-             ) : (
-                 <div className="flex-grow flex items-center justify-center text-gray-600 text-xs italic bg-white/5 rounded border border-white/5 border-dashed">
-                     Tanpa testimoni khusus (Default Verified)
-                 </div>
-             )}
 
-             <div className="mt-2 pt-2 border-t border-white/10">
-                 <Button onClick={handleSubmit} disabled={loadingState.uploading} className="w-full py-2 text-xs">
-                    {loadingState.uploading ? <LoadingSpinner /> : <><Save size={14} /> SIMPAN SEMUA</>}
+                 {/* 7. Narrative Area */}
+                 <textarea 
+                    value={form.longDesc} 
+                    onChange={e => setForm(p => ({...p, longDesc: e.target.value}))} 
+                    placeholder="Narasi Proyek (Deskripsi Lengkap)..." 
+                    className="w-full h-24 bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none leading-relaxed custom-scrollbar resize-none" 
+                 />
+
+                 {/* 8. Testimonial Box (Orange Border Concept) */}
+                 {testiForm.hasTestimonial && (
+                     <div className="border border-brand-orange/30 bg-brand-orange/5 rounded-lg p-3 space-y-2 animate-fade-in">
+                         <div className="flex gap-2">
+                             {/* Client Photo */}
+                             <div className="w-10 h-10 rounded bg-black border border-brand-orange/20 overflow-hidden shrink-0 relative group">
+                                {testiForm.imagePreview ? <img src={testiForm.imagePreview} className="w-full h-full object-cover" /> : <User size={16} className="text-brand-orange m-auto mt-2"/>}
+                                <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setTestiForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
+                             </div>
+                             {/* Client Info */}
+                             <div className="flex-1 space-y-1">
+                                 {/* Using Menu Dropdown concept as just Project Title/Business Context for now as per logic */}
+                                 <div className="bg-black/50 border border-white/10 text-[9px] text-gray-400 px-2 py-1 rounded truncate">
+                                     {form.title || "Project Context"}
+                                 </div>
+                                 <input 
+                                    value={testiForm.client_name} 
+                                    onChange={e => setTestiForm(p => ({...p, client_name: e.target.value}))} 
+                                    placeholder="Nama Klien" 
+                                    className="w-full bg-transparent border-b border-brand-orange/30 text-[10px] text-white focus:outline-none placeholder-white/30" 
+                                 />
+                             </div>
+                         </div>
+                         <textarea 
+                            value={testiForm.content} 
+                            onChange={e => setTestiForm(p => ({...p, content: e.target.value}))} 
+                            placeholder="Isi testimoni..." 
+                            className="w-full h-16 bg-black/30 text-white text-[10px] p-2 rounded border border-brand-orange/10 focus:border-brand-orange outline-none resize-none" 
+                         />
+                     </div>
+                 )}
+
+                 <Button onClick={handleSubmit} disabled={loadingState.uploading} className="w-full py-3 mt-2 text-xs">
+                    {loadingState.uploading ? <LoadingSpinner /> : <><Save size={14} /> SIMPAN DATA</>}
                  </Button>
              </div>
          </div>
@@ -481,10 +514,9 @@ export const AdminGallery = ({
       <div className="w-[40%] bg-black flex items-center justify-center p-8 overflow-hidden relative">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
           
-          {/* Mockup Card - Unified Style (Digital Style for All) */}
           <div className="w-full max-w-sm">
              <div className="text-center mb-4">
-                <span className="text-[10px] text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Live Preview (Unified)</span>
+                <span className="text-[10px] text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Live Preview</span>
              </div>
 
              <div className="group relative bg-brand-card border border-white/5 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-auto">
@@ -500,7 +532,6 @@ export const AdminGallery = ({
                 </div>
                 <div className="p-4 flex flex-col">
                     <div className="flex flex-wrap gap-1 mb-2">
-                       {/* Show Category Chip */}
                        <span className={`text-[9px] px-1.5 py-0.5 rounded border border-white/5 ${form.category_type === 'physical' ? 'bg-green-500/10 text-green-400' : 'bg-blue-500/10 text-blue-400'}`}>
                            {form.category_type === 'physical' ? 'HARDWARE' : 'SOFTWARE'}
                        </span>
@@ -519,18 +550,20 @@ export const AdminGallery = ({
              </div>
 
              {/* PREVIEW TESTIMONIAL FOOTER */}
-             <div className="mt-4 bg-brand-dark border border-white/10 rounded-xl p-3 flex items-center gap-3">
-                 <div className="w-10 h-10 rounded-full border border-brand-orange/30 p-0.5 shrink-0">
-                    <img src={testiForm.hasTestimonial && testiForm.imagePreview ? testiForm.imagePreview : "https://via.placeholder.com/100"} className="w-full h-full rounded-full object-cover bg-black" />
+             {testiForm.hasTestimonial && (
+                 <div className="mt-4 bg-brand-dark border border-white/10 rounded-xl p-3 flex items-center gap-3 animate-fade-in">
+                     <div className="w-10 h-10 rounded-full border border-brand-orange/30 p-0.5 shrink-0">
+                        <img src={testiForm.imagePreview ? testiForm.imagePreview : "https://via.placeholder.com/100"} className="w-full h-full rounded-full object-cover bg-black" />
+                     </div>
+                     <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                           <h5 className="text-xs font-bold text-white">{testiForm.client_name || "Nama Klien"}</h5>
+                           <div className="flex text-yellow-500 gap-0.5">{[...Array(5)].map((_,i) => <Star key={i} size={8} fill={i < testiForm.rating ? "currentColor":"none"}/>)}</div>
+                        </div>
+                        <p className="text-[9px] text-gray-400 italic line-clamp-1">"{testiForm.content || "Isi testimoni..."}"</p>
+                     </div>
                  </div>
-                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                       <h5 className="text-xs font-bold text-white">{testiForm.hasTestimonial && testiForm.client_name ? testiForm.client_name : "Tim Teknis"}</h5>
-                       <div className="flex text-yellow-500 gap-0.5">{[...Array(5)].map((_,i) => <Star key={i} size={8} fill={i < testiForm.rating ? "currentColor":"none"}/>)}</div>
-                    </div>
-                    <p className="text-[9px] text-gray-400 italic line-clamp-1">"{testiForm.hasTestimonial && testiForm.content ? testiForm.content : "Verified Installation"}"</p>
-                 </div>
-             </div>
+             )}
 
           </div>
       </div>
