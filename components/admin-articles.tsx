@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap, ChevronDown, ChevronUp, MoreVertical, ArrowLeft } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
-import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey } from '../utils';
+import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey, slugify } from '../utils';
 import { GoogleGenAI } from "@google/genai";
+import { Link } from 'react-router-dom';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -45,6 +46,37 @@ interface GenConfig {
     imageStyle: 'cinematic' | 'cyberpunk' | 'corporate' | 'studio' | 'minimalist';
 }
 
+// --- HELPER: TEXT RENDERER (Shared - Supports Bold & Links) ---
+const renderInline = (text: string) => {
+    // 1. Split by Links [text](url)
+    const linkParts = text.split(/(\[.*?\]\(.*?\))/g);
+    
+    return linkParts.map((part, i) => {
+        // Handle Link
+        const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+        if (linkMatch) {
+            return (
+                <Link key={i} to={linkMatch[2]} className="text-brand-orange hover:text-white underline decoration-brand-orange/50 hover:decoration-white transition-all font-medium">
+                    {linkMatch[1]}
+                </Link>
+            );
+        }
+
+        // 2. Split non-link parts by Bold **text**
+        const boldParts = part.split(/(\*\*.*?\*\*)/g);
+        return (
+            <span key={i}>
+                {boldParts.map((subPart, j) => {
+                    if (subPart.startsWith('**') && subPart.endsWith('**')) {
+                        return <strong key={j} className="text-white font-bold">{subPart.slice(2, -2)}</strong>;
+                    }
+                    return subPart;
+                })}
+            </span>
+        );
+    });
+};
+
 // --- HELPER: MARKDOWN TABLE ---
 const MarkdownTable = ({ content }: { content: string }) => {
     const rows = content.trim().split('\n');
@@ -59,7 +91,7 @@ const MarkdownTable = ({ content }: { content: string }) => {
                 <thead className="bg-white/5 text-brand-orange uppercase text-[10px] font-bold tracking-wider">
                     <tr>
                         {headers.map((h, i) => (
-                            <th key={i} className="px-4 py-3 border-b border-white/10">{h}</th>
+                            <th key={i} className="px-4 py-3 border-b border-white/10">{renderInline(h)}</th>
                         ))}
                     </tr>
                 </thead>
@@ -74,7 +106,7 @@ const MarkdownTable = ({ content }: { content: string }) => {
                             <tr key={idx} className="hover:bg-white/5 transition-colors">
                                 {cells.map((c, cIdx) => (
                                     <td key={cIdx} className="px-4 py-3 border-r border-white/5 last:border-0 text-gray-300 align-top">
-                                        {c.trim()}
+                                        {renderInline(c.trim())}
                                     </td>
                                 ))}
                             </tr>
@@ -90,16 +122,6 @@ const MarkdownTable = ({ content }: { content: string }) => {
 const SimpleMarkdown = ({ content }: { content: string }) => {
     if (!content) return <div className="text-gray-600 italic">Preview konten akan muncul di sini...</div>;
     
-    const renderInline = (text: string) => {
-        const parts = text.split(/(\*\*.*?\*\*)/g);
-        return parts.map((part, i) => {
-            if (part.startsWith('**') && part.endsWith('**')) {
-                return <strong key={i} className="text-brand-orange font-bold">{part.slice(2, -2)}</strong>;
-            }
-            return part;
-        });
-    };
-
     // Split content but group tables
     const lines = content.split('\n');
     const blocks: { type: string, content: string }[] = [];
@@ -187,7 +209,8 @@ const useArticleManager = (
         // STRATEGY FIELDS
         type: 'cluster' as 'pillar' | 'cluster',
         pillar_id: 0 as number,
-        cluster_ideas: [] as string[]
+        cluster_ideas: [] as string[],
+        scheduleStart: '' // NEW: Date picker state
     });
 
     // AI Flow State
@@ -248,7 +271,8 @@ const useArticleManager = (
             scheduled_for: '',
             type: 'cluster',
             pillar_id: 0,
-            cluster_ideas: []
+            cluster_ideas: [],
+            scheduleStart: ''
         });
         setAiStep(0);
         setKeywords([]);
@@ -279,7 +303,8 @@ const useArticleManager = (
             scheduled_for: item.scheduled_for || '',
             type: item.type || 'cluster',
             pillar_id: item.pillar_id || 0,
-            cluster_ideas: item.cluster_ideas || []
+            cluster_ideas: item.cluster_ideas || [],
+            scheduleStart: ''
         });
         setAiStep(3); 
     };
@@ -342,12 +367,16 @@ const useArticleManager = (
             } else {
                 const parentPillar = availablePillars.find(p => p.id === form.pillar_id);
                 const pillarTitle = parentPillar ? parentPillar.title : "Panduan Lengkap Bisnis";
+                // Generate URL Link
+                const pillarLink = `/articles/${slugify(pillarTitle)}`;
+                
                 strategyContext = `
                 STRATEGY: This is a **CLUSTER CONTENT** (Supporting Article).
                 - Topic: "${form.title}"
-                - Parent Topic: "${pillarTitle}"
+                - Parent Topic (Pillar): "${pillarTitle}"
                 - Focus: Deep dive into this specific sub-topic. Do NOT be generic.
-                - **MANDATORY**: Include a natural link/reference to the Pillar Page.
+                - **MANDATORY INTERNAL LINKING**: You MUST include a Markdown link to the Pillar Page in the Introduction or first section. 
+                  **Format MUST be exactly**: [${pillarTitle}](${pillarLink})
                 `;
                 lengthReq = "STRICTLY MINIMUM 1000 WORDS. Do not write short content.";
                 structureInstruction = "Create 6-8 Detailed Subheadings (H2) covering 'What', 'Why', 'How', 'Examples', 'Common Mistakes', and 'Advanced Tips'.";
@@ -363,7 +392,7 @@ const useArticleManager = (
             
             STRUCTURE:
             1. **Headline**: # ${form.title}
-            2. **Introduction**: Hook & Context (Pain Points).
+            2. **Introduction**: Hook & Context (Pain Points). Include the Internal Link here.
             3. **Deep Dive**: ${structureInstruction}
                - Use detailed paragraphs, bullet points, data tables (Markdown), and real-world examples (Case Studies).
             4. **FAQ**: 5-8 Q&A (Schema ready).
@@ -454,23 +483,40 @@ const useArticleManager = (
     const scheduleClusters = async () => {
         if (!form.cluster_ideas || form.cluster_ideas.length === 0) return alert("Tidak ada ide cluster untuk dijadwalkan.");
         
+        // Start date logic
+        let scheduleDate = new Date();
+        if (form.scheduleStart) {
+            scheduleDate = new Date(form.scheduleStart);
+        } else {
+            // Default to tomorrow if not selected
+            scheduleDate.setDate(scheduleDate.getDate() + 1);
+            scheduleDate.setHours(9, 0, 0, 0); // Default 9 AM
+        }
+
+        if (isNaN(scheduleDate.getTime())) return alert("Tanggal tidak valid.");
+
         setLoading(prev => ({ ...prev, scheduling: true }));
         try {
             const newArticles: Article[] = [];
-            const now = new Date();
+            const parentPillar = availablePillars.find(p => p.id === form.id);
+            const parentSlug = parentPillar ? `/articles/${slugify(parentPillar.title)}` : '#';
+            const parentTitle = parentPillar ? parentPillar.title : 'Pillar Page';
+
+            // Loop logic: 2 articles per day (Morning and Afternoon), starting from selected date/time
+            // If user picked 14:00, first article is 14:00. Next is next day 09:00? Or +6 hours?
+            // Let's keep simpler logic: Start exactly at chosen time, then +6 hours, then +18 hours (next day morning), etc.
+            // Or stick to 09:00 and 16:00 pattern starting from the chosen Date.
             
-            // Logic: 2 articles per day (9am and 4pm)
-            // Start scheduling from TOMORROW
-            let scheduleDate = new Date(now);
-            scheduleDate.setDate(scheduleDate.getDate() + 1); 
+            // Refined Logic:
+            // Article 1: User Selected Time (or default 9am tomorrow)
+            // Article 2: Same day 16:00 (if start < 16:00), else Next Day 09:00
+            // Loop...
             
+            let currentCursor = new Date(scheduleDate);
+
             form.cluster_ideas.forEach((title, index) => {
-                const isMorning = index % 2 === 0;
                 
-                // Set time
-                scheduleDate.setHours(isMorning ? 9 : 16, 0, 0, 0);
-                
-                const scheduledTimeStr = scheduleDate.toLocaleString('id-ID', {
+                const scheduledTimeStr = currentCursor.toLocaleString('id-ID', {
                     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
 
@@ -483,24 +529,24 @@ const useArticleManager = (
                     id: Date.now() + index, // Unique ID
                     title: title,
                     excerpt: `Artikel pendukung untuk pilar: ${form.title}. (Klik Edit untuk Generate Konten Lengkap).`,
-                    content: `<!-- PLACEHOLDER -->\n# ${title}\n\n*Artikel ini telah dijadwalkan. Klik tombol **'GENERATE TEXT DRAFT'** di panel kanan untuk membuat konten lengkap (1000 kata) menggunakan AI.*\n\n> Menginduk ke Pillar: ${form.title}`,
-                    date: scheduleDate.toLocaleDateString('id-ID'),
+                    content: `<!-- PLACEHOLDER -->\n# ${title}\n\n*Artikel ini telah dijadwalkan tayang pada ${scheduledTimeStr}.*\n\nKlik tombol **'GENERATE TEXT DRAFT'** di panel kanan untuk membuat konten lengkap (1000 kata) menggunakan AI.\n\n> **Topik Induk:** [${parentTitle}](${parentSlug})`,
+                    date: currentCursor.toLocaleDateString('id-ID'),
                     image: uniqueImage, 
                     category: form.category || 'Bisnis',
-                    author: getRandomAuthor(), // Randomized Author
+                    author: getRandomAuthor(), 
                     readTime: '10 min read',
                     status: 'scheduled',
                     scheduled_for: scheduledTimeStr,
                     type: 'cluster',
-                    pillar_id: form.id || 0 // Use current Pillar ID (assuming it's saved/will be saved)
+                    pillar_id: form.id || 0 
                 };
 
                 newArticles.push(newArticle);
 
-                // Increment day every 2 articles
-                if (!isMorning) {
-                    scheduleDate.setDate(scheduleDate.getDate() + 1);
-                }
+                // Calculate next slot
+                // Simple pattern: Add 12 hours for next article roughly, or strictly 9am/4pm
+                // Let's just add 24 hours / 2 = 12 hours for simplicity distribution
+                currentCursor.setHours(currentCursor.getHours() + 12);
             });
 
             // Update State & DB
@@ -524,7 +570,7 @@ const useArticleManager = (
                 await supabase.from('articles').insert(dbInserts);
             }
 
-            alert(`Berhasil menjadwalkan ${newArticles.length} artikel cluster!\nCek di daftar artikel dengan status 'Scheduled'.`);
+            alert(`Berhasil menjadwalkan ${newArticles.length} artikel cluster!\nDimulai: ${scheduleDate.toLocaleString()}`);
             
             // Clear ideas after scheduling to prevent dupes
             setForm(prev => ({...prev, cluster_ideas: []}));
@@ -1149,6 +1195,17 @@ export const AdminArticles = ({
                                 </ul>
                             </div>
 
+                            {/* DATE TIME PICKER */}
+                            <div className="bg-white/5 p-2 rounded border border-white/10">
+                                <label className="text-[9px] text-gray-400 block mb-1">Mulai Terbitkan Pada:</label>
+                                <input 
+                                    type="datetime-local" 
+                                    value={form.scheduleStart}
+                                    onChange={(e) => setForm(p => ({...p, scheduleStart: e.target.value}))}
+                                    className="w-full bg-black text-white text-xs border border-white/10 rounded px-2 py-1 focus:border-purple-500 outline-none"
+                                />
+                            </div>
+
                             <Button 
                                 onClick={actions.scheduleClusters} 
                                 disabled={loading.scheduling}
@@ -1157,7 +1214,7 @@ export const AdminArticles = ({
                                 {loading.scheduling ? <LoadingSpinner size={12}/> : <><CalendarClock size={12}/> AUTO-SCHEDULE (2x SEHARI)</>}
                             </Button>
                             <p className="text-[8px] text-gray-500 text-center">
-                                Akan membuat {form.cluster_ideas.length} draft artikel dengan jadwal tayang otomatis mulai besok.
+                                Akan membuat {form.cluster_ideas.length} draft artikel dengan jadwal tayang otomatis.
                             </p>
                         </div>
                     )}
