@@ -354,12 +354,12 @@ const useArticleManager = (
             if (form.type === 'pillar') {
                 strategyContext = `
                 STRATEGY: This is a **PILLAR PAGE** (Cornerstone Content). 
-                - It must be EXTREMELY COMPREHENSIVE (Mega-Guide).
+                - It must be COMPREHENSIVE but concise (Mega-Guide).
                 - Cover definitions, benefits, strategies, comparisons, technical details, case studies, and future trends.
                 - It serves as the ultimate authority resource for this topic.
                 `;
-                lengthReq = "Minimum 6000 words (Mandatory)";
-                structureInstruction = "Create 12-15 Major Subheadings (H2) to satisfy the 6000-word requirement. Each section must be very detailed.";
+                lengthReq = "Maximum 4000 words. Aim for 3000-4000 words.";
+                structureInstruction = "Create 8-12 Major Subheadings (H2) to satisfy the word requirement.";
                 
                 // Instruction to generate clusters IN THE SAME CALL to save time/tokens context
                 clusterInstruction = `
@@ -376,16 +376,16 @@ const useArticleManager = (
                 STRATEGY: This is a **CLUSTER CONTENT** (Supporting Article).
                 - Topic: "${form.title}"
                 - Parent Topic (Pillar): "${pillarTitle}"
-                - Focus: Deep dive into this specific sub-topic. Do NOT be generic.
+                - Focus: Deep dive into this specific sub-topic. Be specific and concise.
                 - **MANDATORY INTERNAL LINKING**: You MUST include a Markdown link to the Pillar Page in the Introduction or first section. 
                   **Format MUST be exactly**: [${pillarTitle}](${pillarLink})
                   **IMPORTANT**: Do NOT put spaces between the bracket ] and parenthesis (. It must be ](url).
                 `;
-                lengthReq = "STRICTLY MINIMUM 1000 WORDS. Do not write short content.";
-                structureInstruction = "Create 6-8 Detailed Subheadings (H2) covering 'What', 'Why', 'How', 'Examples', 'Common Mistakes', and 'Advanced Tips'.";
+                lengthReq = "Maximum 800 words. Keep it focused and actionable.";
+                structureInstruction = "Create 3-5 Detailed Subheadings (H2) focused on answering the user intent.";
             }
 
-            setTextProgress({ percent: 20, message: `Menulis Artikel ${form.type === 'pillar' ? 'Pilar (6000+ Kata)' : 'Cluster (1000+ Kata)'}...` });
+            setTextProgress({ percent: 20, message: `Menulis Artikel ${form.type === 'pillar' ? 'Pilar (MAX 4000 Kata)' : 'Cluster (MAX 800 Kata)'}...` });
             
             const contentPrompt = `
             Role: Senior SEO Content Strategist (Indonesian Market).
@@ -906,6 +906,17 @@ export const AdminArticles = ({
                                                         )}
                                                     </div>
                                                 </div>
+                                                {/* NEW DELETE BUTTON FOR CLUSTER */}
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        actions.deleteItem(cluster.id);
+                                                    }}
+                                                    className="p-1.5 rounded hover:bg-red-500/20 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                                    title="Hapus Cluster"
+                                                >
+                                                    <Trash2 size={12} />
+                                                </button>
                                             </div>
                                         ))
                                     ) : (
