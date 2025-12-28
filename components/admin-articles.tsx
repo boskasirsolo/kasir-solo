@@ -1,7 +1,7 @@
 
 // ... keep imports ...
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, FileText, Calendar, User, Clock, TrendingUp, Target, List, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, FileText, Calendar, User, Clock, TrendingUp, Target, List, CheckCircle2, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv } from '../utils';
@@ -99,6 +99,23 @@ const useArticleManager = (
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setAiStep(3); // Skip to editor mode
+    };
+
+    // --- UTILS: IMAGE GENERATOR ---
+    const getAIImageUrl = (prompt: string) => {
+        const seed = Math.floor(Math.random() * 10000);
+        const cleanPrompt = prompt.replace(/[^a-zA-Z0-9 ]/g, '');
+        // Using Pollinations.ai (Flux Model) for better stability & quality
+        return `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1280&height=720&nologo=true&seed=${seed}&model=flux`;
+    };
+
+    const regenerateCoverImage = () => {
+        if (!form.title) return alert("Judul artikel kosong.");
+        const prompt = `Professional photography for business article: ${form.title}, modern office, retail technology, warm lighting, 4k`;
+        setForm(prev => ({
+            ...prev,
+            imagePreview: getAIImageUrl(prompt)
+        }));
     };
 
     // --- AI: STEP 1 - KEYWORD RESEARCH ---
@@ -213,7 +230,7 @@ const useArticleManager = (
                "excerpt": "Short summary (max 150 chars)",
                "category": "Suggested Category",
                "author": "Amin Maghfuri",
-               "image_search_query": "English keyword for Unsplash image search"
+               "image_prompt": "Detailed visual description for an AI image generator (photorealistic, professional, related to article topic, high quality, 4k)"
             }
             `;
 
@@ -229,7 +246,7 @@ const useArticleManager = (
                 category: genConfig.autoCategory ? data.category : prev.category,
                 author: genConfig.autoAuthor ? data.author : prev.author,
                 imagePreview: genConfig.autoImage 
-                    ? `https://source.unsplash.com/1200x600/?${encodeURIComponent(data.image_search_query || 'technology,business')}` 
+                    ? getAIImageUrl(data.image_prompt || `${form.title} business technology indonesia`) 
                     : prev.imagePreview,
                 status: 'draft' // Default to draft per request
             }));
@@ -351,7 +368,7 @@ const useArticleManager = (
         form, setForm,
         loading,
         aiState: { step: aiStep, setStep: setAiStep, keywords, selectedKeyword, titleOptions, genConfig, setGenConfig },
-        actions: { researchKeywords, generateTitles, generatePillarContent, handleSubmit, handleEditClick, resetForm, deleteItem },
+        actions: { researchKeywords, generateTitles, generatePillarContent, handleSubmit, handleEditClick, resetForm, deleteItem, regenerateCoverImage },
         listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
     };
 };
@@ -489,9 +506,18 @@ const ArticleForm = ({
                     {form.imagePreview && (
                     <div className="mb-3 relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
                         <img src={form.imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <p className="text-white text-xs font-bold">Ganti Cover</p>
-                            </div>
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        actions.regenerateCoverImage();
+                                    }}
+                                    className="px-3 py-1.5 bg-brand-orange text-white text-xs font-bold rounded flex items-center gap-1 shadow-lg hover:bg-brand-glow"
+                                >
+                                    <RefreshCw size={12} /> Regenerate
+                                </button>
+                                <p className="text-white text-xs font-bold pointer-events-none">atau Klik Ganti</p>
+                        </div>
                     </div>
                     )}
                     <div className="border border-dashed border-white/20 rounded-lg p-3 text-center hover:border-brand-orange/50 transition-colors bg-brand-card/30">
