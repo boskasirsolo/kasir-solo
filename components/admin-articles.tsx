@@ -539,7 +539,7 @@ export const AdminArticles = ({
                 <div className="space-y-6">
                     {/* STEP 0: PRESET CATEGORIES (NEW) */}
                     <div className={`transition-all ${aiState.step > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
-                        <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-3">Step 1: Pilih Fokus Topik (Bisa > 1)</label>
+                        <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-3">Step 1: Pilih Fokus Topik (Bisa &gt; 1)</label>
                         <div className="grid grid-cols-2 gap-2 mb-4">
                             {PRESET_TOPICS.map((topic) => (
                                 <button
