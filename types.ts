@@ -19,8 +19,13 @@ export interface Article {
   author: string;   
   readTime: string; 
   tags?: string[];
-  status?: 'published' | 'draft' | 'scheduled'; // New Field
-  scheduled_for?: string; // New Field
+  status?: 'published' | 'draft' | 'scheduled';
+  scheduled_for?: string;
+  // SEO Strategy Fields
+  type?: 'pillar' | 'cluster'; 
+  pillar_id?: number; 
+  // NEW: Stored AI suggestions for pillar pages
+  cluster_ideas?: string[]; 
 }
 
 export interface GalleryItem {

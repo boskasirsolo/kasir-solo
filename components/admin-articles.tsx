@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey } from '../utils';
@@ -66,19 +66,19 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
 };
 
 // --- COMPONENT: PROGRESS BAR ---
-const GenerationProgress = ({ percent, message, color = 'orange' }: { percent: number, message: string, color?: 'orange' | 'blue' }) => (
-    <div className={`w-full bg-brand-dark border rounded-lg p-3 relative overflow-hidden animate-fade-in ${color === 'orange' ? 'border-brand-orange/30' : 'border-blue-500/30'}`}>
+const GenerationProgress = ({ percent, message, color = 'orange' }: { percent: number, message: string, color?: 'orange' | 'blue' | 'green' }) => (
+    <div className={`w-full bg-brand-dark border rounded-lg p-3 relative overflow-hidden animate-fade-in ${color === 'orange' ? 'border-brand-orange/30' : color === 'blue' ? 'border-blue-500/30' : 'border-green-500/30'}`}>
         <div className="flex justify-between items-center mb-2 relative z-10">
-            <span className={`text-xs font-bold animate-pulse ${color === 'orange' ? 'text-brand-orange' : 'text-blue-400'}`}>{message}</span>
+            <span className={`text-xs font-bold animate-pulse ${color === 'orange' ? 'text-brand-orange' : color === 'blue' ? 'text-blue-400' : 'text-green-400'}`}>{message}</span>
             <span className="text-xs font-mono text-gray-400">{percent}%</span>
         </div>
         <div className="w-full h-2 bg-black/50 rounded-full overflow-hidden border border-white/5 relative z-10">
             <div 
-                className={`h-full transition-all duration-500 ease-out ${color === 'orange' ? 'bg-gradient-to-r from-brand-orange to-brand-action' : 'bg-gradient-to-r from-blue-600 to-blue-400'}`}
+                className={`h-full transition-all duration-500 ease-out ${color === 'orange' ? 'bg-gradient-to-r from-brand-orange to-brand-action' : color === 'blue' ? 'bg-gradient-to-r from-blue-600 to-blue-400' : 'bg-gradient-to-r from-green-600 to-green-400'}`}
                 style={{ width: `${percent}%` }}
             ></div>
         </div>
-        <div className={`absolute inset-0 z-0 opacity-10 ${color === 'orange' ? 'bg-brand-orange' : 'bg-blue-500'}`}></div>
+        <div className={`absolute inset-0 z-0 opacity-10 ${color === 'orange' ? 'bg-brand-orange' : color === 'blue' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
     </div>
 );
 
@@ -95,11 +95,15 @@ const useArticleManager = (
         content: '',
         category: '',
         author: 'Admin',
-        readTime: '25 min read', 
+        readTime: '10 min read', 
         imagePreview: '',
         uploadFile: null as File | null,
         status: 'draft' as 'published' | 'draft' | 'scheduled',
-        scheduled_for: ''
+        scheduled_for: '',
+        // STRATEGY FIELDS
+        type: 'cluster' as 'pillar' | 'cluster',
+        pillar_id: 0 as number,
+        cluster_ideas: [] as string[]
     });
 
     // AI Flow State
@@ -119,7 +123,9 @@ const useArticleManager = (
         uploading: false,
         researching: false,
         generatingText: false,
-        generatingImage: false
+        generatingImage: false,
+        generatingClusters: false,
+        scheduling: false
     });
     
     const [textProgress, setTextProgress] = useState({ percent: 0, message: '' });
@@ -127,6 +133,9 @@ const useArticleManager = (
 
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Available Pillars for Dropdown
+    const availablePillars = articles.filter(a => a.type === 'pillar');
 
     const resetForm = () => {
         setForm({
@@ -136,11 +145,14 @@ const useArticleManager = (
             content: '',
             category: '',
             author: 'Admin',
-            readTime: '25 min read',
+            readTime: '10 min read',
             imagePreview: '',
             uploadFile: null,
             status: 'draft',
-            scheduled_for: ''
+            scheduled_for: '',
+            type: 'cluster',
+            pillar_id: 0,
+            cluster_ideas: []
         });
         setAiStep(0);
         setKeywords([]);
@@ -168,7 +180,10 @@ const useArticleManager = (
             imagePreview: item.image,
             uploadFile: null,
             status: item.status || 'published',
-            scheduled_for: item.scheduled_for || ''
+            scheduled_for: item.scheduled_for || '',
+            type: item.type || 'cluster',
+            pillar_id: item.pillar_id || 0,
+            cluster_ideas: item.cluster_ideas || []
         });
         setAiStep(3); 
     };
@@ -190,55 +205,115 @@ const useArticleManager = (
         return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1024&height=576&model=flux&nologo=true&seed=${seed}`;
     };
 
-    // --- ACTION: GENERATE TEXT ONLY ---
+    // --- ACTION: GENERATE TEXT WITH STRATEGY CONTEXT ---
     const generateTextContent = async () => {
         if (!form.title) return alert("Pilih judul terlebih dahulu.");
         
         setLoading(prev => ({ ...prev, generatingText: true }));
-        setTextProgress({ percent: 10, message: 'Menyiapkan outline...' });
+        setTextProgress({ percent: 5, message: 'Menyiapkan strategi konten...' });
 
         try {
             await ensureAPIKey();
             const apiKey = getSmartApiKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
-            // 1. Generate Content
-            setTextProgress({ percent: 40, message: 'Menulis artikel lengkap...' });
+            // 1. Build Context Prompt based on Strategy
+            let strategyContext = "";
+            let lengthReq = "Minimum 1000 words";
+            let clusterInstruction = "";
+            
+            if (form.type === 'pillar') {
+                strategyContext = `
+                STRATEGY: This is a **PILLAR PAGE** (Cornerstone Content). 
+                - It must be extremely comprehensive, covering "What", "Why", and "How" extensively.
+                - It serves as the ultimate guide for this topic.
+                `;
+                lengthReq = "Minimum 2000-3000 words";
+                // Instruction to generate clusters IN THE SAME CALL to save time/tokens context
+                clusterInstruction = `
+                BONUS TASK: At the very end of your response, after the conclusion, please provide a JSON block (and ONLY the JSON block) containing 10 specific, high-potential 'Cluster Article Titles' that should link back to this Pillar Page. 
+                Format: ---CLUSTER_JSON_START--- ["Title 1", "Title 2", ...] ---CLUSTER_JSON_END---
+                `;
+            } else {
+                const parentPillar = availablePillars.find(p => p.id === form.pillar_id);
+                const pillarTitle = parentPillar ? parentPillar.title : "Panduan Lengkap Bisnis";
+                strategyContext = `
+                STRATEGY: This is a **CLUSTER CONTENT** (Supporting Article).
+                - Focus deeply on the specific sub-topic.
+                - **MANDATORY**: Include a natural link/reference to the Pillar Page: "${pillarTitle}".
+                `;
+                lengthReq = "Minimum 800-1200 words";
+            }
+
+            setTextProgress({ percent: 20, message: `Menulis Artikel ${form.type === 'pillar' ? 'Pilar (3000+ Kata)' : 'Cluster'}...` });
             
             const contentPrompt = `
-            Role: Expert Business Consultant & Copywriter (Indonesian Market).
-            Task: Write a COMPREHENSIVE ARTICLE based on title: "${form.title}"
+            Role: Senior SEO Content Strategist (Indonesian Market).
+            Task: Write a Deep-Dive Article based on title: "${form.title}"
+            
+            ${strategyContext}
             
             STRUCTURE:
             1. **Headline**: # ${form.title}
-            2. **Intro**: Hook the reader (Problem/Solution).
-            3. **Body**: 3-5 Subheadings (H2) with deep explanation. Use bullet points.
-            4. **Conclusion**: Summary and Call to Action.
+            2. **Introduction**: Hook & Context.
+            3. **Deep Dive**: 5-7 H2 Subheadings with detailed paragraphs.
+            4. **FAQ**: 3-5 Q&A.
+            5. **Conclusion**: Summary & CTA.
             
-            TONE: Professional, Empathetic, Actionable.
-            FORMAT: Markdown.
+            REQUIREMENTS:
+            - **LENGTH**: ${lengthReq}.
+            - **FORMAT**: Clean Markdown.
+            
+            ${clusterInstruction}
             `;
 
             const contentResponse = await ai.models.generateContent({ 
                 model: 'gemini-3-flash-preview', 
                 contents: contentPrompt,
-                config: { maxOutputTokens: 8192 }
+                config: { maxOutputTokens: 8192 } 
             });
-            const generatedContent = contentResponse.text || '# Error.';
+            
+            let generatedContent = contentResponse.text || '# Error generating text.';
+            let extractedClusters: string[] = [];
 
-            // 2. Generate Metadata
-            setTextProgress({ percent: 80, message: 'Membuat metadata...' });
+            // 2. Extract Clusters if Pillar
+            if (form.type === 'pillar') {
+                const jsonStart = generatedContent.indexOf('---CLUSTER_JSON_START---');
+                const jsonEnd = generatedContent.indexOf('---CLUSTER_JSON_END---');
+                
+                if (jsonStart !== -1 && jsonEnd !== -1) {
+                    const jsonStr = generatedContent.substring(jsonStart + 24, jsonEnd);
+                    try {
+                        extractedClusters = JSON.parse(jsonStr);
+                    } catch (e) { console.error("Failed to parse clusters", e); }
+                    
+                    // Remove JSON from content display
+                    generatedContent = generatedContent.substring(0, jsonStart).trim();
+                }
+            }
+            
+            console.log(`Generated Length: ${generatedContent.length} chars`);
+
+            // 3. Generate Metadata
+            setTextProgress({ percent: 80, message: 'Menganalisa metadata...' });
+            const contextForMeta = generatedContent.substring(0, 3000); 
+            
             const metaPrompt = `
-            Based on this text: "${generatedContent.substring(0, 1000)}..."
-            Generate JSON: { "excerpt": "150 chars summary", "category": "Business/Tech", "author": "Amin Maghfuri" }
+            Based on this text: "${contextForMeta}..."
+            Generate JSON: { 
+                "excerpt": "Compelling 2-sentence summary (max 160 chars)", 
+                "category": "One specific business category", 
+                "readTime": "Estimate read time (e.g. '15 min read')"
+            }
             `;
+            
             const metaResponse = await ai.models.generateContent({
                 model: 'gemini-3-flash-preview',
                 contents: metaPrompt,
                 config: { responseMimeType: "application/json" }
             });
             
-            let metaData = { excerpt: "", category: "Business", author: "Amin Maghfuri" };
+            let metaData = { excerpt: "", category: "Business", readTime: "5 min read" };
             try { metaData = JSON.parse(metaResponse.text || '{}'); } catch(e) {}
 
             setTextProgress({ percent: 100, message: 'Selesai!' });
@@ -249,8 +324,9 @@ const useArticleManager = (
                 content: generatedContent,
                 excerpt: metaData.excerpt || prev.excerpt,
                 category: genConfig.autoCategory ? metaData.category : prev.category,
-                author: genConfig.autoAuthor ? metaData.author : prev.author,
-                readTime: "5 min read"
+                author: "Tim Ahli MKS", 
+                readTime: metaData.readTime || "10 min read",
+                cluster_ideas: extractedClusters
             }));
 
         } catch (e: any) {
@@ -258,6 +334,73 @@ const useArticleManager = (
             setTextProgress({ percent: 0, message: 'Error' });
         } finally {
             setLoading(prev => ({ ...prev, generatingText: false }));
+        }
+    };
+
+    // --- ACTION: AUTO-SCHEDULE CLUSTERS ---
+    const scheduleClusters = async () => {
+        if (!form.cluster_ideas || form.cluster_ideas.length === 0) return alert("Tidak ada ide cluster untuk dijadwalkan.");
+        
+        setLoading(prev => ({ ...prev, scheduling: true }));
+        try {
+            const newArticles: Article[] = [];
+            const now = new Date();
+            
+            // Logic: 2 articles per day (9am and 4pm)
+            // Start scheduling from TOMORROW
+            let scheduleDate = new Date(now);
+            scheduleDate.setDate(scheduleDate.getDate() + 1); 
+            
+            form.cluster_ideas.forEach((title, index) => {
+                const isMorning = index % 2 === 0;
+                
+                // Set time
+                scheduleDate.setHours(isMorning ? 9 : 16, 0, 0, 0);
+                
+                const scheduledTimeStr = scheduleDate.toLocaleString('id-ID', {
+                    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                // Create Draft Article Object
+                const newArticle: Article = {
+                    id: Date.now() + index, // Unique ID
+                    title: title,
+                    excerpt: `Artikel pendukung untuk pilar: ${form.title}. (Auto-generated draft).`,
+                    content: `<!-- AUTO-GENERATED PLACEHOLDER -->\n# ${title}\n\n*Artikel ini dijadwalkan otomatis oleh SIBOS AI. Silakan generate konten lengkapnya nanti.*\n\n> Menginduk ke Pillar: ${form.title}`,
+                    date: scheduleDate.toLocaleDateString('id-ID'),
+                    image: 'https://images.unsplash.com/photo-1661956602116-aa6865609028?auto=format&fit=crop&q=80&w=800', // Placeholder
+                    category: form.category || 'Bisnis',
+                    author: 'SIBOS Bot',
+                    readTime: '5 min read',
+                    status: 'scheduled',
+                    scheduled_for: scheduledTimeStr,
+                    type: 'cluster',
+                    pillar_id: form.id || 0 // Use current Pillar ID (assuming it's saved/will be saved)
+                };
+
+                newArticles.push(newArticle);
+
+                // Increment day every 2 articles
+                if (!isMorning) {
+                    scheduleDate.setDate(scheduleDate.getDate() + 1);
+                }
+            });
+
+            // Update State & DB
+            setArticles([...newArticles, ...articles]);
+            
+            // Note: In real app, we would insert many to Supabase here
+            // await supabase.from('articles').insert(newArticles);
+
+            alert(`Berhasil menjadwalkan ${newArticles.length} artikel cluster!\nCek di daftar artikel dengan status 'Scheduled'.`);
+            
+            // Clear ideas after scheduling to prevent dupes
+            setForm(prev => ({...prev, cluster_ideas: []}));
+
+        } catch (e: any) {
+            alert("Gagal menjadwalkan: " + e.message);
+        } finally {
+            setLoading(prev => ({ ...prev, scheduling: false }));
         }
     };
 
@@ -286,7 +429,6 @@ const useArticleManager = (
             setImageProgress({ percent: 60, message: 'Rendering visual...' });
             const imageUrl = getAIImageUrl(visualPrompt, genConfig.imageStyle);
 
-            // Fake delay for UX to show progress bar moving
             await new Promise(r => setTimeout(r, 800)); 
             setImageProgress({ percent: 100, message: 'Gambar siap!' });
             await new Promise(r => setTimeout(r, 300));
@@ -327,7 +469,10 @@ const useArticleManager = (
                 read_time: form.readTime,
                 image_url: finalImageUrl,
                 status: form.status,
-                scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null
+                scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
+                type: form.type,
+                pillar_id: form.type === 'cluster' ? form.pillar_id : null,
+                cluster_ideas: form.cluster_ideas
             };
 
             const localUpdateData = {
@@ -346,9 +491,14 @@ const useArticleManager = (
             } else {
                 const newId = Date.now();
                 setArticles([{ ...localUpdateData, id: newId, tags: [] }, ...articles]);
-                if (supabase) await supabase.from('articles').insert([dbData]);
+                // Return ID for immediate scheduling reference
+                if (supabase) {
+                    const { data } = await supabase.from('articles').insert([dbData]).select();
+                    if(data && data[0]) setForm(p => ({...p, id: data[0].id}));
+                } else {
+                    setForm(p => ({...p, id: newId}));
+                }
             }
-            resetForm();
             alert(`Artikel berhasil disimpan!`);
         } catch (e: any) { 
             console.error(e); 
@@ -425,8 +575,9 @@ const useArticleManager = (
         loading,
         progress: { text: textProgress, image: imageProgress },
         aiState: { step: aiStep, setStep: setAiStep, keywords, selectedKeyword, genConfig, setGenConfig, selectedPresets, togglePreset },
-        actions: { researchKeywords, selectTopic, generateTextContent, generateImageContent, handleSubmit, handleEditClick, resetForm, deleteItem },
-        listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
+        actions: { researchKeywords, selectTopic, generateTextContent, generateImageContent, handleSubmit, handleEditClick, resetForm, deleteItem, scheduleClusters },
+        listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm },
+        availablePillars
     };
 };
 
@@ -437,7 +588,7 @@ export const AdminArticles = ({
   articles: Article[], 
   setArticles: (a: Article[]) => void 
 }) => {
-  const { form, setForm, loading, progress, aiState, actions, listData } = useArticleManager(articles, setArticles);
+  const { form, setForm, loading, progress, aiState, actions, listData, availablePillars } = useArticleManager(articles, setArticles);
 
   return (
     <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b">
@@ -468,33 +619,62 @@ export const AdminArticles = ({
                 <Plus size={12} /> ARTIKEL BARU
             </button>
 
-            {listData.paginated.map((item: Article) => (
-                <div 
-                    key={item.id}
-                    onClick={() => actions.handleEditClick(item)}
-                    className={`p-2 rounded border cursor-pointer transition-all group relative ${
-                        form.id === item.id 
-                        ? 'bg-brand-orange/10 border-brand-orange' 
-                        : 'bg-transparent border-white/5 hover:bg-white/5'
-                    }`}
-                >
-                    <div className="flex gap-2">
-                        <img src={item.image} className="w-8 h-8 rounded object-cover bg-black" />
-                        <div className="min-w-0 flex-1">
-                            <h5 className="text-[10px] font-bold text-white truncate leading-tight mb-0.5">{item.title}</h5>
-                            <span className={`text-[8px] px-1 rounded ${
-                                item.status === 'published' ? 'text-green-400 bg-green-900/30' : 'text-yellow-400 bg-yellow-900/30'
-                            }`}>{item.status || 'draft'}</span>
-                        </div>
-                    </div>
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); actions.deleteItem(item.id); }}
-                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-500"
+            {listData.paginated.map((item: Article) => {
+                const isPillar = item.type === 'pillar';
+                // Find parent pillar title if connected
+                const parent = item.pillar_id ? articles.find(a => a.id === item.pillar_id) : null;
+
+                return (
+                    <div 
+                        key={item.id}
+                        onClick={() => actions.handleEditClick(item)}
+                        className={`p-2 rounded border cursor-pointer transition-all group relative ${
+                            form.id === item.id 
+                            ? 'bg-brand-orange/10 border-brand-orange' 
+                            : 'bg-transparent border-white/5 hover:bg-white/5'
+                        }`}
                     >
-                        <Trash2 size={12} />
-                    </button>
-                </div>
-            ))}
+                        <div className="flex gap-2 mb-1">
+                            <img src={item.image} className="w-8 h-8 rounded object-cover bg-black" />
+                            <div className="min-w-0 flex-1">
+                                <h5 className="text-[10px] font-bold text-white truncate leading-tight mb-0.5">{item.title}</h5>
+                                <div className="flex items-center gap-1">
+                                    <span className={`text-[8px] px-1.5 rounded-full border ${
+                                        isPillar 
+                                        ? 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10' 
+                                        : 'text-blue-400 border-blue-500/30 bg-blue-500/10'
+                                    }`}>
+                                        {isPillar ? '👑 PILAR' : '🔗 CLUSTER'}
+                                    </span>
+                                    <span className={`text-[8px] px-1 rounded ${
+                                        item.status === 'published' ? 'text-green-400 bg-green-900/30' : item.status === 'scheduled' ? 'text-purple-400 bg-purple-900/30' : 'text-gray-400 bg-gray-800'
+                                    }`}>{item.status || 'draft'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Linkage Info */}
+                        {!isPillar && parent && (
+                            <div className="text-[9px] text-gray-500 flex items-center gap-1 pl-10">
+                                <LinkIcon size={8}/> Menginduk ke: <span className="text-gray-400 truncate max-w-[100px]">{parent.title}</span>
+                            </div>
+                        )}
+                        {/* Scheduled Info */}
+                        {item.status === 'scheduled' && (
+                            <div className="text-[9px] text-purple-400 flex items-center gap-1 pl-10">
+                                <CalendarClock size={8}/> {item.scheduled_for}
+                            </div>
+                        )}
+
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); actions.deleteItem(item.id); }}
+                            className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-500"
+                        >
+                            <Trash2 size={12} />
+                        </button>
+                    </div>
+                );
+            })}
          </div>
       </div>
 
@@ -513,6 +693,61 @@ export const AdminArticles = ({
          </div>
 
          <div className="flex-grow overflow-y-auto p-4 custom-scrollbar">
+            {/* STRATEGY TOGGLE (Always Visible at Step 0) */}
+            {!form.id && aiState.step === 0 && (
+                <div className="mb-6 bg-white/5 p-3 rounded-lg border border-white/10">
+                    <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-2">Pilih Strategi Konten</label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button 
+                            onClick={() => setForm(p => ({...p, type: 'cluster'}))}
+                            className={`p-3 rounded-lg border transition-all text-left relative ${
+                                form.type === 'cluster' 
+                                ? 'bg-blue-500/10 border-blue-500 text-white' 
+                                : 'bg-black/20 border-white/5 text-gray-500 hover:border-white/20'
+                            }`}
+                        >
+                            <Network size={16} className="mb-2"/>
+                            <div className="font-bold text-xs">Cluster</div>
+                            <div className="text-[9px] opacity-70">Artikel Pendukung</div>
+                            {form.type === 'cluster' && <CheckCircle2 size={14} className="absolute top-2 right-2 text-blue-500"/>}
+                        </button>
+                        <button 
+                            onClick={() => setForm(p => ({...p, type: 'pillar'}))}
+                            className={`p-3 rounded-lg border transition-all text-left relative ${
+                                form.type === 'pillar' 
+                                ? 'bg-yellow-500/10 border-yellow-500 text-white' 
+                                : 'bg-black/20 border-white/5 text-gray-500 hover:border-white/20'
+                            }`}
+                        >
+                            <Crown size={16} className="mb-2"/>
+                            <div className="font-bold text-xs">Pillar Page</div>
+                            <div className="text-[9px] opacity-70">Konten Utama</div>
+                            {form.type === 'pillar' && <CheckCircle2 size={14} className="absolute top-2 right-2 text-yellow-500"/>}
+                        </button>
+                    </div>
+
+                    {/* Show Dropdown if Cluster */}
+                    {form.type === 'cluster' && (
+                        <div className="mt-3 animate-fade-in">
+                            <label className="text-[9px] text-gray-500 mb-1 block">Induk Artikel (Pillar)</label>
+                            <select 
+                                value={form.pillar_id || 0}
+                                onChange={(e) => setForm(p => ({...p, pillar_id: parseInt(e.target.value)}))}
+                                className="w-full bg-black text-white text-xs border border-white/10 rounded px-2 py-2 focus:border-brand-orange outline-none"
+                            >
+                                <option value={0}>-- Pilih Pillar Page --</option>
+                                {availablePillars.map(p => (
+                                    <option key={p.id} value={p.id}>{p.title}</option>
+                                ))}
+                            </select>
+                            {availablePillars.length === 0 && (
+                                <p className="text-[9px] text-red-400 mt-1">Belum ada Artikel Pilar. Buat Pillar dulu!</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* AI WIZARD */}
             {!form.id && aiState.step < 3 && (
                 <div className="space-y-6">
@@ -569,7 +804,7 @@ export const AdminArticles = ({
                             {/* BLOCK A: GENERATE TEXT */}
                             <div>
                                 <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
-                                    <FileText size={12}/> Step 3: Tulis Konten Artikel
+                                    <FileText size={12}/> Step 3: Tulis Konten ({form.type === 'pillar' ? 'Pillar' : 'Cluster'})
                                 </label>
                                 {loading.generatingText ? (
                                     <GenerationProgress percent={progress.text.percent} message={progress.text.message} color="orange" />
@@ -627,6 +862,18 @@ export const AdminArticles = ({
             {(form.id || aiState.step === 3) && (
                 <div className="space-y-4 animate-fade-in pb-10">
                     
+                    {/* Strategy Info in Editor */}
+                    <div className="flex gap-2 items-center mb-2">
+                        <span className={`text-[9px] px-2 py-1 rounded border font-bold ${form.type === 'pillar' ? 'bg-yellow-500/10 border-yellow-500 text-yellow-500' : 'bg-blue-500/10 border-blue-500 text-blue-500'}`}>
+                            {form.type.toUpperCase()}
+                        </span>
+                        {form.type === 'cluster' && (
+                            <div className="flex-1 bg-black/30 border border-white/10 rounded px-2 py-1 text-[9px] text-gray-400 truncate">
+                                Parent: {availablePillars.find(p => p.id === form.pillar_id)?.title || 'Tidak ada'}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Image */}
                     <div className="relative w-full h-32 bg-black rounded-lg border border-white/10 overflow-hidden group">
                         {form.imagePreview ? (
@@ -669,6 +916,39 @@ export const AdminArticles = ({
                         <TextArea value={form.content} onChange={e => setForm((p:any) => ({...p, content: e.target.value}))} placeholder="# Konten Markdown..." className="text-[10px] h-96 font-mono custom-scrollbar"/>
                     </div>
 
+                    {/* AUTO-CLUSTER SCHEDULER PANEL (For Pillar Only) */}
+                    {form.type === 'pillar' && form.cluster_ideas && form.cluster_ideas.length > 0 && (
+                        <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/20 rounded-lg p-3 space-y-3 animate-fade-in">
+                            <div className="flex justify-between items-center">
+                                <h4 className="text-[10px] font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
+                                    <Zap size={12}/> Auto-Cluster Strategy
+                                </h4>
+                                <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/20">{form.cluster_ideas.length} Ide</Badge>
+                            </div>
+                            
+                            <div className="max-h-32 overflow-y-auto custom-scrollbar border border-white/5 rounded bg-black/20 p-2">
+                                <ul className="space-y-1">
+                                    {form.cluster_ideas.map((idea, idx) => (
+                                        <li key={idx} className="text-[9px] text-gray-400 flex items-start gap-2">
+                                            <span className="text-purple-500">•</span> {idea}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <Button 
+                                onClick={actions.scheduleClusters} 
+                                disabled={loading.scheduling}
+                                className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-bold border-none shadow-lg"
+                            >
+                                {loading.scheduling ? <LoadingSpinner size={12}/> : <><CalendarClock size={12}/> AUTO-SCHEDULE (2x SEHARI)</>}
+                            </Button>
+                            <p className="text-[8px] text-gray-500 text-center">
+                                Akan membuat {form.cluster_ideas.length} draft artikel dengan jadwal tayang otomatis mulai besok.
+                            </p>
+                        </div>
+                    )}
+
                     {/* Actions */}
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 sticky bottom-0 bg-brand-dark pb-2">
                         <select 
@@ -705,7 +985,10 @@ export const AdminArticles = ({
             
             <div className="max-w-3xl mx-auto relative z-10">
                 <div className="mb-8">
-                    {form.category && <span className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-2 block">{form.category}</span>}
+                    <div className="flex items-center gap-2 mb-2">
+                        {form.category && <span className="text-brand-orange text-[10px] font-bold uppercase tracking-widest block">{form.category}</span>}
+                        {form.type === 'pillar' && <span className="text-yellow-500 text-[9px] border border-yellow-500/30 px-1 rounded">CORNERSTONE CONTENT</span>}
+                    </div>
                     <h1 className="text-4xl font-display font-bold text-white mb-4 leading-tight">{form.title || "Judul Artikel..."}</h1>
                     <div className="flex items-center gap-3 text-gray-500 text-xs mb-6 border-b border-white/10 pb-6">
                         <span className="flex items-center gap-1"><User size={12}/> {form.author}</span>
