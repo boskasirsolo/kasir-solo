@@ -29,6 +29,9 @@ export const getSmartApiKey = () => {
     getEnv('VITE_GEMINI_API_KEY_0'),
     getEnv('VITE_GEMINI_API_KEY_1'),
     getEnv('VITE_GEMINI_API_KEY_2'),
+    getEnv('VITE_GEMINI_API_KEY_3'),
+    getEnv('VITE_GEMINI_API_KEY_4'),
+    getEnv('VITE_GEMINI_API_KEY_5'),
     getEnv('VITE_GEMINI_API_KEY'),
     getEnv('VITE_API_KEY'),
     process.env.API_KEY
