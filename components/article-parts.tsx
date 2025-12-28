@@ -40,8 +40,34 @@ export const useReadingProgress = () => {
 export const useArticlePagination = (content: string, itemsPerPage: number = 30) => {
   const [currentPage, setCurrentPage] = useState(1);
 
+  // LOGIC: Split content but keep Table Lines together as a single block
   const allBlocks = useMemo(() => {
-    return content.split('\n').filter(line => line.trim() !== '');
+    const lines = content.split('\n');
+    const grouped: string[] = [];
+    let tableBuffer: string[] = [];
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      // Heuristic: Table rows start with |
+      if (trimmed.startsWith('|')) {
+        tableBuffer.push(line);
+      } else {
+        // If we were building a table and hit a non-table line, flush the buffer
+        if (tableBuffer.length > 0) {
+          grouped.push(tableBuffer.join('\n'));
+          tableBuffer = [];
+        }
+        if (trimmed !== '') {
+          grouped.push(line);
+        }
+      }
+    });
+    // Flush if table was at the very end
+    if (tableBuffer.length > 0) {
+      grouped.push(tableBuffer.join('\n'));
+    }
+    
+    return grouped;
   }, [content]);
 
   const totalPages = Math.ceil(allBlocks.length / itemsPerPage);
@@ -69,6 +95,47 @@ export const renderFormattedText = (text: string) => {
     }
     return part;
   });
+};
+
+// --- MARKDOWN TABLE COMPONENT ---
+const MarkdownTable = ({ content }: { content: string }) => {
+    const rows = content.trim().split('\n');
+    if (rows.length < 2) return <pre className="whitespace-pre-wrap">{content}</pre>;
+
+    const headers = rows[0].split('|').filter(c => c.trim() !== '').map(c => c.trim());
+    const bodyRows = rows.slice(2); // Skip header and separator
+
+    return (
+        <div className="overflow-x-auto my-8 rounded-xl border border-white/10 bg-black/20 shadow-lg">
+            <table className="w-full text-sm text-left border-collapse min-w-[600px]">
+                <thead className="bg-white/5 text-brand-orange uppercase text-xs font-bold tracking-wider">
+                    <tr>
+                        {headers.map((h, i) => (
+                            <th key={i} className="px-6 py-4 border-b border-white/10">{h}</th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                    {bodyRows.map((row, idx) => {
+                        const cells = row.split('|').filter((c, i, arr) => {
+                             if (i === 0 && c === '') return false;
+                             if (i === arr.length - 1 && c === '') return false;
+                             return true;
+                        });
+                        return (
+                            <tr key={idx} className="hover:bg-white/5 transition-colors">
+                                {cells.map((c, cIdx) => (
+                                    <td key={cIdx} className="px-6 py-4 border-r border-white/5 last:border-0 text-gray-300 align-top leading-relaxed">
+                                        {renderFormattedText(c.trim())}
+                                    </td>
+                                ))}
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
 };
 
 const extractHeadings = (content: string) => {
@@ -247,6 +314,11 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
           const p = paragraph.trim();
           if (!p) return null;
           
+          // DETECT TABLE
+          if (p.startsWith('|') && p.includes('|')) {
+              return <MarkdownTable key={idx} content={p} />;
+          }
+
           const cleanId = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
           
           if (p.startsWith('# ')) {

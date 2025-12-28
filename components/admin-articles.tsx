@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap, ChevronDown, ChevronUp, MoreVertical, ArrowLeft } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 5;
 
 // --- CONSTANTS ---
 const PRESET_TOPICS = [
@@ -18,6 +18,16 @@ const PRESET_TOPICS = [
     { id: 'hr', label: 'Manajemen Karyawan' },
     { id: 'franchise', label: 'Sistem Franchise' },
     { id: 'scam', label: 'Keamanan & Fraud' }
+];
+
+const AUTHORS = [
+    "Tim Teknis SIBOS", 
+    "Tim Marketing", 
+    "Divisi HRD", 
+    "Konsultan Bisnis", 
+    "Tim Akunting", 
+    "Amin Maghfuri (CEO)",
+    "Redaksi KasirSolo"
 ];
 
 // --- INTERFACES ---
@@ -35,6 +45,47 @@ interface GenConfig {
     imageStyle: 'cinematic' | 'cyberpunk' | 'corporate' | 'studio' | 'minimalist';
 }
 
+// --- HELPER: MARKDOWN TABLE ---
+const MarkdownTable = ({ content }: { content: string }) => {
+    const rows = content.trim().split('\n');
+    if (rows.length < 2) return <pre className="text-xs">{content}</pre>;
+
+    const headers = rows[0].split('|').filter(c => c.trim() !== '').map(c => c.trim());
+    const bodyRows = rows.slice(2); // Skip separator row
+
+    return (
+        <div className="overflow-x-auto my-4 rounded-lg border border-white/10 bg-black/20">
+            <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-white/5 text-brand-orange uppercase text-[10px] font-bold tracking-wider">
+                    <tr>
+                        {headers.map((h, i) => (
+                            <th key={i} className="px-4 py-3 border-b border-white/10">{h}</th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                    {bodyRows.map((row, idx) => {
+                        const cells = row.split('|').filter((c, i, arr) => {
+                             if (i === 0 && c === '') return false;
+                             if (i === arr.length - 1 && c === '') return false;
+                             return true;
+                        });
+                        return (
+                            <tr key={idx} className="hover:bg-white/5 transition-colors">
+                                {cells.map((c, cIdx) => (
+                                    <td key={cIdx} className="px-4 py-3 border-r border-white/5 last:border-0 text-gray-300 align-top">
+                                        {c.trim()}
+                                    </td>
+                                ))}
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
 // --- HELPER: MARKDOWN RENDERER ---
 const SimpleMarkdown = ({ content }: { content: string }) => {
     if (!content) return <div className="text-gray-600 italic">Preview konten akan muncul di sini...</div>;
@@ -49,16 +100,49 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
         });
     };
 
+    // Split content but group tables
+    const lines = content.split('\n');
+    const blocks: { type: string, content: string }[] = [];
+    let tableBuffer: string[] = [];
+
+    lines.forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('|')) {
+            tableBuffer.push(line);
+        } else {
+            if (tableBuffer.length > 0) {
+                blocks.push({ type: 'table', content: tableBuffer.join('\n') });
+                tableBuffer = [];
+            }
+            if (trimmed !== '') {
+                blocks.push({ type: 'text', content: line });
+            } else {
+                blocks.push({ type: 'break', content: '' });
+            }
+        }
+    });
+    // Flush remaining table
+    if (tableBuffer.length > 0) {
+        blocks.push({ type: 'table', content: tableBuffer.join('\n') });
+    }
+
     return (
-        <div className="prose prose-invert prose-sm max-w-none space-y-4">
-            {content.split('\n').map((line, i) => {
+        <div className="prose prose-invert prose-sm max-w-none space-y-2">
+            {blocks.map((block, i) => {
+                if (block.type === 'table') {
+                    return <MarkdownTable key={i} content={block.content} />;
+                }
+                
+                const line = block.content;
+                if (block.type === 'break') return <div key={i} className="h-2"></div>;
+
                 if (line.startsWith('# ')) return <h1 key={i} className="text-3xl font-bold text-white mt-6 mb-4 border-b border-brand-orange/30 pb-2">{line.replace('# ', '')}</h1>;
                 if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold text-brand-orange mt-8 mb-3">{line.replace('## ', '')}</h2>;
                 if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold text-gray-200 mt-6 mb-2">{line.replace('### ', '')}</h3>;
                 if (line.startsWith('- ')) return <li key={i} className="ml-4 list-disc text-gray-300 pl-2">{renderInline(line.replace('- ', ''))}</li>;
                 if (line.startsWith('1. ')) return <li key={i} className="ml-4 list-decimal text-gray-300 pl-2">{renderInline(line.replace(/^\d+\.\s/, ''))}</li>;
                 if (line.startsWith('> ')) return <blockquote key={i} className="border-l-4 border-brand-orange pl-4 italic text-gray-400 my-4 bg-white/5 py-2 pr-2 rounded-r">{renderInline(line.replace('> ', ''))}</blockquote>;
-                if (line === '') return <div key={i} className="h-2"></div>;
+                
                 return <p key={i} className="text-gray-300 leading-relaxed text-justify">{renderInline(line)}</p>;
             })}
         </div>
@@ -131,10 +215,22 @@ const useArticleManager = (
     const [textProgress, setTextProgress] = useState({ percent: 0, message: '' });
     const [imageProgress, setImageProgress] = useState({ percent: 0, message: '' });
 
+    // UI States
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+    const [expandedPillarId, setExpandedPillarId] = useState<number | null>(null);
 
-    // Available Pillars for Dropdown
+    // Filter Logic for List (Shows Pillars OR Standalone articles)
+    // We prioritize showing Pillars at the root level. Clusters are hidden inside pillars.
+    const filteredPillars = articles.filter(a => {
+        const isPillar = a.type === 'pillar' || !a.type; // Default to pillar if type undefined
+        const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase());
+        return isPillar && matchesSearch;
+    });
+
+    const totalPages = Math.ceil(filteredPillars.length / ITEMS_PER_PAGE);
+    const paginatedPillars = filteredPillars.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
     const availablePillars = articles.filter(a => a.type === 'pillar');
 
     const resetForm = () => {
@@ -205,6 +301,11 @@ const useArticleManager = (
         return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1024&height=576&model=flux&nologo=true&seed=${seed}`;
     };
 
+    const getRandomAuthor = () => {
+        const idx = Math.floor(Math.random() * AUTHORS.length);
+        return AUTHORS[idx];
+    };
+
     // --- ACTION: GENERATE TEXT WITH STRATEGY CONTEXT ---
     const generateTextContent = async () => {
         if (!form.title) return alert("Pilih judul terlebih dahulu.");
@@ -243,31 +344,35 @@ const useArticleManager = (
                 const pillarTitle = parentPillar ? parentPillar.title : "Panduan Lengkap Bisnis";
                 strategyContext = `
                 STRATEGY: This is a **CLUSTER CONTENT** (Supporting Article).
-                - Focus deeply on the specific sub-topic.
-                - **MANDATORY**: Include a natural link/reference to the Pillar Page: "${pillarTitle}".
+                - Topic: "${form.title}"
+                - Parent Topic: "${pillarTitle}"
+                - Focus: Deep dive into this specific sub-topic. Do NOT be generic.
+                - **MANDATORY**: Include a natural link/reference to the Pillar Page.
                 `;
-                lengthReq = "Minimum 1000 words";
+                lengthReq = "STRICTLY MINIMUM 1000 WORDS. Do not write short content.";
+                structureInstruction = "Create 6-8 Detailed Subheadings (H2) covering 'What', 'Why', 'How', 'Examples', 'Common Mistakes', and 'Advanced Tips'.";
             }
 
             setTextProgress({ percent: 20, message: `Menulis Artikel ${form.type === 'pillar' ? 'Pilar (6000+ Kata)' : 'Cluster (1000+ Kata)'}...` });
             
             const contentPrompt = `
             Role: Senior SEO Content Strategist (Indonesian Market).
-            Task: Write a Deep-Dive Article based on title: "${form.title}"
+            Task: Write a High-Quality Article based on title: "${form.title}"
             
             ${strategyContext}
             
             STRUCTURE:
             1. **Headline**: # ${form.title}
-            2. **Introduction**: Hook & Context.
+            2. **Introduction**: Hook & Context (Pain Points).
             3. **Deep Dive**: ${structureInstruction}
-               - Use detailed paragraphs, bullet points, data tables, and real-world examples.
-            4. **FAQ**: 5-8 Q&A.
-            5. **Conclusion**: Summary & CTA.
+               - Use detailed paragraphs, bullet points, data tables (Markdown), and real-world examples (Case Studies).
+            4. **FAQ**: 5-8 Q&A (Schema ready).
+            5. **Conclusion**: Summary & CTA (Call to Action).
             
             REQUIREMENTS:
-            - **LENGTH**: ${lengthReq}. (CRITICAL: Do not write short content).
-            - **FORMAT**: Clean Markdown.
+            - **LENGTH**: ${lengthReq}.
+            - **FORMAT**: Clean Markdown. Use Bold for emphasis.
+            - **TONE**: Professional, Authoritative, yet Accessible.
             
             ${clusterInstruction}
             `;
@@ -324,12 +429,15 @@ const useArticleManager = (
             setTextProgress({ percent: 100, message: 'Selesai!' });
             await new Promise(r => setTimeout(r, 500));
 
+            // Set Author only if it's currently generic "Admin"
+            const newAuthor = form.author === 'Admin' ? getRandomAuthor() : form.author;
+
             setForm(prev => ({
                 ...prev,
                 content: generatedContent,
                 excerpt: metaData.excerpt || prev.excerpt,
                 category: genConfig.autoCategory ? metaData.category : prev.category,
-                author: "Tim Ahli MKS", 
+                author: newAuthor, 
                 readTime: metaData.readTime || "10 min read",
                 cluster_ideas: extractedClusters
             }));
@@ -366,17 +474,21 @@ const useArticleManager = (
                     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
 
+                // Unique Seed for Image based on Title
+                const imageSeed = Math.floor(Math.random() * 999999);
+                const uniqueImage = `https://image.pollinations.ai/prompt/${encodeURIComponent(title + " business professional photography")}?width=1024&height=576&model=flux&nologo=true&seed=${imageSeed}`;
+
                 // Create Draft Article Object
                 const newArticle: Article = {
                     id: Date.now() + index, // Unique ID
                     title: title,
-                    excerpt: `Artikel pendukung untuk pilar: ${form.title}. (Auto-generated draft).`,
-                    content: `<!-- AUTO-GENERATED PLACEHOLDER -->\n# ${title}\n\n*Artikel ini dijadwalkan otomatis oleh SIBOS AI. Silakan generate konten lengkapnya nanti.*\n\n> Menginduk ke Pillar: ${form.title}`,
+                    excerpt: `Artikel pendukung untuk pilar: ${form.title}. (Klik Edit untuk Generate Konten Lengkap).`,
+                    content: `<!-- PLACEHOLDER -->\n# ${title}\n\n*Artikel ini telah dijadwalkan. Klik tombol **'GENERATE TEXT DRAFT'** di panel kanan untuk membuat konten lengkap (1000 kata) menggunakan AI.*\n\n> Menginduk ke Pillar: ${form.title}`,
                     date: scheduleDate.toLocaleDateString('id-ID'),
-                    image: 'https://images.unsplash.com/photo-1661956602116-aa6865609028?auto=format&fit=crop&q=80&w=800', // Placeholder
+                    image: uniqueImage, 
                     category: form.category || 'Bisnis',
-                    author: 'SIBOS Bot',
-                    readTime: '5 min read',
+                    author: getRandomAuthor(), // Randomized Author
+                    readTime: '10 min read',
                     status: 'scheduled',
                     scheduled_for: scheduledTimeStr,
                     type: 'cluster',
@@ -586,17 +698,22 @@ const useArticleManager = (
         setAiStep(2); 
     };
 
-    const filtered = articles.filter(a => a.title.toLowerCase().includes(searchTerm.toLowerCase()));
-    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-    const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
     return {
         form, setForm,
         loading,
         progress: { text: textProgress, image: imageProgress },
         aiState: { step: aiStep, setStep: setAiStep, keywords, selectedKeyword, genConfig, setGenConfig, selectedPresets, togglePreset },
         actions: { researchKeywords, selectTopic, generateTextContent, generateImageContent, handleSubmit, handleEditClick, resetForm, deleteItem, scheduleClusters },
-        listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm },
+        listData: { 
+            paginated: paginatedPillars, 
+            totalPages, 
+            page, 
+            setPage, 
+            searchTerm, 
+            setSearchTerm,
+            expandedPillarId,
+            setExpandedPillarId
+        },
         availablePillars
     };
 };
@@ -613,89 +730,150 @@ export const AdminArticles = ({
   return (
     <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b">
       
-      {/* 1. LEFT COLUMN: LIST */}
-      <div className="w-[20%] border-r border-white/5 bg-brand-dark flex flex-col min-w-[250px]">
+      {/* 1. LEFT COLUMN: PILLAR LIST (ACCORDION) */}
+      <div className="w-[30%] border-r border-white/5 bg-brand-dark flex flex-col min-w-[300px]">
          <div className="p-4 border-b border-white/5">
-            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <List size={12}/> Arsip Artikel
-            </h4>
+            <div className="flex justify-between items-center mb-3">
+                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                    <List size={12}/> Arsip Artikel
+                </h4>
+                <button 
+                    onClick={actions.resetForm}
+                    className="text-[10px] font-bold text-brand-orange hover:text-white transition-colors flex items-center gap-1 border border-brand-orange/30 px-2 py-1 rounded hover:bg-brand-orange/10"
+                >
+                    <Plus size={10} /> BARU
+                </button>
+            </div>
             <div className="relative">
                 <Search size={12} className="absolute left-2.5 top-2.5 text-gray-500" />
                 <input 
                     type="text" 
                     value={listData.searchTerm}
                     onChange={(e) => listData.setSearchTerm(e.target.value)}
-                    placeholder="Cari..." 
+                    placeholder="Cari artikel pilar..." 
                     className="w-full bg-brand-card border border-white/10 rounded-full pl-8 pr-3 py-1.5 text-[10px] text-white focus:outline-none focus:border-brand-orange"
                 />
             </div>
          </div>
          
          <div className="flex-grow overflow-y-auto p-2 space-y-2 custom-scrollbar">
-            <button 
-                onClick={actions.resetForm}
-                className="w-full py-2 border border-dashed border-white/10 rounded text-gray-400 text-[10px] font-bold hover:bg-brand-orange/10 hover:text-brand-orange hover:border-brand-orange transition-all flex items-center justify-center gap-1"
-            >
-                <Plus size={12} /> ARTIKEL BARU
-            </button>
-
-            {listData.paginated.map((item: Article) => {
-                const isPillar = item.type === 'pillar';
-                // Find parent pillar title if connected
-                const parent = item.pillar_id ? articles.find(a => a.id === item.pillar_id) : null;
-
+            {listData.paginated.map((pillar: Article) => {
+                const isExpanded = listData.expandedPillarId === pillar.id;
+                // Get Linked Clusters
+                const linkedClusters = articles.filter(a => a.pillar_id === pillar.id);
+                
                 return (
                     <div 
-                        key={item.id}
-                        onClick={() => actions.handleEditClick(item)}
-                        className={`p-2 rounded border cursor-pointer transition-all group relative ${
-                            form.id === item.id 
-                            ? 'bg-brand-orange/10 border-brand-orange' 
-                            : 'bg-transparent border-white/5 hover:bg-white/5'
+                        key={pillar.id}
+                        className={`rounded-lg border transition-all overflow-hidden ${
+                            isExpanded ? 'border-brand-orange/50 bg-white/5' : 'border-white/5 hover:border-white/20 bg-brand-card'
                         }`}
                     >
-                        <div className="flex gap-2 mb-1">
-                            <img src={item.image} className="w-8 h-8 rounded object-cover bg-black" />
-                            <div className="min-w-0 flex-1">
-                                <h5 className="text-[10px] font-bold text-white truncate leading-tight mb-0.5">{item.title}</h5>
-                                <div className="flex items-center gap-1">
-                                    <span className={`text-[8px] px-1.5 rounded-full border ${
-                                        isPillar 
-                                        ? 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10' 
-                                        : 'text-blue-400 border-blue-500/30 bg-blue-500/10'
-                                    }`}>
-                                        {isPillar ? '👑 PILAR' : '🔗 CLUSTER'}
+                        {/* Accordion Header */}
+                        <div 
+                            className="p-3 cursor-pointer flex gap-3 items-center"
+                            onClick={() => listData.setExpandedPillarId(isExpanded ? null : pillar.id)}
+                        >
+                            <img src={pillar.image} className="w-10 h-10 rounded object-cover bg-black" />
+                            <div className="flex-1 min-w-0">
+                                <h5 className={`text-[11px] font-bold truncate leading-tight ${isExpanded ? 'text-brand-orange' : 'text-white'}`}>
+                                    {pillar.title}
+                                </h5>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[9px] text-yellow-500 border border-yellow-500/30 bg-yellow-500/10 px-1.5 rounded-full flex items-center gap-1">
+                                        <Crown size={8}/> PILAR
                                     </span>
-                                    <span className={`text-[8px] px-1 rounded ${
-                                        item.status === 'published' ? 'text-green-400 bg-green-900/30' : item.status === 'scheduled' ? 'text-purple-400 bg-purple-900/30' : 'text-gray-400 bg-gray-800'
-                                    }`}>{item.status || 'draft'}</span>
+                                    <span className="text-[9px] text-gray-500">
+                                        {linkedClusters.length} Cluster
+                                    </span>
                                 </div>
                             </div>
+                            {isExpanded ? <ChevronUp size={14} className="text-gray-500"/> : <ChevronDown size={14} className="text-gray-500"/>}
                         </div>
-                        
-                        {/* Linkage Info */}
-                        {!isPillar && parent && (
-                            <div className="text-[9px] text-gray-500 flex items-center gap-1 pl-10">
-                                <LinkIcon size={8}/> Menginduk ke: <span className="text-gray-400 truncate max-w-[100px]">{parent.title}</span>
-                            </div>
-                        )}
-                        {/* Scheduled Info */}
-                        {item.status === 'scheduled' && (
-                            <div className="text-[9px] text-purple-400 flex items-center gap-1 pl-10">
-                                <CalendarClock size={8}/> {item.scheduled_for}
-                            </div>
-                        )}
 
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); actions.deleteItem(item.id); }}
-                            className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-500"
-                        >
-                            <Trash2 size={12} />
-                        </button>
+                        {/* Accordion Body */}
+                        {isExpanded && (
+                            <div className="bg-black/20 border-t border-white/5 p-3 animate-fade-in">
+                                {/* Actions Row */}
+                                <div className="flex gap-2 mb-3">
+                                    <button 
+                                        onClick={() => actions.handleEditClick(pillar)}
+                                        className="flex-1 py-1.5 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-500 rounded flex items-center justify-center gap-1"
+                                    >
+                                        <Edit size={10} /> Edit Pilar
+                                    </button>
+                                    <button 
+                                        onClick={() => actions.deleteItem(pillar.id)}
+                                        className="py-1.5 px-3 text-[10px] font-bold text-red-400 bg-red-900/20 hover:bg-red-900/40 rounded border border-red-900/30"
+                                    >
+                                        <Trash2 size={10} />
+                                    </button>
+                                </div>
+
+                                {/* Cluster List */}
+                                <h6 className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                    <Network size={10}/> Artikel Cluster ({linkedClusters.length})
+                                </h6>
+                                <div className="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                                    {linkedClusters.length > 0 ? (
+                                        linkedClusters.map(cluster => (
+                                            <div 
+                                                key={cluster.id}
+                                                onClick={() => actions.handleEditClick(cluster)}
+                                                className={`p-2 rounded border border-white/5 hover:border-brand-orange/30 cursor-pointer flex gap-2 items-center group transition-colors ${form.id === cluster.id ? 'bg-brand-orange/10 border-brand-orange' : 'bg-white/5'}`}
+                                            >
+                                                <div className="w-1 h-full bg-blue-500 rounded-full"></div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[10px] text-gray-300 truncate group-hover:text-brand-orange transition-colors">{cluster.title}</p>
+                                                    <div className="flex justify-between items-center mt-0.5">
+                                                        <span className={`text-[8px] px-1 rounded ${cluster.status === 'published' ? 'text-green-400 bg-green-900/30' : cluster.status === 'scheduled' ? 'text-purple-400 bg-purple-900/30' : 'text-gray-500 bg-gray-800'}`}>
+                                                            {cluster.status}
+                                                        </span>
+                                                        {cluster.scheduled_for && (
+                                                            <span className="text-[8px] text-purple-400 flex items-center gap-0.5">
+                                                                <Clock size={8}/> {cluster.scheduled_for.split(' ')[0]}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-3 border border-dashed border-white/10 rounded">
+                                            <p className="text-[9px] text-gray-500 mb-1">Belum ada artikel cluster.</p>
+                                            <p className="text-[8px] text-gray-600">Gunakan "Auto-Cluster Strategy" di editor Pilar.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
             })}
          </div>
+
+         {/* Pagination Footer */}
+         {listData.totalPages > 1 && (
+            <div className="p-3 border-t border-white/5 bg-brand-dark flex justify-between items-center">
+                <button 
+                    onClick={() => listData.setPage(p => Math.max(1, p - 1))} 
+                    disabled={listData.page === 1}
+                    className="p-1.5 rounded hover:bg-white/10 text-gray-400 disabled:opacity-30"
+                >
+                    <ChevronLeft size={16} />
+                </button>
+                <span className="text-[10px] font-bold text-gray-400">
+                    Hal {listData.page} / {listData.totalPages}
+                </span>
+                <button 
+                    onClick={() => listData.setPage(p => Math.min(listData.totalPages, p + 1))} 
+                    disabled={listData.page === listData.totalPages}
+                    className="p-1.5 rounded hover:bg-white/10 text-gray-400 disabled:opacity-30"
+                >
+                    <ChevronRight size={16} />
+                </button>
+            </div>
+         )}
       </div>
 
       {/* 2. CENTER COLUMN: EDITOR / AI STUDIO */}
@@ -706,8 +884,9 @@ export const AdminArticles = ({
                 {form.id ? "Editor" : "AI Studio"}
             </h3>
             {form.id || aiState.step > 0 ? (
-                <button onClick={actions.resetForm} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1">
-                    <RefreshCw size={10} /> Reset
+                <button onClick={actions.resetForm} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 border border-red-500/20 px-2 py-1 rounded bg-red-500/10">
+                    {form.id ? <ArrowLeft size={10} /> : <RefreshCw size={10} />}
+                    {form.id ? "Kembali ke Daftar" : "Reset"}
                 </button>
             ) : null}
          </div>
@@ -924,6 +1103,20 @@ export const AdminArticles = ({
                             )}
                         </div>
                     </div>
+
+                    {/* QUICK ACTION: GENERATE FULL TEXT (For Scheduled Clusters) */}
+                    {form.content && form.content.includes("<!-- PLACEHOLDER -->") && (
+                        <div className="p-3 bg-brand-orange/10 border border-brand-orange/30 rounded-lg animate-pulse-slow">
+                            <p className="text-[10px] text-brand-orange mb-2 font-bold">Artikel ini masih berupa Draft Placeholder.</p>
+                            <Button 
+                                onClick={actions.generateTextContent} 
+                                disabled={loading.generatingText}
+                                className="w-full py-2 bg-brand-orange hover:bg-brand-glow text-white text-xs shadow-lg"
+                            >
+                                {loading.generatingText ? <LoadingSpinner size={14}/> : <><Sparkles size={14}/> GENERATE FULL CONTENT (1000+ Words)</>}
+                            </Button>
+                        </div>
+                    )}
 
                     {/* Inputs */}
                     <div className="space-y-3">
