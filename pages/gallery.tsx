@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Image as ImageIcon, X, PlayCircle, Calendar, Monitor, Smartphone, 
-  Code, Globe, CheckCircle2, ArrowRight, Laptop 
+  Code, Globe, CheckCircle2, ArrowRight, Laptop, Quote, Star 
 } from 'lucide-react';
-import { GalleryItem } from '../types';
+import { GalleryItem, Testimonial } from '../types';
 import { SectionHeader, Badge } from '../components/ui';
 
 // --- COMPONENTS: FILTER TABS ---
@@ -32,6 +31,35 @@ const FilterTab = ({
     <Icon size={16} />
     {label}
   </button>
+);
+
+// --- COMPONENT: TESTIMONIAL CARD ---
+const TestimonialCard = ({ item }: { item: Testimonial }) => (
+  <div className="bg-brand-card border border-white/5 rounded-2xl p-6 hover:border-brand-orange transition-all duration-300 hover:shadow-neon group flex flex-col h-full relative overflow-hidden">
+    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+       <Quote size={80} className="text-brand-orange transform rotate-12 translate-x-4 -translate-y-4" />
+    </div>
+    
+    <div className="flex items-center gap-4 mb-6 relative z-10">
+       <div className="w-14 h-14 rounded-full border-2 border-brand-orange/30 p-1">
+          <img src={item.image_url || "https://via.placeholder.com/150"} alt={item.client_name} className="w-full h-full rounded-full object-cover" />
+       </div>
+       <div>
+          <h4 className="text-white font-bold">{item.client_name}</h4>
+          <p className="text-brand-orange text-xs uppercase tracking-wider font-bold">{item.business_name}</p>
+       </div>
+    </div>
+
+    <div className="flex gap-1 mb-4">
+       {[...Array(5)].map((_, i) => (
+          <Star key={i} size={14} className={`${i < item.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'} `} />
+       ))}
+    </div>
+
+    <p className="text-gray-300 text-sm leading-relaxed italic relative z-10 flex-grow">
+       "{item.content}"
+    </p>
+  </div>
 );
 
 // --- COMPONENTS: DIGITAL PROJECT CARD (THE SHOWCASE) ---
@@ -110,8 +138,8 @@ const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: ()
 );
 
 // --- MAIN PAGE COMPONENT ---
-export const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => {
-  const [activeFilter, setActiveFilter] = useState<'all' | 'physical' | 'digital'>('all');
+export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[], testimonials: Testimonial[] }) => {
+  const [activeFilter, setActiveFilter] = useState<'all' | 'physical' | 'digital' | 'testimonials'>('all');
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
 
   // Filter Logic
@@ -129,7 +157,7 @@ export const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => {
       <SectionHeader 
         title="Showcase" 
         highlight="Portofolio" 
-        subtitle="Rekam jejak instalasi fisik dan inovasi digital PT Mesin Kasir Solo."
+        subtitle="Rekam jejak instalasi fisik, inovasi digital, dan kepercayaan klien."
       />
 
       {/* --- FILTER TABS --- */}
@@ -152,26 +180,51 @@ export const GalleryPage = ({ gallery }: { gallery: GalleryItem[] }) => {
           onClick={() => setActiveFilter('digital')} 
           icon={Code}
         />
+        <FilterTab 
+          label="Kata Klien" 
+          active={activeFilter === 'testimonials'} 
+          onClick={() => setActiveFilter('testimonials')} 
+          icon={Quote}
+        />
       </div>
 
-      {/* --- GRID VIEW --- */}
-      {filteredGallery.length === 0 ? (
-        <div className="text-center py-20 bg-brand-card rounded-2xl border border-white/5 border-dashed">
-          <ImageIcon className="mx-auto w-16 h-16 text-gray-600 mb-4" />
-          <p className="text-gray-400">Belum ada portofolio di kategori ini.</p>
-        </div>
+      {/* --- VIEW --- */}
+      {activeFilter === 'testimonials' ? (
+         // TESTIMONIAL VIEW
+         testimonials.length === 0 ? (
+            <div className="text-center py-20 bg-brand-card rounded-2xl border border-white/5 border-dashed">
+              <Quote className="mx-auto w-16 h-16 text-gray-600 mb-4" />
+              <p className="text-gray-400">Belum ada testimoni.</p>
+            </div>
+         ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+              {testimonials.map(t => (
+                 <React.Fragment key={t.id}>
+                   <TestimonialCard item={t} />
+                 </React.Fragment>
+              ))}
+            </div>
+         )
       ) : (
-        <div className={`grid gap-8 ${activeFilter === 'physical' ? 'columns-1 md:columns-2 lg:columns-3 block space-y-8' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
-           {filteredGallery.map((item) => (
-              <React.Fragment key={item.id}>
-                {activeFilter === 'physical' || (activeFilter === 'all' && item.category_type === 'physical') ? (
-                   <PhysicalProjectCard item={item} onClick={() => setSelectedItem(item)} />
-                ) : (
-                   <DigitalProjectCard item={item} onClick={() => setSelectedItem(item)} />
-                )}
-              </React.Fragment>
-           ))}
-        </div>
+         // GALLERY GRID VIEW
+         filteredGallery.length === 0 ? (
+          <div className="text-center py-20 bg-brand-card rounded-2xl border border-white/5 border-dashed">
+            <ImageIcon className="mx-auto w-16 h-16 text-gray-600 mb-4" />
+            <p className="text-gray-400">Belum ada portofolio di kategori ini.</p>
+          </div>
+        ) : (
+          <div className={`grid gap-8 ${activeFilter === 'physical' ? 'columns-1 md:columns-2 lg:columns-3 block space-y-8' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+             {filteredGallery.map((item) => (
+                <React.Fragment key={item.id}>
+                  {activeFilter === 'physical' || (activeFilter === 'all' && item.category_type === 'physical') ? (
+                     <PhysicalProjectCard item={item} onClick={() => setSelectedItem(item)} />
+                  ) : (
+                     <DigitalProjectCard item={item} onClick={() => setSelectedItem(item)} />
+                  )}
+                </React.Fragment>
+             ))}
+          </div>
+        )
       )}
 
       {/* --- LIGHTBOX / MODAL --- */}

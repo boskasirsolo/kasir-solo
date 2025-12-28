@@ -1,5 +1,6 @@
+
 import { createClient } from '@supabase/supabase-js';
-import { Product, Article, GalleryItem } from './types';
+import { Product, Article, GalleryItem, Testimonial } from './types';
 
 // --- Environment Helpers ---
 export const getEnv = (key: string) => {
@@ -206,7 +207,6 @@ Implementasi ini bisa menaikkan *Repeat Order* hingga 40%.`,
   }
 ];
 
-// --- UPDATED GALLERY DATA (HYBRID PORTFOLIO) ---
 export const INITIAL_GALLERY: GalleryItem[] = [
   {
     id: 101,
@@ -279,5 +279,26 @@ export const INITIAL_GALLERY: GalleryItem[] = [
     type: 'image',
     image_url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800",
     description: "Partisipasi PT Mesin Kasir Solo dalam ajang Solo Great Sale. Konsultasi digitalisasi bisnis untuk 500+ pengunjung."
+  }
+];
+
+export const INITIAL_TESTIMONIALS: Testimonial[] = [
+  {
+    id: 1,
+    client_name: "Pak Budi",
+    business_name: "Warkop DKI Reborn",
+    content: "Alat kasirnya bandel banget, udah setahun gak ada masalah. Supportnya juga cepet.",
+    rating: 5,
+    image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
+    is_featured: true
+  },
+  {
+    id: 2,
+    client_name: "Bu Susi",
+    business_name: "Salon Cantik",
+    content: "Awalnya bingung pakainya, tapi diajarin teknisinya sampai bisa. Recommended!",
+    rating: 5,
+    image_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200",
+    is_featured: true
   }
 ];

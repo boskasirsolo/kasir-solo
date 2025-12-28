@@ -41,6 +41,17 @@ export interface GalleryItem {
   };
 }
 
+export interface Testimonial {
+  id: number;
+  client_name: string;
+  business_name: string;
+  content: string;
+  rating: number;
+  image_url?: string;
+  is_featured: boolean;
+  created_at?: string;
+}
+
 export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;

@@ -1,12 +1,14 @@
+
 import React, { useState } from 'react';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap } from 'lucide-react';
-import { Product, GalleryItem, SiteConfig } from '../types';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote } from 'lucide-react';
+import { Product, GalleryItem, SiteConfig, Testimonial } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
 import { AdminGallery } from '../components/admin-gallery';
+import { AdminTestimonials } from '../components/admin-testimonials';
 import { AdminSettings } from '../components/admin-settings';
 import { AdminOrders } from '../components/admin-orders';
-import { supabase, ensureAPIKey } from '../utils';
+import { supabase } from '../utils';
 
 // --- Login Component (SECURED) ---
 export const AdminLogin = () => {
@@ -88,15 +90,17 @@ export const AdminLogin = () => {
 export const AdminDashboard = ({ 
   products, setProducts, 
   gallery, setGallery,
+  testimonials, setTestimonials,
   config, setConfig,
   onLogout 
 }: { 
   products: Product[], setProducts: any,
   gallery: GalleryItem[], setGallery: any,
+  testimonials: Testimonial[], setTestimonials: any,
   config: SiteConfig, setConfig: any,
   onLogout: () => void
 }) => {
-  const [activeTab, setActiveTab] = useState<'store' | 'gallery' | 'settings'>('store');
+  const [activeTab, setActiveTab] = useState<'store' | 'gallery' | 'testimonials' | 'settings'>('store');
   const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog'>('orders');
 
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
@@ -134,8 +138,9 @@ export const AdminDashboard = ({
         
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-wrap gap-2">
-            <TabButton id="store" label="PRODUK & PESANAN" icon={ShoppingBag} />
+            <TabButton id="store" label="PRODUK" icon={ShoppingBag} />
             <TabButton id="gallery" label="GALERI" icon={Image} />
+            <TabButton id="testimonials" label="TESTIMONI" icon={Quote} />
             <TabButton id="settings" label="PENGATURAN" icon={Settings} />
           </div>
           
@@ -206,6 +211,12 @@ export const AdminDashboard = ({
         {activeTab === 'gallery' && (
           <div className="animate-fade-in relative z-10">
              <AdminGallery gallery={gallery} setGallery={setGallery} />
+          </div>
+        )}
+
+        {activeTab === 'testimonials' && (
+          <div className="animate-fade-in relative z-10">
+             <AdminTestimonials testimonials={testimonials} setTestimonials={setTestimonials} />
           </div>
         )}
 
