@@ -1,13 +1,12 @@
 
-// ... keep imports ...
-import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, FileText, Calendar, User, Clock, TrendingUp, Target, List, CheckCircle2, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 10; // Increased for dense list
 
 // --- INTERFACES FOR AI FLOW ---
 interface KeywordData {
@@ -20,7 +19,27 @@ interface GenConfig {
     autoImage: boolean;
     autoCategory: boolean;
     autoAuthor: boolean;
+    imageStyle: 'cinematic' | 'cyberpunk' | 'corporate' | 'studio';
 }
+
+// --- HELPER: MARKDOWN RENDERER (SIMPLE) ---
+const SimpleMarkdown = ({ content }: { content: string }) => {
+    if (!content) return <div className="text-gray-600 italic">Preview konten akan muncul di sini...</div>;
+    
+    return (
+        <div className="prose prose-invert prose-sm max-w-none space-y-4">
+            {content.split('\n').map((line, i) => {
+                if (line.startsWith('# ')) return <h1 key={i} className="text-3xl font-bold text-white mt-6 mb-4">{line.replace('# ', '')}</h1>;
+                if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold text-brand-orange mt-5 mb-3">{line.replace('## ', '')}</h2>;
+                if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold text-gray-200 mt-4 mb-2">{line.replace('### ', '')}</h3>;
+                if (line.startsWith('- ')) return <li key={i} className="ml-4 list-disc text-gray-300">{line.replace('- ', '')}</li>;
+                if (line.startsWith('1. ')) return <li key={i} className="ml-4 list-decimal text-gray-300">{line.replace(/^\d+\.\s/, '')}</li>;
+                if (line === '') return <div key={i} className="h-2"></div>;
+                return <p key={i} className="text-gray-300 leading-relaxed">{line}</p>;
+            })}
+        </div>
+    );
+};
 
 // --- LOGIC: Custom Hook ---
 const useArticleManager = (
@@ -35,7 +54,7 @@ const useArticleManager = (
         content: '',
         category: '',
         author: 'Admin',
-        readTime: '10 min read',
+        readTime: '20 min read', // Default longer read time
         imagePreview: '',
         uploadFile: null as File | null,
         status: 'draft' as 'published' | 'draft' | 'scheduled',
@@ -43,14 +62,15 @@ const useArticleManager = (
     });
 
     // AI Flow State
-    const [aiStep, setAiStep] = useState<number>(0); // 0: Idle, 1: Keywords, 2: Titles, 3: Ready
+    const [aiStep, setAiStep] = useState<number>(0); 
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
     const [selectedKeyword, setSelectedKeyword] = useState<KeywordData | null>(null);
     const [titleOptions, setTitleOptions] = useState<string[]>([]);
     const [genConfig, setGenConfig] = useState<GenConfig>({
         autoImage: true,
         autoCategory: true,
-        autoAuthor: true
+        autoAuthor: true,
+        imageStyle: 'cinematic'
     });
 
     const [loading, setLoading] = useState({
@@ -71,7 +91,7 @@ const useArticleManager = (
             content: '',
             category: '',
             author: 'Admin',
-            readTime: '10 min read',
+            readTime: '20 min read',
             imagePreview: '',
             uploadFile: null,
             status: 'draft',
@@ -97,24 +117,34 @@ const useArticleManager = (
             status: item.status || 'published',
             scheduled_for: item.scheduled_for || ''
         });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setAiStep(3); // Skip to editor mode
+        // No scroll needed in split view
+        setAiStep(3); 
     };
 
-    // --- UTILS: IMAGE GENERATOR ---
-    const getAIImageUrl = (prompt: string) => {
+    // --- UTILS: IMAGE GENERATOR (UPGRADED) ---
+    const getAIImageUrl = (prompt: string, style: string) => {
         const seed = Math.floor(Math.random() * 10000);
-        const cleanPrompt = prompt.replace(/[^a-zA-Z0-9 ]/g, '');
-        // Using Pollinations.ai (Flux Model) for better stability & quality
+        
+        let styleKeywords = "";
+        switch(style) {
+            case 'cinematic': styleKeywords = "cinematic lighting, dramatic atmosphere, 8k, unreal engine 5 render, highly detailed, depth of field"; break;
+            case 'cyberpunk': styleKeywords = "cyberpunk city, neon lights, futuristic, high contrast, purple and orange tones, glowing"; break;
+            case 'corporate': styleKeywords = "modern office, professional, bright, clean lines, corporate photography, 4k"; break;
+            case 'studio': styleKeywords = "studio lighting, product photography, solid background, sharp focus, minimal"; break;
+            default: styleKeywords = "high quality, professional";
+        }
+
+        const cleanPrompt = `${prompt}, ${styleKeywords}`;
         return `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1280&height=720&nologo=true&seed=${seed}&model=flux`;
     };
 
     const regenerateCoverImage = () => {
         if (!form.title) return alert("Judul artikel kosong.");
-        const prompt = `Professional photography for business article: ${form.title}, modern office, retail technology, warm lighting, 4k`;
+        // Use title + explicit visual cues
+        const prompt = `Visual representation of ${form.title}, detailed, masterpiece`;
         setForm(prev => ({
             ...prev,
-            imagePreview: getAIImageUrl(prompt)
+            imagePreview: getAIImageUrl(prompt, genConfig.imageStyle)
         }));
     };
 
@@ -165,11 +195,11 @@ const useArticleManager = (
             Generate 3 Article Titles with DIFFERENT angles.
             
             Angles:
-            1. Case Study / Success Story (e.g., "Bagaimana Toko X Naik Omzet...")
-            2. Educational / Warning (e.g., "5 Kesalahan Fatal...", "Jangan Beli Sebelum Tahu Ini")
-            3. Future Trend / Strategy (e.g., "Masa Depan Kasir di 2025...")
+            1. Deep Dive Case Study (e.g., "Analisis Mendalam...")
+            2. Ultimate Guide (e.g., "Panduan Terlengkap 2025...")
+            3. Controversial/Warning (e.g., "Kenapa Banyak Bisnis Hancur Karena...")
 
-            IMPORTANT: The subject does NOT have to be "Saya" or "Kami" in the title. Focus on the reader's problem or the client's story.
+            Titles should be catchy, click-worthy, but professional.
             Target Audience: Business Owners (UMKM) in Indonesia.
             Language: Indonesian.
             
@@ -190,7 +220,7 @@ const useArticleManager = (
         }
     };
 
-    // --- AI: STEP 3 - PILLAR CONTENT GENERATION ---
+    // --- AI: STEP 3 - PILLAR CONTENT GENERATION (7000 WORDS TARGET) ---
     const generatePillarContent = async () => {
         if (!form.title) return alert("Pilih judul terlebih dahulu.");
         
@@ -201,42 +231,67 @@ const useArticleManager = (
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
             const prompt = `
-            Role: Amin Maghfuri (Founder PT Mesin Kasir Solo).
-            Task: Write a PILLAR ARTICLE based on the title.
+            Role: Expert Business Consultant & Senior Copywriter (Amin Maghfuri).
+            Task: Write an ULTRA-COMPREHENSIVE, DEEP DIVE PILLAR ARTICLE (Target: 7000 words quality equivalent).
             Title: "${form.title}"
             Keyword: "${selectedKeyword?.keyword || form.title}"
             
             CONFIG:
             - Auto Category: ${genConfig.autoCategory}
-            - Auto Author: ${genConfig.autoAuthor} (Set to 'Amin Maghfuri' or 'Tim Teknis')
+            - Auto Author: ${genConfig.autoAuthor} (Set to 'Amin Maghfuri' or 'Tim Riset SIBOS')
             
-            WRITING STYLE GUIDELINES:
-            1. **Voice**: You are the narrator (Amin/Team). Use "Saya" (I) when giving opinions/advice, but the *subject* of the story can be a client, a general situation, or a specific case study.
-            2. **Perspective**: 
-               - If it's a case study: Tell the story of the client ("Klien kami, Pak Budi...", "Saya pernah menemui kasus...").
-               - If it's a tip: Speak directly to the reader ("Anda mungkin pernah mengalami...").
-            3. **Authenticity**: Use natural Indonesian business terms (Omzet, HPP, Boncos, Cuan).
-            4. **Actionable**: Don't just explain 'what', explain 'how'. Give tips that can be applied immediately.
+            EXTREME LENGTH INSTRUCTIONS:
+            1. Do NOT summarize. Expand every point into multiple paragraphs.
+            2. Use a "Book Chapter" structure. Create at least 7-10 main sections (H2).
+            3. Inside each section, use subsections (H3), bullet points, and detailed explanations.
+            4. Include "Real World Scenarios", "Data Analysis", "Step-by-Step Implementation", and "Common Pitfalls".
+            5. Tone: Authoritative, Experienced, yet Accessible (Indonesian Business Context).
+            6. Explain concepts like you are teaching a Masterclass.
             
             STRUCTURE:
-            1. **Hook (Intro)**: Start with a relatable problem or a story.
-            2. **The Core (Body)**: Use H2 (##) for main points. 
-            3. **Real World Application**: Mention "Di lapangan..." or "Berdasarkan pengalaman kami..."
-            4. **Conclusion**: A warm closing.
+            1. **Introduction**: Hook the reader, state the problem, promise the ultimate solution. (Min 500 words)
+            2. **Deep Dive Sections**: Thorough breakdown of the topic. (The meat of the article)
+            3. **Case Studies**: "Studi Kasus Lapangan" (Fictionalized but realistic examples).
+            4. **Actionable Checklist**: What to do next.
+            5. **Conclusion**: Inspiring closing.
             
             OUTPUT JSON ONLY:
             {
-               "content": "# Title... (markdown body)",
-               "excerpt": "Short summary (max 150 chars)",
+               "content": "# Title... (The entire markdown content, make it as long as possible)",
+               "excerpt": "Compelling summary (max 150 chars)",
                "category": "Suggested Category",
                "author": "Amin Maghfuri",
-               "image_prompt": "Detailed visual description for an AI image generator (photorealistic, professional, related to article topic, high quality, 4k)"
+               "image_search_query": "English visual description for cover image"
             }
             `;
 
-            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+            // Using gemini-1.5-pro-latest if available for larger context output, otherwise fallback
+            // Note: In this environment we use gemini-3-pro-preview or flash. Pro is better for long output.
+            const response = await ai.models.generateContent({ 
+                model: 'gemini-3-pro-preview', // Switching to PRO for length
+                contents: prompt,
+                config: {
+                    maxOutputTokens: 8192, // Max out the tokens
+                    thinkingConfig: { thinkingBudget: 1024 } // Give it some thought
+                }
+            });
+            
             const rawText = response.text?.replace(/```json|```/g, '').trim() || '{}';
-            const data = JSON.parse(rawText);
+            // Handle potential JSON parse error if text is too long or malformed
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch (jsonErr) {
+                // Fallback: simple text extraction if JSON fails
+                console.warn("JSON Parse failed, using raw text as content");
+                data = {
+                    content: response.text,
+                    excerpt: "Artikel mendalam tentang " + form.title,
+                    category: "General",
+                    author: "Admin",
+                    image_search_query: "business"
+                };
+            }
 
             // Update Form
             setForm(prev => ({
@@ -245,16 +300,17 @@ const useArticleManager = (
                 excerpt: data.excerpt,
                 category: genConfig.autoCategory ? data.category : prev.category,
                 author: genConfig.autoAuthor ? data.author : prev.author,
+                readTime: "35 min read", // Update read time for long content
                 imagePreview: genConfig.autoImage 
-                    ? getAIImageUrl(data.image_prompt || `${form.title} business technology indonesia`) 
+                    ? getAIImageUrl(data.image_search_query || `${form.title} dramatic cinematic`, genConfig.imageStyle) 
                     : prev.imagePreview,
-                status: 'draft' // Default to draft per request
+                status: 'draft' 
             }));
 
             setAiStep(3); // Done, ready to edit/publish
         } catch (e: any) {
             console.error(e);
-            alert("Gagal generate konten: " + e.message);
+            alert("Gagal generate konten (Mungkin terlalu panjang/timeout). Coba lagi.");
         } finally {
             setLoading(prev => ({ ...prev, generatingContent: false }));
         }
@@ -279,9 +335,6 @@ const useArticleManager = (
                 else throw new Error("Gagal upload gambar.");
             }
 
-            // Data structure for Database (Snake Case)
-            // FIX: Removed 'date' field to prevent "Column not found" error. 
-            // Supabase should handle 'created_at' automatically.
             const dbData = {
                 title: form.title,
                 excerpt: form.excerpt,
@@ -292,10 +345,8 @@ const useArticleManager = (
                 image_url: finalImageUrl,
                 status: form.status,
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null
-                // date: REMOVED
             };
 
-            // Prepare object for Local State (Camel Case matching Article interface)
             const localUpdateData = {
                 title: form.title,
                 excerpt: form.excerpt,
@@ -306,37 +357,23 @@ const useArticleManager = (
                 image: finalImageUrl,
                 status: form.status,
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : undefined,
-                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) // Local only
+                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) 
             };
 
             if (form.id) {
-                // Update Local
                 const existing = articles.find(a => a.id === form.id);
                 if (existing) {
-                    const updatedItem: Article = { 
-                        ...existing, 
-                        ...localUpdateData,
-                        id: form.id
-                    };
+                    const updatedItem: Article = { ...existing, ...localUpdateData, id: form.id };
                     setArticles(articles.map(a => a.id === form.id ? updatedItem : a));
                 }
-                
-                // Update DB
                 if (supabase) {
                     const { error } = await supabase.from('articles').update(dbData).eq('id', form.id);
                     if (error) throw error;
                 }
             } else {
-                // Insert Local
                 const newId = Date.now();
-                const newItem: Article = { 
-                    ...localUpdateData, 
-                    id: newId, 
-                    tags: [] 
-                };
+                const newItem: Article = { ...localUpdateData, id: newId, tags: [] };
                 setArticles([newItem, ...articles]);
-                
-                // Insert DB
                 if (supabase) {
                      const { error } = await supabase.from('articles').insert([dbData]);
                     if (error) throw error;
@@ -373,300 +410,6 @@ const useArticleManager = (
     };
 };
 
-// ... (Rest of component remains same)
-const ArticleForm = ({ 
-    form, setForm, loading, aiState, actions
-}: {
-    form: any, setForm: any, loading: any, aiState: any, actions: any
-}) => (
-    <div className="bg-brand-dark p-6 rounded-xl border border-white/5 h-fit sticky top-6">
-        
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                {form.id ? <Edit size={18} className="text-brand-orange"/> : <Sparkles size={18} className="text-brand-orange"/>}
-                {form.id ? "Edit Artikel" : "AI Content Studio"}
-            </h3>
-            {form.id || aiState.step > 0 ? (
-                <button onClick={actions.resetForm} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
-                    <RefreshCw size={12} /> Reset
-                </button>
-            ) : null}
-        </div>
-
-        {/* --- AI WIZARD SECTION (Only for New Articles or when step < 3) --- */}
-        {!form.id && aiState.step < 3 && (
-            <div className="mb-8 space-y-6">
-                
-                {/* STEP 1: KEYWORD RESEARCH */}
-                <div className={`transition-all duration-300 ${aiState.step > 1 ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-xs text-brand-orange font-bold uppercase tracking-wider flex items-center gap-2">
-                            <Target size={14} /> Step 1: Riset Topik
-                        </label>
-                    </div>
-                    {aiState.keywords.length === 0 ? (
-                         <button 
-                            onClick={actions.researchKeywords} 
-                            disabled={loading.researching}
-                            className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 shadow-lg transition-all"
-                        >
-                            {loading.researching ? <LoadingSpinner size={16} /> : <><TrendingUp size={18}/> RISET KEYWORD POPULER (MAGIC)</>}
-                        </button>
-                    ) : (
-                        <div className="bg-brand-card border border-white/10 rounded-lg p-2 max-h-40 overflow-y-auto custom-scrollbar">
-                            {aiState.keywords.map((k: KeywordData, i: number) => (
-                                <button 
-                                    key={i}
-                                    onClick={() => actions.generateTitles(k)}
-                                    className="w-full text-left p-2 hover:bg-white/5 rounded flex justify-between items-center group"
-                                >
-                                    <span className="text-sm text-white font-bold">{k.keyword}</span>
-                                    <div className="flex gap-2">
-                                        <Badge className="bg-green-500/10 text-green-400 text-[9px]">{k.volume}</Badge>
-                                        <Badge className="bg-yellow-500/10 text-yellow-400 text-[9px]">{k.competition}</Badge>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* STEP 2: TITLE SELECTION */}
-                {aiState.step >= 1 && (
-                    <div className={`transition-all duration-300 ${aiState.step > 2 ? 'opacity-50' : 'opacity-100 animate-fade-in'}`}>
-                        <div className="flex justify-between items-center mb-2">
-                            <label className="text-xs text-brand-orange font-bold uppercase tracking-wider flex items-center gap-2">
-                                <List size={14} /> Step 2: Pilih Judul ({aiState.selectedKeyword?.keyword})
-                            </label>
-                        </div>
-                        {loading.titling ? (
-                            <div className="p-4 text-center text-gray-400 text-xs"><LoadingSpinner /> Menganalisa long-tail keywords...</div>
-                        ) : (
-                            <div className="space-y-2">
-                                {aiState.titleOptions.map((title: string, i: number) => (
-                                    <button 
-                                        key={i}
-                                        onClick={() => {
-                                            setForm((prev: any) => ({ ...prev, title }));
-                                            aiState.setStep(2); // Ready for config
-                                        }}
-                                        className={`w-full text-left p-3 rounded-lg border transition-all text-sm font-bold ${
-                                            form.title === title 
-                                            ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text' 
-                                            : 'bg-brand-card border-white/10 text-gray-300 hover:border-brand-orange/50'
-                                        }`}
-                                    >
-                                        {title}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* STEP 3: CONFIG & GENERATE */}
-                {aiState.step >= 2 && form.title && (
-                    <div className="animate-fade-in border-t border-white/10 pt-4">
-                         <label className="text-xs text-brand-orange font-bold uppercase tracking-wider flex items-center gap-2 mb-3">
-                                <Sparkles size={14} /> Step 3: Setup & Generate Pillar Content
-                         </label>
-                         
-                         <div className="flex gap-4 mb-4">
-                            <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
-                                <input type="checkbox" checked={aiState.genConfig.autoImage} onChange={e => aiState.setGenConfig({...aiState.genConfig, autoImage: e.target.checked})} className="accent-brand-orange"/> Auto Image
-                            </label>
-                            <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
-                                <input type="checkbox" checked={aiState.genConfig.autoCategory} onChange={e => aiState.setGenConfig({...aiState.genConfig, autoCategory: e.target.checked})} className="accent-brand-orange"/> Auto Category
-                            </label>
-                             <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
-                                <input type="checkbox" checked={aiState.genConfig.autoAuthor} onChange={e => aiState.setGenConfig({...aiState.genConfig, autoAuthor: e.target.checked})} className="accent-brand-orange"/> Auto Author
-                            </label>
-                         </div>
-
-                         <button 
-                            onClick={actions.generatePillarContent}
-                            disabled={loading.generatingContent}
-                            className="w-full py-3 bg-brand-orange hover:bg-brand-glow text-white rounded-lg font-bold flex items-center justify-center gap-2 shadow-action transition-all"
-                         >
-                            {loading.generatingContent ? <LoadingSpinner size={16} /> : <><Sparkles size={18}/> GENERATE PILLAR CONTENT</>}
-                         </button>
-                         <p className="text-[10px] text-gray-500 text-center mt-2">Mode: Expert Persona • SEO Optimized • Long Form</p>
-                    </div>
-                )}
-            </div>
-        )}
-
-        {/* --- EDITOR SECTION (Visible if ID exists OR Step == 3) --- */}
-        {(form.id || aiState.step === 3) && (
-            <div className="space-y-4 animate-fade-in">
-                
-                {/* Image Upload/Preview */}
-                <div className="mb-4">
-                    {form.imagePreview && (
-                    <div className="mb-3 relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
-                        <img src={form.imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        actions.regenerateCoverImage();
-                                    }}
-                                    className="px-3 py-1.5 bg-brand-orange text-white text-xs font-bold rounded flex items-center gap-1 shadow-lg hover:bg-brand-glow"
-                                >
-                                    <RefreshCw size={12} /> Regenerate
-                                </button>
-                                <p className="text-white text-xs font-bold pointer-events-none">atau Klik Ganti</p>
-                        </div>
-                    </div>
-                    )}
-                    <div className="border border-dashed border-white/20 rounded-lg p-3 text-center hover:border-brand-orange/50 transition-colors bg-brand-card/30">
-                    <input type="file" accept="image/*" onChange={(e) => {
-                        const file = e.target.files ? e.target.files[0] : null;
-                        if (file) setForm((prev:any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
-                    }} className="hidden" id="article-upload" />
-                    <label htmlFor="article-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                        {!form.imagePreview && <UploadCloud size={20} className="text-gray-400" />}
-                        <span className="text-gray-400 text-xs font-bold">{form.uploadFile ? form.uploadFile.name : (form.id ? "Klik ganti gambar" : "Upload Cover Artikel")}</span>
-                    </label>
-                    </div>
-                </div>
-
-                {/* Main Fields */}
-                <div>
-                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Judul Artikel</label>
-                    <Input value={form.title} onChange={e => setForm((prev:any) => ({...prev, title: e.target.value}))} placeholder="Judul menarik..." className="py-2 text-sm font-bold"/>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Kategori</label>
-                        <Input value={form.category} onChange={e => setForm((prev:any) => ({...prev, category: e.target.value}))} placeholder="Misal: Tips Bisnis" className="py-2 text-xs"/>
-                    </div>
-                    <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Penulis</label>
-                        <Input value={form.author} onChange={e => setForm((prev:any) => ({...prev, author: e.target.value}))} placeholder="Admin" className="py-2 text-xs"/>
-                    </div>
-                </div>
-
-                <div>
-                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Excerpt (Ringkasan)</label>
-                    <TextArea value={form.excerpt} onChange={e => setForm((prev:any) => ({...prev, excerpt: e.target.value}))} placeholder="Ringkasan singkat..." className="h-20 text-xs leading-relaxed" />
-                </div>
-
-                <div>
-                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Konten (Markdown)</label>
-                    <TextArea value={form.content} onChange={e => setForm((prev:any) => ({...prev, content: e.target.value}))} placeholder="# Heading 1..." className="h-64 text-sm font-mono leading-relaxed custom-scrollbar" />
-                </div>
-
-                {/* PUBLISHING OPTIONS */}
-                <div className="bg-black/30 p-3 rounded-lg border border-white/10">
-                     <label className="text-[10px] text-brand-orange uppercase font-bold tracking-wider mb-2 block flex items-center gap-1"><CheckCircle2 size={12}/> Status Publikasi</label>
-                     <div className="grid grid-cols-3 gap-2 mb-3">
-                         {['draft', 'published', 'scheduled'].map((s) => (
-                             <button
-                                key={s}
-                                onClick={() => setForm((prev:any) => ({...prev, status: s}))}
-                                className={`py-1.5 text-xs font-bold rounded capitalize border ${
-                                    form.status === s 
-                                    ? 'bg-brand-orange text-white border-brand-orange' 
-                                    : 'bg-transparent text-gray-500 border-white/10 hover:text-white'
-                                }`}
-                             >
-                                {s}
-                             </button>
-                         ))}
-                     </div>
-                     
-                     {form.status === 'scheduled' && (
-                         <div className="animate-fade-in">
-                             <label className="text-[10px] text-gray-500 uppercase font-bold mb-1 block">Tanggal Publish</label>
-                             <Input 
-                                type="datetime-local" 
-                                value={form.scheduled_for} 
-                                onChange={e => setForm((prev:any) => ({...prev, scheduled_for: e.target.value}))} 
-                                className="py-1 text-xs"
-                             />
-                         </div>
-                     )}
-                </div>
-                
-                <Button onClick={actions.handleSubmit} disabled={loading.uploading} className="w-full py-3 text-sm">
-                    {loading.uploading ? <LoadingSpinner /> : <><Save size={16}/> {form.status === 'published' ? 'PUBLISH SEKARANG' : 'SIMPAN ARTIKEL'}</>}
-                </Button>
-            </div>
-        )}
-    </div>
-);
-
-const ArticleList = ({ 
-    data, onEdit, onDelete 
-}: { 
-    data: any, onEdit: any, onDelete: any 
-}) => (
-    <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden">
-        <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
-            <div className="relative flex-grow">
-                <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
-                <input 
-                    type="text" 
-                    value={data.searchTerm}
-                    onChange={(e) => data.setSearchTerm(e.target.value)}
-                    placeholder="Cari artikel..." 
-                    className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange"
-                />
-             </div>
-             <span className="text-[10px] font-bold text-gray-500 uppercase">Total: {data.paginated.length}</span>
-        </div>
-        
-        <div className="flex-grow overflow-y-auto p-4 custom-scrollbar min-h-[400px]">
-            {data.paginated.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 text-xs">Belum ada artikel.</div>
-            ) : (
-                <div className="grid grid-cols-1 gap-4">
-                    {data.paginated.map((item: Article) => (
-                        <div key={item.id} className="relative bg-brand-card border border-white/5 rounded-lg p-3 flex gap-4 hover:border-brand-orange transition-all group">
-                            <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0 border border-white/10 bg-black relative">
-                                <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                {item.status && (
-                                    <div className={`absolute bottom-0 left-0 w-full py-0.5 text-[8px] font-bold text-center uppercase text-white ${
-                                        item.status === 'published' ? 'bg-green-500/80' : 
-                                        item.status === 'scheduled' ? 'bg-blue-500/80' : 'bg-gray-500/80'
-                                    }`}>
-                                        {item.status}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0 flex flex-col">
-                                <div className="flex justify-between items-start mb-1">
-                                    <span className="px-1.5 py-0.5 rounded bg-brand-orange/10 text-brand-orange text-[9px] font-bold uppercase border border-brand-orange/20">{item.category}</span>
-                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => onEdit(item)} className="text-blue-400 hover:text-white"><Edit size={14} /></button>
-                                        <button onClick={() => onDelete(item.id)} className="text-red-400 hover:text-white"><Trash2 size={14} /></button>
-                                    </div>
-                                </div>
-                                <h5 className="text-sm font-bold text-white leading-tight line-clamp-2 mb-2">{item.title}</h5>
-                                <div className="mt-auto flex items-center gap-3 text-[10px] text-gray-500">
-                                    <span className="flex items-center gap-1"><Calendar size={10}/> {item.date}</span>
-                                    <span className="flex items-center gap-1"><User size={10}/> {item.author}</span>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-
-        {data.totalPages > 1 && (
-            <div className="p-3 border-t border-white/10 bg-black/20 flex justify-center items-center gap-4">
-                <button onClick={() => data.setPage((p:number) => Math.max(1, p - 1))} disabled={data.page === 1} className="text-gray-400 hover:text-white disabled:opacity-30"><ChevronLeft size={16} /></button>
-                <span className="text-xs font-bold text-brand-orange">{data.page} / {data.totalPages}</span>
-                <button onClick={() => data.setPage((p:number) => Math.min(data.totalPages, p + 1))} disabled={data.page === data.totalPages} className="text-gray-400 hover:text-white disabled:opacity-30"><ChevronRight size={16} /></button>
-            </div>
-        )}
-    </div>
-);
-
 export const AdminArticles = ({ 
   articles, 
   setArticles 
@@ -677,19 +420,243 @@ export const AdminArticles = ({
   const { form, setForm, loading, aiState, actions, listData } = useArticleManager(articles, setArticles);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      <div className="lg:col-span-7">
-        <ArticleList data={listData} onEdit={actions.handleEditClick} onDelete={actions.deleteItem} />
+    <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b">
+      
+      {/* 1. LEFT COLUMN: LIST (20%) */}
+      <div className="w-[20%] border-r border-white/5 bg-brand-dark flex flex-col">
+         <div className="p-4 border-b border-white/5">
+            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <List size={12}/> Arsip Artikel
+            </h4>
+            <div className="relative">
+                <Search size={12} className="absolute left-2.5 top-2.5 text-gray-500" />
+                <input 
+                    type="text" 
+                    value={listData.searchTerm}
+                    onChange={(e) => listData.setSearchTerm(e.target.value)}
+                    placeholder="Cari..." 
+                    className="w-full bg-brand-card border border-white/10 rounded-full pl-8 pr-3 py-1.5 text-[10px] text-white focus:outline-none focus:border-brand-orange"
+                />
+            </div>
+         </div>
+         
+         <div className="flex-grow overflow-y-auto p-2 space-y-2 custom-scrollbar">
+            <button 
+                onClick={actions.resetForm}
+                className="w-full py-2 border border-dashed border-white/10 rounded text-gray-400 text-[10px] font-bold hover:bg-brand-orange/10 hover:text-brand-orange hover:border-brand-orange transition-all flex items-center justify-center gap-1"
+            >
+                <Plus size={12} /> ARTIKEL BARU
+            </button>
+
+            {listData.paginated.map((item: Article) => (
+                <div 
+                    key={item.id}
+                    onClick={() => actions.handleEditClick(item)}
+                    className={`p-2 rounded border cursor-pointer transition-all group relative ${
+                        form.id === item.id 
+                        ? 'bg-brand-orange/10 border-brand-orange' 
+                        : 'bg-transparent border-white/5 hover:bg-white/5'
+                    }`}
+                >
+                    <div className="flex gap-2">
+                        <img src={item.image} className="w-8 h-8 rounded object-cover bg-black" />
+                        <div className="min-w-0 flex-1">
+                            <h5 className="text-[10px] font-bold text-white truncate leading-tight mb-0.5">{item.title}</h5>
+                            <span className={`text-[8px] px-1 rounded ${
+                                item.status === 'published' ? 'text-green-400 bg-green-900/30' : 'text-yellow-400 bg-yellow-900/30'
+                            }`}>{item.status || 'draft'}</span>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); actions.deleteItem(item.id); }}
+                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-500"
+                    >
+                        <Trash2 size={12} />
+                    </button>
+                </div>
+            ))}
+         </div>
       </div>
-      <div className="lg:col-span-5">
-        <ArticleForm 
-            form={form} 
-            setForm={setForm} 
-            loading={loading} 
-            aiState={aiState}
-            actions={actions}
-        />
+
+      {/* 2. CENTER COLUMN: EDITOR / AI STUDIO (30%) */}
+      <div className="w-[30%] border-r border-white/5 bg-brand-dark flex flex-col">
+         <div className="p-4 border-b border-white/5 flex justify-between items-center">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                {form.id ? <Edit size={14} className="text-brand-orange"/> : <Sparkles size={14} className="text-brand-orange"/>}
+                {form.id ? "Edit Mode" : "AI Studio"}
+            </h3>
+            {form.id || aiState.step > 0 ? (
+                <button onClick={actions.resetForm} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1">
+                    <RefreshCw size={10} /> Reset
+                </button>
+            ) : null}
+         </div>
+
+         <div className="flex-grow overflow-y-auto p-4 custom-scrollbar">
+            {/* AI WIZARD */}
+            {!form.id && aiState.step < 3 && (
+                <div className="space-y-6">
+                    {/* STEP 1: KEYWORDS */}
+                    <div className={`transition-all ${aiState.step > 1 ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 1: Riset Topik</label>
+                        {aiState.keywords.length === 0 ? (
+                            <Button onClick={actions.researchKeywords} disabled={loading.researching} className="w-full py-3 text-xs">
+                                {loading.researching ? <LoadingSpinner size={14} /> : <><TrendingUp size={14}/> GENERATE TRENDING TOPICS</>}
+                            </Button>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-1">
+                                {aiState.keywords.map((k: KeywordData, i: number) => (
+                                    <button key={i} onClick={() => actions.generateTitles(k)} className="text-left p-2 rounded border border-white/10 hover:border-brand-orange hover:bg-brand-orange/10 text-xs text-gray-300 hover:text-white transition-all">
+                                        <span className="font-bold block">{k.keyword}</span>
+                                        <span className="text-[9px] text-gray-500">Vol: {k.volume} • Comp: {k.competition}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* STEP 2: TITLES */}
+                    {aiState.step >= 1 && (
+                        <div className={`transition-all ${aiState.step > 2 ? 'opacity-50' : 'animate-fade-in'}`}>
+                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 2: Pilih Judul</label>
+                            {loading.titling ? <LoadingSpinner /> : (
+                                <div className="space-y-1">
+                                    {aiState.titleOptions.map((t: string, i: number) => (
+                                        <button key={i} onClick={() => { setForm((p:any) => ({...p, title: t})); aiState.setStep(2); }} className={`w-full text-left p-2 text-xs border rounded transition-all ${form.title === t ? 'bg-brand-orange text-white border-brand-orange' : 'bg-black/20 border-white/10 hover:border-white/30 text-gray-300'}`}>
+                                            {t}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* STEP 3: CONFIG */}
+                    {aiState.step >= 2 && form.title && (
+                        <div className="animate-fade-in border-t border-white/5 pt-4">
+                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 3: Generate Pillar Content</label>
+                            
+                            <div className="mb-3">
+                                <label className="text-[10px] text-gray-500 mb-1 block">Image Style</label>
+                                <div className="grid grid-cols-2 gap-1">
+                                    {(['cinematic', 'cyberpunk', 'corporate', 'studio'] as const).map((style) => (
+                                        <button 
+                                            key={style}
+                                            onClick={() => aiState.setGenConfig({...aiState.genConfig, imageStyle: style})}
+                                            className={`py-1 text-[9px] uppercase border rounded ${aiState.genConfig.imageStyle === style ? 'bg-brand-orange text-white border-brand-orange' : 'bg-transparent text-gray-500 border-white/10'}`}
+                                        >
+                                            {style}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <Button onClick={actions.generatePillarContent} disabled={loading.generatingContent} className="w-full py-3 text-xs bg-gradient-to-r from-brand-orange to-red-500 hover:from-brand-glow hover:to-red-400">
+                                {loading.generatingContent ? <LoadingSpinner size={14} /> : <><Sparkles size={14}/> GENERATE 7000 WORDS (DEEP DIVE)</>}
+                            </Button>
+                            <p className="text-[9px] text-center text-gray-500 mt-2">Mode: Ultra-Comprehensive • Deep Dive • Semantic SEO</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* MANUAL EDITOR */}
+            {(form.id || aiState.step === 3) && (
+                <div className="space-y-4 animate-fade-in">
+                    
+                    {/* Image */}
+                    <div className="relative w-full h-32 bg-black rounded-lg border border-white/10 overflow-hidden group">
+                        {form.imagePreview ? (
+                            <img src={form.imagePreview} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-gray-600"><ImageIcon size={24}/></div>
+                        )}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <button onClick={actions.regenerateCoverImage} className="px-2 py-1 bg-brand-orange text-white text-[10px] rounded flex items-center gap-1 shadow-lg hover:bg-brand-glow">
+                                <Wand2 size={10} /> Re-Imagine
+                            </button>
+                            <label className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white text-[10px] rounded cursor-pointer border border-white/20">
+                                Upload
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                    const file = e.target.files ? e.target.files[0] : null;
+                                    if(file) setForm((p:any) => ({...p, uploadFile: file, imagePreview: URL.createObjectURL(file)}));
+                                }} />
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Inputs */}
+                    <div className="space-y-3">
+                        <Input value={form.title} onChange={e => setForm((p:any) => ({...p, title: e.target.value}))} placeholder="Judul Artikel" className="text-xs font-bold py-2"/>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Input value={form.category} onChange={e => setForm((p:any) => ({...p, category: e.target.value}))} placeholder="Kategori" className="text-[10px] py-1.5"/>
+                            <Input value={form.author} onChange={e => setForm((p:any) => ({...p, author: e.target.value}))} placeholder="Penulis" className="text-[10px] py-1.5"/>
+                        </div>
+                        <TextArea value={form.excerpt} onChange={e => setForm((p:any) => ({...p, excerpt: e.target.value}))} placeholder="Ringkasan..." className="text-[10px] h-16"/>
+                        <TextArea value={form.content} onChange={e => setForm((p:any) => ({...p, content: e.target.value}))} placeholder="# Konten Markdown..." className="text-[10px] h-60 font-mono"/>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5">
+                        <select 
+                            value={form.status} 
+                            onChange={(e) => setForm((p:any) => ({...p, status: e.target.value}))}
+                            className="bg-black/20 text-white text-[10px] rounded border border-white/10 px-2 outline-none focus:border-brand-orange"
+                        >
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                            <option value="scheduled">Scheduled</option>
+                        </select>
+                        <Button onClick={actions.handleSubmit} disabled={loading.uploading} className="py-2 text-[10px]">
+                            {loading.uploading ? <LoadingSpinner size={12}/> : <><Save size={12}/> SIMPAN</>}
+                        </Button>
+                    </div>
+                </div>
+            )}
+         </div>
       </div>
+
+      {/* 3. RIGHT COLUMN: LIVE PREVIEW (50%) */}
+      <div className="w-[50%] bg-black flex flex-col relative overflow-hidden">
+         <div className="p-4 border-b border-white/10 bg-brand-dark/50 flex justify-between items-center backdrop-blur-sm z-10 sticky top-0">
+            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                <Eye size={12} /> Live Preview
+            </h4>
+            <span className="text-[10px] text-gray-600 bg-white/5 px-2 py-0.5 rounded border border-white/5">Desktop View</span>
+         </div>
+
+         <div className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
+            {/* Background Grain */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none fixed"></div>
+            
+            <div className="max-w-3xl mx-auto relative z-10">
+                {/* Header Preview */}
+                <div className="mb-8">
+                    {form.category && <span className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-2 block">{form.category}</span>}
+                    <h1 className="text-4xl font-display font-bold text-white mb-4 leading-tight">{form.title || "Judul Artikel..."}</h1>
+                    <div className="flex items-center gap-3 text-gray-500 text-xs mb-6 border-b border-white/10 pb-6">
+                        <span className="flex items-center gap-1"><User size={12}/> {form.author}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1"><Calendar size={12}/> {new Date().toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1"><Clock size={12}/> {form.readTime}</span>
+                    </div>
+                    {form.imagePreview && (
+                        <div className="w-full h-64 rounded-xl overflow-hidden mb-8 shadow-2xl border border-white/10">
+                            <img src={form.imagePreview} className="w-full h-full object-cover" alt="Cover" />
+                        </div>
+                    )}
+                    {form.excerpt && (
+                        <p className="text-lg text-gray-300 italic border-l-4 border-brand-orange pl-4 py-1 mb-8">{form.excerpt}</p>
+                    )}
+                </div>
+
+                {/* Content Preview */}
+                <SimpleMarkdown content={form.content} />
+            </div>
+         </div>
+      </div>
+
     </div>
   );
 };
