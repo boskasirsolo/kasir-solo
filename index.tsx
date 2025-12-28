@@ -124,6 +124,7 @@ const AppContent = () => {
                 products={products} setProducts={setProducts}
                 gallery={gallery} setGallery={setGallery}
                 testimonials={testimonials} setTestimonials={setTestimonials}
+                articles={articles} setArticles={setArticles}
                 config={config} setConfig={setConfig}
                 onLogout={() => supabase?.auth.signOut()}
               />
