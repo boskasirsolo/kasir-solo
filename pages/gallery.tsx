@@ -88,25 +88,27 @@ const DigitalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: () 
 const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: () => void }) => (
     <div 
       onClick={onClick}
-      className="break-inside-avoid relative group rounded-2xl overflow-hidden border border-white/5 hover:border-brand-orange transition-all duration-500 cursor-pointer shadow-lg"
+      className="group relative rounded-2xl overflow-hidden border border-white/5 hover:border-brand-orange transition-all duration-500 cursor-pointer shadow-lg h-full bg-brand-card"
     >
-      <img 
-        src={item.image_url} 
-        alt={item.title} 
-        className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
-      />
-      
-      {item.type === 'video' && (
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-          <div className="bg-black/50 rounded-full p-3 backdrop-blur-sm border border-white/20 group-hover:bg-brand-orange group-hover:border-brand-orange transition-colors">
-            <PlayCircle size={40} className="text-white fill-white/20" />
+      <div className="relative w-full h-72 md:h-80 overflow-hidden">
+        <img 
+          src={item.image_url} 
+          alt={item.title} 
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+        
+        {item.type === 'video' && (
+          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+            <div className="bg-black/50 rounded-full p-3 backdrop-blur-sm border border-white/20 group-hover:bg-brand-orange group-hover:border-brand-orange transition-colors">
+              <PlayCircle size={40} className="text-white fill-white/20" />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-        <h3 className="text-white font-bold text-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{item.title}</h3>
-        <div className="w-10 h-1 bg-brand-orange mt-2 rounded-full shadow-neon"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+          <h3 className="text-white font-bold text-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{item.title}</h3>
+          <div className="w-10 h-1 bg-brand-orange mt-2 rounded-full shadow-neon"></div>
+        </div>
       </div>
     </div>
 );
@@ -181,7 +183,7 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
           <p className="text-gray-400">Belum ada portofolio di kategori ini.</p>
         </div>
       ) : (
-        <div className={`grid gap-8 ${activeFilter === 'physical' ? 'columns-1 md:columns-2 lg:columns-3 block space-y-8' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+        <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredGallery.map((item) => (
               <React.Fragment key={item.id}>
                 {activeFilter === 'physical' || (activeFilter === 'all' && item.category_type === 'physical') ? (
