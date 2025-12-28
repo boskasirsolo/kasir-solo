@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, formatRupiah, ensureAPIKey, getSmartApiKey } from '../utils';
+import { supabase, CONFIG, formatRupiah, ensureAPIKey, getSmartApiKey, markKeyAsExhausted } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
 const ITEMS_PER_PAGE = 6; 
@@ -59,9 +59,10 @@ const useProductManager = (
         if (!form.name || !form.shortDesc) return alert("Isi Nama dan Keyword Fitur dulu.");
         
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
+        const apiKey = getSmartApiKey();
+
         try {
             await ensureAPIKey(); // Ensure key in IDX
-            const apiKey = getSmartApiKey();
             
             if (!apiKey) {
                 console.warn("No API Key detected.");
@@ -92,7 +93,12 @@ const useProductManager = (
             setForm(prev => ({ ...prev, desc: response.text?.trim() || '' }));
         } catch (e: any) { 
             console.error(e);
-            alert(`AI Error: ${e.message}`); 
+            if (e.message?.includes('429') || e.message?.includes('400') || e.message?.toLowerCase().includes('quota') || e.message?.toLowerCase().includes('resource')) {
+                markKeyAsExhausted(apiKey);
+                alert("API Key limit tercapai. Silakan coba tekan tombol lagi.");
+            } else {
+                alert(`AI Error: ${e.message}`); 
+            }
         } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };

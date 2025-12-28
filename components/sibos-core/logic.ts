@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Product } from '../../types';
-import { formatRupiah, supabase, ensureAPIKey, getSmartApiKey } from '../../utils';
+import { formatRupiah, supabase, ensureAPIKey, getSmartApiKey, markKeyAsExhausted } from '../../utils';
 import { FunctionDeclaration, Type, GoogleGenAI } from "@google/genai";
 
 export interface Message {
@@ -250,9 +250,10 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
     setInputValue('');
     setIsTyping(true);
 
+    const apiKey = getSmartApiKey();
+
     try {
       await ensureAPIKey(); 
-      const apiKey = getSmartApiKey();
       
       const ai = new GoogleGenAI({ apiKey: apiKey || '' });
       
@@ -320,7 +321,11 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
       console.error("SIBOS Error Full:", error);
       let errorMessage = "Waduh, server SIBOS lagi padat. Nanti saya balas lagi ya.";
       
-      if (error.message?.includes('400')) errorMessage = "Ada gangguan teknis sebentar. Coba lagi ya.";
+      if (error.message?.includes('429') || error.message?.includes('400') || error.message?.toLowerCase().includes('quota') || error.message?.toLowerCase().includes('resource')) {
+          markKeyAsExhausted(apiKey);
+          errorMessage = "Sistem sedang sibuk (Quota API Limit). Mohon coba kirim pesan lagi, saya akan ganti server otomatis.";
+      }
+      
       if (error.message?.includes('API key')) errorMessage = "Sistem kunci API bermasalah. Hubungi developer.";
 
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: errorMessage, time: new Date().toLocaleTimeString('id-ID') }]);

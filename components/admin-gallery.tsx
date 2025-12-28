@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, ensureAPIKey, getSmartApiKey } from '../utils';
+import { supabase, CONFIG, ensureAPIKey, getSmartApiKey, markKeyAsExhausted } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
 const ITEMS_PER_PAGE = 8; 
@@ -154,9 +154,11 @@ const useIntegratedGalleryManager = (
         `;
 
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
+        const apiKey = getSmartApiKey();
+
         try {
             await ensureAPIKey(); 
-            const apiKey = getSmartApiKey();
+            
             if (!apiKey) throw new Error("API Key missing");
 
             const ai = new GoogleGenAI({ apiKey });
@@ -196,8 +198,13 @@ const useIntegratedGalleryManager = (
 
         } catch (e: any) { 
             console.error(e); 
-            const msg = e.message || "Gagal menghubungi AI.";
-            alert(`AI Error: ${msg}`);
+            if (e.message?.includes('429') || e.message?.includes('400') || e.message?.toLowerCase().includes('quota') || e.message?.toLowerCase().includes('resource')) {
+                markKeyAsExhausted(apiKey);
+                alert("API Key limit tercapai. Silakan coba tekan tombol lagi.");
+            } else {
+                const msg = e.message || "Gagal menghubungi AI.";
+                alert(`AI Error: ${msg}`);
+            }
         } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };

@@ -23,6 +23,20 @@ export const getEnv = (key: string) => {
 };
 
 // --- API KEY ROTATION LOGIC ---
+
+// Store exhausted keys in memory for the session
+const exhaustedKeys = new Set<string>();
+
+export const markKeyAsExhausted = (key: string) => {
+  if (!key) return;
+  // Identify key by last 4 chars for logging
+  const keyId = key.slice(-4);
+  if (!exhaustedKeys.has(key)) {
+    console.warn(`[System] Marking API Key (...${keyId}) as EXHAUSTED/DEAD.`);
+    exhaustedKeys.add(key);
+  }
+};
+
 export const getSmartApiKey = () => {
   // List of possible keys from Vercel/Env
   const candidates = [
@@ -38,19 +52,32 @@ export const getSmartApiKey = () => {
   ];
 
   // Filter out empty or undefined keys
-  const validKeys = candidates.filter(k => k && k.length > 10);
+  // AND Filter out keys that are in the exhausted list
+  const validKeys = candidates.filter(k => k && k.length > 10 && !exhaustedKeys.has(k));
 
   if (validKeys.length === 0) {
-    console.warn("No valid Gemini API Keys found.");
+    console.error("All API Keys are exhausted or invalid!");
+    
+    // Fallback strategy: If all keys are marked exhausted, reset the list 
+    // to give them another try (in case it was a temporary glitch)
+    const allCandidates = candidates.filter(k => k && k.length > 10);
+    if (allCandidates.length > 0) {
+        console.warn("[System] Resetting exhausted key list for a second chance.");
+        exhaustedKeys.clear();
+        // Return a random one from the full list immediately
+        const randomIndex = Math.floor(Math.random() * allCandidates.length);
+        return allCandidates[randomIndex];
+    }
+
     return '';
   }
 
-  // Randomly pick one key
+  // Randomly pick one key from the VALID pool
   const randomIndex = Math.floor(Math.random() * validKeys.length);
   const selectedKey = validKeys[randomIndex];
   
   // Log (safe mode: only show last 4 chars) to verify rotation
-  console.log(`[System] Using API Key Index [${randomIndex}] ending in ...${selectedKey.slice(-4)}`);
+  console.log(`[System] Using API Key Index [${randomIndex}/${validKeys.length}] ending in ...${selectedKey.slice(-4)}`);
   
   return selectedKey;
 };

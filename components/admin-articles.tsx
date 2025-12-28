@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap, ChevronDown, ChevronUp, MoreVertical, ArrowLeft } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
-import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey, slugify } from '../utils';
+import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey, slugify, markKeyAsExhausted } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 import { Link } from 'react-router-dom';
 
@@ -338,9 +338,11 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, generatingText: true }));
         setTextProgress({ percent: 5, message: 'Menyiapkan strategi konten...' });
 
+        // Retrieve key for potential blacklisting
+        const apiKey = getSmartApiKey();
+
         try {
             await ensureAPIKey();
-            const apiKey = getSmartApiKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
             // 1. Build Context Prompt based on Strategy
@@ -474,7 +476,13 @@ const useArticleManager = (
             }));
 
         } catch (e: any) {
-            alert("Gagal generate teks: " + e.message);
+            // Check for Quota Exceeded / Rate Limit errors
+            if (e.message?.includes('429') || e.message?.includes('400') || e.message?.toLowerCase().includes('quota') || e.message?.toLowerCase().includes('resource')) {
+                markKeyAsExhausted(apiKey);
+                alert("API Key limit tercapai. Silakan coba tekan tombol lagi (Sistem akan otomatis ganti key).");
+            } else {
+                alert("Gagal generate teks: " + e.message);
+            }
             setTextProgress({ percent: 0, message: 'Error' });
         } finally {
             setLoading(prev => ({ ...prev, generatingText: false }));
@@ -591,9 +599,11 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, generatingImage: true }));
         setImageProgress({ percent: 20, message: 'Menganalisa konteks artikel...' });
 
+        // Retrieve key for potential blacklisting
+        const apiKey = getSmartApiKey();
+
         try {
             await ensureAPIKey();
-            const apiKey = getSmartApiKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
             const analysisPrompt = `
@@ -616,7 +626,13 @@ const useArticleManager = (
             setForm(prev => ({ ...prev, imagePreview: imageUrl }));
 
         } catch (e: any) {
-            alert("Gagal generate gambar: " + e.message);
+            // Check for Quota Exceeded / Rate Limit errors
+            if (e.message?.includes('429') || e.message?.includes('400') || e.message?.toLowerCase().includes('quota') || e.message?.toLowerCase().includes('resource')) {
+                markKeyAsExhausted(apiKey);
+                alert("API Key limit tercapai. Silakan coba tekan tombol lagi (Sistem akan otomatis ganti key).");
+            } else {
+                alert("Gagal generate gambar: " + e.message);
+            }
             setImageProgress({ percent: 0, message: 'Error' });
         } finally {
             setLoading(prev => ({ ...prev, generatingImage: false }));
@@ -700,9 +716,10 @@ const useArticleManager = (
         if (selectedPresets.length === 0) return alert("Pilih minimal satu topik.");
         
         setLoading(prev => ({ ...prev, researching: true }));
+        const apiKey = getSmartApiKey();
+
         try {
             await ensureAPIKey();
-            const apiKey = getSmartApiKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
             const prompt = `
@@ -734,7 +751,12 @@ const useArticleManager = (
             setKeywords(data);
             setAiStep(1); 
         } catch (e: any) {
-            alert("Gagal research keyword: " + e.message);
+            if (e.message?.includes('429') || e.message?.includes('400') || e.message?.toLowerCase().includes('quota') || e.message?.toLowerCase().includes('resource')) {
+                markKeyAsExhausted(apiKey);
+                alert("API Key limit tercapai. Silakan coba tekan tombol lagi.");
+            } else {
+                alert("Gagal research keyword: " + e.message);
+            }
         } finally {
             setLoading(prev => ({ ...prev, researching: false }));
         }
