@@ -221,7 +221,7 @@ const useArticleManager = (
         }
     };
 
-    // --- AI: STEP 3 - PILLAR CONTENT GENERATION (5000 WORDS TARGET) ---
+    // --- AI: STEP 3 - PILLAR CONTENT GENERATION (SPLIT STRATEGY) ---
     const generatePillarContent = async () => {
         if (!form.title) return alert("Pilih judul terlebih dahulu.");
         
@@ -231,88 +231,83 @@ const useArticleManager = (
             const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
-            const prompt = `
+            // --- 1. METADATA GENERATION (Fast & Lightweight - JSON) ---
+            const metaPrompt = `
+            Role: Editor.
+            Task: Generate metadata for article: "${form.title}" (${selectedKeyword?.keyword || ''}).
+            Language: Indonesian.
+            Output JSON: { "excerpt": "Compelling summary (150 chars)", "category": "Business/Tech", "author": "Amin Maghfuri", "image_search_query": "English visual description for cover image" }
+            `;
+            
+            // Use Flash for speed on metadata
+            const metaResponse = await ai.models.generateContent({
+                model: 'gemini-3-flash-preview', 
+                contents: metaPrompt,
+                config: { responseMimeType: "application/json" }
+            });
+            
+            let metaData = { excerpt: "", category: "Business", author: "Admin", image_search_query: "business technology" };
+            try { 
+                const metaText = metaResponse.text?.replace(/```json|```/g, '').trim() || '{}';
+                metaData = JSON.parse(metaText); 
+            } catch(e) { console.warn("Meta parse failed, using defaults"); }
+
+            // --- 2. CONTENT GENERATION (Heavy & Long - Plain Text/Markdown) ---
+            const contentPrompt = `
             Role: Expert Business Consultant & Senior Copywriter (Amin Maghfuri).
-            Task: Write a MONSTER PILLAR ARTICLE (Target: 5000+ Words Quality Equivalent).
+            Task: Write a MONSTER PILLAR ARTICLE (Target: 5000 Words Quality Equivalent).
             Title: "${form.title}"
             Keyword: "${selectedKeyword?.keyword || form.title}"
             
-            CONFIG:
-            - Auto Category: ${genConfig.autoCategory}
-            - Auto Author: ${genConfig.autoAuthor} (Set to 'Amin Maghfuri' or 'Tim Riset SIBOS')
-            
-            EXTREME LENGTH & DEPTH INSTRUCTIONS:
-            1. **Exhaustive Detail**: Do NOT summarize. Explain every concept like a university lecture.
-            2. **Structure**: Create at least 12-15 Main Chapters (H2).
-            3. **Sub-Chapters**: Inside every H2, include 3-5 Sub-Chapters (H3).
-            4. **Elaboration**: Every H3 must have multiple paragraphs.
-            5. **Examples**: Provide "Real World Scenarios" and "Case Studies" for every major point.
-            6. **Tone**: Authoritative, Experienced, yet Accessible (Indonesian Business Context).
-            7. **Formatting**: Use bolding, lists, and quotes frequently to break up the massive text.
+            INSTRUCTIONS:
+            1. **Exhaustive Detail**: Explain every concept like a university lecture.
+            2. **Structure**: 
+               - Start directly with "# ${form.title}"
+               - Create at least 12-15 Main Chapters (H2).
+               - Inside every H2, include 3-5 Sub-Chapters (H3).
+            3. **Tone**: Authoritative, Experienced, yet Accessible (Indonesian Business Context).
+            4. **Output**: PURE MARKDOWN only. Do not wrap in JSON.
             
             REQUIRED SECTIONS:
-            1. **Introduction**: 500 words minimum. Hook, Problem, Thesis.
-            2. **The Fundamentals**: Definitions, History, Context.
-            3. **Core Analysis**: The meat of the article (Chapters 3-10).
-            4. **Implementation Guide**: Step-by-step how-to.
-            5. **Common Pitfalls**: What to avoid.
-            6. **Future Trends**: Predictions for next 5 years.
-            7. **Conclusion**: Inspiring closing.
-            
-            OUTPUT JSON ONLY:
-            {
-               "content": "# Title... (The entire markdown content, make it EXTREMELY LONG)",
-               "excerpt": "Compelling summary (max 150 chars)",
-               "category": "Suggested Category",
-               "author": "Amin Maghfuri",
-               "image_search_query": "English visual description for cover image"
-            }
+            - Introduction (Hook, Problem, Thesis)
+            - The Fundamentals (Definitions, History)
+            - Core Analysis (The meat of the article - Chapters 3-10)
+            - Implementation Guide (Step-by-step)
+            - Common Pitfalls (What to avoid)
+            - Future Trends (Predictions)
+            - Conclusion (Inspiring closing)
             `;
 
-            const response = await ai.models.generateContent({ 
-                model: 'gemini-3-pro-preview', // Using Pro for larger context window
-                contents: prompt,
+            // Use Pro for context window, but output PLAIN TEXT to avoid JSON cut-off errors
+            const contentResponse = await ai.models.generateContent({ 
+                model: 'gemini-3-pro-preview', 
+                contents: contentPrompt,
                 config: {
-                    maxOutputTokens: 8192, // Maximized for length
-                    thinkingConfig: { thinkingBudget: 2048 } // Deep thinking for structure
+                    maxOutputTokens: 8192, 
+                    thinkingConfig: { thinkingBudget: 1024 } // Reduced budget to avoid timeout
                 }
             });
             
-            const rawText = response.text?.replace(/```json|```/g, '').trim() || '{}';
-            // Handle potential JSON parse error if text is too long or malformed
-            let data;
-            try {
-                data = JSON.parse(rawText);
-            } catch (jsonErr) {
-                // Fallback: simple text extraction if JSON fails (likely due to length cut-off or format)
-                console.warn("JSON Parse failed, using raw text as content");
-                data = {
-                    content: response.text, // Use raw text if JSON fails
-                    excerpt: "Artikel mendalam tentang " + form.title,
-                    category: "General",
-                    author: "Admin",
-                    image_search_query: "business technology"
-                };
-            }
+            const contentText = contentResponse.text || '# Gagal Generate Konten. Silakan coba lagi.';
 
-            // Update Form
+            // --- COMBINE RESULTS ---
             setForm(prev => ({
                 ...prev,
-                content: data.content,
-                excerpt: data.excerpt,
-                category: genConfig.autoCategory ? data.category : prev.category,
-                author: genConfig.autoAuthor ? data.author : prev.author,
-                readTime: "45 min read", // Update read time for monster content
+                content: contentText,
+                excerpt: metaData.excerpt || prev.excerpt,
+                category: genConfig.autoCategory ? metaData.category : prev.category,
+                author: genConfig.autoAuthor ? metaData.author : prev.author,
+                readTime: "45 min read",
                 imagePreview: genConfig.autoImage 
-                    ? getAIImageUrl(data.image_search_query || `${form.title} dramatic cinematic`, genConfig.imageStyle) 
+                    ? getAIImageUrl(metaData.image_search_query || `${form.title} dramatic cinematic`, genConfig.imageStyle) 
                     : prev.imagePreview,
                 status: 'draft' 
             }));
 
-            setAiStep(3); // Done, ready to edit/publish
+            setAiStep(3); // Done
         } catch (e: any) {
             console.error(e);
-            alert("Gagal generate konten (Mungkin terlalu panjang/timeout). Coba lagi.");
+            alert(`Gagal generate konten: ${e.message}. Coba lagi atau gunakan judul yang lebih spesifik.`);
         } finally {
             setLoading(prev => ({ ...prev, generatingContent: false }));
         }
