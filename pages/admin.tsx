@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText } from 'lucide-react';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig, Testimonial, Article } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
@@ -9,6 +9,7 @@ import { AdminSettings } from '../components/admin-settings';
 import { AdminOrders } from '../components/admin-orders';
 import { AdminArticles } from '../components/admin-articles';
 import { supabase } from '../utils';
+import { useNavigate } from 'react-router-dom';
 
 // --- Login Component (SECURED) ---
 export const AdminLogin = () => {
@@ -102,6 +103,7 @@ export const AdminDashboard = ({
   config: SiteConfig, setConfig: any,
   onLogout: () => void
 }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'store' | 'gallery' | 'articles' | 'settings'>('store');
   const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog'>('orders');
   const [showConnectAI, setShowConnectAI] = useState(false);
@@ -155,6 +157,15 @@ export const AdminDashboard = ({
           
           <div className="w-px h-8 bg-white/10 hidden md:block"></div>
           
+          <button 
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 transition-colors"
+            title="Lihat Website"
+          >
+            <Home size={16} />
+            <span className="hidden md:inline">Lihat Web</span>
+          </button>
+
           {showConnectAI && (
             <button 
                onClick={connectAI}

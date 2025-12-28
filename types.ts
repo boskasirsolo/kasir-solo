@@ -18,7 +18,9 @@ export interface Article {
   category: string; 
   author: string;   
   readTime: string; 
-  tags?: string[];  
+  tags?: string[];
+  status?: 'published' | 'draft' | 'scheduled'; // New Field
+  scheduled_for?: string; // New Field
 }
 
 export interface GalleryItem {
