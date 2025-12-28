@@ -6,7 +6,10 @@ import {
 } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { SectionHeader } from '../components/ui';
-import { ProjectDetailModal } from '../components/gallery-modal'; // Import refactored modal
+import { ProjectDetailView } from '../components/gallery-modal'; 
+import { useNavigate, useParams } from 'react-router-dom';
+import { slugify } from '../utils';
+import { NotFoundPage } from './not-found';
 
 // --- COMPONENTS: FILTER TABS ---
 const FilterTab = ({ 
@@ -108,15 +111,38 @@ const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: ()
     </div>
 );
 
-// --- MAIN PAGE COMPONENT ---
+// --- PAGE: DETAIL ---
+export const ProjectDetailPage = ({ gallery, testimonials }: { gallery: GalleryItem[], testimonials: Testimonial[] }) => {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const item = gallery.find(g => slugify(g.title) === slug);
+
+  if (!item) {
+    return <NotFoundPage setPage={() => navigate('/')} />;
+  }
+
+  return (
+    <ProjectDetailView 
+      item={item} 
+      testimonials={testimonials} 
+      onClose={() => navigate('/gallery')} 
+    />
+  );
+};
+
+// --- PAGE: MAIN LIST ---
 export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[], testimonials: Testimonial[] }) => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<'all' | 'physical' | 'digital'>('all');
-  const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
 
   // Filter Logic
   const filteredGallery = activeFilter === 'all' 
     ? gallery 
     : gallery.filter(item => item.category_type === activeFilter);
+
+  const handleItemClick = (item: GalleryItem) => {
+    navigate(`/gallery/${slugify(item.title)}`);
+  };
 
   return (
     <div className="container mx-auto px-4 py-10 animate-fade-in relative">
@@ -159,22 +185,13 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
             {filteredGallery.map((item) => (
               <React.Fragment key={item.id}>
                 {activeFilter === 'physical' || (activeFilter === 'all' && item.category_type === 'physical') ? (
-                    <PhysicalProjectCard item={item} onClick={() => setSelectedItem(item)} />
+                    <PhysicalProjectCard item={item} onClick={() => handleItemClick(item)} />
                 ) : (
-                    <DigitalProjectCard item={item} onClick={() => setSelectedItem(item)} />
+                    <DigitalProjectCard item={item} onClick={() => handleItemClick(item)} />
                 )}
               </React.Fragment>
             ))}
         </div>
-      )}
-
-      {/* --- REUSABLE MODAL --- */}
-      {selectedItem && (
-        <ProjectDetailModal 
-          item={selectedItem} 
-          testimonials={testimonials} 
-          onClose={() => setSelectedItem(null)} 
-        />
       )}
     </div>
   );

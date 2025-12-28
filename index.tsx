@@ -9,8 +9,8 @@ import { CartProvider } from './context/cart-context';
 // Component Imports
 import { Layout } from './components/layout';
 import { HomePage } from './pages/home';
-import { ShopPage } from './pages/shop';
-import { GalleryPage } from './pages/gallery';
+import { ShopPage, ProductDetailPage } from './pages/shop';
+import { GalleryPage, ProjectDetailPage } from './pages/gallery';
 import { ArticlesPage, ArticleDetailPage } from './pages/articles';
 import { AboutPage } from './pages/about';
 import { AdminDashboard, AdminLogin } from './pages/admin';
@@ -114,7 +114,11 @@ const AppContent = () => {
           } />
           
           <Route path="/shop" element={<ShopPage products={products} />} />
+          <Route path="/shop/:slug" element={<ProductDetailPage products={products} />} />
+          
           <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
+          <Route path="/gallery/:slug" element={<ProjectDetailPage gallery={gallery} testimonials={testimonials} />} />
+          
           <Route path="/articles" element={<ArticlesPage articles={articles} products={products} />} />
           <Route path="/articles/:slug" element={<ArticleDetailPage articles={articles} products={products} />} />
           

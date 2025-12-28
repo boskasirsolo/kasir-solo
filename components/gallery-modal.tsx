@@ -1,17 +1,18 @@
 
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Globe, MessageCircle, ShieldCheck, Star, CheckCircle2 } from 'lucide-react';
+import { X, Globe, MessageCircle, ShieldCheck, Star, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Badge } from './ui';
 
-interface ProjectDetailModalProps {
+interface ProjectDetailProps {
   item: GalleryItem;
   testimonials: Testimonial[];
   onClose: () => void;
+  isModal?: boolean;
 }
 
-export const ProjectDetailModal = ({ item, testimonials, onClose }: ProjectDetailModalProps) => {
+export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false }: ProjectDetailProps) => {
   
   // Logic: Find related testimonial or use DEFAULT Fallback Layout
   const activeTestimonial = testimonials.find(t => 
@@ -28,25 +29,39 @@ export const ProjectDetailModal = ({ item, testimonials, onClose }: ProjectDetai
     is_featured: false
   };
 
-  // Body lock scroll
+  // If modal, lock body scroll
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'auto'; };
-  }, []);
+    if (isModal) {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = 'auto'; };
+    }
+  }, [isModal]);
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6" role="dialog" aria-modal="true">
-      <div className="fixed inset-0 bg-black/95 backdrop-blur-md transition-opacity" onClick={onClose} />
+  const Wrapper = isModal ? 
+    ({children}: any) => createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6" role="dialog" aria-modal="true">
+            <div className="fixed inset-0 bg-black/95 backdrop-blur-md transition-opacity" onClick={onClose} />
+            {children}
+        </div>, document.body
+    ) : 
+    ({children}: any) => (
+        <div className="min-h-screen flex items-center justify-center p-4 md:p-6 animate-fade-in relative">
+             <div className="absolute top-0 left-0 w-full h-full bg-brand-black -z-10"></div>
+             {children}
+        </div>
+    );
 
-      <div className="relative w-full max-w-7xl h-[90vh] rounded-2xl bg-brand-dark shadow-2xl border border-white/10 animate-fade-in flex flex-col md:flex-row z-[10000] overflow-hidden">
-        <button onClick={onClose} className="absolute top-4 right-4 z-50 bg-black/50 p-2 rounded-full text-white backdrop-blur-sm hover:bg-brand-orange transition-colors">
-          <X size={24} />
+  return (
+    <Wrapper>
+      <div className={`relative w-full max-w-7xl ${isModal ? 'h-[90vh]' : 'min-h-[80vh]'} rounded-2xl bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row z-[10000] overflow-hidden`}>
+        <button onClick={onClose} className="absolute top-4 right-4 z-50 bg-black/50 p-2 rounded-full text-white backdrop-blur-sm hover:bg-brand-orange transition-colors border border-white/10">
+          {isModal ? <X size={24} /> : <ArrowLeft size={24} />}
         </button>
 
         {/* =========================================================
             LEFT COLUMN (65%): IMAGE + FOOTER (TESTIMONIAL + BUTTONS)
            ========================================================= */}
-        <div className="w-full md:w-8/12 h-[55%] md:h-full bg-black flex flex-col relative border-b md:border-b-0 md:border-r border-white/10">
+        <div className="w-full md:w-8/12 h-[500px] md:h-auto bg-black flex flex-col relative border-b md:border-b-0 md:border-r border-white/10">
            
            {/* 1. IMAGE DISPLAY (Flex Grow) */}
            <div className="flex-grow relative overflow-hidden bg-gray-900 group">
@@ -128,7 +143,7 @@ export const ProjectDetailModal = ({ item, testimonials, onClose }: ProjectDetai
         {/* =========================================================
             RIGHT COLUMN (35%): HEADER + NARRATIVE
            ========================================================= */}
-        <div className="w-full md:w-4/12 h-[45%] md:h-full bg-brand-card flex flex-col relative z-20">
+        <div className="w-full md:w-4/12 h-auto md:h-auto bg-brand-card flex flex-col relative z-20">
           
           {/* HEADER (Sticky) */}
           <div className="p-6 md:p-8 border-b border-white/10 bg-brand-card sticky top-0 z-10 shrink-0">
@@ -148,7 +163,7 @@ export const ProjectDetailModal = ({ item, testimonials, onClose }: ProjectDetai
           </div>
 
           {/* BODY (Scrollable) */}
-          <div className="p-6 md:p-8 flex-grow overflow-y-auto custom-scrollbar text-left space-y-8">
+          <div className="p-6 md:p-8 flex-grow overflow-y-auto custom-scrollbar text-left space-y-8 max-h-[600px] md:max-h-none">
             {item.case_study ? (
                // CASE STUDY FORMAT (STAR METHOD)
                <>
@@ -194,7 +209,9 @@ export const ProjectDetailModal = ({ item, testimonials, onClose }: ProjectDetai
         </div>
 
       </div>
-    </div>,
-    document.body
+    </Wrapper>
   );
 };
+
+// Shim for backwards compatibility if needed
+export const ProjectDetailModal = (props: any) => <ProjectDetailView {...props} isModal={true} />;

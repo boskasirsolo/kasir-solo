@@ -1,14 +1,35 @@
 
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
-import { ShopHeader, ProductCard, ShopPagination, ProductDetailModal } from '../components/shop-parts';
+import { ShopHeader, ProductCard, ShopPagination, ProductDetailView } from '../components/shop-parts';
+import { useNavigate, useParams } from 'react-router-dom';
+import { slugify } from '../utils';
+import { NotFoundPage } from './not-found';
 
 const ITEMS_PER_PAGE = 4;
 
+export const ProductDetailPage = ({ products }: { products: Product[] }) => {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  // Matching logic: simple slugify check
+  const product = products.find(p => slugify(p.name) === slug);
+
+  if (!product) {
+    return <NotFoundPage setPage={() => navigate('/')} />;
+  }
+
+  return (
+    <ProductDetailView 
+      product={product} 
+      onClose={() => navigate('/shop')} 
+    />
+  );
+};
+
 export const ShopPage = ({ products }: { products: Product[] }) => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Filter Logic
   const filteredProducts = products.filter(p => 
@@ -28,6 +49,10 @@ export const ShopPage = ({ products }: { products: Product[] }) => {
     setPage(1);
   }, [searchTerm]);
 
+  const handleProductClick = (product: Product) => {
+    navigate(`/shop/${slugify(product.name)}`);
+  };
+
   return (
     <div className="container mx-auto px-4 py-10 animate-fade-in relative">
       
@@ -41,11 +66,10 @@ export const ShopPage = ({ products }: { products: Product[] }) => {
       {displayedProducts.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {displayedProducts.map((product) => (
-            // Fixed: Wrapped in React.Fragment to resolve key prop type error
             <React.Fragment key={product.id}>
               <ProductCard 
                 product={product} 
-                onDetail={setSelectedProduct} 
+                onDetail={() => handleProductClick(product)} 
               />
             </React.Fragment>
           ))}
@@ -62,14 +86,6 @@ export const ShopPage = ({ products }: { products: Product[] }) => {
         totalPages={totalPages} 
         setPage={setPage} 
       />
-
-      {/* Modular Detail Modal */}
-      {selectedProduct && (
-        <ProductDetailModal 
-          product={selectedProduct} 
-          onClose={() => setSelectedProduct(null)} 
-        />
-      )}
 
     </div>
   );

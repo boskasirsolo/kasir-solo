@@ -1,11 +1,11 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus, Check } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus, Check, ArrowLeft } from 'lucide-react';
 import { Product } from '../types';
 import { Badge, Card, Input, Button } from './ui';
 import { formatRupiah } from '../utils';
 import { useCart } from '../context/cart-context';
+import { createPortal } from 'react-dom';
 
 // --- ATOM: SEARCH HEADER ---
 export const ShopHeader = ({ 
@@ -115,7 +115,7 @@ export const ProductActions = ({
   const [flyData, setFlyData] = useState<{ start: DOMRect, target: DOMRect } | null>(null);
   
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening modal
+    e.stopPropagation(); // Prevent opening navigation
     if (isAnimating) return;
 
     // 1. Cari tombol cart di layout (Desktop atau Mobile)
@@ -254,52 +254,58 @@ export const ShopPagination = ({
   );
 };
 
-// --- MOLECULE: DETAIL MODAL (PORTAL TO BODY) ---
-export const ProductDetailModal = ({ 
+// --- MOLECULE: DETAIL VIEW (Converted from Modal) ---
+export const ProductDetailView = ({ 
   product, 
-  onClose 
+  onClose,
+  isModal = false 
 }: { 
   product: Product, 
-  onClose: () => void 
+  onClose: () => void,
+  isModal?: boolean
 }) => {
   const { addToCart } = useCart();
   const [isAnimating, setIsAnimating] = useState(false);
   
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'auto'; };
-  }, []);
-
   const handleAddToCart = () => {
     setIsAnimating(true);
     addToCart(product);
     setTimeout(() => {
         setIsAnimating(false);
-        onClose(); 
+        if(isModal) onClose(); 
     }, 500);
   };
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      
-      {/* 1. Backdrop (Fixed Fullscreen) */}
-      <div 
-        className="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity" 
-        onClick={onClose}
-      />
+  // If used as a Modal (e.g. QuickView), use Portal
+  const Wrapper = isModal ? 
+    ({children}: any) => createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" aria-modal="true">
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={onClose} />
+            {children}
+        </div>, document.body
+    ) : 
+    ({children}: any) => (
+        <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 animate-fade-in relative">
+            <div className="absolute top-0 left-0 w-full h-full bg-brand-black -z-10"></div>
+            {/* Ambient Background for Page Mode */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-orange/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+            {children}
+        </div>
+    );
 
-      {/* 2. Modal Panel (Centered & Scrollable Internally) */}
-      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row animate-fade-in z-[10000] custom-scrollbar">
+  return (
+    <Wrapper>
+      <div className={`relative w-full max-w-5xl ${isModal ? 'max-h-[90vh]' : 'min-h-[600px]'} overflow-y-auto rounded-2xl bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row custom-scrollbar`}>
         
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-action transition-colors"
+          className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-action transition-colors border border-white/10"
         >
-          <X size={20} />
+          {isModal ? <X size={20} /> : <ArrowLeft size={20} />}
         </button>
 
         {/* Left: Image (Full width mobile, Half width desktop) */}
-        <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-6 md:p-0 min-h-[300px] md:min-h-full">
+        <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-6 md:p-0 min-h-[300px] md:min-h-full border-b md:border-b-0 md:border-r border-white/10">
             <img 
               src={product.image} 
               alt={product.name} 
@@ -317,34 +323,39 @@ export const ProductDetailModal = ({
               <p className="text-3xl font-bold text-brand-orange">{formatRupiah(product.price)}</p>
           </div>
 
-          <div className="prose prose-invert prose-sm text-gray-300 mb-8 leading-relaxed border-t border-white/10 pt-6 flex-grow overflow-y-auto max-h-[30vh] custom-scrollbar">
+          <div className="prose prose-invert prose-sm text-gray-300 mb-8 leading-relaxed border-t border-white/10 pt-6 flex-grow">
             <p>{product.description}</p>
+            <ul className="list-disc pl-4 space-y-1 text-gray-400 mt-4">
+               <li>Garansi Hardware 1 Tahun</li>
+               <li>Free Training Staff</li>
+               <li>Support Teknis Lifetime</li>
+            </ul>
           </div>
 
           <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button 
               onClick={handleAddToCart}
-              // UPDATED: Buy button -> brand-action
               className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${
                   isAnimating ? 'bg-green-500 text-white' : 'bg-brand-action hover:bg-brand-actionGlow text-white'
               }`}
             >
               {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} 
-              {isAnimating ? "Berhasil" : "Beli"}
+              {isAnimating ? "Berhasil" : "Beli Sekarang"}
             </button>
             <a 
               href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center w-full py-4 border border-white/20 hover:border-brand-action text-white rounded-xl font-bold transition-all gap-2"
+              className="flex items-center justify-center w-full py-4 border border-white/20 hover:border-brand-action text-white rounded-xl font-bold transition-all gap-2 hover:bg-white/5"
             >
-              <MessageCircle size={20} /> Chat
+              <MessageCircle size={20} /> Tanya Sales
             </a>
           </div>
         </div>
       </div>
-
-    </div>,
-    document.body
+    </Wrapper>
   );
 };
+
+// Backwards compatibility shim if needed, or ProductDetailView can be used directly
+export const ProductDetailModal = (props: any) => <ProductDetailView {...props} isModal={true} />;
