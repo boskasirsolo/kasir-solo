@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, formatRupiah, ensureAPIKey, getEnv } from '../utils';
+import { supabase, CONFIG, formatRupiah, ensureAPIKey, getSmartApiKey } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
 const ITEMS_PER_PAGE = 6; 
@@ -61,15 +61,15 @@ const useProductManager = (
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
             await ensureAPIKey(); // Ensure key in IDX
-            
-            // Flexible Key Retrieval
-            const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
+            const apiKey = getSmartApiKey();
             
             if (!apiKey) {
-                console.warn("No API Key detected in Environment. Trying anyway (IDX might inject).");
+                console.warn("No API Key detected.");
+                alert("API Key tidak ditemukan.");
+                return;
             }
 
-            const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+            const ai = new GoogleGenAI({ apiKey });
             
             const prompt = `
             Role: Expert E-commerce Copywriter & SEO Specialist.
@@ -92,11 +92,7 @@ const useProductManager = (
             setForm(prev => ({ ...prev, desc: response.text?.trim() || '' }));
         } catch (e: any) { 
             console.error(e);
-            if (e.message?.includes("API key")) {
-                alert("Gagal: API Key tidak ditemukan. Pastikan VITE_GEMINI_API_KEY diset di environment variables.");
-            } else {
-                alert(`AI Error: ${e.message}`); 
-            }
+            alert(`AI Error: ${e.message}`); 
         } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };

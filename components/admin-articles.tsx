@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
-import { supabase, CONFIG, ensureAPIKey, getEnv } from '../utils';
+import { supabase, CONFIG, ensureAPIKey, getSmartApiKey } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
 const ITEMS_PER_PAGE = 10;
@@ -133,27 +133,37 @@ const useArticleManager = (
         setAiStep(3); 
     };
 
-    // --- UTILS: IMAGE GENERATOR (UPGRADED) ---
+    // --- UTILS: IMAGE GENERATOR (FIXED) ---
     const getAIImageUrl = (prompt: string, style: string) => {
-        const seed = Math.floor(Math.random() * 10000);
+        const seed = Math.floor(Math.random() * 999999);
         
+        // Sanitize and Shorten Prompt (Crucial for success)
+        // Take first 10-15 words only to prevent URL errors
+        const safePrompt = prompt
+            .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special chars
+            .split(' ')
+            .slice(0, 12) // Truncate
+            .join(' ');
+
         let styleKeywords = "";
         switch(style) {
-            case 'cinematic': styleKeywords = "cinematic lighting, dramatic atmosphere, 8k, unreal engine 5 render, highly detailed, depth of field, blockbuster movie look"; break;
-            case 'cyberpunk': styleKeywords = "cyberpunk city, neon lights, futuristic, high contrast, purple and orange tones, glowing, tech noir"; break;
-            case 'corporate': styleKeywords = "modern office, professional, bright, clean lines, corporate photography, 4k, success, business meeting"; break;
-            case 'studio': styleKeywords = "studio lighting, product photography, solid background, sharp focus, minimal, advertising standard"; break;
-            default: styleKeywords = "high quality, professional";
+            case 'cinematic': styleKeywords = "cinematic lighting dramatic 8k highly detailed"; break;
+            case 'cyberpunk': styleKeywords = "cyberpunk neon futuristic purple orange tech"; break;
+            case 'corporate': styleKeywords = "modern office professional bright clean corporate"; break;
+            case 'studio': styleKeywords = "studio lighting product photography solid background minimal"; break;
+            default: styleKeywords = "high quality professional";
         }
 
-        const cleanPrompt = `${prompt}, ${styleKeywords}`;
-        return `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1280&height=720&nologo=true&seed=${seed}&model=flux`;
+        const finalPrompt = `${safePrompt} ${styleKeywords}`;
+        
+        // Using Flux model via Pollinations with specific seed and quality params
+        return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1024&height=576&model=flux&nologo=true&seed=${seed}`;
     };
 
     const regenerateCoverImage = () => {
         if (!form.title) return alert("Judul artikel kosong.");
         // Use title + explicit visual cues
-        const prompt = `Visual representation of ${form.title}, detailed, masterpiece`;
+        const prompt = `${form.title}`;
         setForm(prev => ({
             ...prev,
             imagePreview: getAIImageUrl(prompt, genConfig.imageStyle)
@@ -165,8 +175,10 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, researching: true }));
         try {
             await ensureAPIKey();
-            const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
-            const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+            const apiKey = getSmartApiKey(); // ROTATED KEY
+            if (!apiKey) throw new Error("API Key habis atau tidak ditemukan.");
+
+            const ai = new GoogleGenAI({ apiKey });
             
             const prompt = `
             Act as an SEO Expert for "Mesin Kasir" and "UMKM Indonesia".
@@ -198,7 +210,7 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, titling: true }));
         try {
             await ensureAPIKey();
-            const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
+            const apiKey = getSmartApiKey(); // ROTATED KEY
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
             const prompt = `
@@ -239,7 +251,7 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, generatingContent: true }));
         try {
             await ensureAPIKey();
-            const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
+            const apiKey = getSmartApiKey(); // ROTATED KEY
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
             // --- 1. METADATA GENERATION (Fast & Lightweight - JSON) ---
@@ -310,7 +322,7 @@ const useArticleManager = (
                 author: genConfig.autoAuthor ? metaData.author : prev.author,
                 readTime: "45 min read",
                 imagePreview: genConfig.autoImage 
-                    ? getAIImageUrl(metaData.image_search_query || `${form.title} dramatic cinematic`, genConfig.imageStyle) 
+                    ? getAIImageUrl(metaData.image_search_query || `${form.title}`, genConfig.imageStyle) 
                     : prev.imagePreview,
                 status: 'draft' 
             }));
@@ -321,7 +333,7 @@ const useArticleManager = (
             let msg = e.message || "Unknown error";
             // Translate common API errors to user friendly messages
             if (msg.includes("429") || msg.includes("Quota")) {
-                msg = "Kuota Harian AI Habis (Limit 429). Tunggu beberapa saat atau ganti API Key.";
+                msg = "Kuota Harian AI Habis (Limit 429). Sistem mencoba switch API Key, silakan coba klik lagi.";
             } else if (msg.includes("API key")) {
                 msg = "API Key tidak valid atau belum diset.";
             }

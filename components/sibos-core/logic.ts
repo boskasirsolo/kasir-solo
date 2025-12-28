@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Product } from '../../types';
-import { formatRupiah, supabase, ensureAPIKey, getEnv } from '../../utils';
+import { formatRupiah, supabase, ensureAPIKey, getSmartApiKey } from '../../utils';
 import { FunctionDeclaration, Type, GoogleGenAI } from "@google/genai";
 
 export interface Message {
@@ -252,7 +252,7 @@ export const useSibosChat = (products: Product[], isAdmin: boolean = false, curr
 
     try {
       await ensureAPIKey(); 
-      const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
+      const apiKey = getSmartApiKey();
       
       const ai = new GoogleGenAI({ apiKey: apiKey || '' });
       

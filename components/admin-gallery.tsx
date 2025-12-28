@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, ensureAPIKey, getEnv } from '../utils';
+import { supabase, CONFIG, ensureAPIKey, getSmartApiKey } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
 const ITEMS_PER_PAGE = 8; 
@@ -156,11 +156,10 @@ const useIntegratedGalleryManager = (
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
             await ensureAPIKey(); 
-            const apiKey = process.env.API_KEY || getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY');
-            
-            if (!apiKey) console.warn("API Key not found. Trying IDX injection.");
+            const apiKey = getSmartApiKey();
+            if (!apiKey) throw new Error("API Key missing");
 
-            const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+            const ai = new GoogleGenAI({ apiKey });
             
             // 1. Generate Main Description
             const mainPrompt = `
@@ -198,11 +197,7 @@ const useIntegratedGalleryManager = (
         } catch (e: any) { 
             console.error(e); 
             const msg = e.message || "Gagal menghubungi AI.";
-            if (msg.includes("API key")) {
-                alert("API Key bermasalah. Pastikan VITE_GEMINI_API_KEY diset.");
-            } else {
-                alert(`AI Error: ${msg}`);
-            }
+            alert(`AI Error: ${msg}`);
         } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };

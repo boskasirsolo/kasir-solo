@@ -22,6 +22,36 @@ export const getEnv = (key: string) => {
   return '';
 };
 
+// --- API KEY ROTATION LOGIC ---
+export const getSmartApiKey = () => {
+  // List of possible keys from Vercel/Env
+  const candidates = [
+    getEnv('VITE_GEMINI_API_KEY_0'),
+    getEnv('VITE_GEMINI_API_KEY_1'),
+    getEnv('VITE_GEMINI_API_KEY_2'),
+    getEnv('VITE_GEMINI_API_KEY'),
+    getEnv('VITE_API_KEY'),
+    process.env.API_KEY
+  ];
+
+  // Filter out empty or undefined keys
+  const validKeys = candidates.filter(k => k && k.length > 10);
+
+  if (validKeys.length === 0) {
+    console.warn("No valid Gemini API Keys found.");
+    return '';
+  }
+
+  // Randomly pick one key
+  const randomIndex = Math.floor(Math.random() * validKeys.length);
+  const selectedKey = validKeys[randomIndex];
+  
+  // Log (safe mode: only show last 4 chars) to verify rotation
+  console.log(`[System] Using API Key Index [${randomIndex}] ending in ...${selectedKey.slice(-4)}`);
+  
+  return selectedKey;
+};
+
 // --- Configuration ---
 export const CONFIG = {
   SUPABASE_URL: getEnv('VITE_SUPABASE_URL'),
@@ -296,7 +326,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
   {
     id: 1,
     client_name: "Pak Budi",
-    business_name: "Kopi Senja", // Changed from Warkop DKI Reborn to match Gallery item
+    business_name: "Kopi Senja", 
     content: "Website & Aplikasi membership dari PT Mesin Kasir Solo beneran ngebantu banget buat ngelola pelanggan. Data rapi, omzet naik.",
     rating: 5,
     image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
