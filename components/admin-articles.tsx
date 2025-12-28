@@ -1,18 +1,31 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
-import { supabase, CONFIG, ensureAPIKey, getSmartApiKey } from '../utils';
+import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
 const ITEMS_PER_PAGE = 10;
+
+// --- CONSTANTS ---
+const PRESET_TOPICS = [
+    { id: 'fnb', label: 'Bisnis Kuliner (F&B)' },
+    { id: 'retail', label: 'Retail & Minimarket' },
+    { id: 'tech', label: 'Teknologi Kasir (POS)' },
+    { id: 'finance', label: 'Keuangan & Pajak' },
+    { id: 'marketing', label: 'Digital Marketing' },
+    { id: 'hr', label: 'Manajemen Karyawan' },
+    { id: 'franchise', label: 'Sistem Franchise' },
+    { id: 'scam', label: 'Keamanan & Fraud' }
+];
 
 // --- INTERFACES FOR AI FLOW ---
 interface KeywordData {
     keyword: string;
     volume: string;
     competition: 'Low' | 'Medium' | 'High';
+    type: 'Trend' | 'Evergreen' | 'Niche';
 }
 
 interface GenConfig {
@@ -75,6 +88,7 @@ const useArticleManager = (
 
     // AI Flow State
     const [aiStep, setAiStep] = useState<number>(0); 
+    const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
     const [selectedKeyword, setSelectedKeyword] = useState<KeywordData | null>(null);
     const [titleOptions, setTitleOptions] = useState<string[]>([]);
@@ -113,6 +127,13 @@ const useArticleManager = (
         setKeywords([]);
         setTitleOptions([]);
         setSelectedKeyword(null);
+        setSelectedPresets([]);
+    };
+
+    const togglePreset = (label: string) => {
+        setSelectedPresets(prev => 
+            prev.includes(label) ? prev.filter(p => p !== label) : [...prev, label]
+        );
     };
 
     const handleEditClick = (item: Article) => {
@@ -137,12 +158,11 @@ const useArticleManager = (
     const getAIImageUrl = (prompt: string, style: string) => {
         const seed = Math.floor(Math.random() * 999999);
         
-        // Sanitize and Shorten Prompt (Crucial for success)
-        // Take first 10-15 words only to prevent URL errors
+        // Sanitize and Shorten Prompt
         const safePrompt = prompt
-            .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special chars
+            .replace(/[^a-zA-Z0-9\s]/g, '')
             .split(' ')
-            .slice(0, 12) // Truncate
+            .slice(0, 12)
             .join(' ');
 
         let styleKeywords = "";
@@ -155,14 +175,11 @@ const useArticleManager = (
         }
 
         const finalPrompt = `${safePrompt} ${styleKeywords}`;
-        
-        // Using Flux model via Pollinations with specific seed and quality params
         return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1024&height=576&model=flux&nologo=true&seed=${seed}`;
     };
 
     const regenerateCoverImage = () => {
         if (!form.title) return alert("Judul artikel kosong.");
-        // Use title + explicit visual cues
         const prompt = `${form.title}`;
         setForm(prev => ({
             ...prev,
@@ -175,19 +192,30 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, researching: true }));
         try {
             await ensureAPIKey();
-            const apiKey = getSmartApiKey(); // ROTATED KEY
+            const apiKey = getSmartApiKey();
             if (!apiKey) throw new Error("API Key habis atau tidak ditemukan.");
 
             const ai = new GoogleGenAI({ apiKey });
             
+            // Context from presets
+            const contextTopics = selectedPresets.length > 0 
+                ? selectedPresets.join(', ') 
+                : "Bisnis UMKM, Mesin Kasir, dan Manajemen Toko";
+
             const prompt = `
-            Act as an SEO Expert for "Mesin Kasir" and "UMKM Indonesia".
-            List 5 trending keywords related to: "Mesin Kasir", "Strategi Ritel", "Pembukuan UMKM", "Teknologi Toko", "Franchise".
-            Focus on keywords with HIGH VOLUME but LOW/MEDIUM COMPETITION.
+            Act as an Expert Business Consultant & SEO Strategist for Indonesia Market.
+            
+            FOCUS TOPICS: ${contextTopics}
+            
+            Task: Generate 8 potential article topics/keywords.
+            Mix between:
+            1. Trending Issues (Viral now)
+            2. Evergreen Content (Always needed)
+            3. Niche/Specific Problems (High intent)
             
             RETURN JSON ARRAY ONLY:
             [
-              { "keyword": "...", "volume": "10k-100k", "competition": "Low" }
+              { "keyword": "Topik spesifik...", "volume": "High/Med", "competition": "Low/Med", "type": "Trend" }
             ]
             `;
             
@@ -210,25 +238,22 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, titling: true }));
         try {
             await ensureAPIKey();
-            const apiKey = getSmartApiKey(); // ROTATED KEY
+            const apiKey = getSmartApiKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
             const prompt = `
             Based on keyword: "${keywordData.keyword}"
-            Act as Amin Maghfuri (Business Owner & Tech Expert).
-            Generate 3 Article Titles with DIFFERENT angles.
-            
-            Angles:
-            1. Deep Dive Case Study (e.g., "Analisis Mendalam...")
-            2. Ultimate Guide (e.g., "Panduan Terlengkap 2025...")
-            3. Controversial/Warning (e.g., "Kenapa Banyak Bisnis Hancur Karena...")
-
-            Titles should be catchy, click-worthy, but professional.
             Target Audience: Business Owners (UMKM) in Indonesia.
-            Language: Indonesian.
             
+            Generate 5 High-CTR Article Titles with distinct angles:
+            1. "The Guide" (Panduan Lengkap...)
+            2. "The Mistake/Warning" (Jangan Lakukan ini...)
+            3. "The Listicle" (7 Cara/Alat Terbaik...)
+            4. "The Case Study" (Bagaimana Toko X naik omzet...)
+            5. "The Question" (Kenapa bisnis anda...)
+
             RETURN JSON ARRAY OF STRINGS ONLY:
-            ["Title 1...", "Title 2...", "Title 3..."]
+            ["Title 1...", "Title 2...", "Title 3...", "Title 4...", "Title 5..."]
             `;
 
             const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
@@ -251,18 +276,18 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, generatingContent: true }));
         try {
             await ensureAPIKey();
-            const apiKey = getSmartApiKey(); // ROTATED KEY
+            const apiKey = getSmartApiKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
-            // --- 1. METADATA GENERATION (Fast & Lightweight - JSON) ---
+            // --- 1. METADATA GENERATION ---
             const metaPrompt = `
             Role: Editor.
-            Task: Generate metadata for article: "${form.title}" (${selectedKeyword?.keyword || ''}).
+            Task: Generate metadata for article: "${form.title}".
+            Context: ${selectedKeyword?.keyword || ''}.
             Language: Indonesian.
-            Output JSON: { "excerpt": "Compelling summary (150 chars)", "category": "Business/Tech", "author": "Amin Maghfuri", "image_search_query": "English visual description for cover image" }
+            Output JSON: { "excerpt": "Compelling summary (150 chars)", "category": "Based on title", "author": "Amin Maghfuri", "image_search_query": "English visual description for cover image, detailed, relevant" }
             `;
             
-            // Use Flash for speed on metadata
             const metaResponse = await ai.models.generateContent({
                 model: 'gemini-3-flash-preview', 
                 contents: metaPrompt,
@@ -275,40 +300,30 @@ const useArticleManager = (
                 metaData = JSON.parse(metaText); 
             } catch(e) { console.warn("Meta parse failed, using defaults"); }
 
-            // --- 2. CONTENT GENERATION (Heavy & Long - Plain Text/Markdown) ---
+            // --- 2. CONTENT GENERATION ---
             const contentPrompt = `
             Role: Expert Business Consultant & Senior Copywriter (Amin Maghfuri).
-            Task: Write a MONSTER PILLAR ARTICLE (Target: 3000-5000 Words Quality Equivalent).
+            Task: Write a COMPREHENSIVE ARTICLE (Deep Dive).
             Title: "${form.title}"
             Keyword: "${selectedKeyword?.keyword || form.title}"
             
             INSTRUCTIONS:
-            1. **Exhaustive Detail**: Explain every concept like a university lecture.
+            1. **Tone**: Authoritative, Empathetic, Actionable (Indonesian Business Context).
             2. **Structure**: 
                - Start directly with "# ${form.title}"
-               - Create at least 10 Main Chapters (H2).
-               - Inside every H2, include 2-3 Sub-Chapters (H3).
-            3. **Tone**: Authoritative, Experienced, yet Accessible (Indonesian Business Context).
-            4. **Output**: PURE MARKDOWN only. Do not wrap in JSON.
-            
-            REQUIRED SECTIONS:
-            - Introduction (Hook, Problem, Thesis)
-            - The Fundamentals (Definitions, History)
-            - Core Analysis (The meat of the article - Chapters 3-8)
-            - Implementation Guide (Step-by-step)
-            - Common Pitfalls (What to avoid)
-            - Future Trends (Predictions)
-            - Conclusion (Inspiring closing)
+               - Introduction (Hook the reader immediately)
+               - Core Concepts (Explain 'Why' & 'What')
+               - Practical Steps (The 'How To' - use bullet points)
+               - Real World Examples (Hypothetical or generic case studies)
+               - Conclusion (Call to Action)
+            3. **Formatting**: Use proper Markdown (H2, H3, Bold, Lists).
+            4. **Length**: Substantial depth, but no fluff.
             `;
 
-            // Use FLASH instead of PRO to avoid Quota Exceeded (429) errors on Free Tier
             const contentResponse = await ai.models.generateContent({ 
                 model: 'gemini-3-flash-preview', 
                 contents: contentPrompt,
-                config: {
-                    maxOutputTokens: 8192, 
-                    // removed thinkingConfig to save tokens/complexity on Flash model
-                }
+                config: { maxOutputTokens: 8192 }
             });
             
             const contentText = contentResponse.text || '# Gagal Generate Konten. Silakan coba lagi.';
@@ -320,7 +335,7 @@ const useArticleManager = (
                 excerpt: metaData.excerpt || prev.excerpt,
                 category: genConfig.autoCategory ? metaData.category : prev.category,
                 author: genConfig.autoAuthor ? metaData.author : prev.author,
-                readTime: "45 min read",
+                readTime: "10 min read",
                 imagePreview: genConfig.autoImage 
                     ? getAIImageUrl(metaData.image_search_query || `${form.title}`, genConfig.imageStyle) 
                     : prev.imagePreview,
@@ -331,7 +346,6 @@ const useArticleManager = (
         } catch (e: any) {
             console.error(e);
             let msg = e.message || "Unknown error";
-            // Translate common API errors to user friendly messages
             if (msg.includes("429") || msg.includes("Quota")) {
                 msg = "Kuota Harian AI Habis (Limit 429). Sistem mencoba switch API Key, silakan coba klik lagi.";
             } else if (msg.includes("API key")) {
@@ -431,7 +445,7 @@ const useArticleManager = (
     return {
         form, setForm,
         loading,
-        aiState: { step: aiStep, setStep: setAiStep, keywords, selectedKeyword, titleOptions, genConfig, setGenConfig },
+        aiState: { step: aiStep, setStep: setAiStep, keywords, selectedKeyword, titleOptions, genConfig, setGenConfig, selectedPresets, togglePreset },
         actions: { researchKeywords, generateTitles, generatePillarContent, handleSubmit, handleEditClick, resetForm, deleteItem, regenerateCoverImage },
         listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
     };
@@ -523,33 +537,60 @@ export const AdminArticles = ({
             {/* AI WIZARD */}
             {!form.id && aiState.step < 3 && (
                 <div className="space-y-6">
+                    {/* STEP 0: PRESET CATEGORIES (NEW) */}
+                    <div className={`transition-all ${aiState.step > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-3">Step 1: Pilih Fokus Topik (Bisa > 1)</label>
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                            {PRESET_TOPICS.map((topic) => (
+                                <button
+                                    key={topic.id}
+                                    onClick={() => aiState.togglePreset(topic.label)}
+                                    className={`text-[10px] py-2 px-2 rounded border transition-all flex items-center justify-between ${
+                                        aiState.selectedPresets.includes(topic.label)
+                                        ? 'bg-brand-orange text-white border-brand-orange'
+                                        : 'bg-white/5 text-gray-400 border-white/10 hover:border-white/30'
+                                    }`}
+                                >
+                                    {topic.label}
+                                    {aiState.selectedPresets.includes(topic.label) && <Check size={12} />}
+                                </button>
+                            ))}
+                        </div>
+                        <Button 
+                            onClick={actions.researchKeywords} 
+                            disabled={loading.researching} 
+                            className={`w-full py-3 text-xs ${aiState.selectedPresets.length === 0 ? 'opacity-50' : ''}`}
+                        >
+                            {loading.researching ? <LoadingSpinner size={14} /> : <><TrendingUp size={14}/> GENERATE IDE TOPIK</>}
+                        </Button>
+                    </div>
+
                     {/* STEP 1: KEYWORDS */}
-                    <div className={`transition-all ${aiState.step > 1 ? 'opacity-50 pointer-events-none' : ''}`}>
-                        <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 1: Riset Topik</label>
-                        {aiState.keywords.length === 0 ? (
-                            <Button onClick={actions.researchKeywords} disabled={loading.researching} className="w-full py-3 text-xs">
-                                {loading.researching ? <LoadingSpinner size={14} /> : <><TrendingUp size={14}/> GENERATE TRENDING TOPICS</>}
-                            </Button>
-                        ) : (
-                            <div className="grid grid-cols-1 gap-1">
+                    {aiState.step >= 1 && (
+                        <div className={`transition-all ${aiState.step > 1 ? 'opacity-50 pointer-events-none' : 'animate-fade-in'}`}>
+                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 2: Pilih Keyword</label>
+                            <div className="grid grid-cols-1 gap-1.5">
                                 {aiState.keywords.map((k: KeywordData, i: number) => (
-                                    <button key={i} onClick={() => actions.generateTitles(k)} className="text-left p-2 rounded border border-white/10 hover:border-brand-orange hover:bg-brand-orange/10 text-xs text-gray-300 hover:text-white transition-all">
-                                        <span className="font-bold block">{k.keyword}</span>
-                                        <span className="text-[9px] text-gray-500">Vol: {k.volume} • Comp: {k.competition}</span>
+                                    <button key={i} onClick={() => actions.generateTitles(k)} className="text-left p-2.5 rounded border border-white/10 hover:border-brand-orange hover:bg-brand-orange/10 transition-all flex justify-between items-center group">
+                                        <div>
+                                            <span className="font-bold text-xs text-gray-200 group-hover:text-white block">{k.keyword}</span>
+                                            <span className="text-[9px] text-gray-500 uppercase tracking-wide">{k.type} • Vol: {k.volume}</span>
+                                        </div>
+                                        <ChevronRight size={14} className="text-gray-600 group-hover:text-brand-orange"/>
                                     </button>
                                 ))}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
 
                     {/* STEP 2: TITLES */}
-                    {aiState.step >= 1 && (
+                    {aiState.step >= 1 && aiState.titleOptions.length > 0 && (
                         <div className={`transition-all ${aiState.step > 2 ? 'opacity-50' : 'animate-fade-in'}`}>
-                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 2: Pilih Judul</label>
+                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 3: Pilih Judul</label>
                             {loading.titling ? <LoadingSpinner /> : (
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                     {aiState.titleOptions.map((t: string, i: number) => (
-                                        <button key={i} onClick={() => { setForm((p:any) => ({...p, title: t})); aiState.setStep(2); }} className={`w-full text-left p-2 text-xs border rounded transition-all ${form.title === t ? 'bg-brand-orange text-white border-brand-orange' : 'bg-black/20 border-white/10 hover:border-white/30 text-gray-300'}`}>
+                                        <button key={i} onClick={() => { setForm((p:any) => ({...p, title: t})); aiState.setStep(2); }} className={`w-full text-left p-2 text-xs border rounded transition-all leading-relaxed ${form.title === t ? 'bg-brand-orange text-white border-brand-orange' : 'bg-black/20 border-white/10 hover:border-white/30 text-gray-300'}`}>
                                             {t}
                                         </button>
                                     ))}
@@ -561,7 +602,7 @@ export const AdminArticles = ({
                     {/* STEP 3: CONFIG */}
                     {aiState.step >= 2 && form.title && (
                         <div className="animate-fade-in border-t border-white/5 pt-4">
-                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 3: Generate 5000+ Words</label>
+                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 4: Generate Content</label>
                             
                             <div className="mb-3">
                                 <label className="text-[10px] text-gray-500 mb-1 block">Image Style</label>
@@ -579,9 +620,8 @@ export const AdminArticles = ({
                             </div>
 
                             <Button onClick={actions.generatePillarContent} disabled={loading.generatingContent} className="w-full py-3 text-xs bg-gradient-to-r from-brand-orange to-red-500 hover:from-brand-glow hover:to-red-400 shadow-action">
-                                {loading.generatingContent ? <LoadingSpinner size={14} /> : <><Sparkles size={14}/> GENERATE MONSTER CONTENT</>}
+                                {loading.generatingContent ? <LoadingSpinner size={14} /> : <><Sparkles size={14}/> GENERATE FULL ARTICLE</>}
                             </Button>
-                            <p className="text-[9px] text-center text-gray-500 mt-2">Target: 5000 Words • Deep Dive • Semantic SEO</p>
                         </div>
                     )}
                 </div>
