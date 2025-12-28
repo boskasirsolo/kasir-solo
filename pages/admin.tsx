@@ -5,7 +5,6 @@ import { Product, GalleryItem, SiteConfig, Testimonial } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
 import { AdminGallery } from '../components/admin-gallery';
-import { AdminTestimonials } from '../components/admin-testimonials';
 import { AdminSettings } from '../components/admin-settings';
 import { AdminOrders } from '../components/admin-orders';
 import { supabase } from '../utils';
@@ -100,7 +99,7 @@ export const AdminDashboard = ({
   config: SiteConfig, setConfig: any,
   onLogout: () => void
 }) => {
-  const [activeTab, setActiveTab] = useState<'store' | 'gallery' | 'testimonials' | 'settings'>('store');
+  const [activeTab, setActiveTab] = useState<'store' | 'gallery' | 'settings'>('store');
   const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog'>('orders');
 
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
@@ -138,9 +137,8 @@ export const AdminDashboard = ({
         
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-wrap gap-2">
-            <TabButton id="store" label="PRODUK" icon={ShoppingBag} />
-            <TabButton id="gallery" label="GALERI" icon={Image} />
-            <TabButton id="testimonials" label="TESTIMONI" icon={Quote} />
+            <TabButton id="store" label="PRODUK & ORDER" icon={ShoppingBag} />
+            <TabButton id="gallery" label="GALERI & TESTIMONI" icon={Image} />
             <TabButton id="settings" label="PENGATURAN" icon={Settings} />
           </div>
           
@@ -165,11 +163,10 @@ export const AdminDashboard = ({
         </div>
       </div>
 
-      <div className="bg-brand-card border border-white/10 rounded-2xl p-4 md:p-6 min-h-[600px] shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-orange/5 rounded-full blur-[80px] pointer-events-none"></div>
-
+      <div className="bg-brand-card border border-white/10 rounded-2xl min-h-[600px] shadow-2xl relative overflow-hidden">
+        
         {activeTab === 'store' && (
-          <div className="animate-fade-in relative z-10">
+          <div className="animate-fade-in relative z-10 p-4 md:p-6">
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/5">
                 <div className="bg-brand-dark p-1 rounded-lg inline-flex border border-white/10">
                    <button 
@@ -209,19 +206,16 @@ export const AdminDashboard = ({
         )}
 
         {activeTab === 'gallery' && (
-          <div className="animate-fade-in relative z-10">
-             <AdminGallery gallery={gallery} setGallery={setGallery} />
-          </div>
-        )}
-
-        {activeTab === 'testimonials' && (
-          <div className="animate-fade-in relative z-10">
-             <AdminTestimonials testimonials={testimonials} setTestimonials={setTestimonials} />
+          <div className="animate-fade-in relative z-10 h-full">
+             <AdminGallery 
+                gallery={gallery} setGallery={setGallery} 
+                testimonials={testimonials} setTestimonials={setTestimonials}
+             />
           </div>
         )}
 
         {activeTab === 'settings' && (
-          <div className="animate-fade-in relative z-10">
+          <div className="animate-fade-in relative z-10 p-4 md:p-6">
              <AdminSettings config={config} setConfig={setConfig} />
           </div>
         )}

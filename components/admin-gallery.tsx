@@ -1,18 +1,21 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer } from 'lucide-react';
-import { GalleryItem } from '../types';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, PlayCircle } from 'lucide-react';
+import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, ensureAPIKey } from '../utils';
 import { GoogleGenAI } from "@google/genai";
 
-const ITEMS_PER_PAGE = 6; 
+const ITEMS_PER_PAGE = 8; 
 
-// --- LOGIC: Custom Hook ---
-const useGalleryManager = (
+// --- LOGIC: Custom Hook with Integrated Testimonial ---
+const useIntegratedGalleryManager = (
     gallery: GalleryItem[], 
-    setGallery: (g: GalleryItem[]) => void
+    setGallery: (g: GalleryItem[]) => void,
+    testimonials: Testimonial[],
+    setTestimonials: (t: Testimonial[]) => void
 ) => {
+    // GALLERY STATE
     const [form, setForm] = useState({
         id: null as number | null,
         title: '',
@@ -27,6 +30,17 @@ const useGalleryManager = (
         cs_result: '',
         imagePreview: '',
         uploadFile: null as File | null
+    });
+
+    // TESTIMONIAL STATE (Linked)
+    const [testiForm, setTestiForm] = useState({
+        id: null as number | null,
+        client_name: '',
+        content: '',
+        rating: 5,
+        imagePreview: '',
+        uploadFile: null as File | null,
+        hasTestimonial: false
     });
 
     const [loadingState, setLoadingState] = useState({
@@ -53,9 +67,19 @@ const useGalleryManager = (
             imagePreview: '',
             uploadFile: null
         });
+        setTestiForm({
+            id: null,
+            client_name: '',
+            content: '',
+            rating: 5,
+            imagePreview: '',
+            uploadFile: null,
+            hasTestimonial: false
+        });
     };
 
     const handleEditClick = (item: GalleryItem) => {
+        // 1. Populate Gallery Form
         setForm({
             id: item.id,
             title: item.title,
@@ -71,65 +95,78 @@ const useGalleryManager = (
             imagePreview: item.image_url,
             uploadFile: null
         });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // 2. Find Linked Testimonial (By matching Business Name == Project Title)
+        const linkedTestimonial = testimonials.find(t => 
+            t.business_name.toLowerCase() === item.title.toLowerCase() ||
+            item.title.toLowerCase().includes(t.business_name.toLowerCase())
+        );
+
+        if (linkedTestimonial) {
+            setTestiForm({
+                id: linkedTestimonial.id,
+                client_name: linkedTestimonial.client_name,
+                content: linkedTestimonial.content,
+                rating: linkedTestimonial.rating,
+                imagePreview: linkedTestimonial.image_url || '',
+                uploadFile: null,
+                hasTestimonial: true
+            });
+        } else {
+            setTestiForm({
+                id: null,
+                client_name: '',
+                content: '',
+                rating: 5,
+                imagePreview: '',
+                uploadFile: null,
+                hasTestimonial: false
+            });
+        }
     };
 
     const generateAINarrative = async () => {
-        if (!form.title || !form.shortDesc) return alert("Mohon isi Judul dan Context (Trigger) dulu.");
-        
+        if (!form.title || !form.shortDesc) return alert("Isi Judul & Context dulu.");
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
         try {
-            await ensureAPIKey(); // Ensure key is selected
+            await ensureAPIKey(); 
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             
+            // Generate Project Description
             if (form.category_type === 'digital') {
-                 const prompt = `
-                 Role: Tech Copywriter. Project: ${form.title}. Context: ${form.shortDesc}.
-                 Task: Create a mini case study (STAR method).
-                 Output JSON format: { "challenge": "...", "solution": "...", "result": "..." }
-                 Bahasa Indonesia. No markdown.
-                 `;
+                 const prompt = `Role: Tech Copywriter. Project: ${form.title}. Context: ${form.shortDesc}. Output JSON: { "challenge": "...", "solution": "...", "result": "..." }. Bahasa Indonesia.`;
                  const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
                  const rawText = response.text?.trim() || '{}';
-                 
                  try {
-                     const jsonStart = rawText.indexOf('{');
-                     const jsonEnd = rawText.lastIndexOf('}') + 1;
-                     const jsonStr = rawText.substring(jsonStart, jsonEnd);
+                     const jsonStr = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
                      const parsed = JSON.parse(jsonStr);
-                     setForm(prev => ({
-                        ...prev,
-                        cs_challenge: parsed.challenge || '',
-                        cs_solution: parsed.solution || '',
-                        cs_result: parsed.result || ''
-                     }));
-                 } catch (e) {
-                     setForm(prev => ({...prev, longDesc: rawText}));
-                 }
-
+                     setForm(prev => ({ ...prev, cs_challenge: parsed.challenge || '', cs_solution: parsed.solution || '', cs_result: parsed.result || '' }));
+                 } catch (e) { setForm(prev => ({...prev, longDesc: rawText})); }
             } else {
-                 const prompt = `
-                 Role: Copywriter. Project: ${form.title}. Context: ${form.shortDesc}.
-                 Task: Write a compelling description (2 paragraphs). Bahasa Indonesia.
-                 `;
+                 const prompt = `Role: Copywriter. Project: ${form.title}. Context: ${form.shortDesc}. Write description (2 paragraphs). Bahasa Indonesia.`;
                  const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
                  setForm(prev => ({ ...prev, longDesc: response.text?.trim() || '' }));
             }
-        } catch (e: any) { 
-            console.error(e);
-            alert(`AI Error: ${e.message || "Gagal menghubungi layanan AI."}`); 
-        } 
+
+            // Also Generate Testimonial Draft if empty
+            if (!testiForm.content && testiForm.hasTestimonial) {
+                 const testiPrompt = `Buat testimoni singkat (1 kalimat positif) dari klien pemilik bisnis "${form.title}" yang puas dengan layanan "${form.shortDesc}".`;
+                 const testiResponse = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: testiPrompt });
+                 setTestiForm(prev => ({...prev, content: testiResponse.text?.trim() || ''}));
+            }
+
+        } catch (e) { console.error(e); alert("AI Error."); } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };
 
     const handleSubmit = async () => {
         if (!CONFIG.CLOUDINARY_CLOUD_NAME) return alert("Config Cloudinary Missing");
-        if (!form.id && !form.uploadFile && !form.imagePreview) return alert("Pilih gambar dulu!");
+        if (!form.title) return alert("Judul Project wajib diisi");
 
         setLoadingState(prev => ({ ...prev, uploading: true }));
         try {
+            // 1. Handle Gallery Image Upload
             let finalImageUrl = form.imagePreview;
-
             if (form.uploadFile) {
                 const formData = new FormData();
                 formData.append('file', form.uploadFile);
@@ -141,7 +178,7 @@ const useGalleryManager = (
 
             const dbData: Partial<GalleryItem> = {
                 title: form.title,
-                image_url: finalImageUrl,
+                image_url: finalImageUrl || 'https://via.placeholder.com/800x600',
                 type: 'image',
                 category_type: form.category_type,
                 description: form.longDesc, 
@@ -158,6 +195,7 @@ const useGalleryManager = (
                 };
             }
 
+            // Save Gallery Item
             if (form.id) {
                 const updatedItem = { ...gallery.find(g => g.id === form.id)!, ...dbData };
                 setGallery(gallery.map(g => g.id === form.id ? updatedItem : g));
@@ -168,8 +206,42 @@ const useGalleryManager = (
                 setGallery([newItem, ...gallery]);
                 if (supabase) await supabase.from('gallery').insert([dbData]);
             }
+
+            // 2. Handle Testimonial Save (If enabled)
+            if (testiForm.hasTestimonial && testiForm.client_name) {
+                let finalTestiImage = testiForm.imagePreview;
+                if (testiForm.uploadFile) {
+                    const formData = new FormData();
+                    formData.append('file', testiForm.uploadFile);
+                    formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (data.secure_url) finalTestiImage = data.secure_url;
+                }
+
+                const testiData = {
+                    client_name: testiForm.client_name,
+                    business_name: form.title, // LINK BY NAME
+                    content: testiForm.content,
+                    rating: testiForm.rating,
+                    image_url: finalTestiImage,
+                    is_featured: true
+                };
+
+                if (testiForm.id) {
+                     const updatedTesti = { ...testimonials.find(t => t.id === testiForm.id)!, ...testiData };
+                     setTestimonials(testimonials.map(t => t.id === testiForm.id ? updatedTesti : t));
+                     if (supabase) await supabase.from('testimonials').update(testiData).eq('id', testiForm.id);
+                } else {
+                     const newTestiId = Date.now() + 1;
+                     const newTesti = { ...testiData, id: newTestiId };
+                     setTestimonials([newTesti, ...testimonials]);
+                     if (supabase) await supabase.from('testimonials').insert([testiData]);
+                }
+            }
+
             resetForm();
-            alert("Galeri berhasil disimpan!");
+            alert("Project & Testimoni berhasil disimpan!");
         } catch (e) { console.error(e); alert("Gagal menyimpan."); }
         finally { setLoadingState(prev => ({ ...prev, uploading: false })); }
     };
@@ -187,6 +259,7 @@ const useGalleryManager = (
 
     return {
         form, setForm,
+        testiForm, setTestiForm,
         loadingState,
         handleSubmit,
         handleEditClick,
@@ -197,230 +270,228 @@ const useGalleryManager = (
     };
 };
 
-const GalleryForm = ({ 
-    form, setForm, loading, onSubmit, onReset, onGenerateAI 
-}: {
-    form: any, setForm: any, loading: any, onSubmit: any, onReset: any, onGenerateAI: any
-}) => (
-    <div className="bg-brand-dark p-6 rounded-xl border border-white/5 h-fit sticky top-6">
-        <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                {form.id ? <Edit size={18} className="text-brand-orange"/> : <ImageIcon size={18} className="text-brand-orange"/>}
-                {form.id ? "Edit Galeri" : "Upload Baru"}
-            </h3>
-            {form.id && (
-                <button onClick={onReset} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
-                    <XIcon size={12} /> Batal
-                </button>
-            )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-black/40 rounded-lg border border-white/5">
-            <button 
-                onClick={() => setForm((prev:any) => ({...prev, category_type: 'physical'}))}
-                // UPDATED: Use brand-action (Orange) for active toggle state
-                className={`py-2 text-xs font-bold rounded flex items-center justify-center gap-2 transition-all ${
-                    form.category_type === 'physical' ? 'bg-brand-action text-white shadow-lg' : 'text-gray-500 hover:text-white'
-                }`}
-            >
-                <Hammer size={14} /> Fisik / Hardware
-            </button>
-            <button 
-                onClick={() => setForm((prev:any) => ({...prev, category_type: 'digital'}))}
-                className={`py-2 text-xs font-bold rounded flex items-center justify-center gap-2 transition-all ${
-                    form.category_type === 'digital' ? 'bg-brand-action text-white shadow-lg' : 'text-gray-500 hover:text-white'
-                }`}
-            >
-                <Monitor size={14} /> Digital / Web
-            </button>
-        </div>
-
-        <div className="mb-4">
-             {form.imagePreview && (
-               <div className="mb-3 relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
-                  <img src={form.imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <p className="text-white text-xs font-bold">Ganti Gambar</p>
-                    </div>
-               </div>
-             )}
-             <div className="border border-dashed border-white/20 rounded-lg p-4 text-center hover:border-brand-orange/50 transition-colors bg-brand-card/30">
-              <input type="file" accept="image/*" onChange={(e) => {
-                const file = e.target.files ? e.target.files[0] : null;
-                if (file) setForm((prev:any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
-              }} className="hidden" id="gallery-upload" />
-              <label htmlFor="gallery-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                {!form.imagePreview && <UploadCloud size={24} className="text-gray-400" />}
-                <span className="text-gray-400 text-xs font-bold">{form.uploadFile ? form.uploadFile.name : (form.id ? "Klik untuk ganti" : "Pilih Foto Project")}</span>
-              </label>
-            </div>
-            {form.category_type === 'digital' && <p className="text-[10px] text-gray-500 mt-1 text-center">*Gunakan screenshot full page untuk efek scroll</p>}
-        </div>
-
-        <div className="space-y-4">
-            <div>
-              <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Judul Project</label>
-              <Input value={form.title} onChange={e => setForm((prev:any) => ({...prev, title: e.target.value}))} placeholder="Contoh: Instalasi Cafe..." className="py-2 text-sm"/>
-            </div>
-
-            {form.category_type === 'digital' && (
-                <div className="space-y-4 p-4 bg-white/5 rounded-lg border border-white/5">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Platform</label>
-                            <select 
-                                value={form.platform} 
-                                onChange={(e) => setForm((prev:any) => ({...prev, platform: e.target.value}))}
-                                className="w-full bg-brand-card border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-brand-orange"
-                            >
-                                <option value="web">Website</option>
-                                <option value="mobile">Mobile App</option>
-                                <option value="desktop">Desktop App</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Client URL</label>
-                            <Input value={form.client_url} onChange={e => setForm((prev:any) => ({...prev, client_url: e.target.value}))} placeholder="https://..." className="py-2 text-sm"/>
-                        </div>
-                    </div>
-                    <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Tech Stack (Comma Separated)</label>
-                        <Input value={form.tech_stack_str} onChange={e => setForm((prev:any) => ({...prev, tech_stack_str: e.target.value}))} placeholder="React, Supabase, Tailwind" className="py-2 text-sm"/>
-                    </div>
-                </div>
-            )}
-
-            <div className="p-3 bg-brand-orange/5 rounded-lg border border-brand-orange/20">
-               <div className="flex justify-between items-center mb-2">
-                  <label className="text-[10px] text-brand-orange uppercase font-bold tracking-wider flex items-center gap-1"><Sparkles size={12} /> AI Generator</label>
-                  <span className="text-[9px] text-brand-orange">{form.category_type === 'digital' ? 'Generates Case Study' : 'Generates Description'}</span>
-               </div>
-               <div className="flex gap-2">
-                  <input 
-                        value={form.shortDesc} 
-                        onChange={e => setForm((prev:any) => ({...prev, shortDesc: e.target.value}))} 
-                        placeholder={form.category_type === 'digital' ? "Context: website lambat, butuh SEO..." : "Context: kafe outdoor, wifi kencang..."}
-                        className="bg-brand-card border border-white/10 rounded px-3 text-xs w-full focus:outline-none focus:border-brand-orange"
-                    />
-                  <button onClick={onGenerateAI} disabled={loading.generatingAI} className="bg-brand-action text-white rounded px-3 py-1 flex items-center justify-center hover:bg-brand-actionGlow disabled:opacity-50">
-                    {loading.generatingAI ? <LoadingSpinner /> : <Sparkles size={16} />}
-                  </button>
-               </div>
-            </div>
-
-            {form.category_type === 'digital' ? (
-                <div className="space-y-3">
-                    <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Challenge</label>
-                        <TextArea value={form.cs_challenge} onChange={e => setForm((prev:any) => ({...prev, cs_challenge: e.target.value}))} className="h-20 text-xs"/>
-                    </div>
-                    <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Solution</label>
-                        <TextArea value={form.cs_solution} onChange={e => setForm((prev:any) => ({...prev, cs_solution: e.target.value}))} className="h-20 text-xs"/>
-                    </div>
-                    <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Result</label>
-                        <TextArea value={form.cs_result} onChange={e => setForm((prev:any) => ({...prev, cs_result: e.target.value}))} className="h-20 text-xs"/>
-                    </div>
-                </div>
-            ) : (
-                <div>
-                  <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Deskripsi</label>
-                  <TextArea value={form.longDesc} onChange={e => setForm((prev:any) => ({...prev, longDesc: e.target.value}))} placeholder="Ceritakan project ini..." className="h-32 text-sm leading-relaxed" />
-                </div>
-            )}
-            
-            <Button onClick={onSubmit} disabled={loading.uploading} className="w-full py-2.5 text-sm">
-              {loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={16}/> Simpan Perubahan</> : <><Plus size={16}/> Upload Galeri</>)}
-            </Button>
-        </div>
-    </div>
-);
-
-const GalleryList = ({ 
-    data, onEdit, onDelete 
+export const AdminGallery = ({ 
+  gallery, setGallery, testimonials, setTestimonials
 }: { 
-    data: any, onEdit: any, onDelete: any 
-}) => (
-    <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden">
-        <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
-            <div className="relative flex-grow">
+  gallery: GalleryItem[], setGallery: (g: GalleryItem[]) => void,
+  testimonials: Testimonial[], setTestimonials: (t: Testimonial[]) => void
+}) => {
+  const { 
+    form, setForm, 
+    testiForm, setTestiForm,
+    loadingState, handleSubmit, handleEditClick, resetForm, deleteItem, generateAINarrative, listData 
+  } = useIntegratedGalleryManager(gallery, setGallery, testimonials, setTestimonials);
+
+  return (
+    <div className="flex h-[800px] border-t border-white/5">
+      
+      {/* COLUMN 1: LIST (30%) */}
+      <div className="w-[30%] border-r border-white/5 bg-black/20 flex flex-col">
+          <div className="p-4 border-b border-white/5">
+             <div className="relative">
                 <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
                 <input 
                     type="text" 
-                    value={data.searchTerm}
-                    onChange={(e) => data.setSearchTerm(e.target.value)}
+                    value={listData.searchTerm}
+                    onChange={(e) => listData.setSearchTerm(e.target.value)}
                     placeholder="Cari project..." 
-                    className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange"
+                    className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-brand-orange"
                 />
              </div>
-             <span className="text-[10px] font-bold text-gray-500 uppercase">Total: {data.paginated.length}</span>
-        </div>
-        
-        <div className="flex-grow overflow-y-auto p-4 custom-scrollbar min-h-[500px]">
-            {data.paginated.length === 0 ? (
-                <div className="text-center py-20 text-gray-500 text-xs">Data galeri tidak ditemukan.</div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {data.paginated.map((item: GalleryItem) => (
-                        <div key={item.id} className="group relative bg-brand-card border border-white/5 rounded-lg overflow-hidden hover:border-brand-orange transition-all hover:shadow-neon-text/20">
-                            <div className="relative aspect-video bg-black overflow-hidden border-b border-white/5">
-                                <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                    <button onClick={() => onEdit(item)} className="p-2 bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500 hover:text-white transition-colors"><Edit size={16} /></button>
-                                    <button onClick={() => onDelete(item.id)} className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-colors"><Trash2 size={16} /></button>
+          </div>
+          <div className="flex-grow overflow-y-auto p-3 space-y-2 custom-scrollbar">
+             <button 
+                onClick={resetForm}
+                className="w-full py-3 mb-2 border border-dashed border-white/10 rounded-lg text-gray-400 text-xs font-bold hover:bg-brand-orange/10 hover:text-brand-orange hover:border-brand-orange transition-all flex items-center justify-center gap-2"
+             >
+                <Plus size={14} /> TAMBAH PROJECT BARU
+             </button>
+             
+             {listData.paginated.map(item => (
+                 <div 
+                    key={item.id} 
+                    onClick={() => handleEditClick(item)}
+                    className={`flex gap-3 p-3 rounded-lg cursor-pointer border transition-all group ${
+                        form.id === item.id 
+                        ? 'bg-brand-orange/10 border-brand-orange shadow-neon-text/20' 
+                        : 'bg-brand-card border-white/5 hover:border-white/20'
+                    }`}
+                 >
+                    <img src={item.image_url} className="w-12 h-12 bg-black rounded object-cover" />
+                    <div className="flex-1 min-w-0">
+                       <h5 className="text-xs font-bold text-white truncate">{item.title}</h5>
+                       <span className={`text-[9px] px-1 rounded ${item.category_type === 'digital' ? 'text-blue-400 bg-blue-400/10' : 'text-green-400 bg-green-400/10'}`}>
+                          {item.category_type === 'digital' ? 'DIGITAL' : 'HARDWARE'}
+                       </span>
+                    </div>
+                    <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} className="text-gray-600 hover:text-red-500">
+                       <Trash2 size={14} />
+                    </button>
+                 </div>
+             ))}
+          </div>
+          {/* Pagination Simple */}
+          {listData.totalPages > 1 && (
+             <div className="p-3 border-t border-white/5 flex justify-between items-center bg-brand-dark">
+                <button onClick={() => listData.setPage(p => Math.max(1, p-1))} disabled={listData.page===1} className="text-gray-400 disabled:opacity-30"><ChevronLeft size={16}/></button>
+                <span className="text-xs text-brand-orange font-bold">{listData.page}/{listData.totalPages}</span>
+                <button onClick={() => listData.setPage(p => Math.min(listData.totalPages, p+1))} disabled={listData.page===listData.totalPages} className="text-gray-400 disabled:opacity-30"><ChevronRight size={16}/></button>
+             </div>
+          )}
+      </div>
+
+      {/* COLUMN 2: EDITORS (30%) */}
+      <div className="w-[30%] border-r border-white/5 flex flex-col bg-brand-dark">
+         {/* Top Half: Project Editor */}
+         <div className="h-1/2 overflow-y-auto p-4 border-b border-white/10 custom-scrollbar">
+             <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2"><Edit size={12}/> Project Details</h4>
+             
+             <div className="space-y-3">
+                 <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => setForm(p => ({...p, category_type: 'physical'}))} className={`py-1.5 text-[10px] font-bold rounded border ${form.category_type === 'physical' ? 'bg-brand-action text-white border-brand-action' : 'border-white/10 text-gray-500'}`}>HARDWARE</button>
+                    <button onClick={() => setForm(p => ({...p, category_type: 'digital'}))} className={`py-1.5 text-[10px] font-bold rounded border ${form.category_type === 'digital' ? 'bg-brand-action text-white border-brand-action' : 'border-white/10 text-gray-500'}`}>DIGITAL</button>
+                 </div>
+                 
+                 <div className="flex gap-2 items-center bg-black/20 p-2 rounded border border-white/5">
+                    <div className="w-10 h-10 bg-black rounded overflow-hidden shrink-0 border border-white/10 relative group">
+                        {form.imagePreview && <img src={form.imagePreview} className="w-full h-full object-cover" />}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
+                           <UploadCloud size={14} className="text-white"/>
+                           <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
+                        </div>
+                    </div>
+                    <Input value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} placeholder="Judul Project" className="text-xs py-1.5 h-8" />
+                 </div>
+
+                 {/* AI Trigger */}
+                 <div className="p-2 bg-brand-orange/5 rounded border border-brand-orange/20">
+                    <div className="flex gap-1 mb-1">
+                        <Input value={form.shortDesc} onChange={e => setForm(p => ({...p, shortDesc: e.target.value}))} placeholder="AI Trigger: konteks project..." className="text-xs py-1 h-7 bg-transparent border-none focus:ring-0 px-0" />
+                        <button onClick={generateAINarrative} disabled={loadingState.generatingAI} className="bg-brand-orange text-white px-2 rounded text-[9px] font-bold hover:bg-brand-glow">{loadingState.generatingAI ? '...' : 'AI'}</button>
+                    </div>
+                 </div>
+
+                 <TextArea value={form.longDesc} onChange={e => setForm(p => ({...p, longDesc: e.target.value}))} placeholder="Deskripsi..." className="text-xs h-20" />
+
+                 {/* Digital Specifics */}
+                 {form.category_type === 'digital' && (
+                     <div className="space-y-2 bg-white/5 p-2 rounded">
+                         <select value={form.platform} onChange={e => setForm(p => ({...p, platform: e.target.value as any}))} className="w-full bg-black text-white text-xs p-1 rounded border border-white/10">
+                             <option value="web">Website</option><option value="mobile">Mobile App</option>
+                         </select>
+                         <Input value={form.client_url} onChange={e => setForm(p => ({...p, client_url: e.target.value}))} placeholder="URL" className="text-xs py-1 h-7" />
+                         <div className="grid grid-cols-3 gap-1">
+                             <input value={form.cs_challenge} onChange={e => setForm(p => ({...p, cs_challenge: e.target.value}))} placeholder="Challenge" className="bg-black text-white text-[9px] p-1 rounded border border-white/10" />
+                             <input value={form.cs_solution} onChange={e => setForm(p => ({...p, cs_solution: e.target.value}))} placeholder="Solution" className="bg-black text-white text-[9px] p-1 rounded border border-white/10" />
+                             <input value={form.cs_result} onChange={e => setForm(p => ({...p, cs_result: e.target.value}))} placeholder="Result" className="bg-black text-white text-[9px] p-1 rounded border border-white/10" />
+                         </div>
+                     </div>
+                 )}
+             </div>
+         </div>
+
+         {/* Bottom Half: Testimonial Editor */}
+         <div className="h-1/2 overflow-y-auto p-4 bg-black/40 custom-scrollbar flex flex-col">
+             <div className="flex justify-between items-center mb-3">
+                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Quote size={12}/> Testimoni</h4>
+                 <label className="flex items-center gap-2 cursor-pointer">
+                     <span className="text-[10px] text-gray-400">Include?</span>
+                     <input type="checkbox" checked={testiForm.hasTestimonial} onChange={e => setTestiForm(p => ({...p, hasTestimonial: e.target.checked}))} className="accent-brand-orange" />
+                 </label>
+             </div>
+             
+             {testiForm.hasTestimonial ? (
+                 <div className="space-y-3 flex-grow">
+                     <div className="flex gap-2 items-center">
+                        <div className="w-8 h-8 rounded-full bg-brand-card border border-white/10 overflow-hidden relative group shrink-0">
+                            {testiForm.imagePreview ? <img src={testiForm.imagePreview} className="w-full h-full object-cover"/> : <User size={16} className="text-gray-500 m-auto mt-2"/>}
+                            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setTestiForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
+                        </div>
+                        <Input value={testiForm.client_name} onChange={e => setTestiForm(p => ({...p, client_name: e.target.value}))} placeholder="Nama Klien" className="text-xs py-1 h-8" />
+                     </div>
+                     <div className="flex gap-1">
+                         {[1,2,3,4,5].map(s => (
+                             <Star key={s} size={12} className={`cursor-pointer ${s <= testiForm.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} onClick={() => setTestiForm(p => ({...p, rating: s}))} />
+                         ))}
+                     </div>
+                     <TextArea value={testiForm.content} onChange={e => setTestiForm(p => ({...p, content: e.target.value}))} placeholder="Isi testimoni..." className="text-xs h-20 bg-brand-card" />
+                 </div>
+             ) : (
+                 <div className="flex-grow flex items-center justify-center text-gray-600 text-xs italic">
+                     Tanpa testimoni khusus (Default Verified)
+                 </div>
+             )}
+
+             <div className="mt-3 pt-3 border-t border-white/10">
+                 <Button onClick={handleSubmit} disabled={loadingState.uploading} className="w-full py-2 text-xs">
+                    {loadingState.uploading ? <LoadingSpinner /> : <><Save size={14} /> SIMPAN SEMUA</>}
+                 </Button>
+             </div>
+         </div>
+      </div>
+
+      {/* COLUMN 3: PREVIEW (40%) */}
+      <div className="w-[40%] bg-black flex items-center justify-center p-8 overflow-hidden relative">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+          
+          {/* Mockup Card */}
+          <div className="w-full max-w-sm">
+             <div className="text-center mb-4">
+                <span className="text-[10px] text-gray-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Live Preview Card</span>
+             </div>
+
+             {/* PREVIEW COMPONENT LOGIC */}
+             {form.category_type === 'digital' ? (
+                 <div className="group relative bg-brand-card border border-white/5 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-auto">
+                    <div className="relative bg-gray-900 pt-4 px-4 pb-0 border-b border-white/5">
+                        <div className="relative rounded-t-xl bg-black border-[4px] border-gray-800 border-b-0 overflow-hidden aspect-[16/10]">
+                            {form.imagePreview ? <img src={form.imagePreview} className="w-full h-full object-cover object-top" /> : <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-600 text-xs">No Image</div>}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                                <div className="bg-black/60 p-2 rounded-full border border-white/10">
+                                   {form.platform === 'mobile' ? <Smartphone size={16} className="text-white"/> : <Globe size={16} className="text-white"/>}
                                 </div>
-                                <div className="absolute top-2 right-2">
-                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${item.category_type === 'digital' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white'}`}>
-                                        {item.category_type === 'digital' ? 'DIGITAL' : 'FISIK'}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="p-3">
-                                <h5 className="text-sm font-bold text-white truncate mb-1" title={item.title}>{item.title}</h5>
-                                <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">
-                                    {item.category_type === 'digital' ? `Tech: ${item.tech_stack?.join(', ')}` : (item.description || "Belum ada deskripsi.")}
-                                </p>
                             </div>
                         </div>
-                    ))}
-                </div>
-            )}
-        </div>
+                    </div>
+                    <div className="p-4 flex flex-col">
+                        <div className="flex flex-wrap gap-1 mb-2">
+                           {form.tech_stack_str.split(',').slice(0,3).map((t,i) => t && <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-gray-400 border border-white/5">{t}</span>)}
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-1">{form.title || 'Judul Project'}</h3>
+                        <p className="text-gray-400 text-xs line-clamp-2 mb-3">{form.longDesc || 'Deskripsi project akan muncul di sini...'}</p>
+                        <div className="flex items-center text-brand-orange text-[10px] font-bold uppercase tracking-widest gap-1 mt-auto">Lihat Case Study <ChevronRight size={12}/></div>
+                    </div>
+                 </div>
+             ) : (
+                 <div className="group relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+                    <div className="aspect-[4/3] bg-black relative">
+                         {form.imagePreview ? <img src={form.imagePreview} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-600 text-xs">No Image</div>}
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                            <h3 className="text-white font-bold text-lg">{form.title || 'Judul Project'}</h3>
+                            <div className="w-8 h-1 bg-brand-orange mt-2 rounded-full"></div>
+                         </div>
+                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <PlayCircle size={32} className="text-white/20"/> 
+                         </div>
+                    </div>
+                 </div>
+             )}
 
-        {data.totalPages > 1 && (
-            <div className="p-3 border-t border-white/10 bg-black/20 flex justify-center items-center gap-4">
-                <button onClick={() => data.setPage((p:number) => Math.max(1, p - 1))} disabled={data.page === 1} className="text-gray-400 hover:text-white disabled:opacity-30"><ChevronLeft size={16} /></button>
-                <span className="text-xs font-bold text-brand-orange">{data.page} / {data.totalPages}</span>
-                <button onClick={() => data.setPage((p:number) => Math.min(data.totalPages, p + 1))} disabled={data.page === data.totalPages} className="text-gray-400 hover:text-white disabled:opacity-30"><ChevronRight size={16} /></button>
-            </div>
-        )}
-    </div>
-);
+             {/* PREVIEW TESTIMONIAL FOOTER */}
+             <div className="mt-4 bg-brand-dark border border-white/10 rounded-xl p-3 flex items-center gap-3">
+                 <div className="w-10 h-10 rounded-full border border-brand-orange/30 p-0.5 shrink-0">
+                    <img src={testiForm.hasTestimonial && testiForm.imagePreview ? testiForm.imagePreview : "https://via.placeholder.com/100"} className="w-full h-full rounded-full object-cover bg-black" />
+                 </div>
+                 <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                       <h5 className="text-xs font-bold text-white">{testiForm.hasTestimonial && testiForm.client_name ? testiForm.client_name : "Tim Teknis"}</h5>
+                       <div className="flex text-yellow-500 gap-0.5">{[...Array(5)].map((_,i) => <Star key={i} size={8} fill={i < testiForm.rating ? "currentColor":"none"}/>)}</div>
+                    </div>
+                    <p className="text-[9px] text-gray-400 italic line-clamp-1">"{testiForm.hasTestimonial && testiForm.content ? testiForm.content : "Verified Installation"}"</p>
+                 </div>
+             </div>
 
-export const AdminGallery = ({ 
-  gallery, 
-  setGallery 
-}: { 
-  gallery: GalleryItem[], 
-  setGallery: (g: GalleryItem[]) => void 
-}) => {
-  const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteItem, generateAINarrative, listData } = useGalleryManager(gallery, setGallery);
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      <div className="lg:col-span-7">
-        <GalleryList data={listData} onEdit={handleEditClick} onDelete={deleteItem} />
-      </div>
-      <div className="lg:col-span-5">
-        <GalleryForm 
-            form={form} 
-            setForm={setForm} 
-            loading={loadingState} 
-            onSubmit={handleSubmit} 
-            onReset={resetForm} 
-            onGenerateAI={generateAINarrative}
-        />
+          </div>
       </div>
     </div>
   );

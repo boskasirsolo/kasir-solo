@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Product, Article, GalleryItem, Testimonial } from './types';
 
@@ -286,8 +285,8 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
   {
     id: 1,
     client_name: "Pak Budi",
-    business_name: "Warkop DKI Reborn",
-    content: "Alat kasirnya bandel banget, udah setahun gak ada masalah. Supportnya juga cepet.",
+    business_name: "Kopi Senja", // Changed from Warkop DKI Reborn to match Gallery item
+    content: "Website & Aplikasi membership dari PT Mesin Kasir Solo beneran ngebantu banget buat ngelola pelanggan. Data rapi, omzet naik.",
     rating: 5,
     image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
     is_featured: true
