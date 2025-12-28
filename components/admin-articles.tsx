@@ -91,7 +91,6 @@ const useArticleManager = (
     const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
     const [selectedKeyword, setSelectedKeyword] = useState<KeywordData | null>(null);
-    const [titleOptions, setTitleOptions] = useState<string[]>([]);
     const [genConfig, setGenConfig] = useState<GenConfig>({
         autoImage: true,
         autoCategory: true,
@@ -102,7 +101,6 @@ const useArticleManager = (
     const [loading, setLoading] = useState({
         uploading: false,
         researching: false,
-        titling: false,
         generatingContent: false
     });
 
@@ -125,7 +123,6 @@ const useArticleManager = (
         });
         setAiStep(0);
         setKeywords([]);
-        setTitleOptions([]);
         setSelectedKeyword(null);
         setSelectedPresets([]);
     };
@@ -157,14 +154,7 @@ const useArticleManager = (
     // --- UTILS: IMAGE GENERATOR (FIXED) ---
     const getAIImageUrl = (prompt: string, style: string) => {
         const seed = Math.floor(Math.random() * 999999);
-        
-        // Sanitize and Shorten Prompt
-        const safePrompt = prompt
-            .replace(/[^a-zA-Z0-9\s]/g, '')
-            .split(' ')
-            .slice(0, 12)
-            .join(' ');
-
+        const safePrompt = prompt.replace(/[^a-zA-Z0-9\s]/g, '').split(' ').slice(0, 12).join(' ');
         let styleKeywords = "";
         switch(style) {
             case 'cinematic': styleKeywords = "cinematic lighting dramatic 8k highly detailed"; break;
@@ -173,7 +163,6 @@ const useArticleManager = (
             case 'studio': styleKeywords = "studio lighting product photography solid background minimal"; break;
             default: styleKeywords = "high quality professional";
         }
-
         const finalPrompt = `${safePrompt} ${styleKeywords}`;
         return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1024&height=576&model=flux&nologo=true&seed=${seed}`;
     };
@@ -187,7 +176,7 @@ const useArticleManager = (
         }));
     };
 
-    // --- AI: STEP 1 - KEYWORD RESEARCH ---
+    // --- AI: STEP 1 - TOPIC RESEARCH (UPDATED) ---
     const researchKeywords = async () => {
         setLoading(prev => ({ ...prev, researching: true }));
         try {
@@ -203,19 +192,15 @@ const useArticleManager = (
                 : "Bisnis UMKM, Mesin Kasir, dan Manajemen Toko";
 
             const prompt = `
-            Act as an Expert Business Consultant & SEO Strategist for Indonesia Market.
-            
+            Act as an Expert Business Consultant for Indonesia.
             FOCUS TOPICS: ${contextTopics}
             
-            Task: Generate 8 potential article topics/keywords.
-            Mix between:
-            1. Trending Issues (Viral now)
-            2. Evergreen Content (Always needed)
-            3. Niche/Specific Problems (High intent)
+            Task: Generate 10 engaging, High-CTR Article Titles/Topics.
+            Mix between: Trending, Evergreen, and Niche problems.
             
             RETURN JSON ARRAY ONLY:
             [
-              { "keyword": "Topik spesifik...", "volume": "High/Med", "competition": "Low/Med", "type": "Trend" }
+              { "keyword": "Full Article Title Here", "volume": "High/Med", "competition": "Low/Med", "type": "Topic" }
             ]
             `;
             
@@ -226,50 +211,20 @@ const useArticleManager = (
             setKeywords(data);
             setAiStep(1);
         } catch (e: any) {
-            alert("Gagal riset keyword: " + e.message);
+            alert("Gagal riset topik: " + e.message);
         } finally {
             setLoading(prev => ({ ...prev, researching: false }));
         }
     };
 
-    // --- AI: STEP 2 - TITLE GENERATION ---
-    const generateTitles = async (keywordData: KeywordData) => {
+    // --- AI: STEP 2 - SELECT TOPIC (Simplified) ---
+    const selectTopic = (keywordData: KeywordData) => {
         setSelectedKeyword(keywordData);
-        setLoading(prev => ({ ...prev, titling: true }));
-        try {
-            await ensureAPIKey();
-            const apiKey = getSmartApiKey();
-            const ai = new GoogleGenAI({ apiKey: apiKey || '' });
-
-            const prompt = `
-            Based on keyword: "${keywordData.keyword}"
-            Target Audience: Business Owners (UMKM) in Indonesia.
-            
-            Generate 5 High-CTR Article Titles with distinct angles:
-            1. "The Guide" (Panduan Lengkap...)
-            2. "The Mistake/Warning" (Jangan Lakukan ini...)
-            3. "The Listicle" (7 Cara/Alat Terbaik...)
-            4. "The Case Study" (Bagaimana Toko X naik omzet...)
-            5. "The Question" (Kenapa bisnis anda...)
-
-            RETURN JSON ARRAY OF STRINGS ONLY:
-            ["Title 1...", "Title 2...", "Title 3...", "Title 4...", "Title 5..."]
-            `;
-
-            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
-            const rawText = response.text?.replace(/```json|```/g, '').trim() || '[]';
-            const data = JSON.parse(rawText);
-
-            setTitleOptions(data);
-            setAiStep(2);
-        } catch (e: any) {
-            alert("Gagal generate judul: " + e.message);
-        } finally {
-            setLoading(prev => ({ ...prev, titling: false }));
-        }
+        setForm(prev => ({ ...prev, title: keywordData.keyword }));
+        setAiStep(2); // Jump directly to Config/Generation
     };
 
-    // --- AI: STEP 3 - PILLAR CONTENT GENERATION (SPLIT STRATEGY) ---
+    // --- AI: STEP 3 - CONTENT GENERATION ---
     const generatePillarContent = async () => {
         if (!form.title) return alert("Pilih judul terlebih dahulu.");
         
@@ -279,13 +234,12 @@ const useArticleManager = (
             const apiKey = getSmartApiKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
-            // --- 1. METADATA GENERATION ---
+            // --- 1. METADATA ---
             const metaPrompt = `
             Role: Editor.
-            Task: Generate metadata for article: "${form.title}".
-            Context: ${selectedKeyword?.keyword || ''}.
+            Task: Generate metadata for: "${form.title}".
             Language: Indonesian.
-            Output JSON: { "excerpt": "Compelling summary (150 chars)", "category": "Based on title", "author": "Amin Maghfuri", "image_search_query": "English visual description for cover image, detailed, relevant" }
+            Output JSON: { "excerpt": "Summary 150 chars", "category": "Business/Tech/Tips", "author": "Amin Maghfuri", "image_search_query": "English visual description" }
             `;
             
             const metaResponse = await ai.models.generateContent({
@@ -294,30 +248,26 @@ const useArticleManager = (
                 config: { responseMimeType: "application/json" }
             });
             
-            let metaData = { excerpt: "", category: "Business", author: "Admin", image_search_query: "business technology" };
+            let metaData = { excerpt: "", category: "Business", author: "Admin", image_search_query: "business" };
             try { 
                 const metaText = metaResponse.text?.replace(/```json|```/g, '').trim() || '{}';
                 metaData = JSON.parse(metaText); 
-            } catch(e) { console.warn("Meta parse failed, using defaults"); }
+            } catch(e) { console.warn("Meta parse failed"); }
 
-            // --- 2. CONTENT GENERATION ---
+            // --- 2. CONTENT ---
             const contentPrompt = `
-            Role: Expert Business Consultant & Senior Copywriter (Amin Maghfuri).
-            Task: Write a COMPREHENSIVE ARTICLE (Deep Dive).
-            Title: "${form.title}"
-            Keyword: "${selectedKeyword?.keyword || form.title}"
+            Role: Expert Business Consultant (Amin Maghfuri).
+            Task: Write a COMPREHENSIVE ARTICLE about: "${form.title}"
             
             INSTRUCTIONS:
-            1. **Tone**: Authoritative, Empathetic, Actionable (Indonesian Business Context).
+            1. **Tone**: Authoritative, Empathetic, Actionable (Indonesian).
             2. **Structure**: 
-               - Start directly with "# ${form.title}"
-               - Introduction (Hook the reader immediately)
-               - Core Concepts (Explain 'Why' & 'What')
-               - Practical Steps (The 'How To' - use bullet points)
-               - Real World Examples (Hypothetical or generic case studies)
-               - Conclusion (Call to Action)
-            3. **Formatting**: Use proper Markdown (H2, H3, Bold, Lists).
-            4. **Length**: Substantial depth, but no fluff.
+               - # Title
+               - Intro (Hook)
+               - Core Concepts
+               - Practical Steps (Bullets)
+               - Conclusion
+            3. **Length**: Deep Dive.
             `;
 
             const contentResponse = await ai.models.generateContent({ 
@@ -326,9 +276,8 @@ const useArticleManager = (
                 config: { maxOutputTokens: 8192 }
             });
             
-            const contentText = contentResponse.text || '# Gagal Generate Konten. Silakan coba lagi.';
+            const contentText = contentResponse.text || '# Error generating content.';
 
-            // --- COMBINE RESULTS ---
             setForm(prev => ({
                 ...prev,
                 content: contentText,
@@ -345,13 +294,7 @@ const useArticleManager = (
             setAiStep(3); // Done
         } catch (e: any) {
             console.error(e);
-            let msg = e.message || "Unknown error";
-            if (msg.includes("429") || msg.includes("Quota")) {
-                msg = "Kuota Harian AI Habis (Limit 429). Sistem mencoba switch API Key, silakan coba klik lagi.";
-            } else if (msg.includes("API key")) {
-                msg = "API Key tidak valid atau belum diset.";
-            }
-            alert(`Gagal generate konten: ${msg}`);
+            alert(`Gagal generate konten: ${e.message}`);
         } finally {
             setLoading(prev => ({ ...prev, generatingContent: false }));
         }
@@ -424,8 +367,7 @@ const useArticleManager = (
             alert(`Artikel berhasil disimpan sebagai ${form.status.toUpperCase()}!`);
         } catch (e: any) { 
             console.error(e); 
-            let msg = e.message || JSON.stringify(e);
-            alert(`Gagal menyimpan:\n${msg}`); 
+            alert(`Gagal menyimpan: ${e.message}`); 
         } finally { 
             setLoading(prev => ({ ...prev, uploading: false })); 
         }
@@ -445,8 +387,8 @@ const useArticleManager = (
     return {
         form, setForm,
         loading,
-        aiState: { step: aiStep, setStep: setAiStep, keywords, selectedKeyword, titleOptions, genConfig, setGenConfig, selectedPresets, togglePreset },
-        actions: { researchKeywords, generateTitles, generatePillarContent, handleSubmit, handleEditClick, resetForm, deleteItem, regenerateCoverImage },
+        aiState: { step: aiStep, setStep: setAiStep, keywords, selectedKeyword, genConfig, setGenConfig, selectedPresets, togglePreset },
+        actions: { researchKeywords, selectTopic, generatePillarContent, handleSubmit, handleEditClick, resetForm, deleteItem, regenerateCoverImage },
         listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
     };
 };
@@ -463,7 +405,7 @@ export const AdminArticles = ({
   return (
     <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b">
       
-      {/* 1. LEFT COLUMN: LIST (20%) */}
+      {/* 1. LEFT COLUMN: LIST */}
       <div className="w-[20%] border-r border-white/5 bg-brand-dark flex flex-col min-w-[250px]">
          <div className="p-4 border-b border-white/5">
             <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -519,7 +461,7 @@ export const AdminArticles = ({
          </div>
       </div>
 
-      {/* 2. CENTER COLUMN: EDITOR / AI STUDIO (30%) */}
+      {/* 2. CENTER COLUMN: EDITOR / AI STUDIO */}
       <div className="w-[30%] border-r border-white/5 bg-brand-dark flex flex-col min-w-[350px]">
          <div className="p-4 border-b border-white/5 flex justify-between items-center">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
@@ -537,9 +479,9 @@ export const AdminArticles = ({
             {/* AI WIZARD */}
             {!form.id && aiState.step < 3 && (
                 <div className="space-y-6">
-                    {/* STEP 0: PRESET CATEGORIES (NEW) */}
+                    {/* STEP 1: PRESET CATEGORIES (NEW) */}
                     <div className={`transition-all ${aiState.step > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
-                        <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-3">Step 1: Pilih Fokus Topik (Bisa &gt; 1)</label>
+                        <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-3">Step 1: Pilih Fokus Topik</label>
                         <div className="grid grid-cols-2 gap-2 mb-4">
                             {PRESET_TOPICS.map((topic) => (
                                 <button
@@ -565,13 +507,13 @@ export const AdminArticles = ({
                         </Button>
                     </div>
 
-                    {/* STEP 1: KEYWORDS */}
+                    {/* STEP 2: SELECT TOPIC/TITLE (Combined) */}
                     {aiState.step >= 1 && (
                         <div className={`transition-all ${aiState.step > 1 ? 'opacity-50 pointer-events-none' : 'animate-fade-in'}`}>
-                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 2: Pilih Keyword</label>
+                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 2: Pilih Judul/Topik</label>
                             <div className="grid grid-cols-1 gap-1.5">
                                 {aiState.keywords.map((k: KeywordData, i: number) => (
-                                    <button key={i} onClick={() => actions.generateTitles(k)} className="text-left p-2.5 rounded border border-white/10 hover:border-brand-orange hover:bg-brand-orange/10 transition-all flex justify-between items-center group">
+                                    <button key={i} onClick={() => actions.selectTopic(k)} className="text-left p-2.5 rounded border border-white/10 hover:border-brand-orange hover:bg-brand-orange/10 transition-all flex justify-between items-center group">
                                         <div>
                                             <span className="font-bold text-xs text-gray-200 group-hover:text-white block">{k.keyword}</span>
                                             <span className="text-[9px] text-gray-500 uppercase tracking-wide">{k.type} • Vol: {k.volume}</span>
@@ -583,29 +525,13 @@ export const AdminArticles = ({
                         </div>
                     )}
 
-                    {/* STEP 2: TITLES */}
-                    {aiState.step >= 1 && aiState.titleOptions.length > 0 && (
-                        <div className={`transition-all ${aiState.step > 2 ? 'opacity-50' : 'animate-fade-in'}`}>
-                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 3: Pilih Judul</label>
-                            {loading.titling ? <LoadingSpinner /> : (
-                                <div className="space-y-1.5">
-                                    {aiState.titleOptions.map((t: string, i: number) => (
-                                        <button key={i} onClick={() => { setForm((p:any) => ({...p, title: t})); aiState.setStep(2); }} className={`w-full text-left p-2 text-xs border rounded transition-all leading-relaxed ${form.title === t ? 'bg-brand-orange text-white border-brand-orange' : 'bg-black/20 border-white/10 hover:border-white/30 text-gray-300'}`}>
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* STEP 3: CONFIG */}
+                    {/* STEP 3: CONFIG & GENERATE */}
                     {aiState.step >= 2 && form.title && (
                         <div className="animate-fade-in border-t border-white/5 pt-4">
-                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 4: Generate Content</label>
+                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Step 3: Konfigurasi & Generate</label>
                             
                             <div className="mb-3">
-                                <label className="text-[10px] text-gray-500 mb-1 block">Image Style</label>
+                                <label className="text-[10px] text-gray-500 mb-1 block">Gaya Gambar</label>
                                 <div className="grid grid-cols-2 gap-1">
                                     {(['cinematic', 'cyberpunk', 'corporate', 'studio'] as const).map((style) => (
                                         <button 
@@ -683,7 +609,7 @@ export const AdminArticles = ({
          </div>
       </div>
 
-      {/* 3. RIGHT COLUMN: LIVE PREVIEW (50%) */}
+      {/* 3. RIGHT COLUMN: LIVE PREVIEW */}
       <div className="w-[50%] bg-black flex flex-col relative overflow-hidden">
          <div className="p-4 border-b border-white/10 bg-brand-dark/50 flex justify-between items-center backdrop-blur-sm z-10 sticky top-0">
             <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
@@ -695,11 +621,9 @@ export const AdminArticles = ({
          </div>
 
          <div className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
-            {/* Background Grain */}
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none fixed"></div>
             
             <div className="max-w-3xl mx-auto relative z-10">
-                {/* Header Preview */}
                 <div className="mb-8">
                     {form.category && <span className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-2 block">{form.category}</span>}
                     <h1 className="text-4xl font-display font-bold text-white mb-4 leading-tight">{form.title || "Judul Artikel..."}</h1>
@@ -720,7 +644,6 @@ export const AdminArticles = ({
                     )}
                 </div>
 
-                {/* Content Preview */}
                 <SimpleMarkdown content={form.content} />
             </div>
          </div>

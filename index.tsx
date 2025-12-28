@@ -24,10 +24,10 @@ const AppContent = () => {
 
   const [session, setSession] = useState<any>(null);
   
-  // Data State
+  // Data State - Initialize Articles empty to prevent ghosting
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [gallery, setGallery] = useState<GalleryItem[]>(INITIAL_GALLERY);
-  const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
+  const [articles, setArticles] = useState<Article[]>([]); 
   const [testimonials, setTestimonials] = useState<Testimonial[]>(INITIAL_TESTIMONIALS);
 
   // Config State
@@ -45,15 +45,11 @@ const AppContent = () => {
   });
 
   // --- Router Bridge ---
-  // Convert URL path to a simplified "Page ID" string for Layout props
   const getCurrentPageId = () => {
-    // Standardize path extraction for Layout active state
-    // Splits /shop/detail -> returns 'shop' to keep nav active
     const path = location.pathname.split('/')[1] || 'home';
     return path;
   };
 
-  // Convert old "setPage" calls to Router "navigate"
   const handleNavigation = (pageId: string) => {
     if (pageId === 'home') navigate('/');
     else navigate(`/${pageId}`);
@@ -61,9 +57,46 @@ const AppContent = () => {
     window.scrollTo(0, 0);
   };
 
+  // --- Helper: Smart Date Parser ---
+  const parseDate = (dateStr: string) => {
+    if (!dateStr) return new Date(0);
+    
+    // 1. Try standard parse
+    const stdDate = new Date(dateStr);
+    if (!isNaN(stdDate.getTime())) return stdDate;
+
+    // 2. Manual parse for Indonesian formats
+    const months: {[key: string]: number} = {
+      'Januari': 0, 'Jan': 0, 'Februari': 1, 'Feb': 1, 'Maret': 2, 'Mar': 2,
+      'April': 3, 'Apr': 3, 'Mei': 4, 'May': 4, 'Juni': 5, 'Jun': 5,
+      'Juli': 6, 'Jul': 6, 'Agustus': 7, 'Agu': 7, 'Aug': 7, 'September': 8, 'Sep': 8,
+      'Oktober': 9, 'Okt': 9, 'Oct': 9, 'November': 10, 'Nov': 10, 'Desember': 11, 'Des': 11
+    };
+
+    try {
+      const parts = dateStr.split(' ');
+      if (parts.length >= 3) {
+        const day = parseInt(parts[0]);
+        const monthStr = parts[1];
+        const year = parseInt(parts[2]);
+        const monthIndex = months[monthStr];
+        
+        if (monthIndex !== undefined) {
+          return new Date(year, monthIndex, day);
+        }
+      }
+    } catch (e) { return new Date(0); }
+    
+    return new Date(0);
+  };
+
   // --- Initial Data Fetching ---
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+        // Fallback for Demo Mode (No DB Connection)
+        setArticles(INITIAL_ARTICLES);
+        return;
+    }
 
     const fetchData = async () => {
       const { data: prodData } = await supabase.from('products').select('*');
@@ -72,8 +105,28 @@ const AppContent = () => {
       const { data: galData } = await supabase.from('gallery').select('*');
       if (galData && galData.length > 0) setGallery(galData);
 
+      // Fetch Articles & Sort
       const { data: artData } = await supabase.from('articles').select('*');
-      if (artData && artData.length > 0) setArticles(artData);
+      if (artData && artData.length > 0) {
+        const mappedArticles = artData.map((item: any) => ({
+          ...item,
+          // FIX: Map DB column 'image_url' to Frontend 'image'
+          image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
+          // FIX: Map DB column 'read_time' to Frontend 'readTime'
+          readTime: item.read_time || item.readTime || '5 min read',
+          // Ensure Date exists
+          date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+        })).sort((a: any, b: any) => {
+           // Sort Descending (Newest First) using Smart Parser or Created_At
+           const dateA = a.created_at ? new Date(a.created_at) : parseDate(a.date);
+           const dateB = b.created_at ? new Date(b.created_at) : parseDate(b.date);
+           return dateB.getTime() - dateA.getTime();
+        });
+        setArticles(mappedArticles);
+      } else {
+        // If DB is empty or connection fails, show initial mock data? 
+        // User requested NO dummy data ghosting, so we leave it empty if DB returns 0.
+      }
       
       const { data: testiData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
       if (testiData && testiData.length > 0) setTestimonials(testiData);
