@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home } from 'lucide-react';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home, ArrowLeft } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig, Testimonial, Article } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 
 // --- Login Component (SECURED) ---
 export const AdminLogin = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,6 +49,17 @@ export const AdminLogin = () => {
     <div className="min-h-screen flex items-center justify-center animate-fade-in bg-brand-dark relative overflow-hidden">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-orange/10 rounded-full blur-[150px] animate-pulse-slow"></div>
       
+      {/* Back to Home Button */}
+      <button 
+        onClick={() => navigate('/')}
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-gray-500 hover:text-brand-orange transition-colors group"
+      >
+        <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 border border-white/5 group-hover:border-brand-orange/30 transition-all">
+            <ArrowLeft size={18} />
+        </div>
+        <span className="text-xs font-bold uppercase tracking-widest hidden md:inline">Kembali ke Beranda</span>
+      </button>
+
       <form 
         onSubmit={handleLogin}
         className="bg-brand-card p-10 rounded-2xl border border-white/10 w-full max-w-md shadow-neon z-10"
