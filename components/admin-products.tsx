@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, formatRupiah, callGeminiWithRotation } from '../utils';
 
-const ITEMS_PER_PAGE = 6; 
+const ITEMS_PER_PAGE = 8; // Increased items per page since list is wider
 
 const useProductManager = (
     products: Product[], 
@@ -16,13 +16,15 @@ const useProductManager = (
         name: '',
         price: '',
         desc: '',
-        shortDesc: '',
+        shortDesc: '', // Used as Keywords/Features context
         imagePreview: '',
         uploadFile: null as File | null
     });
 
     const [loadingState, setLoadingState] = useState({
-        generatingAI: false,
+        generatingTitle: false,
+        generatingDesc: false,
+        generatingImage: false,
         uploading: false
     });
 
@@ -54,46 +56,70 @@ const useProductManager = (
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    // --- AI GENERATORS ---
+
+    const generateAITitle = async () => {
+        if (!form.shortDesc) return alert("Isi 'Keywords / Fitur' terlebih dahulu sebagai ide.");
+        setLoadingState(p => ({...p, generatingTitle: true}));
+        try {
+            const prompt = `Create a short, professional, and catchy product name (Title) for a POS/Cashier System.
+            Context/Features: ${form.shortDesc}.
+            Language: Indonesian.
+            Output: JUST the product name (max 5 words). No quotes.`;
+            
+            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+            setForm(p => ({...p, name: res.text?.trim() || p.name}));
+        } catch(e) { alert("Gagal generate judul."); }
+        finally { setLoadingState(p => ({...p, generatingTitle: false})); }
+    };
+
     const generateAIDesc = async () => {
-        if (!form.name || !form.shortDesc) return alert("Isi Nama dan Keyword Fitur dulu.");
-        
-        setLoadingState(prev => ({ ...prev, generatingAI: true }));
+        if (!form.name && !form.shortDesc) return alert("Isi Nama Produk atau Keywords dulu.");
+        setLoadingState(prev => ({ ...prev, generatingDesc: true }));
 
         try {
             const prompt = `
-            Role: Expert E-commerce Copywriter & SEO Specialist.
-            Task: Write a high-converting product description (Sales Copy).
-            Product: ${form.name}
-            Features/Context: ${form.shortDesc}
-            
-            STRICT RULES:
-            1. DIRECT OUTPUT ONLY: Do NOT use "Tentu", "Berikut draf", "Ini deskripsinya". Start directly with the hook.
-            2. Language: Indonesian (Persuasive, Benefit-driven).
-            3. Structure: 
-               - Hook (Problem/Solution)
-               - Key Benefits (Bulleted or short sentences)
-               - Closing/Call to Action
-            4. SEO: Include transactional keywords relevant to POS/Kasir.
-            5. Length: Max 3 paragraphs.
+            Role: Expert E-commerce Copywriter.
+            Task: Write a persuasive product description for: "${form.name}".
+            Features: ${form.shortDesc}.
+            Format: Indonesian. 2 Paragraphs + Bullet points of benefits. High conversion tone.
             `;
-            
-            // USE CENTRALIZED ROTATION CALLER
-            const response = await callGeminiWithRotation({ 
-                model: 'gemini-3-flash-preview', 
-                contents: prompt 
-            });
-            
+            const response = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
             setForm(prev => ({ ...prev, desc: response.text?.trim() || '' }));
-        } catch (e: any) { 
-            console.error(e);
-            alert(`AI Error: ${e.message}`); 
-        } 
-        finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
+        } catch (e: any) { alert(`AI Error: ${e.message}`); } 
+        finally { setLoadingState(prev => ({ ...prev, generatingDesc: false })); }
+    };
+
+    const generateAIImage = async () => {
+        if (!form.name) return alert("Isi Nama Produk untuk referensi gambar.");
+        setLoadingState(p => ({...p, generatingImage: true}));
+        try {
+            // Using Pollinations for instant image
+            const seed = Math.floor(Math.random() * 999999);
+            const cleanName = form.name.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 50);
+            const prompt = `${cleanName} modern point of sale hardware machine, sleek, white background, high quality, 8k, realistic product photography`;
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=800&model=flux&nologo=true&seed=${seed}`;
+            
+            // Preload to check availability
+            const img = new Image();
+            img.src = url;
+            img.onload = () => {
+                setForm(p => ({...p, imagePreview: url, uploadFile: null}));
+                setLoadingState(p => ({...p, generatingImage: false}));
+            };
+            img.onerror = () => {
+                alert("Gagal generate gambar. Coba lagi.");
+                setLoadingState(p => ({...p, generatingImage: false}));
+            }
+        } catch(e) { setLoadingState(p => ({...p, generatingImage: false})); }
     };
 
     const handleSubmit = async () => {
         if (!form.name || !form.price) return alert("Wajib isi Nama dan Harga");
-        if (!CONFIG.CLOUDINARY_CLOUD_NAME) return alert("Cloudinary Config Missing");
+        
+        // Allow submitting without Cloudinary if using AI Generated URL (Pollinations)
+        // Only check Cloudinary if uploading a FILE
+        if (form.uploadFile && !CONFIG.CLOUDINARY_CLOUD_NAME) return alert("Cloudinary Config Missing");
 
         setLoadingState(prev => ({ ...prev, uploading: true }));
         try {
@@ -148,91 +174,108 @@ const useProductManager = (
         handleEditClick,
         resetForm,
         deleteProduct,
+        generateAITitle,
         generateAIDesc,
+        generateAIImage,
         listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
     };
 };
 
 const ProductForm = ({ 
-    form, setForm, loading, onSubmit, onReset, onGenerateAI 
+    form, setForm, loading, onSubmit, onReset, onGenTitle, onGenDesc, onGenImage 
 }: {
-    form: any, setForm: any, loading: any, onSubmit: any, onReset: any, onGenerateAI: any
+    form: any, setForm: any, loading: any, onSubmit: any, onReset: any, onGenTitle: any, onGenDesc: any, onGenImage: any
 }) => (
-    <div className="bg-brand-dark p-6 rounded-xl border border-white/5 h-fit sticky top-6">
-        <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                {form.id ? <Edit size={18} className="text-brand-orange"/> : <Tag size={18} className="text-brand-orange"/>}
-                {form.id ? "Edit Produk" : "Tambah Baru"}
+    <div className="bg-brand-dark p-5 rounded-xl border border-white/5 h-fit shadow-2xl relative overflow-hidden">
+        {/* Glow Effect */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange/10 rounded-full blur-[50px] pointer-events-none"></div>
+
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5 relative z-10">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                {form.id ? <Edit size={16} className="text-brand-orange"/> : <Tag size={16} className="text-brand-orange"/>}
+                {form.id ? "EDIT PRODUK" : "PRODUK BARU"}
             </h3>
             {form.id && (
-                <button onClick={onReset} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
+                <button onClick={onReset} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
                     <XIcon size={12} /> Batal
                 </button>
             )}
         </div>
 
-        <div className="mb-4">
-            {form.imagePreview && (
-                <div className="mb-3 relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
-                    <img src={form.imagePreview} alt="Preview" className="w-full h-full object-contain" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <p className="text-white text-xs font-bold">Ganti Gambar</p>
+        {/* IMAGE SECTION */}
+        <div className="mb-5">
+            <div className="relative w-full aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/10 group mb-2">
+                {form.imagePreview ? (
+                    <img src={form.imagePreview} alt="Preview" className="w-full h-full object-contain p-2" />
+                ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-1">
+                        <ImageIcon size={24} />
+                        <span className="text-[9px]">Preview Gambar</span>
                     </div>
+                )}
+                {/* Image Actions Overlay */}
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
+                     <button onClick={onGenImage} disabled={loading.generatingImage} className="w-full py-2 bg-blue-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-500">
+                        {loading.generatingImage ? <LoadingSpinner size={12}/> : <><Wand2 size={12}/> Generate AI</>}
+                     </button>
+                     <label className="w-full py-2 bg-white/10 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-white/20 cursor-pointer border border-white/20">
+                        <UploadCloud size={12}/> Upload
+                        <input type="file" accept="image/*" onChange={(e) => {
+                            const file = e.target.files ? e.target.files[0] : null;
+                            if (file) setForm((prev: any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
+                        }} className="hidden" />
+                     </label>
                 </div>
-            )}
-            <div className="border border-dashed border-white/20 rounded-lg p-4 text-center hover:border-brand-orange/50 transition-colors bg-brand-card/30">
-                <input type="file" accept="image/*" onChange={(e) => {
-                    const file = e.target.files ? e.target.files[0] : null;
-                    if (file) setForm((prev: any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
-                }} className="hidden" id="prod-upload" />
-                <label htmlFor="prod-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                    {!form.imagePreview && <UploadCloud size={24} className="text-gray-400" />}
-                    <span className="text-gray-400 text-xs font-bold">{form.uploadFile ? form.uploadFile.name : (form.id ? "Klik untuk ganti foto" : "Upload Foto Produk")}</span>
-                </label>
             </div>
         </div>
 
-        <div className="space-y-4">
-            <div>
-                <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Nama Produk</label>
-                <Input value={form.name} onChange={e => setForm((prev:any) => ({...prev, name: e.target.value}))} placeholder="Nama Produk..." className="py-2 text-sm" />
+        <div className="space-y-4 relative z-10">
+            {/* KEYWORDS (Context for AI) */}
+            <div className="bg-brand-orange/5 p-3 rounded-lg border border-brand-orange/20">
+                <label className="text-[9px] text-brand-orange uppercase font-bold tracking-wider mb-1 block flex items-center gap-1">
+                    <Sparkles size={10} /> Keywords / Fitur (AI Context)
+                </label>
+                <input 
+                    value={form.shortDesc} 
+                    onChange={e => setForm((prev:any) => ({...prev, shortDesc: e.target.value}))} 
+                    placeholder="e.g. Android, Touchscreen, Murah..." 
+                    className="w-full bg-black/40 border border-brand-orange/30 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange placeholder-gray-600"
+                />
             </div>
+
+            {/* NAME */}
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Nama Produk</label>
+                    <button onClick={onGenTitle} disabled={loading.generatingTitle} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
+                        {loading.generatingTitle ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Name</>}
+                    </button>
+                </div>
+                <Input value={form.name} onChange={e => setForm((prev:any) => ({...prev, name: e.target.value}))} placeholder="Nama Produk..." className="py-2 text-xs" />
+            </div>
+
+            {/* PRICE */}
             <div>
                 <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Harga (IDR)</label>
                 <div className="relative">
-                    <DollarSign size={14} className="absolute left-3 top-3 text-gray-500"/>
-                    <Input value={form.price} onChange={e => setForm((prev:any) => ({...prev, price: e.target.value}))} placeholder="0" type="number" className="pl-9 py-2 text-sm" />
+                    <DollarSign size={12} className="absolute left-3 top-3 text-gray-500"/>
+                    <Input value={form.price} onChange={e => setForm((prev:any) => ({...prev, price: e.target.value}))} placeholder="0" type="number" className="pl-8 py-2 text-xs" />
                 </div>
             </div>
 
-            <div className="p-3 bg-brand-orange/5 rounded-lg border border-brand-orange/20">
-                <div className="flex justify-between items-center mb-2">
-                    <label className="text-[10px] text-brand-orange uppercase font-bold tracking-wider flex items-center gap-1"><Sparkles size={12} /> AI Copywriter</label>
-                </div>
-                <div className="flex gap-2">
-                    <input 
-                        value={form.shortDesc} 
-                        onChange={e => setForm((prev:any) => ({...prev, shortDesc: e.target.value}))} 
-                        placeholder="Keyword: canggih, murah..." 
-                        className="bg-brand-card border border-white/10 rounded px-3 text-xs w-full focus:outline-none focus:border-brand-orange"
-                    />
-                    <button 
-                        onClick={onGenerateAI} 
-                        disabled={loading.generatingAI} 
-                        className="bg-brand-action text-white rounded px-3 py-1 flex items-center justify-center hover:bg-brand-actionGlow disabled:opacity-50"
-                    >
-                        {loading.generatingAI ? <LoadingSpinner /> : <Sparkles size={16} />}
+            {/* DESCRIPTION */}
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Deskripsi</label>
+                    <button onClick={onGenDesc} disabled={loading.generatingDesc} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
+                        {loading.generatingDesc ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Desc</>}
                     </button>
                 </div>
+                <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-28 text-xs leading-relaxed custom-scrollbar" />
             </div>
 
-            <div>
-                <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Deskripsi</label>
-                <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-32 text-sm leading-relaxed" />
-            </div>
-
-            <Button onClick={onSubmit} disabled={loading.uploading} className="w-full py-2.5 text-sm">
-                {loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={16}/> Simpan Perubahan</> : <><Plus size={16}/> Tambah Produk</>)}
+            <Button onClick={onSubmit} disabled={loading.uploading} className="w-full py-3 text-xs font-bold shadow-neon">
+                {loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={14}/> UPDATE</> : <><Plus size={14}/> SIMPAN</>)}
             </Button>
         </div>
     </div>
@@ -243,7 +286,7 @@ const ProductList = ({
 }: { 
     data: any, onEdit: any, onDelete: any 
 }) => (
-    <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden">
+    <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden shadow-xl">
         <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
              <div className="relative flex-grow">
                 <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
@@ -255,29 +298,34 @@ const ProductList = ({
                     className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange"
                 />
              </div>
-             <span className="text-[10px] font-bold text-gray-500 uppercase">Total: {data.paginated.length}</span>
+             <span className="text-[10px] font-bold text-gray-500 uppercase bg-white/5 px-2 py-1 rounded">Total: {data.paginated.length}</span>
         </div>
         
-        <div className="flex-grow overflow-y-auto p-4 custom-scrollbar min-h-[400px]">
+        <div className="flex-grow overflow-y-auto p-4 custom-scrollbar min-h-[500px]">
             {data.paginated.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 text-xs">Produk tidak ditemukan.</div>
+                <div className="text-center py-20 text-gray-500 text-xs">
+                    <Search size={32} className="mx-auto mb-2 opacity-20"/>
+                    Produk tidak ditemukan.
+                </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                     {data.paginated.map((p: Product) => (
-                        <div key={p.id} className="group relative bg-brand-card border border-white/5 rounded-lg overflow-hidden hover:border-brand-orange transition-all hover:shadow-neon-text/20">
-                            <div className="relative h-32 bg-black overflow-hidden border-b border-white/5">
+                        <div key={p.id} className="group relative bg-brand-card border border-white/5 rounded-lg overflow-hidden hover:border-brand-orange transition-all hover:shadow-neon-text/20 flex flex-col h-full">
+                            <div className="relative aspect-square bg-black overflow-hidden border-b border-white/5">
                                 <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                    <button onClick={() => onEdit(p)} className="p-2 bg-blue-500/20 text-blue-400 rounded-full hover:bg-blue-500 hover:text-white transition-colors"><Edit size={16} /></button>
-                                    <button onClick={() => onDelete(p.id)} className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-colors"><Trash2 size={16} /></button>
+                                    <button onClick={() => onEdit(p)} className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-500 shadow-lg"><Edit size={14} /></button>
+                                    <button onClick={() => onDelete(p.id)} className="p-2 bg-red-600 text-white rounded-full hover:bg-red-500 shadow-lg"><Trash2 size={14} /></button>
                                 </div>
                                 <div className="absolute top-2 right-2">
-                                     <span className="bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-white border border-white/10">{formatRupiah(p.price)}</span>
+                                     <span className="bg-black/70 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-brand-orange font-bold border border-brand-orange/30 shadow-black shadow-lg">
+                                        {formatRupiah(p.price)}
+                                     </span>
                                 </div>
                             </div>
-                            <div className="p-3">
-                                <h5 className="text-sm font-bold text-white truncate mb-1" title={p.name}>{p.name}</h5>
-                                <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed h-8">
+                            <div className="p-3 flex-grow flex flex-col">
+                                <h5 className="text-xs font-bold text-white line-clamp-2 mb-1 leading-snug" title={p.name}>{p.name}</h5>
+                                <p className="text-[9px] text-gray-500 line-clamp-2 leading-relaxed flex-grow">
                                     {p.description || "Belum ada deskripsi."}
                                 </p>
                             </div>
@@ -289,9 +337,9 @@ const ProductList = ({
 
         {data.totalPages > 1 && (
             <div className="p-3 border-t border-white/10 bg-black/20 flex justify-center items-center gap-4">
-                <button onClick={() => data.setPage((p:number) => Math.max(1, p - 1))} disabled={data.page === 1} className="text-gray-400 hover:text-white disabled:opacity-30"><ChevronLeft size={16} /></button>
-                <span className="text-xs font-bold text-brand-orange">{data.page} / {data.totalPages}</span>
-                <button onClick={() => data.setPage((p:number) => Math.min(data.totalPages, p + 1))} disabled={data.page === data.totalPages} className="text-gray-400 hover:text-white disabled:opacity-30"><ChevronRight size={16} /></button>
+                <button onClick={() => data.setPage((p:number) => Math.max(1, p - 1))} disabled={data.page === 1} className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30"><ChevronLeft size={14} /></button>
+                <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-0.5 rounded">{data.page} / {data.totalPages}</span>
+                <button onClick={() => data.setPage((p:number) => Math.min(data.totalPages, p + 1))} disabled={data.page === data.totalPages} className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30"><ChevronRight size={14} /></button>
             </div>
         )}
     </div>
@@ -304,21 +352,26 @@ export const AdminProducts = ({
   products: Product[], 
   setProducts: (p: Product[]) => void 
 }) => {
-  const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, generateAIDesc, listData } = useProductManager(products, setProducts);
+  const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, generateAITitle, generateAIDesc, generateAIImage, listData } = useProductManager(products, setProducts);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      <div className="lg:col-span-7">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+      {/* List Column (75%) */}
+      <div className="lg:col-span-3 order-2 lg:order-1">
          <ProductList data={listData} onEdit={handleEditClick} onDelete={deleteProduct} />
       </div>
-      <div className="lg:col-span-5">
+      
+      {/* Editor Column (25%) */}
+      <div className="lg:col-span-1 order-1 lg:order-2 sticky top-6">
          <ProductForm 
             form={form} 
             setForm={setForm} 
             loading={loadingState} 
             onSubmit={handleSubmit} 
             onReset={resetForm} 
-            onGenerateAI={generateAIDesc}
+            onGenTitle={generateAITitle}
+            onGenDesc={generateAIDesc}
+            onGenImage={generateAIImage}
          />
       </div>
     </div>
