@@ -16,6 +16,7 @@ import { AboutPage } from './pages/about';
 import { AdminDashboard, AdminLogin } from './pages/admin';
 import { CheckoutPage } from './pages/checkout';
 import { InnovationPage } from './pages/innovation';
+import { WebsiteServicePage, WebAppServicePage, SeoServicePage, MaintenanceServicePage } from './pages/services';
 import { NotFoundPage } from './pages/not-found';
 
 const AppContent = () => {
@@ -55,15 +56,14 @@ const AppContent = () => {
 
   // --- Router Bridge ---
   const getCurrentPageId = () => {
-    const path = location.pathname.split('/')[1] || 'home';
+    // Return path without leading slash
+    const path = location.pathname.substring(1) || 'home';
     return path;
   };
 
   const handleNavigation = (pageId: string) => {
     if (pageId === 'home') navigate('/');
     else navigate(`/${pageId}`);
-    
-    // window.scrollTo(0, 0); // Handled by useEffect now
   };
 
   // --- Helper: Smart Date Parser ---
@@ -219,6 +219,12 @@ const AppContent = () => {
           <Route path="/articles" element={<ArticlesPage articles={articles} products={products} />} />
           <Route path="/articles/:slug" element={<ArticleDetailPage articles={articles} products={products} />} />
           
+          {/* New Service Routes */}
+          <Route path="/services/website" element={<WebsiteServicePage />} />
+          <Route path="/services/webapp" element={<WebAppServicePage />} />
+          <Route path="/services/seo" element={<SeoServicePage />} />
+          <Route path="/services/maintenance" element={<MaintenanceServicePage />} />
+
           <Route path="/about" element={<AboutPage config={config} />} />
           
           <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />

@@ -7,7 +7,7 @@ import { SibosWidget } from './sibos-core/index'; // CRITICAL FIX: Specific impo
 import { INITIAL_PRODUCTS } from '../utils';
 
 // --- DATA & CONSTANTS ---
-// Structure updated to support Dropdown
+// Structure updated to support Dropdown with REAL routes
 const NAV_ITEMS = [
   { id: 'home', label: 'Beranda' },
   { id: 'innovation', label: 'Inovasi' }, 
@@ -16,10 +16,10 @@ const NAV_ITEMS = [
     id: 'services-group', 
     label: 'Layanan',
     children: [
-      { id: 'home', label: 'Pembuatan Website' },
-      { id: 'home', label: 'Web App Development' },
-      { id: 'home', label: 'Optimasi SEO' },
-      { id: 'home', label: 'Maintenance' },
+      { id: 'services/website', label: 'Pembuatan Website' },
+      { id: 'services/webapp', label: 'Web App Development' },
+      { id: 'services/seo', label: 'Optimasi SEO' },
+      { id: 'services/maintenance', label: 'Maintenance' },
       { id: 'gallery', label: 'Portofolio' },
     ]
   },
@@ -129,7 +129,7 @@ const DesktopNav = ({
           // DROPDOWN MENU
           <div className="relative group">
             <button className={`flex items-center gap-1 text-sm font-bold tracking-wide transition-all duration-300 ${
-              item.children.some(child => child.id === current)
+              item.children.some(child => child.id === current || current.startsWith(child.id))
                 ? 'text-brand-orange' 
                 : 'text-gray-400 hover:text-white'
             }`}>
@@ -137,14 +137,14 @@ const DesktopNav = ({
             </button>
             
             {/* Dropdown Content */}
-            <div className="absolute left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 z-50 min-w-[200px]">
+            <div className="absolute left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 z-50 min-w-[220px]">
                <div className="bg-brand-dark border border-white/10 rounded-xl shadow-2xl p-2 flex flex-col gap-1 overflow-hidden">
                   {item.children.map((child, idx) => (
                     <button 
                       key={idx}
                       onClick={() => setPage(child.id)}
                       className={`text-left px-4 py-3 rounded-lg text-sm font-bold transition-colors ${
-                        current === child.id && child.id !== 'home' 
+                        current === child.id 
                           ? 'bg-brand-orange text-white' 
                           : 'text-gray-400 hover:bg-white/5 hover:text-white'
                       }`}
@@ -218,7 +218,7 @@ const MobileMenuOverlay = ({
                       <NavLink 
                         key={idx}
                         label={child.label} 
-                        active={current === child.id && child.id !== 'home'} 
+                        active={current === child.id} 
                         onClick={() => { setPage(child.id); onClose(); }} 
                         mobile
                         isChild
@@ -251,6 +251,9 @@ const Header = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { totalItems } = useCart(); 
+
+  // Fix: Extract main route for 'services' to highlight parent if needed, though exact match preferred in items
+  // Passing full currentPage string to DesktopNav handles highlighting fine with exact string match logic added
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-brand-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl">
