@@ -303,7 +303,8 @@ const useArticleManager = (
             status: item.status || 'published',
             scheduled_for: item.scheduled_for || '',
             type: item.type || 'cluster',
-            pillar_id: item.pillar_id || 0,
+            // FIX: If it's a pillar, set pillar_id to its own ID so switching to cluster mode auto-selects it
+            pillar_id: item.type === 'pillar' ? item.id : (item.pillar_id || 0),
             cluster_ideas: item.cluster_ideas || [],
             scheduleStart: ''
         });
@@ -867,7 +868,13 @@ export const AdminArticles = ({
                         {/* Accordion Header */}
                         <div 
                             className="p-3 cursor-pointer flex gap-3 items-center"
-                            onClick={() => listData.setExpandedPillarId(isExpanded ? null : pillar.id)}
+                            onClick={() => {
+                                listData.setExpandedPillarId(isExpanded ? null : pillar.id);
+                                // AUTO-SELECT PILLAR ID WHEN CLICKING ACCORDION (If NOT collapsing)
+                                if (!isExpanded) {
+                                    setForm(prev => ({...prev, pillar_id: pillar.id}));
+                                }
+                            }}
                         >
                             <img src={pillar.image} className="w-10 h-10 rounded object-cover bg-black" />
                             <div className="flex-1 min-w-0">
@@ -1041,7 +1048,8 @@ export const AdminArticles = ({
                                 className="w-full bg-black text-white text-xs border border-white/10 rounded px-2 py-2 focus:border-brand-orange outline-none"
                             >
                                 <option value={0}>-- Pilih Pillar Page --</option>
-                                {availablePillars.map(p => (
+                                {/* CHANGED: Map from listData.paginated instead of availablePillars */}
+                                {listData.paginated.map(p => (
                                     <option key={p.id} value={p.id}>{p.title}</option>
                                 ))}
                             </select>
@@ -1263,8 +1271,8 @@ export const AdminArticles = ({
                             <Input value={form.category} onChange={e => setForm((p:any) => ({...p, category: e.target.value}))} placeholder="Kategori" className="text-[10px] py-1.5 w-1/3"/>
                             
                             <div className="flex-1 flex gap-2">
-                                {/* Author Avatar Trigger */}
-                                <div className="relative group w-8 h-8 rounded-full border border-white/20 bg-black overflow-hidden shrink-0 cursor-pointer">
+                                {/* Author Avatar Trigger - STYLED FOR VISIBILITY */}
+                                <div className="relative group w-8 h-8 rounded-full border border-white/20 bg-black overflow-hidden shrink-0 cursor-pointer hover:border-brand-orange transition-colors">
                                     <img 
                                         src={form.authorAvatar || "https://via.placeholder.com/100"} 
                                         alt="Author" 
@@ -1279,7 +1287,7 @@ export const AdminArticles = ({
                                             if(file) setForm((p:any) => ({...p, uploadAuthorFile: file, authorAvatar: URL.createObjectURL(file)}));
                                         }}
                                     />
-                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Edit size={10} className="text-white"/>
                                     </div>
                                 </div>
