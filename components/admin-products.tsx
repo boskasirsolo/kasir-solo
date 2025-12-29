@@ -336,7 +336,7 @@ const ProductForm = ({
                         {loading.generatingDesc ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Desc</>}
                     </button>
                 </div>
-                <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-32 text-xs leading-relaxed custom-scrollbar" />
+                <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-32 text-xs leading-relaxed custom-scrollbar whitespace-pre-line" />
             </div>
         </div>
 
