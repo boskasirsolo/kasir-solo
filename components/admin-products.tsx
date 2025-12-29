@@ -1,11 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw, Filter } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, formatRupiah, callGeminiWithRotation, formatNumberInput, cleanNumberInput } from '../utils';
 
-const ITEMS_PER_PAGE = 8; // Pastikan limit 8 produk per halaman
+const ITEMS_PER_PAGE = 8; 
+
+// Preset Categories
+const PRODUCT_CATEGORIES = [
+    "Android POS",
+    "Windows POS",
+    "Smart Kiosk",
+    "Retail POS",
+    "Hardware",
+    "Software",
+    "Accessories"
+];
 
 const useProductManager = (
     products: Product[], 
@@ -14,9 +25,10 @@ const useProductManager = (
     const [form, setForm] = useState({
         id: null as number | null,
         name: '',
+        category: PRODUCT_CATEGORIES[0], // Default category
         price: '',
         desc: '',
-        shortDesc: '', // Used as Keywords/Features context
+        shortDesc: '', 
         imagePreview: '',
         uploadFile: null as File | null
     });
@@ -30,16 +42,18 @@ const useProductManager = (
 
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('All'); // Filter state
 
-    // --- PENTING: Reset ke halaman 1 saat user mengetik di pencarian ---
+    // Reset pagination when filter changes
     useEffect(() => {
         setPage(1);
-    }, [searchTerm]);
+    }, [searchTerm, selectedCategory]);
 
     const resetForm = () => {
         setForm({
             id: null,
             name: '',
+            category: PRODUCT_CATEGORIES[0],
             price: '',
             desc: '',
             shortDesc: '',
@@ -52,13 +66,13 @@ const useProductManager = (
         setForm({
             id: p.id,
             name: p.name,
-            price: formatNumberInput(p.price), // Format initially from number
+            category: p.category || PRODUCT_CATEGORIES[0],
+            price: formatNumberInput(p.price), 
             desc: p.description,
             shortDesc: '',
             imagePreview: p.image,
             uploadFile: null
         });
-        // Scroll handled inside the sticky container, no window scroll needed
     };
 
     // --- AI GENERATORS ---
@@ -69,6 +83,7 @@ const useProductManager = (
         try {
             const prompt = `Create a short, professional, and catchy product name (Title) for a POS/Cashier System.
             Context/Features: ${form.shortDesc}.
+            Category: ${form.category}.
             Language: Indonesian.
             Output: JUST the product name (max 5 words). No quotes.`;
             
@@ -86,6 +101,7 @@ const useProductManager = (
             const prompt = `
             Role: Expert E-commerce Copywriter.
             Task: Write a persuasive product description for: "${form.name}".
+            Category: ${form.category}.
             Features: ${form.shortDesc}.
             Format: Indonesian.
             
@@ -97,7 +113,6 @@ const useProductManager = (
             5. Start directly with the Hook. No "Here is the description".
             `;
             const response = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            // Clean up any lingering stars just in case
             const cleanText = (response.text?.trim() || '').replace(/\*\*/g, '');
             setForm(prev => ({ ...prev, desc: cleanText }));
         } catch (e: any) { alert(`AI Error: ${e.message}`); } 
@@ -108,13 +123,11 @@ const useProductManager = (
         if (!form.name) return alert("Isi Nama Produk untuk referensi gambar.");
         setLoadingState(p => ({...p, generatingImage: true}));
         try {
-            // Using Pollinations for instant image
             const seed = Math.floor(Math.random() * 999999);
             const cleanName = form.name.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 50);
-            const prompt = `${cleanName} modern point of sale hardware machine, sleek, white background, high quality, 8k, realistic product photography`;
+            const prompt = `${cleanName} ${form.category} modern point of sale hardware machine, sleek, white background, high quality, 8k, realistic product photography`;
             const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=800&model=flux&nologo=true&seed=${seed}`;
             
-            // Preload to check availability
             const img = new Image();
             img.src = url;
             img.onload = () => {
@@ -131,8 +144,6 @@ const useProductManager = (
     const handleSubmit = async () => {
         if (!form.name || !form.price) return alert("Wajib isi Nama dan Harga");
         
-        // Allow submitting without Cloudinary if using AI Generated URL (Pollinations)
-        // Only check Cloudinary if uploading a FILE
         if (form.uploadFile && !CONFIG.CLOUDINARY_CLOUD_NAME) return alert("Cloudinary Config Missing");
 
         setLoadingState(prev => ({ ...prev, uploading: true }));
@@ -150,8 +161,8 @@ const useProductManager = (
 
             const dbData = {
                 name: form.name,
-                price: cleanNumberInput(form.price), // Clean formatted string back to integer
-                category: 'POS System',
+                price: cleanNumberInput(form.price),
+                category: form.category,
                 description: form.desc,
                 image_url: finalImageUrl
             };
@@ -177,7 +188,13 @@ const useProductManager = (
         if (form.id === id) resetForm();
     };
 
-    const filtered = products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    // Filter Logic
+    const filtered = products.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
+
     const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
     const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
@@ -198,7 +215,9 @@ const useProductManager = (
             setPage, 
             searchTerm, 
             setSearchTerm,
-            totalItems: filtered.length // Add Total Count
+            selectedCategory,
+            setSelectedCategory,
+            totalItems: filtered.length
         }
     };
 };
@@ -236,7 +255,6 @@ const ProductForm = ({
                         <span className="text-[9px]">Preview Gambar</span>
                     </div>
                 )}
-                {/* Image Actions Overlay */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
                      <button onClick={onGenImage} disabled={loading.generatingImage} className="w-full py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-500">
                         {loading.generatingImage ? <LoadingSpinner size={12}/> : <><Wand2 size={12}/> AI Generate</>}
@@ -252,17 +270,17 @@ const ProductForm = ({
             </div>
         </div>
 
-        {/* 3. SCROLLABLE CONTENT (Inputs & Desc) */}
+        {/* 3. SCROLLABLE CONTENT */}
         <div className="flex-grow overflow-y-auto p-5 custom-scrollbar space-y-4">
             {/* KEYWORDS */}
             <div className="bg-brand-orange/5 p-3 rounded-lg border border-brand-orange/20">
                 <label className="text-[9px] text-brand-orange uppercase font-bold tracking-wider mb-1 block flex items-center gap-1">
-                    <Sparkles size={10} /> Keywords / Fitur (AI Context)
+                    <Sparkles size={10} /> Keywords (AI Trigger)
                 </label>
                 <input 
                     value={form.shortDesc} 
                     onChange={e => setForm((prev:any) => ({...prev, shortDesc: e.target.value}))} 
-                    placeholder="e.g. Android, Touchscreen, Murah..." 
+                    placeholder="Fitur, spek, keunggulan..." 
                     className="w-full bg-black/40 border border-brand-orange/30 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange placeholder-gray-600"
                 />
             </div>
@@ -276,6 +294,23 @@ const ProductForm = ({
                     </button>
                 </div>
                 <Input value={form.name} onChange={e => setForm((prev:any) => ({...prev, name: e.target.value}))} placeholder="Nama Produk..." className="py-2 text-xs" />
+            </div>
+
+            {/* CATEGORY (NEW) */}
+            <div>
+                <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Kategori</label>
+                <div className="relative">
+                    <Filter size={12} className="absolute left-3 top-3 text-gray-500"/>
+                    <select 
+                        value={form.category} 
+                        onChange={e => setForm((prev:any) => ({...prev, category: e.target.value}))}
+                        className="w-full bg-brand-card border border-white/10 rounded-lg pl-8 pr-3 py-2 text-xs text-white focus:border-brand-orange outline-none appearance-none"
+                    >
+                        {PRODUCT_CATEGORIES.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
             {/* PRICE */}
@@ -301,11 +336,11 @@ const ProductForm = ({
                         {loading.generatingDesc ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Desc</>}
                     </button>
                 </div>
-                <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-48 text-xs leading-relaxed custom-scrollbar" />
+                <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-32 text-xs leading-relaxed custom-scrollbar" />
             </div>
         </div>
 
-        {/* 4. STICKY FOOTER (Button) */}
+        {/* 4. STICKY FOOTER */}
         <div className="p-5 border-t border-white/5 shrink-0 bg-brand-dark">
             <Button onClick={onSubmit} disabled={loading.uploading} className="w-full py-3 text-xs font-bold shadow-neon">
                 {loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={14}/> UPDATE</> : <><Plus size={14}/> SIMPAN</>)}
@@ -318,9 +353,9 @@ const ProductForm = ({
 const Pagination = ({ page, totalPages, setPage, className = "" }: { page: number, totalPages: number, setPage: (p: any) => void, className?: string }) => {
     if (totalPages <= 1) return null;
     return (
-        <div className={`p-2 bg-black/20 flex justify-center items-center gap-4 ${className}`}>
+        <div className={`flex items-center gap-2 ${className}`}>
             <button onClick={() => setPage((p: number) => Math.max(1, p - 1))} disabled={page === 1} className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30"><ChevronLeft size={14} /></button>
-            <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-0.5 rounded">{page} / {totalPages}</span>
+            <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-0.5 rounded border border-brand-orange/20">{page} / {totalPages}</span>
             <button onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30"><ChevronRight size={14} /></button>
         </div>
     );
@@ -332,6 +367,7 @@ const ProductList = ({
     data: any, onEdit: any, onDelete: any 
 }) => (
     <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden shadow-xl">
+        {/* HEADER: Search & Total */}
         <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
              <div className="relative flex-grow">
                 <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
@@ -343,13 +379,43 @@ const ProductList = ({
                     className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange"
                 />
              </div>
-             {/* Show Total ITEMS, not just page items */}
              <span className="text-[10px] font-bold text-gray-500 uppercase bg-white/5 px-2 py-1 rounded">Total: {data.totalItems}</span>
         </div>
         
-        {/* Pagination TOP */}
-        <Pagination page={data.page} totalPages={data.totalPages} setPage={data.setPage} className="border-b border-white/5" />
+        {/* TOOLBAR: Categories & Pagination */}
+        <div className="p-2 border-b border-white/5 flex justify-between items-center bg-black/10 overflow-x-auto gap-4 custom-scrollbar">
+            {/* Category Pills - Left */}
+            <div className="flex gap-2 shrink-0">
+                <button 
+                    onClick={() => data.setSelectedCategory('All')}
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all border ${
+                        data.selectedCategory === 'All' 
+                        ? 'bg-brand-orange text-white border-brand-orange' 
+                        : 'bg-white/5 text-gray-400 border-white/10 hover:border-white/30'
+                    }`}
+                >
+                    Semua
+                </button>
+                {PRODUCT_CATEGORIES.map(cat => (
+                    <button 
+                        key={cat}
+                        onClick={() => data.setSelectedCategory(cat)}
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all border whitespace-nowrap ${
+                            data.selectedCategory === cat 
+                            ? 'bg-brand-orange text-white border-brand-orange' 
+                            : 'bg-white/5 text-gray-400 border-white/10 hover:border-white/30'
+                        }`}
+                    >
+                        {cat}
+                    </button>
+                ))}
+            </div>
 
+            {/* Pagination - Right */}
+            <Pagination page={data.page} totalPages={data.totalPages} setPage={data.setPage} className="shrink-0 justify-end" />
+        </div>
+
+        {/* GRID */}
         <div className="flex-grow overflow-y-auto p-4 custom-scrollbar min-h-[500px]">
             {data.paginated.length === 0 ? (
                 <div className="text-center py-20 text-gray-500 text-xs">
@@ -371,6 +437,11 @@ const ProductList = ({
                                         {formatRupiah(p.price)}
                                      </span>
                                 </div>
+                                <div className="absolute bottom-2 left-2">
+                                     <span className="bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-[9px] text-white font-bold border border-white/10">
+                                        {p.category}
+                                     </span>
+                                </div>
                             </div>
                             <div className="p-3 flex-grow flex flex-col">
                                 <h5 className="text-xs font-bold text-white line-clamp-2 mb-1 leading-snug" title={p.name}>{p.name}</h5>
@@ -384,8 +455,10 @@ const ProductList = ({
             )}
         </div>
 
-        {/* Pagination BOTTOM */}
-        <Pagination page={data.page} totalPages={data.totalPages} setPage={data.setPage} className="border-t border-white/10" />
+        {/* BOTTOM PAGINATION: Right Aligned */}
+        <div className="p-2 border-t border-white/10 flex justify-end">
+            <Pagination page={data.page} totalPages={data.totalPages} setPage={data.setPage} />
+        </div>
     </div>
 );
 
