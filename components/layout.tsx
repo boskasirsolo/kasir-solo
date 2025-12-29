@@ -288,9 +288,9 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
   <footer className="bg-brand-dark border-t border-white/5 py-12 mt-20 relative overflow-hidden">
     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-brand-orange shadow-neon opacity-50"></div>
     <div className="container mx-auto px-4">
-      <div className="grid md:grid-cols-3 gap-10">
+      <div className="grid md:grid-cols-4 gap-10">
         {/* Brand Section */}
-        <div>
+        <div className="md:col-span-1">
           <h3 className="text-2xl font-display font-bold text-white mb-4">PT MESIN KASIR SOLO</h3>
           <p className="text-gray-400 mb-6 text-sm leading-relaxed">
             Mitra strategis digitalisasi bisnis Anda di Seluruh Indonesia. Solusi POS, Software, & Web Development.
@@ -305,7 +305,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
         </div>
         
         {/* Contact Section */}
-        <div>
+        <div className="md:col-span-1">
           <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Kontak & Lokasi</h4>
           <ul className="space-y-4 text-gray-400 text-sm">
             <li className="flex items-start gap-3">
@@ -328,7 +328,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
         </div>
 
         {/* Menu Section */}
-        <div>
+        <div className="md:col-span-1">
           <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Menu</h4>
           <ul className="space-y-2 text-gray-400 text-sm">
             {['shop', 'gallery', 'about', 'innovation'].map((link) => (
@@ -341,6 +341,33 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
                 </button>
               </li>
             ))}
+          </ul>
+        </div>
+
+        {/* Legal & Help Section */}
+        <div className="md:col-span-1">
+          <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Legal & Bantuan</h4>
+          <ul className="space-y-2 text-gray-400 text-sm">
+            <li>
+                <button onClick={() => setPage('legal/refund')} className="hover:text-brand-orange transition-colors">
+                    Garansi & Refund
+                </button>
+            </li>
+            <li>
+                <button onClick={() => setPage('legal/privacy')} className="hover:text-brand-orange transition-colors">
+                    Kebijakan Privasi
+                </button>
+            </li>
+            <li>
+                <button onClick={() => setPage('legal/terms')} className="hover:text-brand-orange transition-colors">
+                    Syarat & Ketentuan
+                </button>
+            </li>
+            <li className="pt-2">
+                <a href="https://wa.me/6282325103336" target="_blank" rel="noreferrer" className="text-green-500 hover:text-green-400 transition-colors flex items-center gap-1 font-bold">
+                    <Phone size={14}/> Lapor Kendala
+                </a>
+            </li>
           </ul>
         </div>
       </div>

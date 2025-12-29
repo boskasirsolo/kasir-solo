@@ -17,6 +17,7 @@ import { AdminDashboard, AdminLogin } from './pages/admin';
 import { CheckoutPage } from './pages/checkout';
 import { InnovationPage } from './pages/innovation';
 import { WebsiteServicePage, WebAppServicePage, SeoServicePage, MaintenanceServicePage } from './pages/services';
+import { LegalPage } from './pages/legal'; // NEW IMPORT
 import { NotFoundPage } from './pages/not-found';
 
 const AppContent = () => {
@@ -224,6 +225,9 @@ const AppContent = () => {
           <Route path="/services/webapp" element={<WebAppServicePage />} />
           <Route path="/services/seo" element={<SeoServicePage />} />
           <Route path="/services/maintenance" element={<MaintenanceServicePage />} />
+
+          {/* Legal Pages */}
+          <Route path="/legal/:type" element={<LegalPage />} />
 
           <Route path="/about" element={<AboutPage config={config} />} />
           
