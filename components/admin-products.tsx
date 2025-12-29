@@ -83,6 +83,11 @@ const useProductManager = (
             Task: Write a persuasive product description for: "${form.name}".
             Features: ${form.shortDesc}.
             Format: Indonesian. 2 Paragraphs + Bullet points of benefits. High conversion tone.
+            
+            STRICT RULES:
+            1. Output ONLY the description content. 
+            2. Do NOT use introductory text like "Berikut adalah deskripsi...", "Tentu", or "Here is".
+            3. Start directly with the Hook/Headline.
             `;
             const response = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
             setForm(prev => ({ ...prev, desc: response.text?.trim() || '' }));
@@ -202,9 +207,9 @@ const ProductForm = ({
             )}
         </div>
 
-        {/* IMAGE SECTION */}
+        {/* IMAGE SECTION - COMPACT HEIGHT */}
         <div className="mb-5">
-            <div className="relative w-full aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/10 group mb-2">
+            <div className="relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group mb-2">
                 {form.imagePreview ? (
                     <img src={form.imagePreview} alt="Preview" className="w-full h-full object-contain p-2" />
                 ) : (
