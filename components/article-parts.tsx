@@ -410,7 +410,7 @@ const ArticleSidebarLeft = ({
   activeId 
 }: { 
   article: Article, 
-  onHeadingClick: (h: any) => void,
+  onHeadingClick: (h: any) => void, 
   activeId: string 
 }) => {
   const headings = useMemo(() => extractHeadings(article.content), [article.content]);
@@ -554,7 +554,7 @@ const ArticleSidebarLeft = ({
 // --- SIDEBAR RIGHT: COMPONENTS ---
 
 // 1. Flying Particle Animation (Copied locally to ensure self-containment for the modal context)
-const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: string, startRect: DOMRect, targetRect: DOMRect, onFinish: () => void }) => {
+export const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: string, startRect: DOMRect, targetRect: DOMRect, onFinish: () => void }) => {
   const [style, setStyle] = useState<React.CSSProperties>({
     position: 'fixed',
     top: startRect.top,
@@ -590,7 +590,7 @@ const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: string,
 };
 
 // 2. Sidebar Product Card (Matches Shop Card Design but Compact)
-const SidebarProductCard = ({ 
+export const SidebarProductCard = ({ 
   product, 
   onDetail 
 }: { 

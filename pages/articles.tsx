@@ -1,13 +1,15 @@
 
-import React, { useState } from 'react';
-import { Search, ChevronDown, ChevronRight, Hash, FolderOpen, Tag, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, ChevronDown, ChevronRight, Hash, FolderOpen, Tag, Filter, ChevronLeft, TrendingUp } from 'lucide-react';
 import { Article, Product } from '../types';
 import { SectionHeader, Input } from '../components/ui';
 import { 
   FeaturedArticleHero, 
   ArticleGridCard, 
-  ArticleReaderView
+  ArticleReaderView,
+  SidebarProductCard
 } from '../components/article-parts';
+import { ProductDetailModal } from '../components/shop-parts'; // Need this for Sidebar Product Click
 import { useParams, useNavigate } from 'react-router-dom';
 import { slugify } from '../utils';
 import { NotFoundPage } from './not-found';
@@ -64,6 +66,13 @@ export const ArticlesPage = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<{ type: 'parent' | 'sub' | 'all', value: string }>({ type: 'all', value: '' });
   const [expandedParent, setExpandedParent] = useState<string | null>('business'); // Default expand first
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
+
+  // Selected Product for Modal
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // --- FILTER LOGIC ---
   const filteredArticles = articles.filter(article => {
@@ -88,8 +97,21 @@ export const ArticlesPage = ({
     return matchesSearch && matchesCategory;
   });
 
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedFilter]);
+
   const featuredArticle = filteredArticles.length > 0 ? filteredArticles[0] : null;
-  const gridArticles = filteredArticles.length > 0 ? filteredArticles.slice(1) : [];
+  // Grid articles excluding featured one
+  const gridSource = filteredArticles.length > 0 ? filteredArticles.slice(1) : [];
+  
+  // Pagination Logic on Grid Source
+  const totalPages = Math.ceil(gridSource.length / ITEMS_PER_PAGE);
+  const paginatedArticles = gridSource.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleArticleClick = (article: Article) => {
     navigate(`/articles/${slugify(article.title)}`);
@@ -97,6 +119,34 @@ export const ArticlesPage = ({
 
   const toggleParent = (id: string) => {
     setExpandedParent(expandedParent === id ? null : id);
+  };
+
+  // --- PAGINATION COMPONENT ---
+  const PaginationControls = () => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="flex justify-center items-center gap-4 py-6">
+        <button 
+          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+          className="p-2 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        
+        <span className="text-brand-orange font-bold text-sm">
+          Hal {currentPage} dari {totalPages}
+        </span>
+
+        <button 
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          className="p-2 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -125,18 +175,21 @@ export const ArticlesPage = ({
             </div>
           ) : (
             <>
-              {/* Featured Hero (Only shows if no specific search/filter active, or just show always) */}
-              {featuredArticle && (
+              {/* Featured Hero (Only shows on first page and if not filtering specifically, or always show relevant featured) */}
+              {featuredArticle && currentPage === 1 && (
                  <FeaturedArticleHero 
                    article={featuredArticle} 
                    onClick={() => handleArticleClick(featuredArticle)} 
                  />
               )}
 
-              {/* Grid Articles */}
-              {gridArticles.length > 0 && (
-                <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8">
-                  {gridArticles.map((article) => (
+              {/* Pagination Top */}
+              <PaginationControls />
+
+              {/* Grid Articles - UPDATED TO 3 COLUMNS */}
+              {paginatedArticles.length > 0 && (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {paginatedArticles.map((article) => (
                     <React.Fragment key={article.id}>
                       <ArticleGridCard 
                         article={article}
@@ -146,6 +199,9 @@ export const ArticlesPage = ({
                   ))}
                 </div>
               )}
+
+              {/* Pagination Bottom */}
+              <PaginationControls />
             </>
           )}
         </div>
@@ -244,7 +300,7 @@ export const ArticlesPage = ({
              </div>
           </div>
 
-          {/* 3. Popular Tags Widget (Optional Visual Filler) */}
+          {/* 3. Popular Tags Widget */}
           <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
              <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                 <Hash size={14} className="text-brand-orange"/> Trending
@@ -262,9 +318,35 @@ export const ArticlesPage = ({
              </div>
           </div>
 
+          {/* 4. Best Selling Products Widget (New) */}
+          <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
+             <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
+                <TrendingUp size={16} className="text-brand-orange" />
+                <h4 className="text-sm font-bold text-white uppercase tracking-widest">Produk Terlaris</h4>
+             </div>
+             <div className="space-y-4">
+                {products.slice(0, 2).map((product) => (
+                   <React.Fragment key={product.id}>
+                      <SidebarProductCard 
+                        product={product} 
+                        onDetail={() => setSelectedProduct(product)} 
+                      />
+                   </React.Fragment>
+                ))}
+             </div>
+          </div>
+
         </div>
 
       </div>
+
+      {/* RENDER PRODUCT DETAIL MODAL */}
+      {selectedProduct && (
+        <ProductDetailModal 
+          product={selectedProduct} 
+          onClose={() => setSelectedProduct(null)} 
+        />
+      )}
     </div>
   );
 };
