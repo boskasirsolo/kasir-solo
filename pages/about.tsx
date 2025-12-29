@@ -145,7 +145,7 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
           </div>
         </div>
 
-        <div className="h-[600px] bg-gray-800 rounded-3xl overflow-hidden relative border border-brand-orange/30 shadow-neon-strong group">
+        <div className="h-[600px] bg-gray-800 rounded-3xl overflow-hidden relative border border-brand-orange/30 group">
           <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000" alt="Map" className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-4">
              {/* Pin Solo - Clickable & No Shadow */}
