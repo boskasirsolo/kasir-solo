@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, formatRupiah, callGeminiWithRotation, formatNumberInput, cleanNumberInput } from '../utils';
 
-const ITEMS_PER_PAGE = 8; // 4 columns x 2 rows
+const ITEMS_PER_PAGE = 8; // Pastikan limit 8 produk per halaman
 
 const useProductManager = (
     products: Product[], 
@@ -30,6 +30,11 @@ const useProductManager = (
 
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // --- PENTING: Reset ke halaman 1 saat user mengetik di pencarian ---
+    useEffect(() => {
+        setPage(1);
+    }, [searchTerm]);
 
     const resetForm = () => {
         setForm({
