@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Image as ImageIcon, PlayCircle, Monitor, Smartphone, 
-  Code, Globe, ArrowRight, Laptop 
+  Code, Globe, ArrowRight, Laptop, ChevronLeft, ChevronRight 
 } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { SectionHeader } from '../components/ui';
@@ -10,6 +10,47 @@ import { ProjectDetailView } from '../components/gallery-modal';
 import { useNavigate, useParams } from 'react-router-dom';
 import { slugify } from '../utils';
 import { NotFoundPage } from './not-found';
+
+const ITEMS_PER_PAGE = 6;
+
+// --- COMPONENTS: PAGINATION CONTROL ---
+const PaginationControl = ({ 
+  page, 
+  totalPages, 
+  setPage,
+  className = ""
+}: { 
+  page: number, 
+  totalPages: number, 
+  setPage: (p: number) => void,
+  className?: string
+}) => {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className={`flex justify-center items-center gap-4 ${className}`}>
+      <button 
+        onClick={() => setPage(Math.max(1, page - 1))}
+        disabled={page === 1}
+        className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
+      >
+        <ChevronLeft size={20} />
+      </button>
+      
+      <span className="text-brand-orange font-display font-bold">
+        Page {page} / {totalPages}
+      </span>
+
+      <button 
+        onClick={() => setPage(Math.min(totalPages, page + 1))}
+        disabled={page === totalPages}
+        className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
+      >
+        <ChevronRight size={20} />
+      </button>
+    </div>
+  );
+};
 
 // --- COMPONENTS: FILTER TABS ---
 const FilterTab = ({ 
@@ -166,11 +207,24 @@ export const ProjectDetailPage = ({ gallery, testimonials }: { gallery: GalleryI
 export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[], testimonials: Testimonial[] }) => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<'all' | 'physical' | 'digital'>('all');
+  const [page, setPage] = useState(1);
 
   // Filter Logic
   const filteredGallery = activeFilter === 'all' 
     ? gallery 
     : gallery.filter(item => item.category_type === activeFilter);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredGallery.length / ITEMS_PER_PAGE);
+  const paginatedGallery = filteredGallery.slice(
+    (page - 1) * ITEMS_PER_PAGE, 
+    page * ITEMS_PER_PAGE
+  );
+
+  // Reset page to 1 when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [activeFilter]);
 
   const handleItemClick = (item: GalleryItem) => {
     navigate(`/gallery/${slugify(item.title)}`);
@@ -185,7 +239,7 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
       />
 
       {/* --- FILTER TABS --- */}
-      <div className="flex justify-center gap-4 mb-12 flex-wrap">
+      <div className="flex justify-center gap-4 mb-8 flex-wrap">
         <FilterTab 
           label="Semua Project" 
           active={activeFilter === 'all'} 
@@ -206,6 +260,9 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
         />
       </div>
 
+      {/* --- PAGINATION TOP --- */}
+      <PaginationControl page={page} totalPages={totalPages} setPage={setPage} className="mb-8" />
+
       {/* --- GALLERY GRID VIEW --- */}
       {filteredGallery.length === 0 ? (
         <div className="text-center py-20 bg-brand-card rounded-2xl border border-white/5 border-dashed">
@@ -214,7 +271,7 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
         </div>
       ) : (
         <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {filteredGallery.map((item) => (
+            {paginatedGallery.map((item) => (
               <React.Fragment key={item.id}>
                 {activeFilter === 'physical' || (activeFilter === 'all' && item.category_type === 'physical') ? (
                     <PhysicalProjectCard item={item} onClick={() => handleItemClick(item)} />
@@ -225,6 +282,9 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
             ))}
         </div>
       )}
+
+      {/* --- PAGINATION BOTTOM --- */}
+      <PaginationControl page={page} totalPages={totalPages} setPage={setPage} className="mt-12 border-t border-white/5 pt-8" />
     </div>
   );
 };
