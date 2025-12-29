@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap, ChevronDown, ChevronUp, MoreVertical, ArrowLeft, Mic, Camera } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap, ChevronDown, ChevronUp, MoreVertical, ArrowLeft, Mic, Camera, Users } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey, slugify, markKeyAsExhausted } from '../utils';
@@ -184,11 +184,28 @@ const useArticleManager = (
     articles: Article[], 
     setArticles: (a: Article[]) => void
 ) => {
-    // GLOBAL AUTHOR SETTING (New)
-    const [authorProfile, setAuthorProfile] = useState({
-        name: 'Amin Maghfuri',
-        avatar: '', // URL
-        file: null as File | null
+    // GLOBAL AUTHOR SETTINGS (UPDATED: Dual Profile)
+    const [authorProfiles, setAuthorProfiles] = useState({
+        personal: {
+            name: 'Amin Maghfuri',
+            avatar: '', // URL
+            file: null as File | null
+        },
+        team: {
+            name: 'Redaksi KasirSolo',
+            avatar: '', // URL
+            file: null as File | null
+        }
+    });
+
+    // AI Flow State
+    const [aiStep, setAiStep] = useState<number>(0); 
+    const [genConfig, setGenConfig] = useState<GenConfig>({
+        autoImage: true,
+        autoCategory: true,
+        autoAuthor: true,
+        imageStyle: 'cinematic',
+        narrative: 'narsis' 
     });
 
     // Basic Form State
@@ -198,8 +215,8 @@ const useArticleManager = (
         excerpt: '',
         content: '',
         category: '',
-        author: authorProfile.name,
-        authorAvatar: authorProfile.avatar, 
+        author: authorProfiles.personal.name,
+        authorAvatar: authorProfiles.personal.avatar, 
         uploadAuthorFile: null as File | null,
         readTime: '10 min read', 
         imagePreview: '',
@@ -213,29 +230,31 @@ const useArticleManager = (
         scheduleStart: '' 
     });
 
-    // Sync form with global author profile when resetting or init
-    useEffect(() => {
-        if (!form.id) {
-            setForm(p => ({
-                ...p,
-                author: authorProfile.name,
-                authorAvatar: authorProfile.avatar
-            }));
-        }
-    }, [authorProfile]);
-
-    // AI Flow State
-    const [aiStep, setAiStep] = useState<number>(0); 
     const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
     const [selectedKeyword, setSelectedKeyword] = useState<KeywordData | null>(null);
-    const [genConfig, setGenConfig] = useState<GenConfig>({
-        autoImage: true,
-        autoCategory: true,
-        autoAuthor: true,
-        imageStyle: 'cinematic',
-        narrative: 'umum' 
-    });
+
+    // Sync form with global author profile when narrative changes or profile updates
+    useEffect(() => {
+        if (!form.id) {
+            const target = genConfig.narrative === 'narsis' ? authorProfiles.personal : authorProfiles.team;
+            setForm(p => ({
+                ...p,
+                author: target.name,
+                authorAvatar: target.avatar,
+                uploadAuthorFile: target.file // Inherit file if exists for upload
+            }));
+        }
+    }, [authorProfiles, genConfig.narrative, form.id]);
+
+    const handleProfileChange = (type: 'personal' | 'team', file: File | undefined) => {
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        setAuthorProfiles(prev => ({
+            ...prev,
+            [type]: { ...prev[type], avatar: url, file: file }
+        }));
+    };
 
     // Loading & Progress States (Split)
     const [loading, setLoading] = useState({
@@ -268,15 +287,16 @@ const useArticleManager = (
     const availablePillars = articles.filter(a => a.type === 'pillar');
 
     const resetForm = () => {
+        const defaultProfile = authorProfiles.personal;
         setForm({
             id: null,
             title: '',
             excerpt: '',
             content: '',
             category: '',
-            author: authorProfile.name, // Reset to Global Profile
-            authorAvatar: authorProfile.avatar, // Reset to Global Profile
-            uploadAuthorFile: null,
+            author: defaultProfile.name,
+            authorAvatar: defaultProfile.avatar,
+            uploadAuthorFile: defaultProfile.file,
             readTime: '10 min read',
             imagePreview: '',
             uploadFile: null,
@@ -293,6 +313,8 @@ const useArticleManager = (
         setSelectedPresets([]);
         setTextProgress({ percent: 0, message: '' });
         setImageProgress({ percent: 0, message: '' });
+        // Reset config default
+        setGenConfig(p => ({...p, narrative: 'narsis'}));
     };
 
     const togglePreset = (label: string) => {
@@ -416,15 +438,18 @@ const useArticleManager = (
             let authorName = "Redaksi KasirSolo";
 
             if (genConfig.narrative === 'narsis') {
-                authorName = "Amin Maghfuri (CEO)";
+                authorName = authorProfiles.personal.name || "Amin Maghfuri (CEO)";
                 narrativeInstruction = `
                 **NARRATIVE STYLE: PERSONAL & AUTHORITATIVE (Narsis/CEO POV)**
-                - Role: Write as **Amin Maghfuri**, the CEO of PT Mesin Kasir Solo.
+                - Role: Write as **${authorName}**, the CEO of PT Mesin Kasir Solo.
+                - Tone: Experienced, inspiring, confident, using "Saya" or "Aku".
                 `;
             } else {
+                authorName = authorProfiles.team.name || "Redaksi KasirSolo";
                 narrativeInstruction = `
                 **NARRATIVE STYLE: GENERAL / EDITORIAL**
-                - Role: Editorial Team (Redaksi KasirSolo).
+                - Role: Editorial Team (${authorName}).
+                - Tone: Objective, journalistic, using "Kami" or third person.
                 `;
             }
 
@@ -537,9 +562,7 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, uploading: true }));
         try {
             let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/800';
-            
-            // USE GLOBAL AUTHOR AVATAR IF FORM DOESNT HAVE ONE SPECIFIC
-            let finalAuthorAvatar = form.authorAvatar || authorProfile.avatar;
+            let finalAuthorAvatar = form.authorAvatar || authorProfiles.personal.avatar;
 
             // 1. Upload Cover
             if (form.uploadFile && CONFIG.CLOUDINARY_CLOUD_NAME) {
@@ -559,16 +582,8 @@ const useArticleManager = (
                  const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                  const data = await res.json();
                  finalAuthorAvatar = data.secure_url;
-            } else if (authorProfile.file && CONFIG.CLOUDINARY_CLOUD_NAME && !form.id) {
-                 // If new article and global profile has a pending file
-                 const formData = new FormData();
-                 formData.append('file', authorProfile.file);
-                 formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
-                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
-                 const data = await res.json();
-                 finalAuthorAvatar = data.secure_url;
-                 // Update global avatar URL to avoid re-upload
-                 setAuthorProfile(p => ({...p, avatar: data.secure_url, file: null}));
+                 // Note: We don't necessarily update the global state here to avoid confusion, 
+                 // but in a real app, you might want to save this to user settings.
             }
 
             const dbData = {
@@ -614,7 +629,7 @@ const useArticleManager = (
 
     return {
         form, setForm,
-        authorProfile, setAuthorProfile, // Export Author Profile State
+        authorProfiles, setAuthorProfiles, handleProfileChange, // Exported
         loading,
         progress: { text: textProgress, image: imageProgress },
         aiState: { step: aiStep, setStep: setAiStep, keywords, selectedKeyword, genConfig, setGenConfig, selectedPresets, togglePreset },
@@ -640,7 +655,7 @@ export const AdminArticles = ({
   articles: Article[], 
   setArticles: (a: Article[]) => void 
 }) => {
-  const { form, setForm, authorProfile, setAuthorProfile, loading, progress, aiState, actions, listData, availablePillars } = useArticleManager(articles, setArticles);
+  const { form, setForm, authorProfiles, setAuthorProfiles, handleProfileChange, loading, progress, aiState, actions, listData, availablePillars } = useArticleManager(articles, setArticles);
 
   return (
     <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b">
@@ -651,38 +666,55 @@ export const AdminArticles = ({
          {/* AUTHOR PROFILE SETTINGS (NEW PLACEMENT: TOP OF LEFT COLUMN) */}
          <div className="p-4 border-b border-white/5 bg-brand-card/50">
             <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-               <User size={12}/> Identitas Penulis Default
+               <User size={12}/> Identitas Penulis (Default)
             </h4>
-            <div className="flex items-center gap-3">
-               <div className="relative group w-12 h-12 rounded-full border-2 border-white/10 bg-black overflow-hidden shrink-0 cursor-pointer hover:border-brand-orange transition-colors">
-                  <img 
-                     src={authorProfile.avatar || "https://via.placeholder.com/100"} 
-                     alt="Author" 
-                     className="w-full h-full object-cover"
-                  />
-                  <input 
-                     type="file" 
-                     accept="image/*" 
-                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                     onChange={(e) => {
-                        const file = e.target.files ? e.target.files[0] : null;
-                        if(file) setAuthorProfile(p => ({...p, file: file, avatar: URL.createObjectURL(file)}));
-                     }}
-                  />
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                     <Camera size={14} className="text-white"/>
-                  </div>
-               </div>
-               <div className="flex-1">
-                  <input 
-                     type="text" 
-                     value={authorProfile.name}
-                     onChange={(e) => setAuthorProfile(p => ({...p, name: e.target.value}))}
-                     className="w-full bg-transparent border-b border-white/10 text-xs font-bold text-white focus:outline-none focus:border-brand-orange pb-1 mb-1 placeholder-gray-600"
-                     placeholder="Nama Penulis..."
-                  />
-                  <p className="text-[9px] text-gray-500">Akan dipakai otomatis untuk artikel baru.</p>
-               </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+                {/* 1. PERSONAL */}
+                <div className="bg-black/20 p-2 rounded border border-white/5 hover:border-brand-orange/30 transition-colors">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="relative group w-8 h-8 rounded-full border border-white/10 bg-black overflow-hidden shrink-0 cursor-pointer hover:border-brand-orange transition-colors">
+                            <img src={authorProfiles.personal.avatar || "https://via.placeholder.com/100"} className="w-full h-full object-cover" />
+                            <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                onChange={(e) => handleProfileChange('personal', e.target.files?.[0])}
+                            />
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera size={10} className="text-white"/>
+                            </div>
+                        </div>
+                        <span className="text-[9px] font-bold text-gray-400 uppercase">Personal</span>
+                    </div>
+                    <input 
+                        type="text" 
+                        value={authorProfiles.personal.name}
+                        onChange={(e) => setAuthorProfiles(p => ({...p, personal: {...p.personal, name: e.target.value}}))}
+                        className="w-full bg-transparent border-b border-white/10 text-[10px] font-bold text-white focus:outline-none focus:border-brand-orange pb-1 placeholder-gray-600"
+                        placeholder="Nama CEO..."
+                    />
+                </div>
+
+                {/* 2. TEAM */}
+                <div className="bg-black/20 p-2 rounded border border-white/5 hover:border-blue-500/30 transition-colors">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="relative group w-8 h-8 rounded-full border border-white/10 bg-black overflow-hidden shrink-0 cursor-pointer hover:border-blue-500 transition-colors">
+                            <img src={authorProfiles.team.avatar || "https://via.placeholder.com/100"} className="w-full h-full object-cover" />
+                            <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                onChange={(e) => handleProfileChange('team', e.target.files?.[0])}
+                            />
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Users size={10} className="text-white"/>
+                            </div>
+                        </div>
+                        <span className="text-[9px] font-bold text-gray-400 uppercase">Redaksi</span>
+                    </div>
+                    <input 
+                        type="text" 
+                        value={authorProfiles.team.name}
+                        onChange={(e) => setAuthorProfiles(p => ({...p, team: {...p.team, name: e.target.value}}))}
+                        className="w-full bg-transparent border-b border-white/10 text-[10px] font-bold text-white focus:outline-none focus:border-blue-500 pb-1 placeholder-gray-600"
+                        placeholder="Nama Tim..."
+                    />
+                </div>
             </div>
          </div>
 
@@ -902,7 +934,7 @@ export const AdminArticles = ({
                                     }`}
                                 >
                                     <span className="font-bold flex items-center gap-1"><Mic size={10} /> Personal (CEO)</span>
-                                    <span className="text-[8px] opacity-70">Amin Maghfuri</span>
+                                    <span className="text-[8px] opacity-70">{authorProfiles.personal.name}</span>
                                 </button>
                                 <button 
                                     onClick={() => aiState.setGenConfig(prev => ({...prev, narrative: 'umum'}))}
@@ -913,7 +945,7 @@ export const AdminArticles = ({
                                     }`}
                                 >
                                     <span className="font-bold flex items-center gap-1"><FileText size={10} /> Umum (Redaksi)</span>
-                                    <span className="text-[8px] opacity-70">Tim Redaksi</span>
+                                    <span className="text-[8px] opacity-70">{authorProfiles.team.name}</span>
                                 </button>
                             </div>
                         </div>
