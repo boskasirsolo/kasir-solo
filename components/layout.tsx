@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video, ChevronDown, ArrowUp } from 'lucide-react';
 import { useCart } from '../context/cart-context';
 import { SiteConfig, Product } from '../types';
 import { SibosWidget } from './sibos-core/index'; // CRITICAL FIX: Specific import path
@@ -353,6 +353,43 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
   </footer>
 );
 
+// --- ATOM: Scroll To Top Button ---
+const ScrollToTop = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.scrollY > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener('scroll', toggleVisibility);
+    return () => window.removeEventListener('scroll', toggleVisibility);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
+  return (
+    <button
+      onClick={scrollToTop}
+      className={`fixed bottom-24 right-6 z-[9980] p-3 rounded-full bg-brand-dark border border-brand-orange text-brand-orange shadow-neon transition-all duration-300 transform hover:-translate-y-1 hover:bg-brand-orange hover:text-white ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+      }`}
+      aria-label="Scroll to top"
+    >
+      <ArrowUp size={24} />
+    </button>
+  );
+};
+
 // --- TEMPLATE: Main Layout ---
 
 export const Layout = ({ 
@@ -389,6 +426,9 @@ export const Layout = ({
 
       <Footer setPage={setPage} config={config} />
       
+      {/* SCROLL TO TOP BUTTON */}
+      <ScrollToTop />
+
       {/* SIBOS AI WIDGET (PUBLIC MODE) - Pass currentPage for Behavioral Trigger */}
       <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} currentPage={currentPage} />
     </div>
