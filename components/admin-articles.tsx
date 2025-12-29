@@ -429,64 +429,94 @@ const useArticleManager = (
         if (!form.title) return alert("Pilih judul terlebih dahulu.");
         
         setLoading(prev => ({ ...prev, generatingText: true }));
-        setTextProgress({ percent: 5, message: 'Menyiapkan strategi konten...' });
+        setTextProgress({ percent: 5, message: 'Menyiapkan strategi persona...' });
 
         try {
-            // Narrative Logic
+            // --- 1. DEFINISI PERSONA (STRICT) ---
             let narrativeInstruction = "";
-            let authorName = "Redaksi KasirSolo";
+            const authorName = genConfig.narrative === 'narsis' 
+                ? (authorProfiles.personal.name || "Amin Maghfuri") 
+                : (authorProfiles.team.name || "Redaksi KasirSolo");
 
             if (genConfig.narrative === 'narsis') {
-                authorName = authorProfiles.personal.name || "Amin Maghfuri (CEO)";
                 narrativeInstruction = `
-                **NARRATIVE STYLE: PERSONAL & AUTHORITATIVE (Narsis/CEO POV)**
-                - Role: Write as **${authorName}**, the CEO of PT Mesin Kasir Solo.
-                - Tone: Experienced, inspiring, confident, using "Saya" or "Aku".
+                **PERSONA: PERSONAL BRANDING (STRICTLY ENFORCED)**
+                - Penulis: **${authorName}** (Founder & CEO PT Mesin Kasir Solo).
+                - Tone of Voice: Berwibawa tapi santai, berpengalaman (10+ tahun), inspiratif, dan personal.
+                - Kata Ganti: Gunakan **"Saya"**, **"Aku"**, atau **"Gue"** (sesekali untuk penekanan santai). JANGAN gunakan "Kami".
+                - Storytelling: Wajib selipkan sedikit kisah perjuangan bangkit dari nol atau pengalaman lapangan nyata saat install mesin kasir.
+                - Opinionated: Berikan opini yang kuat dan berani, bukan sekadar teori umum.
                 `;
             } else {
-                authorName = authorProfiles.team.name || "Redaksi KasirSolo";
                 narrativeInstruction = `
-                **NARRATIVE STYLE: GENERAL / EDITORIAL**
-                - Role: Editorial Team (${authorName}).
-                - Tone: Objective, journalistic, using "Kami" or third person.
+                **PERSONA: CORPORATE EDITORIAL**
+                - Penulis: **Tim Redaksi KasirSolo**.
+                - Tone of Voice: Profesional, objektif, edukatif, jurnalistik, dan terpercaya.
+                - Kata Ganti: Gunakan **"Kami"** atau **"Tim SIBOS"**.
+                - Style: Fokus pada data, fakta, dan panduan teknis yang clear.
                 `;
             }
 
+            // --- 2. STRATEGI KONTEN (Pillar vs Cluster) ---
             let strategyContext = "";
-            let lengthReq = "Minimum 1000 words";
+            let structureInstruction = "";
+            let lengthReq = "";
             let clusterInstruction = "";
-            let structureInstruction = "Create 5-7 Major Subheadings (H2).";
 
             if (form.type === 'pillar') {
-                strategyContext = `STRATEGY: This is a **PILLAR PAGE**. MEGA GUIDE.`;
-                lengthReq = "Aim for 3000-4000 words.";
-                structureInstruction = "Create 8-12 Major Subheadings (H2).";
-                clusterInstruction = `BONUS TASK: Provide JSON block of 10 Cluster Titles at end. Format: ---CLUSTER_JSON_START--- ["Title 1", ...] ---CLUSTER_JSON_END---`;
+                strategyContext = `
+                **TYPE: PILLAR PAGE (CORNERSTONE CONTENT)**
+                - Tujuan: Menjadi panduan terlengkap di internet tentang topik ini.
+                - Depth: Bahas dari A sampai Z (Definisi, Manfaat, Cara Kerja, Perbandingan, Studi Kasus, Masa Depan).
+                - Internal Linking: Siapkan "hooks" untuk artikel turunan (cluster) nanti.
+                `;
+                lengthReq = "Target: 2500+ kata (Output maksimal token).";
+                structureInstruction = "Gunakan H2 untuk Bab Utama dan H3 untuk Sub-bab. Minimal 8 Bab Utama.";
+                clusterInstruction = `
+                **MANDATORY OUTPUT AT THE END:**
+                Generate a JSON list of 10 Cluster Article Titles that relate to this pillar.
+                Format: ---CLUSTER_JSON_START--- ["Judul 1", "Judul 2", ...] ---CLUSTER_JSON_END---
+                `;
             } else {
+                // Cari parent pillar untuk konteks link
                 const parentPillar = availablePillars.find(p => p.id === form.pillar_id);
-                const pillarTitle = parentPillar ? parentPillar.title : "Panduan Lengkap Bisnis";
-                const pillarLink = `/articles/${slugify(pillarTitle)}`;
-                strategyContext = `STRATEGY: CLUSTER CONTENT. Parent: "${pillarTitle}". Link back to parent as [${pillarTitle}](${pillarLink}).`;
-                lengthReq = "Maximum 800 words.";
+                const pillarTitle = parentPillar ? parentPillar.title : "Panduan Bisnis";
+                
+                strategyContext = `
+                **TYPE: CLUSTER CONTENT (SPECIFIC TOPIC)**
+                - Parent Pillar: "${pillarTitle}".
+                - Tugas: Bahas topik "${form.title}" secara spesifik dan mendalam. Jangan melebar.
+                - SEO Requirement: Wajib mention dan berikan link kontekstual ke parent pillar dengan format markdown: [${pillarTitle}](/articles/${slugify(pillarTitle)}).
+                `;
+                lengthReq = "Target: 800 - 1200 kata.";
+                structureInstruction = "Gunakan H2 untuk poin-poin utama. Minimal 5 H2.";
             }
 
-            setTextProgress({ percent: 20, message: `Menulis Artikel...` });
+            setTextProgress({ percent: 25, message: `Menulis draf artikel...` });
             
             const contentPrompt = `
-            Task: Write Article "${form.title}"
-            ${narrativeInstruction}
-            ${strategyContext}
-            
-            MANDATORY PROMOTION (Soft Selling):
-            - Must mention that "PT Mesin Kasir Solo" is developing 2 major platforms releasing in **2026**.
-            - 1. **SIBOS** (Smart Integrated Back Office System) for business management.
-            - 2. **QALAM** for education management (TPA/Pesantren).
-            - Call to Action: Join Waiting List at **sibos.my.id** and **qalam.id**.
-            - Placement: Insert naturally in "Future Solutions" section or "Conclusion".
+            Tugas: Tulis Artikel Blog SEO Friendly.
+            Judul: "${form.title}"
+            Bahasa: Indonesia (Natural, Mengalir, Tidak Kaku).
+            Target Audience: Pemilik UMKM, Cafe, Resto, dan Pengusaha Retail di Indonesia.
 
-            STRUCTURE: # Headline, Intro, ${structureInstruction}, FAQ, Conclusion (with Promo).
-            LENGTH: ${lengthReq}
-            LANG: Indonesian.
+            ${narrativeInstruction}
+
+            ${strategyContext}
+
+            **STRUKTUR ARTIKEL (MARKDOWN):**
+            1. **Judul H1** (Buat judul yang clickbait tapi relevan).
+            2. **Lead/Intro**: Hook yang kuat, relate dengan masalah pembaca (Pain Point).
+            3. **Body**: ${structureInstruction} Gunakan bullet points, bold text untuk keyword penting.
+            4. **Soft Selling (WAJIB)**:
+               - Sisipkan secara natural (jangan hard sell) bahwa **PT Mesin Kasir Solo** sedang mengembangkan **SIBOS** (Aplikasi Bisnis) dan **QALAM** (Aplikasi Pendidikan) yang rilis 2026.
+               - Ajak untuk join waiting list/demo.
+            5. **Kesimpulan & Call to Action**.
+
+            **ATURAN LAIN:**
+            - Format Markdown rapi (H1, H2, H3, Bold, List).
+            - Jangan ada intro meta seperti "Berikut adalah artikelnya...". Langsung konten.
+            
             ${clusterInstruction}
             `;
 
@@ -494,32 +524,44 @@ const useArticleManager = (
             const contentResponse = await callGeminiWithRotation({ 
                 model: 'gemini-3-flash-preview', 
                 contents: contentPrompt,
-                config: { maxOutputTokens: 8192 } 
+                config: { maxOutputTokens: 8192 } // Request max tokens for long form
             });
             
-            let generatedContent = contentResponse.text || '# Error generating text.';
+            let generatedContent = contentResponse.text || '# Maaf, gagal generate konten.';
             let extractedClusters: string[] = [];
 
+            // Extract Cluster JSON if Pillar
             if (form.type === 'pillar') {
                 const jsonStart = generatedContent.indexOf('---CLUSTER_JSON_START---');
                 const jsonEnd = generatedContent.indexOf('---CLUSTER_JSON_END---');
                 if (jsonStart !== -1 && jsonEnd !== -1) {
                     const jsonStr = generatedContent.substring(jsonStart + 24, jsonEnd);
                     try { extractedClusters = JSON.parse(jsonStr); } catch (e) {}
+                    // Remove JSON from displayed content
                     generatedContent = generatedContent.substring(0, jsonStart).trim();
                 }
             }
             
-            setTextProgress({ percent: 80, message: 'Metadata...' });
+            setTextProgress({ percent: 85, message: 'Membuat metadata SEO...' });
             
-            const metaPrompt = `Based on: "${generatedContent.substring(0, 1000)}..." Generate JSON: { "excerpt": "...", "category": "...", "readTime": "..." }`;
+            // Generate Metadata separate call
+            const metaPrompt = `
+            Based on this article content: "${generatedContent.substring(0, 1500)}..."
+            
+            Generate JSON Metadata:
+            {
+                "excerpt": "Ringkasan menarik max 150 karakter untuk SEO description",
+                "category": "Kategori yang paling cocok (pilih satu: Bisnis Tips, Teknologi, Marketing, Finance)",
+                "readTime": "Estimasi waktu baca (contoh: 5 min read)"
+            }
+            `;
             const metaResponse = await callGeminiWithRotation({ 
                 model: 'gemini-3-flash-preview', 
                 contents: metaPrompt, 
                 config: { responseMimeType: "application/json" } 
             });
             
-            let metaData = { excerpt: "", category: "Business", readTime: "5 min read" };
+            let metaData = { excerpt: "", category: "Bisnis", readTime: "5 min read" };
             try { metaData = JSON.parse(metaResponse.text || '{}'); } catch(e) {}
 
             setTextProgress({ percent: 100, message: 'Selesai!' });
@@ -527,14 +569,14 @@ const useArticleManager = (
                 ...prev,
                 content: generatedContent,
                 excerpt: metaData.excerpt || prev.excerpt,
-                category: genConfig.autoCategory ? metaData.category : prev.category,
+                category: genConfig.autoCategory ? (metaData.category || "General") : prev.category,
                 author: authorName, 
-                readTime: metaData.readTime || "10 min read",
+                readTime: metaData.readTime || "5 min read",
                 cluster_ideas: extractedClusters
             }));
 
         } catch (e: any) {
-            alert("Gagal: " + e.message);
+            alert("Gagal generate: " + e.message);
         } finally {
             setLoading(prev => ({ ...prev, generatingText: false }));
         }
