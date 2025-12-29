@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Button, Input, SectionHeader } from '../components/ui';
-import { formatRupiah } from '../utils';
+import { formatRupiah, formatNumberInput, cleanNumberInput } from '../utils';
 
 // --- COMPONENT: LOSS CALCULATOR ---
 const LossCalculator = () => {
@@ -14,22 +14,14 @@ const LossCalculator = () => {
   const [loss, setLoss] = useState<number | null>(null);
 
   const handleOmzetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Hapus karakter non-digit
-    const rawValue = e.target.value.replace(/\D/g, '');
-    
-    if (rawValue === '') {
-      setOmzet('');
-      return;
-    }
-
-    // Format ke format ribuan Indonesia
-    const formatted = new Intl.NumberFormat('id-ID').format(parseInt(rawValue));
-    setOmzet(formatted);
+    // Use shared utility for formatting
+    const val = formatNumberInput(e.target.value);
+    setOmzet(val);
   };
 
   const calculate = () => {
-    // Hapus titik sebelum konversi ke number
-    const numericValue = parseFloat(omzet.replace(/\./g, ''));
+    // Use shared utility for cleaning
+    const numericValue = cleanNumberInput(omzet);
     
     if (!numericValue) return;
     // Asumsi kebocoran rata-rata tanpa sistem = 5% (Fraud, salah hitung, stok hilang)

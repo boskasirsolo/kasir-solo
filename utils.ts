@@ -169,6 +169,21 @@ export const formatRupiah = (number: number) => {
   }).format(number);
 };
 
+// New Helper: Format number input with thousands separator (e.g. 1.000.000)
+export const formatNumberInput = (value: string | number) => {
+  const valStr = String(value);
+  // Remove non-digit characters
+  const raw = valStr.replace(/\D/g, '');
+  if (!raw) return '';
+  // Format with Indonesian locale
+  return new Intl.NumberFormat('id-ID').format(parseInt(raw));
+};
+
+// New Helper: Clean formatted input back to integer (e.g. 1.000.000 -> 1000000)
+export const cleanNumberInput = (value: string) => {
+  return parseInt(value.replace(/\./g, '') || '0');
+};
+
 export const slugify = (text: string) => {
   return text
     .toString()

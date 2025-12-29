@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, formatRupiah, callGeminiWithRotation } from '../utils';
+import { supabase, CONFIG, formatRupiah, callGeminiWithRotation, formatNumberInput, cleanNumberInput } from '../utils';
 
 const ITEMS_PER_PAGE = 8; // 4 columns x 2 rows
 
@@ -47,7 +47,7 @@ const useProductManager = (
         setForm({
             id: p.id,
             name: p.name,
-            price: p.price.toString(),
+            price: formatNumberInput(p.price), // Format initially from number
             desc: p.description,
             shortDesc: '',
             imagePreview: p.image,
@@ -141,7 +141,7 @@ const useProductManager = (
 
             const dbData = {
                 name: form.name,
-                price: parseInt(form.price),
+                price: cleanNumberInput(form.price), // Clean formatted string back to integer
                 category: 'POS System',
                 description: form.desc,
                 image_url: finalImageUrl
@@ -267,12 +267,18 @@ const ProductForm = ({
                 <Input value={form.name} onChange={e => setForm((prev:any) => ({...prev, name: e.target.value}))} placeholder="Nama Produk..." className="py-2 text-xs" />
             </div>
 
-            {/* PRICE */}
+            {/* PRICE (Formatted Input) */}
             <div>
                 <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Harga (IDR)</label>
                 <div className="relative">
                     <DollarSign size={12} className="absolute left-3 top-3 text-gray-500"/>
-                    <Input value={form.price} onChange={e => setForm((prev:any) => ({...prev, price: e.target.value}))} placeholder="0" type="number" className="pl-8 py-2 text-xs" />
+                    <Input 
+                        value={form.price} 
+                        onChange={e => setForm((prev:any) => ({...prev, price: formatNumberInput(e.target.value)}))} 
+                        placeholder="0" 
+                        type="text" 
+                        className="pl-8 py-2 text-xs" 
+                    />
                 </div>
             </div>
 
