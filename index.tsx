@@ -147,6 +147,27 @@ const AppContent = () => {
       
       const { data: testiData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
       if (testiData && testiData.length > 0) setTestimonials(testiData);
+
+      // 3. Fetch Site Settings (FIX: Load from DB)
+      const { data: settingsData } = await supabase.from('site_settings').select('*').single();
+      if (settingsData) {
+         setConfig({
+             heroTitle: settingsData.hero_title || config.heroTitle,
+             heroSubtitle: settingsData.hero_subtitle || config.heroSubtitle,
+             sibosUrl: settingsData.sibos_url || config.sibosUrl,
+             qalamUrl: settingsData.qalam_url || config.qalamUrl,
+             whatsappNumber: settingsData.whatsapp_number || config.whatsappNumber,
+             addressSolo: settingsData.address_solo || config.addressSolo,
+             addressBlora: settingsData.address_blora || config.addressBlora,
+             mapSoloLink: settingsData.map_solo_link || config.mapSoloLink,
+             mapBloraLink: settingsData.map_blora_link || config.mapBloraLink,
+             instagramUrl: settingsData.instagram_url || config.instagramUrl,
+             facebookUrl: settingsData.facebook_url || config.facebookUrl,
+             youtubeUrl: settingsData.youtube_url || config.youtubeUrl,
+             tiktokUrl: settingsData.tiktok_url || config.tiktokUrl,
+             linkedinUrl: settingsData.linkedin_url || config.linkedinUrl,
+         });
+      }
     };
 
     fetchData();
