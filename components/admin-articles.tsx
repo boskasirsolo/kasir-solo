@@ -402,22 +402,26 @@ const useArticleManager = (
     // --- UTILS: IMAGE GENERATOR ---
     const getAIImageUrl = (prompt: string, style: string) => {
         const seed = Math.floor(Math.random() * 9999999);
-        // Clean prompt rigorously: Remove newlines, non-alphanumeric (except basic punctuation), and limit length
-        const cleanPrompt = prompt.replace(/[\n\r]/g, ' ').replace(/[^\w\s,-]/g, '').trim();
         
+        // 1. Clean Prompt Aggressively for Pollinations URL
+        // Take max 80 chars, remove special characters except spaces to prevent URL breakage
+        let cleanPrompt = prompt.replace(/[^a-zA-Z0-9 ]/g, '');
+        cleanPrompt = cleanPrompt.substring(0, 80).trim();
+
         let styleKeywords = "";
         switch(style) {
-            case 'cinematic': styleKeywords = "cinematic lighting, dramatic, 8k, photorealistic"; break;
-            case 'cyberpunk': styleKeywords = "cyberpunk city, neon lights, futuristic, purple and orange"; break;
-            case 'corporate': styleKeywords = "modern office, professional, clean, corporate photography"; break;
-            case 'studio': styleKeywords = "studio lighting, product photography, minimal, sharp focus, 4k"; break;
-            case 'minimalist': styleKeywords = "minimalist, flat design, simple shapes, pastel colors"; break;
-            default: styleKeywords = "high quality, professional";
+            case 'cinematic': styleKeywords = "cinematic lighting realistic 8k"; break;
+            case 'cyberpunk': styleKeywords = "cyberpunk neon futuristic"; break;
+            case 'corporate': styleKeywords = "modern office professional"; break;
+            case 'studio': styleKeywords = "studio lighting minimal product"; break;
+            case 'minimalist': styleKeywords = "minimalist flat design"; break;
+            default: styleKeywords = "high quality";
         }
-        const finalPrompt = `${cleanPrompt}, ${styleKeywords}`;
         
-        // Use standard HD resolution 1280x720, use seed for cache busting
-        // Using 'flux' model which is currently reliable on Pollinations
+        // 2. Construct Safe URL
+        const finalPrompt = `${cleanPrompt} ${styleKeywords}`;
+        
+        // Using Flux model with explicit encoding and nologo
         return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
     };
 
