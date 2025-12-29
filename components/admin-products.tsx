@@ -58,7 +58,7 @@ const useProductManager = (
             imagePreview: p.image,
             uploadFile: null
         });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Scroll handled inside the sticky container, no window scroll needed
     };
 
     // --- AI GENERATORS ---
@@ -87,15 +87,19 @@ const useProductManager = (
             Role: Expert E-commerce Copywriter.
             Task: Write a persuasive product description for: "${form.name}".
             Features: ${form.shortDesc}.
-            Format: Indonesian. 2 Paragraphs + Bullet points of benefits. High conversion tone.
+            Format: Indonesian.
             
-            STRICT RULES:
-            1. Output ONLY the description content. 
-            2. Do NOT use introductory text like "Berikut adalah deskripsi...", "Tentu", or "Here is".
-            3. Start directly with the Hook/Headline.
+            STRICT OUTPUT RULES:
+            1. Output PLAIN TEXT only. 
+            2. Do NOT use Markdown formatting (NO **bold**, NO ## headers).
+            3. Use actual newlines for paragraphs.
+            4. Use dashes (-) for bullet points.
+            5. Start directly with the Hook. No "Here is the description".
             `;
             const response = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            setForm(prev => ({ ...prev, desc: response.text?.trim() || '' }));
+            // Clean up any lingering stars just in case
+            const cleanText = (response.text?.trim() || '').replace(/\*\*/g, '');
+            setForm(prev => ({ ...prev, desc: cleanText }));
         } catch (e: any) { alert(`AI Error: ${e.message}`); } 
         finally { setLoadingState(prev => ({ ...prev, generatingDesc: false })); }
     };
@@ -204,39 +208,40 @@ const ProductForm = ({
 }: {
     form: any, setForm: any, loading: any, onSubmit: any, onReset: any, onGenTitle: any, onGenDesc: any, onGenImage: any
 }) => (
-    <div className="bg-brand-dark p-5 rounded-xl border border-white/5 h-fit shadow-2xl relative overflow-hidden">
-        {/* Glow Effect */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-orange/10 rounded-full blur-[50px] pointer-events-none"></div>
-
-        <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5 relative z-10">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                {form.id ? <Edit size={16} className="text-brand-orange"/> : <Tag size={16} className="text-brand-orange"/>}
-                {form.id ? "EDIT PRODUK" : "PRODUK BARU"}
-            </h3>
-            {form.id && (
-                <button onClick={onReset} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
-                    <XIcon size={12} /> Batal
-                </button>
-            )}
+    <div className="bg-brand-dark rounded-xl border border-white/5 shadow-2xl relative overflow-hidden flex flex-col h-[85vh] sticky top-6">
+        
+        {/* 1. STICKY HEADER */}
+        <div className="p-5 border-b border-white/5 shrink-0 bg-brand-dark z-20">
+            <div className="flex justify-between items-center">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    {form.id ? <Edit size={16} className="text-brand-orange"/> : <Tag size={16} className="text-brand-orange"/>}
+                    {form.id ? "EDIT PRODUK" : "PRODUK BARU"}
+                </h3>
+                {form.id && (
+                    <button onClick={onReset} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
+                        <XIcon size={12} /> Batal
+                    </button>
+                )}
+            </div>
         </div>
 
-        {/* IMAGE SECTION - COMPACT HEIGHT */}
-        <div className="mb-5">
-            <div className="relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group mb-2">
+        {/* 2. STICKY IMAGE SECTION (Compact) */}
+        <div className="p-4 border-b border-white/5 shrink-0 bg-brand-dark/50 z-10">
+            <div className="relative w-full h-32 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
                 {form.imagePreview ? (
                     <img src={form.imagePreview} alt="Preview" className="w-full h-full object-contain p-2" />
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-1">
-                        <ImageIcon size={24} />
+                        <ImageIcon size={20} />
                         <span className="text-[9px]">Preview Gambar</span>
                     </div>
                 )}
                 {/* Image Actions Overlay */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
-                     <button onClick={onGenImage} disabled={loading.generatingImage} className="w-full py-2 bg-blue-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-500">
-                        {loading.generatingImage ? <LoadingSpinner size={12}/> : <><Wand2 size={12}/> Generate AI</>}
+                     <button onClick={onGenImage} disabled={loading.generatingImage} className="w-full py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-500">
+                        {loading.generatingImage ? <LoadingSpinner size={12}/> : <><Wand2 size={12}/> AI Generate</>}
                      </button>
-                     <label className="w-full py-2 bg-white/10 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-white/20 cursor-pointer border border-white/20">
+                     <label className="w-full py-1.5 bg-white/10 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-white/20 cursor-pointer border border-white/20">
                         <UploadCloud size={12}/> Upload
                         <input type="file" accept="image/*" onChange={(e) => {
                             const file = e.target.files ? e.target.files[0] : null;
@@ -247,8 +252,9 @@ const ProductForm = ({
             </div>
         </div>
 
-        <div className="space-y-4 relative z-10">
-            {/* KEYWORDS (Context for AI) */}
+        {/* 3. SCROLLABLE CONTENT (Inputs & Desc) */}
+        <div className="flex-grow overflow-y-auto p-5 custom-scrollbar space-y-4">
+            {/* KEYWORDS */}
             <div className="bg-brand-orange/5 p-3 rounded-lg border border-brand-orange/20">
                 <label className="text-[9px] text-brand-orange uppercase font-bold tracking-wider mb-1 block flex items-center gap-1">
                     <Sparkles size={10} /> Keywords / Fitur (AI Context)
@@ -272,7 +278,7 @@ const ProductForm = ({
                 <Input value={form.name} onChange={e => setForm((prev:any) => ({...prev, name: e.target.value}))} placeholder="Nama Produk..." className="py-2 text-xs" />
             </div>
 
-            {/* PRICE (Formatted Input) */}
+            {/* PRICE */}
             <div>
                 <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Harga (IDR)</label>
                 <div className="relative">
@@ -295,9 +301,12 @@ const ProductForm = ({
                         {loading.generatingDesc ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Desc</>}
                     </button>
                 </div>
-                <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-28 text-xs leading-relaxed custom-scrollbar" />
+                <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-48 text-xs leading-relaxed custom-scrollbar" />
             </div>
+        </div>
 
+        {/* 4. STICKY FOOTER (Button) */}
+        <div className="p-5 border-t border-white/5 shrink-0 bg-brand-dark">
             <Button onClick={onSubmit} disabled={loading.uploading} className="w-full py-3 text-xs font-bold shadow-neon">
                 {loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={14}/> UPDATE</> : <><Plus size={14}/> SIMPAN</>)}
             </Button>
@@ -365,7 +374,7 @@ const ProductList = ({
                             </div>
                             <div className="p-3 flex-grow flex flex-col">
                                 <h5 className="text-xs font-bold text-white line-clamp-2 mb-1 leading-snug" title={p.name}>{p.name}</h5>
-                                <p className="text-[9px] text-gray-500 line-clamp-2 leading-relaxed flex-grow">
+                                <p className="text-[9px] text-gray-500 line-clamp-2 leading-relaxed flex-grow whitespace-pre-line">
                                     {p.description || "Belum ada deskripsi."}
                                 </p>
                             </div>
@@ -397,7 +406,7 @@ export const AdminProducts = ({
       </div>
       
       {/* Editor Column (25%) */}
-      <div className="lg:col-span-1 order-1 lg:order-2 sticky top-6">
+      <div className="lg:col-span-1 order-1 lg:order-2">
          <ProductForm 
             form={form} 
             setForm={setForm} 
