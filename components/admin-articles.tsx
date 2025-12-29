@@ -401,19 +401,24 @@ const useArticleManager = (
 
     // --- UTILS: IMAGE GENERATOR ---
     const getAIImageUrl = (prompt: string, style: string) => {
-        const seed = Math.floor(Math.random() * 999999);
-        const safePrompt = prompt.replace(/[^a-zA-Z0-9\s,]/g, '').trim();
+        const seed = Math.floor(Math.random() * 9999999);
+        // Clean prompt rigorously: Remove newlines, non-alphanumeric (except basic punctuation), and limit length
+        const cleanPrompt = prompt.replace(/[\n\r]/g, ' ').replace(/[^\w\s,-]/g, '').trim();
+        
         let styleKeywords = "";
         switch(style) {
-            case 'cinematic': styleKeywords = "cinematic lighting, dramatic, 8k, highly detailed, photorealistic, movie scene"; break;
-            case 'cyberpunk': styleKeywords = "cyberpunk city, neon lights, futuristic, purple and orange, high tech, blade runner style"; break;
-            case 'corporate': styleKeywords = "modern office, professional, bright, clean, corporate photography, success, business meeting"; break;
-            case 'studio': styleKeywords = "studio lighting, product photography, solid background, minimal, sharp focus, 4k"; break;
-            case 'minimalist': styleKeywords = "minimalist, flat design, vector art, simple shapes, pastel colors, clean lines"; break;
-            default: styleKeywords = "high quality, professional, award winning";
+            case 'cinematic': styleKeywords = "cinematic lighting, dramatic, 8k, photorealistic"; break;
+            case 'cyberpunk': styleKeywords = "cyberpunk city, neon lights, futuristic, purple and orange"; break;
+            case 'corporate': styleKeywords = "modern office, professional, clean, corporate photography"; break;
+            case 'studio': styleKeywords = "studio lighting, product photography, minimal, sharp focus, 4k"; break;
+            case 'minimalist': styleKeywords = "minimalist, flat design, simple shapes, pastel colors"; break;
+            default: styleKeywords = "high quality, professional";
         }
-        const finalPrompt = `${safePrompt}, ${styleKeywords}`;
-        return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1024&height=576&model=flux&nologo=true&seed=${seed}`;
+        const finalPrompt = `${cleanPrompt}, ${styleKeywords}`;
+        
+        // Use standard HD resolution 1280x720, use seed for cache busting
+        // Using 'flux' model which is currently reliable on Pollinations
+        return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
     };
 
     const generateTextContent = async () => {
@@ -467,7 +472,15 @@ const useArticleManager = (
             Task: Write Article "${form.title}"
             ${narrativeInstruction}
             ${strategyContext}
-            STRUCTURE: # Headline, Intro, ${structureInstruction}, FAQ, Conclusion.
+            
+            MANDATORY PROMOTION (Soft Selling):
+            - Must mention that "PT Mesin Kasir Solo" is developing 2 major platforms releasing in **2026**.
+            - 1. **SIBOS** (Smart Integrated Back Office System) for business management.
+            - 2. **QALAM** for education management (TPA/Pesantren).
+            - Call to Action: Join Waiting List at **sibos.my.id** and **qalam.id**.
+            - Placement: Insert naturally in "Future Solutions" section or "Conclusion".
+
+            STRUCTURE: # Headline, Intro, ${structureInstruction}, FAQ, Conclusion (with Promo).
             LENGTH: ${lengthReq}
             LANG: Indonesian.
             ${clusterInstruction}
@@ -529,11 +542,13 @@ const useArticleManager = (
         setImageProgress({ percent: 20, message: 'Merancang visual...' });
 
         try {
-             const prompt = `Create a short English prompt for an AI image generator based on article title: "${form.title}". Style: ${genConfig.imageStyle}. Max 15 words.`;
+             // More specific prompt for prompt generation to avoid complex characters
+             const prompt = `Create a short, simple English image description (max 10 words) for an article titled: "${form.title}". Style: ${genConfig.imageStyle}. Avoid quotes or special chars.`;
              
              // USE CENTRALIZED ROTATION CALLER
              const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-             const imagePrompt = result.text || form.title;
+             // Clean result from potential quotes Gemini might add
+             const imagePrompt = (result.text || form.title).replace(/['"]/g, '');
 
              setImageProgress({ percent: 60, message: 'Rendering...' });
              const url = getAIImageUrl(imagePrompt, genConfig.imageStyle);
@@ -541,6 +556,7 @@ const useArticleManager = (
              setForm(prev => ({ ...prev, imagePreview: url }));
              setImageProgress({ percent: 100, message: 'Selesai!' });
         } catch(e) {
+             console.error("AI Image Prompt Generation Failed, using title fallback", e);
              const url = getAIImageUrl(form.title, genConfig.imageStyle);
              setForm(prev => ({ ...prev, imagePreview: url }));
         } finally { 
@@ -1069,7 +1085,13 @@ export const AdminArticles = ({
                     {/* Image */}
                     <div className="relative w-full h-32 bg-black rounded-lg border border-white/10 overflow-hidden group">
                         {form.imagePreview ? (
-                            <img src={form.imagePreview} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                            <img 
+                                src={form.imagePreview} 
+                                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/800x600?text=Image+Load+Error";
+                                }}
+                            />
                         ) : (
                             <div className="flex items-center justify-center h-full text-gray-600"><ImageIcon size={24}/></div>
                         )}
@@ -1177,7 +1199,14 @@ export const AdminArticles = ({
                     </div>
                     {form.imagePreview && (
                         <div className="w-full h-64 rounded-xl overflow-hidden mb-8 shadow-2xl border border-white/10">
-                            <img src={form.imagePreview} className="w-full h-full object-cover" alt="Cover" />
+                            <img 
+                                src={form.imagePreview} 
+                                className="w-full h-full object-cover" 
+                                alt="Cover"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "https://via.placeholder.com/800x600?text=Image+Load+Error";
+                                }}
+                            />
                         </div>
                     )}
                     {form.excerpt && (
