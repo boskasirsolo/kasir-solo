@@ -28,7 +28,8 @@ export const SibosWidget = ({
     setInputValue,
     handleSendMessage,
     clearChat,
-    isModeAdmin // Expose this from hook
+    isModeAdmin, // Expose this from hook
+    authState // Get authState to determine if password input is needed
   } = useSibosChat(products, isAdmin, currentPage, setConfig, session);
 
   return (
@@ -46,6 +47,7 @@ export const SibosWidget = ({
           setInput={setInputValue} 
           onSend={handleSendMessage} 
           disabled={isTyping}
+          isPassword={authState === 'AWAITING_PASSWORD'}
         />
       </div>
 

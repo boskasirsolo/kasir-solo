@@ -98,12 +98,14 @@ export const ChatInputArea = ({
   input, 
   setInput, 
   onSend,
-  disabled
+  disabled,
+  isPassword = false
 }: { 
   input: string, 
   setInput: (v: string) => void, 
   onSend: () => void,
-  disabled: boolean
+  disabled: boolean,
+  isPassword?: boolean
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -115,18 +117,30 @@ export const ChatInputArea = ({
   return (
     <div className="pb-3 pt-1 bg-brand-dark border-t border-white/10 shrink-0 rounded-b-2xl">
       <div className="px-3 flex items-end gap-2">
-        {/* Text Area */}
+        {/* Text Area or Input Password */}
         <div className="flex-1 relative bg-black/40 border border-white/10 rounded-xl focus-within:border-brand-orange/50 transition-colors flex items-end">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ketik pesan..."
-            disabled={disabled}
-            className="w-full bg-transparent text-sm text-white placeholder-gray-500 resize-none outline-none max-h-24 py-3 px-3 custom-scrollbar disabled:opacity-50"
-            rows={1}
-            style={{ minHeight: '44px' }}
-          />
+          {isPassword ? (
+            <input
+                type="password"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Masukkan Password..."
+                disabled={disabled}
+                className="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none h-11 px-3 disabled:opacity-50"
+            />
+          ) : (
+            <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ketik pesan..."
+                disabled={disabled}
+                className="w-full bg-transparent text-sm text-white placeholder-gray-500 resize-none outline-none max-h-24 py-3 px-3 custom-scrollbar disabled:opacity-50"
+                rows={1}
+                style={{ minHeight: '44px' }}
+            />
+          )}
         </div>
 
         {/* Send Button */}
