@@ -22,6 +22,11 @@ const AppContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // --- Global Scroll To Top ---
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   const [session, setSession] = useState<any>(null);
   
   // Data State - Initialize Articles empty to prevent ghosting
@@ -37,6 +42,10 @@ const AppContent = () => {
     sibosUrl: "https://sibos.id",
     qalamUrl: "https://qalam.id",
     whatsappNumber: "6282325103336",
+    addressSolo: "Perum Graha Tiara 2 B1, Kartasura",
+    addressBlora: "Gumiring 04/04, Banjarejo",
+    mapSoloLink: "https://maps.google.com/?q=Perum+Graha+Tiara+2+B1+Kartasura",
+    mapBloraLink: "https://maps.google.com/?q=Gumiring+Banjarejo+Blora",
     instagramUrl: "https://instagram.com/",
     facebookUrl: "https://facebook.com/",
     youtubeUrl: "https://youtube.com/",
@@ -54,7 +63,7 @@ const AppContent = () => {
     if (pageId === 'home') navigate('/');
     else navigate(`/${pageId}`);
     
-    window.scrollTo(0, 0);
+    // window.scrollTo(0, 0); // Handled by useEffect now
   };
 
   // --- Helper: Smart Date Parser ---
@@ -183,7 +192,9 @@ const AppContent = () => {
           <Route path="/articles" element={<ArticlesPage articles={articles} products={products} />} />
           <Route path="/articles/:slug" element={<ArticleDetailPage articles={articles} products={products} />} />
           
-          <Route path="/about" element={<AboutPage />} />
+          {/* PASS CONFIG TO ABOUT PAGE */}
+          <Route path="/about" element={<AboutPage config={config} />} />
+          
           <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
           <Route path="/innovation" element={<InnovationPage config={config} />} />
           

@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { MapPin, Phone, History, Rocket, TrendingUp, AlertTriangle, Sunrise } from 'lucide-react';
+import { SiteConfig } from '../types';
 
-export const AboutPage = () => (
+export const AboutPage = ({ config }: { config?: SiteConfig }) => (
   <div className="animate-fade-in">
     {/* Hero Section */}
     <div className="bg-brand-card py-24 border-b border-white/5 relative overflow-hidden">
@@ -118,18 +119,14 @@ export const AboutPage = () => (
                 <div>
                     <h4 className="text-brand-orange font-bold text-sm uppercase tracking-wider mb-2 border-l-2 border-brand-orange pl-2">Kantor Legal (Solo Raya)</h4>
                     <p className="text-gray-300 leading-relaxed">
-                        Perum Graha Tiara 2 No. B1,<br/>
-                        Gumpang 07/01, Kartasura, Sukoharjo,<br/>
-                        Jawa Tengah, Indonesia 57169
+                        {config?.addressSolo || "Perum Graha Tiara 2 No. B1, Gumpang 07/01, Kartasura, Sukoharjo, Jawa Tengah"}
                     </p>
                 </div>
 
                 <div className="pt-6 border-t border-white/5">
                     <h4 className="text-brand-orange font-bold text-sm uppercase tracking-wider mb-2 border-l-2 border-brand-orange pl-2">Kantor Operasional (Blora)</h4>
                     <p className="text-gray-300 leading-relaxed">
-                        Gumiring 04/04, Sidomulyo,<br/>
-                        Banjarejo, Blora,<br/>
-                        Jawa Tengah, Indonesia 58253
+                        {config?.addressBlora || "Gumiring 04/04, Sidomulyo, Banjarejo, Blora, Jawa Tengah"}
                     </p>
                 </div>
             </div>
@@ -142,8 +139,8 @@ export const AboutPage = () => (
               </div> 
               Layanan Pelanggan
             </h3>
-            <a href="https://wa.me/6282325103336" className="inline-flex items-center gap-4 text-3xl font-bold text-brand-orange hover:text-white transition-colors drop-shadow-neon">
-              0823 2510 3336
+            <a href={`https://wa.me/${config?.whatsappNumber}`} className="inline-flex items-center gap-4 text-3xl font-bold text-brand-orange hover:text-white transition-colors drop-shadow-neon">
+              {config?.whatsappNumber || "0823 2510 3336"}
             </a>
           </div>
         </div>
@@ -151,19 +148,29 @@ export const AboutPage = () => (
         <div className="h-[600px] bg-gray-800 rounded-3xl overflow-hidden relative border border-brand-orange/30 shadow-neon-strong group">
           <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000" alt="Map" className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-4">
-             {/* Pin Solo */}
-             <div className="bg-brand-black/90 p-6 rounded-2xl border border-brand-orange text-center backdrop-blur-md shadow-neon w-64 transform transition-transform hover:scale-105">
+             {/* Pin Solo - Clickable & No Shadow */}
+             <a 
+               href={config?.mapSoloLink || '#'} 
+               target="_blank" 
+               rel="noreferrer"
+               className="block bg-brand-black/90 p-6 rounded-2xl border border-brand-orange text-center backdrop-blur-md w-64 transform transition-transform hover:scale-105 cursor-pointer hover:bg-brand-black"
+             >
                <MapPin className="text-brand-orange w-8 h-8 mx-auto mb-2 animate-bounce" />
                <p className="font-bold text-white text-lg">SOLO RAYA</p>
                <p className="text-gray-400 text-xs">Sukoharjo & Kartasura</p>
-             </div>
+             </a>
 
-             {/* Pin Blora */}
-             <div className="bg-brand-black/90 p-6 rounded-2xl border border-brand-orange text-center backdrop-blur-md shadow-neon w-64 transform transition-transform hover:scale-105">
+             {/* Pin Blora - Clickable & No Shadow */}
+             <a 
+               href={config?.mapBloraLink || '#'}
+               target="_blank"
+               rel="noreferrer"
+               className="block bg-brand-black/90 p-6 rounded-2xl border border-brand-orange text-center backdrop-blur-md w-64 transform transition-transform hover:scale-105 cursor-pointer hover:bg-brand-black"
+             >
                <MapPin className="text-brand-orange w-8 h-8 mx-auto mb-2 animate-bounce" style={{ animationDelay: '0.5s' }} />
                <p className="font-bold text-white text-lg">BLORA</p>
                <p className="text-gray-400 text-xs">Banjarejo & Sekitarnya</p>
-             </div>
+             </a>
           </div>
         </div>
       </div>

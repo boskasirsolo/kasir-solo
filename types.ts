@@ -68,6 +68,8 @@ export interface SiteConfig {
   whatsappNumber?: string;
   addressSolo?: string;
   addressBlora?: string;
+  mapSoloLink?: string; // New Map Link
+  mapBloraLink?: string; // New Map Link
   instagramUrl?: string;
   facebookUrl?: string;
   youtubeUrl?: string;

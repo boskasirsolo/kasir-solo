@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone } from 'lucide-react';
+import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea } from './ui';
 
@@ -42,6 +42,19 @@ export const AdminSettings = ({
              <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Alamat Kantor 2 (Blora)</label>
              <Input value={config.addressBlora || ''} onChange={(e) => setConfig({...config, addressBlora: e.target.value})} placeholder="Banjarejo..." />
            </div>
+           
+           {/* New Map Coordinates */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Compass size={12}/> Link Map Solo</label>
+                <Input value={config.mapSoloLink || ''} onChange={(e) => setConfig({...config, mapSoloLink: e.target.value})} placeholder="https://maps.app.goo.gl/..." className="text-xs" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Compass size={12}/> Link Map Blora</label>
+                <Input value={config.mapBloraLink || ''} onChange={(e) => setConfig({...config, mapBloraLink: e.target.value})} placeholder="https://maps.app.goo.gl/..." className="text-xs" />
+              </div>
+           </div>
+
            <div>
              <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Phone size={12}/> No. WhatsApp Utama</label>
              <Input value={config.whatsappNumber || ''} onChange={(e) => setConfig({...config, whatsappNumber: e.target.value})} placeholder="08xxxx (Tanpa +62)" />
