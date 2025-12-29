@@ -84,31 +84,61 @@ const DigitalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: () 
   );
 };
 
-// --- COMPONENTS: PHYSICAL PROJECT CARD (CLASSIC) ---
+// --- COMPONENTS: PHYSICAL PROJECT CARD (UPDATED FORMAT) ---
 const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: () => void }) => (
     <div 
       onClick={onClick}
-      className="group relative rounded-2xl overflow-hidden border border-white/5 hover:border-brand-orange transition-all duration-500 cursor-pointer shadow-lg h-full bg-brand-card"
+      className="group relative bg-brand-card border border-white/5 rounded-2xl overflow-hidden hover:border-brand-orange transition-all duration-500 cursor-pointer shadow-lg hover:shadow-neon flex flex-col h-full"
     >
-      <div className="relative w-full h-72 md:h-80 overflow-hidden">
-        <img 
-          src={item.image_url} 
-          alt={item.title} 
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
-        
-        {item.type === 'video' && (
-          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-            <div className="bg-black/50 rounded-full p-3 backdrop-blur-sm border border-white/20 group-hover:bg-brand-orange group-hover:border-brand-orange transition-colors">
-              <PlayCircle size={40} className="text-white fill-white/20" />
-            </div>
-          </div>
-        )}
+      {/* PHOTO FRAME CONTAINER */}
+      <div className="relative bg-gray-900 p-4 border-b border-white/5">
+         <div className="relative rounded-xl bg-black border border-white/10 overflow-hidden aspect-[16/10] shadow-2xl">
+            <img 
+              src={item.image_url} 
+              alt={item.title} 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            />
+            
+            {/* Video Icon Overlay if Type Video */}
+            {item.type === 'video' && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                <div className="bg-black/50 rounded-full p-3 backdrop-blur-sm border border-white/20 group-hover:bg-brand-orange group-hover:border-brand-orange transition-colors">
+                  <PlayCircle size={32} className="text-white fill-white/20" />
+                </div>
+              </div>
+            )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-          <h3 className="text-white font-bold text-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">{item.title}</h3>
-          <div className="w-10 h-1 bg-brand-orange mt-2 rounded-full shadow-neon"></div>
-        </div>
+            {/* Default Icon Overlay (Fade out on hover) */}
+            <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${item.type === 'video' ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'}`}>
+               <div className="bg-black/60 backdrop-blur-md p-3 rounded-full border border-white/10">
+                  <Monitor size={24} className="text-white"/>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div className="p-6 flex flex-col flex-grow">
+         {/* Tags */}
+         <div className="flex flex-wrap gap-2 mb-3">
+            <span className="text-[10px] font-bold px-2 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20">
+               Hardware & Instalasi
+            </span>
+            {item.type === 'video' && (
+                <span className="text-[10px] font-bold px-2 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-1">
+                   Video
+                </span>
+            )}
+         </div>
+
+         <h3 className="text-xl font-bold text-white mb-2 group-hover:text-brand-orange transition-colors line-clamp-2">{item.title}</h3>
+         
+         <p className="text-gray-400 text-sm line-clamp-2 mb-4 flex-grow">
+            {item.description || "Dokumentasi instalasi perangkat keras dan konfigurasi sistem."}
+         </p>
+         
+         <div className="flex items-center text-brand-orange text-xs font-bold uppercase tracking-widest gap-2 mt-auto">
+            Lihat Detail <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+         </div>
       </div>
     </div>
 );
