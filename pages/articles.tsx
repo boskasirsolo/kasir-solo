@@ -27,6 +27,7 @@ export const ArticleDetailPage = ({ articles, products }: { articles: Article[],
     <ArticleReaderView
       article={article}
       products={products}
+      allArticles={articles}
       onClose={() => navigate('/articles')}
     />
   );

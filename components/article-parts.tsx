@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
-import { formatRupiah } from '../utils';
+import { formatRupiah, slugify } from '../utils';
 import { useCart } from '../context/cart-context';
 import { ProductDetailModal } from './shop-parts'; // Import Modal Detail Produk
 
@@ -710,10 +710,12 @@ const SidebarProductCard = ({
 const ArticleSidebarRight = ({ 
   article, 
   products, 
+  allArticles, // New prop
   onProductClick 
 }: { 
   article: Article, 
-  products: Product[], 
+  products: Product[],
+  allArticles: Article[], 
   onProductClick: (p: Product) => void 
 }) => {
   // Logic: Product Recommendation
@@ -732,26 +734,76 @@ const ArticleSidebarRight = ({
     recommendedProducts = recommendedProducts.slice(0, 3);
   }
 
+  // Logic: Related Articles (Exclude current)
+  const relatedArticles = allArticles
+      .filter(a => a.id !== article.id)
+      .slice(0, 4);
+
   return (
       <div className="space-y-6 sticky top-28">
-            <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
-              <RecIcon size={16} className="text-brand-orange" />
-              <h5 className="text-xs font-bold text-white uppercase tracking-widest">{recTitle}</h5>
-            </div>
             
-            {/* Product Cards Grid */}
-            <div className="space-y-4">
-              {recommendedProducts.map((p: Product) => (
-                  <React.Fragment key={p.id}>
-                    <SidebarProductCard 
-                      product={p} 
-                      onDetail={() => onProductClick(p)} 
-                    />
-                  </React.Fragment>
-              ))}
+            {/* 1. Author Widget (New) */}
+            <div className="bg-brand-card border border-white/5 rounded-xl p-5 shadow-lg">
+                <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-brand-orange/10 flex items-center justify-center text-brand-orange border border-brand-orange/30">
+                        <User size={24} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Ditulis Oleh</p>
+                        <p className="text-sm font-bold text-white leading-tight">{article.author || "Tim Redaksi"}</p>
+                    </div>
+                </div>
+                <p className="text-xs text-gray-400 mb-4 leading-relaxed line-clamp-3">
+                   Praktisi teknologi kasir dan konsultan bisnis UMKM berpengalaman di PT Mesin Kasir Solo.
+                </p>
+                <button className="w-full py-2 rounded-lg border border-white/10 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
+                   Lihat Profile
+                </button>
             </div>
 
-            {/* CTA Box */}
+            {/* 2. Related Articles (New) */}
+            {relatedArticles.length > 0 && (
+                <div className="bg-brand-card border border-white/5 rounded-xl p-5 shadow-lg">
+                    <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
+                        <TrendingUp size={16} className="text-brand-orange" />
+                        <h5 className="text-xs font-bold text-white uppercase tracking-widest">Baca Juga</h5>
+                    </div>
+                    <div className="space-y-4">
+                        {relatedArticles.map(a => (
+                            <Link to={`/articles/${slugify(a.title)}`} key={a.id} className="block group">
+                                <h6 className="text-xs font-bold text-gray-300 group-hover:text-brand-orange transition-colors line-clamp-2 mb-1">
+                                    {a.title}
+                                </h6>
+                                <div className="flex items-center gap-2 text-[10px] text-gray-600">
+                                    <span>{a.date}</span>
+                                    <span>•</span>
+                                    <span>{a.readTime}</span>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* 3. Products */}
+            <div>
+                 <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
+                    <RecIcon size={16} className="text-brand-orange" />
+                    <h5 className="text-xs font-bold text-white uppercase tracking-widest">{recTitle}</h5>
+                 </div>
+                 <div className="space-y-4">
+                    {recommendedProducts.map((p: Product) => (
+                        <React.Fragment key={p.id}>
+                            <SidebarProductCard 
+                            product={p} 
+                            onDetail={() => onProductClick(p)} 
+                            />
+                        </React.Fragment>
+                    ))}
+                 </div>
+            </div>
+
+            {/* 4. CTA Box */}
             <div className="bg-gradient-to-br from-brand-orange/10 to-brand-dark border border-brand-orange/20 p-4 rounded-xl text-center mt-6">
                 <p className="text-xs text-gray-300 mb-3 font-bold">Butuh konsultasi lebih lanjut?</p>
                 <a href="https://wa.me/6282325103336" target="_blank" rel="noreferrer" className="block w-full py-2 bg-brand-orange text-white text-xs font-bold rounded hover:bg-brand-glow transition-all">
@@ -766,7 +818,17 @@ const ArticleSidebarRight = ({
 // 4. ORGANISMS (Complex Components)
 // ==========================================
 
-export const ArticleReaderView = ({ article, onClose, products }: { article: Article, onClose: () => void, products: Product[] }) => {
+export const ArticleReaderView = ({ 
+  article, 
+  onClose, 
+  products,
+  allArticles 
+}: { 
+  article: Article, 
+  onClose: () => void, 
+  products: Product[],
+  allArticles: Article[]
+}) => {
   const { progress, scrollPos, containerRef, handleScroll } = useReadingProgress();
   const ITEMS_PER_PAGE = 30; // Defined here to share with ToC logic
   const { currentPage, setCurrentPage, totalPages, currentBlocks } = useArticlePagination(article.content, ITEMS_PER_PAGE);
@@ -896,7 +958,8 @@ export const ArticleReaderView = ({ article, onClose, products }: { article: Art
                          <div className="sticky top-28 space-y-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
                             <ArticleSidebarRight 
                               article={article} 
-                              products={products} 
+                              products={products}
+                              allArticles={allArticles}
                               onProductClick={setSelectedSidebarProduct}
                             />
                          </div>
