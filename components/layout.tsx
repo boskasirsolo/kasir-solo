@@ -77,9 +77,9 @@ const NavLink: React.FC<NavLinkProps> = ({
     return (
       <button
         onClick={onClick}
-        className={`text-left font-bold p-2 rounded hover:bg-white/5 transition-all flex items-center justify-between w-full group ${
-          active ? 'text-brand-orange border-l-2 border-brand-orange pl-3' : 'text-gray-400'
-        } ${isChild ? 'pl-6 text-sm font-normal' : 'text-lg'}`}
+        className={`text-left font-bold p-3 rounded-lg hover:bg-white/5 transition-all flex items-center justify-between w-full group ${
+          active ? 'text-brand-orange bg-brand-orange/10 border-l-2 border-brand-orange pl-3' : 'text-gray-300 border-l-2 border-transparent'
+        } ${isChild ? 'pl-8 text-sm font-normal' : 'text-base'}`}
       >
         {label}
         {mobile && !isChild && active && <ChevronRight size={16} />}
@@ -212,11 +212,12 @@ const MobileNavToggle = ({
   cartCount: number, 
   onCartClick: () => void 
 }) => (
-  <div className="flex items-center gap-4 lg:hidden">
+  <div className="flex items-center gap-4 lg:hidden relative z-50">
     <CartButton id="mobile-cart-btn" count={cartCount} onClick={onCartClick} mobile />
     <button 
-      className="text-brand-orange drop-shadow-neon p-1"
+      className="text-brand-orange drop-shadow-neon p-2 rounded-md hover:bg-white/10 transition-colors"
       onClick={onToggle}
+      aria-label="Toggle Menu"
     >
       {isOpen ? <X size={28} /> : <Menu size={28} />}
     </button>
@@ -247,17 +248,17 @@ const MobileMenuOverlay = ({
   if (!isOpen) return null;
   
   return (
-    <div className="lg:hidden bg-brand-dark/95 backdrop-blur-xl border-t border-white/10 fixed inset-0 top-[72px] z-40 overflow-y-auto animate-fade-in">
-      <div className="p-6 flex flex-col gap-6 pb-24">
+    <div className="lg:hidden fixed inset-0 z-40 bg-brand-black/95 backdrop-blur-xl overflow-y-auto animate-fade-in">
+      <div className="min-h-screen pt-24 pb-12 px-6 flex flex-col gap-6">
         {NAV_ITEMS.map((item) => (
           <React.Fragment key={item.id}>
              {item.children ? (
                 // Group Header & Children for Mobile
                 <div className="flex flex-col gap-2 bg-white/5 rounded-xl p-4 border border-white/5">
-                   <div className="text-left text-brand-orange text-xs font-bold uppercase tracking-widest px-2 flex items-center gap-2">
+                   <div className="text-left text-brand-orange text-xs font-bold uppercase tracking-widest px-2 flex items-center gap-2 mb-2">
                       {item.label}
                    </div>
-                   <div className="flex flex-col gap-1 pl-2 border-l border-white/10">
+                   <div className="flex flex-col gap-1 pl-2 border-l-2 border-white/10">
                      {item.children.map((child, idx) => (
                         <NavLink 
                           key={idx}
@@ -281,13 +282,13 @@ const MobileMenuOverlay = ({
           </React.Fragment>
         ))}
         
-        <div className="mt-4 pt-6 border-t border-white/10">
+        <div className="mt-6 pt-6 border-t border-white/10">
            <p className="text-gray-500 text-xs mb-3 text-center uppercase tracking-widest font-bold">Layanan Korporat</p>
            <a 
               href="https://wa.me/6282325103336?text=Halo%20PT%20Mesin%20Kasir%20Solo,%20saya%20ingin%20minta%20penawaran%20harga."
               target="_blank"
               rel="noreferrer"
-              className="flex w-full items-center justify-center gap-2 bg-brand-orange text-white py-4 rounded-xl font-bold shadow-neon text-sm"
+              className="flex w-full items-center justify-center gap-2 bg-brand-orange text-white py-4 rounded-xl font-bold shadow-neon text-sm hover:bg-brand-action transition-colors"
            >
               <FileText size={18} /> MINTA PENAWARAN RESMI
            </a>
@@ -310,31 +311,35 @@ const Header = ({
   const { totalItems } = useCart(); 
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-brand-black/90 backdrop-blur-xl border-b border-white/10 shadow-2xl transition-all duration-300">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center relative z-50">
-        <Logo onClick={() => setPage('home')} />
-        
-        <DesktopNav 
-          current={currentPage} 
-          setPage={setPage} 
-          cartCount={totalItems} 
-        />
-        
-        <MobileNavToggle 
-          isOpen={isMenuOpen} 
-          onToggle={() => setIsMenuOpen(!isMenuOpen)} 
-          cartCount={totalItems} 
-          onCartClick={() => { setPage('checkout'); setIsMenuOpen(false); }}
-        />
-      </div>
+    <>
+      <nav className="fixed top-0 w-full z-50 bg-brand-black/90 backdrop-blur-xl border-b border-white/10 shadow-2xl transition-all duration-300">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center relative z-50">
+          <Logo onClick={() => { setPage('home'); setIsMenuOpen(false); }} />
+          
+          <DesktopNav 
+            current={currentPage} 
+            setPage={setPage} 
+            cartCount={totalItems} 
+          />
+          
+          <MobileNavToggle 
+            isOpen={isMenuOpen} 
+            onToggle={() => setIsMenuOpen(!isMenuOpen)} 
+            cartCount={totalItems} 
+            onCartClick={() => { setPage('checkout'); setIsMenuOpen(false); }}
+          />
+        </div>
+      </nav>
 
+      {/* Render overlay outside of nav structure for better stacking context management if needed, 
+          but usually fixed/fixed works. Keeping it separate to ensure z-index clarity relative to document */}
       <MobileMenuOverlay 
         isOpen={isMenuOpen} 
         current={currentPage} 
         setPage={setPage} 
         onClose={() => setIsMenuOpen(false)} 
       />
-    </nav>
+    </>
   );
 };
 
