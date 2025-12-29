@@ -72,7 +72,7 @@ const renderInline = (text: string) => {
 };
 
 // --- HELPER: MARKDOWN TABLE ---
-const MarkdownTable = ({ content }: { content: string }) => {
+const MarkdownTable: React.FC<{ content: string }> = ({ content }) => {
     const rows = content.trim().split('\n');
     if (rows.length < 2) return <pre className="text-xs">{content}</pre>;
 

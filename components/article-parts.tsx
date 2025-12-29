@@ -134,7 +134,7 @@ export const renderFormattedText = (text: string) => {
 };
 
 // --- MARKDOWN TABLE COMPONENT ---
-const MarkdownTable = ({ content }: { content: string }) => {
+const MarkdownTable: React.FC<{ content: string }> = ({ content }) => {
     const rows = content.trim().split('\n');
     if (rows.length < 2) return <pre className="whitespace-pre-wrap">{content}</pre>;
 

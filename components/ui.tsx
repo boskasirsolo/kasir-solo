@@ -106,7 +106,7 @@ export const LoadingSpinner = ({ size = 24, className = '' }: { size?: number, c
 
 // --- Molecules ---
 
-export const Card = ({ children, className = '', hoverEffect = true }: { children?: React.ReactNode, className?: string, hoverEffect?: boolean }) => (
+export const Card: React.FC<{ children?: React.ReactNode, className?: string, hoverEffect?: boolean }> = ({ children, className = '', hoverEffect = true }) => (
   <div className={`bg-brand-card border border-white/5 rounded-2xl overflow-hidden ${hoverEffect ? 'hover:border-brand-orange transition-all duration-300 hover:shadow-neon hover:-translate-y-2 group' : ''} ${className}`}>
     {children}
   </div>

@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video, ChevronDown, ArrowUp, FileText } from 'lucide-react';
+import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video, ChevronDown, ArrowUp, FileText, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/cart-context';
 import { SiteConfig, Product } from '../types';
 import { SibosWidget } from './sibos-core/index'; // CRITICAL FIX: Specific import path
 import { INITIAL_PRODUCTS } from '../utils';
 
 // --- DATA & CONSTANTS ---
-// Corporate Menu Structure
+// Corporate Menu Structure - Refined Narrative
 const NAV_ITEMS = [
   { id: 'home', label: 'Beranda' },
   { 
@@ -16,24 +16,26 @@ const NAV_ITEMS = [
     children: [
       { id: 'about', label: 'Profil Perusahaan' },
       { id: 'about', label: 'Visi & Misi' },
+      { id: 'gallery', label: 'Klien & Portfolio' },
     ]
   },
   { 
     id: 'solutions', 
     label: 'Solusi Bisnis',
     children: [
-      { id: 'shop', label: 'Hardware POS' },
-      { id: 'innovation', label: 'Software Aplikasi' },
-      { id: 'services/website', label: 'Digital Agency' },
-      { id: 'services/webapp', label: 'Custom App' },
+      { id: 'shop', label: 'Hardware Kasir (POS)' },
+      { id: 'innovation', label: 'Software Aplikasi (SaaS)' },
+      { id: 'services/website', label: 'Jasa Pembuatan Website' },
+      { id: 'services/webapp', label: 'Custom Web App' },
+      { id: 'services/seo', label: 'Optimasi SEO & Traffic' },
+      { id: 'services/maintenance', label: 'Maintenance & Security' },
     ]
   },
-  { id: 'gallery', label: 'Portfolio' },
   { 
     id: 'support', 
-    label: 'Bantuan',
+    label: 'Pusat Bantuan',
     children: [
-      { id: 'legal/refund', label: 'Garansi & Retur' },
+      { id: 'legal/refund', label: 'Klaim Garansi & Retur' },
       { id: 'legal/privacy', label: 'Kebijakan Privasi' },
       { id: 'legal/terms', label: 'Syarat & Ketentuan' },
     ]
@@ -75,11 +77,12 @@ const NavLink: React.FC<NavLinkProps> = ({
     return (
       <button
         onClick={onClick}
-        className={`text-left font-bold p-2 rounded hover:bg-white/5 transition-all ${
-          active ? 'text-brand-orange border-l-2 border-brand-orange' : 'text-gray-400'
-        } ${isChild ? 'pl-8 text-sm font-normal' : 'text-lg'}`}
+        className={`text-left font-bold p-2 rounded hover:bg-white/5 transition-all flex items-center justify-between w-full group ${
+          active ? 'text-brand-orange border-l-2 border-brand-orange pl-3' : 'text-gray-400'
+        } ${isChild ? 'pl-6 text-sm font-normal' : 'text-lg'}`}
       >
         {label}
+        {mobile && !isChild && active && <ChevronRight size={16} />}
       </button>
     );
   }
@@ -143,28 +146,29 @@ const DesktopNav = ({
         {item.children ? (
           // DROPDOWN MENU
           <div className="relative group">
-            <button className={`flex items-center gap-1 text-sm font-bold tracking-wide transition-all duration-300 ${
+            <button className={`flex items-center gap-1 text-sm font-bold tracking-wide transition-all duration-300 py-4 ${
               item.children.some(child => child.id === current || current.startsWith(child.id))
                 ? 'text-brand-orange' 
                 : 'text-gray-400 hover:text-white'
             }`}>
-              {item.label.toUpperCase()} <ChevronDown size={14} />
+              {item.label.toUpperCase()} <ChevronDown size={14} className="group-hover:rotate-180 transition-transform duration-300" />
             </button>
             
             {/* Dropdown Content */}
-            <div className="absolute left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 z-50 min-w-[220px]">
-               <div className="bg-brand-dark border border-white/10 rounded-xl shadow-2xl p-2 flex flex-col gap-1 overflow-hidden">
+            <div className="absolute left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-4 z-50 min-w-[260px]">
+               <div className="bg-brand-dark/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 flex flex-col gap-1 overflow-hidden ring-1 ring-black/5">
                   {item.children.map((child, idx) => (
                     <button 
                       key={idx}
                       onClick={() => setPage(child.id)}
-                      className={`text-left px-4 py-3 rounded-lg text-sm font-bold transition-colors ${
+                      className={`text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between group/item ${
                         current === child.id 
-                          ? 'bg-brand-orange text-white' 
-                          : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                          ? 'bg-brand-orange text-white shadow-md' 
+                          : 'text-gray-300 hover:bg-white/5 hover:text-white'
                       }`}
                     >
-                      {child.label.toUpperCase()}
+                      {child.label}
+                      {current !== child.id && <ChevronRight size={14} className="opacity-0 group-hover/item:opacity-100 -translate-x-2 group-hover/item:translate-x-0 transition-all text-brand-orange" />}
                     </button>
                   ))}
                </div>
@@ -187,12 +191,12 @@ const DesktopNav = ({
     
     {/* CTA Button */}
     <a 
-      href="https://wa.me/6282325103336?text=Halo%20PT%20Mesin%20Kasir%20Solo,%20saya%20ingin%20minta%20penawaran%20harga."
+      href="https://wa.me/6282325103336?text=Halo%20PT%20Mesin%20Kasir%20Solo,%20saya%20ingin%20minta%20penawaran%20harga%20untuk%20perusahaan."
       target="_blank"
       rel="noreferrer"
-      className="bg-brand-orange hover:bg-brand-action text-white text-xs font-bold px-5 py-2.5 rounded-full shadow-neon hover:shadow-neon-strong transition-all flex items-center gap-2"
+      className="bg-brand-orange hover:bg-brand-action text-white text-xs font-bold px-6 py-3 rounded-full shadow-neon hover:shadow-neon-strong transition-all flex items-center gap-2 transform hover:-translate-y-0.5"
     >
-      <FileText size={14} /> MINTA PENAWARAN
+      <FileText size={16} /> MINTA PENAWARAN
     </a>
   </div>
 );
@@ -211,7 +215,7 @@ const MobileNavToggle = ({
   <div className="flex items-center gap-4 lg:hidden">
     <CartButton id="mobile-cart-btn" count={cartCount} onClick={onCartClick} mobile />
     <button 
-      className="text-brand-orange drop-shadow-neon"
+      className="text-brand-orange drop-shadow-neon p-1"
       onClick={onToggle}
     >
       {isOpen ? <X size={28} /> : <Menu size={28} />}
@@ -230,28 +234,41 @@ const MobileMenuOverlay = ({
   setPage: (id: string) => void, 
   onClose: () => void 
 }) => {
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
+
   if (!isOpen) return null;
+  
   return (
-    <div className="lg:hidden bg-brand-dark border-b border-brand-orange/20 p-4 absolute w-full shadow-2xl animate-fade-in z-40 max-h-[80vh] overflow-y-auto">
-      <div className="flex flex-col gap-2">
+    <div className="lg:hidden bg-brand-dark/95 backdrop-blur-xl border-t border-white/10 fixed inset-0 top-[72px] z-40 overflow-y-auto animate-fade-in">
+      <div className="p-6 flex flex-col gap-6 pb-24">
         {NAV_ITEMS.map((item) => (
           <React.Fragment key={item.id}>
              {item.children ? (
                 // Group Header & Children for Mobile
-                <div className="flex flex-col gap-1">
-                   <div className="text-left text-gray-500 text-xs font-bold uppercase tracking-widest mt-2 mb-1 px-2 border-b border-white/5 pb-1">
+                <div className="flex flex-col gap-2 bg-white/5 rounded-xl p-4 border border-white/5">
+                   <div className="text-left text-brand-orange text-xs font-bold uppercase tracking-widest px-2 flex items-center gap-2">
                       {item.label}
                    </div>
-                   {item.children.map((child, idx) => (
-                      <NavLink 
-                        key={idx}
-                        label={child.label} 
-                        active={current === child.id} 
-                        onClick={() => { setPage(child.id); onClose(); }} 
-                        mobile
-                        isChild
-                      />
-                   ))}
+                   <div className="flex flex-col gap-1 pl-2 border-l border-white/10">
+                     {item.children.map((child, idx) => (
+                        <NavLink 
+                          key={idx}
+                          label={child.label} 
+                          active={current === child.id} 
+                          onClick={() => { setPage(child.id); onClose(); }} 
+                          mobile
+                          isChild
+                        />
+                     ))}
+                   </div>
                 </div>
              ) : (
                 <NavLink 
@@ -263,14 +280,16 @@ const MobileMenuOverlay = ({
              )}
           </React.Fragment>
         ))}
-        <div className="mt-4 pt-4 border-t border-white/10">
+        
+        <div className="mt-4 pt-6 border-t border-white/10">
+           <p className="text-gray-500 text-xs mb-3 text-center uppercase tracking-widest font-bold">Layanan Korporat</p>
            <a 
               href="https://wa.me/6282325103336?text=Halo%20PT%20Mesin%20Kasir%20Solo,%20saya%20ingin%20minta%20penawaran%20harga."
               target="_blank"
               rel="noreferrer"
-              className="flex w-full items-center justify-center gap-2 bg-brand-orange text-white py-3 rounded-lg font-bold shadow-neon"
+              className="flex w-full items-center justify-center gap-2 bg-brand-orange text-white py-4 rounded-xl font-bold shadow-neon text-sm"
            >
-              <FileText size={16} /> MINTA PENAWARAN
+              <FileText size={18} /> MINTA PENAWARAN RESMI
            </a>
         </div>
       </div>
@@ -290,12 +309,9 @@ const Header = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { totalItems } = useCart(); 
 
-  // Fix: Extract main route for 'services' to highlight parent if needed, though exact match preferred in items
-  // Passing full currentPage string to DesktopNav handles highlighting fine with exact string match logic added
-
   return (
-    <nav className="fixed top-0 w-full z-50 bg-brand-black/95 backdrop-blur-xl border-b border-white/10 shadow-2xl">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center relative z-50">
+    <nav className="fixed top-0 w-full z-50 bg-brand-black/90 backdrop-blur-xl border-b border-white/10 shadow-2xl transition-all duration-300">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center relative z-50">
         <Logo onClick={() => setPage('home')} />
         
         <DesktopNav 
@@ -308,7 +324,7 @@ const Header = ({
           isOpen={isMenuOpen} 
           onToggle={() => setIsMenuOpen(!isMenuOpen)} 
           cartCount={totalItems} 
-          onCartClick={() => setPage('checkout')}
+          onCartClick={() => { setPage('checkout'); setIsMenuOpen(false); }}
         />
       </div>
 
@@ -323,17 +339,22 @@ const Header = ({
 };
 
 const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: SiteConfig }) => (
-  <footer className="bg-brand-dark border-t border-white/5 py-12 mt-20 relative overflow-hidden">
-    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-brand-orange shadow-neon opacity-50"></div>
+  <footer className="bg-brand-dark border-t border-white/5 py-16 mt-20 relative overflow-hidden">
+    {/* Decorative Top Line */}
+    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-transparent via-brand-orange to-transparent shadow-neon opacity-70"></div>
+    
     <div className="container mx-auto px-4">
-      <div className="grid md:grid-cols-4 gap-10">
+      <div className="grid md:grid-cols-4 gap-12">
         {/* Brand Section */}
-        <div className="md:col-span-1">
-          <h3 className="text-2xl font-display font-bold text-white mb-4">PT MESIN KASIR SOLO</h3>
-          <p className="text-gray-400 mb-6 text-sm leading-relaxed">
-            Mitra strategis digitalisasi bisnis Anda di Seluruh Indonesia. Solusi POS, Software, & Web Development.
+        <div className="md:col-span-1 space-y-6">
+          <div>
+            <h3 className="text-2xl font-display font-bold text-white mb-2">PT MESIN KASIR SOLO</h3>
+            <div className="h-1 w-12 bg-brand-orange rounded-full"></div>
+          </div>
+          <p className="text-gray-400 text-sm leading-relaxed">
+            Mitra teknologi terpercaya untuk digitalisasi bisnis di Indonesia. Menyediakan solusi Hardware POS, Software SaaS, dan Jasa Pengembangan Website sejak 2015.
           </p>
-          <div className="flex gap-4 flex-wrap">
+          <div className="flex gap-3 flex-wrap">
             <SocialButton icon={Instagram} href={config.instagramUrl} />
             <SocialButton icon={Facebook} href={config.facebookUrl} />
             <SocialButton icon={Youtube} href={config.youtubeUrl} />
@@ -342,85 +363,75 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
           </div>
         </div>
         
+        {/* Solusi Bisnis Section */}
+        <div className="md:col-span-1">
+          <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs border-l-2 border-brand-orange pl-3">Solusi Digital</h4>
+          <ul className="space-y-3 text-gray-400 text-sm">
+            <li><button onClick={() => setPage('shop')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Hardware Kasir</button></li>
+            <li><button onClick={() => setPage('innovation')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Software Aplikasi</button></li>
+            <li><button onClick={() => setPage('services/website')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Jasa Website</button></li>
+            <li><button onClick={() => setPage('services/seo')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Jasa SEO</button></li>
+            <li><button onClick={() => setPage('services/maintenance')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Maintenance</button></li>
+          </ul>
+        </div>
+
+        {/* Perusahaan & Legal Section */}
+        <div className="md:col-span-1">
+          <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs border-l-2 border-brand-orange pl-3">Perusahaan</h4>
+          <ul className="space-y-3 text-gray-400 text-sm">
+            <li><button onClick={() => setPage('about')} className="hover:text-brand-orange transition-colors">Tentang Kami</button></li>
+            <li><button onClick={() => setPage('gallery')} className="hover:text-brand-orange transition-colors">Klien & Portfolio</button></li>
+            <li><button onClick={() => setPage('articles')} className="hover:text-brand-orange transition-colors">Blog & Wawasan</button></li>
+            <li className="pt-2 border-t border-white/5 mt-2">
+                <button onClick={() => setPage('legal/refund')} className="hover:text-brand-orange transition-colors text-xs text-gray-500 hover:text-gray-300">Kebijakan Refund</button>
+            </li>
+            <li>
+                <button onClick={() => setPage('legal/privacy')} className="hover:text-brand-orange transition-colors text-xs text-gray-500 hover:text-gray-300">Privacy Policy</button>
+            </li>
+          </ul>
+        </div>
+
         {/* Contact Section */}
         <div className="md:col-span-1">
-          <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Kontak & Lokasi</h4>
-          <ul className="space-y-4 text-gray-400 text-sm">
-            <li className="flex items-start gap-3">
-                <MapPin className="text-brand-orange shrink-0 mt-1" size={18} />
-                <div className="flex flex-col gap-1">
-                    <span className="text-white font-bold text-xs">SOLO (Legal):</span>
-                    <span>{config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura"}</span>
-                    
-                    <span className="text-white font-bold text-xs mt-1">BLORA (Ops):</span>
-                    <span>{config.addressBlora || "Gumiring 04/04, Banjarejo"}</span>
+          <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs border-l-2 border-brand-orange pl-3">Hubungi Kami</h4>
+          <ul className="space-y-5 text-gray-400 text-sm">
+            <li className="flex items-start gap-3 group cursor-pointer" onClick={() => window.open(config.mapSoloLink, '_blank')}>
+                <div className="p-2 bg-white/5 rounded-lg text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-colors">
+                    <MapPin size={18} />
+                </div>
+                <div>
+                    <span className="text-white font-bold text-xs block mb-1">HEAD OFFICE (SOLO)</span>
+                    <span className="leading-tight block">{config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura"}</span>
                 </div>
             </li>
-            <li className="flex items-center gap-3">
-              <Phone className="text-brand-orange shrink-0" size={18} />
-              <a href={`https://wa.me/${config.whatsappNumber}`} target="_blank" rel="noreferrer" className="hover:text-brand-orange transition-colors">
-                {config.whatsappNumber || "0823 2510 3336"}
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        {/* Menu Section - Corporate Update */}
-        <div className="md:col-span-1">
-          <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Perusahaan</h4>
-          <ul className="space-y-2 text-gray-400 text-sm">
-            {['about', 'gallery', 'articles'].map((link) => (
-              <li key={link}>
-                <button 
-                  onClick={() => setPage(link)} 
-                  className="hover:text-brand-orange capitalize transition-colors"
-                >
-                  {link === 'about' ? 'Tentang Kami' : link === 'gallery' ? 'Portfolio Klien' : 'Blog & Wawasan'}
-                </button>
-              </li>
-            ))}
-            <li>
-                <button onClick={() => setPage('shop')} className="hover:text-brand-orange transition-colors">
-                    Hardware Store
-                </button>
-            </li>
-          </ul>
-        </div>
-
-        {/* Legal & Help Section */}
-        <div className="md:col-span-1">
-          <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Pusat Bantuan</h4>
-          <ul className="space-y-2 text-gray-400 text-sm">
-            <li>
-                <button onClick={() => setPage('legal/refund')} className="hover:text-brand-orange transition-colors">
-                    Garansi & Refund
-                </button>
-            </li>
-            <li>
-                <button onClick={() => setPage('legal/privacy')} className="hover:text-brand-orange transition-colors">
-                    Kebijakan Privasi
-                </button>
-            </li>
-            <li>
-                <button onClick={() => setPage('legal/terms')} className="hover:text-brand-orange transition-colors">
-                    Syarat & Ketentuan
-                </button>
-            </li>
-            <li className="pt-2">
-                <a href="https://wa.me/6282325103336" target="_blank" rel="noreferrer" className="text-green-500 hover:text-green-400 transition-colors flex items-center gap-1 font-bold">
-                    <Phone size={14}/> Support Teknis
-                </a>
+            <li className="flex items-start gap-3">
+              <div className="p-2 bg-white/5 rounded-lg text-brand-orange">
+                  <Phone size={18} />
+              </div>
+              <div>
+                  <span className="text-white font-bold text-xs block mb-1">HOTLINE (24/7)</span>
+                  <a href={`https://wa.me/${config.whatsappNumber}`} target="_blank" rel="noreferrer" className="hover:text-brand-orange transition-colors text-lg font-bold">
+                    {config.whatsappNumber || "0823 2510 3336"}
+                  </a>
+              </div>
             </li>
           </ul>
         </div>
       </div>
 
       {/* Copyright & Admin Trigger */}
-      <div className="border-t border-white/5 mt-10 pt-6 flex flex-col items-center gap-2">
-        <p className="text-center text-gray-600 text-xs">© {new Date().getFullYear()} PT Mesin Kasir Solo. All Rights Reserved.</p>
-        <button onClick={() => setPage('admin')} className="text-gray-800 hover:text-brand-orange transition-colors p-2">
-          <Lock size={12} />
-        </button>
+      <div className="border-t border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p className="text-center text-gray-600 text-xs">
+            © {new Date().getFullYear()} <strong className="text-gray-500">PT Mesin Kasir Solo</strong>. All Rights Reserved.
+        </p>
+        <div className="flex items-center gap-4">
+            <a href="https://wa.me/6282325103336" target="_blank" rel="noreferrer" className="text-xs font-bold text-green-600 hover:text-green-500 flex items-center gap-1">
+                <Phone size={12}/> WhatsApp Support
+            </a>
+            <button onClick={() => setPage('admin')} className="text-gray-800 hover:text-brand-orange transition-colors p-2" title="Admin Login">
+                <Lock size={12} />
+            </button>
+        </div>
       </div>
     </div>
   </footer>
@@ -497,7 +508,7 @@ export const Layout = ({
     <div className="min-h-screen flex flex-col font-sans bg-brand-black text-gray-200">
       <Header currentPage={currentPage} setPage={setPage} />
       
-      <main className="flex-grow pt-24">
+      <main className="flex-grow pt-[76px]"> {/* Adjusted padding for fixed header */}
         {children}
       </main>
 

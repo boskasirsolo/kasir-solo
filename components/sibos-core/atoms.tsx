@@ -44,7 +44,7 @@ const parseCellContent = (text: string) => {
 };
 
 // --- HELPER: MARKDOWN TABLE COMPONENT ---
-const MarkdownTable = ({ lines }: { lines: string[] }) => {
+const MarkdownTable: React.FC<{ lines: string[] }> = ({ lines }) => {
   if (lines.length < 2) return null;
 
   // Header is usually the first row
