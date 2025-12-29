@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Product, SiteConfig } from '../../types';
-import { formatRupiah, supabase, ensureAPIKey, getSmartApiKey, markKeyAsExhausted, callGeminiWithRotation } from '../../utils';
+import { formatRupiah, supabase, ensureAPIKey, callGeminiWithRotation } from '../../utils';
 import { FunctionDeclaration, Type, GoogleGenAI } from "@google/genai";
 
 export interface Message {

@@ -23,122 +23,7 @@ export const getEnv = (key: string) => {
   return '';
 };
 
-// --- API KEY ROTATION LOGIC ---
-
-// Store exhausted keys in memory for the session
-const exhaustedKeys = new Set<string>();
-
-export const markKeyAsExhausted = (key: string) => {
-  if (!key) return;
-  // Identify key by last 4 chars for logging
-  const keyId = key.slice(-4);
-  if (!exhaustedKeys.has(key)) {
-    console.warn(`[System] Marking API Key (...${keyId}) as EXHAUSTED/DEAD.`);
-    exhaustedKeys.add(key);
-  }
-};
-
-export const getSmartApiKey = () => {
-  // List of possible keys from Vercel/Env
-  const candidates = [
-    getEnv('VITE_GEMINI_API_KEY_0'),
-    getEnv('VITE_GEMINI_API_KEY_1'),
-    getEnv('VITE_GEMINI_API_KEY_2'),
-    getEnv('VITE_GEMINI_API_KEY_3'),
-    getEnv('VITE_GEMINI_API_KEY_4'),
-    getEnv('VITE_GEMINI_API_KEY_5'),
-    getEnv('VITE_GEMINI_API_KEY'),
-    getEnv('VITE_API_KEY'),
-    process.env.API_KEY
-  ];
-
-  // Filter out empty or undefined keys
-  // AND Filter out keys that are in the exhausted list
-  const validKeys = candidates.filter(k => k && k.length > 10 && !exhaustedKeys.has(k));
-
-  if (validKeys.length === 0) {
-    console.error("All API Keys are exhausted or invalid!");
-    
-    // Fallback strategy: If all keys are marked exhausted, reset the list 
-    // to give them another try (in case it was a temporary glitch)
-    const allCandidates = candidates.filter(k => k && k.length > 10);
-    if (allCandidates.length > 0) {
-        console.warn("[System] Resetting exhausted key list for a second chance.");
-        exhaustedKeys.clear();
-        // Return a random one from the full list immediately
-        const randomIndex = Math.floor(Math.random() * allCandidates.length);
-        return allCandidates[randomIndex];
-    }
-
-    return '';
-  }
-
-  // Randomly pick one key from the VALID pool
-  const randomIndex = Math.floor(Math.random() * validKeys.length);
-  const selectedKey = validKeys[randomIndex];
-  
-  // Log (safe mode: only show last 4 chars) to verify rotation
-  console.log(`[System] Using API Key Index [${randomIndex}/${validKeys.length}] ending in ...${selectedKey.slice(-4)}`);
-  
-  return selectedKey;
-};
-
-// --- CENTRALIZED ROTATION CALLER ---
-export const callGeminiWithRotation = async (params: {
-  model: string,
-  contents: any,
-  config?: any
-}) => {
-  let attempts = 0;
-  const maxAttempts = 12; // Try up to 12 different keys
-  let lastError: any = null;
-
-  while (attempts < maxAttempts) {
-    const currentApiKey = getSmartApiKey();
-    if (!currentApiKey) throw new Error("Semua API Key telah mencapai limit harian (Quota Exhausted). Silakan coba besok.");
-
-    try {
-      await ensureAPIKey(); // Ensure key in IDX env
-      const ai = new GoogleGenAI({ apiKey: currentApiKey });
-      
-      const result = await ai.models.generateContent({
-        model: params.model,
-        contents: params.contents,
-        config: params.config
-      });
-      return result;
-
-    } catch (error: any) {
-      lastError = error;
-      const errStr = error.toString().toLowerCase();
-      
-      // Check for Quota Limit (429) or Resource Exhausted
-      if (errStr.includes('quota') || errStr.includes('429') || errStr.includes('resource exhausted')) {
-        markKeyAsExhausted(currentApiKey); // Mark dead
-        attempts++;
-        console.warn(`[System] API Key ...${currentApiKey.slice(-4)} exhausted. Rotating to next key (${attempts}/${maxAttempts})...`);
-        // Loop continues to getSmartApiKey() which now excludes the dead one
-      } else {
-        // Rethrow non-quota errors (like 400 Bad Request) immediately
-        throw error; 
-      }
-    }
-  }
-  throw lastError || new Error("Gagal koneksi AI setelah mencoba semua key.");
-};
-
-// --- Configuration ---
-export const CONFIG = {
-  SUPABASE_URL: getEnv('VITE_SUPABASE_URL'),
-  SUPABASE_KEY: getEnv('VITE_SUPABASE_ANON_KEY'),
-  CLOUDINARY_CLOUD_NAME: getEnv('VITE_CLOUDINARY_CLOUD_NAME'),
-  CLOUDINARY_PRESET: getEnv('VITE_CLOUDINARY_UPLOAD_PRESET'),
-};
-
-// --- Clients ---
-export const supabase = (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_KEY) 
-  ? createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY) 
-  : null;
+// --- API KEY MANAGEMENT ---
 
 // Helper to ensure API Key is selected (For Google AI Studio environments)
 export const ensureAPIKey = async () => {
@@ -158,6 +43,47 @@ export const ensureAPIKey = async () => {
   }
   return false;
 };
+
+// --- CENTRALIZED API CALLER ---
+export const callGeminiWithRotation = async (params: {
+  model: string,
+  contents: any,
+  config?: any
+}) => {
+  // 1. Ensure API Key is ready/selected
+  await ensureAPIKey();
+
+  // 2. Initialize Client using strictly process.env.API_KEY
+  // This assumes the environment or the ensureAPIKey call populates/validates this.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  // 3. Make the call
+  try {
+    const result = await ai.models.generateContent({
+      model: params.model,
+      contents: params.contents,
+      config: params.config
+    });
+    return result;
+  } catch (error: any) {
+    // Pass error up to the UI
+    console.error("Gemini API Call Failed:", error);
+    throw error;
+  }
+};
+
+// --- Configuration ---
+export const CONFIG = {
+  SUPABASE_URL: getEnv('VITE_SUPABASE_URL'),
+  SUPABASE_KEY: getEnv('VITE_SUPABASE_ANON_KEY'),
+  CLOUDINARY_CLOUD_NAME: getEnv('VITE_CLOUDINARY_CLOUD_NAME'),
+  CLOUDINARY_PRESET: getEnv('VITE_CLOUDINARY_UPLOAD_PRESET'),
+};
+
+// --- Clients ---
+export const supabase = (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_KEY) 
+  ? createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY) 
+  : null;
 
 // --- Formatters ---
 export const formatRupiah = (number: number) => {
