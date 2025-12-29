@@ -192,9 +192,6 @@ export const ArticlesPage = ({
             </div>
           ) : (
             <>
-              {/* Pagination Top */}
-              <PaginationControls />
-
               {/* Grid Articles - 3 COLUMNS */}
               {paginatedArticles.length > 0 && (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
