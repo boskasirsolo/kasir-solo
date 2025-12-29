@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap, ChevronDown, ChevronUp, MoreVertical, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap, ChevronDown, ChevronUp, MoreVertical, ArrowLeft, Mic } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey, slugify, markKeyAsExhausted } from '../utils';
@@ -21,16 +21,6 @@ const PRESET_TOPICS = [
     { id: 'scam', label: 'Keamanan & Fraud' }
 ];
 
-const AUTHORS = [
-    "Tim Teknis SIBOS", 
-    "Tim Marketing", 
-    "Divisi HRD", 
-    "Konsultan Bisnis", 
-    "Tim Akunting", 
-    "Amin Maghfuri (CEO)",
-    "Redaksi KasirSolo"
-];
-
 // --- INTERFACES ---
 interface KeywordData {
     keyword: string;
@@ -44,6 +34,7 @@ interface GenConfig {
     autoCategory: boolean;
     autoAuthor: boolean;
     imageStyle: 'cinematic' | 'cyberpunk' | 'corporate' | 'studio' | 'minimalist';
+    narrative: 'narsis' | 'umum'; // New field for Narrative Style
 }
 
 // --- HELPER: TEXT RENDERER (Shared - Supports Bold & Links) ---
@@ -200,7 +191,9 @@ const useArticleManager = (
         excerpt: '',
         content: '',
         category: '',
-        author: 'Admin',
+        author: 'Redaksi KasirSolo',
+        authorAvatar: '', // New Avatar Field
+        uploadAuthorFile: null as File | null,
         readTime: '10 min read', 
         imagePreview: '',
         uploadFile: null as File | null,
@@ -222,7 +215,8 @@ const useArticleManager = (
         autoImage: true,
         autoCategory: true,
         autoAuthor: true,
-        imageStyle: 'cinematic'
+        imageStyle: 'cinematic',
+        narrative: 'umum' // Default General
     });
 
     // Loading & Progress States (Split)
@@ -263,7 +257,9 @@ const useArticleManager = (
             excerpt: '',
             content: '',
             category: '',
-            author: 'Admin',
+            author: 'Redaksi KasirSolo',
+            authorAvatar: '',
+            uploadAuthorFile: null,
             readTime: '10 min read',
             imagePreview: '',
             uploadFile: null,
@@ -289,6 +285,9 @@ const useArticleManager = (
     };
 
     const handleEditClick = (item: Article) => {
+        // Safe access for author_avatar (if not in interface, assume it might come from DB as any)
+        const itemAny = item as any;
+        
         setForm({
             id: item.id,
             title: item.title,
@@ -296,6 +295,8 @@ const useArticleManager = (
             content: item.content,
             category: item.category,
             author: item.author,
+            authorAvatar: itemAny.author_avatar || '',
+            uploadAuthorFile: null,
             readTime: item.readTime,
             imagePreview: item.image,
             uploadFile: null,
@@ -326,11 +327,6 @@ const useArticleManager = (
         return `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=1024&height=576&model=flux&nologo=true&seed=${seed}`;
     };
 
-    const getRandomAuthor = () => {
-        const idx = Math.floor(Math.random() * AUTHORS.length);
-        return AUTHORS[idx];
-    };
-
     // --- ACTION: GENERATE TEXT WITH STRATEGY CONTEXT ---
     const generateTextContent = async () => {
         if (!form.title) return alert("Pilih judul terlebih dahulu.");
@@ -345,12 +341,35 @@ const useArticleManager = (
             await ensureAPIKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
-            // 1. Build Context Prompt based on Strategy
+            // 1. Build Context Prompt based on Strategy & Narrative
             let strategyContext = "";
             let lengthReq = "Minimum 1000 words";
             let clusterInstruction = "";
             let structureInstruction = "Create 5-7 Major Subheadings (H2).";
             
+            // Narrative Logic
+            let narrativeInstruction = "";
+            let authorName = "Redaksi KasirSolo";
+
+            if (genConfig.narrative === 'narsis') {
+                authorName = "Amin Maghfuri (CEO)";
+                narrativeInstruction = `
+                **NARRATIVE STYLE: PERSONAL & AUTHORITATIVE (Narsis/CEO POV)**
+                - Role: Write as **Amin Maghfuri**, the CEO of PT Mesin Kasir Solo.
+                - Tone: Experienced, inspiring, confident, slightly opinionated but professional.
+                - Perspective: Use "Saya", "Aku", or "Kami di KasirSolo". Share "personal" insights or anecdotes about the industry.
+                - Goal: Build personal branding and trust.
+                `;
+            } else {
+                narrativeInstruction = `
+                **NARRATIVE STYLE: GENERAL / EDITORIAL**
+                - Role: Editorial Team (Redaksi KasirSolo).
+                - Tone: Objective, journalistic, informative, neutral.
+                - Perspective: Use Third Person or "Kita" (inclusive).
+                - Goal: Provide clear information without personal bias.
+                `;
+            }
+
             if (form.type === 'pillar') {
                 strategyContext = `
                 STRATEGY: This is a **PILLAR PAGE** (Cornerstone Content). 
@@ -385,12 +404,13 @@ const useArticleManager = (
                 structureInstruction = "Create 3-5 Detailed Subheadings (H2) focused on answering the user intent.";
             }
 
-            setTextProgress({ percent: 20, message: `Menulis Artikel ${form.type === 'pillar' ? 'Pilar (MAX 4000 Kata)' : 'Cluster (MAX 800 Kata)'}...` });
+            setTextProgress({ percent: 20, message: `Menulis Artikel ${genConfig.narrative === 'narsis' ? 'Gaya CEO' : 'Gaya Redaksi'}...` });
             
             const contentPrompt = `
             Role: Senior SEO Content Strategist (Indonesian Market).
             Task: Write a High-Quality Article based on title: "${form.title}"
             
+            ${narrativeInstruction}
             ${strategyContext}
             
             STRUCTURE:
@@ -404,8 +424,8 @@ const useArticleManager = (
             REQUIREMENTS:
             - **LENGTH**: ${lengthReq}.
             - **FORMAT**: Clean Markdown. Use Bold for emphasis.
-            - **TONE**: Professional, Authoritative, yet Accessible.
             - **LINKS**: Ensure links are formatted as [Text](URL) with NO spaces between parts.
+            - **LANGUAGE**: Indonesian (Casual-Professional).
             
             ${clusterInstruction}
             `;
@@ -462,15 +482,12 @@ const useArticleManager = (
             setTextProgress({ percent: 100, message: 'Selesai!' });
             await new Promise(r => setTimeout(r, 500));
 
-            // Set Author only if it's currently generic "Admin"
-            const newAuthor = form.author === 'Admin' ? getRandomAuthor() : form.author;
-
             setForm(prev => ({
                 ...prev,
                 content: generatedContent,
                 excerpt: metaData.excerpt || prev.excerpt,
                 category: genConfig.autoCategory ? metaData.category : prev.category,
-                author: newAuthor, 
+                author: authorName, // AUTO-SET AUTHOR BASED ON NARRATIVE
                 readTime: metaData.readTime || "10 min read",
                 cluster_ideas: extractedClusters
             }));
@@ -512,16 +529,6 @@ const useArticleManager = (
             const parentSlug = parentPillar ? `/articles/${slugify(parentPillar.title)}` : '#';
             const parentTitle = parentPillar ? parentPillar.title : 'Pillar Page';
 
-            // Loop logic: 2 articles per day (Morning and Afternoon), starting from selected date/time
-            // If user picked 14:00, first article is 14:00. Next is next day 09:00? Or +6 hours?
-            // Let's keep simpler logic: Start exactly at chosen time, then +6 hours, then +18 hours (next day morning), etc.
-            // Or stick to 09:00 and 16:00 pattern starting from the chosen Date.
-            
-            // Refined Logic:
-            // Article 1: User Selected Time (or default 9am tomorrow)
-            // Article 2: Same day 16:00 (if start < 16:00), else Next Day 09:00
-            // Loop...
-            
             let currentCursor = new Date(scheduleDate);
 
             form.cluster_ideas.forEach((title, index) => {
@@ -543,7 +550,7 @@ const useArticleManager = (
                     date: currentCursor.toLocaleDateString('id-ID'),
                     image: uniqueImage, 
                     category: form.category || 'Bisnis',
-                    author: getRandomAuthor(), 
+                    author: form.author, // Inherit Author
                     readTime: '10 min read',
                     status: 'scheduled',
                     scheduled_for: scheduledTimeStr,
@@ -552,10 +559,6 @@ const useArticleManager = (
                 };
 
                 newArticles.push(newArticle);
-
-                // Calculate next slot
-                // Simple pattern: Add 12 hours for next article roughly, or strictly 9am/4pm
-                // Let's just add 24 hours / 2 = 12 hours for simplicity distribution
                 currentCursor.setHours(currentCursor.getHours() + 12);
             });
 
@@ -645,15 +648,28 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, uploading: true }));
         try {
             let finalImageUrl = form.imagePreview || 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=1200';
+            let finalAuthorAvatar = form.authorAvatar;
 
+            if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Konfigurasi Cloudinary belum diset.");
+
+            // 1. Upload Cover Image
             if (form.uploadFile) {
-                if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Konfigurasi Cloudinary belum diset.");
                 const formData = new FormData();
                 formData.append('file', form.uploadFile);
                 formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.secure_url) finalImageUrl = data.secure_url;
+            }
+
+            // 2. Upload Author Avatar (If New File Present)
+            if (form.uploadAuthorFile) {
+                const formData = new FormData();
+                formData.append('file', form.uploadAuthorFile);
+                formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.secure_url) finalAuthorAvatar = data.secure_url;
             }
 
             const dbData = {
@@ -668,7 +684,8 @@ const useArticleManager = (
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
                 type: form.type,
                 pillar_id: form.type === 'cluster' ? form.pillar_id : null,
-                cluster_ideas: form.cluster_ideas
+                cluster_ideas: form.cluster_ideas,
+                author_avatar: finalAuthorAvatar // Save to DB
             };
 
             const localUpdateData = {
@@ -686,7 +703,7 @@ const useArticleManager = (
                 if (supabase) await supabase.from('articles').update(dbData).eq('id', form.id);
             } else {
                 const newId = Date.now();
-                setArticles([{ ...localUpdateData, id: newId, tags: [] }, ...articles]);
+                setArticles([{ ...localUpdateData, id: newId, tags: [] } as any, ...articles]);
                 // Return ID for immediate scheduling reference
                 if (supabase) {
                     const { data } = await supabase.from('articles').insert([dbData]).select();
@@ -718,6 +735,9 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, researching: true }));
         const apiKey = getSmartApiKey();
 
+        // 1. Gather Existing Titles for Exclusion Logic
+        const existingTitles = articles.map(a => `"${a.title}"`).join(', ');
+
         try {
             await ensureAPIKey();
             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
@@ -726,6 +746,11 @@ const useArticleManager = (
             Role: SEO Content Strategist (Indonesian Market).
             Context: We sell POS Systems (Kasir) & Software.
             Task: Generate 5 high-potential article titles/keywords based on topics: ${selectedPresets.join(', ')}.
+            
+            CRITICAL CONSTRAINT: 
+            You MUST NOT suggest titles that are similar to these existing articles: [${existingTitles}].
+            Provide FRESH angles, new trends, or specific case studies instead.
+            
             Target Audience: UMKM Owners, Business Starters.
             Format: JSON Array of objects: [{ "keyword": "Title Idea", "volume": "Search Volume (e.g. 10k/mo)", "competition": "Low/Medium/High", "type": "Trend/Evergreen" }]
             STRICT: Return ONLY JSON.
@@ -744,7 +769,7 @@ const useArticleManager = (
             } catch (e) {
                 console.error("Failed to parse JSON", text);
                 data = [
-                    { keyword: `Strategi ${selectedPresets[0]} untuk Pemula`, volume: "Unknown", competition: "Low", type: "Evergreen" }
+                    { keyword: `Strategi ${selectedPresets[0]} untuk Pemula (Manual Fallback)`, volume: "Unknown", competition: "Low", type: "Evergreen" }
                 ];
             }
             
@@ -1031,8 +1056,38 @@ export const AdminArticles = ({
             {/* AI WIZARD */}
             {!form.id && aiState.step < 3 && (
                 <div className="space-y-6">
-                    {/* STEP 1: PRESET CATEGORIES */}
+                    {/* STEP 1: PRESET CATEGORIES & NARRATIVE STYLE */}
                     <div className={`transition-all ${aiState.step > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                        
+                        {/* Narrative Style Selection */}
+                        <div className="mb-4 bg-white/5 p-3 rounded-lg border border-white/10">
+                            <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-2">Gaya Narasi & Penulis</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button 
+                                    onClick={() => aiState.setGenConfig(prev => ({...prev, narrative: 'narsis'}))}
+                                    className={`text-[10px] py-2 px-2 rounded border transition-all flex flex-col items-center gap-1 ${
+                                        aiState.genConfig.narrative === 'narsis'
+                                        ? 'bg-brand-orange text-white border-brand-orange'
+                                        : 'bg-black/20 text-gray-400 border-white/10'
+                                    }`}
+                                >
+                                    <span className="font-bold flex items-center gap-1"><Mic size={10} /> Personal (CEO)</span>
+                                    <span className="text-[8px] opacity-70">Amin Maghfuri</span>
+                                </button>
+                                <button 
+                                    onClick={() => aiState.setGenConfig(prev => ({...prev, narrative: 'umum'}))}
+                                    className={`text-[10px] py-2 px-2 rounded border transition-all flex flex-col items-center gap-1 ${
+                                        aiState.genConfig.narrative === 'umum'
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-black/20 text-gray-400 border-white/10'
+                                    }`}
+                                >
+                                    <span className="font-bold flex items-center gap-1"><FileText size={10} /> Umum (Redaksi)</span>
+                                    <span className="text-[8px] opacity-70">Tim Redaksi</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <label className="text-[10px] text-brand-orange font-bold uppercase tracking-wider block mb-3">Step 1: Pilih Fokus Topik</label>
                         <div className="grid grid-cols-2 gap-2 mb-4">
                             {PRESET_TOPICS.map((topic) => (
@@ -1055,7 +1110,7 @@ export const AdminArticles = ({
                             disabled={loading.researching} 
                             className={`w-full py-3 text-xs ${aiState.selectedPresets.length === 0 ? 'opacity-50' : ''}`}
                         >
-                            {loading.researching ? <LoadingSpinner size={14} /> : <><TrendingUp size={14}/> GENERATE IDE TOPIK</>}
+                            {loading.researching ? <LoadingSpinner size={14} /> : <><TrendingUp size={14}/> GENERATE IDE TOPIK (UNIK)</>}
                         </Button>
                     </div>
 
@@ -1202,10 +1257,36 @@ export const AdminArticles = ({
                     {/* Inputs */}
                     <div className="space-y-3">
                         <Input value={form.title} onChange={e => setForm((p:any) => ({...p, title: e.target.value}))} placeholder="Judul Artikel" className="text-xs font-bold py-2"/>
-                        <div className="grid grid-cols-2 gap-2">
-                            <Input value={form.category} onChange={e => setForm((p:any) => ({...p, category: e.target.value}))} placeholder="Kategori" className="text-[10px] py-1.5"/>
-                            <Input value={form.author} onChange={e => setForm((p:any) => ({...p, author: e.target.value}))} placeholder="Penulis" className="text-[10px] py-1.5"/>
+                        
+                        {/* Category & Author Row with Avatar */}
+                        <div className="flex gap-2">
+                            <Input value={form.category} onChange={e => setForm((p:any) => ({...p, category: e.target.value}))} placeholder="Kategori" className="text-[10px] py-1.5 w-1/3"/>
+                            
+                            <div className="flex-1 flex gap-2">
+                                {/* Author Avatar Trigger */}
+                                <div className="relative group w-8 h-8 rounded-full border border-white/20 bg-black overflow-hidden shrink-0 cursor-pointer">
+                                    <img 
+                                        src={form.authorAvatar || "https://via.placeholder.com/100"} 
+                                        alt="Author" 
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                        onChange={(e) => {
+                                            const file = e.target.files ? e.target.files[0] : null;
+                                            if(file) setForm((p:any) => ({...p, uploadAuthorFile: file, authorAvatar: URL.createObjectURL(file)}));
+                                        }}
+                                    />
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Edit size={10} className="text-white"/>
+                                    </div>
+                                </div>
+                                <Input value={form.author} onChange={e => setForm((p:any) => ({...p, author: e.target.value}))} placeholder="Penulis" className="text-[10px] py-1.5 flex-1"/>
+                            </div>
                         </div>
+
                         <TextArea value={form.excerpt} onChange={e => setForm((p:any) => ({...p, excerpt: e.target.value}))} placeholder="Ringkasan..." className="text-[10px] h-16"/>
                         <TextArea value={form.content} onChange={e => setForm((p:any) => ({...p, content: e.target.value}))} placeholder="# Konten Markdown..." className="text-[10px] h-96 font-mono custom-scrollbar"/>
                     </div>
