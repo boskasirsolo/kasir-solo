@@ -327,8 +327,21 @@ export const useSibosChat = (
         } catch (e: any) {
             // Fail
             setAuthState('IDLE');
+            
+            let rejectionMsg = "";
+            if (e.message && (e.message.includes("Invalid login credentials") || e.message.includes("Invalid email or password"))) {
+                 rejectionMsg = "Kombinasi Email dan Password SALAH. Identitas tidak valid.";
+            } else {
+                 rejectionMsg = `Terjadi kesalahan sistem: ${e.message}`;
+            }
+
             setMessages(prev => [...prev, 
-                { id: (Date.now()+1).toString(), role: 'assistant', text: `🚫 **ACCESS DENIED**. Login gagal: ${e.message}.`, time: 'System' }
+                { 
+                    id: (Date.now()+1).toString(), 
+                    role: 'assistant', 
+                    text: `🚫 **ACCESS DENIED**.\n\n${rejectionMsg}\n\nMaaf, Anda tidak dapat masuk ke mode admin. Sistem keamanan menolak permintaan Anda.`, 
+                    time: 'System' 
+                }
             ]);
         } finally {
             setIsTyping(false);
