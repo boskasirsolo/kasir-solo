@@ -157,9 +157,26 @@ export const ArticlesPage = ({
         subtitle="Panduan bisnis, review teknologi, dan strategi manajemen kasir." 
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 pt-8">
+      {/* 
+        1. FEATURED HERO - MOVED OUTSIDE THE GRID 
+        Now acts as a full-width block before the sidebar/list split
+      */}
+      {featuredArticle && currentPage === 1 && filteredArticles.length > 0 && (
+         <div className="mb-12 animate-fade-in">
+            <FeaturedArticleHero 
+              article={featuredArticle} 
+              onClick={() => handleArticleClick(featuredArticle)} 
+            />
+         </div>
+      )}
+
+      {/* 
+        2. MAIN CONTENT GRID (LIST + SIDEBAR)
+        Sidebar is now aligned with the Grid List, not the Hero.
+      */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
         
-        {/* --- LEFT COLUMN: CONTENT (75%) --- */}
+        {/* --- LEFT COLUMN: LIST CONTENT (75%) --- */}
         <div className="lg:col-span-9 order-2 lg:order-1">
           {filteredArticles.length === 0 ? (
             <div className="text-center py-20 bg-brand-card rounded-3xl border border-white/5 border-dashed">
@@ -175,18 +192,10 @@ export const ArticlesPage = ({
             </div>
           ) : (
             <>
-              {/* Featured Hero (Only shows on first page and if not filtering specifically, or always show relevant featured) */}
-              {featuredArticle && currentPage === 1 && (
-                 <FeaturedArticleHero 
-                   article={featuredArticle} 
-                   onClick={() => handleArticleClick(featuredArticle)} 
-                 />
-              )}
-
               {/* Pagination Top */}
               <PaginationControls />
 
-              {/* Grid Articles - UPDATED TO 3 COLUMNS */}
+              {/* Grid Articles - 3 COLUMNS */}
               {paginatedArticles.length > 0 && (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {paginatedArticles.map((article) => (
@@ -318,7 +327,7 @@ export const ArticlesPage = ({
              </div>
           </div>
 
-          {/* 4. Best Selling Products Widget (New) */}
+          {/* 4. Best Selling Products Widget */}
           <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
              <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
                 <TrendingUp size={16} className="text-brand-orange" />
