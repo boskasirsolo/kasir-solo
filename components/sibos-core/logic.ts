@@ -277,18 +277,7 @@ export const useSibosChat = (
 
     // AUTH FLOW: Step 1 - Trigger
     if (text.toLowerCase() === '/admin') {
-        // If already logged in (session exists), just switch mode
-        if (session) {
-            setIsModeAdmin(true);
-            setMessages(prev => [...prev, 
-                { id: Date.now().toString(), role: 'user', text: text, time: 'Now' },
-                { id: (Date.now()+1).toString(), role: 'assistant', text: "🔓 **ACCESS GRANTED**. Welcome back, Commander.", time: 'System' }
-            ]);
-            chatHistoryRef.current = [];
-            return;
-        }
-        
-        // If not logged in, start interactive flow
+        // ALWAYS Require credential check in Chat Mode (Stealth Protocol)
         setAuthState('AWAITING_EMAIL');
         setMessages(prev => [...prev, 
             { id: Date.now().toString(), role: 'user', text: text, time: 'Now' },
