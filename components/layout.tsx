@@ -1,30 +1,45 @@
 
 import React, { useState, useEffect } from 'react';
-import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video, ChevronDown, ArrowUp } from 'lucide-react';
+import { Monitor, Menu, X, Instagram, Facebook, MapPin, Phone, Lock, ShoppingCart, Youtube, Linkedin, Video, ChevronDown, ArrowUp, FileText } from 'lucide-react';
 import { useCart } from '../context/cart-context';
 import { SiteConfig, Product } from '../types';
 import { SibosWidget } from './sibos-core/index'; // CRITICAL FIX: Specific import path
 import { INITIAL_PRODUCTS } from '../utils';
 
 // --- DATA & CONSTANTS ---
-// Structure updated to support Dropdown with REAL routes
+// Corporate Menu Structure
 const NAV_ITEMS = [
   { id: 'home', label: 'Beranda' },
-  { id: 'innovation', label: 'Inovasi' }, 
-  { id: 'shop', label: 'Toko' },
   { 
-    id: 'services-group', 
-    label: 'Layanan',
+    id: 'company', 
+    label: 'Tentang Kami',
     children: [
-      { id: 'services/website', label: 'Pembuatan Website' },
-      { id: 'services/webapp', label: 'Web App Development' },
-      { id: 'services/seo', label: 'Optimasi SEO' },
-      { id: 'services/maintenance', label: 'Maintenance' },
-      { id: 'gallery', label: 'Portofolio' },
+      { id: 'about', label: 'Profil Perusahaan' },
+      { id: 'about', label: 'Visi & Misi' },
     ]
   },
-  { id: 'articles', label: 'Artikel' },
-  { id: 'about', label: 'Tentang' },
+  { 
+    id: 'solutions', 
+    label: 'Solusi Bisnis',
+    children: [
+      { id: 'shop', label: 'Hardware POS' },
+      { id: 'innovation', label: 'Software Aplikasi' },
+      { id: 'services/website', label: 'Digital Agency' },
+      { id: 'services/webapp', label: 'Custom App' },
+    ]
+  },
+  { id: 'gallery', label: 'Portfolio' },
+  { 
+    id: 'support', 
+    label: 'Bantuan',
+    children: [
+      { id: 'legal/refund', label: 'Garansi & Retur' },
+      { id: 'legal/privacy', label: 'Kebijakan Privasi' },
+      { id: 'legal/terms', label: 'Syarat & Ketentuan' },
+    ]
+  },
+  { id: 'articles', label: 'Wawasan' },
+  { id: 'about', label: 'Kontak' },
 ];
 
 // --- ATOMS: Visual Components ---
@@ -122,7 +137,7 @@ const DesktopNav = ({
   setPage: (id: string) => void, 
   cartCount: number 
 }) => (
-  <div className="hidden md:flex items-center gap-8">
+  <div className="hidden lg:flex items-center gap-6 xl:gap-8">
     {NAV_ITEMS.map((item) => (
       <React.Fragment key={item.id}>
         {item.children ? (
@@ -165,7 +180,20 @@ const DesktopNav = ({
         )}
       </React.Fragment>
     ))}
+    
+    <div className="h-6 w-px bg-white/10 mx-2"></div>
+    
     <CartButton id="desktop-cart-btn" count={cartCount} onClick={() => setPage('checkout')} />
+    
+    {/* CTA Button */}
+    <a 
+      href="https://wa.me/6282325103336?text=Halo%20PT%20Mesin%20Kasir%20Solo,%20saya%20ingin%20minta%20penawaran%20harga."
+      target="_blank"
+      rel="noreferrer"
+      className="bg-brand-orange hover:bg-brand-action text-white text-xs font-bold px-5 py-2.5 rounded-full shadow-neon hover:shadow-neon-strong transition-all flex items-center gap-2"
+    >
+      <FileText size={14} /> MINTA PENAWARAN
+    </a>
   </div>
 );
 
@@ -180,7 +208,7 @@ const MobileNavToggle = ({
   cartCount: number, 
   onCartClick: () => void 
 }) => (
-  <div className="flex items-center gap-4 md:hidden">
+  <div className="flex items-center gap-4 lg:hidden">
     <CartButton id="mobile-cart-btn" count={cartCount} onClick={onCartClick} mobile />
     <button 
       className="text-brand-orange drop-shadow-neon"
@@ -204,7 +232,7 @@ const MobileMenuOverlay = ({
 }) => {
   if (!isOpen) return null;
   return (
-    <div className="md:hidden bg-brand-dark border-b border-brand-orange/20 p-4 absolute w-full shadow-2xl animate-fade-in z-40 max-h-[80vh] overflow-y-auto">
+    <div className="lg:hidden bg-brand-dark border-b border-brand-orange/20 p-4 absolute w-full shadow-2xl animate-fade-in z-40 max-h-[80vh] overflow-y-auto">
       <div className="flex flex-col gap-2">
         {NAV_ITEMS.map((item) => (
           <React.Fragment key={item.id}>
@@ -235,6 +263,16 @@ const MobileMenuOverlay = ({
              )}
           </React.Fragment>
         ))}
+        <div className="mt-4 pt-4 border-t border-white/10">
+           <a 
+              href="https://wa.me/6282325103336?text=Halo%20PT%20Mesin%20Kasir%20Solo,%20saya%20ingin%20minta%20penawaran%20harga."
+              target="_blank"
+              rel="noreferrer"
+              className="flex w-full items-center justify-center gap-2 bg-brand-orange text-white py-3 rounded-lg font-bold shadow-neon"
+           >
+              <FileText size={16} /> MINTA PENAWARAN
+           </a>
+        </div>
       </div>
     </div>
   );
@@ -327,26 +365,31 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
           </ul>
         </div>
 
-        {/* Menu Section */}
+        {/* Menu Section - Corporate Update */}
         <div className="md:col-span-1">
-          <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Menu</h4>
+          <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Perusahaan</h4>
           <ul className="space-y-2 text-gray-400 text-sm">
-            {['shop', 'gallery', 'about', 'innovation'].map((link) => (
+            {['about', 'gallery', 'articles'].map((link) => (
               <li key={link}>
                 <button 
                   onClick={() => setPage(link)} 
                   className="hover:text-brand-orange capitalize transition-colors"
                 >
-                  {link === 'shop' ? 'Produk' : link === 'about' ? 'Kontak' : link === 'innovation' ? 'Software' : link === 'gallery' ? 'Portofolio' : link}
+                  {link === 'about' ? 'Tentang Kami' : link === 'gallery' ? 'Portfolio Klien' : 'Blog & Wawasan'}
                 </button>
               </li>
             ))}
+            <li>
+                <button onClick={() => setPage('shop')} className="hover:text-brand-orange transition-colors">
+                    Hardware Store
+                </button>
+            </li>
           </ul>
         </div>
 
         {/* Legal & Help Section */}
         <div className="md:col-span-1">
-          <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Legal & Bantuan</h4>
+          <h4 className="text-white font-bold mb-4 uppercase tracking-wider text-sm border-l-2 border-brand-orange pl-3">Pusat Bantuan</h4>
           <ul className="space-y-2 text-gray-400 text-sm">
             <li>
                 <button onClick={() => setPage('legal/refund')} className="hover:text-brand-orange transition-colors">
@@ -365,7 +408,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
             </li>
             <li className="pt-2">
                 <a href="https://wa.me/6282325103336" target="_blank" rel="noreferrer" className="text-green-500 hover:text-green-400 transition-colors flex items-center gap-1 font-bold">
-                    <Phone size={14}/> Lapor Kendala
+                    <Phone size={14}/> Support Teknis
                 </a>
             </li>
           </ul>
@@ -374,7 +417,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
 
       {/* Copyright & Admin Trigger */}
       <div className="border-t border-white/5 mt-10 pt-6 flex flex-col items-center gap-2">
-        <p className="text-center text-gray-600 text-xs">© {new Date().getFullYear()} PT Mesin Kasir Solo.</p>
+        <p className="text-center text-gray-600 text-xs">© {new Date().getFullYear()} PT Mesin Kasir Solo. All Rights Reserved.</p>
         <button onClick={() => setPage('admin')} className="text-gray-800 hover:text-brand-orange transition-colors p-2">
           <Lock size={12} />
         </button>
