@@ -5,7 +5,7 @@ import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, formatRupiah, callGeminiWithRotation } from '../utils';
 
-const ITEMS_PER_PAGE = 8; // Increased items per page since list is wider
+const ITEMS_PER_PAGE = 8; // 4 columns x 2 rows
 
 const useProductManager = (
     products: Product[], 
@@ -182,7 +182,15 @@ const useProductManager = (
         generateAITitle,
         generateAIDesc,
         generateAIImage,
-        listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
+        listData: { 
+            paginated, 
+            totalPages, 
+            page, 
+            setPage, 
+            searchTerm, 
+            setSearchTerm,
+            totalItems: filtered.length // Add Total Count
+        }
     };
 };
 
@@ -286,6 +294,18 @@ const ProductForm = ({
     </div>
 );
 
+// --- REUSABLE PAGINATION COMPONENT ---
+const Pagination = ({ page, totalPages, setPage, className = "" }: { page: number, totalPages: number, setPage: (p: any) => void, className?: string }) => {
+    if (totalPages <= 1) return null;
+    return (
+        <div className={`p-2 bg-black/20 flex justify-center items-center gap-4 ${className}`}>
+            <button onClick={() => setPage((p: number) => Math.max(1, p - 1))} disabled={page === 1} className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30"><ChevronLeft size={14} /></button>
+            <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-0.5 rounded">{page} / {totalPages}</span>
+            <button onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30"><ChevronRight size={14} /></button>
+        </div>
+    );
+};
+
 const ProductList = ({ 
     data, onEdit, onDelete 
 }: { 
@@ -303,9 +323,13 @@ const ProductList = ({
                     className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange"
                 />
              </div>
-             <span className="text-[10px] font-bold text-gray-500 uppercase bg-white/5 px-2 py-1 rounded">Total: {data.paginated.length}</span>
+             {/* Show Total ITEMS, not just page items */}
+             <span className="text-[10px] font-bold text-gray-500 uppercase bg-white/5 px-2 py-1 rounded">Total: {data.totalItems}</span>
         </div>
         
+        {/* Pagination TOP */}
+        <Pagination page={data.page} totalPages={data.totalPages} setPage={data.setPage} className="border-b border-white/5" />
+
         <div className="flex-grow overflow-y-auto p-4 custom-scrollbar min-h-[500px]">
             {data.paginated.length === 0 ? (
                 <div className="text-center py-20 text-gray-500 text-xs">
@@ -340,13 +364,8 @@ const ProductList = ({
             )}
         </div>
 
-        {data.totalPages > 1 && (
-            <div className="p-3 border-t border-white/10 bg-black/20 flex justify-center items-center gap-4">
-                <button onClick={() => data.setPage((p:number) => Math.max(1, p - 1))} disabled={data.page === 1} className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30"><ChevronLeft size={14} /></button>
-                <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-0.5 rounded">{data.page} / {data.totalPages}</span>
-                <button onClick={() => data.setPage((p:number) => Math.min(data.totalPages, p + 1))} disabled={data.page === data.totalPages} className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30"><ChevronRight size={14} /></button>
-            </div>
-        )}
+        {/* Pagination BOTTOM */}
+        <Pagination page={data.page} totalPages={data.totalPages} setPage={data.setPage} className="border-t border-white/10" />
     </div>
 );
 
