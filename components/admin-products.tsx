@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, formatRupiah, ensureAPIKey, getSmartApiKey, markKeyAsExhausted } from '../utils';
-import { GoogleGenAI } from "@google/genai";
+import { supabase, CONFIG, formatRupiah, callGeminiWithRotation } from '../utils';
 
 const ITEMS_PER_PAGE = 6; 
 
@@ -59,19 +58,8 @@ const useProductManager = (
         if (!form.name || !form.shortDesc) return alert("Isi Nama dan Keyword Fitur dulu.");
         
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
-        const apiKey = getSmartApiKey();
 
         try {
-            await ensureAPIKey(); // Ensure key in IDX
-            
-            if (!apiKey) {
-                console.warn("No API Key detected.");
-                alert("API Key tidak ditemukan.");
-                return;
-            }
-
-            const ai = new GoogleGenAI({ apiKey });
-            
             const prompt = `
             Role: Expert E-commerce Copywriter & SEO Specialist.
             Task: Write a high-converting product description (Sales Copy).
@@ -89,16 +77,16 @@ const useProductManager = (
             5. Length: Max 3 paragraphs.
             `;
             
-            const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+            // USE CENTRALIZED ROTATION CALLER
+            const response = await callGeminiWithRotation({ 
+                model: 'gemini-3-flash-preview', 
+                contents: prompt 
+            });
+            
             setForm(prev => ({ ...prev, desc: response.text?.trim() || '' }));
         } catch (e: any) { 
             console.error(e);
-            if (e.message?.includes('429') || e.message?.includes('400') || e.message?.toLowerCase().includes('quota') || e.message?.toLowerCase().includes('resource')) {
-                markKeyAsExhausted(apiKey);
-                alert("API Key limit tercapai. Silakan coba tekan tombol lagi.");
-            } else {
-                alert(`AI Error: ${e.message}`); 
-            }
+            alert(`AI Error: ${e.message}`); 
         } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };
@@ -231,7 +219,6 @@ const ProductForm = ({
                     <button 
                         onClick={onGenerateAI} 
                         disabled={loading.generatingAI} 
-                        // UPDATED: Use brand-action (Orange) for manual AI button
                         className="bg-brand-action text-white rounded px-3 py-1 flex items-center justify-center hover:bg-brand-actionGlow disabled:opacity-50"
                     >
                         {loading.generatingAI ? <LoadingSpinner /> : <Sparkles size={16} />}

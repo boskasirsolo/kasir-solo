@@ -1,6 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { Product, Article, GalleryItem, Testimonial } from './types';
+import { GoogleGenAI } from "@google/genai";
 
 // --- Environment Helpers ---
 export const getEnv = (key: string) => {
@@ -80,6 +81,50 @@ export const getSmartApiKey = () => {
   console.log(`[System] Using API Key Index [${randomIndex}/${validKeys.length}] ending in ...${selectedKey.slice(-4)}`);
   
   return selectedKey;
+};
+
+// --- CENTRALIZED ROTATION CALLER ---
+export const callGeminiWithRotation = async (params: {
+  model: string,
+  contents: any,
+  config?: any
+}) => {
+  let attempts = 0;
+  const maxAttempts = 12; // Try up to 12 different keys
+  let lastError: any = null;
+
+  while (attempts < maxAttempts) {
+    const currentApiKey = getSmartApiKey();
+    if (!currentApiKey) throw new Error("Semua API Key telah mencapai limit harian (Quota Exhausted). Silakan coba besok.");
+
+    try {
+      await ensureAPIKey(); // Ensure key in IDX env
+      const ai = new GoogleGenAI({ apiKey: currentApiKey });
+      
+      const result = await ai.models.generateContent({
+        model: params.model,
+        contents: params.contents,
+        config: params.config
+      });
+      return result;
+
+    } catch (error: any) {
+      lastError = error;
+      const errStr = error.toString().toLowerCase();
+      
+      // Check for Quota Limit (429) or Resource Exhausted
+      if (errStr.includes('quota') || errStr.includes('429') || errStr.includes('resource exhausted')) {
+        markKeyAsExhausted(currentApiKey); // Mark dead
+        attempts++;
+        console.warn(`[System] API Key ...${currentApiKey.slice(-4)} exhausted. Rotating to next key (${attempts}/${maxAttempts})...`);
+        // Loop continues to getSmartApiKey() which now excludes the dead one
+      } else {
+        // Rethrow non-quota errors (like 400 Bad Request) immediately
+        throw error; 
+      }
+    }
+  }
+  throw lastError || new Error("Gagal koneksi AI setelah mencoba semua key.");
 };
 
 // --- Configuration ---

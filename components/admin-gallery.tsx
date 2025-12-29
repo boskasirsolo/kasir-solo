@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, ensureAPIKey, getSmartApiKey, markKeyAsExhausted } from '../utils';
-import { GoogleGenAI } from "@google/genai";
+import { supabase, CONFIG, callGeminiWithRotation } from '../utils';
 
 const ITEMS_PER_PAGE = 8; 
 
@@ -154,16 +153,9 @@ const useIntegratedGalleryManager = (
         `;
 
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
-        const apiKey = getSmartApiKey();
 
         try {
-            await ensureAPIKey(); 
-            
-            if (!apiKey) throw new Error("API Key missing");
-
-            const ai = new GoogleGenAI({ apiKey });
-            
-            // 1. Generate Main Description
+            // 1. Generate Main Description using CENTRALIZED ROTATION
             const mainPrompt = `
             Role: Senior Portfolio Copywriter.
             Task: Write a compelling project description (Case Study Summary).
@@ -176,7 +168,10 @@ const useIntegratedGalleryManager = (
             4. NO INTRO like "Here is the text". Just the text.
             `;
             
-            const mainResponse = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: mainPrompt });
+            const mainResponse = await callGeminiWithRotation({ 
+                model: 'gemini-3-flash-preview', 
+                contents: mainPrompt 
+            });
             setForm(prev => ({ ...prev, longDesc: mainResponse.text?.trim() || '' }));
 
             // 2. Generate Testimonial (Only if checkbox is checked)
@@ -188,7 +183,12 @@ const useIntegratedGalleryManager = (
                  Language: Indonesian (Casual/Semi-formal).
                  STRICT: Output ONLY the testimonial text. No quotes, no intro.
                  `;
-                 const testiResponse = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: testiPrompt });
+                 
+                 const testiResponse = await callGeminiWithRotation({ 
+                     model: 'gemini-3-flash-preview', 
+                     contents: testiPrompt 
+                 });
+                 
                  setTestiForm(prev => ({
                      ...prev, 
                      content: testiResponse.text?.trim() || '',
@@ -198,13 +198,7 @@ const useIntegratedGalleryManager = (
 
         } catch (e: any) { 
             console.error(e); 
-            if (e.message?.includes('429') || e.message?.includes('400') || e.message?.toLowerCase().includes('quota') || e.message?.toLowerCase().includes('resource')) {
-                markKeyAsExhausted(apiKey);
-                alert("API Key limit tercapai. Silakan coba tekan tombol lagi.");
-            } else {
-                const msg = e.message || "Gagal menghubungi AI.";
-                alert(`AI Error: ${msg}`);
-            }
+            alert(`AI Error: ${e.message || "Gagal menghubungi AI."}`);
         } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };

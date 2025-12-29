@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save, Sparkles, TrendingUp } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
-import { supabase, ensureAPIKey, getSmartApiKey } from '../utils';
-import { GoogleGenAI } from "@google/genai";
+import { supabase, callGeminiWithRotation } from '../utils';
 
 export const AdminSettings = ({
   config,
@@ -53,13 +52,6 @@ export const AdminSettings = ({
   const generateHeroContent = async () => {
     setIsGenerating(true);
     try {
-        const apiKey = getSmartApiKey();
-        await ensureAPIKey();
-        
-        if (!apiKey) throw new Error("API Key tidak ditemukan.");
-
-        const ai = new GoogleGenAI({ apiKey });
-        
         const prompt = `
         Role: Senior SEO Strategist & Conversion Copywriter (Indonesian Market Expert).
         Task: Generate a high-converting Hero Section for 'PT MESIN KASIR SOLO'.
@@ -86,7 +78,8 @@ export const AdminSettings = ({
         }
         `;
         
-        const result = await ai.models.generateContent({
+        // USE CENTRALIZED ROTATION CALLER
+        const result = await callGeminiWithRotation({
             model: 'gemini-3-flash-preview',
             contents: prompt,
             config: { responseMimeType: "application/json" }

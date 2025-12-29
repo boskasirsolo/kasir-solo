@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Product, SiteConfig } from '../../types';
-import { formatRupiah, supabase, ensureAPIKey, getSmartApiKey, markKeyAsExhausted } from '../../utils';
+import { formatRupiah, supabase, ensureAPIKey, getSmartApiKey, markKeyAsExhausted, callGeminiWithRotation } from '../../utils';
 import { FunctionDeclaration, Type, GoogleGenAI } from "@google/genai";
 
 export interface Message {
@@ -45,6 +45,32 @@ export const useSibosChat = (
           setIsModeAdmin(false); // Logout if session dies
       }
   }, [session]);
+
+  // --- AUTO LOGOUT ADMIN (20s Inactivity) ---
+  useEffect(() => {
+    // FIX: Changed from NodeJS.Timeout to any to avoid namespace errors in browser environment
+    let timer: any;
+
+    if (isModeAdmin) {
+        // Reset timer whenever messages change (activity) or user is typing (inputValue changes)
+        timer = setTimeout(async () => {
+            if (supabase) await supabase.auth.signOut();
+            
+            setIsModeAdmin(false);
+            setAuthState('IDLE');
+            
+            // Notification Message
+            setMessages(prev => [...prev, 
+                { id: Date.now().toString(), role: 'assistant', text: "🔒 **AUTO LOGOUT**. Sesi Admin berakhir karena tidak ada aktivitas (20s).", time: 'System' }
+            ]);
+            
+            // Clear context so next login starts fresh
+            chatHistoryRef.current = [];
+        }, 20000); // 20 Seconds
+    }
+
+    return () => clearTimeout(timer);
+  }, [isModeAdmin, messages, inputValue]); // Dependencies: Status, New Messages, Typing
 
   const chatHistoryRef = useRef<any[]>([]);
 
@@ -277,7 +303,7 @@ export const useSibosChat = (
 
     // AUTH FLOW: Step 1 - Trigger
     if (text.toLowerCase() === '/admin') {
-        // ALWAYS Require credential check in Chat Mode (Stealth Protocol)
+        // ALWAYS Require credential check in Chat Mode (Stealth Protocol) - No auto login here
         setAuthState('AWAITING_EMAIL');
         setMessages(prev => [...prev, 
             { id: Date.now().toString(), role: 'user', text: text, time: 'Now' },
@@ -307,7 +333,7 @@ export const useSibosChat = (
         // Attempt Login
         setIsTyping(true);
         try {
-            if (!supabase) throw new Error("DB Error");
+            if (!supabase) throw new Error("Database Error: Supabase client not initialized.");
             
             const { error } = await supabase.auth.signInWithPassword({
                 email: tempCreds.email,
@@ -325,23 +351,19 @@ export const useSibosChat = (
             chatHistoryRef.current = []; // Reset AI context to clean slate
 
         } catch (e: any) {
-            // Fail
+            // Fail Handling
             setAuthState('IDLE');
-            
-            let rejectionMsg = "";
-            if (e.message && (e.message.includes("Invalid login credentials") || e.message.includes("Invalid email or password"))) {
-                 rejectionMsg = "Kombinasi Email dan Password SALAH. Identitas tidak valid.";
-            } else {
-                 rejectionMsg = `Terjadi kesalahan sistem: ${e.message}`;
+            let errorMsg = e.message || "Unknown error";
+            let friendlyMsg = "Login gagal. Coba lagi.";
+
+            if (errorMsg.includes("Invalid login credentials")) {
+                friendlyMsg = "🚫 **ACCESS DENIED**. Email atau Password salah.";
+            } else if (errorMsg.includes("Email not confirmed")) {
+                friendlyMsg = "⚠️ Email belum dikonfirmasi.";
             }
 
             setMessages(prev => [...prev, 
-                { 
-                    id: (Date.now()+1).toString(), 
-                    role: 'assistant', 
-                    text: `🚫 **ACCESS DENIED**.\n\n${rejectionMsg}\n\nMaaf, Anda tidak dapat masuk ke mode admin. Sistem keamanan menolak permintaan Anda.`, 
-                    time: 'System' 
-                }
+                { id: (Date.now()+1).toString(), role: 'assistant', text: friendlyMsg, time: 'System' }
             ]);
         } finally {
             setIsTyping(false);
@@ -362,12 +384,7 @@ export const useSibosChat = (
     setMessages(prev => [...prev, userMsg]);
     setIsTyping(true);
 
-    const apiKey = getSmartApiKey();
-
     try {
-      await ensureAPIKey(); 
-      const ai = new GoogleGenAI({ apiKey: apiKey || '' });
-      
       const userParts = [{ text: text }];
       
       // Construct context
@@ -381,8 +398,8 @@ export const useSibosChat = (
         activeTools = [{ functionDeclarations: crmTools }];
       }
 
-      // API Call
-      const result = await ai.models.generateContent({
+      // 1. First Call (Generate Content) - USING CENTRALIZED ROTATION
+      const result = await callGeminiWithRotation({
         model: 'gemini-3-flash-preview',
         contents: [...historyForApi, { role: 'user', parts: userParts }],
         config: {
@@ -408,8 +425,8 @@ export const useSibosChat = (
              chatHistoryRef.current.push({ role: 'function', parts: [{ functionResponse: { name: call.name, response: { result: toolResult } } }] });
            }
         }
-        // Second pass for final text
-        const finalResult = await ai.models.generateContent({
+        // 2. Second Call (Summarize Tool Output) - USING CENTRALIZED ROTATION
+        const finalResult = await callGeminiWithRotation({
             model: 'gemini-3-flash-preview',
             contents: chatHistoryRef.current,
             config: { systemInstruction: buildSystemInstruction() }
@@ -427,12 +444,22 @@ export const useSibosChat = (
       }
 
     } catch (error: any) {
-      console.error(error);
+      console.error("AI Error:", error);
+      
       let errorMessage = "Waduh, server SIBOS lagi padat.";
-      if (error.message?.toLowerCase().includes('quota')) {
-          markKeyAsExhausted(apiKey);
-          errorMessage = "Quota Limit. Coba lagi.";
+      const errStr = error.toString().toLowerCase();
+
+      // Better Error Diagnostics
+      if (errStr.includes('quota') || errStr.includes('429')) {
+          errorMessage = "⚠️ Semua server AI sibuk (Quota Limit). Silakan coba besok.";
+      } else if (errStr.includes('key') || errStr.includes('400')) {
+          errorMessage = "⚠️ API Key Invalid (400). Cek konfigurasi.";
+      } else if (errStr.includes('fetch') || errStr.includes('network')) {
+          errorMessage = "⚠️ Koneksi Gagal. Cek internet Anda.";
+      } else {
+          errorMessage = `⚠️ Error Sistem: ${error.message || "Unknown Error"}`;
       }
+
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: errorMessage, time: 'System' }]);
     } finally {
       setIsTyping(false);

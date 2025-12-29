@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap, ChevronDown, ChevronUp, MoreVertical, ArrowLeft, Mic, Camera, Users } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
-import { supabase, CONFIG, ensureAPIKey, getEnv, getSmartApiKey, slugify, markKeyAsExhausted } from '../utils';
-import { GoogleGenAI } from "@google/genai";
+import { supabase, CONFIG, ensureAPIKey, getEnv, slugify, callGeminiWithRotation } from '../utils';
 import { Link } from 'react-router-dom';
 
 const ITEMS_PER_PAGE = 5;
@@ -354,12 +353,7 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, researching: true }));
         setKeywords([]); 
 
-        const apiKey = getSmartApiKey();
-
         try {
-            await ensureAPIKey();
-            const ai = new GoogleGenAI({ apiKey: apiKey || '' });
-            
             const prompt = `
             Role: SEO Strategist for Indonesian Market.
             Context: POS System (Kasir) & Business Management.
@@ -369,7 +363,8 @@ const useArticleManager = (
             Strict JSON only.
             `;
 
-            const result = await ai.models.generateContent({
+            // USE CENTRALIZED ROTATION CALLER
+            const result = await callGeminiWithRotation({
                 model: 'gemini-3-flash-preview',
                 contents: prompt,
                 config: { responseMimeType: "application/json" }
@@ -427,12 +422,7 @@ const useArticleManager = (
         setLoading(prev => ({ ...prev, generatingText: true }));
         setTextProgress({ percent: 5, message: 'Menyiapkan strategi konten...' });
 
-        const apiKey = getSmartApiKey();
-
         try {
-            await ensureAPIKey();
-            const ai = new GoogleGenAI({ apiKey: apiKey || '' });
-
             // Narrative Logic
             let narrativeInstruction = "";
             let authorName = "Redaksi KasirSolo";
@@ -483,7 +473,8 @@ const useArticleManager = (
             ${clusterInstruction}
             `;
 
-            const contentResponse = await ai.models.generateContent({ 
+            // USE CENTRALIZED ROTATION CALLER
+            const contentResponse = await callGeminiWithRotation({ 
                 model: 'gemini-3-flash-preview', 
                 contents: contentPrompt,
                 config: { maxOutputTokens: 8192 } 
@@ -503,8 +494,14 @@ const useArticleManager = (
             }
             
             setTextProgress({ percent: 80, message: 'Metadata...' });
+            
             const metaPrompt = `Based on: "${generatedContent.substring(0, 1000)}..." Generate JSON: { "excerpt": "...", "category": "...", "readTime": "..." }`;
-            const metaResponse = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
+            const metaResponse = await callGeminiWithRotation({ 
+                model: 'gemini-3-flash-preview', 
+                contents: metaPrompt, 
+                config: { responseMimeType: "application/json" } 
+            });
+            
             let metaData = { excerpt: "", category: "Business", readTime: "5 min read" };
             try { metaData = JSON.parse(metaResponse.text || '{}'); } catch(e) {}
 
@@ -532,12 +529,10 @@ const useArticleManager = (
         setImageProgress({ percent: 20, message: 'Merancang visual...' });
 
         try {
-             const apiKey = getSmartApiKey();
-             await ensureAPIKey();
-             const ai = new GoogleGenAI({ apiKey: apiKey || '' });
-
              const prompt = `Create a short English prompt for an AI image generator based on article title: "${form.title}". Style: ${genConfig.imageStyle}. Max 15 words.`;
-             const result = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+             
+             // USE CENTRALIZED ROTATION CALLER
+             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
              const imagePrompt = result.text || form.title;
 
              setImageProgress({ percent: 60, message: 'Rendering...' });
