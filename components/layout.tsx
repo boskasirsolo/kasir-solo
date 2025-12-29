@@ -396,12 +396,16 @@ export const Layout = ({
   children, 
   setPage, 
   currentPage,
-  config 
+  config,
+  setConfig,
+  session
 }: { 
   children?: React.ReactNode, 
   setPage: (p: string) => void, 
   currentPage: string,
-  config: SiteConfig
+  config: SiteConfig,
+  setConfig?: (c: SiteConfig) => void,
+  session?: any
 }) => {
   // Hide Header/Footer on Admin Page
   if (currentPage === 'admin') {
@@ -411,7 +415,7 @@ export const Layout = ({
           {children}
         </main>
         {/* SIBOS AI WIDGET (ADMIN MODE) */}
-        <SibosWidget products={INITIAL_PRODUCTS} isAdmin={true} currentPage={currentPage} />
+        <SibosWidget products={INITIAL_PRODUCTS} isAdmin={true} currentPage={currentPage} setConfig={setConfig} session={session} />
       </div>
     );
   }
@@ -429,8 +433,8 @@ export const Layout = ({
       {/* SCROLL TO TOP BUTTON */}
       <ScrollToTop />
 
-      {/* SIBOS AI WIDGET (PUBLIC MODE) - Pass currentPage for Behavioral Trigger */}
-      <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} currentPage={currentPage} />
+      {/* SIBOS AI WIDGET (PUBLIC MODE) - Pass currentPage & session */}
+      <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} currentPage={currentPage} setConfig={setConfig} session={session} />
     </div>
   );
 };

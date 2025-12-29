@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save } from 'lucide-react';
+import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save, Sparkles, TrendingUp } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
-import { supabase } from '../utils';
+import { supabase, ensureAPIKey, getSmartApiKey } from '../utils';
+import { GoogleGenAI } from "@google/genai";
 
 export const AdminSettings = ({
   config,
@@ -13,6 +14,8 @@ export const AdminSettings = ({
   setConfig: (c: SiteConfig) => void
 }) => {
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [magicContext, setMagicContext] = useState('');
 
   const saveSettings = async () => {
       if (!supabase) return alert("Koneksi Database bermasalah.");
@@ -47,8 +50,67 @@ export const AdminSettings = ({
       }
   };
 
+  const generateHeroContent = async () => {
+    setIsGenerating(true);
+    try {
+        const apiKey = getSmartApiKey();
+        await ensureAPIKey();
+        
+        if (!apiKey) throw new Error("API Key tidak ditemukan.");
+
+        const ai = new GoogleGenAI({ apiKey });
+        
+        const prompt = `
+        Role: Senior SEO Strategist & Conversion Copywriter (Indonesian Market Expert).
+        Task: Generate a high-converting Hero Section for 'PT MESIN KASIR SOLO'.
+        
+        Business Context: 
+        - Selling: Mesin Kasir (POS), Software (SIBOS, QALAM), Web Development.
+        - Target: UMKM, Cafe, Retail, Corporate.
+        - User Input Context: "${magicContext || "General Promotion"}"
+
+        SEO STRATEGY (Modern & Trending):
+        1. Analyze predicted trending keywords for 2024/2025 in Indonesia (e.g., 'Kasir Android', 'Digitalisasi UMKM', 'Omnichannel POS').
+        2. Focus on "Transactional Intent" (keywords that drive sales).
+        3. Use "Semantic SEO" to include related terms naturally in the subtitle.
+        
+        OUTPUT RULES:
+        - Hero Title: Maximum 6 words. Powerful, keyword-rich, attention-grabbing.
+        - Hero Subtitle: Maximum 25 words. Explains the value proposition + solves a pain point + includes secondary keywords.
+        - Language: Indonesian (Professional, Persuasive, Trustworthy).
+        
+        STRICT JSON OUTPUT FORMAT:
+        {
+            "heroTitle": "YOUR TITLE HERE",
+            "heroSubtitle": "YOUR SUBTITLE HERE"
+        }
+        `;
+        
+        const result = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: { responseMimeType: "application/json" }
+        });
+        
+        const text = result.text || "{}";
+        const data = JSON.parse(text);
+        
+        if(data.heroTitle && data.heroSubtitle) {
+            setConfig({ 
+                ...config, 
+                heroTitle: data.heroTitle, 
+                heroSubtitle: data.heroSubtitle 
+            });
+        }
+    } catch(e: any) {
+        alert("Gagal generate AI: " + e.message);
+    } finally {
+        setIsGenerating(false);
+    }
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
         {/* Header with Save Button */}
         <div className="flex justify-between items-center pb-4 border-b border-white/10 sticky top-0 bg-brand-dark z-10 py-2">
             <div>
@@ -66,15 +128,42 @@ export const AdminSettings = ({
         <div className="space-y-8">
             {/* General Config */}
             <div className="space-y-4">
-            <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2">Hero Section</h4>
-            <div>
-                <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Hero Title</label>
-                <Input value={config.heroTitle} onChange={(e) => setConfig({...config, heroTitle: e.target.value})} />
-            </div>
-            <div>
-                <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Hero Subtitle</label>
-                <TextArea value={config.heroSubtitle} onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})} className="h-28" />
-            </div>
+                <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2">Hero Section</h4>
+                
+                {/* AI MAGIC BOX */}
+                <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-white/10 rounded-lg p-4 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-30 transition-opacity">
+                        <Sparkles size={40} className="text-white"/>
+                    </div>
+                    <label className="text-[10px] text-blue-300 font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <TrendingUp size={12}/> SEO Magic Writer
+                    </label>
+                    <div className="flex gap-2">
+                        <input 
+                            value={magicContext}
+                            onChange={(e) => setMagicContext(e.target.value)}
+                            placeholder="Target: 'Promo Lebaran', 'Kasir Cafe', 'Jasa Web'..."
+                            className="bg-black/40 border border-white/10 rounded px-3 text-xs w-full focus:outline-none focus:border-blue-400 text-white placeholder-gray-500"
+                        />
+                        <button 
+                            onClick={generateHeroContent}
+                            disabled={isGenerating}
+                            className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold px-4 py-2 rounded flex items-center gap-2 whitespace-nowrap transition-all shadow-lg"
+                        >
+                            {isGenerating ? <LoadingSpinner size={14}/> : <><Sparkles size={14}/> RESEARCH & WRITE</>}
+                        </button>
+                    </div>
+                    <p className="text-[9px] text-gray-400 mt-2 italic">*AI akan meriset keyword populer terbaru sebelum menulis.</p>
+                </div>
+
+                <div>
+                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Hero Title (H1)</label>
+                    <Input value={config.heroTitle} onChange={(e) => setConfig({...config, heroTitle: e.target.value})} />
+                </div>
+                <div>
+                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Hero Subtitle</label>
+                    <TextArea value={config.heroSubtitle} onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})} className="h-28" />
+                </div>
             </div>
 
             {/* Contact Info */}

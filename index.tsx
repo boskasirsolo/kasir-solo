@@ -185,7 +185,13 @@ const AppContent = () => {
 
   return (
     <CartProvider>
-      <Layout setPage={handleNavigation} currentPage={getCurrentPageId()} config={config}>
+      <Layout 
+        setPage={handleNavigation} 
+        currentPage={getCurrentPageId()} 
+        config={config} 
+        setConfig={setConfig}
+        session={session} // PASS SESSION HERE
+      >
         <Routes>
           <Route path="/" element={
             <HomePage 
@@ -213,7 +219,6 @@ const AppContent = () => {
           <Route path="/articles" element={<ArticlesPage articles={articles} products={products} />} />
           <Route path="/articles/:slug" element={<ArticleDetailPage articles={articles} products={products} />} />
           
-          {/* PASS CONFIG TO ABOUT PAGE */}
           <Route path="/about" element={<AboutPage config={config} />} />
           
           <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
