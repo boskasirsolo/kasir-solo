@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Article } from '../types';
-import { Eye } from 'lucide-react';
+import { Eye, ImageOff } from 'lucide-react';
 import { SimpleMarkdown } from './admin-articles/markdown';
 import { useArticleManager } from './admin-articles/logic';
 import { ListPanel } from './admin-articles/list-panel';
@@ -20,6 +20,9 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
       handleEditClick: actions.handleEditClick,
       deleteItem: actions.deleteItem
   };
+
+  // Image Error State for Preview
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
@@ -66,15 +69,22 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
          </div>
          <div className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
             {/* Cover Image Preview */}
-            {form.imagePreview && (
+            {form.imagePreview && !imgError ? (
                 <div className="mb-6 rounded-xl overflow-hidden border border-white/10 shadow-lg">
                     <img 
                         src={form.imagePreview} 
                         alt="Article Cover" 
                         className="w-full h-auto object-cover aspect-video" 
+                        onError={() => setImgError(true)}
                     />
                 </div>
-            )}
+            ) : form.imagePreview ? (
+                <div className="mb-6 rounded-xl overflow-hidden border border-white/10 shadow-lg bg-white/5 flex items-center justify-center aspect-video text-gray-500 gap-2">
+                    <ImageOff size={24} />
+                    <span className="text-xs">Gambar Tidak Dapat Dimuat</span>
+                </div>
+            ) : null}
+            
             <SimpleMarkdown content={form.content} />
          </div>
       </div>

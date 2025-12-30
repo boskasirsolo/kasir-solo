@@ -255,7 +255,7 @@ export const EditorPanel = ({
     // Layout: 
     // 1. Header (Fixed)
     // 2. Meta Controls (Fixed / Non-Scrollable)
-    // 3. Content Editor (Scrollable)
+    // 3. Content Editor (Internal Scroll)
     // 4. Footer (Fixed)
     return (
         <div className="flex flex-col h-full bg-brand-dark overflow-hidden">
@@ -332,21 +332,21 @@ export const EditorPanel = ({
                 </div>
             </div>
 
-            {/* 3. Main Content Editor (Scrollable) */}
-            <div className="flex-grow overflow-y-auto p-4 custom-scrollbar relative">
+            {/* 3. Main Content Editor (Fixed container, internal scroll) */}
+            <div className="flex-grow overflow-hidden p-4 relative flex flex-col">
                 <TextArea 
                     value={form.content} 
                     onChange={e => setForm((p:any) => ({...p, content: e.target.value}))} 
                     placeholder="# Konten Artikel..." 
-                    className="w-full h-full min-h-[500px] text-xs font-mono resize-none bg-transparent border-none focus:ring-0 p-0 text-gray-300 leading-relaxed custom-scrollbar"
+                    className="flex-grow w-full text-xs font-mono resize-none bg-transparent border-none focus:ring-0 p-0 text-gray-300 leading-relaxed custom-scrollbar h-full"
                 />
                 
                 {/* Floating AI Button inside Scroll Area */}
-                <div className="absolute bottom-4 right-6 sticky float-right">
+                <div className="absolute bottom-4 right-6 pointer-events-none">
                     <button 
                     onClick={actions.runWrite}
                     disabled={loading.generatingText}
-                    className="bg-brand-orange/90 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 rounded-full shadow-lg hover:bg-brand-orange flex items-center gap-1 border border-white/20 transition-all transform hover:scale-105"
+                    className="pointer-events-auto bg-brand-orange/90 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 rounded-full shadow-lg hover:bg-brand-orange flex items-center gap-1 border border-white/20 transition-all transform hover:scale-105"
                     >
                     {loading.generatingText ? <Loader2 size={10} className="animate-spin"/> : <Wand2 size={10}/>}
                     Regenerate

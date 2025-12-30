@@ -254,6 +254,9 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
                 finalImageUrl = await aiLogic.uploadToCloudinary(form.uploadFile);
             }
 
+            const now = new Date().toISOString();
+            const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
             const dbData = {
                 title: form.title, 
                 excerpt: form.excerpt, 
@@ -267,7 +270,10 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
                 type: form.type, 
                 pillar_id: form.type === 'cluster' ? form.pillar_id : null,
-                cluster_ideas: form.cluster_ideas
+                cluster_ideas: form.cluster_ideas,
+                // IMPORTANT: Inject date/created_at to ensure sorting works even for drafts
+                date: dateStr,
+                created_at: now
             };
 
             if (form.id) {
