@@ -39,7 +39,8 @@ Halaman About Reference: Kisah kegagalan adalah kekuatan kami. Kami mengerti per
 
 [PRODUK 2: QALAM]
 - Definisi: Aplikasi Manajemen TPA/Pendidikan Islam Standar Premium.
-- Biaya: GRATIS untuk lembaga <200 santri (Konsep Donasi & Subsidi Silang dari versi Enterprise).
+- Biaya: GRATIS untuk lembaga <200 santri.
+- Model Bisnis: Subsidi Silang (Versi Enterprise/Berbayar mensubsidi versi Gratis).
 - Fitur Unggulan: 
   1. Integrasi Civitas (Guru, Kyai, Staf), Wali, dan Donatur.
   2. Transparansi Keuangan.
@@ -47,6 +48,7 @@ Halaman About Reference: Kisah kegagalan adalah kekuatan kami. Kami mengerti per
   4. Payment Gateway & Whatsapp API.
 - **STATUS SAAT INI: WAITING LIST SUDAH DIBUKA**.
 - **Akses**: Calon pengguna dapat mendaftar waiting list di website resmi (qalam.id) yang bisa diakses melalui halaman "Innovation" di website ini.
+- **ATURAN NARASI PENTING**: JANGAN PERNAH menyebutkan bahwa QALAM disubsidi dari keuntungan SIBOS atau penjualan kasir. QALAM adalah entitas mandiri yang menerapkan subsidi silang internal (Pengguna Qalam Enterprise mensubsidi Pengguna Qalam Gratis).
 
 [STRATEGI KONTEN]
 Setiap artikel harus melakukan "Soft Selling" yang elegan. Posisikan SIBOS atau QALAM sebagai solusi masa depan. 
@@ -381,6 +383,9 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             // Use current persona avatar as source of truth if form is default
             const finalAuthorAvatar = form.authorAvatar || activePersona.avatar;
 
+            // Ensure status is normalized to lowercase to prevent filter issues on frontend
+            const statusNormalized = (form.status || 'draft').toLowerCase().trim();
+
             const commonData = {
                 title: form.title, 
                 excerpt: form.excerpt || '', 
@@ -390,7 +395,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 author_avatar: finalAuthorAvatar, 
                 read_time: form.readTime, 
                 image_url: finalImageUrl,
-                status: form.status || 'draft',
+                status: statusNormalized as any, // Force normalized status
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
                 type: form.type, 
                 pillar_id: form.type === 'cluster' ? form.pillar_id : null,

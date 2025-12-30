@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Product, SiteConfig } from '../../types';
 import { formatRupiah, supabase, ensureAPIKey, callGeminiWithRotation } from '../../utils';
@@ -49,6 +50,7 @@ You are **SIBOS AI**, the central intelligence of **PT Mesin Kasir Solo**. You a
 - **Features:** Integrated Civitas (Teachers, Kyai, Staff), Guardians/Parents, and Donors. Financial Transparency. AI Integration (Auto-reporting student progress, psychological consultation for parents).
 - **STATUS: WAITING LIST OPEN**.
 - **ACTION**: Direct users to the **Innovation Page** to access the official QALAM website (qalam.id) and join the waiting list.
+- **RESTRICTION:** NEVER say QALAM is funded by SIBOS profits. It is funded by its own Enterprise revenue.
 
 [INTERACTION RULES]
 1. **Soft Selling:** In every answer, subtly connect the user's problem to SIBOS (for business) or QALAM (for education) as the ultimate solution.

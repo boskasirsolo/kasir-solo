@@ -115,10 +115,13 @@ const AppContent = () => {
         if (artData) {
             const mappedArticles = artData.map((item: any) => ({
                 ...item,
+                // Ensure image is mapped correctly
                 image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
                 readTime: item.read_time || item.readTime || '5 min read',
                 author_avatar: item.author_avatar, // EXPLICIT MAPPING FOR AVATAR
-                date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+                // CRITICAL FIX: Normalize status to lowercase and trimmed to prevent filter issues
+                status: (item.status || 'draft').toLowerCase().trim()
             })).sort((a: any, b: any) => {
                 const dateA = a.created_at ? new Date(a.created_at) : parseDate(a.date);
                 const dateB = b.created_at ? new Date(b.created_at) : parseDate(b.date);
