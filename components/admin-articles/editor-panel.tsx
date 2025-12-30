@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, ArrowRight, Layout, Network, Image as ImageIcon, UploadCloud, CalendarClock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, ArrowRight, Layout, Network, Image as ImageIcon, UploadCloud, CalendarClock, X as XIcon } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, Input, TextArea, LoadingSpinner } from '../ui';
 import { PRESET_TOPICS, ARTICLE_CATEGORIES } from './types';
@@ -45,6 +45,31 @@ export const EditorPanel = ({
     availablePillars: Article[]
 }) => {
     
+    // Multi Category Logic
+    const [catInput, setCatInput] = useState('');
+    const selectedCats = form.category ? form.category.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+
+    const addCategory = (cat: string) => {
+        const trimmed = cat.trim();
+        if (trimmed && !selectedCats.includes(trimmed)) {
+            const newCats = [...selectedCats, trimmed];
+            setForm((p: any) => ({ ...p, category: newCats.join(', ') }));
+        }
+        setCatInput('');
+    };
+
+    const removeCategory = (cat: string) => {
+        const newCats = selectedCats.filter((c: string) => c !== cat);
+        setForm((p: any) => ({ ...p, category: newCats.join(', ') }));
+    };
+
+    const handleCatKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            addCategory(catInput);
+        }
+    };
+
     // --- MODE 1: AI STUDIO - STEP 1 (Topic Selection) ---
     if (!form.id && aiState.step === 0) {
         return (
@@ -227,14 +252,28 @@ export const EditorPanel = ({
                     </div>
                 </div>
 
-                {/* 2. CATEGORY SELECTOR (DATALIST HYBRID) */}
+                {/* 2. CATEGORY SELECTOR (MULTI-TAG) */}
                 <div>
-                    <label className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Kategori Artikel</label>
+                    <label className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Kategori Artikel (Multi)</label>
+                    
+                    {/* Selected Tags */}
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                        {selectedCats.map((cat: string, i: number) => (
+                            <span key={i} className="bg-brand-orange/20 text-brand-orange border border-brand-orange/30 rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
+                                {cat}
+                                <button onClick={() => removeCategory(cat)} className="hover:text-white"><XIcon size={10}/></button>
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Input Hybrid */}
                     <input 
                         list="categories" 
-                        value={form.category} 
-                        onChange={(e) => setForm((p:any) => ({...p, category: e.target.value}))}
-                        placeholder="Pilih atau Ketik Kategori Baru..."
+                        value={catInput}
+                        onChange={(e) => setCatInput(e.target.value)}
+                        onKeyDown={handleCatKeyDown}
+                        onBlur={() => { if(catInput) addCategory(catInput); }} // Add on blur if typed
+                        placeholder="Pilih atau Ketik Baru + Enter..."
                         className="w-full bg-brand-card border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-orange outline-none"
                     />
                     <datalist id="categories">

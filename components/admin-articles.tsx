@@ -10,7 +10,7 @@ import { EditorPanel } from './admin-articles/editor-panel';
 export const AdminArticles = ({ articles, setArticles }: { articles: Article[], setArticles: (a: Article[]) => void }) => {
   // Use the Centralized Logic Hook
   const manager = useArticleManager(articles, setArticles);
-  const { form, filterLogic, aiLogic, aiState, actions, authorPersona, setAuthorPersona } = manager;
+  const { form, filterLogic, aiLogic, aiState, actions, authorPersona, setAuthorPersona, updatePersonaAvatar } = manager;
 
   // Filter out the Pillars for the Select Dropdown
   const availablePillars = articles.filter(a => a.type === 'pillar');
@@ -33,7 +33,7 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
                 actions: listActions
             }}
             onReset={actions.resetForm}
-            personaState={{ authorPersona, setAuthorPersona }} // Pass Persona State
+            personaState={{ authorPersona, setAuthorPersona, updatePersonaAvatar }} // Pass Avatar Handler
             form={form} // Pass active form to highlight selection
          />
       </div>

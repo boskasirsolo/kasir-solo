@@ -21,10 +21,7 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
             const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase());
             if (!matchesSearch) return false;
 
-            if (filterType === 'all') {
-                // Show everything in ALL, except maybe archived? for now show all.
-                return true; 
-            }
+            if (filterType === 'all') return true; 
             if (filterType === 'pillar') return a.type === 'pillar';
             if (filterType === 'cluster') return a.type === 'cluster';
             if (filterType === 'orphan') return !a.pillar_id && a.type !== 'pillar';
@@ -47,6 +44,18 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
     };
 };
 
+// --- HELPER: Cloudinary Upload ---
+const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
+    if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Cloudinary Config Missing");
+    const formData = new FormData();
+    formData.append('file', fileOrBlob);
+    formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+    if (!res.ok) throw new Error("Upload Failed");
+    const data = await res.json();
+    return data.secure_url;
+};
+
 // --- SUB-HOOK: AI GENERATOR ---
 export const useAIGenerator = () => {
     const [loading, setLoading] = useState({ researching: false, generatingText: false, generatingImage: false, uploading: false });
@@ -65,20 +74,9 @@ export const useAIGenerator = () => {
             Act as a Senior SEO Strategist for the Indonesian Market.
             Context: Point of Sale (POS) System & Business Management Software.
             Selected Topics: ${topics.join(', ')}.
-            
             Task: Generate 5 high-potential article titles/keywords.
-            Criteria:
-            1. Search Volume: High / Trending.
-            2. Competition: Low to Medium (Easy to rank).
-            3. Intent: Transactional or Informational.
-            4. Language: Indonesian.
-            
-            Strict Output Format: JSON Array ONLY. No markdown, no explanation.
-            Example:
-            [
-              {"keyword": "Cara Mengelola Karyawan Shift Malam", "volume": "High", "competition": "Low", "type": "Evergreen"},
-              {"keyword": "Aplikasi Kasir Gratis vs Berbayar", "volume": "Very High", "competition": "Medium", "type": "Comparison"}
-            ]
+            Strict Output Format: JSON Array ONLY.
+            Example: [{"keyword": "Judul", "volume": "High", "competition": "Low", "type": "Evergreen"}]
             `;
             
             const result = await callGeminiWithRotation({ 
@@ -111,21 +109,14 @@ export const useAIGenerator = () => {
             Title: "${title}"
             Language: Indonesian.
             Format: Markdown.
-            Structure:
-            - H1 Title
-            - Introduction (Hook the reader)
-            - H2 Subheadings (Use LSI Keywords)
-            - Bullet points for readability
-            - Conclusion & Call to Action (Soft sell POS System).
-            
-            Narrative Style: ${narrative === 'narsis' ? 'Personal (POV: Gue/Saya), opinionated, storytelling from a business owner perspective.' : 'Professional (POV: Kami/Kita), objective, educational, corporate tone.'}
+            Narrative Style: ${narrative === 'narsis' ? 'Personal (POV: Gue/Saya), opinionated, storytelling.' : 'Professional (POV: Kami/Kita), objective, educational.'}
             Article Type: ${type} (Pillar or Cluster).
             Length: 800-1000 words.
             `;
             
             const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
             
-            const metaPrompt = `Generate JSON Metadata for an article with title "${title}". Format: {"excerpt": "...", "category": "...", "readTime": "..."}`;
+            const metaPrompt = `Generate JSON Metadata for article "${title}". Format: {"excerpt": "...", "category": "...", "readTime": "..."}`;
             const metaRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
             const metaData = JSON.parse(metaRes.text || '{}');
 
@@ -135,13 +126,22 @@ export const useAIGenerator = () => {
         }
     };
 
-    const getAIImageUrl = (prompt: string, style: string) => {
+    const getAIImageUrl = async (prompt: string, style: string) => {
+        // 1. Generate URL from Pollinations
         const seed = Math.floor(Math.random() * 9999999);
         let cleanPrompt = prompt.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 80).trim();
-        return `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt + ' ' + style)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
+        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt + ' ' + style)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
+        
+        // 2. Fetch the image as Blob
+        const res = await fetch(pollUrl);
+        const blob = await res.blob();
+
+        // 3. Upload to Cloudinary
+        const cloudUrl = await uploadToCloudinary(blob);
+        return cloudUrl;
     };
 
-    return { loading, setLoading, keywords, genConfig, setGenConfig, researchKeywords, generateContent, getAIImageUrl };
+    return { loading, setLoading, keywords, genConfig, setGenConfig, researchKeywords, generateContent, getAIImageUrl, uploadToCloudinary };
 };
 
 // --- MAIN HOOK: ARTICLE MANAGER ---
@@ -154,14 +154,15 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
     const [authorPersona, setAuthorPersona] = useState<AuthorPersona>({
         name: 'Amin Maghfuri',
         role: 'Founder, CEO',
-        mode: 'personal'
+        mode: 'personal',
+        avatar: '' // Default empty
     });
 
     // 3. Form State
     const [form, setForm] = useState<ArticleFormState>({
         id: null, title: '', excerpt: '', content: '', category: '',
         readTime: '5 min read', imagePreview: '', uploadFile: null, 
-        author: '', authorAvatar: '', uploadAuthorFile: null, // Legacy fields kept for TS, but controlled by Persona
+        author: '', authorAvatar: '', uploadAuthorFile: null, 
         status: 'draft', scheduled_for: '',
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
     });
@@ -195,6 +196,18 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
         setAiStep(3); // Go directly to editor
     };
 
+    const updatePersonaAvatar = async (file: File) => {
+        aiLogic.setLoading(p => ({...p, uploading: true}));
+        try {
+            const url = await aiLogic.uploadToCloudinary(file);
+            setAuthorPersona(prev => ({ ...prev, avatar: url }));
+        } catch(e: any) {
+            alert("Gagal upload avatar: " + e.message);
+        } finally {
+            aiLogic.setLoading(p => ({...p, uploading: false}));
+        }
+    };
+
     const saveArticle = async () => {
         if (!form.title || !form.content) return alert("Judul dan Konten wajib diisi.");
         aiLogic.setLoading(p => ({ ...p, uploading: true }));
@@ -202,14 +215,9 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
         try {
             let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/800';
             
-            // Upload Logic (Simplified)
-            if (form.uploadFile && CONFIG.CLOUDINARY_CLOUD_NAME) {
-                const formData = new FormData();
-                formData.append('file', form.uploadFile);
-                formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
-                const data = await res.json();
-                finalImageUrl = data.secure_url;
+            // Manual Image Upload
+            if (form.uploadFile) {
+                finalImageUrl = await aiLogic.uploadToCloudinary(form.uploadFile);
             }
 
             const dbData = {
@@ -217,7 +225,8 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
                 excerpt: form.excerpt, 
                 content: form.content, 
                 category: form.category,
-                author: authorPersona.name, // Use Global Persona
+                author: authorPersona.name, // Use Global Persona Name
+                // author_avatar: authorPersona.avatar, // Ideally save this too if DB has column
                 read_time: form.readTime, 
                 image_url: finalImageUrl,
                 status: form.status, 
@@ -277,7 +286,8 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
         aiLogic.setLoading(p => ({ ...p, generatingImage: true }));
         try {
             const style = authorPersona.mode === 'personal' ? 'cinematic' : 'corporate';
-            const url = aiLogic.getAIImageUrl(form.title, style);
+            // Now this returns a Cloudinary URL directly
+            const url = await aiLogic.getAIImageUrl(form.title, style);
             setForm(p => ({ ...p, imagePreview: url }));
         } catch(e) { console.error(e); }
         finally { aiLogic.setLoading(p => ({ ...p, generatingImage: false })); }
@@ -287,8 +297,8 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
         form, setForm,
         filterLogic,
         aiLogic,
-        // Expose Persona State
-        authorPersona, setAuthorPersona,
+        // Expose Persona State & Actions
+        authorPersona, setAuthorPersona, updatePersonaAvatar,
         aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, keywords: aiLogic.keywords },
         actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage }
     };

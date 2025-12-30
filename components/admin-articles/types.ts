@@ -22,6 +22,7 @@ export interface AuthorPersona {
     name: string;
     role: string; // 'Founder' | 'Editor'
     mode: 'personal' | 'team';
+    avatar: string; // New field for profile picture
 }
 
 export interface ArticleFormState {

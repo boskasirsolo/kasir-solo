@@ -1,8 +1,8 @@
 
-import React from 'react';
-import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera } from 'lucide-react';
 import { Article } from '../../types';
-import { FilterType } from './types';
+import { FilterType, AuthorPersona } from './types';
 
 // --- ATOM: Filter Tab ---
 interface FilterTabProps {
@@ -31,39 +31,86 @@ const FilterTab: React.FC<FilterTabProps> = ({
 );
 
 // --- ATOM: Persona Switcher (Global) ---
-const PersonaSwitcher = ({ persona, setPersona }: { persona: any, setPersona: any }) => (
-    <div className="mb-4 bg-white/5 border border-white/10 rounded-lg p-3">
-        <div className="flex justify-between items-center mb-2">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Penulis Aktif</span>
-            <span className={`text-[9px] px-2 py-0.5 rounded border ${persona.mode === 'personal' ? 'bg-brand-orange/10 border-brand-orange text-brand-orange' : 'bg-purple-500/10 border-purple-500 text-purple-400'}`}>
-                {persona.mode === 'personal' ? 'PERSONAL' : 'REDAKSI'}
-            </span>
+const PersonaSwitcher = ({ 
+    persona, 
+    setPersona,
+    onAvatarUpload 
+}: { 
+    persona: AuthorPersona, 
+    setPersona: any,
+    onAvatarUpload: (file: File) => void
+}) => {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            onAvatarUpload(e.target.files[0]);
+        }
+    };
+
+    return (
+        <div className="mb-4 bg-white/5 border border-white/10 rounded-lg p-3">
+            <div className="flex justify-between items-center mb-3">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Penulis Aktif</span>
+                <span className={`text-[9px] px-2 py-0.5 rounded border ${persona.mode === 'personal' ? 'bg-brand-orange/10 border-brand-orange text-brand-orange' : 'bg-purple-500/10 border-purple-500 text-purple-400'}`}>
+                    {persona.mode === 'personal' ? 'PERSONAL' : 'REDAKSI'}
+                </span>
+            </div>
+            
+            <div className="flex items-center gap-3 mb-3">
+                {/* Avatar with Upload Trigger */}
+                <div 
+                    className="relative w-12 h-12 rounded-full border-2 border-white/10 cursor-pointer group overflow-hidden bg-black flex-shrink-0"
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                    {persona.avatar ? (
+                        <img src={persona.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                            {persona.mode === 'personal' ? <User size={20}/> : <Users size={20}/>}
+                        </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <Camera size={14} className="text-white"/>
+                    </div>
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handleFileChange}
+                    />
+                </div>
+
+                <div className="flex-1">
+                    <input 
+                        type="text" 
+                        value={persona.name}
+                        onChange={(e) => setPersona({...persona, name: e.target.value})}
+                        className="w-full bg-transparent border-b border-white/10 py-1 text-xs text-white font-bold focus:outline-none focus:border-brand-orange placeholder-gray-600"
+                        placeholder="Nama Penulis..."
+                    />
+                    <p className="text-[9px] text-gray-500 mt-1">{persona.role}</p>
+                </div>
+            </div>
+
+            <div className="flex gap-2">
+                <button 
+                    onClick={() => setPersona({ name: 'Amin Maghfuri', role: 'Founder, CEO', mode: 'personal', avatar: persona.avatar })}
+                    className={`flex-1 py-1.5 rounded text-[9px] font-bold border transition-all ${persona.mode === 'personal' ? 'bg-brand-orange text-white border-brand-orange' : 'bg-white/5 text-gray-500 border-transparent hover:bg-white/10'}`}
+                >
+                    Personal
+                </button>
+                <button 
+                    onClick={() => setPersona({ name: 'Tim Redaksi', role: 'Content Team', mode: 'team', avatar: persona.avatar })}
+                    className={`flex-1 py-1.5 rounded text-[9px] font-bold border transition-all ${persona.mode === 'team' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white/5 text-gray-500 border-transparent hover:bg-white/10'}`}
+                >
+                    Tim Redaksi
+                </button>
+            </div>
         </div>
-        <div className="flex gap-2">
-            <button 
-                onClick={() => setPersona({ name: 'Amin Maghfuri', role: 'Founder, CEO', mode: 'personal' })}
-                className={`flex-1 p-2 rounded border transition-all flex flex-col items-center gap-1 ${persona.mode === 'personal' ? 'bg-brand-orange text-white border-brand-orange' : 'bg-black/20 text-gray-500 border-white/10 hover:bg-white/5'}`}
-            >
-                <User size={14} />
-                <span className="text-[9px] font-bold">Gue (Amin)</span>
-            </button>
-            <button 
-                onClick={() => setPersona({ name: 'Tim Redaksi', role: 'Content Team', mode: 'team' })}
-                className={`flex-1 p-2 rounded border transition-all flex flex-col items-center gap-1 ${persona.mode === 'team' ? 'bg-purple-600 text-white border-purple-600' : 'bg-black/20 text-gray-500 border-white/10 hover:bg-white/5'}`}
-            >
-                <Users size={14} />
-                <span className="text-[9px] font-bold">Tim Redaksi</span>
-            </button>
-        </div>
-        <input 
-            type="text" 
-            value={persona.name}
-            onChange={(e) => setPersona({...persona, name: e.target.value})}
-            className="w-full mt-2 bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] text-white focus:outline-none focus:border-white/30 text-center"
-            placeholder="Custom Name..."
-        />
-    </div>
-);
+    );
+};
 
 // --- MOLECULE: Article Card ---
 interface ArticleCardProps {
@@ -123,7 +170,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
                         {article.status === 'draft' && (
                             <span className="text-[9px] text-gray-400 border border-gray-500/30 bg-gray-500/10 px-1.5 rounded-full flex items-center gap-1"><FileEdit size={8}/> DRAFT</span>
                         )}
-                        <span className="text-[9px] text-gray-500 ml-auto">{article.category}</span>
+                        <span className="text-[9px] text-gray-500 ml-auto truncate max-w-[80px]">{article.category}</span>
                     </div>
                 </div>
                 
@@ -184,10 +231,11 @@ export const ListPanel = ({
                     <button onClick={onReset} className="text-[10px] font-bold text-brand-orange border border-brand-orange/30 hover:bg-brand-orange hover:text-white transition-all px-2 py-1 rounded flex items-center gap-1"><Plus size={10} /> BARU</button>
                 </div>
 
-                {/* GLOBAL PERSONA SETTINGS */}
+                {/* GLOBAL PERSONA SETTINGS (Avatar + Name) */}
                 <PersonaSwitcher 
                     persona={personaState.authorPersona} 
-                    setPersona={personaState.setAuthorPersona} 
+                    setPersona={personaState.setAuthorPersona}
+                    onAvatarUpload={personaState.updatePersonaAvatar}
                 />
                 
                 {/* Filter Tabs */}
@@ -237,7 +285,6 @@ export const ListPanel = ({
                     </div>
                 ) : logic.paginatedList.map((article: Article) => {
                     const isPillar = article.type === 'pillar';
-                    // Accordion logic: Always expandable on 'pillar' filter, otherwise expand if clicked
                     const canExpand = isPillar && (logic.filterType === 'pillar' || logic.filterType === 'all');
                     const linkedClusters = articles.filter(a => a.pillar_id === article.id);
 
