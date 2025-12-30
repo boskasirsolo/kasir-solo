@@ -25,7 +25,8 @@ export const Button = ({
   const variants = {
     // UPDATED: Use brand-gradient (Orange-Red) for primary buttons
     primary: "bg-brand-gradient text-white hover:bg-brand-gradient-hover shadow-action hover:shadow-action-strong transform hover:-translate-y-1",
-    outline: "border-2 border-white/10 text-white hover:bg-white/5 hover:border-brand-orange/50 hover:shadow-action",
+    // UPDATED: Outline now uses brand-orange border by default
+    outline: "border-2 border-brand-orange text-white hover:bg-brand-orange hover:text-white shadow-[0_0_15px_rgba(255,95,31,0.15)] hover:shadow-action",
     ghost: "text-gray-400 hover:text-brand-orange hover:bg-white/5",
     danger: "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 shadow-neon-text/20"
   };
