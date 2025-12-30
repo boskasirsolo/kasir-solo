@@ -12,13 +12,27 @@ Karakter: Resilien (Tahan Banting), Jujur, Solutif, dan Berorientasi Komunitas.
 Halaman About Reference: Kisah kegagalan adalah kekuatan kami. Kami mengerti perjuangan UMKM karena kami pernah di posisi terendah.
 
 [PRODUK 1: SIBOS - Smart Integrated Back Office System]
-- Definisi: Platform ekosistem ERP komplit (POS, CRM, IRM, HRM, Akunting, Omnichannel, AI).
+- Definisi: Platform ekosistem ERP komplit, bukan sekadar POS biasa.
+- Modul Utama: POS, CRM, IRM, HRM, Accounting, Omnichannel, dan AI.
+- Platform: Android, iOS, Windows, Linux, dan Web-base.
+- Target Bisnis: 
+  1. Kuliner (Resto, F&B, Cafe).
+  2. Ritel (Supermarket, Minimarket, Swalayan, Distributor, Grosir).
+  3. Jasa, Bengkel, Fashion, Elektronik, Apotek/Farmasi.
+  4. Industri Berat (Pabrik, Konstruksi, Pertambangan).
+- Fitur "Killer" (Keunggulan Mutlak):
+  1. **Multi Bisnis dalam 1 Akun**: Satu akun bisa handle bisnis Kuliner DAN Ritel sekaligus dengan flow berbeda.
+  2. **Multi Outlet**: Mengelola banyak cabang tanpa batas.
+  3. **Fleksibilitas Produk**: Multi varian, multi harga, multi satuan, multi ukuran, dan supports Transaksi Desimal.
+  4. **Manufaktur/Produksi**: Hitung bahan baku (recipe/ingredients) dan penggabungan produk (bundling).
+  5. **Database Server**: User bisa impor data produk pabrikan langsung dari server (tidak perlu input manual satu-satu).
+  6. **Hardware Support**: Timbangan Digital, Printer Barcode, KDS (Kitchen Display System), Layar Pelanggan (CDS), Layar Dapur, Sistem Antrian.
+  7. **Integrasi**: Website Usaha, WhatsApp API, Payment Gateway.
+  8. **Omnichannel**: Terhubung ke Medsos, Marketplace, dan Website.
+  9. **Hybrid Mode**: Bisa jalan Offline dan Online.
 - Status: Prototipe (Rencana Rilis 2026).
-- Model Bisnis: Freemium (Standar Premium Gratis), Enterprise/Dedicated Berbayar.
-- Konsep Komunitas: 
-  1. Terdiri dari Investor, Developer, Partner, User.
-  2. Kepemilikan saham dibatasi max 5% untuk menjaga visi sosial ("Dari, Oleh, dan Untuk Komunitas").
-- Sistem Partner Unik: Konsep Piramida Terbalik (Ghost Marketing). Semakin besar kapasitas usaha klien yang dihandle partner senior, jumlah klien dikurangi sistem dan dialihkan ke partner rintisan di wilayah sama. Tujuannya: Pelayanan maksimal & pemerataan pendapatan partner.
+- Model Bisnis: Freemium (Standar Premium Gratis), Premium, Enterprise, Dedicated.
+- Konsep Komunitas: Saham dibatasi max 5%, sistem Partner Piramida Terbalik (pemerataan income).
 
 [PRODUK 2: QALAM]
 - Definisi: Aplikasi Manajemen TPA/Pendidikan Islam Standar Premium.
