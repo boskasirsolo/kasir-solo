@@ -51,6 +51,9 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
 export const useAIGenerator = () => {
     const [loading, setLoading] = useState({ researching: false, generatingText: false, generatingImage: false });
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
+    
+    // Store narrative preference here or in main hook? 
+    // Let's keep general config here but let UI override
     const [genConfig, setGenConfig] = useState<GenConfig>({
         autoImage: true, autoCategory: true, autoAuthor: true,
         imageStyle: 'cinematic', narrative: 'narsis'
@@ -60,7 +63,6 @@ export const useAIGenerator = () => {
         if (topics.length === 0) throw new Error("Pilih minimal 1 topik.");
         setLoading(p => ({ ...p, researching: true }));
         try {
-            // REVISED PROMPT FOR SEO STRATEGY
             const prompt = `
             Act as a Senior SEO Strategist for the Indonesian Market.
             Context: Point of Sale (POS) System & Business Management Software.
@@ -118,7 +120,7 @@ export const useAIGenerator = () => {
             - Bullet points for readability
             - Conclusion & Call to Action (Soft sell POS System).
             
-            Narrative Style: ${narrative === 'narsis' ? 'Personal, opinionated, storytelling from a business owner perspective.' : 'Professional, objective, educational.'}
+            Narrative Style: ${narrative === 'narsis' ? 'Personal (POV: Gue/Saya), opinionated, storytelling from a business owner perspective.' : 'Professional (POV: Kami/Kita), objective, educational, corporate tone.'}
             Article Type: ${type} (Pillar or Cluster).
             Length: 800-1000 words.
             `;
@@ -160,6 +162,7 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
 
     const [aiStep, setAiStep] = useState(0);
     const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
+    const [narrative, setNarrative] = useState<'narsis' | 'umum'>('narsis'); // Local UI State for Step 2
 
     // 3. Actions
     const resetForm = () => {
@@ -171,6 +174,7 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
         });
         setAiStep(0);
         setSelectedPresets([]);
+        setNarrative('narsis');
     };
 
     const handleEditClick = (item: Article) => {
@@ -249,8 +253,10 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
 
     const runWrite = async () => {
         try {
-            const { content, meta } = await aiLogic.generateContent(form.title, aiLogic.genConfig.narrative, form.type);
+            // Use the locally selected narrative state
+            const { content, meta } = await aiLogic.generateContent(form.title, narrative, form.type);
             setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: meta.category, readTime: meta.readTime }));
+            setAiStep(3); // Move to final editor
         } catch(e: any) { alert(e.message); }
     };
 
@@ -265,7 +271,8 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
         form, setForm,
         filterLogic,
         aiLogic,
-        aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets },
+        // Add narrative state here to be accessible by UI
+        aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, narrative, setNarrative, keywords: aiLogic.keywords },
         actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage }
     };
 };
