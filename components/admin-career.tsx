@@ -77,18 +77,26 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
     const deleteJob = async (id: number) => {
         if(!confirm("Yakin hapus lowongan ini?")) return;
         
-        // 1. Optimistic Update (Hapus dari layar dulu)
-        // Menggunakan functional update (prev => ...) agar state yang diproses selalu terbaru
+        // 1. Simpan backup state untuk rollback jika error
+        const previousJobs = [...jobs];
+
+        // 2. Optimistic Update (Hapus dari layar dulu)
         setJobs((prev: JobOpening[]) => prev.filter(j => j.id !== id));
 
-        // 2. Hapus dari Database
+        // 3. Hapus dari Database
         if (supabase) {
-            const { error } = await supabase.from('jobs').delete().eq('id', id);
-            
-            if (error) {
+            try {
+                const { error } = await supabase.from('jobs').delete().eq('id', id);
+                
+                if (error) {
+                    throw error;
+                }
+            } catch (error: any) {
                 console.error("Gagal hapus DB:", error);
-                alert("Gagal menghapus dari database. Silakan refresh halaman.");
-                // Opsional: Bisa fetch ulang data di sini jika perlu revert state
+                alert(`Gagal menghapus: ${error.message || "Database Error"}`);
+                
+                // ROLLBACK: Kembalikan data jika gagal hapus di DB
+                setJobs(previousJobs);
             }
         }
 
@@ -138,8 +146,8 @@ export const AdminCareer = ({ jobs, setJobs }: { jobs: JobOpening[], setJobs: (j
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                <button onClick={() => handleEditClick(job)} className="text-blue-400 hover:text-white p-1"><Edit size={14}/></button>
-                                <button onClick={() => deleteJob(job.id)} className="text-red-400 hover:text-white p-1"><Trash2 size={14}/></button>
+                                <button type="button" onClick={() => handleEditClick(job)} className="text-blue-400 hover:text-white p-1"><Edit size={14}/></button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); deleteJob(job.id); }} className="text-red-400 hover:text-white p-1"><Trash2 size={14}/></button>
                             </div>
                         </div>
                     ))}
@@ -154,7 +162,7 @@ export const AdminCareer = ({ jobs, setJobs }: { jobs: JobOpening[], setJobs: (j
                         {form.id ? "Edit Lowongan" : "Buat Lowongan"}
                     </h3>
                     {form.id && (
-                        <button onClick={resetForm} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
+                        <button type="button" onClick={resetForm} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
                             <XIcon size={12} /> Batal
                         </button>
                     )}
