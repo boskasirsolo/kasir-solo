@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Zap, Target, Shield, Flame, XCircle, HeartHandshake } from 'lucide-react';
+import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Zap, Target, Shield, Flame, XCircle, HeartHandshake, Mail } from 'lucide-react';
 import { JobOpening } from '../types';
 import { Button, Card, Badge, SectionHeader } from '../components/ui';
 
@@ -192,11 +192,14 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                   <Shield size={32} />
                </div>
                <h3 className="text-2xl font-bold text-white mb-2">Skuad Sedang Lengkap</h3>
-               <p className="text-gray-400 max-w-md text-center mb-6 leading-relaxed">
+               <p className="text-gray-400 max-w-md text-center mb-8 leading-relaxed">
                  Saat ini semua pos tempur sudah terisi. Namun, jika Anda yakin skill Anda di atas rata-rata dan bisa memberikan impact, kirimkan CV spontan Anda.
                </p>
-               <Button onClick={() => window.open('mailto:karir@kasirsolo.com', '_blank')} variant="outline">
-                  Kirim CV Spontan
+               <Button 
+                  onClick={() => window.open('mailto:karir@kasirsolo.com', '_blank')} 
+                  className="px-8 py-4 text-base font-bold shadow-neon hover:shadow-neon-strong transition-transform hover:-translate-y-1 bg-gradient-to-r from-brand-orange to-red-600 text-white border-0"
+               >
+                  <Mail size={18} className="mr-2" /> Kirim CV Spontan
                </Button>
             </div>
           )}
