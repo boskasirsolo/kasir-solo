@@ -73,8 +73,11 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
   return { currentPage, setCurrentPage, totalPages, currentBlocks, allBlocks };
 };
 
-export const renderFormattedText = (text: string) => {
-  const parts = text.split(/(\[.*?\]\s*\(.*?\))/g);
+// --- HELPER: Parse Links only ---
+const parseLinks = (text: string) => {
+  // Regex to match markdown links: [label](url)
+  const linkRegex = /(\[.*?\]\s*\(.*?\))/g;
+  const parts = text.split(linkRegex);
 
   return parts.map((part, i) => {
     const linkMatch = part.match(/^\[(.*?)\]\s*\((.*?)\)$/);
@@ -82,38 +85,48 @@ export const renderFormattedText = (text: string) => {
       const label = linkMatch[1];
       const url = linkMatch[2];
       const isInternal = url.startsWith('/') || url.startsWith('#');
-
       const className = "text-brand-orange hover:text-white underline decoration-brand-orange/50 hover:decoration-white transition-colors font-medium break-words";
 
       if (isInternal) {
-          return <Link key={i} to={url} className={className}>{label}</Link>;
+          return <Link key={`link-${i}`} to={url} className={className}>{label}</Link>;
       }
-      return <a key={i} href={url} target="_blank" rel="noreferrer" className={className}>{label}</a>;
+      return <a key={`link-${i}`} href={url} target="_blank" rel="noreferrer" className={className}>{label}</a>;
     }
-
-    const boldParts = part.split(/(\*\*.*?\*\*)/g);
+    
+    // Handle Italics inside standard text
+    const italicParts = part.split(/(\*.*?\*)/g);
     return (
-        <span key={i}>
-            {boldParts.map((subPart, j) => {
-                if (subPart.startsWith('**') && subPart.endsWith('**')) {
-                    return <strong key={j} className="text-white font-bold bg-brand-orange/10 px-1 rounded">{subPart.slice(2, -2)}</strong>;
+        <span key={`text-${i}`}>
+            {italicParts.map((sub, j) => {
+                if (sub.startsWith('*') && sub.endsWith('*') && sub.length > 2 && !sub.startsWith('**')) {
+                    return <em key={`italic-${j}`} className="text-gray-400 italic">{sub.slice(1, -1)}</em>;
                 }
-                
-                const italicParts = subPart.split(/(\*.*?\*)/g);
-                return (
-                    <span key={j}>
-                        {italicParts.map((innerPart, k) => {
-                             if (innerPart.startsWith('*') && innerPart.endsWith('*') && innerPart.length > 2) {
-                                return <em key={k} className="text-gray-400 italic">{innerPart.slice(1, -1)}</em>;
-                             }
-                             return innerPart;
-                        })}
-                    </span>
-                );
+                return sub;
             })}
         </span>
     );
   });
+};
+
+// --- HELPER: Main Formatter (Bold First, Then Links) ---
+export const renderFormattedText = (text: string) => {
+  // Split by Bold syntax: **text**
+  const boldRegex = /(\*\*.*?\*\*)/g;
+  const parts = text.split(boldRegex);
+
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          // This part is bold. Strip asterisks and parse links inside.
+          const content = part.slice(2, -2);
+          return <strong key={i} className="text-white font-bold bg-brand-orange/10 px-1 rounded">{parseLinks(content)}</strong>;
+        }
+        // This part is normal text. Parse links inside.
+        return <span key={i}>{parseLinks(part)}</span>;
+      })}
+    </>
+  );
 };
 
 const MarkdownTable: React.FC<{ content: string }> = ({ content }) => {
