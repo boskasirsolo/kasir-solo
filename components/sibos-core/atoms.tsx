@@ -162,11 +162,11 @@ export const SibosTrigger = ({
   isOpen: boolean, 
   unreadCount: number 
 }) => (
-  // UPDATED: bg-brand-action (Orange) for trigger button
+  // UPDATED: bg-brand-gradient for trigger button
   <button
     onClick={onClick}
     className={`fixed bottom-6 right-6 z-[9990] w-14 h-14 rounded-full shadow-action-strong flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-      isOpen ? 'bg-brand-dark border border-brand-action text-brand-action' : 'bg-brand-action text-white'
+      isOpen ? 'bg-brand-dark border border-brand-orange text-brand-orange' : 'bg-brand-gradient text-white'
     }`}
   >
     {isOpen ? <X size={24} /> : <Bot size={28} />}

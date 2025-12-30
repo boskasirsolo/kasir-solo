@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Coffee, Ghost } from 'lucide-react';
 import { JobOpening } from '../types';
@@ -119,20 +120,14 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 px-4 bg-brand-card/50 rounded-3xl border-2 border-dashed border-white/5">
-               <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-600">
+            <div className="text-center py-16 px-4 bg-brand-card/50 rounded-3xl border-2 border-dashed border-brand-orange/20">
+               <div className="w-24 h-24 bg-brand-orange/10 rounded-full flex items-center justify-center mx-auto mb-6 text-brand-orange shadow-neon">
                   <Ghost size={40} />
                </div>
                <h3 className="text-2xl font-bold text-white mb-2">Belum Ada Lowongan</h3>
-               <p className="text-gray-400 max-w-md mx-auto mb-8">
-                 Saat ini belum ada posisi terbuka. Namun kami selalu mencari talenta berbakat. Kirimkan CV terbaikmu untuk database kami.
+               <p className="text-gray-400 max-w-md mx-auto mb-0">
+                 Saat ini belum ada posisi terbuka. Pantau terus halaman ini atau sosial media kami untuk update info rekrutmen terbaru.
                </p>
-               <a 
-                 href="mailto:hrd@kasirsolo.com?subject=General Application - [Nama Anda]"
-                 className="inline-flex items-center gap-2 px-8 py-3 border border-white/20 hover:border-brand-orange text-white rounded-xl font-bold transition-all hover:bg-brand-orange/10"
-               >
-                 <Coffee size={18}/> Kirim General CV
-               </a>
             </div>
           )}
 

@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Edit, Save, X as XIcon, Briefcase, MapPin, Search, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, X as XIcon, Briefcase, MapPin, Search, CheckCircle2, Sparkles, Wand2 } from 'lucide-react';
 import { JobOpening } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase } from '../utils';
+import { supabase, callGeminiWithRotation } from '../utils';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -20,6 +20,7 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
     });
 
     const [loading, setLoading] = useState(false);
+    const [aiLoading, setAiLoading] = useState({ desc: false, req: false });
     const [searchTerm, setSearchTerm] = useState('');
 
     const resetForm = () => {
@@ -38,6 +39,54 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
     const handleEditClick = (job: JobOpening) => {
         setForm({ ...job, id: job.id });
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // --- AI GENERATORS ---
+    const generateJobContent = async (target: 'desc' | 'req') => {
+        if (!form.title) return alert("Mohon isi 'Posisi / Judul' terlebih dahulu sebagai konteks AI.");
+        
+        setAiLoading(prev => ({ ...prev, [target]: true }));
+
+        try {
+            let prompt = "";
+            if (target === 'desc') {
+                prompt = `
+                Bertindaklah sebagai HRD Manager profesional.
+                Tugas: Buat deskripsi pekerjaan singkat (Job Description) yang menarik untuk posisi: "${form.title}".
+                Divisi: ${form.division || "Umum"}.
+                Tipe: ${form.type}.
+                Bahasa: Indonesia.
+                Tone: Profesional, Mengundang, dan Jelas.
+                Output: HANYA teks deskripsi (maksimal 3 kalimat paragraf). Jangan pakai markdown bold/heading.
+                `;
+            } else {
+                prompt = `
+                Bertindaklah sebagai HRD Manager profesional.
+                Tugas: Buat daftar Kualifikasi (Requirements) untuk posisi: "${form.title}".
+                Divisi: ${form.division || "Umum"}.
+                Bahasa: Indonesia.
+                Output: Daftar poin-poin (bullet points) menggunakan tanda strip (-). Maksimal 5-7 poin kunci. HANYA listnya saja.
+                `;
+            }
+
+            const response = await callGeminiWithRotation({
+                model: 'gemini-3-flash-preview',
+                contents: prompt
+            });
+
+            const text = response.text?.trim() || "";
+            
+            if (target === 'desc') {
+                setForm(prev => ({ ...prev, description: text }));
+            } else {
+                setForm(prev => ({ ...prev, requirements: text }));
+            }
+
+        } catch (e: any) {
+            alert(`Gagal generate AI: ${e.message}`);
+        } finally {
+            setAiLoading(prev => ({ ...prev, [target]: false }));
+        }
     };
 
     const handleSubmit = async () => {
@@ -119,11 +168,11 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
 
     const filtered = jobs.filter(j => j.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    return { form, setForm, loading, handleSubmit, handleEditClick, resetForm, deleteJob, filtered, searchTerm, setSearchTerm };
+    return { form, setForm, loading, aiLoading, generateJobContent, handleSubmit, handleEditClick, resetForm, deleteJob, filtered, searchTerm, setSearchTerm };
 };
 
 export const AdminCareer = ({ jobs, setJobs }: { jobs: JobOpening[], setJobs: (j: JobOpening[]) => void }) => {
-    const { form, setForm, loading, handleSubmit, handleEditClick, resetForm, deleteJob, filtered, searchTerm, setSearchTerm } = useJobManager(jobs, setJobs);
+    const { form, setForm, loading, aiLoading, generateJobContent, handleSubmit, handleEditClick, resetForm, deleteJob, filtered, searchTerm, setSearchTerm } = useJobManager(jobs, setJobs);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -185,7 +234,7 @@ export const AdminCareer = ({ jobs, setJobs }: { jobs: JobOpening[], setJobs: (j
                 <div className="bg-blue-500/5 border border-blue-500/20 p-3 rounded-lg mb-4 flex gap-2 items-start">
                     <CheckCircle2 size={14} className="text-blue-400 mt-0.5 shrink-0" />
                     <p className="text-[10px] text-gray-300">
-                        Data lowongan tersimpan <strong>otomatis & langsung</strong> ke database saat tombol simpan ditekan. Tidak perlu menekan tombol 'Simpan Pengaturan' di menu lain.
+                        Tips: Isi <strong>Posisi / Judul</strong> terlebih dahulu, lalu gunakan tombol <strong>Magic AI</strong> untuk membuat deskripsi otomatis.
                     </p>
                 </div>
 
@@ -219,12 +268,34 @@ export const AdminCareer = ({ jobs, setJobs }: { jobs: JobOpening[], setJobs: (j
                             <Input value={form.location} onChange={e => setForm({...form, location: e.target.value})} className="pl-9 py-2 text-sm"/>
                         </div>
                     </div>
+                    
+                    {/* DESKRIPSI SECTION */}
                     <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Deskripsi Singkat</label>
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Deskripsi Singkat</label>
+                            <button 
+                                onClick={() => generateJobContent('desc')}
+                                disabled={aiLoading.desc}
+                                className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50 transition-colors"
+                            >
+                                {aiLoading.desc ? <LoadingSpinner size={10}/> : <><Sparkles size={10}/> Magic Write</>}
+                            </button>
+                        </div>
                         <TextArea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="h-20 text-sm" placeholder="Gambaran umum pekerjaan..."/>
                     </div>
+
+                    {/* REQUIREMENTS SECTION */}
                     <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Kualifikasi (Poin-poin)</label>
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Kualifikasi (Poin-poin)</label>
+                            <button 
+                                onClick={() => generateJobContent('req')}
+                                disabled={aiLoading.req}
+                                className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50 transition-colors"
+                            >
+                                {aiLoading.req ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto List</>}
+                            </button>
+                        </div>
                         <TextArea value={form.requirements} onChange={e => setForm({...form, requirements: e.target.value})} className="h-32 text-sm" placeholder="- Poin 1&#10;- Poin 2&#10;- Poin 3"/>
                     </div>
                     

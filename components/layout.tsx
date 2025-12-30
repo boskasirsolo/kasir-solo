@@ -195,7 +195,7 @@ const DesktopNav = ({
       href="https://wa.me/6282325103336?text=Halo%20PT%20Mesin%20Kasir%20Solo,%20saya%20ingin%20minta%20penawaran%20harga%20untuk%20perusahaan."
       target="_blank"
       rel="noreferrer"
-      className="bg-brand-orange hover:bg-brand-action text-white text-xs font-bold px-6 py-3 rounded-full shadow-neon hover:shadow-neon-strong transition-all flex items-center gap-2 transform hover:-translate-y-0.5"
+      className="bg-brand-gradient hover:bg-brand-gradient-hover text-white text-xs font-bold px-6 py-3 rounded-full shadow-neon hover:shadow-neon-strong transition-all flex items-center gap-2 transform hover:-translate-y-0.5"
     >
       <FileText size={16} /> MINTA PENAWARAN
     </a>
@@ -289,7 +289,7 @@ const MobileMenuOverlay = ({
               href="https://wa.me/6282325103336?text=Halo%20PT%20Mesin%20Kasir%20Solo,%20saya%20ingin%20minta%20penawaran%20harga."
               target="_blank"
               rel="noreferrer"
-              className="flex w-full items-center justify-center gap-2 bg-brand-orange text-white py-4 rounded-xl font-bold shadow-neon text-sm hover:bg-brand-action transition-colors"
+              className="flex w-full items-center justify-center gap-2 bg-brand-gradient text-white py-4 rounded-xl font-bold shadow-neon text-sm hover:bg-brand-gradient-hover transition-colors"
            >
               <FileText size={18} /> MINTA PENAWARAN RESMI
            </a>

@@ -78,8 +78,8 @@ const SmartLinkButton = ({ url, defaultLabel, waLabel }: { url?: string, default
       href={targetUrl} 
       target="_blank" 
       rel="noreferrer"
-      // UPDATED: Use brand-action (Orange) for main buttons
-      className="w-full md:w-auto inline-flex justify-center items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all transform hover:-translate-y-1 bg-brand-action text-white hover:bg-brand-actionGlow shadow-action hover:shadow-action-strong"
+      // UPDATED: Use brand-gradient for main buttons
+      className="w-full md:w-auto inline-flex justify-center items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all transform hover:-translate-y-1 bg-brand-gradient text-white hover:bg-brand-gradient-hover shadow-action hover:shadow-action-strong"
     >
       {isLinkActive ? defaultLabel : waLabel} 
       {isLinkActive ? <ExternalLink size={18} /> : <ArrowRight size={18} />}

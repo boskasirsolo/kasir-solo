@@ -173,11 +173,11 @@ export const ProductActions = ({
         <button 
           ref={buttonRef}
           onClick={handleAddToCart}
-          // UPDATED: Use brand-action (Orange) for Buy button
+          // UPDATED: Use brand-gradient for Buy button
           className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all group/btn ${
             isAdded 
               ? 'bg-green-500 text-white shadow-lg scale-95' 
-              : 'bg-brand-action text-white hover:bg-brand-actionGlow hover:shadow-action'
+              : 'bg-brand-gradient text-white hover:bg-brand-gradient-hover hover:shadow-action'
           }`}
         >
           {isAdded ? (
@@ -336,7 +336,7 @@ export const ProductDetailView = ({
             <button 
               onClick={handleAddToCart}
               className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${
-                  isAnimating ? 'bg-green-500 text-white' : 'bg-brand-action hover:bg-brand-actionGlow text-white'
+                  isAnimating ? 'bg-green-500 text-white' : 'bg-brand-gradient hover:bg-brand-gradient-hover text-white'
               }`}
             >
               {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} 
