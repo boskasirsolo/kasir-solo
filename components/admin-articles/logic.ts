@@ -25,7 +25,6 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
             if (filterType === 'pillar') return a.type === 'pillar';
             if (filterType === 'cluster') return a.type === 'cluster';
             if (filterType === 'orphan') return !a.pillar_id && a.type !== 'pillar';
-            // Robust check: Treat null/undefined status as draft in Admin Panel
             if (filterType === 'draft') return a.status === 'draft' || !a.status; 
             if (filterType === 'scheduled') return a.status === 'scheduled';
             return false;
@@ -237,7 +236,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             const now = new Date().toISOString();
             const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
-            // Common Data for both Insert and Update
+            // Common Data for both Insert and Update (Including 'date')
             const commonData = {
                 title: form.title, 
                 excerpt: form.excerpt || '', 
@@ -246,12 +245,12 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 author: form.author, 
                 read_time: form.readTime, 
                 image_url: finalImageUrl,
-                status: form.status || 'draft', // ENSURE STATUS IS SET
+                status: form.status || 'draft',
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
                 type: form.type, 
                 pillar_id: form.type === 'cluster' ? form.pillar_id : null,
                 cluster_ideas: form.cluster_ideas,
-                date: dateStr
+                date: dateStr // Restore date field for backward compatibility
             };
 
             let savedId = form.id;
@@ -262,8 +261,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 setArticles((prev: Article[]) => prev.map(a => a.id === form.id ? { ...a, ...commonData, image: finalImageUrl } : a));
                 
                 if (supabase) {
-                    // CRITICAL FIX: Do NOT update created_at on edit, it ruins sorting.
-                    // Also strictly check for error.
                     const { error } = await supabase.from('articles').update(commonData).eq('id', form.id);
                     if (error) {
                         console.error("Supabase Update Error:", error);
@@ -272,7 +269,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 }
             } else {
                 // INSERT MODE
-                // Add created_at only on insert
                 const insertData = { ...commonData, created_at: now };
                 const tempId = Date.now();
                 
@@ -287,12 +283,10 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             }
 
             // --- BACKGROUND MIGRATION ---
-            // If we uploaded a file to Supabase, trigger the Cloudinary migration in background
             if (supabasePath && fileToMigrate && savedId) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'articles', savedId, 'image_url')
                     .then((cloudUrl) => {
                         if (cloudUrl) {
-                            // Update local state with new URL silently
                             setArticles((prev: any[]) => prev.map(a => a.id === savedId ? { ...a, image: cloudUrl } : a));
                         }
                     });
@@ -302,7 +296,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             console.log("Artikel tersimpan:", form.status);
         } catch(e: any) {
             alert("Error: " + e.message);
-            // Optionally revert local state here if strict consistency is needed
         } finally {
             aiLogic.setLoading(p => ({ ...p, uploading: false }));
         }
@@ -315,8 +308,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         if (form.id === id) resetForm();
     };
 
-    // ... (rest of AI functions: runResearch, selectTopic, runWrite, runImage) -> pass through from aiLogic
-    
     const runResearch = async () => {
         try { await aiLogic.researchKeywords(selectedPresets); setAiStep(1); } catch(e: any) { alert(e.message); }
     };
