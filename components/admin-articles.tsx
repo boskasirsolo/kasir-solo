@@ -1,53 +1,47 @@
 
 import React, { useState } from 'react';
 import { Article } from '../types';
-import { Eye, Edit3 } from 'lucide-react';
+import { Eye, Edit3, Save, CalendarClock, RefreshCw, UploadCloud, Image as ImageIcon, CheckCircle2, Sparkles, Loader2, ArrowRight } from 'lucide-react';
 import { useArticleManager } from './admin-articles/logic';
 import { ListPanel } from './admin-articles/list-panel';
 import { EditorPanel } from './admin-articles/editor-panel';
-import { LiveEditor } from './admin-articles/live-editor'; // NEW IMPORT
+import { LiveEditor } from './admin-articles/live-editor';
+import { Button, Input, LoadingSpinner } from './ui';
 
 export const AdminArticles = ({ articles, setArticles }: { articles: Article[], setArticles: (a: Article[]) => void }) => {
-  // Use the Centralized Logic Hook
   const manager = useArticleManager(articles, setArticles);
   const { form, filterLogic, aiLogic, aiState, actions, authorPersona, setAuthorPersona, updatePersonaAvatar } = manager;
-
-  // Filter out the Pillars for the Select Dropdown
   const availablePillars = articles.filter(a => a.type === 'pillar');
 
-  // Handling List Item Actions Wrapper
-  const listActions = {
-      handleEditClick: actions.handleEditClick,
-      deleteItem: actions.deleteItem
+  // Handle uploading cover image directly from right panel
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files ? e.target.files[0] : null;
+      if (file) {
+          manager.setForm((prev: any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
+      }
   };
 
   return (
     <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
       
-      {/* 1. LEFT PANEL: List & Filter & Persona */}
+      {/* 1. LEFT PANEL: List & Filter & Persona (25%) */}
       <div className="w-[25%] border-r border-white/5 min-w-[280px]">
          <ListPanel 
             articles={articles}
-            logic={{
-                ...filterLogic,
-                actions: listActions
-            }}
+            logic={{ ...filterLogic, actions: { handleEditClick: actions.handleEditClick, deleteItem: actions.deleteItem } }}
             onReset={actions.resetForm}
-            personaState={{ authorPersona, setAuthorPersona, updatePersonaAvatar }} // Pass Avatar Handler
-            form={form} // Pass active form to highlight selection
+            personaState={{ authorPersona, setAuthorPersona, updatePersonaAvatar }}
+            form={form} 
          />
       </div>
 
-      {/* 2. MIDDLE PANEL: Command Center (Configuration) */}
+      {/* 2. MIDDLE PANEL: Command Center (25%) */}
       <div className="w-[25%] border-r border-white/5 min-w-[300px]">
          <EditorPanel 
             form={form}
             setForm={manager.setForm}
             loading={aiLogic.loading}
-            aiState={{
-                ...aiState,
-                keywords: aiLogic.keywords
-            }}
+            aiState={{ ...aiState, keywords: aiLogic.keywords }}
             actions={{
                 ...actions,
                 runResearch: manager.actions.runResearch,
@@ -58,39 +52,117 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
          />
       </div>
 
-      {/* 3. RIGHT PANEL: The Canvas (Live Editor) */}
+      {/* 3. RIGHT PANEL: The Canvas & Publishing (50%) */}
       <div className="w-[50%] bg-black flex flex-col relative overflow-hidden">
-         <div className="p-4 border-b border-white/10 bg-brand-dark/95 flex justify-between items-center backdrop-blur-sm z-10 sticky top-0">
-            <h4 className="text-[10px] font-bold text-gray-400 uppercase flex items-center gap-2"><Edit3 size={12} /> Interactive Editor (WYSIWYG)</h4>
-            <div className="flex items-center gap-2">
-                <span className="text-[9px] text-gray-600 bg-white/5 px-2 py-1 rounded">Markdown Enabled</span>
-                <span className="text-[9px] text-brand-orange bg-brand-orange/10 border border-brand-orange/20 px-2 py-1 rounded font-bold">Live Editing</span>
-            </div>
-         </div>
          
-         <div className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
-            <div className="max-w-3xl mx-auto">
-                {/* Visual Header */}
-                <h1 className="text-4xl font-display font-bold text-white mb-4 leading-tight">{form.title || "Judul Artikel..."}</h1>
-                <div className="flex items-center gap-3 mb-8 pb-8 border-b border-white/10">
-                    {form.imagePreview && (
-                        <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
-                            <img src={form.authorAvatar || 'https://via.placeholder.com/50'} className="w-full h-full object-cover" />
+         {/* Top Bar: Title & Meta Controls */}
+         <div className="p-6 border-b border-white/5 bg-brand-dark/50 backdrop-blur-sm z-10 sticky top-0 flex flex-col gap-6">
+            
+            {/* Title Editor */}
+            <input 
+                type="text" 
+                value={form.title}
+                onChange={(e) => manager.setForm((p:any) => ({...p, title: e.target.value}))}
+                placeholder="Judul Artikel (H1)..."
+                className="w-full bg-transparent text-3xl font-display font-bold text-white placeholder-gray-600 outline-none"
+            />
+
+            {/* Meta Row: Image & Author */}
+            <div className="flex gap-6 items-start">
+                
+                {/* Cover Image Control */}
+                <div className="group relative w-32 h-20 bg-black/40 rounded-lg overflow-hidden border border-white/10 shrink-0">
+                    {form.imagePreview ? (
+                        <img src={form.imagePreview} alt="Cover" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                            <ImageIcon size={16} />
+                            <span className="text-[8px] uppercase mt-1">Cover</span>
                         </div>
                     )}
-                    <div>
-                        <p className="text-sm font-bold text-white">{form.author || "Penulis"}</p>
-                        <p className="text-xs text-gray-500">{new Date().toLocaleDateString()} • {form.readTime}</p>
+                    <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                        <button onClick={actions.runImage} disabled={aiLogic.loading.generatingImage} className="text-[8px] font-bold text-blue-400 hover:text-white flex items-center gap-1">
+                            {aiLogic.loading.generatingImage ? <Loader2 size={10} className="animate-spin"/> : <><Sparkles size={10}/> AI Gen</>}
+                        </button>
+                        <label className="text-[8px] font-bold text-gray-400 hover:text-white flex items-center gap-1 cursor-pointer">
+                            <UploadCloud size={10}/> Upload
+                            <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+                        </label>
                     </div>
                 </div>
 
-                {/* Main Editor */}
-                <LiveEditor 
-                    content={form.content} 
-                    onChange={(newContent) => manager.setForm((prev: any) => ({ ...prev, content: newContent }))}
-                />
+                {/* Author Info */}
+                <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                        <img src={form.authorAvatar || 'https://via.placeholder.com/30'} className="w-6 h-6 rounded-full border border-white/20" />
+                        <span className="text-sm font-bold text-gray-300">{form.author}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span>{new Date().toLocaleDateString('id-ID')}</span>
+                        <span>•</span>
+                        <input 
+                            value={form.readTime} 
+                            onChange={e => manager.setForm((p:any) => ({...p, readTime: e.target.value}))}
+                            className="bg-transparent border-b border-white/10 w-16 focus:border-brand-orange outline-none text-gray-400"
+                        />
+                    </div>
+                </div>
+
+                {/* Publish Controls (Top Right) */}
+                <div className="flex flex-col gap-2 items-end">
+                    <div className="flex items-center gap-2 bg-black/40 rounded-lg p-1 border border-white/10">
+                        <select 
+                            value={form.status} 
+                            onChange={(e) => manager.setForm((p:any) => ({...p, status: e.target.value}))} 
+                            className={`bg-transparent text-[10px] font-bold uppercase outline-none px-2 py-1 rounded cursor-pointer ${
+                                form.status === 'published' ? 'text-green-400' : 
+                                form.status === 'scheduled' ? 'text-purple-400' : 'text-gray-400'
+                            }`}
+                        >
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                            <option value="scheduled">Scheduled</option>
+                        </select>
+                    </div>
+                    
+                    {form.status === 'scheduled' && (
+                        <input 
+                            type="datetime-local" 
+                            value={form.scheduled_for} 
+                            onChange={(e) => manager.setForm((p:any) => ({...p, scheduled_for: e.target.value}))}
+                            className="bg-black/40 text-[10px] text-gray-300 border border-white/10 rounded px-2 py-1 outline-none focus:border-brand-orange w-32"
+                        />
+                    )}
+
+                    <Button onClick={actions.saveArticle} disabled={aiLogic.loading.uploading} className="px-6 py-2 h-9 text-xs shadow-neon">
+                        {aiLogic.loading.uploading ? <LoadingSpinner size={14}/> : <><Save size={14}/> Simpan</>}
+                    </Button>
+                </div>
             </div>
          </div>
+         
+         {/* Live Editor Area */}
+         <div className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
+            <LiveEditor 
+                content={form.content} 
+                onChange={(newContent) => manager.setForm((prev: any) => ({ ...prev, content: newContent }))}
+            />
+         </div>
+
+         {/* Bottom Status Bar */}
+         <div className="p-2 bg-brand-dark border-t border-white/5 flex justify-between items-center text-[10px] text-gray-500 px-4">
+            <div className="flex gap-4">
+                <span>Words: {form.content.split(/\s+/).length}</span>
+                <span>Blocks: {form.content.split('\n\n').length}</span>
+            </div>
+            {form.status === 'draft' && (
+                <div className="flex items-center gap-2 text-yellow-500">
+                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                    Unpublished Draft
+                </div>
+            )}
+         </div>
+
       </div>
 
     </div>

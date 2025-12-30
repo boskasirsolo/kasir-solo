@@ -73,15 +73,13 @@ export interface ArticleFormState {
     uploadAuthorFile: File | null;
 }
 
-export const PRESET_TOPICS = [
-    { id: 'fnb', label: 'Bisnis Kuliner (F&B)' },
-    { id: 'retail', label: 'Retail & Minimarket' },
-    { id: 'tech', label: 'Teknologi Kasir (POS)' },
-    { id: 'finance', label: 'Keuangan & Pajak' },
-    { id: 'marketing', label: 'Digital Marketing' },
-    { id: 'hr', label: 'Manajemen Karyawan' },
-    { id: 'franchise', label: 'Sistem Franchise' },
-    { id: 'scam', label: 'Keamanan & Fraud' }
+// Preset Topics for Research Context
+export const RESEARCH_TOPICS = [
+    "Android POS", "Windows POS", "Manajemen Stok", "Laporan Keuangan", 
+    "Strategi Diskon", "Loyalty Member", "Cegah Fraud/Kecurangan", 
+    "Omnichannel", "QRIS & E-Wallet", "Hardware Kasir", 
+    "Tips Bisnis Kuliner", "Tips Bisnis Retail", "Manajemen Karyawan",
+    "Digital Marketing UMKM", "Branding Usaha", "Software ERP", "Aplikasi Kasir Gratis"
 ];
 
 // Sesuai dengan data frontend (Category Tree)
