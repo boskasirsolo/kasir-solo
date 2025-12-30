@@ -12,11 +12,7 @@ import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
 import { formatRupiah, slugify } from '../utils';
 import { useCart } from '../context/cart-context';
-import { ProductDetailModal } from './shop-parts'; // Import Modal Detail Produk
-
-// ==========================================
-// 1. LOGIC & HOOKS (Controller Layer for UI)
-// ==========================================
+import { ProductDetailModal } from './shop-parts'; 
 
 export const useReadingProgress = () => {
   const [progress, setProgress] = useState(0);
@@ -41,7 +37,6 @@ export const useReadingProgress = () => {
 export const useArticlePagination = (content: string, itemsPerPage: number = 30) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  // LOGIC: Split content but keep Table Lines together as a single block
   const allBlocks = useMemo(() => {
     const lines = content.split('\n');
     const grouped: string[] = [];
@@ -49,11 +44,9 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
 
     lines.forEach(line => {
       const trimmed = line.trim();
-      // Heuristic: Table rows start with |
       if (trimmed.startsWith('|')) {
         tableBuffer.push(line);
       } else {
-        // If we were building a table and hit a non-table line, flush the buffer
         if (tableBuffer.length > 0) {
           grouped.push(tableBuffer.join('\n'));
           tableBuffer = [];
@@ -63,7 +56,6 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
         }
       }
     });
-    // Flush if table was at the very end
     if (tableBuffer.length > 0) {
       grouped.push(tableBuffer.join('\n'));
     }
@@ -81,16 +73,10 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
   return { currentPage, setCurrentPage, totalPages, currentBlocks, allBlocks };
 };
 
-// ==========================================
-// 2. HELPERS & UTILS
-// ==========================================
-
 export const renderFormattedText = (text: string) => {
-  // 1. Split by Links [text](url) - Robust regex allowing spaces between ] and (
   const parts = text.split(/(\[.*?\]\s*\(.*?\))/g);
 
   return parts.map((part, i) => {
-    // Check if part is a link
     const linkMatch = part.match(/^\[(.*?)\]\s*\((.*?)\)$/);
     if (linkMatch) {
       const label = linkMatch[1];
@@ -105,7 +91,6 @@ export const renderFormattedText = (text: string) => {
       return <a key={i} href={url} target="_blank" rel="noreferrer" className={className}>{label}</a>;
     }
 
-    // 2. Process Bold (**text**)
     const boldParts = part.split(/(\*\*.*?\*\*)/g);
     return (
         <span key={i}>
@@ -114,12 +99,10 @@ export const renderFormattedText = (text: string) => {
                     return <strong key={j} className="text-white font-bold bg-brand-orange/10 px-1 rounded">{subPart.slice(2, -2)}</strong>;
                 }
                 
-                // 3. Process Italics (*text*) inside non-bold parts
                 const italicParts = subPart.split(/(\*.*?\*)/g);
                 return (
                     <span key={j}>
                         {italicParts.map((innerPart, k) => {
-                             // Ensure it's not just a single asterisk or unrelated text
                              if (innerPart.startsWith('*') && innerPart.endsWith('*') && innerPart.length > 2) {
                                 return <em key={k} className="text-gray-400 italic">{innerPart.slice(1, -1)}</em>;
                              }
@@ -133,13 +116,12 @@ export const renderFormattedText = (text: string) => {
   });
 };
 
-// --- MARKDOWN TABLE COMPONENT ---
 const MarkdownTable: React.FC<{ content: string }> = ({ content }) => {
     const rows = content.trim().split('\n');
     if (rows.length < 2) return <pre className="whitespace-pre-wrap">{content}</pre>;
 
     const headers = rows[0].split('|').filter(c => c.trim() !== '').map(c => c.trim());
-    const bodyRows = rows.slice(2); // Skip header and separator
+    const bodyRows = rows.slice(2); 
 
     return (
         <div className="overflow-x-auto my-8 rounded-xl border border-white/10 bg-black/20 shadow-lg">
@@ -198,10 +180,6 @@ const extractHeadings = (content: string) => {
     return acc;
   }, [] as { id: string, text: string, level: number, originalIndex: number }[]);
 };
-
-// ==========================================
-// 3. ATOMS & MOLECULES (Visual Layer)
-// ==========================================
 
 export const CategoryTab = ({ label, active, onClick }: { label: string, active: boolean, onClick: () => void }) => (
   <button 
@@ -275,10 +253,7 @@ export const FeaturedArticleHero = ({ article, onClick }: { article: Article, on
   </div>
 );
 
-// --- Sub-Components for Reader Modal ---
-
 const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, onClose, onWheelProxy }: any) => {
-  // Hitung opacity berdasarkan tinggi saat ini
   const expandRatio = Math.max(0, (currentHeight - minHeight) / (maxHeight - minHeight));
   const collapseRatio = 1 - expandRatio;
 
@@ -288,17 +263,14 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
       style={{ height: `${currentHeight}px`, transition: 'none' }}
       onWheel={onWheelProxy}
     >
-        {/* Progress Bar */}
         <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10 z-50">
             <div className="h-full bg-brand-orange shadow-[0_0_10px_rgba(255,95,31,0.8)]" style={{ width: `${progress}%`, transition: 'width 0.1s linear' }}></div>
         </div>
 
-        {/* Close Button */}
         <button onClick={onClose} className="absolute top-6 right-6 z-[60] p-2 bg-black/50 hover:bg-red-500 text-white rounded-full backdrop-blur-md transition-colors border border-white/10 shadow-lg group">
           <X size={24} className="group-hover:rotate-90 transition-transform" />
         </button>
 
-        {/* Background Image & Overlay */}
         <div className="absolute inset-0 w-full h-full">
             <img 
               src={article.image} 
@@ -306,16 +278,12 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
               className="w-full h-full object-cover" 
               style={{ filter: `brightness(${0.4 + (expandRatio * 0.4)})` }}
             />
-            {/* Overlay Gradient untuk compact mode */}
             <div className="absolute inset-0 bg-brand-black" style={{ opacity: collapseRatio * 0.9 }}></div>
-            {/* Gradient untuk expanded mode */}
             <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-transparent to-transparent" style={{ opacity: expandRatio }}></div>
         </div>
 
-        {/* Content Container */}
         <div className="container mx-auto px-4 h-full relative z-10 max-w-7xl pointer-events-none">
             
-            {/* Compact State Title */}
             <div 
               className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 flex items-center"
               style={{ opacity: collapseRatio, pointerEvents: collapseRatio > 0.5 ? 'auto' : 'none' }}
@@ -323,7 +291,6 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
                <h2 className="text-lg md:text-xl font-bold text-white line-clamp-1 max-w-xl drop-shadow-md">{article.title}</h2>
             </div>
 
-            {/* Expanded State Content */}
             <div 
               className="absolute bottom-10 left-4 md:left-8 origin-bottom-left"
               style={{ 
@@ -350,7 +317,6 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
           const p = paragraph.trim();
           if (!p) return null;
           
-          // DETECT TABLE
           if (p.startsWith('|') && p.includes('|')) {
               return <MarkdownTable key={idx} content={p} />;
           }
@@ -381,7 +347,6 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
           return <p key={idx} className="text-lg leading-8 text-gray-300">{renderFormattedText(p)}</p>;
       })}
       
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-12 pt-8 border-t border-white/10 flex items-center justify-between">
             <Button variant="outline" onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="px-4 py-2"><ChevronLeft size={16} /> Sebelumnya</Button>
@@ -390,7 +355,6 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
         </div>
       )}
 
-      {/* Author Box - Positioned at Bottom */}
       {currentPage === totalPages && (
         <div className="mt-20 p-8 bg-brand-card rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left animate-fade-in">
               <div className="w-20 h-20 bg-brand-orange/20 rounded-full flex items-center justify-center text-brand-orange border border-brand-orange/30 shrink-0"><User size={40} /></div>
@@ -415,14 +379,11 @@ const ArticleSidebarLeft = ({
 }) => {
   const headings = useMemo(() => extractHeadings(article.content), [article.content]);
   
-  // FIXED: Comments separated by Article ID
   const [comments, setComments] = useState<{name: string, text: string, time: string}[]>([]);
   const [newComment, setNewComment] = useState('');
   const [showCommentForm, setShowCommentForm] = useState(false);
 
-  // Load comments specific to this article
   useEffect(() => {
-    // Try load from local storage
     const storageKey = `mks_comments_${article.id}`;
     const saved = localStorage.getItem(storageKey);
     
@@ -433,7 +394,6 @@ const ArticleSidebarLeft = ({
             setComments([]);
         }
     } else {
-        // Mock data specifically ONLY for Article ID 1
         if (article.id === 1) {
             setComments([
                 { name: 'Budi Santoso', text: 'Sangat menginspirasi! Saya juga pake Android POS, memang lebih hemat.', time: '2 jam lalu' }
@@ -466,8 +426,6 @@ const ArticleSidebarLeft = ({
       const updatedList = [newEntry, ...comments];
       
       setComments(updatedList);
-      
-      // Persist to LocalStorage unique to this article
       localStorage.setItem(`mks_comments_${article.id}`, JSON.stringify(updatedList));
       
       setNewComment('');
@@ -489,7 +447,6 @@ const ArticleSidebarLeft = ({
                             : 'text-gray-500 hover:text-gray-300 hover:translate-x-1'
                         } ${h.level > 1 ? 'pl-4' : ''}`}
                       >
-                        {/* Indicator dot for active state */}
                         {h.id === activeId && (
                           <span className="absolute -left-4 top-1.5 w-1.5 h-1.5 rounded-full bg-brand-orange shadow-neon"></span>
                         )}
@@ -551,9 +508,6 @@ const ArticleSidebarLeft = ({
   );
 };
 
-// --- SIDEBAR RIGHT: COMPONENTS ---
-
-// 1. Flying Particle Animation (Copied locally to ensure self-containment for the modal context)
 export const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: string, startRect: DOMRect, targetRect: DOMRect, onFinish: () => void }) => {
   const [style, setStyle] = useState<React.CSSProperties>({
     position: 'fixed',
@@ -562,7 +516,7 @@ export const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: 
     width: 60,
     height: 60,
     opacity: 1,
-    zIndex: 99999, // Super high z-index for modal overlay
+    zIndex: 99999,
     borderRadius: '8px',
     objectFit: 'cover',
     pointerEvents: 'none',
@@ -589,7 +543,6 @@ export const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: 
   return <img src={src} style={style} alt="flying-product" />;
 };
 
-// 2. Sidebar Product Card (Matches Shop Card Design but Compact)
 export const SidebarProductCard = ({ 
   product, 
   onDetail 
@@ -604,10 +557,9 @@ export const SidebarProductCard = ({
   const [flyData, setFlyData] = useState<{ start: DOMRect, target: DOMRect } | null>(null);
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Stop propagation to prevent opening the modal when clicking 'Buy'
+    e.stopPropagation(); 
     if (isAnimating) return;
 
-    // Find cart target (prioritize mobile button in modal if existing, else desktop main layout)
     const cartBtnDesktop = document.getElementById('desktop-cart-btn');
     const cartBtnMobile = document.getElementById('mobile-cart-btn');
     const targetEl = (cartBtnMobile && cartBtnMobile.offsetWidth > 0) ? cartBtnMobile : cartBtnDesktop;
@@ -650,7 +602,6 @@ export const SidebarProductCard = ({
         onClick={onDetail}
         className="bg-brand-card border border-white/10 rounded-xl overflow-hidden hover:border-brand-orange transition-all shadow-lg hover:shadow-neon flex flex-col group cursor-pointer"
       >
-        {/* Image Section - Compact Height */}
         <div className="relative h-28 w-full bg-black border-b border-white/5 overflow-hidden">
           <img 
             src={product.image} 
@@ -663,7 +614,6 @@ export const SidebarProductCard = ({
           </div>
         </div>
 
-        {/* Content Section - Compact Padding */}
         <div className="p-3 flex flex-col">
           <h6 className="font-bold text-white text-xs line-clamp-2 leading-snug mb-2 group-hover:text-brand-orange transition-colors min-h-[2.5em]">
             {product.name}
@@ -672,14 +622,14 @@ export const SidebarProductCard = ({
           <div className="mt-1">
             <p className="text-brand-orange font-bold text-sm mb-2 font-display">{formatRupiah(product.price)}</p>
             
-            {/* Action Buttons: Chat & Buy */}
             <div className="grid grid-cols-2 gap-2">
+              {/* UPDATED: Chat button with orange outline */}
               <a 
                 href={`https://wa.me/6282325103336?text=Halo, saya tertarik dengan produk ${product.name} yang ada di artikel.`}
                 target="_blank"
                 rel="noreferrer"
-                onClick={(e) => e.stopPropagation()} // Prevent opening modal when clicking chat
-                className="px-2 py-1.5 rounded-lg border border-white/20 text-gray-300 hover:text-brand-orange hover:border-brand-orange font-bold text-[10px] transition-all hover:shadow-neon flex items-center justify-center gap-1"
+                onClick={(e) => e.stopPropagation()} 
+                className="px-2 py-1.5 rounded-lg border border-brand-orange text-gray-300 hover:text-white hover:bg-brand-orange font-bold text-[10px] transition-all hover:shadow-neon flex items-center justify-center gap-1"
               >
                 <MessageCircle size={12} /> Chat
               </a>
@@ -710,7 +660,7 @@ export const SidebarProductCard = ({
 const ArticleSidebarRight = ({ 
   article, 
   products, 
-  allArticles, // New prop
+  allArticles,
   onProductClick 
 }: { 
   article: Article, 
@@ -718,7 +668,6 @@ const ArticleSidebarRight = ({
   allArticles: Article[], 
   onProductClick: (p: Product) => void 
 }) => {
-  // Logic: Product Recommendation
   let recommendedProducts = products.filter((p: Product) => 
     article.category && p.category.toLowerCase().includes(article.category.split(' ')[0].toLowerCase())
   );
@@ -734,7 +683,6 @@ const ArticleSidebarRight = ({
     recommendedProducts = recommendedProducts.slice(0, 3);
   }
 
-  // Logic: Related Articles (Exclude current)
   const relatedArticles = allArticles
       .filter(a => a.id !== article.id)
       .slice(0, 4);
@@ -742,7 +690,6 @@ const ArticleSidebarRight = ({
   return (
       <div className="space-y-6 sticky top-28">
             
-            {/* 1. Related Articles (New) */}
             {relatedArticles.length > 0 && (
                 <div className="bg-brand-card border border-white/5 rounded-xl p-5 shadow-lg">
                     <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
@@ -766,7 +713,6 @@ const ArticleSidebarRight = ({
                 </div>
             )}
 
-            {/* 2. Products */}
             <div>
                  <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
                     <RecIcon size={16} className="text-brand-orange" />
@@ -784,7 +730,6 @@ const ArticleSidebarRight = ({
                  </div>
             </div>
 
-            {/* 3. CTA Box */}
             <div className="bg-gradient-to-br from-brand-orange/10 to-brand-dark border border-brand-orange/20 p-4 rounded-xl text-center mt-6">
                 <p className="text-xs text-gray-300 mb-3 font-bold">Butuh konsultasi lebih lanjut?</p>
                 <a href="https://wa.me/6282325103336" target="_blank" rel="noreferrer" className="block w-full py-2 bg-brand-orange text-white text-xs font-bold rounded hover:bg-brand-glow transition-all">
@@ -794,10 +739,6 @@ const ArticleSidebarRight = ({
       </div>
   );
 };
-
-// ==========================================
-// 4. ORGANISMS (Complex Components)
-// ==========================================
 
 export const ArticleReaderView = ({ 
   article, 
@@ -811,7 +752,7 @@ export const ArticleReaderView = ({
   allArticles: Article[]
 }) => {
   const { progress, scrollPos, containerRef, handleScroll } = useReadingProgress();
-  const ITEMS_PER_PAGE = 30; // Defined here to share with ToC logic
+  const ITEMS_PER_PAGE = 30; 
   const { currentPage, setCurrentPage, totalPages, currentBlocks } = useArticlePagination(article.content, ITEMS_PER_PAGE);
   const [activeHeadingId, setActiveHeadingId] = useState<string>('');
   const [selectedSidebarProduct, setSelectedSidebarProduct] = useState<Product | null>(null);
@@ -821,7 +762,6 @@ export const ArticleReaderView = ({
 
   const currentHeaderHeight = Math.max(MIN_HEIGHT, MAX_HEIGHT - scrollPos);
 
-  // --- Scroll Spy Logic ---
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -852,7 +792,6 @@ export const ArticleReaderView = ({
   }, [currentBlocks, currentPage]);
 
 
-  // --- Smart Navigation Logic ---
   const handleToCClick = (heading: { id: string, originalIndex: number }) => {
     const targetPage = Math.floor(heading.originalIndex / ITEMS_PER_PAGE) + 1;
 
@@ -951,7 +890,6 @@ export const ArticleReaderView = ({
         </div>
       </div>
 
-      {/* RENDER PRODUCT DETAIL MODAL ON TOP IF SELECTED */}
       {selectedSidebarProduct && (
         <ProductDetailModal 
           product={selectedSidebarProduct} 

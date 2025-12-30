@@ -4,8 +4,6 @@ import { ShieldCheck, RefreshCw, FileText, AlertTriangle, Video, Lock, Truck, Cr
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui';
 
-// --- CONTENT COMPONENTS ---
-
 const RefundContent = () => (
   <div className="space-y-8 animate-fade-in">
     <div className="border-b border-white/10 pb-6">
@@ -13,7 +11,6 @@ const RefundContent = () => (
       <p className="text-gray-400">Terakhir diperbarui: 25 Maret 2024</p>
     </div>
 
-    {/* CRITICAL WARNING BOX */}
     <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 md:p-8 relative overflow-hidden">
       <div className="absolute top-0 right-0 p-4 opacity-10">
         <Video size={120} className="text-red-500" />
@@ -42,7 +39,6 @@ const RefundContent = () => (
       </div>
     </div>
 
-    {/* SECTIONS */}
     <div className="space-y-6 text-gray-300 leading-relaxed">
       <section>
         <h3 className="text-xl font-bold text-white mb-3">1. Cakupan Garansi Hardware</h3>
@@ -164,13 +160,10 @@ const TermsContent = () => (
   </div>
 );
 
-// --- MAIN LAYOUT COMPONENT ---
-
 export const LegalPage = () => {
   const { type } = useParams();
   const navigate = useNavigate();
 
-  // Scroll to top on change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [type]);
@@ -186,7 +179,6 @@ export const LegalPage = () => {
       <div className="container mx-auto px-4">
         
         <div className="grid lg:grid-cols-12 gap-8">
-          {/* SIDEBAR NAVIGATION */}
           <div className="lg:col-span-3">
             <div className="bg-brand-card border border-white/5 rounded-xl p-4 sticky top-28">
               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 px-2">Legalitas</h4>
@@ -210,11 +202,12 @@ export const LegalPage = () => {
 
               <div className="mt-8 p-4 bg-brand-dark rounded-lg border border-white/5">
                 <p className="text-xs text-gray-400 mb-3">Butuh bantuan lebih lanjut?</p>
+                {/* UPDATED: Button with orange outline */}
                 <a 
                     href="https://wa.me/6282325103336" 
                     target="_blank" 
                     rel="noreferrer"
-                    className="flex items-center justify-center w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs font-bold text-white transition-colors"
+                    className="flex items-center justify-center w-full py-2 bg-white/5 hover:bg-white/10 border border-brand-orange rounded text-xs font-bold text-white transition-colors"
                 >
                     Hubungi Admin
                 </a>
@@ -222,18 +215,15 @@ export const LegalPage = () => {
             </div>
           </div>
 
-          {/* MAIN CONTENT AREA */}
           <div className="lg:col-span-9">
             <div className="bg-brand-card border border-white/5 rounded-2xl p-6 md:p-10 min-h-[600px]">
                {type === 'refund' && <RefundContent />}
                {type === 'privacy' && <PrivacyContent />}
                {type === 'terms' && <TermsContent />}
                
-               {/* Default Redirect if no match */}
                {!['refund', 'privacy', 'terms'].includes(type || '') && (
                    <div className="text-center py-20">
                        <p className="text-gray-500">Memuat kebijakan...</p>
-                       {/* Auto redirect effect could be added here, but button is safer */}
                        <Button onClick={() => navigate('/legal/refund')} className="mt-4">Lihat Kebijakan Refund</Button>
                    </div>
                )}

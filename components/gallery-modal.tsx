@@ -14,12 +14,10 @@ interface ProjectDetailProps {
 
 export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false }: ProjectDetailProps) => {
   
-  // Logic: Find related testimonial or use DEFAULT Fallback Layout
   const activeTestimonial = testimonials.find(t => 
     item.title.toLowerCase().includes(t.business_name.toLowerCase()) || 
     t.business_name.toLowerCase().includes(item.title.toLowerCase())
   ) || {
-    // FALLBACK OBJECT (Visual Placeholder)
     id: 0,
     client_name: "Tim Teknis",
     business_name: "PT MESIN KASIR SOLO",
@@ -29,7 +27,6 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
     is_featured: false
   };
 
-  // If modal, lock body scroll
   useEffect(() => {
     if (isModal) {
         document.body.style.overflow = 'hidden';
@@ -58,12 +55,8 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
           {isModal ? <X size={24} /> : <ArrowLeft size={24} />}
         </button>
 
-        {/* =========================================================
-            LEFT COLUMN (65%): IMAGE + FOOTER (TESTIMONIAL + BUTTONS)
-           ========================================================= */}
         <div className="w-full md:w-8/12 h-[500px] md:h-auto bg-black flex flex-col relative border-b md:border-b-0 md:border-r border-white/10">
            
-           {/* 1. IMAGE DISPLAY (Flex Grow) */}
            <div className="flex-grow relative overflow-hidden bg-gray-900 group">
               {item.category_type === 'digital' ? (
                  <div className="w-full h-full overflow-y-auto custom-scrollbar">
@@ -86,10 +79,8 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
               )}
            </div>
 
-           {/* 2. BOTTOM BAR (Footer) - COMPACT FIXED HEIGHT */}
            <div className="shrink-0 bg-brand-dark border-t border-white/10 h-auto md:h-40 flex flex-col md:flex-row">
                
-               {/* TESTIMONIAL SECTION */}
                <div className="flex-1 p-5 flex items-center border-b md:border-b-0 md:border-r border-white/10">
                    {activeTestimonial && (
                       <div className="flex gap-5 items-center w-full animate-fade-in">
@@ -116,7 +107,6 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
                    )}
                </div>
 
-               {/* ACTION BUTTONS */}
                <div className="w-full md:w-64 p-5 flex flex-col justify-center gap-2 bg-brand-dark/50">
                     <a 
                          href="https://wa.me/6282325103336" 
@@ -131,7 +121,8 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
                             href={item.client_url} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="w-full flex items-center justify-center py-3 border border-white/20 hover:border-white hover:bg-white/5 text-white rounded-lg font-bold transition-all gap-2 text-xs"
+                            // UPDATED: Use Orange Outline
+                            className="w-full flex items-center justify-center py-3 border border-brand-orange text-white hover:bg-brand-orange rounded-lg font-bold transition-all gap-2 text-xs"
                          >
                             <Globe size={16}/> Visit Project
                          </a>
@@ -140,12 +131,8 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
            </div>
         </div>
 
-        {/* =========================================================
-            RIGHT COLUMN (35%): HEADER + NARRATIVE
-           ========================================================= */}
         <div className="w-full md:w-4/12 h-auto md:h-auto bg-brand-card flex flex-col relative z-20">
           
-          {/* HEADER (Sticky) */}
           <div className="p-6 md:p-8 border-b border-white/10 bg-brand-card sticky top-0 z-10 shrink-0">
             <div className="flex items-center gap-2 mb-3">
                <Badge className="bg-brand-orange text-white border-transparent">{item.category_type === 'digital' ? 'Software' : 'Hardware'}</Badge>
@@ -162,10 +149,8 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
             )}
           </div>
 
-          {/* BODY (Scrollable) */}
           <div className="p-6 md:p-8 flex-grow overflow-y-auto custom-scrollbar text-left space-y-8 max-h-[600px] md:max-h-none">
             {item.case_study ? (
-               // CASE STUDY FORMAT (STAR METHOD)
                <>
                   <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
@@ -200,7 +185,6 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
                   </div>
                </>
             ) : (
-               // STANDARD DESCRIPTION
                <div className="prose prose-invert prose-sm max-w-none text-gray-300 leading-relaxed whitespace-pre-line">
                   {item.description || "Belum ada deskripsi detail untuk project ini."}
                </div>
@@ -213,5 +197,4 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
   );
 };
 
-// Shim for backwards compatibility if needed
 export const ProjectDetailModal = (props: any) => <ProjectDetailView {...props} isModal={true} />;

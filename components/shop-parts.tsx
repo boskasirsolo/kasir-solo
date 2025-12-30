@@ -59,7 +59,6 @@ export const ProductDescription = ({ description }: { description: string }) => 
 );
 
 export const ProductPrice = ({ price }: { price: number }) => (
-  // Price uses Amber (Premium)
   <div className="text-2xl font-display font-bold text-brand-orange">{formatRupiah(price)}</div>
 );
 
@@ -81,7 +80,6 @@ const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: string,
   });
 
   useEffect(() => {
-    // Trigger animation next frame
     requestAnimationFrame(() => {
       setStyle(prev => ({
         ...prev,
@@ -115,38 +113,31 @@ export const ProductActions = ({
   const [flyData, setFlyData] = useState<{ start: DOMRect, target: DOMRect } | null>(null);
   
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening navigation
+    e.stopPropagation(); 
     if (isAnimating) return;
 
-    // 1. Cari tombol cart di layout (Desktop atau Mobile)
     const cartBtnDesktop = document.getElementById('desktop-cart-btn');
     const cartBtnMobile = document.getElementById('mobile-cart-btn');
-    
-    // Pilih target yang visible (lebar > 0)
     const targetEl = (cartBtnMobile && cartBtnMobile.offsetWidth > 0) ? cartBtnMobile : cartBtnDesktop;
 
     if (buttonRef.current && targetEl) {
       const startRect = buttonRef.current.getBoundingClientRect();
       const targetRect = targetEl.getBoundingClientRect();
       
-      // 2. Start Animation
       setIsAnimating(true);
       setFlyData({ start: startRect, target: targetRect });
       
-      // 3. Add to Cart Logic (Delay sedikit biar pas animasi sampai)
       setTimeout(() => {
         addToCart(product);
         setIsAdded(true);
       }, 600);
 
-      // 4. Reset Button State
       setTimeout(() => {
         setIsAdded(false);
         setIsAnimating(false);
         setFlyData(null);
       }, 2000);
     } else {
-      // Fallback if elements not found
       addToCart(product);
     }
   };
@@ -164,16 +155,16 @@ export const ProductActions = ({
       )}
 
       <div className="grid grid-cols-2 gap-3">
+        {/* UPDATED: Detail button with Orange Outline */}
         <button 
           onClick={(e) => { e.stopPropagation(); onDetail(); }}
-          className="px-4 py-2 rounded-lg border border-white/20 text-gray-300 hover:text-brand-orange hover:border-brand-orange font-bold text-sm transition-all hover:shadow-neon"
+          className="px-4 py-2 rounded-lg border border-brand-orange text-gray-300 hover:text-white hover:bg-brand-orange font-bold text-sm transition-all hover:shadow-neon"
         >
           Detail
         </button>
         <button 
           ref={buttonRef}
           onClick={handleAddToCart}
-          // UPDATED: Use brand-gradient for Buy button
           className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all group/btn ${
             isAdded 
               ? 'bg-green-500 text-white shadow-lg scale-95' 
@@ -199,7 +190,6 @@ export const ProductCard = ({
   product: Product, 
   onDetail: (p: Product) => void
 }) => (
-  // Added onClick here to make the whole card clickable
   <div onClick={() => onDetail(product)}>
     <Card className="flex flex-col h-full group cursor-pointer hover:border-brand-orange transition-colors">
       <ProductImage image={product.image} name={product.name} category={product.category} />
@@ -254,7 +244,7 @@ export const ShopPagination = ({
   );
 };
 
-// --- MOLECULE: DETAIL VIEW (Converted from Modal) ---
+// --- MOLECULE: DETAIL VIEW ---
 export const ProductDetailView = ({ 
   product, 
   onClose,
@@ -276,7 +266,6 @@ export const ProductDetailView = ({
     }, 500);
   };
 
-  // If used as a Modal (e.g. QuickView), use Portal
   const Wrapper = isModal ? 
     ({children}: any) => createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" aria-modal="true">
@@ -287,7 +276,6 @@ export const ProductDetailView = ({
     ({children}: any) => (
         <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 animate-fade-in relative">
             <div className="absolute top-0 left-0 w-full h-full bg-brand-black -z-10"></div>
-            {/* Ambient Background for Page Mode */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-orange/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
             {children}
         </div>
@@ -304,7 +292,6 @@ export const ProductDetailView = ({
           {isModal ? <X size={20} /> : <ArrowLeft size={20} />}
         </button>
 
-        {/* Left: Image (Full width mobile, Half width desktop) */}
         <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-6 md:p-0 min-h-[300px] md:min-h-full border-b md:border-b-0 md:border-r border-white/10">
             <img 
               src={product.image} 
@@ -313,7 +300,6 @@ export const ProductDetailView = ({
             />
         </div>
 
-        {/* Right: Content */}
         <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col bg-brand-dark">
           <div className="mb-4">
               <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange border border-brand-orange/30 px-2 py-1 rounded bg-brand-orange/10 mb-3">
@@ -342,11 +328,12 @@ export const ProductDetailView = ({
               {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} 
               {isAnimating ? "Berhasil" : "Beli Sekarang"}
             </button>
+            {/* UPDATED: Tanya Sales button with Orange Outline */}
             <a 
               href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center w-full py-4 border border-white/20 hover:border-brand-action text-white rounded-xl font-bold transition-all gap-2 hover:bg-white/5"
+              className="flex items-center justify-center w-full py-4 border border-brand-orange hover:bg-brand-orange text-white rounded-xl font-bold transition-all gap-2 hover:shadow-neon"
             >
               <MessageCircle size={20} /> Tanya Sales
             </a>
@@ -357,5 +344,4 @@ export const ProductDetailView = ({
   );
 };
 
-// Backwards compatibility shim if needed, or ProductDetailView can be used directly
 export const ProductDetailModal = (props: any) => <ProductDetailView {...props} isModal={true} />;

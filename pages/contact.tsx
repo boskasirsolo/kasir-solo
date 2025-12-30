@@ -37,13 +37,11 @@ const FaqItem = ({ q, a }: { q: string, a: string }) => {
   );
 };
 
-// Component helper to clean iframe code if pasted with tags
 const MapEmbed = ({ embedCode, title, fallbackImage }: { embedCode?: string, title: string, fallbackImage: string }) => {
     if (!embedCode || embedCode.length < 10) {
         return <img src={fallbackImage} className="w-full h-full object-cover opacity-40 group-hover:opacity-30 transition-opacity" alt={title} />;
     }
 
-    // Sanitize width/height to force fill parent
     const cleanEmbed = embedCode
         .replace(/width="[^"]*"/g, 'width="100%"')
         .replace(/height="[^"]*"/g, 'height="100%"')
@@ -69,7 +67,6 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
     e.preventDefault();
     if(!form.name || !form.message) return alert("Mohon lengkapi pesan Anda");
     
-    // Auto-format WhatsApp Message
     const text = `*FORM KONTAK WEBSITE*%0A%0ANama: ${form.name}%0ANo HP: ${form.phone}%0AKategori: ${form.category}%0A%0APesan:%0A${form.message}`;
     const url = `https://wa.me/${config.whatsappNumber}?text=${text}`;
     window.open(url, '_blank');
@@ -77,19 +74,15 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
 
   const email = config.emailAddress || "admin@kasirsolo.com";
 
-  // Helper for Phone Display
   const getDisplayPhone = (num?: string) => {
       if (!num) return "0823 2510 3336";
-      // If starts with 62, slice 2 digits -> +62 8xx
       if (num.startsWith('62')) return `+62 ${num.substring(2)}`;
-      // If starts with 0, slice 1 digit -> +62 8xx
       if (num.startsWith('0')) return `+62 ${num.substring(1)}`;
       return num;
   };
 
   return (
     <div className="animate-fade-in">
-      {/* HEADER SECTION */}
       <section className="pt-32 pb-16 relative overflow-hidden">
          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-brand-orange/10 rounded-full blur-[120px] pointer-events-none"></div>
          <div className="container mx-auto px-4 text-center relative z-10">
@@ -106,10 +99,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
       <div className="container mx-auto px-4 pb-24">
          <div className="grid lg:grid-cols-12 gap-12">
             
-            {/* LEFT COLUMN: Contact Info */}
             <div className="lg:col-span-5 space-y-8">
-               
-               {/* Contact Channels */}
                <div className="space-y-4">
                   <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                      <Users size={20} className="text-brand-orange"/> Layanan Pelanggan
@@ -137,13 +127,11 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                   />
                </div>
 
-               {/* Office Locations */}
                <div className="space-y-4 pt-4 border-t border-white/10">
                   <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                      <Building size={20} className="text-brand-orange"/> Lokasi Kantor
                   </h3>
                   
-                  {/* Solo Map Card */}
                   <div className="group relative h-48 bg-gray-800 rounded-xl overflow-hidden border border-white/10 cursor-pointer">
                      <div className="absolute inset-0 z-0">
                         <MapEmbed 
@@ -159,7 +147,6 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                               <p className="text-white font-bold text-lg mt-2 leading-tight drop-shadow-md">Head Office</p>
                               <p className="text-gray-200 text-xs line-clamp-2 mt-1 bg-black/60 p-1 rounded inline-block">{config.addressSolo}</p>
                            </div>
-                           {/* Only show icon if no embed, or as an overlay button */}
                            {!config.mapSoloEmbed && (
                                <div className="bg-brand-orange p-2 rounded-full text-white shadow-lg transform group-hover:-translate-y-2 transition-transform">
                                   <MapPin size={20} />
@@ -167,11 +154,9 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                            )}
                         </div>
                      </div>
-                     {/* Click overlay for external link if embed is missing or user wants full map */}
                      <a href={config.mapSoloLink} target="_blank" rel="noreferrer" className="absolute inset-0 z-10" aria-label="Open Map"></a>
                   </div>
 
-                  {/* Blora Map Card */}
                   <div className="group relative h-48 bg-gray-800 rounded-xl overflow-hidden border border-white/10 cursor-pointer">
                      <div className="absolute inset-0 z-0">
                         <MapEmbed 
@@ -200,10 +185,8 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                </div>
             </div>
 
-            {/* RIGHT COLUMN: Form & FAQ */}
             <div className="lg:col-span-7 space-y-10">
                
-               {/* Contact Form */}
                <Card className="p-6 md:p-8 bg-brand-dark/50 border-brand-orange/20 shadow-neon-text/5">
                   <h3 className="text-2xl font-display font-bold text-white mb-6">Kirim Pesan</h3>
                   <form onSubmit={handleSubmit} className="space-y-5">
@@ -230,6 +213,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                      <div>
                         <label className="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Kategori Pesan</label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                           {/* UPDATED: Category buttons use orange outline in inactive state */}
                            {['Sales', 'Support', 'Kerjasama', 'Lainnya'].map(cat => (
                               <button
                                  key={cat}
@@ -238,7 +222,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                                  className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all ${
                                     form.category === cat 
                                     ? 'bg-brand-orange text-white border-brand-orange' 
-                                    : 'bg-black/20 text-gray-400 border-white/10 hover:border-white/30'
+                                    : 'bg-black/20 text-gray-400 border-brand-orange hover:bg-brand-orange hover:text-white'
                                  }`}
                               >
                                  {cat}
@@ -266,7 +250,6 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                   </form>
                </Card>
 
-               {/* FAQ Section */}
                <div className="pt-8 border-t border-white/10">
                   <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                      <HelpCircle size={20} className="text-brand-orange"/> Pertanyaan Umum (FAQ)

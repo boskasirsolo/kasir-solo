@@ -247,20 +247,20 @@ export const HomePage = ({
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Palette, title: "Pembuatan Website", desc: "Website Company Profile & Toko Online SEO-Friendly." },
-              { icon: Code, title: "Web App Development", desc: "Aplikasi custom (SaaS/Internal Tools) sesuai kebutuhan." },
-              { icon: Search, title: "Optimasi SEO", desc: "Strategi SEO untuk ranking 1 Google." },
-              { icon: Settings, title: "Maintenance", desc: "Pengelolaan konten & keamanan server." }
+              { icon: Palette, title: "Pembuatan Website", desc: "Website Company Profile & Toko Online SEO-Friendly.", link: "services/website" },
+              { icon: Code, title: "Web App Development", desc: "Aplikasi custom (SaaS/Internal Tools) sesuai kebutuhan.", link: "services/webapp" },
+              { icon: Search, title: "Optimasi SEO", desc: "Strategi SEO untuk ranking 1 Google.", link: "services/seo" },
+              { icon: Settings, title: "Maintenance", desc: "Pengelolaan konten & keamanan server.", link: "services/maintenance" }
             ].map((service, idx) => (
-              <React.Fragment key={idx}>
-                <Card className="p-8 flex flex-col items-center text-center">
+              <div key={idx} onClick={() => setPage(service.link)} className="cursor-pointer h-full">
+                <Card className="p-8 flex flex-col items-center text-center h-full">
                   <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-brand-orange mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all duration-300 shadow-neon">
                     <service.icon size={32} />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-3">{service.title}</h3>
                   <p className="text-gray-400 text-sm leading-relaxed">{service.desc}</p>
                 </Card>
-              </React.Fragment>
+              </div>
             ))}
           </div>
         </div>

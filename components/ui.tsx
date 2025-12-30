@@ -23,10 +23,9 @@ export const Button = ({
   const baseStyles = "rounded-lg font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
-    // UPDATED: Use brand-gradient (Orange-Red) for primary buttons
     primary: "bg-brand-gradient text-white hover:bg-brand-gradient-hover shadow-action hover:shadow-action-strong transform hover:-translate-y-1",
-    // UPDATED: Outline now uses brand-orange border by default
-    outline: "border-2 border-brand-orange text-white hover:bg-brand-orange hover:text-white shadow-[0_0_15px_rgba(255,95,31,0.15)] hover:shadow-action",
+    // UPDATED: Outline now uses solid orange border by default for high contrast
+    outline: "border border-brand-orange text-white hover:bg-brand-orange hover:text-white shadow-[0_0_10px_rgba(255,95,31,0.1)] hover:shadow-action",
     ghost: "text-gray-400 hover:text-brand-orange hover:bg-white/5",
     danger: "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 shadow-neon-text/20"
   };
@@ -56,7 +55,6 @@ export const Input = ({
   type?: string,
   className?: string
 }) => (
-  // Use brand-orange for focus state borders
   <input 
     type={type}
     value={value}
@@ -86,7 +84,6 @@ export const TextArea = ({
 );
 
 export const Badge = ({ children, className = '' }: { children?: React.ReactNode, className?: string }) => (
-  // Badge uses solid orange for visibility
   <span className={`px-3 py-1 rounded-full text-xs font-bold text-brand-orange border border-brand-orange/30 bg-black/60 backdrop-blur-sm ${className}`}>
     {children}
   </span>
@@ -138,10 +135,8 @@ export const ConfirmModal = ({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in">
       <div className="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
       <div className="relative bg-brand-dark border border-white/10 rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center overflow-hidden z-[10000]">
-         {/* Glow Effect */}
          <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-[60px] opacity-20 pointer-events-none ${variant === 'danger' ? 'bg-red-500' : 'bg-brand-orange'}`}></div>
          
-         {/* Icon */}
          <div className={`relative w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 border ${variant === 'danger' ? 'bg-red-500/10 border-red-500/30' : 'bg-brand-orange/10 border-brand-orange/30'}`}>
             <AlertTriangle className={variant === 'danger' ? 'text-red-500' : 'text-brand-orange'} size={32} />
          </div>

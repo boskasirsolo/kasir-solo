@@ -13,7 +13,6 @@ import { NotFoundPage } from './not-found';
 
 const ITEMS_PER_PAGE = 6;
 
-// --- COMPONENTS: PAGINATION CONTROL ---
 const PaginationControl = ({ 
   page, 
   totalPages, 
@@ -52,7 +51,7 @@ const PaginationControl = ({
   );
 };
 
-// --- COMPONENTS: FILTER TABS ---
+// --- UPDATED: Filter Tab with Orange Border by Default ---
 const FilterTab = ({ 
   label, 
   active, 
@@ -69,7 +68,7 @@ const FilterTab = ({
     className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all whitespace-nowrap border ${
       active 
         ? 'bg-brand-orange text-white border-brand-orange shadow-neon' 
-        : 'bg-brand-card text-gray-400 border-white/10 hover:border-brand-orange/50 hover:text-white'
+        : 'bg-brand-card text-gray-400 border-brand-orange hover:bg-brand-orange hover:text-white'
     }`}
   >
     <Icon size={16} />
@@ -77,27 +76,21 @@ const FilterTab = ({
   </button>
 );
 
-// --- COMPONENTS: DIGITAL PROJECT CARD (THE SHOWCASE) ---
 const DigitalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: () => void }) => {
   return (
     <div 
       onClick={onClick}
       className="group relative bg-brand-card border border-white/5 rounded-2xl overflow-hidden hover:border-brand-orange transition-all duration-500 cursor-pointer shadow-lg hover:shadow-neon flex flex-col h-full"
     >
-      {/* LAPTOP FRAME MOCKUP */}
       <div className="relative bg-gray-900 pt-4 px-4 pb-0 overflow-hidden border-b border-white/5">
-         {/* Laptop Screen Frame */}
          <div className="relative rounded-t-xl bg-black border-[6px] border-gray-800 border-b-0 overflow-hidden aspect-[16/10] shadow-2xl">
-            {/* The Scrolling Image */}
             <div 
                 className="w-full h-full bg-cover bg-top transition-all duration-[4000ms] ease-linear group-hover:bg-bottom"
                 style={{ backgroundImage: `url(${item.image_url})` }}
             >
-                {/* Overlay for inactive state */}
                 <div className="absolute inset-0 bg-black/20 group-hover:opacity-0 transition-opacity duration-500"></div>
             </div>
             
-            {/* Logo/Icon Overlay (Center) */}
             <div className="absolute inset-0 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity duration-300">
                <div className="bg-black/60 backdrop-blur-md p-3 rounded-full border border-white/10">
                   {item.platform === 'mobile' ? <Smartphone size={24} className="text-white"/> : <Globe size={24} className="text-white"/>}
@@ -125,13 +118,11 @@ const DigitalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: () 
   );
 };
 
-// --- COMPONENTS: PHYSICAL PROJECT CARD (UPDATED FORMAT) ---
 const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: () => void }) => (
     <div 
       onClick={onClick}
       className="group relative bg-brand-card border border-white/5 rounded-2xl overflow-hidden hover:border-brand-orange transition-all duration-500 cursor-pointer shadow-lg hover:shadow-neon flex flex-col h-full"
     >
-      {/* PHOTO FRAME CONTAINER */}
       <div className="relative bg-gray-900 p-4 border-b border-white/5">
          <div className="relative rounded-xl bg-black border border-white/10 overflow-hidden aspect-[16/10] shadow-2xl">
             <img 
@@ -140,7 +131,6 @@ const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: ()
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
             
-            {/* Video Icon Overlay if Type Video */}
             {item.type === 'video' && (
               <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                 <div className="bg-black/50 rounded-full p-3 backdrop-blur-sm border border-white/20 group-hover:bg-brand-orange group-hover:border-brand-orange transition-colors">
@@ -149,7 +139,6 @@ const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: ()
               </div>
             )}
 
-            {/* Default Icon Overlay (Fade out on hover) */}
             <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${item.type === 'video' ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'}`}>
                <div className="bg-black/60 backdrop-blur-md p-3 rounded-full border border-white/10">
                   <Monitor size={24} className="text-white"/>
@@ -159,7 +148,6 @@ const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: ()
       </div>
 
       <div className="p-6 flex flex-col flex-grow">
-         {/* Tags */}
          <div className="flex flex-wrap gap-2 mb-3">
             <span className="text-[10px] font-bold px-2 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20">
                Hardware & Instalasi
@@ -184,7 +172,6 @@ const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: ()
     </div>
 );
 
-// --- PAGE: DETAIL ---
 export const ProjectDetailPage = ({ gallery, testimonials }: { gallery: GalleryItem[], testimonials: Testimonial[] }) => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -203,25 +190,21 @@ export const ProjectDetailPage = ({ gallery, testimonials }: { gallery: GalleryI
   );
 };
 
-// --- PAGE: MAIN LIST ---
 export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[], testimonials: Testimonial[] }) => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<'all' | 'physical' | 'digital'>('all');
   const [page, setPage] = useState(1);
 
-  // Filter Logic
   const filteredGallery = activeFilter === 'all' 
     ? gallery 
     : gallery.filter(item => item.category_type === activeFilter);
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredGallery.length / ITEMS_PER_PAGE);
   const paginatedGallery = filteredGallery.slice(
     (page - 1) * ITEMS_PER_PAGE, 
     page * ITEMS_PER_PAGE
   );
 
-  // Reset page to 1 when search changes
   useEffect(() => {
     setPage(1);
   }, [activeFilter]);
@@ -238,7 +221,6 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
         subtitle="Rekam jejak instalasi fisik, inovasi digital, dan kepercayaan klien."
       />
 
-      {/* --- FILTER TABS --- */}
       <div className="flex justify-center gap-4 mb-8 flex-wrap">
         <FilterTab 
           label="Semua Project" 
@@ -260,10 +242,8 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
         />
       </div>
 
-      {/* --- PAGINATION TOP --- */}
       <PaginationControl page={page} totalPages={totalPages} setPage={setPage} className="mb-8" />
 
-      {/* --- GALLERY GRID VIEW --- */}
       {filteredGallery.length === 0 ? (
         <div className="text-center py-20 bg-brand-card rounded-2xl border border-white/5 border-dashed">
           <ImageIcon className="mx-auto w-16 h-16 text-gray-600 mb-4" />
@@ -283,7 +263,6 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
         </div>
       )}
 
-      {/* --- PAGINATION BOTTOM --- */}
       <PaginationControl page={page} totalPages={totalPages} setPage={setPage} className="mt-12 border-t border-white/5 pt-8" />
     </div>
   );
