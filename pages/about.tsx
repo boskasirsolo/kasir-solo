@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MapPin, Phone, History, Rocket, TrendingUp, AlertTriangle, Sunrise } from 'lucide-react';
+import { History, Rocket, AlertTriangle, Sunrise, Users, Target } from 'lucide-react';
 import { SiteConfig } from '../types';
 
 export const AboutPage = ({ config }: { config?: SiteConfig }) => (
@@ -16,8 +16,34 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
       </div>
     </div>
 
+    {/* NEW NARRATIVE SECTION: The Philosophy */}
+    <section className="py-20 bg-brand-black relative">
+        <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center space-y-8">
+                <div className="inline-flex items-center justify-center p-3 bg-white/5 rounded-full mb-4">
+                    <Users className="text-brand-orange w-6 h-6" />
+                </div>
+                <h3 className="text-3xl md:text-4xl font-display font-bold text-white leading-tight">
+                    "Kami Bukan Sekadar Vendor,<br/>Kami Adalah <span className="text-brand-orange">Partner Strategis</span> Anda."
+                </h3>
+                <div className="prose prose-invert prose-lg mx-auto text-gray-400 leading-relaxed">
+                    <p>
+                        Di dunia bisnis yang bergerak cepat, Anda tidak butuh sekadar penjual alat kasir yang jual putus. 
+                        Anda butuh partner yang mengerti pedihnya selisih stok, pusingnya laporan keuangan yang tidak balance, 
+                        dan lelahnya mengawasi karyawan nakal.
+                    </p>
+                    <p>
+                        PT Mesin Kasir Solo lahir dari pengalaman lapangan nyata. Kami memulai dari toko kecil, merasakan semua kendala itu, 
+                        dan membangun solusi untuk menyelesaikannya. DNA kami adalah <strong>empati</strong> terhadap sesama pengusaha.
+                    </p>
+                </div>
+                <div className="h-1 w-24 bg-brand-orange mx-auto rounded-full mt-12"></div>
+            </div>
+        </div>
+    </section>
+
     {/* Narrative Timeline Section */}
-    <div className="container mx-auto px-4 py-20 relative">
+    <div className="container mx-auto px-4 py-20 relative border-t border-white/5 bg-brand-dark/50">
       <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-white/10 hidden md:block"></div>
       
       <div className="space-y-16 relative z-10">
@@ -98,81 +124,6 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
            </div>
         </div>
 
-      </div>
-    </div>
-
-    {/* Location & Contact Section (Existing Layout) */}
-    <div className="container mx-auto px-4 py-20 border-t border-white/5">
-      <div className="grid md:grid-cols-2 gap-16 items-center">
-        <div className="space-y-10">
-          
-          {/* Alamat Section */}
-          <div className="bg-brand-dark p-10 rounded-3xl border border-white/10 hover:border-brand-orange/30 transition-all hover:shadow-neon group">
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-4">
-              <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-brand-orange group-hover:scale-110 transition-transform">
-                <MapPin />
-              </div> 
-              Lokasi Kantor
-            </h3>
-            
-            <div className="space-y-6">
-                <div>
-                    <h4 className="text-brand-orange font-bold text-sm uppercase tracking-wider mb-2 border-l-2 border-brand-orange pl-2">Kantor Legal (Solo Raya)</h4>
-                    <p className="text-gray-300 leading-relaxed">
-                        {config?.addressSolo || "Perum Graha Tiara 2 No. B1, Gumpang 07/01, Kartasura, Sukoharjo, Jawa Tengah"}
-                    </p>
-                </div>
-
-                <div className="pt-6 border-t border-white/5">
-                    <h4 className="text-brand-orange font-bold text-sm uppercase tracking-wider mb-2 border-l-2 border-brand-orange pl-2">Kantor Operasional (Blora)</h4>
-                    <p className="text-gray-300 leading-relaxed">
-                        {config?.addressBlora || "Gumiring 04/04, Sidomulyo, Banjarejo, Blora, Jawa Tengah"}
-                    </p>
-                </div>
-            </div>
-          </div>
-
-          <div className="bg-brand-dark p-10 rounded-3xl border border-white/10 hover:border-brand-orange/30 transition-all hover:shadow-neon group">
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-4">
-               <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-brand-orange group-hover:scale-100 transition-transform">
-                <Phone />
-              </div> 
-              Layanan Pelanggan
-            </h3>
-            <a href={`https://wa.me/${config?.whatsappNumber}`} className="inline-flex items-center gap-4 text-3xl font-bold text-brand-orange hover:text-white transition-colors drop-shadow-neon">
-              {config?.whatsappNumber || "0823 2510 3336"}
-            </a>
-          </div>
-        </div>
-
-        <div className="h-[600px] bg-gray-800 rounded-3xl overflow-hidden relative border border-brand-orange/30 group">
-          <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000" alt="Map" className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-4">
-             {/* Pin Solo - Clickable & No Shadow */}
-             <a 
-               href={config?.mapSoloLink || '#'} 
-               target="_blank" 
-               rel="noreferrer"
-               className="block bg-brand-black/90 p-6 rounded-2xl border border-brand-orange text-center backdrop-blur-md w-64 transform transition-transform hover:scale-105 cursor-pointer hover:bg-brand-black"
-             >
-               <MapPin className="text-brand-orange w-8 h-8 mx-auto mb-2 animate-bounce" />
-               <p className="font-bold text-white text-lg">SOLO RAYA</p>
-               <p className="text-gray-400 text-xs">Sukoharjo & Kartasura</p>
-             </a>
-
-             {/* Pin Blora - Clickable & No Shadow */}
-             <a 
-               href={config?.mapBloraLink || '#'}
-               target="_blank"
-               rel="noreferrer"
-               className="block bg-brand-black/90 p-6 rounded-2xl border border-brand-orange text-center backdrop-blur-md w-64 transform transition-transform hover:scale-105 cursor-pointer hover:bg-brand-black"
-             >
-               <MapPin className="text-brand-orange w-8 h-8 mx-auto mb-2 animate-bounce" style={{ animationDelay: '0.5s' }} />
-               <p className="font-bold text-white text-lg">BLORA</p>
-               <p className="text-gray-400 text-xs">Banjarejo & Sekitarnya</p>
-             </a>
-          </div>
-        </div>
       </div>
     </div>
   </div>

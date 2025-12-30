@@ -15,8 +15,9 @@ const NAV_ITEMS = [
     label: 'Tentang Kami',
     children: [
       { id: 'about', label: 'Profil Perusahaan' },
-      { id: 'about/vision', label: 'Visi & Misi' }, // UPDATED: Link to dedicated page
+      { id: 'about/vision', label: 'Visi & Misi' }, 
       { id: 'gallery', label: 'Klien & Portfolio' },
+      { id: 'contact', label: 'Hubungi Kami' }, // MOVED HERE
     ]
   },
   { 
@@ -41,7 +42,6 @@ const NAV_ITEMS = [
     ]
   },
   { id: 'articles', label: 'Wawasan' },
-  { id: 'contact', label: 'Kontak' }, 
 ];
 
 // --- ATOMS: Visual Components ---
