@@ -246,6 +246,9 @@ const AppContent = () => {
       );
   }
 
+  // --- FILTER: Only pass Published articles to public routes ---
+  const publishedArticles = articles.filter(a => a.status === 'published');
+
   return (
     <CartProvider>
       <Layout 
@@ -279,8 +282,8 @@ const AppContent = () => {
           <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
           <Route path="/gallery/:slug" element={<ProjectDetailPage gallery={gallery} testimonials={testimonials} />} />
           
-          <Route path="/articles" element={<ArticlesPage articles={articles} products={products} />} />
-          <Route path="/articles/:slug" element={<ArticleDetailPage articles={articles} products={products} />} />
+          <Route path="/articles" element={<ArticlesPage articles={publishedArticles} products={products} />} />
+          <Route path="/articles/:slug" element={<ArticleDetailPage articles={publishedArticles} products={products} />} />
           
           <Route path="/services/website" element={<WebsiteServicePage />} />
           <Route path="/services/webapp" element={<WebAppServicePage />} />

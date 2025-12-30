@@ -24,8 +24,6 @@ export const getEnv = (key: string) => {
 };
 
 // --- API KEY MANAGEMENT ---
-
-// Helper to ensure API Key is selected (For Google AI Studio environments)
 export const ensureAPIKey = async () => {
   try {
     // @ts-ignore
@@ -50,40 +48,28 @@ export const callGeminiWithRotation = async (params: {
   contents: any,
   config?: any
 }) => {
-  // 1. CHECK & ROTATE KEYS
   let selectedKey = '';
-  
   // @ts-ignore
   const isAIStudio = typeof window !== 'undefined' && window.aistudio;
 
   if (isAIStudio) {
       await ensureAPIKey();
-      // In AI Studio, process.env.API_KEY is injected by the environment automatically.
       selectedKey = process.env.API_KEY || '';
   } else {
-      // --- MANUAL ROTATION LOGIC FOR VERCEL/PRODUCTION ---
       const keys: string[] = [];
-      
-      // Check for numbered keys (1-10) to support rotation (e.g., VITE_GEMINI_API_KEY_1)
       for (let i = 1; i <= 10; i++) {
           const k = getEnv(`VITE_GEMINI_API_KEY_${i}`) || getEnv(`VITE_API_KEY_${i}`);
           if (k && k.length > 10) keys.push(k);
       }
-      
-      // Check standard single keys
       const kSingle = getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY') || getEnv('API_KEY');
       if (kSingle && kSingle.length > 10) keys.push(kSingle);
 
       const uniqueKeys = [...new Set(keys)];
-      
       if (uniqueKeys.length > 0) {
-          // Pick a random key from the pool
           selectedKey = uniqueKeys[Math.floor(Math.random() * uniqueKeys.length)];
-          console.log(`[System] API Key Rotated. Active Pool: ${uniqueKeys.length} keys.`);
       }
   }
 
-  // 2. INJECT KEY FOR SDK (Polyfill process.env.API_KEY)
   if (selectedKey) {
       // @ts-ignore
       if (typeof window !== 'undefined') {
@@ -95,15 +81,10 @@ export const callGeminiWithRotation = async (params: {
           window.process.env.API_KEY = selectedKey;
       }
       try { process.env.API_KEY = selectedKey; } catch(e) {}
-  } else {
-      console.warn("Warning: No API Key found in environment variables. Features utilizing AI might fail.");
   }
 
-  // 3. Initialize Client
-  // Now process.env.API_KEY is populated with our rotated key
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-  // 4. Make the call
   try {
     const result = await ai.models.generateContent({
       model: params.model,
@@ -130,6 +111,73 @@ export const supabase = (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_KEY)
   ? createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY) 
   : null;
 
+// --- STORAGE HELPERS (HYBRID STRATEGY) ---
+
+// 1. Upload to Supabase (Fast, Temporary)
+export const uploadToSupabase = async (file: File, folder: string = 'temp') => {
+    if (!supabase) throw new Error("Supabase not connected");
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+        .from('images') // Assumes bucket 'images' exists
+        .upload(fileName, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage.from('images').getPublicUrl(fileName);
+    return { url: data.publicUrl, path: fileName };
+};
+
+// 2. Upload to Cloudinary (Permanent, Optimized)
+export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
+    if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Cloudinary Config Missing");
+    const formData = new FormData();
+    formData.append('file', fileOrBlob);
+    formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+    if (!res.ok) throw new Error("Cloudinary Upload Failed");
+    const data = await res.json();
+    return data.secure_url;
+};
+
+// 3. Delete from Supabase
+export const deleteFromSupabase = async (path: string) => {
+    if (!supabase) return;
+    await supabase.storage.from('images').remove([path]);
+};
+
+// 4. Background Migration Process
+export const processBackgroundMigration = async (
+    file: File, 
+    sbPath: string, 
+    tableName: string, 
+    recordId: number,
+    columnName: string = 'image_url' // 'image' or 'image_url'
+) => {
+    try {
+        console.log(`[Background] Migrating ${tableName} #${recordId} to Cloudinary...`);
+        // A. Upload to Cloudinary
+        const cloudUrl = await uploadToCloudinary(file);
+        
+        // B. Update Database
+        if (supabase) {
+            await supabase.from(tableName).update({ [columnName]: cloudUrl }).eq('id', recordId);
+        }
+
+        // C. Delete Temp File from Supabase
+        await deleteFromSupabase(sbPath);
+        
+        console.log(`[Background] Migration Complete for ${tableName} #${recordId}`);
+        return cloudUrl;
+    } catch (e) {
+        console.error("[Background] Migration Failed:", e);
+        return null;
+    }
+};
+
+
 // --- Formatters ---
 export const formatRupiah = (number: number) => {
   if (typeof number !== 'number') return 'Rp 0';
@@ -140,17 +188,13 @@ export const formatRupiah = (number: number) => {
   }).format(number);
 };
 
-// New Helper: Format number input with thousands separator (e.g. 1.000.000)
 export const formatNumberInput = (value: string | number) => {
   const valStr = String(value);
-  // Remove non-digit characters
   const raw = valStr.replace(/\D/g, '');
   if (!raw) return '';
-  // Format with Indonesian locale
   return new Intl.NumberFormat('id-ID').format(parseInt(raw));
 };
 
-// New Helper: Clean formatted input back to integer (e.g. 1.000.000 -> 1000000)
 export const cleanNumberInput = (value: string) => {
   return parseInt(value.replace(/\./g, '') || '0');
 };
@@ -160,25 +204,22 @@ export const slugify = (text: string) => {
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-')     // Replace spaces with -
-    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
-    .replace(/\-\-+/g, '-');  // Replace multiple - with single -
+    .replace(/\s+/g, '-')     
+    .replace(/[^\w\-]+/g, '') 
+    .replace(/\-\-+/g, '-');  
 };
 
 // --- SEO INJECTION HELPERS ---
 export const injectGoogleTags = (gaId?: string, gscCode?: string) => {
   if (typeof window === 'undefined') return;
 
-  // 1. Inject Google Analytics (GA4)
   if (gaId && !document.getElementById('ga-script')) {
-    // Main Script
     const script = document.createElement('script');
     script.id = 'ga-script';
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
     document.head.appendChild(script);
 
-    // Config Script
     const inlineScript = document.createElement('script');
     inlineScript.id = 'ga-inline';
     inlineScript.innerHTML = `
@@ -188,278 +229,34 @@ export const injectGoogleTags = (gaId?: string, gscCode?: string) => {
       gtag('config', '${gaId}');
     `;
     document.head.appendChild(inlineScript);
-    console.log("GA4 Injected:", gaId);
   }
 
-  // 2. Inject Google Search Console Meta Tag
   if (gscCode && !document.querySelector('meta[name="google-site-verification"]')) {
     const meta = document.createElement('meta');
     meta.name = "google-site-verification";
     meta.content = gscCode;
     document.head.appendChild(meta);
-    console.log("GSC Meta Injected");
   }
 };
 
 // --- Mock Data ---
 export const INITIAL_PRODUCTS: Product[] = [
-  {
-    id: 1,
-    name: "Paket Kasir Android Lite",
-    price: 2500000,
-    category: "Android POS",
-    description: "Solusi hemat untuk UMKM, Warkop, dan Coffee Shop. Tablet 8 inch + Printer Thermal High Speed + Stand Kokoh. Siap pakai.",
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 2,
-    name: "Paket Resto Pro Windows",
-    price: 7500000,
-    category: "Windows POS",
-    description: "Sistem kasir restoran lengkap. PC All-in-One Touchscreen, Printer Dapur & Kasir, Cash Drawer. Support manajemen meja & inventory.",
-    image: "https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 3,
-    name: "Kiosk Self-Service Touchscreen",
-    price: 15000000,
-    category: "Smart Kiosk",
-    description: "Mesin pemesanan mandiri 24 inch untuk efisiensi antrian. Terintegrasi pembayaran QRIS & E-Wallet. Modern & Futuristik.",
-    image: "https://images.unsplash.com/photo-1585646397275-84e625a4d46c?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 4,
-    name: "Paket Retail Minimarket Full",
-    price: 5500000,
-    category: "Retail POS",
-    description: "Paket komputer kasir spek tinggi, Scanner Barcode Omnidirectional, Printer Struk. Mampu menangani 10.000+ SKU barang.",
-    image: "https://images.unsplash.com/photo-1580569766020-21a48c66060c?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 5,
-    name: "Printer Thermal Bluetooth Portable",
-    price: 350000,
-    category: "Hardware",
-    description: "Printer struk mini ukuran 58mm. Koneksi bluetooth ke HP Android/iOS. Cocok untuk kasir keliling atau food truck.",
-    image: "https://images.unsplash.com/photo-1622675235450-482a59a72175?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 6,
-    name: "Scanner Barcode Wireless 2D",
-    price: 850000,
-    category: "Hardware",
-    description: "Scanner barcode tanpa kabel, jangkauan hingga 50 meter. Bisa scan QR Code (e-wallet) dan Barcode batang biasa.",
-    image: "https://images.unsplash.com/photo-1579707248386-7a85df71665a?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 7,
-    name: "Cash Drawer Besi RJ11",
-    price: 450000,
-    category: "Hardware",
-    description: "Laci uang bahan metal kokoh. Terbuka otomatis saat struk keluar. Kompatibel dengan semua jenis printer kasir.",
-    image: "https://images.unsplash.com/photo-1556742031-c6961e8560b0?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 8,
-    name: "Paket Tablet Kasir Ekonomis",
-    price: 1800000,
-    category: "Android POS",
-    description: "Paket starter kit untuk usaha kecil. Tablet 7 inch + Aplikasi Kasir Gratis + Printer Bluetooth. Mudah digunakan.",
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca4?auto=format&fit=crop&q=80&w=800"
-  }
+  { id: 1, name: "Paket Kasir Android Lite", price: 2500000, category: "Android POS", description: "Solusi hemat untuk UMKM.", image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800" },
+  { id: 2, name: "Paket Resto Pro Windows", price: 7500000, category: "Windows POS", description: "Sistem kasir restoran lengkap.", image: "https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&q=80&w=800" }
 ];
 
 export const INITIAL_ARTICLES: Article[] = [
-  {
-    id: 1,
-    title: "Battle Royale: Android POS vs Windows POS, Mana Raja Sebenarnya?",
-    excerpt: "Analisis mendalam membedah kelebihan, kekurangan, dan biaya tersembunyi antara Kasir Android vs Windows PC untuk bisnis 2024.",
-    content: `# Battle Royale: Android POS vs Windows POS
-
-## Pendahuluan
-Memilih mesin kasir bukan sekadar beli alat, tapi investasi jangka panjang. Salah pilih, operasional berantakan.
-
-## 1. Android POS: Si Lincah yang Hemat Energi
-Kelebihan utama Android POS adalah efisiensi. Hemat listrik, bentuk compact, dan harga software yang biasanya lebih terjangkau (SaaS).
-
-**Cocok untuk:** Coffee Shop, Booth Makanan, Salon.
-
-## 2. Windows POS: Si Pekerja Berat
-Windows menang di kompatibilitas hardware. Printer dot matrix, timbangan digital, hingga scanner omnidirectional bekerja lebih stabil di Windows.
-
-**Cocok untuk:** Minimarket, Grosir, Restoran Besar.
-
-## Kesimpulan
-Jika Anda butuh mobilitas dan estetika, pilih Android. Jika Anda butuh performa berat dan integrasi hardware kompleks, Windows jawabannya.`,
-    date: "14 Feb 2024",
-    image: "https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&q=80&w=1200",
-    category: "Hardware Review",
-    author: "Amin Maghfuri",
-    readTime: "15 min read",
-    tags: ["Perbandingan", "Investasi", "Teknologi"]
-  },
-  {
-    id: 2,
-    title: "5 Tanda Kasir Anda 'Mencuri' Tanpa Anda Sadari (Fraud Detection)",
-    excerpt: "Kebocoran omzet seringkali bukan dari orang luar, tapi dari celah sistem yang dimanfaatkan karyawan nakal.",
-    content: `# 5 Tanda Fraud di Kasir
-
-## 1. Void Berlebihan
-Perhatikan laporan void/cancel transaksi. Jika terlalu sering terjadi saat jam ramai, bisa jadi uang diterima tapi struk dibatalkan.
-
-## 2. No Sale (Laci Terbuka Tanpa Transaksi)
-Fitur 'Open Drawer' harus dipantau ketat. Kenapa laci terbuka jika tidak ada pembayaran?
-
-## 3. Diskon Manual yang Mencurigakan
-Pastikan hak akses pemberian diskon hanya dipegang oleh supervisor atau owner.
-
-> "Sistem yang baik tidak hanya mencatat penjualan, tapi juga mengamankan aset."`,
-    date: "10 Jan 2024",
-    image: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=1200",
-    category: "Bisnis Tips",
-    author: "Amin Maghfuri",
-    readTime: "10 min read",
-    tags: ["Keamanan", "Manajemen", "Tips"]
-  },
-  {
-    id: 3,
-    title: "Membangun Loyalitas Pelanggan dengan Membership Digital",
-    excerpt: "Kartu member fisik sudah kuno. Pelajari cara integrasi membership digital via WhatsApp untuk retensi pelanggan.",
-    content: `# Membership Digital
-
-Zaman sekarang orang malas bawa kartu fisik. Solusinya? Membership digital.
-
-### Kenapa Efektif?
-1. **Database Real:** Anda punya data kontak asli pelanggan.
-2. **Hemat Biaya Cetak:** Tidak perlu cetak kartu PVC.
-3. **Notifikasi Promo:** Bisa broadcast promo langsung ke WA.
-
-Implementasi ini bisa menaikkan *Repeat Order* hingga 40%.`,
-    date: "05 Mar 2024",
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=1200",
-    category: "Digital Marketing",
-    author: "Team SIBOS",
-    readTime: "7 min read",
-    tags: ["Marketing", "Loyalty", "Software"]
-  }
+  { id: 1, title: "Android POS vs Windows POS", excerpt: "Analisis mendalam...", content: "Content...", date: "14 Feb 2024", image: "https://images.unsplash.com/photo-1556742111-a301076d9d18", category: "Hardware Review", author: "Amin", readTime: "5 min", status: 'published' }
 ];
 
 export const INITIAL_GALLERY: GalleryItem[] = [
-  {
-    id: 101,
-    title: "Kopi Senja: E-Commerce & Membership",
-    category_type: 'digital',
-    platform: 'web',
-    image_url: "https://cdn.dribbble.com/users/1615584/screenshots/15710288/media/6c7a695e5d4f0a94792a106d5bc0eb6d.jpg?resize=1200x900&vertical=center", 
-    description: "Website pemesanan online terintegrasi dengan sistem poin membership.",
-    client_url: "https://kopisenja.com",
-    tech_stack: ["React", "Next.js", "Supabase", "Midtrans"],
-    case_study: {
-      challenge: "Kopi Senja mengalami kesulitan melacak data pelanggan setia. Antrian kasir sering menumpuk karena pelanggan mendaftar member secara manual.",
-      solution: "Kami membangun Web App Progressive (PWA) yang memungkinkan pelanggan memesan dari meja (QR Order) dan otomatis mendapatkan poin loyalty.",
-      result: "Antrian kasir berkurang 40%, dan database membership tumbuh 300% dalam 2 bulan pertama peluncuran."
-    },
-    type: 'image'
-  },
-  { 
-    id: 1, 
-    title: "Instalasi Full-Set Cafe Solo Baru", 
-    category_type: 'physical',
-    type: 'image',
-    image_url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800",
-    description: "Proses instalasi sistem POS full-set di salah satu klien kami, 'Kopi Senja'. Topologi jaringan LAN hybrid untuk memastikan koneksi tetap stabil meskipun wifi pengunjung penuh."
-  },
-  {
-    id: 102,
-    title: "PT. Maju Logistik Indonesia",
-    category_type: 'digital',
-    platform: 'web',
-    image_url: "https://cdn.dribbble.com/users/418188/screenshots/16361453/media/4c02931d68352b2c28c869ba0029b35e.png?resize=1200x900&vertical=center",
-    description: "Redesign website korporat dengan fokus pada SEO dan Lead Generation.",
-    client_url: "https://majulogistik.co.id",
-    tech_stack: ["Wordpress Custom", "Elementor", "Yoast SEO"],
-    case_study: {
-      challenge: "Website lama klien sangat lambat dan tidak muncul di halaman pertama Google untuk keyword 'jasa logistik solo'.",
-      solution: "Revamp total UI/UX dengan nuansa modern, optimasi kecepatan server, dan implementasi struktur SEO on-page yang rigid.",
-      result: "Traffic organik naik 150% dan konversi lead via WhatsApp meningkat signifikan."
-    },
-    type: 'image'
-  },
-  { 
-    id: 2, 
-    title: "Setup Kasir Minimarket 'Mart Jaya'", 
-    category_type: 'physical',
-    type: 'image',
-    image_url: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=800",
-    description: "Sesi pelatihan intensif bagi staff kasir. Materi training mencakup input barang, retur, dan pembayaran QRIS."
-  },
-  {
-    id: 103,
-    title: "QALAM: Manajemen Pendidikan TPA",
-    category_type: 'digital',
-    platform: 'mobile',
-    image_url: "https://cdn.dribbble.com/userupload/12586737/file/original-b18361099e099684128540445d07c082.png?resize=1200x900",
-    description: "Aplikasi Android & iOS untuk memantau hafalan santri secara real-time.",
-    client_url: "https://qalam.id",
-    tech_stack: ["Flutter", "Firebase", "Node.js"],
-    case_study: {
-      challenge: "Wali santri sulit memantau perkembangan hafalan anak karena masih menggunakan kartu setoran kertas yang sering hilang.",
-      solution: "Mengembangkan aplikasi mobile cross-platform dimana Ustadz menginput nilai, dan notifikasi langsung masuk ke HP Orang Tua.",
-      result: "Diadopsi oleh 50+ TPA di Solo Raya dalam 6 bulan pertama."
-    },
-    type: 'image'
-  },
-  { 
-    id: 4, 
-    title: "Pameran UMKM Solo Great Sale", 
-    category_type: 'physical',
-    type: 'image',
-    image_url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800",
-    description: "Partisipasi PT Mesin Kasir Solo dalam ajang Solo Great Sale. Konsultasi digitalisasi bisnis untuk 500+ pengunjung."
-  }
+  { id: 101, title: "Kopi Senja", category_type: 'digital', platform: 'web', image_url: "https://cdn.dribbble.com/users/1615584/screenshots/15710288/media/6c7a695e5d4f0a94792a106d5bc0eb6d.jpg", description: "Web App.", client_url: "#" }
 ];
 
 export const INITIAL_TESTIMONIALS: Testimonial[] = [
-  {
-    id: 1,
-    client_name: "Pak Budi",
-    business_name: "Kopi Senja", 
-    content: "Website & Aplikasi membership dari PT Mesin Kasir Solo beneran ngebantu banget buat ngelola pelanggan. Data rapi, omzet naik.",
-    rating: 5,
-    image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
-    is_featured: true
-  },
-  {
-    id: 2,
-    client_name: "Bu Susi",
-    business_name: "Salon Cantik",
-    content: "Awalnya bingung pakainya, tapi diajarin teknisinya sampai bisa. Recommended!",
-    rating: 5,
-    image_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200",
-    is_featured: true
-  }
+  { id: 1, client_name: "Pak Budi", business_name: "Kopi Senja", content: "Bagus.", rating: 5, image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d", is_featured: true }
 ];
 
-// --- INITIAL JOBS (For Demo/Fallback) ---
 export const INITIAL_JOBS: JobOpening[] = [
-  {
-    id: 1,
-    title: "Digital Marketing Specialist",
-    division: "Marketing",
-    type: "Full-time",
-    location: "Solo (On-site)",
-    description: "Kami mencari marketer kreatif yang menguasai Meta Ads, TikTok Ads, dan Content Strategy.",
-    requirements: "1. Pengalaman minimal 1 tahun\n2. Menguasai Copywriting & Basic Design\n3. Familiar dengan Analytics",
-    is_active: true
-  },
-  {
-    id: 2,
-    title: "Teknisi Hardware Kasir",
-    division: "Technical",
-    type: "Full-time",
-    location: "Solo (On-site)",
-    description: "Bertanggung jawab atas instalasi, perbaikan, dan maintenance mesin kasir klien.",
-    requirements: "1. SMK TKJ/RPL/Listrik\n2. Paham jaringan LAN/WLAN\n3. Memiliki kendaraan sendiri",
-    is_active: true
-  }
+  { id: 1, title: "Marketing", division: "Sales", type: "Full-time", location: "Solo", description: "Jualan.", requirements: "Semangat.", is_active: true }
 ];
