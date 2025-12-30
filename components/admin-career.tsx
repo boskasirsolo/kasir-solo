@@ -7,7 +7,8 @@ import { supabase } from '../utils';
 
 const ITEMS_PER_PAGE = 6;
 
-const useJobManager = (jobs: JobOpening[], setJobs: (j: JobOpening[]) => void) => {
+// Changed setJobs type to 'any' to allow functional updates (React.Dispatch pattern)
+const useJobManager = (jobs: JobOpening[], setJobs: any) => {
     const [form, setForm] = useState({
         id: null as number | null,
         title: '',
@@ -56,14 +57,14 @@ const useJobManager = (jobs: JobOpening[], setJobs: (j: JobOpening[]) => void) =
             };
 
             if (form.id) {
-                // Update Local State
-                setJobs(jobs.map(j => j.id === form.id ? { ...j, ...dbData } : j));
+                // Update Local State using Functional Update
+                setJobs((prev: JobOpening[]) => prev.map(j => j.id === form.id ? { ...j, ...dbData } : j));
                 // Update DB
                 if (supabase) await supabase.from('jobs').update(dbData).eq('id', form.id);
             } else {
                 // Create Local State
                 const newId = Date.now();
-                setJobs([{ ...dbData, id: newId } as JobOpening, ...jobs]);
+                setJobs((prev: JobOpening[]) => [{ ...dbData, id: newId } as JobOpening, ...prev]);
                 // Insert DB
                 if (supabase) await supabase.from('jobs').insert([dbData]);
             }
@@ -74,9 +75,23 @@ const useJobManager = (jobs: JobOpening[], setJobs: (j: JobOpening[]) => void) =
     };
 
     const deleteJob = async (id: number) => {
-        if(!confirm("Hapus lowongan ini?")) return;
-        setJobs(jobs.filter(j => j.id !== id));
-        if (supabase) await supabase.from('jobs').delete().eq('id', id);
+        if(!confirm("Yakin hapus lowongan ini?")) return;
+        
+        // 1. Optimistic Update (Hapus dari layar dulu)
+        // Menggunakan functional update (prev => ...) agar state yang diproses selalu terbaru
+        setJobs((prev: JobOpening[]) => prev.filter(j => j.id !== id));
+
+        // 2. Hapus dari Database
+        if (supabase) {
+            const { error } = await supabase.from('jobs').delete().eq('id', id);
+            
+            if (error) {
+                console.error("Gagal hapus DB:", error);
+                alert("Gagal menghapus dari database. Silakan refresh halaman.");
+                // Opsional: Bisa fetch ulang data di sini jika perlu revert state
+            }
+        }
+
         if (form.id === id) resetForm();
     };
 
