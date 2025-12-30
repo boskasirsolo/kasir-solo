@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { Product, Article, GalleryItem, Testimonial } from './types';
+import { Product, Article, GalleryItem, Testimonial, JobOpening } from './types';
 import { GoogleGenAI } from "@google/genai";
 
 // --- Environment Helpers ---
@@ -356,5 +356,29 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     rating: 5,
     image_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200",
     is_featured: true
+  }
+];
+
+// --- INITIAL JOBS (For Demo/Fallback) ---
+export const INITIAL_JOBS: JobOpening[] = [
+  {
+    id: 1,
+    title: "Digital Marketing Specialist",
+    division: "Marketing",
+    type: "Full-time",
+    location: "Solo (On-site)",
+    description: "Kami mencari marketer kreatif yang menguasai Meta Ads, TikTok Ads, dan Content Strategy.",
+    requirements: "1. Pengalaman minimal 1 tahun\n2. Menguasai Copywriting & Basic Design\n3. Familiar dengan Analytics",
+    is_active: true
+  },
+  {
+    id: 2,
+    title: "Teknisi Hardware Kasir",
+    division: "Technical",
+    type: "Full-time",
+    location: "Solo (On-site)",
+    description: "Bertanggung jawab atas instalasi, perbaikan, dan maintenance mesin kasir klien.",
+    requirements: "1. SMK TKJ/RPL/Listrik\n2. Paham jaringan LAN/WLAN\n3. Memiliki kendaraan sendiri",
+    is_active: true
   }
 ];

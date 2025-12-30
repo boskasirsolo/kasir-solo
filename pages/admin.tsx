@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home, ArrowLeft } from 'lucide-react';
-import { Product, GalleryItem, SiteConfig, Testimonial, Article } from '../types';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home, ArrowLeft, Briefcase } from 'lucide-react';
+import { Product, GalleryItem, SiteConfig, Testimonial, Article, JobOpening } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
 import { AdminGallery } from '../components/admin-gallery';
 import { AdminSettings } from '../components/admin-settings';
 import { AdminOrders } from '../components/admin-orders';
 import { AdminArticles } from '../components/admin-articles';
+import { AdminCareer } from '../components/admin-career'; // ADDED
 import { supabase } from '../utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -105,6 +106,7 @@ export const AdminDashboard = ({
   gallery, setGallery,
   testimonials, setTestimonials,
   articles, setArticles,
+  jobs, setJobs, // ADDED
   config, setConfig,
   onLogout 
 }: { 
@@ -112,11 +114,12 @@ export const AdminDashboard = ({
   gallery: GalleryItem[], setGallery: any,
   testimonials: Testimonial[], setTestimonials: any,
   articles: Article[], setArticles: any,
+  jobs: JobOpening[], setJobs: any, // ADDED
   config: SiteConfig, setConfig: any,
   onLogout: () => void
 }) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'store' | 'gallery' | 'articles' | 'settings'>('store');
+  const [activeTab, setActiveTab] = useState<'store' | 'gallery' | 'articles' | 'career' | 'settings'>('store');
   const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog'>('orders');
   const [showConnectAI, setShowConnectAI] = useState(false);
 
@@ -164,6 +167,7 @@ export const AdminDashboard = ({
             <TabButton id="store" label="PRODUK & ORDER" icon={ShoppingBag} />
             <TabButton id="gallery" label="GALERI" icon={Image} />
             <TabButton id="articles" label="ARTIKEL" icon={FileText} />
+            <TabButton id="career" label="KARIR" icon={Briefcase} /> 
             <TabButton id="settings" label="PENGATURAN" icon={Settings} />
           </div>
           
@@ -253,6 +257,13 @@ export const AdminDashboard = ({
         {activeTab === 'articles' && (
           <div className="animate-fade-in relative z-10 p-4 md:p-6">
              <AdminArticles articles={articles} setArticles={setArticles} />
+          </div>
+        )}
+
+        {/* ADDED CAREER TAB */}
+        {activeTab === 'career' && (
+          <div className="animate-fade-in relative z-10 p-4 md:p-6">
+             <AdminCareer jobs={jobs} setJobs={setJobs} />
           </div>
         )}
 

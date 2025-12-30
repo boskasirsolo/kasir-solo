@@ -16,6 +16,7 @@ const NAV_ITEMS = [
     children: [
       { id: 'about', label: 'Profil Perusahaan' },
       { id: 'about/vision', label: 'Visi & Misi' }, 
+      { id: 'career', label: 'Karir' }, // ADDED
       { id: 'gallery', label: 'Klien & Portfolio' },
       { id: 'contact', label: 'Hubungi Kami' }, // MOVED HERE
     ]
@@ -385,6 +386,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
           <ul className="space-y-3 text-gray-400 text-sm">
             <li><button onClick={() => setPage('about')} className="hover:text-brand-orange transition-colors">Tentang Kami</button></li>
             <li><button onClick={() => setPage('gallery')} className="hover:text-brand-orange transition-colors">Klien & Portfolio</button></li>
+            <li><button onClick={() => setPage('career')} className="hover:text-brand-orange transition-colors">Karir</button></li>
             <li><button onClick={() => setPage('contact')} className="hover:text-brand-orange transition-colors">Hubungi Kami</button></li>
           </ul>
         </div>

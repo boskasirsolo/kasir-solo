@@ -59,6 +59,18 @@ export interface Testimonial {
   created_at?: string;
 }
 
+export interface JobOpening {
+  id: number;
+  title: string;
+  division: string;
+  type: 'Full-time' | 'Part-time' | 'Internship' | 'Freelance';
+  location: string;
+  description: string;
+  requirements: string; // Markdown/Text formatting
+  is_active: boolean;
+  created_at?: string;
+}
+
 export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;

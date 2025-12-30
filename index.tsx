@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS } from './utils';
-import { Product, Article, GalleryItem, SiteConfig, Testimonial } from './types';
+import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS, INITIAL_JOBS } from './utils';
+import { Product, Article, GalleryItem, SiteConfig, Testimonial, JobOpening } from './types';
 import { CartProvider } from './context/cart-context';
 
 // Component Imports
@@ -13,7 +13,8 @@ import { ShopPage, ProductDetailPage } from './pages/shop';
 import { GalleryPage, ProjectDetailPage } from './pages/gallery';
 import { ArticlesPage, ArticleDetailPage } from './pages/articles';
 import { AboutPage } from './pages/about';
-import { VisionPage } from './pages/vision'; // NEW IMPORT
+import { VisionPage } from './pages/vision'; 
+import { CareerPage } from './pages/career'; // ADDED
 import { ContactPage } from './pages/contact';
 import { AdminDashboard, AdminLogin } from './pages/admin';
 import { CheckoutPage } from './pages/checkout';
@@ -38,6 +39,7 @@ const AppContent = () => {
   const [gallery, setGallery] = useState<GalleryItem[]>(INITIAL_GALLERY);
   const [articles, setArticles] = useState<Article[]>([]); 
   const [testimonials, setTestimonials] = useState<Testimonial[]>(INITIAL_TESTIMONIALS);
+  const [jobs, setJobs] = useState<JobOpening[]>(INITIAL_JOBS); // ADDED
 
   // Config State
   const [config, setConfig] = useState<SiteConfig>({
@@ -151,7 +153,11 @@ const AppContent = () => {
       const { data: testiData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
       if (testiData && testiData.length > 0) setTestimonials(testiData);
 
-      // 3. Fetch Site Settings
+      // 3. Fetch Jobs
+      const { data: jobsData } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
+      if (jobsData && jobsData.length > 0) setJobs(jobsData);
+
+      // 4. Fetch Site Settings
       const { data: settingsData } = await supabase.from('site_settings').select('*').single();
       if (settingsData) {
          setConfig({
@@ -254,6 +260,7 @@ const AppContent = () => {
 
           <Route path="/about" element={<AboutPage config={config} />} />
           <Route path="/about/vision" element={<VisionPage />} /> 
+          <Route path="/career" element={<CareerPage jobs={jobs} />} /> {/* ADDED */}
           <Route path="/contact" element={<ContactPage config={config} />} /> 
           
           <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
@@ -266,6 +273,7 @@ const AppContent = () => {
                 gallery={gallery} setGallery={setGallery}
                 testimonials={testimonials} setTestimonials={setTestimonials}
                 articles={articles} setArticles={setArticles}
+                jobs={jobs} setJobs={setJobs} // ADDED
                 config={config} setConfig={setConfig}
                 onLogout={() => supabase?.auth.signOut()}
               />
