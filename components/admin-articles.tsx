@@ -17,8 +17,8 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
 
   // Handling List Item Actions Wrapper
   const listActions = {
-      onEdit: actions.handleEditClick,
-      onDelete: actions.deleteItem
+      handleEditClick: actions.handleEditClick,
+      deleteItem: actions.deleteItem
   };
 
   return (
@@ -34,6 +34,7 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
             }}
             onReset={actions.resetForm}
             personaState={{ authorPersona, setAuthorPersona }} // Pass Persona State
+            form={form} // Pass active form to highlight selection
          />
       </div>
 

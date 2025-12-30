@@ -22,13 +22,14 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
             if (!matchesSearch) return false;
 
             if (filterType === 'all') {
-                const isPillar = a.type === 'pillar';
-                const isOrphan = !a.pillar_id && a.type !== 'pillar'; 
-                return isPillar || isOrphan;
+                // Show everything in ALL, except maybe archived? for now show all.
+                return true; 
             }
             if (filterType === 'pillar') return a.type === 'pillar';
             if (filterType === 'cluster') return a.type === 'cluster';
             if (filterType === 'orphan') return !a.pillar_id && a.type !== 'pillar';
+            if (filterType === 'draft') return a.status === 'draft';
+            if (filterType === 'scheduled') return a.status === 'scheduled';
             return false;
         });
     }, [articles, searchTerm, filterType]);

@@ -1,7 +1,7 @@
 
 import { Article } from '../../types';
 
-export type FilterType = 'all' | 'pillar' | 'cluster' | 'orphan';
+export type FilterType = 'all' | 'pillar' | 'cluster' | 'orphan' | 'draft' | 'scheduled';
 
 export interface KeywordData {
     keyword: string;

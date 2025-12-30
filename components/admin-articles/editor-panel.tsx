@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, ArrowRight, Layout, Network, Image as ImageIcon, UploadCloud } from 'lucide-react';
+import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, ArrowRight, Layout, Network, Image as ImageIcon, UploadCloud, CalendarClock } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, Input, TextArea, LoadingSpinner } from '../ui';
 import { PRESET_TOPICS, ARTICLE_CATEGORIES } from './types';
@@ -227,19 +227,21 @@ export const EditorPanel = ({
                     </div>
                 </div>
 
-                {/* 2. CATEGORY SELECTOR (REPLACED Strategy/Author) */}
+                {/* 2. CATEGORY SELECTOR (DATALIST HYBRID) */}
                 <div>
                     <label className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Kategori Artikel</label>
-                    <select 
+                    <input 
+                        list="categories" 
                         value={form.category} 
                         onChange={(e) => setForm((p:any) => ({...p, category: e.target.value}))}
+                        placeholder="Pilih atau Ketik Kategori Baru..."
                         className="w-full bg-brand-card border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-orange outline-none"
-                    >
-                        <option value="">-- Pilih Kategori --</option>
+                    />
+                    <datalist id="categories">
                         {ARTICLE_CATEGORIES.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
+                            <option key={cat} value={cat} />
                         ))}
-                    </select>
+                    </datalist>
                 </div>
 
                 {/* 3. Content Editor */}
@@ -262,15 +264,32 @@ export const EditorPanel = ({
 
             {/* Footer Actions */}
             <div className="p-4 border-t border-white/5 bg-brand-dark/90 backdrop-blur-sm sticky bottom-0 z-10">
-                <div className="grid grid-cols-2 gap-2">
-                    <select value={form.status} onChange={(e) => setForm((p:any) => ({...p, status: e.target.value}))} className="bg-black/40 text-white text-[10px] rounded border border-white/10 px-2 focus:border-brand-orange outline-none">
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                    <select value={form.status} onChange={(e) => setForm((p:any) => ({...p, status: e.target.value}))} className="bg-black/40 text-white text-[10px] rounded border border-white/10 px-2 focus:border-brand-orange outline-none h-8">
                         <option value="draft">Draft</option>
                         <option value="published">Published</option>
+                        <option value="scheduled">Terjadwal</option>
                     </select>
-                    <Button onClick={actions.saveArticle} disabled={loading.uploading} className="py-2 text-[10px]">
-                        {loading.uploading ? <LoadingSpinner size={12}/> : <><Save size={12}/> SIMPAN</>}
-                    </Button>
+                    
+                    {/* SCHEDULE INPUT (Condition) */}
+                    {form.status === 'scheduled' ? (
+                        <div className="relative">
+                            <CalendarClock size={12} className="absolute left-2 top-2 text-gray-500"/>
+                            <input 
+                                type="datetime-local" 
+                                value={form.scheduled_for} 
+                                onChange={(e) => setForm((p:any) => ({...p, scheduled_for: e.target.value}))}
+                                className="w-full bg-black/40 text-white text-[10px] rounded border border-white/10 pl-6 pr-2 h-8 focus:border-brand-orange outline-none"
+                            />
+                        </div>
+                    ) : (
+                        <div className="h-8"></div> // Spacer to keep button size consistent
+                    )}
                 </div>
+                
+                <Button onClick={actions.saveArticle} disabled={loading.uploading} className="w-full py-2 text-[10px]">
+                    {loading.uploading ? <LoadingSpinner size={12}/> : <><Save size={12}/> SIMPAN ARTIKEL</>}
+                </Button>
             </div>
         </div>
     );
