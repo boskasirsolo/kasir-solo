@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS, INITIAL_JOBS } from './utils';
+import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS, INITIAL_JOBS, injectGoogleTags } from './utils';
 import { Product, Article, GalleryItem, SiteConfig, Testimonial, JobOpening } from './types';
 import { CartProvider } from './context/cart-context';
 import { LoadingSpinner } from './components/ui'; // Import Loader
@@ -64,7 +64,9 @@ const AppContent = () => {
     facebookUrl: "https://facebook.com/",
     youtubeUrl: "https://youtube.com/",
     tiktokUrl: "https://tiktok.com/",
-    linkedinUrl: "https://linkedin.com/"
+    linkedinUrl: "https://linkedin.com/",
+    googleAnalyticsId: "",
+    googleSearchConsoleCode: ""
   });
 
   // --- Router Bridge ---
@@ -169,27 +171,34 @@ const AppContent = () => {
             // Fetch Site Settings
             const { data: settingsData } = await supabase.from('site_settings').select('*').single();
             if (settingsData) {
-                setConfig(prev => ({
-                    ...prev,
-                    heroTitle: settingsData.hero_title || prev.heroTitle,
-                    heroSubtitle: settingsData.hero_subtitle || prev.heroSubtitle,
-                    aboutImage: settingsData.about_image || prev.aboutImage,
-                    sibosUrl: settingsData.sibos_url || prev.sibosUrl,
-                    qalamUrl: settingsData.qalam_url || prev.qalamUrl,
-                    whatsappNumber: settingsData.whatsapp_number || prev.whatsappNumber,
-                    emailAddress: settingsData.email_address || prev.emailAddress,
-                    addressSolo: settingsData.address_solo || prev.addressSolo,
-                    addressBlora: settingsData.address_blora || prev.addressBlora,
-                    mapSoloLink: settingsData.map_solo_link || prev.mapSoloLink,
-                    mapBloraLink: settingsData.map_blora_link || prev.mapBloraLink,
-                    mapSoloEmbed: settingsData.map_solo_embed || prev.mapSoloEmbed,
-                    mapBloraEmbed: settingsData.map_blora_embed || prev.mapBloraEmbed,
-                    instagramUrl: settingsData.instagram_url || prev.instagramUrl,
-                    facebookUrl: settingsData.facebook_url || prev.facebookUrl,
-                    youtubeUrl: settingsData.youtube_url || prev.youtubeUrl,
-                    tiktokUrl: settingsData.tiktok_url || prev.tiktokUrl,
-                    linkedinUrl: settingsData.linkedin_url || prev.linkedinUrl,
-                }));
+                const newConfig = {
+                    ...config, // Keep defaults
+                    heroTitle: settingsData.hero_title || config.heroTitle,
+                    heroSubtitle: settingsData.hero_subtitle || config.heroSubtitle,
+                    aboutImage: settingsData.about_image || config.aboutImage,
+                    sibosUrl: settingsData.sibos_url || config.sibosUrl,
+                    qalamUrl: settingsData.qalam_url || config.qalamUrl,
+                    whatsappNumber: settingsData.whatsapp_number || config.whatsappNumber,
+                    emailAddress: settingsData.email_address || config.emailAddress,
+                    addressSolo: settingsData.address_solo || config.addressSolo,
+                    addressBlora: settingsData.address_blora || config.addressBlora,
+                    mapSoloLink: settingsData.map_solo_link || config.mapSoloLink,
+                    mapBloraLink: settingsData.map_blora_link || config.mapBloraLink,
+                    mapSoloEmbed: settingsData.map_solo_embed || config.mapSoloEmbed,
+                    mapBloraEmbed: settingsData.map_blora_embed || config.mapBloraEmbed,
+                    instagramUrl: settingsData.instagram_url || config.instagramUrl,
+                    facebookUrl: settingsData.facebook_url || config.facebookUrl,
+                    youtubeUrl: settingsData.youtube_url || config.youtubeUrl,
+                    tiktokUrl: settingsData.tiktok_url || config.tiktokUrl,
+                    linkedinUrl: settingsData.linkedin_url || config.linkedinUrl,
+                    // Load Google IDs
+                    googleAnalyticsId: settingsData.google_analytics_id || '',
+                    googleSearchConsoleCode: settingsData.google_search_console_code || ''
+                };
+                setConfig(newConfig);
+                
+                // INJECT GOOGLE TAGS DYNAMICALLY
+                injectGoogleTags(newConfig.googleAnalyticsId, newConfig.googleSearchConsoleCode);
             }
         } catch (e) {
             console.error("Data Fetch Error:", e);

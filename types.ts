@@ -79,18 +79,21 @@ export interface SiteConfig {
   qalamUrl?: string; 
   // Contact & Footer Config
   whatsappNumber?: string;
-  emailAddress?: string; // NEW
+  emailAddress?: string; 
   addressSolo?: string;
   addressBlora?: string;
   mapSoloLink?: string; 
   mapBloraLink?: string; 
-  mapSoloEmbed?: string; // NEW: HTML String for Iframe
-  mapBloraEmbed?: string; // NEW: HTML String for Iframe
+  mapSoloEmbed?: string; 
+  mapBloraEmbed?: string; 
   instagramUrl?: string;
   facebookUrl?: string;
   youtubeUrl?: string;
   tiktokUrl?: string;
   linkedinUrl?: string;
+  // Google Integration
+  googleAnalyticsId?: string; // G-XXXXXXXXXX
+  googleSearchConsoleCode?: string; // Verification meta content
 }
 
 // --- E-Commerce Types ---

@@ -120,6 +120,42 @@ export const slugify = (text: string) => {
     .replace(/\-\-+/g, '-');  // Replace multiple - with single -
 };
 
+// --- SEO INJECTION HELPERS ---
+export const injectGoogleTags = (gaId?: string, gscCode?: string) => {
+  if (typeof window === 'undefined') return;
+
+  // 1. Inject Google Analytics (GA4)
+  if (gaId && !document.getElementById('ga-script')) {
+    // Main Script
+    const script = document.createElement('script');
+    script.id = 'ga-script';
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+    document.head.appendChild(script);
+
+    // Config Script
+    const inlineScript = document.createElement('script');
+    inlineScript.id = 'ga-inline';
+    inlineScript.innerHTML = `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${gaId}');
+    `;
+    document.head.appendChild(inlineScript);
+    console.log("GA4 Injected:", gaId);
+  }
+
+  // 2. Inject Google Search Console Meta Tag
+  if (gscCode && !document.querySelector('meta[name="google-site-verification"]')) {
+    const meta = document.createElement('meta');
+    meta.name = "google-site-verification";
+    meta.content = gscCode;
+    document.head.appendChild(meta);
+    console.log("GSC Meta Injected");
+  }
+};
+
 // --- Mock Data ---
 export const INITIAL_PRODUCTS: Product[] = [
   {

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save, Sparkles, TrendingUp, Image as ImageIcon, UploadCloud, Mail } from 'lucide-react';
+import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save, Sparkles, TrendingUp, Image as ImageIcon, UploadCloud, Mail, BarChart, Globe } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
 import { supabase, callGeminiWithRotation, CONFIG } from '../utils';
@@ -49,18 +49,21 @@ export const AdminSettings = ({
               sibos_url: config.sibosUrl,
               qalam_url: config.qalamUrl,
               whatsapp_number: config.whatsappNumber,
-              email_address: config.emailAddress, // Added
+              email_address: config.emailAddress, 
               address_solo: config.addressSolo,
               address_blora: config.addressBlora,
               map_solo_link: config.mapSoloLink,
               map_blora_link: config.mapBloraLink,
-              map_solo_embed: config.mapSoloEmbed, // Added
-              map_blora_embed: config.mapBloraEmbed, // Added
+              map_solo_embed: config.mapSoloEmbed, 
+              map_blora_embed: config.mapBloraEmbed, 
               instagram_url: config.instagramUrl,
               facebook_url: config.facebookUrl,
               youtube_url: config.youtubeUrl,
               tiktok_url: config.tiktokUrl,
-              linkedin_url: config.linkedinUrl
+              linkedin_url: config.linkedinUrl,
+              // Google Integration Fields
+              google_analytics_id: config.googleAnalyticsId,
+              google_search_console_code: config.googleSearchConsoleCode
           };
           
           const { error } = await supabase.from('site_settings').upsert(dbData);
@@ -142,7 +145,7 @@ export const AdminSettings = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* COLUMN 1: General & Contact */}
+        {/* COLUMN 1: General, Google & Contact */}
         <div className="space-y-8">
             {/* General Config */}
             <div className="space-y-4">
@@ -181,6 +184,40 @@ export const AdminSettings = ({
                 <div>
                     <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Hero Subtitle</label>
                     <TextArea value={config.heroSubtitle} onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})} className="h-28" />
+                </div>
+            </div>
+
+            {/* GOOGLE INTEGRATION SECTION (NEW) */}
+            <div className="space-y-4">
+                <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                    <Globe size={14} /> Integrasi Pihak Ketiga
+                </h4>
+                
+                <div className="bg-brand-card border border-white/5 p-4 rounded-lg space-y-4">
+                    <div>
+                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1">
+                            <BarChart size={12}/> Google Analytics 4 (GA4)
+                        </label>
+                        <Input 
+                            value={config.googleAnalyticsId || ''} 
+                            onChange={(e) => setConfig({...config, googleAnalyticsId: e.target.value})} 
+                            placeholder="G-XXXXXXXXXX" 
+                            className="font-mono text-xs"
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">Masukkan Measurement ID.</p>
+                    </div>
+                    <div>
+                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1">
+                            <Globe size={12}/> Google Search Console (GSC)
+                        </label>
+                        <Input 
+                            value={config.googleSearchConsoleCode || ''} 
+                            onChange={(e) => setConfig({...config, googleSearchConsoleCode: e.target.value})} 
+                            placeholder="Kode verifikasi (HTML Tag Content)" 
+                            className="font-mono text-xs"
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">Hanya kode di dalam content (contoh: 'abc12345...').</p>
+                    </div>
                 </div>
             </div>
 
