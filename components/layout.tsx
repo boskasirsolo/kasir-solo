@@ -190,15 +190,13 @@ const DesktopNav = ({
     
     <CartButton id="desktop-cart-btn" count={cartCount} onClick={() => setPage('checkout')} />
     
-    {/* CTA Button */}
-    <a 
-      href="https://wa.me/6282325103336?text=Halo%20PT%20Mesin%20Kasir%20Solo,%20saya%20ingin%20minta%20penawaran%20harga%20untuk%20perusahaan."
-      target="_blank"
-      rel="noreferrer"
+    {/* CTA Button - Navigates to Contact Page */}
+    <button 
+      onClick={() => setPage('contact')}
       className="bg-brand-gradient hover:bg-brand-gradient-hover text-white text-xs font-bold px-6 py-3 rounded-full shadow-neon hover:shadow-neon-strong transition-all flex items-center gap-2 transform hover:-translate-y-0.5"
     >
       <FileText size={16} /> MINTA PENAWARAN
-    </a>
+    </button>
   </div>
 );
 
@@ -285,14 +283,12 @@ const MobileMenuOverlay = ({
         
         <div className="mt-6 pt-6 border-t border-white/10">
            <p className="text-gray-500 text-xs mb-3 text-center uppercase tracking-widest font-bold">Layanan Korporat</p>
-           <a 
-              href="https://wa.me/6282325103336?text=Halo%20PT%20Mesin%20Kasir%20Solo,%20saya%20ingin%20minta%20penawaran%20harga."
-              target="_blank"
-              rel="noreferrer"
+           <button
+              onClick={() => { setPage('contact'); onClose(); }}
               className="flex w-full items-center justify-center gap-2 bg-brand-gradient text-white py-4 rounded-xl font-bold shadow-neon text-sm hover:bg-brand-gradient-hover transition-colors"
            >
               <FileText size={18} /> MINTA PENAWARAN RESMI
-           </a>
+           </button>
         </div>
       </div>
     </div>
