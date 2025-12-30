@@ -75,28 +75,38 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
     };
 
     const deleteJob = async (id: number) => {
-        if(!confirm("Yakin hapus lowongan ini?")) return;
+        if(!confirm("Yakin hapus lowongan ini? Tindakan tidak bisa dibatalkan.")) return;
         
         // 1. Simpan backup state untuk rollback jika error
         const previousJobs = [...jobs];
 
-        // 2. Optimistic Update (Hapus dari layar dulu)
+        // 2. Optimistic Update (Hapus dari layar dulu agar UX cepat)
         setJobs((prev: JobOpening[]) => prev.filter(j => j.id !== id));
 
         // 3. Hapus dari Database
         if (supabase) {
             try {
-                const { error } = await supabase.from('jobs').delete().eq('id', id);
+                // Pastikan ID dikirim sebagai integer/number
+                const { error } = await supabase.from('jobs').delete().match({ id: id });
                 
                 if (error) {
-                    throw error;
+                    console.error("Supabase Delete Error:", error);
+                    throw error; // Lempar ke catch untuk rollback
                 }
             } catch (error: any) {
+                // 4. Jika Gagal, Rollback (Kembalikan data)
                 console.error("Gagal hapus DB:", error);
-                alert(`Gagal menghapus: ${error.message || "Database Error"}`);
                 
-                // ROLLBACK: Kembalikan data jika gagal hapus di DB
-                setJobs(previousJobs);
+                // Cek pesan error spesifik
+                let msg = "Gagal menghapus data.";
+                if (error.code === '42501' || error.message?.includes('violates row-level security')) {
+                    msg = "Izin Ditolak: RLS Policy belum diaktifkan untuk DELETE di Supabase.";
+                } else {
+                    msg = `Error Database: ${error.message}`;
+                }
+                
+                alert(msg);
+                setJobs(previousJobs); // Balikin data lama ke layar
             }
         }
 
