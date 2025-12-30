@@ -7,7 +7,6 @@ import { supabase } from '../utils';
 
 const ITEMS_PER_PAGE = 6;
 
-// Changed setJobs type to 'any' to allow functional updates (React.Dispatch pattern)
 const useJobManager = (jobs: JobOpening[], setJobs: any) => {
     const [form, setForm] = useState({
         id: null as number | null,
@@ -43,7 +42,8 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
 
     const handleSubmit = async () => {
         if (!form.title || !form.division) return alert("Mohon lengkapi Judul dan Divisi.");
-        
+        if (!supabase) return alert("Koneksi Database tidak ditemukan.");
+
         setLoading(true);
         try {
             const dbData = {
@@ -57,57 +57,65 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
             };
 
             if (form.id) {
-                // Update Local State using Functional Update
+                // --- UPDATE MODE ---
+                const { error } = await supabase
+                    .from('jobs')
+                    .update(dbData)
+                    .eq('id', form.id);
+
+                if (error) throw error;
+
+                // Update State Lokal
                 setJobs((prev: JobOpening[]) => prev.map(j => j.id === form.id ? { ...j, ...dbData } : j));
-                // Update DB
-                if (supabase) await supabase.from('jobs').update(dbData).eq('id', form.id);
+                alert("Lowongan berhasil diupdate!");
             } else {
-                // Create Local State
-                const newId = Date.now();
-                setJobs((prev: JobOpening[]) => [{ ...dbData, id: newId } as JobOpening, ...prev]);
-                // Insert DB
-                if (supabase) await supabase.from('jobs').insert([dbData]);
+                // --- CREATE MODE (CRITICAL FIX) ---
+                // Kita gunakan .select() untuk mendapatkan ID asli dari database
+                const { data, error } = await supabase
+                    .from('jobs')
+                    .insert([dbData])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    // Masukkan data ASLI dari DB ke state (bukan data dummy Date.now())
+                    setJobs((prev: JobOpening[]) => [data, ...prev]);
+                    alert("Lowongan berhasil diterbitkan!");
+                }
             }
             resetForm();
-            alert("Lowongan berhasil disimpan!");
-        } catch (e) { console.error(e); alert("Gagal menyimpan."); }
-        finally { setLoading(false); }
+        } catch (e: any) { 
+            console.error("Submit Error:", e); 
+            alert(`Gagal menyimpan: ${e.message}`); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     const deleteJob = async (id: number) => {
-        if(!confirm("Yakin hapus lowongan ini? Tindakan tidak bisa dibatalkan.")) return;
+        if(!confirm("Yakin hapus lowongan ini?")) return;
         
-        // 1. Simpan backup state untuk rollback jika error
+        // 1. Backup state
         const previousJobs = [...jobs];
 
-        // 2. Optimistic Update (Hapus dari layar dulu agar UX cepat)
+        // 2. Optimistic Update (Hapus dari layar)
         setJobs((prev: JobOpening[]) => prev.filter(j => j.id !== id));
 
         // 3. Hapus dari Database
         if (supabase) {
             try {
-                // Pastikan ID dikirim sebagai integer/number
-                const { error } = await supabase.from('jobs').delete().match({ id: id });
-                
-                if (error) {
-                    console.error("Supabase Delete Error:", error);
-                    throw error; // Lempar ke catch untuk rollback
-                }
+                const { error } = await supabase.from('jobs').delete().eq('id', id);
+                if (error) throw error;
             } catch (error: any) {
-                // 4. Jika Gagal, Rollback (Kembalikan data)
-                console.error("Gagal hapus DB:", error);
-                
-                // Cek pesan error spesifik
-                let msg = "Gagal menghapus data.";
-                if (error.code === '42501' || error.message?.includes('violates row-level security')) {
-                    msg = "Izin Ditolak: RLS Policy belum diaktifkan untuk DELETE di Supabase.";
-                } else {
-                    msg = `Error Database: ${error.message}`;
-                }
-                
-                alert(msg);
-                setJobs(previousJobs); // Balikin data lama ke layar
+                console.error("Delete Error:", error);
+                alert(`Gagal menghapus dari database: ${error.message}`);
+                // Rollback jika gagal
+                setJobs(previousJobs);
             }
+        } else {
+            // Jika demo mode (tanpa supabase), biarkan terhapus di layar
         }
 
         if (form.id === id) resetForm();
@@ -141,7 +149,7 @@ export const AdminCareer = ({ jobs, setJobs }: { jobs: JobOpening[], setJobs: (j
                 </div>
 
                 <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
-                    {filtered.length === 0 && <p className="text-center text-gray-500 text-xs py-10">Belum ada data.</p>}
+                    {filtered.length === 0 && <p className="text-center text-gray-500 text-xs py-10">Belum ada data lowongan.</p>}
                     {filtered.map(job => (
                         <div key={job.id} className="bg-brand-card p-4 rounded-lg border border-white/5 flex justify-between items-start group hover:border-brand-orange/30 transition-colors">
                             <div>
