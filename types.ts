@@ -17,6 +17,7 @@ export interface Article {
   image: string;
   category: string; 
   author: string;   
+  author_avatar?: string; // New field for author profile picture
   readTime: string; 
   tags?: string[];
   status?: 'published' | 'draft' | 'scheduled';

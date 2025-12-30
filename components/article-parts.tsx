@@ -41,36 +41,66 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
     const lines = content.split('\n');
     const grouped: string[] = [];
     let tableBuffer: string[] = [];
+    
+    // --- STATE MACHINE FOR TOC FILTERING ---
+    let inTocBlock = false;
 
-    lines.forEach(line => {
+    lines.forEach((line, index) => {
       const trimmed = line.trim();
 
-      // --- ADVANCED CLEANING FILTERS ---
+      // 1. Detect start of TOC block
+      // Matches "Daftar Isi", "**Daftar Isi**", "## Daftar Isi"
+      // Also handles "---" if it appears just before (checked in previous lines logic conceptually, but here we just ignore the line)
+      if (/^(#+)?\s*(\*\*|__)?(Daftar Isi|Table of Contents)(\*\*|__)?/i.test(trimmed)) {
+        inTocBlock = true;
+        return; // Skip the "Daftar Isi" header line
+      }
+
+      // 2. If inside TOC block, determine if we should exit
+      if (inTocBlock) {
+        // If line is empty, stay in TOC block (usually spacing)
+        if (!trimmed) return;
+
+        // If line is a list item (numbered or bullet), it's part of TOC -> Skip
+        // Regex: Starts with Number. or Bullet (- or *)
+        if (/^(\d+\.|[\-\*])\s/.test(trimmed)) {
+            return;
+        }
+
+        // If line matches a link [Text](#anchor), likely TOC -> Skip
+        if (/^\[.*\]\(#.*\)$/.test(trimmed)) {
+            return;
+        }
+
+        // If we hit a Horizontal Rule '---' right after TOC, likely end of TOC -> Skip but end block?
+        // Usually '---' starts content. Let's assume '---' ends TOC.
+        if (trimmed === '---') {
+            inTocBlock = false;
+            return; // Skip the separator
+        }
+
+        // If we hit a standard Heading (# Title), TOC is over.
+        if (trimmed.startsWith('#')) {
+            inTocBlock = false;
+            // Do NOT return, process this line as it is the first real heading
+        } else {
+            // Found text that isn't a list, link, or separator. Assume content started.
+            // However, be careful of "intro text" before the list. 
+            // Aggressive approach: If it looks like normal text, assume TOC ended.
+            inTocBlock = false;
+        }
+      }
+
+      // --- GENERAL ARTIFACT CLEANING ---
       
-      // 1. Remove HTML Anchors artifacts (e.g. <a name="intro"></a> or <a name="bab-1"></a>)
-      // Regex menangkap <a name="..."></a> yang berdiri sendiri
+      // Remove HTML Anchor tags <a name="..."></a> that might be stand-alone
       if (/^<a\s+name=["'].*?["']\s*(\/?>|><\/a>)$/i.test(trimmed)) {
         return;
       }
+      // Remove standalone horizontal rules if they are redundant (optional style choice)
+      // Keeping '---' for now as it maps to a divider component
 
-      // 2. Remove explicit "Daftar Isi" headers inside content body
-      if (/^(#+)?\s*(Daftar Isi|Table of Contents)/i.test(trimmed)) {
-        return;
-      }
-
-      // 3. Remove ToC List Items (lines that are just bullet points linking to internal anchors)
-      // Regex: Bullet/Number -> Space -> [Text] -> (#anchor) -> End of line
-      if (/^([\-\*+]|\d+\.)\s+\[.*?\]\(#.*?\)$/.test(trimmed)) {
-        return;
-      }
-
-      // 4. Remove empty anchor tags that might slip through
-      if (trimmed === '<a name="pendahuluan"></a>' || trimmed === '<a name="bab-1"></a>') {
-        return;
-      }
-
-      // --- END CLEANING ---
-
+      // --- TABLE BUFFERING ---
       if (trimmed.startsWith('|')) {
         tableBuffer.push(line);
       } else {
@@ -83,6 +113,7 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
         }
       }
     });
+    
     if (tableBuffer.length > 0) {
       grouped.push(tableBuffer.join('\n'));
     }
@@ -440,10 +471,14 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
               {/* Author Box */}
               <div className="p-8 bg-brand-card rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left animate-fade-in hover:border-brand-orange/30 transition-colors">
                     <div className="w-20 h-20 rounded-full flex items-center justify-center border-2 border-brand-orange/30 shrink-0 overflow-hidden bg-brand-dark shadow-neon">
-                       {/* Avatar Logic: Initials or Icon */}
-                       <div className="w-full h-full bg-brand-orange flex items-center justify-center text-white font-bold text-2xl">
-                           {authorInfo.initials}
-                       </div>
+                       {/* UPDATED: Avatar Logic to use article.author_avatar */}
+                       {article.author_avatar ? (
+                           <img src={article.author_avatar} alt={article.author} className="w-full h-full object-cover" />
+                       ) : (
+                           <div className="w-full h-full bg-brand-orange flex items-center justify-center text-white font-bold text-2xl">
+                               {authorInfo.initials}
+                           </div>
+                       )}
                     </div>
                     <div>
                       <p className="text-xs text-brand-orange uppercase font-bold mb-1 tracking-widest flex items-center justify-center sm:justify-start gap-2">

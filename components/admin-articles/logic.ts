@@ -30,7 +30,8 @@ Halaman About Reference: Kisah kegagalan adalah kekuatan kami. Kami mengerti per
   6. **Hardware Support**: Timbangan Digital, Printer Barcode, KDS (Kitchen Display System), Layar Pelanggan (CDS), Layar Dapur, Sistem Antrian.
   7. **Integrasi**: Website Usaha, WhatsApp API, Payment Gateway.
   8. **Omnichannel**: Terhubung ke Medsos, Marketplace, dan Website.
-  9. **Hybrid Mode**: Bisa jalan Offline dan Online.
+  9. **Google Business Profile Integration**: Sinkronisasi produk dan jam operasional langsung ke Profil Bisnis Google (GMB/Maps).
+  10. **Hybrid Mode**: Bisa jalan Offline dan Online.
 - **STATUS SAAT INI: WAITING LIST SUDAH DIBUKA**.
 - **Akses**: Calon pengguna dapat mendaftar waiting list di website resmi (sibos.id) yang bisa diakses melalui halaman "Innovation" di website ini.
 - Model Bisnis: Freemium (Standar Premium Gratis), Premium, Enterprise, Dedicated.
@@ -188,7 +189,7 @@ export const useAIGenerator = () => {
             4. ${lengthInstruction}
             5. ${structureInstruction}
             6. **CRITICAL:** Integrate mentions of SIBOS or QALAM naturally where relevant. 
-               - If topic is Business/Retail -> Mention SIBOS features (Anti-fraud, Community concept).
+               - If topic is Business/Retail -> Mention SIBOS features (Anti-fraud, Multi-business, Google Business Profile Integration).
                - If topic is Education/Social -> Mention QALAM features.
                - If topic is Hardware -> Mention our resilience and after-sales support.
             
@@ -263,7 +264,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         id: null, title: '', excerpt: '', content: '', category: '',
         readTime: '5 min read', imagePreview: '', uploadFile: null, 
         author: authorPersona.name,
-        authorAvatar: '', uploadAuthorFile: null, 
+        authorAvatar: authorPersona.avatar || '',
+        uploadAuthorFile: null, 
         status: 'draft', scheduled_for: '',
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
     });
@@ -275,7 +277,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         setForm({
             id: null, title: '', excerpt: '', content: '', category: '',
             author: authorPersona.name,
-            authorAvatar: '', uploadAuthorFile: null, 
+            authorAvatar: authorPersona.avatar || '', 
+            uploadAuthorFile: null, 
             readTime: '5 min read', imagePreview: '', uploadFile: null, 
             status: 'draft', scheduled_for: '',
             type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
@@ -290,7 +293,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             id: item.id, title: item.title, excerpt: item.excerpt, content: item.content,
             category: item.category, 
             author: item.author,
-            authorAvatar: '', uploadAuthorFile: null,
+            authorAvatar: item.author_avatar || '', 
+            uploadAuthorFile: null,
             readTime: item.readTime, imagePreview: item.image, uploadFile: null,
             status: item.status || 'draft', 
             scheduled_for: item.scheduled_for || '',
@@ -300,8 +304,34 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         setAiStep(3); 
     };
 
+    // UPDATE: Handle Avatar Upload from PersonaSwitcher
     const updatePersonaAvatar = async (file: File) => {
-        // ... (Avatar logic can use simple upload for now)
+        aiLogic.setLoading(p => ({ ...p, uploading: true }));
+        try {
+            let avatarUrl = '';
+            
+            // 1. Upload logic
+            if (supabase) {
+                const { url } = await uploadToSupabase(file, 'avatars');
+                avatarUrl = url;
+            } else {
+                avatarUrl = URL.createObjectURL(file); // Fallback for local demo
+            }
+
+            // 2. Update Persona State
+            setAuthorPersona(prev => ({ ...prev, avatar: avatarUrl }));
+
+            // 3. Update current form if active author matches
+            if (form.author === authorPersona.name) {
+                setForm(prev => ({ ...prev, authorAvatar: avatarUrl }));
+            }
+
+        } catch (e) {
+            console.error("Avatar Upload Failed", e);
+            alert("Gagal upload foto profil.");
+        } finally {
+            aiLogic.setLoading(p => ({ ...p, uploading: false }));
+        }
     };
 
     const saveArticle = async () => {
@@ -325,12 +355,16 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
             // Common Data for both Insert and Update (Including 'date')
+            // UPDATE: Save author_avatar from Form or Active Persona
+            const finalAuthorAvatar = form.authorAvatar || authorPersona.avatar;
+
             const commonData = {
                 title: form.title, 
                 excerpt: form.excerpt || '', 
                 content: form.content || '', 
                 category: form.category || 'General',
                 author: form.author, 
+                author_avatar: finalAuthorAvatar, // Save the avatar URL
                 read_time: form.readTime, 
                 image_url: finalImageUrl,
                 status: form.status || 'draft',
