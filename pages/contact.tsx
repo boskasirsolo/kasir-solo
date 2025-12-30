@@ -77,6 +77,16 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
 
   const email = config.emailAddress || "admin@kasirsolo.com";
 
+  // Helper for Phone Display
+  const getDisplayPhone = (num?: string) => {
+      if (!num) return "0823 2510 3336";
+      // If starts with 62, slice 2 digits -> +62 8xx
+      if (num.startsWith('62')) return `+62 ${num.substring(2)}`;
+      // If starts with 0, slice 1 digit -> +62 8xx
+      if (num.startsWith('0')) return `+62 ${num.substring(1)}`;
+      return num;
+  };
+
   return (
     <div className="animate-fade-in">
       {/* HEADER SECTION */}
@@ -107,7 +117,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                   <ContactItem 
                      icon={Phone} 
                      title="Sales & Konsultasi" 
-                     value={config.whatsappNumber ? `+62 ${config.whatsappNumber.substring(1)}` : "0823 2510 3336"} 
+                     value={getDisplayPhone(config.whatsappNumber)} 
                      sub="Senin - Sabtu (08:00 - 17:00 WIB)"
                      action={() => window.open(`https://wa.me/${config.whatsappNumber}`, '_blank')}
                   />
