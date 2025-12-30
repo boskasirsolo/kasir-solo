@@ -5,7 +5,8 @@ import {
   BarChart, TrendingUp, RefreshCw, ShieldCheck, Server, 
   Code, ArrowRight, CheckCircle2, Layout, PenTool, Store, MousePointer2, Clock, ShoppingBag, Award,
   FileSpreadsheet, Cpu, GitMerge, Users, PieChart, Layers, 
-  Megaphone, Target, DollarSign, MapPin, Anchor, LineChart
+  Megaphone, Target, DollarSign, MapPin, Anchor, LineChart,
+  ShieldAlert, Activity, LifeBuoy
 } from 'lucide-react';
 import { Button, Card, SectionHeader } from '../components/ui';
 
@@ -36,12 +37,12 @@ const ServiceHero = ({
       </p>
       <div className="flex justify-center gap-4">
         <a 
-          href="https://wa.me/6282325103336?text=Halo, saya ingin konsultasi strategi SEO agar tidak ketergantungan iklan."
+          href="https://wa.me/6282325103336?text=Halo, saya ingin berlangganan maintenance agar website saya aman."
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-2 px-8 py-3 bg-brand-action hover:bg-brand-actionGlow text-white rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong"
         >
-          Konsultasi Strategi <ArrowRight size={18} />
+          Amankan Aset Saya <ArrowRight size={18} />
         </a>
       </div>
     </div>
@@ -246,7 +247,7 @@ export const WebAppServicePage = () => {
   );
 };
 
-// --- 3. SEO OPTIMIZATION PAGE (REVISED NARRATIVE) ---
+// --- 3. SEO OPTIMIZATION PAGE ---
 export const SeoServicePage = () => {
   const features = [
     { title: "Buying Intent Keywords", desc: "Kami tidak menargetkan 'kata kunci sampah' yang hanya mendatangkan traffic tanpa penjualan. Kami riset kata kunci yang diketik orang saat SIAP BELI.", icon: Target },
@@ -329,32 +330,83 @@ export const SeoServicePage = () => {
   );
 };
 
-// --- 4. MAINTENANCE PAGE ---
+// --- 4. MAINTENANCE PAGE (REVISED NARRATIVE) ---
 export const MaintenanceServicePage = () => {
   const features = [
-    { title: "Daily Backup", desc: "Pencadangan data website setiap hari ke server terpisah untuk keamanan maksimal.", icon: Database },
-    { title: "Update System", desc: "Pembaruan rutin core website, plugin, dan patch keamanan terbaru.", icon: RefreshCw },
-    { title: "Malware Scan", desc: "Scanning rutin untuk mencegah serangan virus, hack, atau injeksi script berbahaya.", icon: ShieldCheck },
-    { title: "Uptime Monitor", desc: "Pemantauan server 24/7. Kami tahu duluan jika website Anda down sebelum Anda tahu.", icon: Monitor },
-    { title: "Speed Optimization", desc: "Pembersihan cache dan optimasi database rutin agar website tetap ngebut.", icon: Zap },
-    { title: "Minor Edit", desc: "Bantuan edit konten ringan (ganti foto/teks) tanpa biaya tambahan.", icon: PenTool },
+    { title: "Digital Insurance", desc: "Anggap ini asuransi. Jika website kena hack atau error, kami punya 'Time Machine' (Backup) untuk memulihkannya dalam hitungan menit.", icon: ShieldCheck },
+    { title: "Performance Guard", desc: "Website lambat = Kehilangan pembeli. Kami rutin membersihkan 'sampah' database dan cache agar loading tetap ngebut.", icon: Zap },
+    { title: "Proactive Security", desc: "Kami tidak menunggu website di-hack baru bertindak. Kami memasang firewall dan scanning rutin untuk menangkis serangan.", icon: Lock },
+    { title: "Uptime Monitor", desc: "Kami memantau website Anda setiap 5 menit. Jika down, tim kami langsung bergerak memperbaikinya, bahkan saat Anda tidur.", icon: Activity },
+    { title: "Content Update", desc: "Mau ganti banner promo? Ganti nomor WA? Kirim materi ke kami, biar tim teknis yang update. Anda terima beres.", icon: PenTool },
+    { title: "Tech Advisory", desc: "Bingung mau tambah fitur apa? Konsultasikan dengan kami. Kami adalah CTO (Chief Technology Officer) sewaan Anda.", icon: LifeBuoy },
   ];
 
   const steps = [
-    { step: "1", title: "Akses", desc: "Serah terima akses Cpanel/Admin untuk kami audit." },
-    { step: "2", title: "Cleaning", desc: "Pembersihan awal bug dan optimasi keamanan dasar." },
-    { step: "3", title: "Monitoring", desc: "Pemasangan alat pantau uptime dan keamanan." },
-    { step: "4", title: "Laporan", desc: "Laporan kesehatan website dikirim setiap bulan." },
+    { step: "1", title: "Akses & Audit", desc: "Pengecekan celah keamanan awal." },
+    { step: "2", title: "Hardening", desc: "Penguatan sistem pertahanan website." },
+    { step: "3", title: "Monitoring", desc: "Pemantauan real-time 24/7." },
+    { step: "4", title: "Monthly Report", desc: "Laporan kesehatan website rutin." },
   ];
 
   return (
     <div className="animate-fade-in">
       <ServiceHero 
-        title="Website" 
-        highlight="Maintenance" 
-        subtitle="Fokus urus bisnis, biarkan kami yang menjaga website Anda tetap aman, cepat, dan selalu online 24 jam."
+        title="Jaga Aset Digital" 
+        highlight="Tetap Bernilai." 
+        subtitle="Tidur nyenyak sementara kami menjaga 'Toko Online' Anda dari serangan hacker, virus, dan kendala teknis 24 jam sehari."
         icon={ShieldCheck}
       />
+
+      {/* NARRATIVE SECTION: THE DIGITAL SECURITY GUARD */}
+      <section className="py-16 bg-brand-black relative border-b border-white/5">
+         <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+               <div>
+                  <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6 leading-tight">
+                     Website Tanpa Maintenance = <span className="text-red-500">Bom Waktu</span>
+                  </h2>
+                  <p className="text-gray-400 leading-relaxed mb-6">
+                     Anda menggembok toko fisik dan membayar satpam. Mengapa toko online Anda dibiarkan <strong>tak terkunci</strong>?
+                  </p>
+                  <p className="text-gray-400 leading-relaxed mb-6">
+                     Serangan cyber tidak pandang bulu. UMKM sering menjadi target karena sistem keamanannya lemah. Sekali data pelanggan bocor atau website hilang, reputasi hancur selamanya.
+                  </p>
+                  <div className="bg-brand-dark border-l-4 border-red-500 p-4 rounded-r-lg">
+                     <p className="text-white italic text-sm">
+                        "Biaya maintenance jauh lebih murah daripada biaya memulihkan reputasi yang hancur karena website down saat promo besar."
+                     </p>
+                  </div>
+               </div>
+               
+               <div className="relative">
+                  <div className="absolute inset-0 bg-red-500/10 blur-[80px] rounded-full"></div>
+                  <div className="relative bg-brand-dark border border-white/10 rounded-2xl p-8 space-y-6">
+                     <div className="flex items-center justify-between text-gray-500 mb-2">
+                        <ShieldAlert size={32} className="text-red-500 animate-pulse" />
+                        <ArrowRight size={24} className="text-gray-600" />
+                        <ShieldCheck size={32} className="text-green-500" />
+                     </div>
+                     <h3 className="text-xl font-bold text-white">Risiko vs Solusi</h3>
+                     <ul className="space-y-4">
+                        <li className="flex items-center justify-between border-b border-white/5 pb-2">
+                           <span className="text-gray-400 text-sm">Website Down</span>
+                           <span className="text-red-400 text-xs font-bold">Hilang Omzet</span>
+                        </li>
+                        <li className="flex items-center justify-between border-b border-white/5 pb-2">
+                           <span className="text-gray-400 text-sm">Data Hilang</span>
+                           <span className="text-red-400 text-xs font-bold">Hilang Kepercayaan</span>
+                        </li>
+                        <li className="flex items-center justify-between">
+                           <span className="text-white font-bold text-sm">Paket Maintenance</span>
+                           <span className="text-green-400 text-xs font-bold flex items-center gap-1"><CheckCircle2 size={12}/> Peace of Mind</span>
+                        </li>
+                     </ul>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
+
       <FeatureGrid features={features} />
       <WorkflowSection steps={steps} />
     </div>
