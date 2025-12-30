@@ -386,12 +386,6 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
             <li><button onClick={() => setPage('about')} className="hover:text-brand-orange transition-colors">Tentang Kami</button></li>
             <li><button onClick={() => setPage('gallery')} className="hover:text-brand-orange transition-colors">Klien & Portfolio</button></li>
             <li><button onClick={() => setPage('contact')} className="hover:text-brand-orange transition-colors">Hubungi Kami</button></li>
-            <li className="pt-2 border-t border-white/5 mt-2">
-                <button onClick={() => setPage('legal/refund')} className="hover:text-brand-orange transition-colors text-xs text-gray-500 hover:text-gray-300">Kebijakan Refund</button>
-            </li>
-            <li>
-                <button onClick={() => setPage('legal/privacy')} className="hover:text-brand-orange transition-colors text-xs text-gray-500 hover:text-gray-300">Privacy Policy</button>
-            </li>
           </ul>
         </div>
 
@@ -399,6 +393,8 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
         <div className="md:col-span-1">
           <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs border-l-2 border-brand-orange pl-3">Hubungi Kami</h4>
           <ul className="space-y-5 text-gray-400 text-sm">
+            
+            {/* HEAD OFFICE (SOLO) */}
             <li className="flex items-start gap-3 group cursor-pointer" onClick={() => window.open(config.mapSoloLink, '_blank')}>
                 <div className="p-2 bg-white/5 rounded-lg text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-colors">
                     <MapPin size={18} />
@@ -408,6 +404,19 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
                     <span className="leading-tight block">{config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura"}</span>
                 </div>
             </li>
+
+            {/* OPERATIONAL OFFICE (BLORA) */}
+            <li className="flex items-start gap-3 group cursor-pointer" onClick={() => window.open(config.mapBloraLink, '_blank')}>
+                <div className="p-2 bg-white/5 rounded-lg text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-colors">
+                    <MapPin size={18} />
+                </div>
+                <div>
+                    <span className="text-white font-bold text-xs block mb-1">KANTOR OPERASIONAL</span>
+                    <span className="leading-tight block">{config.addressBlora || "Gumiring 04/04, Banjarejo"}</span>
+                </div>
+            </li>
+
+            {/* HOTLINE */}
             <li className="flex items-start gap-3">
               <div className="p-2 bg-white/5 rounded-lg text-brand-orange">
                   <Phone size={18} />
@@ -415,7 +424,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
               <div>
                   <span className="text-white font-bold text-xs block mb-1">HOTLINE (24/7)</span>
                   <a href={`https://wa.me/${config.whatsappNumber}`} target="_blank" rel="noreferrer" className="hover:text-brand-orange transition-colors text-lg font-bold">
-                    {config.whatsappNumber || "0823 2510 3336"}
+                    {config.whatsappNumber ? (config.whatsappNumber.startsWith('62') ? `+${config.whatsappNumber}` : config.whatsappNumber) : "0823 2510 3336"}
                   </a>
               </div>
             </li>
@@ -423,15 +432,22 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
         </div>
       </div>
 
-      {/* Copyright & Admin Trigger */}
-      <div className="border-t border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-        <p className="text-center text-gray-600 text-xs">
-            © {new Date().getFullYear()} <strong className="text-gray-500">PT Mesin Kasir Solo</strong>. All Rights Reserved.
-        </p>
+      {/* Copyright & Legal - UPDATED LAYOUT */}
+      <div className="border-t border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-4">
+        
+        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-center md:text-left">
+            <p className="text-gray-600 text-xs">
+                © {new Date().getFullYear()} <strong className="text-gray-500">PT Mesin Kasir Solo</strong>. All Rights Reserved.
+            </p>
+            {/* NEW LEGAL LINKS PLACEMENT */}
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                <button onClick={() => setPage('legal/refund')} className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Kebijakan Refund & Garansi</button>
+                <button onClick={() => setPage('legal/privacy')} className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Kebijakan Privasi</button>
+                <button onClick={() => setPage('legal/terms')} className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Syarat dan Ketentuan</button>
+            </div>
+        </div>
+
         <div className="flex items-center gap-4">
-            <a href="https://wa.me/6282325103336" target="_blank" rel="noreferrer" className="text-xs font-bold text-green-600 hover:text-green-500 flex items-center gap-1">
-                <Phone size={12}/> WhatsApp Support
-            </a>
             <button onClick={() => setPage('admin')} className="text-gray-800 hover:text-brand-orange transition-colors p-2" title="Admin Login">
                 <Lock size={12} />
             </button>
