@@ -8,9 +8,11 @@ import {
   Megaphone, Target, DollarSign, MapPin, Anchor, LineChart,
   ShieldAlert, Activity, LifeBuoy
 } from 'lucide-react';
-import { Button, Card, SectionHeader } from '../components/ui';
+import { Card, SectionHeader } from '../components/ui';
 
-// --- SHARED COMPONENTS ---
+// ==========================================
+// 1. SHARED UI COMPONENTS
+// ==========================================
 
 const ServiceHero = ({ 
   title, 
@@ -37,12 +39,12 @@ const ServiceHero = ({
       </p>
       <div className="flex justify-center gap-4">
         <a 
-          href="https://wa.me/6282325103336?text=Halo, saya ingin berlangganan maintenance agar website saya aman."
+          href="https://wa.me/6282325103336?text=Halo, saya ingin konsultasi layanan digital."
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-2 px-8 py-3 bg-brand-action hover:bg-brand-actionGlow text-white rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong"
         >
-          Amankan Aset Saya <ArrowRight size={18} />
+          Konsultasi Gratis <ArrowRight size={18} />
         </a>
       </div>
     </div>
@@ -89,34 +91,94 @@ const WorkflowSection = ({ steps }: { steps: { step: string, title: string, desc
   </section>
 );
 
-// --- 1. WEBSITE DEVELOPMENT PAGE ---
-export const WebsiteServicePage = () => {
-  const features = [
-    { title: "SEO Domination", desc: "Kami tidak cuma bikin web cantik. Kami merancang struktur agar bisnis Anda mudah ditemukan di Google (Mesin Pencari Pelanggan).", icon: Search },
-    { title: "Toko Buka 24 Jam", desc: "Toko fisik Anda tutup jam 9 malam? Website Anda tetap jualan jam 2 pagi. Tangkap order saat Anda tidur.", icon: Clock },
-    { title: "Kecepatan Kilat", desc: "Pengunjung kabur jika web loading > 3 detik. Kami optimasi kode & server agar web Anda ngebut maksimal.", icon: Zap },
-    { title: "Brand Authority", desc: "Di era digital, bisnis tanpa website dianggap tidak bonafit. Tingkatkan kepercayaan supplier & customer.", icon: Award },
-    { title: "Katalog Online", desc: "Showcase ribuan produk tanpa sewa ruko mahal. Biarkan pelanggan melihat koleksi lengkap Anda dari HP mereka.", icon: ShoppingBag },
-    { title: "Siap Integrasi POS", desc: "Dibangun dengan mindset integrasi masa depan. Siap hubungkan data website dengan Mesin Kasir SIBOS.", icon: RefreshCw },
-  ];
+// ==========================================
+// 2. DATA CONSTANTS
+// ==========================================
 
-  const steps = [
+const WEBSITE_DATA = {
+  features: [
+    { title: "SEO Domination", desc: "Struktur website dirancang agar mudah ditemukan di Google (Mesin Pencari Pelanggan).", icon: Search },
+    { title: "Toko Buka 24 Jam", desc: "Website Anda tetap jualan jam 2 pagi. Tangkap order saat Anda tidur.", icon: Clock },
+    { title: "Kecepatan Kilat", desc: "Optimasi kode & server agar loading website < 3 detik. Anti lemot.", icon: Zap },
+    { title: "Brand Authority", desc: "Meningkatkan kepercayaan supplier & customer dengan kehadiran digital yang bonafit.", icon: Award },
+    { title: "Katalog Online", desc: "Showcase ribuan produk tanpa sewa ruko mahal. Katalog di genggaman pelanggan.", icon: ShoppingBag },
+    { title: "Siap Integrasi POS", desc: "Dibangun dengan mindset integrasi masa depan dengan Mesin Kasir SIBOS.", icon: RefreshCw },
+  ],
+  steps: [
     { step: "1", title: "Bedah Bisnis", desc: "Kami pelajari model bisnis Anda, bukan sekadar tanya warna favorit." },
     { step: "2", title: "Strategi Konten", desc: "Merancang struktur halaman yang menjual dan SEO-friendly." },
     { step: "3", title: "Development", desc: "Coding & Desain oleh tim yang mengerti UI/UX Retail." },
     { step: "4", title: "Launch & Training", desc: "Web rilis + Pelatihan cara update konten mandiri." },
-  ];
+  ]
+};
 
+const WEBAPP_DATA = {
+  features: [
+    { title: "Business Automation", desc: "Ubah proses manual (tulis nota, rekap Excel) menjadi sistem otomatis.", icon: Cpu },
+    { title: "Centralized Data", desc: "Satu database pusat untuk semua cabang. Tidak ada lagi drama 'file Excel berbeda'.", icon: Database },
+    { title: "Real-time Dashboard", desc: "Pantau omzet, stok, dan kinerja karyawan detik ini juga dari HP Anda.", icon: PieChart },
+    { title: "Role Management", desc: "Batasi akses karyawan. Kasir hanya input penjualan, tidak bisa lihat laba bersih.", icon: Users },
+    { title: "API Integration", desc: "Hubungkan sistem dengan Payment Gateway, WhatsApp Notif, atau Supplier.", icon: GitMerge },
+    { title: "Asset Ownership", desc: "Aplikasi custom adalah ASET ANDA. Database milik Anda sepenuhnya, bukan sewa.", icon: ShieldCheck },
+  ],
+  steps: [
+    { step: "1", title: "Audit Alur", desc: "Kami memetakan 'benang kusut' di operasional Anda saat ini." },
+    { step: "2", title: "Blueprint", desc: "Merancang arsitektur database dan flow sistem yang efisien." },
+    { step: "3", title: "Agile Dev", desc: "Pengerjaan bertahap dengan feedback rutin." },
+    { step: "4", title: "UAT & Live", desc: "User Acceptance Test (Uji Coba) sebelum peluncuran." },
+  ]
+};
+
+const SEO_DATA = {
+  features: [
+    { title: "Buying Intent Keywords", desc: "Target kata kunci 'siap beli', bukan sekadar traffic sampah.", icon: Target },
+    { title: "Stop 'Bakar Uang' Iklan", desc: "Iklan itu sewa, SEO itu investasi properti. Aset milik Anda selamanya.", icon: DollarSign },
+    { title: "Dominasi Lokal (GMB)", desc: "Muncul di Google Maps saat orang mencari produk Anda di kota Anda.", icon: MapPin },
+    { title: "Technical Audit", desc: "Perbaiki 'jeroan' website agar mudah dibaca robot Google.", icon: Layers },
+    { title: "Authority Content", desc: "Artikel yang mengedukasi dan membangun kepercayaan calon pembeli.", icon: PenTool },
+    { title: "Safe Backlink Strategy", desc: "Reputasi digital dengan cara aman (White Hat), anti-banned.", icon: ShieldCheck },
+  ],
+  steps: [
+    { step: "1", title: "Audit & Riset", desc: "Mencari celah kompetitor dan kata kunci 'uang'." },
+    { step: "2", title: "On-Page Fix", desc: "Memperbaiki struktur website (Speed, Mobile, Meta)." },
+    { step: "3", title: "Content Asset", desc: "Memproduksi konten pilar yang menjawab masalah customer." },
+    { step: "4", title: "Off-Page Authority", desc: "Meningkatkan kepercayaan domain secara bertahap." },
+  ]
+};
+
+const MAINTENANCE_DATA = {
+  features: [
+    { title: "Digital Insurance", desc: "Backup rutin 'Time Machine' untuk memulihkan website jika terjadi error.", icon: ShieldCheck },
+    { title: "Performance Guard", desc: "Membersihkan 'sampah' database dan cache agar loading tetap ngebut.", icon: Zap },
+    { title: "Proactive Security", desc: "Memasang firewall dan scanning rutin untuk menangkis serangan.", icon: Lock },
+    { title: "Uptime Monitor", desc: "Pemantauan 24/7. Kami tahu website down sebelum Anda tahu.", icon: Activity },
+    { title: "Content Update", desc: "Kirim materi, kami yang update. Anda terima beres.", icon: PenTool },
+    { title: "Tech Advisory", desc: "Konsultasi fitur baru. CTO (Chief Technology Officer) sewaan Anda.", icon: LifeBuoy },
+  ],
+  steps: [
+    { step: "1", title: "Akses & Audit", desc: "Pengecekan celah keamanan awal." },
+    { step: "2", title: "Hardening", desc: "Penguatan sistem pertahanan website." },
+    { step: "3", title: "Monitoring", desc: "Pemantauan real-time 24/7." },
+    { step: "4", title: "Monthly Report", desc: "Laporan kesehatan website rutin." },
+  ]
+};
+
+// ==========================================
+// 3. PAGE COMPONENT IMPLEMENTATIONS
+// ==========================================
+
+// --- WEBSITE PAGE ---
+export const WebsiteServicePage = () => {
   return (
     <div className="animate-fade-in">
       <ServiceHero 
         title="Website Bukan Sekadar Pajangan." 
         highlight="Ini Cabang Digital Anda." 
-        subtitle="Integrasikan kekuatan Toko Fisik (Mesin Kasir) dengan jangkauan Toko Online. Satu ekosistem, omzet maksimal. Jangan biarkan kompetitor merebut pasar digital Anda."
+        subtitle="Integrasikan kekuatan Toko Fisik (Mesin Kasir) dengan jangkauan Toko Online. Satu ekosistem, omzet maksimal."
         icon={Globe}
       />
       
-      {/* NARRATIVE SECTION: THE MISSING LINK */}
+      {/* Narrative: Omnichannel */}
       <section className="py-16 bg-brand-black relative border-b border-white/5">
          <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -130,9 +192,9 @@ export const WebsiteServicePage = () => {
                      </div>
                      <h3 className="text-2xl font-bold text-white">The Omnichannel Strategy</h3>
                      <p className="text-gray-400 leading-relaxed">
-                        Banyak web developer hanya paham kode, tapi tidak paham <strong>Retail & Stok</strong>. 
-                        Kami berbeda. Sebagai perusahaan Mesin Kasir, kami membangun website dengan pola pikir pengusaha: 
+                        Kami membangun website dengan pola pikir pengusaha Retail: 
                         Bagaimana data online dan offline bisa sinkron? Bagaimana stok tidak selisih?
+                        Kami paham bisnis, bukan sekadar kode.
                      </p>
                   </div>
                </div>
@@ -142,10 +204,10 @@ export const WebsiteServicePage = () => {
                   </h2>
                   <ul className="space-y-4">
                      {[
-                        "Struktur kategori produk yang rapi sesuai standar stok gudang.",
-                        "Optimasi flow checkout yang mirip logika kasir (cepat & ringkas).",
-                        "Persiapan teknis untuk integrasi masa depan dengan SIBOS ERP.",
-                        "Dukungan teknis yang paham bahasa bisnis (HPP, Margin, Varian)."
+                        "Struktur kategori produk rapi sesuai standar gudang.",
+                        "Optimasi flow checkout ringkas (seperti kasir).",
+                        "Persiapan teknis untuk integrasi SIBOS ERP.",
+                        "Dukungan teknis yang paham bahasa bisnis (Margin, Varian)."
                      ].map((item, i) => (
                         <li key={i} className="flex gap-3 text-gray-300">
                            <CheckCircle2 className="text-brand-orange shrink-0" size={20} />
@@ -158,40 +220,24 @@ export const WebsiteServicePage = () => {
          </div>
       </section>
 
-      <FeatureGrid features={features} />
-      <WorkflowSection steps={steps} />
+      <FeatureGrid features={WEBSITE_DATA.features} />
+      <WorkflowSection steps={WEBSITE_DATA.steps} />
     </div>
   );
 };
 
-// --- 2. WEB APP DEVELOPMENT PAGE ---
+// --- WEB APP PAGE ---
 export const WebAppServicePage = () => {
-  const features = [
-    { title: "Business Automation", desc: "Ubah proses manual (tulis nota, rekap Excel) menjadi sistem otomatis. Hemat waktu admin hingga 70%.", icon: Cpu },
-    { title: "Centralized Data", desc: "Satu database pusat untuk semua cabang. Tidak ada lagi drama 'file Excel yang mana yang terbaru?'.", icon: Database },
-    { title: "Real-time Dashboard", desc: "Pantau omzet, stok, dan kinerja karyawan detik ini juga dari HP Anda, di mana saja.", icon: PieChart },
-    { title: "Role Management", desc: "Batasi akses karyawan. Kasir hanya bisa input penjualan, tidak bisa melihat HPP atau laba bersih.", icon: Users },
-    { title: "API Integration", desc: "Hubungkan sistem dengan Payment Gateway, WhatsApp Notif, atau sistem Supplier.", icon: GitMerge },
-    { title: "Asset Ownership", desc: "Berbeda dengan langganan SaaS, aplikasi custom adalah ASET ANDA. Database milik Anda sepenuhnya.", icon: ShieldCheck },
-  ];
-
-  const steps = [
-    { step: "1", title: "Audit Alur", desc: "Kami memetakan 'benang kusut' di operasional Anda saat ini." },
-    { step: "2", title: "Blueprint", desc: "Merancang arsitektur database dan flow sistem yang efisien." },
-    { step: "3", title: "Agile Dev", desc: "Pengerjaan bertahap dengan feedback rutin agar sesuai ekspektasi." },
-    { step: "4", title: "UAT & Live", desc: "User Acceptance Test (Uji Coba) sebelum peluncuran resmi." },
-  ];
-
   return (
     <div className="animate-fade-in">
       <ServiceHero 
         title="Jangan Biarkan Bisnis" 
         highlight="Diatur Spreadsheet." 
-        subtitle="Saatnya beralih ke Custom Web App. Sistem operasi digital yang dirancang khusus mengikuti alur unik bisnis Anda, bukan sebaliknya."
+        subtitle="Saatnya beralih ke Custom Web App. Sistem operasi digital yang dirancang khusus mengikuti alur unik bisnis Anda."
         icon={Layers}
       />
 
-      {/* NARRATIVE SECTION: THE EXCEL TRAP */}
+      {/* Narrative: Excel Trap */}
       <section className="py-16 bg-brand-black relative border-b border-white/5">
          <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -200,16 +246,11 @@ export const WebAppServicePage = () => {
                      Keluar dari Jebakan <span className="text-red-500">Manual Admin</span>
                   </h2>
                   <p className="text-gray-400 leading-relaxed mb-6">
-                     Bisnis Anda tumbuh, tapi pekerjaan admin makin "menggila"? Data stok selisih, orderan tercecer di chat WhatsApp, dan Anda buta terhadap profit harian?
+                     Bisnis tumbuh, tapi admin makin pusing? Data stok selisih, orderan tercecer di chat WhatsApp, dan buta profit harian?
                   </p>
                   <p className="text-gray-400 leading-relaxed mb-6">
-                     Aplikasi Siap Pakai (SaaS) seringkali <strong>terlalu kaku</strong>. Fitur yang Anda butuhkan tidak ada, fitur yang tidak butuh malah menumpuk.
+                     Aplikasi Siap Pakai (SaaS) seringkali <strong>terlalu kaku</strong>. Custom Web App adalah baju yang dijahit khusus untuk badan bisnis Anda.
                   </p>
-                  <div className="bg-brand-dark border-l-4 border-brand-orange p-4 rounded-r-lg">
-                     <p className="text-white italic">
-                        "Custom Web App adalah baju yang dijahit khusus untuk badan bisnis Anda. Pas, Nyaman, dan Membuat Anda Bergerak Lebih Cepat."
-                     </p>
-                  </div>
                </div>
                
                <div className="relative">
@@ -232,7 +273,7 @@ export const WebAppServicePage = () => {
                         </li>
                         <li className="flex gap-3 text-sm text-white font-bold bg-brand-orange/10 p-2 rounded">
                            <CheckCircle2 className="text-brand-orange shrink-0" size={16} />
-                           <span>Laporan Otomatis Real-time (0 detik)</span>
+                           <span>Laporan Otomatis Real-time</span>
                         </li>
                      </ul>
                   </div>
@@ -241,40 +282,24 @@ export const WebAppServicePage = () => {
          </div>
       </section>
 
-      <FeatureGrid features={features} />
-      <WorkflowSection steps={steps} />
+      <FeatureGrid features={WEBAPP_DATA.features} />
+      <WorkflowSection steps={WEBAPP_DATA.steps} />
     </div>
   );
 };
 
-// --- 3. SEO OPTIMIZATION PAGE ---
+// --- SEO PAGE ---
 export const SeoServicePage = () => {
-  const features = [
-    { title: "Buying Intent Keywords", desc: "Kami tidak menargetkan 'kata kunci sampah' yang hanya mendatangkan traffic tanpa penjualan. Kami riset kata kunci yang diketik orang saat SIAP BELI.", icon: Target },
-    { title: "Stop 'Bakar Uang' Iklan", desc: "Iklan (Ads) itu seperti sewa rumah; berhenti bayar, Anda diusir. SEO adalah investasi properti; asetnya milik Anda selamanya.", icon: DollarSign },
-    { title: "Dominasi Lokal (GMB)", desc: "Pastikan toko Anda muncul di Google Maps saat orang mencari 'Kasir terdekat' atau produk Anda di kota Anda.", icon: MapPin },
-    { title: "Technical Audit", desc: "Google membenci web lambat & error. Kami perbaiki 'jeroan' website agar mudah dibaca robot Google.", icon: Layers },
-    { title: "Authority Content", desc: "Artikel yang tidak hanya disukai Google, tapi juga mengedukasi calon pembeli bahwa ANDALAH solusinya.", icon: PenTool },
-    { title: "Safe Backlink Strategy", desc: "Membangun reputasi digital dengan cara aman (White Hat), bukan cara curang yang berisiko di-banned Google.", icon: ShieldCheck },
-  ];
-
-  const steps = [
-    { step: "1", title: "Audit & Riset", desc: "Mencari celah kompetitor dan kata kunci 'uang' yang belum digarap." },
-    { step: "2", title: "On-Page Fix", desc: "Memperbaiki struktur website agar ramah Google (Speed, Mobile, Meta)." },
-    { step: "3", title: "Content Asset", desc: "Memproduksi konten pilar yang menjawab masalah customer." },
-    { step: "4", title: "Off-Page Authority", desc: "Meningkatkan kepercayaan domain di mata Google secara bertahap." },
-  ];
-
   return (
     <div className="animate-fade-in">
       <ServiceHero 
         title="Berhenti Membakar" 
         highlight="Uang Iklan." 
-        subtitle="Ubah Website Anda menjadi Aset Digital yang bekerja 24 jam. Datangkan pelanggan potensial secara organik tanpa perlu bayar per klik selamanya."
+        subtitle="Ubah Website Anda menjadi Aset Digital yang bekerja 24 jam. Datangkan pelanggan potensial secara organik."
         icon={LineChart}
       />
 
-      {/* NARRATIVE SECTION: THE TRAFFIC TRAP */}
+      {/* Narrative: Traffic Investment */}
       <section className="py-16 bg-brand-black relative border-b border-white/5">
          <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -296,9 +321,7 @@ export const SeoServicePage = () => {
                      </div>
                      <h3 className="text-xl font-bold text-white">Investasi vs Pengeluaran</h3>
                      <p className="text-gray-400 text-sm leading-relaxed">
-                        Saat Anda berhenti beriklan di Google/FB Ads, traffic Anda <strong>NOL</strong> detik itu juga. 
-                        Dengan SEO, traffic terus mengalir bahkan saat Anda sedang tidur atau liburan. 
-                        Bangun aset, jangan cuma menyewa.
+                        Saat berhenti beriklan, traffic NOL. Dengan SEO, traffic terus mengalir bahkan saat Anda tidur. Bangun aset, jangan cuma menyewa.
                      </p>
                   </div>
                </div>
@@ -308,10 +331,7 @@ export const SeoServicePage = () => {
                      Dominasi <span className="text-brand-orange">Halaman 1</span> Google
                   </h2>
                   <p className="text-gray-400 leading-relaxed mb-6">
-                     Pelanggan tidak mencari Anda di halaman 2. Jika website Anda tidak ada di halaman 1, bisnis Anda <strong>tidak terlihat</strong>.
-                  </p>
-                  <p className="text-gray-400 leading-relaxed mb-6">
-                     Kami tidak menjanjikan trik sulap instan. SEO adalah maraton, bukan lari sprint. Tapi hasilnya adalah <strong>Monopoli Pasar</strong> jangka panjang yang sulit digoyahkan kompetitor.
+                     Pelanggan tidak mencari Anda di halaman 2. Kami bantu bisnis Anda muncul di tempat yang tepat saat orang mengetik kata kunci "Beli".
                   </p>
                   <div className="flex gap-4">
                       <div className="flex items-center gap-2 text-white font-bold bg-brand-orange/10 px-4 py-2 rounded-lg border border-brand-orange/20">
@@ -324,40 +344,24 @@ export const SeoServicePage = () => {
          </div>
       </section>
 
-      <FeatureGrid features={features} />
-      <WorkflowSection steps={steps} />
+      <FeatureGrid features={SEO_DATA.features} />
+      <WorkflowSection steps={SEO_DATA.steps} />
     </div>
   );
 };
 
-// --- 4. MAINTENANCE PAGE (REVISED NARRATIVE) ---
+// --- MAINTENANCE PAGE ---
 export const MaintenanceServicePage = () => {
-  const features = [
-    { title: "Digital Insurance", desc: "Anggap ini asuransi. Jika website kena hack atau error, kami punya 'Time Machine' (Backup) untuk memulihkannya dalam hitungan menit.", icon: ShieldCheck },
-    { title: "Performance Guard", desc: "Website lambat = Kehilangan pembeli. Kami rutin membersihkan 'sampah' database dan cache agar loading tetap ngebut.", icon: Zap },
-    { title: "Proactive Security", desc: "Kami tidak menunggu website di-hack baru bertindak. Kami memasang firewall dan scanning rutin untuk menangkis serangan.", icon: Lock },
-    { title: "Uptime Monitor", desc: "Kami memantau website Anda setiap 5 menit. Jika down, tim kami langsung bergerak memperbaikinya, bahkan saat Anda tidur.", icon: Activity },
-    { title: "Content Update", desc: "Mau ganti banner promo? Ganti nomor WA? Kirim materi ke kami, biar tim teknis yang update. Anda terima beres.", icon: PenTool },
-    { title: "Tech Advisory", desc: "Bingung mau tambah fitur apa? Konsultasikan dengan kami. Kami adalah CTO (Chief Technology Officer) sewaan Anda.", icon: LifeBuoy },
-  ];
-
-  const steps = [
-    { step: "1", title: "Akses & Audit", desc: "Pengecekan celah keamanan awal." },
-    { step: "2", title: "Hardening", desc: "Penguatan sistem pertahanan website." },
-    { step: "3", title: "Monitoring", desc: "Pemantauan real-time 24/7." },
-    { step: "4", title: "Monthly Report", desc: "Laporan kesehatan website rutin." },
-  ];
-
   return (
     <div className="animate-fade-in">
       <ServiceHero 
         title="Jaga Aset Digital" 
         highlight="Tetap Bernilai." 
-        subtitle="Tidur nyenyak sementara kami menjaga 'Toko Online' Anda dari serangan hacker, virus, dan kendala teknis 24 jam sehari."
+        subtitle="Business Continuity & Digital Asset Insurance. Tidur nyenyak sementara kami menjaga 'Toko Online' Anda 24 jam."
         icon={ShieldCheck}
       />
 
-      {/* NARRATIVE SECTION: THE DIGITAL SECURITY GUARD */}
+      {/* Narrative: Security Guard */}
       <section className="py-16 bg-brand-black relative border-b border-white/5">
          <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -369,11 +373,11 @@ export const MaintenanceServicePage = () => {
                      Anda menggembok toko fisik dan membayar satpam. Mengapa toko online Anda dibiarkan <strong>tak terkunci</strong>?
                   </p>
                   <p className="text-gray-400 leading-relaxed mb-6">
-                     Serangan cyber tidak pandang bulu. UMKM sering menjadi target karena sistem keamanannya lemah. Sekali data pelanggan bocor atau website hilang, reputasi hancur selamanya.
+                     Serangan cyber tidak pandang bulu. Sekali data pelanggan bocor atau website hilang, reputasi hancur selamanya.
                   </p>
                   <div className="bg-brand-dark border-l-4 border-red-500 p-4 rounded-r-lg">
                      <p className="text-white italic text-sm">
-                        "Biaya maintenance jauh lebih murah daripada biaya memulihkan reputasi yang hancur karena website down saat promo besar."
+                        "Biaya maintenance jauh lebih murah daripada biaya memulihkan reputasi yang hancur."
                      </p>
                   </div>
                </div>
@@ -407,8 +411,8 @@ export const MaintenanceServicePage = () => {
          </div>
       </section>
 
-      <FeatureGrid features={features} />
-      <WorkflowSection steps={steps} />
+      <FeatureGrid features={MAINTENANCE_DATA.features} />
+      <WorkflowSection steps={MAINTENANCE_DATA.steps} />
     </div>
   );
 };

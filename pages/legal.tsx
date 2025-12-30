@@ -185,7 +185,7 @@ const TermsContent = () => (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="bg-white/5 p-3 rounded border border-white/5">
                 <strong className="text-white text-xs block mb-1">Wajib Asuransi</strong>
-                <p className="text-xs text-gray-400">Barang bernilai > Rp 1 Juta wajib asuransi pengiriman.</p>
+                <p className="text-xs text-gray-400">Barang bernilai &gt; Rp 1 Juta wajib asuransi pengiriman.</p>
             </div>
             <div className="bg-white/5 p-3 rounded border border-white/5">
                 <strong className="text-white text-xs block mb-1">Packing Kayu</strong>
