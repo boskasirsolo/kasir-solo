@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, ArrowRight, Layout, Network, Image as ImageIcon, UploadCloud, CalendarClock, X as XIcon } from 'lucide-react';
+import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, ArrowRight, Layout, Network, Image as ImageIcon, UploadCloud, CalendarClock, X as XIcon, User, Users } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, Input, TextArea, LoadingSpinner } from '../ui';
-import { PRESET_TOPICS, ARTICLE_CATEGORIES } from './types';
+import { PRESET_TOPICS, ARTICLE_CATEGORIES, AUTHOR_PRESETS } from './types';
 
 // --- ATOM: Strategy Switcher ---
 const StrategySwitcher = ({ type, onChange }: { type: string, onChange: (t: 'pillar' | 'cluster') => void }) => (
@@ -194,7 +194,33 @@ export const EditorPanel = ({
                         }} 
                     />
 
-                    {/* 3. Parent Selection (If Cluster) */}
+                    {/* 3. AUTHOR SELECTION (NEW) */}
+                    <div className="bg-white/5 p-3 rounded-lg border border-white/10">
+                        <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
+                            <User size={10} /> Penulis Artikel
+                        </label>
+                        <div className="flex gap-2">
+                            {AUTHOR_PRESETS.map((preset) => {
+                                const isActive = form.author === preset.name;
+                                return (
+                                    <button 
+                                        key={preset.id}
+                                        onClick={() => setForm((p:any) => ({...p, author: preset.name}))}
+                                        className={`flex-1 py-2 px-2 text-[10px] rounded border transition-all flex items-center justify-center gap-2 ${
+                                            isActive 
+                                            ? 'bg-brand-orange text-white border-brand-orange font-bold shadow-[0_0_10px_rgba(255,95,31,0.4)]' 
+                                            : 'bg-black/20 border-white/10 text-gray-500 hover:bg-white/5'
+                                        }`}
+                                    >
+                                        {preset.mode === 'personal' ? <User size={10} /> : <Users size={10} />}
+                                        {preset.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* 4. Parent Selection (If Cluster) */}
                     {form.type === 'cluster' && (
                         <div className="bg-blue-500/5 p-3 rounded-lg border border-blue-500/20 animate-fade-in">
                             <label className="text-[9px] text-blue-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">

@@ -2,7 +2,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Article } from '../../types';
 import { supabase, CONFIG, callGeminiWithRotation } from '../../utils';
-import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona } from './types';
+import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS } from './types';
 
 // --- SUB-HOOK: FILTER & PAGINATION ---
 export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
@@ -170,19 +170,30 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
     const filterLogic = useArticleFilter(articles, 7); // 7 Items per page
     const aiLogic = useAIGenerator();
 
-    // 2. Global Author State (Lifted Up)
-    const [authorPersona, setAuthorPersona] = useState<AuthorPersona>({
-        name: 'Amin Maghfuri',
-        role: 'Founder, CEO',
-        mode: 'personal',
-        avatar: '' // Default empty
+    // 2. Global Author State (Lifted Up & Persistent)
+    const [authorPersona, setAuthorPersona] = useState<AuthorPersona>(() => {
+        // Init from LocalStorage or Default to Personal
+        try {
+            const saved = localStorage.getItem('mks_author_pref');
+            return saved ? JSON.parse(saved) : AUTHOR_PRESETS[0];
+        } catch (e) {
+            return AUTHOR_PRESETS[0];
+        }
     });
+
+    // Save to LocalStorage whenever persona changes
+    useEffect(() => {
+        try {
+            localStorage.setItem('mks_author_pref', JSON.stringify(authorPersona));
+        } catch (e) { console.error("LS Error", e); }
+    }, [authorPersona]);
 
     // 3. Form State
     const [form, setForm] = useState<ArticleFormState>({
         id: null, title: '', excerpt: '', content: '', category: '',
         readTime: '5 min read', imagePreview: '', uploadFile: null, 
-        author: '', authorAvatar: '', uploadAuthorFile: null, 
+        author: authorPersona.name, // Init with current global persona
+        authorAvatar: '', uploadAuthorFile: null, 
         status: 'draft', scheduled_for: '',
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
     });
@@ -194,7 +205,8 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
     const resetForm = () => {
         setForm({
             id: null, title: '', excerpt: '', content: '', category: '',
-            author: '', authorAvatar: '', uploadAuthorFile: null, 
+            author: authorPersona.name, // Reset uses CURRENT active persona
+            authorAvatar: '', uploadAuthorFile: null, 
             readTime: '5 min read', imagePreview: '', uploadFile: null, 
             status: 'draft', scheduled_for: '',
             type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
@@ -207,7 +219,8 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
         setForm({
             id: item.id, title: item.title, excerpt: item.excerpt, content: item.content,
             category: item.category, 
-            author: item.author, authorAvatar: '', uploadAuthorFile: null,
+            author: item.author, // Use saved author from DB
+            authorAvatar: '', uploadAuthorFile: null,
             readTime: item.readTime, imagePreview: item.image, uploadFile: null,
             status: item.status || 'published', scheduled_for: item.scheduled_for || '',
             type: item.type || 'cluster', pillar_id: item.pillar_id || 0,
@@ -220,6 +233,7 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
         aiLogic.setLoading(p => ({...p, uploading: true}));
         try {
             const url = await aiLogic.uploadToCloudinary(file);
+            // Update global persona state (which updates LS via useEffect)
             setAuthorPersona(prev => ({ ...prev, avatar: url }));
         } catch(e: any) {
             alert("Gagal upload avatar: " + e.message);
@@ -245,8 +259,8 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
                 excerpt: form.excerpt, 
                 content: form.content, 
                 category: form.category,
-                author: authorPersona.name, // Use Global Persona Name
-                // author_avatar: authorPersona.avatar, // Ideally save this too if DB has column
+                // CRITICAL: Use the form's author field, which might be different from global persona
+                author: form.author, 
                 read_time: form.readTime, 
                 image_url: finalImageUrl,
                 status: form.status, 
@@ -294,8 +308,10 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
 
     const runWrite = async () => {
         try {
-            // Use Global Persona Narrative Mode
-            const narrativeMode = authorPersona.mode === 'personal' ? 'narsis' : 'umum';
+            // Determine narrative based on SELECTED form author, matching it back to presets
+            const selectedPreset = AUTHOR_PRESETS.find(p => p.name === form.author) || authorPersona;
+            const narrativeMode = selectedPreset.mode === 'personal' ? 'narsis' : 'umum';
+            
             const { content, meta } = await aiLogic.generateContent(form.title, narrativeMode, form.type);
             setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: meta.category, readTime: meta.readTime }));
             setAiStep(3); 
@@ -305,8 +321,10 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
     const runImage = async () => {
         aiLogic.setLoading(p => ({ ...p, generatingImage: true }));
         try {
-            const style = authorPersona.mode === 'personal' ? 'cinematic' : 'corporate';
-            // Now this returns a Cloudinary URL directly
+            // Style based on selected author
+            const selectedPreset = AUTHOR_PRESETS.find(p => p.name === form.author) || authorPersona;
+            const style = selectedPreset.mode === 'personal' ? 'cinematic' : 'corporate';
+            
             const url = await aiLogic.getAIImageUrl(form.title, style);
             setForm(p => ({ ...p, imagePreview: url }));
         } catch(e) { console.error(e); }

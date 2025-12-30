@@ -19,11 +19,29 @@ export interface GenConfig {
 }
 
 export interface AuthorPersona {
+    id: string;
     name: string;
     role: string; // 'Founder' | 'Editor'
     mode: 'personal' | 'team';
     avatar: string; // New field for profile picture
 }
+
+export const AUTHOR_PRESETS: AuthorPersona[] = [
+    {
+        id: 'personal',
+        name: 'Amin Maghfuri',
+        role: 'Founder, CEO',
+        mode: 'personal',
+        avatar: '' // Will use upload or placeholder
+    },
+    {
+        id: 'team',
+        name: 'Tim Redaksi',
+        role: 'Content Team',
+        mode: 'team',
+        avatar: ''
+    }
+];
 
 export interface ArticleFormState {
     id: number | null;
@@ -31,7 +49,8 @@ export interface ArticleFormState {
     excerpt: string;
     content: string;
     category: string;
-    // author field removed from form state, handled by global persona
+    author: string; // Added author to form state for per-article override
+    authorAvatar: string;
     readTime: string;
     imagePreview: string;
     uploadFile: File | null;
@@ -41,6 +60,7 @@ export interface ArticleFormState {
     pillar_id: number;
     cluster_ideas: string[];
     scheduleStart: string;
+    uploadAuthorFile: File | null;
 }
 
 export const PRESET_TOPICS = [

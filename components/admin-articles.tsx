@@ -65,6 +65,16 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
             <span className="text-[9px] text-gray-600 bg-white/5 px-2 py-1 rounded">Markdown Mode</span>
          </div>
          <div className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
+            {/* Cover Image Preview */}
+            {form.imagePreview && (
+                <div className="mb-6 rounded-xl overflow-hidden border border-white/10 shadow-lg">
+                    <img 
+                        src={form.imagePreview} 
+                        alt="Article Cover" 
+                        className="w-full h-auto object-cover aspect-video" 
+                    />
+                </div>
+            )}
             <SimpleMarkdown content={form.content} />
          </div>
       </div>

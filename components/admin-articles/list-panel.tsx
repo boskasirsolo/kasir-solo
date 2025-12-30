@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera } from 'lucide-react';
 import { Article } from '../../types';
-import { FilterType, AuthorPersona } from './types';
+import { FilterType, AuthorPersona, AUTHOR_PRESETS } from './types';
 
 // --- ATOM: Filter Tab ---
 interface FilterTabProps {
@@ -61,6 +61,20 @@ const PersonaSwitcher = ({
         }
     };
 
+    // Helper to switch persona based on preset ID
+    const switchPersona = (presetId: string) => {
+        const preset = AUTHOR_PRESETS.find(p => p.id === presetId);
+        if (preset) {
+            // Keep current avatar if switching, or use preset default?
+            // For now, let's reset to preset default but preserve avatar if it's the same logical user (simplified here)
+            // Ideally, avatar is part of the preset, but we are allowing dynamic avatar upload.
+            // We will just switch the ID/Name/Role/Mode.
+            setPersona({ ...persona, ...preset, avatar: persona.avatar }); // Preserve avatar for now or reset?
+            // Actually, better to reset to preset base, but we need avatar per preset in DB ideally.
+            // Simplified: Just switch name/role/mode.
+        }
+    };
+
     return (
         <div className="mb-4 bg-white/5 border border-white/10 rounded-lg p-3">
             <div className="flex justify-between items-center mb-3">
@@ -108,18 +122,19 @@ const PersonaSwitcher = ({
             </div>
 
             <div className="flex gap-2">
-                <button 
-                    onClick={() => setPersona({ name: 'Amin Maghfuri', role: 'Founder, CEO', mode: 'personal', avatar: persona.avatar })}
-                    className={`flex-1 py-1.5 rounded text-[9px] font-bold border transition-all ${persona.mode === 'personal' ? 'bg-brand-orange text-white border-brand-orange' : 'bg-white/5 text-gray-500 border-transparent hover:bg-white/10'}`}
-                >
-                    Personal
-                </button>
-                <button 
-                    onClick={() => setPersona({ name: 'Tim Redaksi', role: 'Content Team', mode: 'team', avatar: persona.avatar })}
-                    className={`flex-1 py-1.5 rounded text-[9px] font-bold border transition-all ${persona.mode === 'team' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white/5 text-gray-500 border-transparent hover:bg-white/10'}`}
-                >
-                    Tim Redaksi
-                </button>
+                {AUTHOR_PRESETS.map((preset) => (
+                    <button 
+                        key={preset.id}
+                        onClick={() => switchPersona(preset.id)}
+                        className={`flex-1 py-1.5 rounded text-[9px] font-bold border transition-all ${
+                            persona.id === preset.id || persona.mode === preset.mode // Fallback check mode if ID lost
+                            ? (preset.mode === 'personal' ? 'bg-brand-orange text-white border-brand-orange' : 'bg-purple-600 text-white border-purple-600')
+                            : 'bg-white/5 text-gray-500 border-transparent hover:bg-white/10'
+                        }`}
+                    >
+                        {preset.name}
+                    </button>
+                ))}
             </div>
         </div>
     );
