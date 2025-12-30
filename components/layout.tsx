@@ -26,7 +26,7 @@ const NAV_ITEMS = [
     label: 'Solusi Bisnis',
     children: [
       { id: 'shop', label: 'Hardware Kasir (POS)' },
-      { id: 'innovation', label: 'Software Aplikasi (SaaS)' },
+      { id: 'innovation', label: 'Inovasi Aplikasi (SaaS)' },
       { id: 'services/website', label: 'Jasa Pembuatan Website' },
       { id: 'services/webapp', label: 'Custom Web App' },
       { id: 'services/seo', label: 'Optimasi SEO & Traffic' },
@@ -369,7 +369,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
           <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs border-l-2 border-brand-orange pl-3">Solusi Digital</h4>
           <ul className="space-y-3 text-gray-400 text-sm">
             <li><button onClick={() => setPage('shop')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Hardware Kasir</button></li>
-            <li><button onClick={() => setPage('innovation')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Software Aplikasi</button></li>
+            <li><button onClick={() => setPage('innovation')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Inovasi Aplikasi</button></li>
             <li><button onClick={() => setPage('services/website')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Jasa Website</button></li>
             <li><button onClick={() => setPage('services/seo')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Jasa SEO</button></li>
             <li><button onClick={() => setPage('services/maintenance')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Maintenance</button></li>

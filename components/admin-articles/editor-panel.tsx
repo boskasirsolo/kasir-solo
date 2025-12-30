@@ -244,18 +244,6 @@ export const EditorPanel = ({
                     </div>
                 </div>
 
-                {/* 5. SAVE CONFIG BUTTON (Action is now just to lock/save state visually, generation happens on Right) */}
-                <Button 
-                    onClick={() => {
-                        // Just visually confirm, maybe move focus to right panel
-                        const editor = document.getElementById('live-editor-area');
-                        if(editor) editor.scrollIntoView({ behavior: 'smooth' });
-                    }} 
-                    className="w-full py-4 text-xs font-bold shadow-neon bg-white/5 border border-white/10 hover:border-brand-orange hover:bg-brand-orange/10 hover:text-brand-orange transition-all"
-                >
-                    <Save size={16} /> SIMPAN KONFIGURASI
-                </Button>
-
             </div>
         </div>
     );

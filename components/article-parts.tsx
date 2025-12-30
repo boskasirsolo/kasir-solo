@@ -525,7 +525,9 @@ const ArticleSidebarLeft = ({
 }) => {
   const headings = useMemo(() => extractHeadings(article.content), [article.content]);
   
-  const [comments, setComments] = useState<{name: string, text: string, time: string}[]>([]);
+  const [comments, setComments] = useState<{name: string, text: string, time: string, website?: string}[]>([]);
+  const [newName, setNewName] = useState('');
+  const [newWebsite, setNewWebsite] = useState('');
   const [newComment, setNewComment] = useState('');
   const [showCommentForm, setShowCommentForm] = useState(false);
 
@@ -566,15 +568,22 @@ const ArticleSidebarLeft = ({
   };
 
   const submitComment = () => {
-      if(!newComment.trim()) return;
+      if(!newComment.trim() || !newName.trim()) return alert("Mohon isi Nama dan Komentar.");
       
-      const newEntry = { name: 'Pengunjung', text: newComment, time: 'Baru saja' };
+      const newEntry = { 
+          name: newName, 
+          text: newComment, 
+          website: newWebsite,
+          time: 'Baru saja' 
+      };
       const updatedList = [newEntry, ...comments];
       
       setComments(updatedList);
       localStorage.setItem(`mks_comments_${article.id}`, JSON.stringify(updatedList));
       
       setNewComment('');
+      setNewName('');
+      setNewWebsite('');
       setShowCommentForm(false);
   };
 
@@ -622,16 +631,28 @@ const ArticleSidebarLeft = ({
                     <span>Tulis Komentar ({comments.length})</span>
                 </button>
             ) : (
-                <div className="bg-brand-card border border-white/10 rounded-lg p-3 mb-6 animate-fade-in">
+                <div className="bg-brand-card border border-white/10 rounded-lg p-3 mb-6 animate-fade-in space-y-2">
+                    <Input 
+                        value={newName} 
+                        onChange={(e) => setNewName(e.target.value)} 
+                        placeholder="Nama Lengkap *" 
+                        className="text-xs py-2 bg-black/20 border-white/10 focus:border-brand-orange"
+                    />
+                    <Input 
+                        value={newWebsite} 
+                        onChange={(e) => setNewWebsite(e.target.value)} 
+                        placeholder="Website (Opsional - Backlink)" 
+                        className="text-xs py-2 bg-black/20 border-white/10 focus:border-brand-orange"
+                    />
                     <TextArea 
                         value={newComment} 
                         onChange={(e) => setNewComment(e.target.value)} 
                         placeholder="Tulis pendapat Anda..." 
-                        className="text-xs min-h-[80px] mb-2"
+                        className="text-xs min-h-[80px] bg-black/20 border-white/10 focus:border-brand-orange"
                     />
                     <div className="flex gap-2">
-                        <Button onClick={() => setShowCommentForm(false)} variant="outline" className="flex-1 py-1 text-xs">Batal</Button>
-                        <Button onClick={submitComment} className="flex-1 py-1 text-xs"><Send size={12}/> Kirim</Button>
+                        <Button onClick={() => setShowCommentForm(false)} variant="outline" className="flex-1 py-1 text-xs h-8">Batal</Button>
+                        <Button onClick={submitComment} className="flex-1 py-1 text-xs h-8"><Send size={12}/> Kirim</Button>
                     </div>
                 </div>
             )}
@@ -643,7 +664,13 @@ const ArticleSidebarLeft = ({
                 {comments.map((c, i) => (
                     <div key={i} className="bg-black/20 p-3 rounded-lg border border-white/5">
                         <div className="flex justify-between items-center mb-1">
-                            <span className="text-brand-orange font-bold text-xs">{c.name}</span>
+                            {c.website ? (
+                                <a href={c.website} target="_blank" rel="nofollow noreferrer" className="text-brand-orange font-bold text-xs hover:underline flex items-center gap-1 group">
+                                    {c.name} <LinkIcon size={8} className="opacity-50 group-hover:opacity-100"/>
+                                </a>
+                            ) : (
+                                <span className="text-brand-orange font-bold text-xs">{c.name}</span>
+                            )}
                             <span className="text-[10px] text-gray-600">{c.time}</span>
                         </div>
                         <p className="text-gray-400 text-xs leading-relaxed">{c.text}</p>
