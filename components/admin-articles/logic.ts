@@ -3,6 +3,36 @@ import { Article } from '../../types';
 import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration } from '../../utils';
 import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS } from './types';
 
+// --- BRAND CONTEXT KNOWLEDGE BASE ---
+const BRAND_CONTEXT = `
+[IDENTITAS PERUSAHAAN]
+Nama: PT Mesin Kasir Solo.
+Sejarah: Berdiri 2015, sempat "mati suri" & kehilangan aset digital pada 2022 akibat pandemi, kini bangkit kembali (Reborn 2025).
+Karakter: Resilien (Tahan Banting), Jujur, Solutif, dan Berorientasi Komunitas.
+Halaman About Reference: Kisah kegagalan adalah kekuatan kami. Kami mengerti perjuangan UMKM karena kami pernah di posisi terendah.
+
+[PRODUK 1: SIBOS - Smart Integrated Back Office System]
+- Definisi: Platform ekosistem ERP komplit (POS, CRM, IRM, HRM, Akunting, Omnichannel, AI).
+- Status: Prototipe (Rencana Rilis 2026).
+- Model Bisnis: Freemium (Standar Premium Gratis), Enterprise/Dedicated Berbayar.
+- Konsep Komunitas: 
+  1. Terdiri dari Investor, Developer, Partner, User.
+  2. Kepemilikan saham dibatasi max 5% untuk menjaga visi sosial ("Dari, Oleh, dan Untuk Komunitas").
+- Sistem Partner Unik: Konsep Piramida Terbalik (Ghost Marketing). Semakin besar kapasitas usaha klien yang dihandle partner senior, jumlah klien dikurangi sistem dan dialihkan ke partner rintisan di wilayah sama. Tujuannya: Pelayanan maksimal & pemerataan pendapatan partner.
+
+[PRODUK 2: QALAM]
+- Definisi: Aplikasi Manajemen TPA/Pendidikan Islam Standar Premium.
+- Biaya: GRATIS untuk lembaga <200 santri (Konsep Donasi & Subsidi Silang dari versi Enterprise).
+- Fitur Unggulan: 
+  1. Integrasi Civitas (Guru, Kyai, Staf), Wali, dan Donatur.
+  2. Transparansi Keuangan.
+  3. Integrasi AI (Laporan perkembangan santri otomatis, Konsultasi psikologis wali dengan Asisten Qalam).
+  4. Payment Gateway & Whatsapp API.
+
+[STRATEGI KONTEN]
+Setiap artikel harus melakukan "Soft Selling" yang elegan. Posisikan SIBOS atau QALAM sebagai solusi masa depan, namun tetap berikan nilai edukasi yang tinggi (jangan hard selling murahan).
+`;
+
 // --- SUB-HOOK: FILTER & PAGINATION ---
 export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
     const [page, setPage] = useState(1);
@@ -67,10 +97,10 @@ export const useAIGenerator = () => {
         setLoading(p => ({ ...p, researching: true }));
         try {
             const prompt = `
-            Act as a Senior SEO Strategist for the Indonesian Market.
-            Context: Point of Sale (POS) System & Business Management Software.
+            Act as a Senior SEO Strategist for the Indonesian Market working for PT Mesin Kasir Solo.
+            Context: We sell POS Hardware, Website Services, and develop SIBOS (ERP) & QALAM (Edu App).
             Selected Topics: ${topics.join(', ')}.
-            Task: Generate 10 high-potential article titles/keywords.
+            Task: Generate 10 high-potential article titles/keywords based on our products.
             Strict Output Format: JSON Array ONLY.
             Example: [{"keyword": "Judul", "volume": "High", "competition": "Low", "type": "Evergreen"}]
             `;
@@ -100,23 +130,46 @@ export const useAIGenerator = () => {
     const generateContent = async (title: string, narrative: string, type: string) => {
         setLoading(p => ({ ...p, generatingText: true }));
         try {
+            // --- LOGIKA PANJANG ARTIKEL ---
+            const isPillar = type === 'pillar';
+            const lengthInstruction = isPillar 
+                ? "EXTREME LENGTH REQUIREMENT: 4000 - 5000 WORDS. This is a Pillar Page. Must be exhaustive, covering every angle, history, future trends, and detailed guides."
+                : "LENGTH REQUIREMENT: 700 - 1000 WORDS. This is a Cluster Article. Be specific, focused, and concise.";
+
+            const structureInstruction = isPillar
+                ? "Structure: Table of Contents, Deep Dive Introduction, Multiple H2 & H3 Chapters, Case Studies, FAQ Section, Conclusion."
+                : "Structure: Direct Intro, 3-4 Key Points (H2), Conclusion.";
+
             const contentPrompt = `
-            You are a Modern SEO Content Expert. Write an article about: "${title}".
-            Language: Indonesian.
-            Format: Markdown.
-            Narrative Style: ${narrative === 'narsis' ? 'Personal (POV: Gue/Saya). Casual but expert.' : 'Professional (POV: Kami). Objective.'}
-            Article Type: ${type}.
-            Length: 800-1200 words.
-            No preamble. Start content directly.
+            You are a Senior Content Writer for **PT Mesin Kasir Solo**.
+            
+            [BRAND KNOWLEDGE BASE]
+            ${BRAND_CONTEXT}
+
+            [TASK]
+            Write an SEO Article about: "${title}".
+            
+            [REQUIREMENTS]
+            1. Language: Indonesian (Fluent, Engaging).
+            2. Narrative Style: ${narrative === 'narsis' ? 'Personal Storytelling (POV: Gue/Saya - Founder Perspective). Relatable, sharing struggle & success.' : 'Professional & Authoritative (POV: Kami). Trustworthy expert.'}
+            3. Article Type: ${type.toUpperCase()}.
+            4. ${lengthInstruction}
+            5. ${structureInstruction}
+            6. **CRITICAL:** Integrate mentions of SIBOS or QALAM naturally where relevant. 
+               - If topic is Business/Retail -> Mention SIBOS features (Anti-fraud, Community concept).
+               - If topic is Education/Social -> Mention QALAM features.
+               - If topic is Hardware -> Mention our resilience and after-sales support.
+            
+            Start writing the content directly in Markdown format.
             `;
             
             const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
             
             const metaPrompt = `
             Generate JSON Metadata for article "${title}". 
-            1. "excerpt": Meta Description (max 160 chars).
-            2. "category": Best fitting category.
-            3. "readTime": Estimated reading time.
+            1. "excerpt": Meta Description (max 160 chars). Persuasive.
+            2. "category": Best fitting category based on title.
+            3. "readTime": Estimate reading time based on ${isPillar ? '4000' : '800'} words (e.g. "${isPillar ? '20 min read' : '5 min read'}").
             Format: {"excerpt": "...", "category": "...", "readTime": "..."}
             `;
             const metaRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
@@ -130,7 +183,7 @@ export const useAIGenerator = () => {
 
     const getAIImageUrl = async (prompt: string, style: string) => {
         const seed = Math.floor(Math.random() * 9999999);
-        const enhancedPrompt = `editorial photography of ${prompt}, ${style} style, modern tech context, 8k, detailed, no text`;
+        const enhancedPrompt = `editorial photography of ${prompt}, ${style} style, modern tech office context, indonesia, 8k, detailed, no text`;
         const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
         
         // Fetch as blob to upload

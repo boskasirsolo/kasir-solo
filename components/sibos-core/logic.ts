@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Product, SiteConfig } from '../../types';
 import { formatRupiah, supabase, ensureAPIKey, callGeminiWithRotation } from '../../utils';
@@ -10,6 +9,38 @@ export interface Message {
   text: string;
   time: string;
 }
+
+// --- THE SIBOS BRAIN (CORE MEMORY & CONTEXT) ---
+const SIBOS_BRAIN_CONTEXT = `
+You are **SIBOS AI**, the central intelligence of **PT Mesin Kasir Solo**. You are NOT a generic AI. You are a partner to the user.
+
+[YOUR IDENTITY & HISTORY]
+- **Company:** PT Mesin Kasir Solo.
+- **History:** Established 2015 by Amin Maghfuri (Single Fighter). Expanded nationally 2019-2020. Experienced "Total Loss/Mati Suri" in 2022 (lost domains kasirsolo.com & sibos.id due to pandemic impact). **Reborn in 2025** with resilience and a new vision.
+- **Character:** Resilient, Empathetic (You understand business struggles because you lived them), Honest, Solution-Oriented.
+- **Tone:** Professional but Personal. Use "Kami" (We) representing the company. You can relate to users' pain points (fraud, leaking money, chaos) deeply.
+
+[CORE PRODUCT 1: SIBOS (The Brain)]
+- **Concept:** Not just a POS. It is a Smart Integrated Back Office System (ERP ecosystem: POS, CRM, IRM, HRM, Accounting, Omnichannel, AI).
+- **Status:** Prototype phase (Reborn). Targeted Release: 2026.
+- **Pricing:** **Freemium** (Premium Standard but Free).
+- **Community Philosophy (CRITICAL):**
+  1. "Dari Komunitas, Oleh Komunitas, Untuk Komunitas".
+  2. Stakeholders: Investor, Developer, Partner, User.
+  3. **Shares Cap:** Max ownership 5% per person to maintain social vision.
+  4. **Ghost Marketing & Reverse Pyramid:** Partners handle clients. Uniquely, as a partner handles TOO MANY clients, the system AUTO-REDUCES their load and shifts clients to junior partners in the same area. Goal: Max service quality for clients, distributed income for partners (Anti-Monopoly).
+
+[CORE PRODUCT 2: QALAM (The Heart)]
+- **Concept:** Application for TPA/TPQ Management & Islamic Education.
+- **Pricing:** **GRATIS/FREE** for institutions with <200 students. Donation-based server maintenance.
+- **Business Model:** Cross-subsidy. The Enterprise version (for >200 students) pays to subsidize the free version for small TPA.
+- **Features:** Integrated Civitas (Teachers, Kyai, Staff), Guardians/Parents, and Donors. Financial Transparency. AI Integration (Auto-reporting student progress, psychological consultation for parents).
+
+[INTERACTION RULES]
+1. **Soft Selling:** In every answer, subtly connect the user's problem to SIBOS (for business) or QALAM (for education) as the ultimate solution.
+2. **Education:** Don't just sell. Educate. If they ask about "Kasir", explain why "Data" is more important than the machine.
+3. **Context Awareness:** If the user is on the 'admin' page, act as a System Assistant. If on 'home', act as a Greeter/Consultant.
+`;
 
 export const useSibosChat = (
     products: Product[], 
@@ -36,13 +67,6 @@ export const useSibosChat = (
   // --- AUTO LOGOUT ADMIN LOGIC ---
   useEffect(() => {
     let timer: any;
-    
-    // Only trigger auto-logout if:
-    // 1. User is in Admin Mode
-    // 2. AI is not currently typing
-    // 3. IMPORTANT: User is NOT on the main '/admin' dashboard page. 
-    //    (If they are on the dashboard, we rely on Supabase session, not this widget's timer)
-    
     if (isModeAdmin && !isTyping && currentPage !== 'admin') {
         timer = setTimeout(async () => {
             if (supabase) await supabase.auth.signOut();
@@ -50,7 +74,7 @@ export const useSibosChat = (
             setAuthState('IDLE');
             setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: "🔒 **AUTO LOGOUT**. Sesi Admin Chat berakhir karena tidak ada aktivitas.", time: 'System' }]);
             chatHistoryRef.current = [];
-        }, 300000); // Increased to 5 minutes (300s) for Chat-Only mode
+        }, 300000); 
     }
     return () => clearTimeout(timer);
   }, [isModeAdmin, messages, inputValue, isTyping, currentPage]);
@@ -95,7 +119,7 @@ export const useSibosChat = (
     const text = inputValue.trim();
     setInputValue('');
 
-    // ... Auth Logic Omitted for Brevity (Same as before) ...
+    // ... Auth Logic ...
     if (text === '/admin') { setAuthState('AWAITING_EMAIL'); setMessages(p=>[...p, {id:Date.now().toString(), role:'user', text}, {id:(Date.now()+1).toString(), role:'assistant', text:'Email Admin:', time:'System'}]); return; }
     if (authState === 'AWAITING_EMAIL') { setTempCreds(p=>({...p, email:text})); setAuthState('AWAITING_PASSWORD'); setMessages(p=>[...p, {id:Date.now().toString(), role:'user', text}, {id:(Date.now()+1).toString(), role:'assistant', text:'Password:', time:'System'}]); return; }
     if (authState === 'AWAITING_PASSWORD') { 
@@ -115,7 +139,10 @@ export const useSibosChat = (
       const result = await callGeminiWithRotation({
         model: 'gemini-3-flash-preview',
         contents: [...chatHistoryRef.current.map(h => ({ role: h.role, parts: h.parts })), { role: 'user', parts: [{ text }] }],
-        config: { tools: isModeAdmin ? [{ functionDeclarations: dbTools }] : [] }
+        config: { 
+            systemInstruction: SIBOS_BRAIN_CONTEXT, // INJECTING THE SOUL HERE
+            tools: isModeAdmin ? [{ functionDeclarations: dbTools }] : [] 
+        }
       });
 
       const responseContent = result.candidates?.[0]?.content;
@@ -131,7 +158,12 @@ export const useSibosChat = (
              chatHistoryRef.current.push({ role: 'function', parts: [{ functionResponse: { name: call.name, response: { result: toolResult } } }] });
            }
         }
-        const finalResult = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: chatHistoryRef.current });
+        // Second call also gets the system instruction for consistency
+        const finalResult = await callGeminiWithRotation({ 
+            model: 'gemini-3-flash-preview', 
+            contents: chatHistoryRef.current,
+            config: { systemInstruction: SIBOS_BRAIN_CONTEXT } 
+        });
         const finalText = finalResult.text || "Done.";
         setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: finalText, time: 'Now' }]);
         chatHistoryRef.current.push({ role: 'model', parts: [{ text: finalText }] });
