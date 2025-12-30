@@ -25,13 +25,14 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
             if (filterType === 'pillar') return a.type === 'pillar';
             if (filterType === 'cluster') return a.type === 'cluster';
             if (filterType === 'orphan') return !a.pillar_id && a.type !== 'pillar';
-            if (filterType === 'draft') return a.status === 'draft' || !a.status; // Robust check
+            // Robust check: Treat null/undefined status as draft in Admin Panel
+            if (filterType === 'draft') return a.status === 'draft' || !a.status; 
             if (filterType === 'scheduled') return a.status === 'scheduled';
             return false;
         });
     }, [articles, searchTerm, filterType]);
 
-    // Sorting: Newest First
+    // Sorting: Newest First based on created_at
     const sortedList = useMemo(() => {
         return [...filteredList].sort((a, b) => {
             const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -204,7 +205,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             author: item.author,
             authorAvatar: '', uploadAuthorFile: null,
             readTime: item.readTime, imagePreview: item.image, uploadFile: null,
-            status: item.status || 'draft', // FORCE DEFAULT TO DRAFT IF NULL
+            status: item.status || 'draft', 
             scheduled_for: item.scheduled_for || '',
             type: item.type || 'cluster', pillar_id: item.pillar_id || 0,
             cluster_ideas: item.cluster_ideas || [], scheduleStart: ''
@@ -236,7 +237,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             const now = new Date().toISOString();
             const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
-            const dbData = {
+            // Common Data for both Insert and Update
+            const commonData = {
                 title: form.title, 
                 excerpt: form.excerpt || '', 
                 content: form.content || '', 
@@ -249,26 +251,37 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 type: form.type, 
                 pillar_id: form.type === 'cluster' ? form.pillar_id : null,
                 cluster_ideas: form.cluster_ideas,
-                date: dateStr,
-                created_at: now // CRITICAL FOR SORTING
+                date: dateStr
             };
 
             let savedId = form.id;
 
             if (form.id) {
+                // UPDATE MODE
                 // Update Local State Optimistically
-                setArticles(articles.map(a => a.id === form.id ? { ...a, ...dbData, image: finalImageUrl } as any : a));
+                setArticles((prev: Article[]) => prev.map(a => a.id === form.id ? { ...a, ...commonData, image: finalImageUrl } : a));
                 
                 if (supabase) {
-                    await supabase.from('articles').update(dbData).eq('id', form.id);
+                    // CRITICAL FIX: Do NOT update created_at on edit, it ruins sorting.
+                    // Also strictly check for error.
+                    const { error } = await supabase.from('articles').update(commonData).eq('id', form.id);
+                    if (error) {
+                        console.error("Supabase Update Error:", error);
+                        throw new Error("Gagal update ke database: " + error.message);
+                    }
                 }
             } else {
-                savedId = Date.now();
+                // INSERT MODE
+                // Add created_at only on insert
+                const insertData = { ...commonData, created_at: now };
+                const tempId = Date.now();
+                
                 // Add to Local State Optimistically
-                setArticles([{ ...dbData, id: savedId, image: finalImageUrl } as any, ...articles]);
+                setArticles((prev: Article[]) => [{ ...insertData, id: tempId, image: finalImageUrl } as any, ...prev]);
                 
                 if (supabase) {
-                    const { data } = await supabase.from('articles').insert([dbData]).select().single();
+                    const { data, error } = await supabase.from('articles').insert([insertData]).select().single();
+                    if (error) throw new Error("Gagal insert ke database: " + error.message);
                     if (data) savedId = data.id;
                 }
             }
@@ -276,7 +289,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             // --- BACKGROUND MIGRATION ---
             // If we uploaded a file to Supabase, trigger the Cloudinary migration in background
             if (supabasePath && fileToMigrate && savedId) {
-                // We don't await this, let it run in background
                 processBackgroundMigration(fileToMigrate, supabasePath, 'articles', savedId, 'image_url')
                     .then((cloudUrl) => {
                         if (cloudUrl) {
@@ -287,10 +299,10 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             }
 
             resetForm();
-            // Don't alert blocking, just toast or console
-            console.log("Artikel tersimpan!");
+            console.log("Artikel tersimpan:", form.status);
         } catch(e: any) {
             alert("Error: " + e.message);
+            // Optionally revert local state here if strict consistency is needed
         } finally {
             aiLogic.setLoading(p => ({ ...p, uploading: false }));
         }
@@ -298,7 +310,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
 
     const deleteItem = async (id: number) => {
         if(!confirm("Hapus artikel ini?")) return;
-        setArticles(articles.filter(a => a.id !== id));
+        setArticles((prev: Article[]) => prev.filter(a => a.id !== id));
         if (supabase) await supabase.from('articles').delete().eq('id', id);
         if (form.id === id) resetForm();
     };
