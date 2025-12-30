@@ -289,11 +289,17 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     };
 
     const handleEditClick = (item: Article) => {
+        // CORRECTION: If article has no avatar, try to use the current persona's avatar if names match (or partially match)
+        let effectiveAvatar = item.author_avatar;
+        if (!effectiveAvatar && authorPersona.avatar && item.author.toLowerCase().includes(authorPersona.name.toLowerCase().split(' ')[0])) {
+            effectiveAvatar = authorPersona.avatar;
+        }
+
         setForm({
             id: item.id, title: item.title, excerpt: item.excerpt, content: item.content,
             category: item.category, 
             author: item.author,
-            authorAvatar: item.author_avatar || '', 
+            authorAvatar: effectiveAvatar || '', 
             uploadAuthorFile: null,
             readTime: item.readTime, imagePreview: item.image, uploadFile: null,
             status: item.status || 'draft', 
@@ -321,10 +327,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             // 2. Update Persona State
             setAuthorPersona(prev => ({ ...prev, avatar: avatarUrl }));
 
-            // 3. Update current form if active author matches
-            if (form.author === authorPersona.name) {
-                setForm(prev => ({ ...prev, authorAvatar: avatarUrl }));
-            }
+            // 3. Update current form regardless of author name match (assume user wants to use this avatar for current edit)
+            setForm(prev => ({ ...prev, authorAvatar: avatarUrl }));
 
         } catch (e) {
             console.error("Avatar Upload Failed", e);

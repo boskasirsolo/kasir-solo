@@ -117,6 +117,7 @@ const AppContent = () => {
                 ...item,
                 image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
                 readTime: item.read_time || item.readTime || '5 min read',
+                author_avatar: item.author_avatar, // EXPLICIT MAPPING FOR AVATAR
                 date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
             })).sort((a: any, b: any) => {
                 const dateA = a.created_at ? new Date(a.created_at) : parseDate(a.date);
