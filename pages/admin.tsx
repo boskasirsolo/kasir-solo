@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home, ArrowLeft, Briefcase } from 'lucide-react';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home, ArrowLeft, Briefcase, BarChart } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig, Testimonial, Article, JobOpening } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
@@ -8,7 +8,9 @@ import { AdminGallery } from '../components/admin-gallery';
 import { AdminSettings } from '../components/admin-settings';
 import { AdminOrders } from '../components/admin-orders';
 import { AdminArticles } from '../components/admin-articles';
-import { AdminCareer } from '../components/admin-career'; // ADDED
+import { AdminCareer } from '../components/admin-career'; 
+import { AnalyticsDashboard } from '../components/admin-analytics'; // ADDED
+import { activateGhostMode } from '../hooks/use-analytics'; // ADDED
 import { supabase } from '../utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -39,6 +41,10 @@ export const AdminLogin = () => {
       if (error) {
         throw error;
       }
+      
+      // AUTO-ENABLE GHOST MODE FOR ADMIN
+      activateGhostMode();
+
     } catch (error: any) {
       setErr(error.message || "Gagal login. Periksa email dan password.");
     } finally {
@@ -106,7 +112,7 @@ export const AdminDashboard = ({
   gallery, setGallery,
   testimonials, setTestimonials,
   articles, setArticles,
-  jobs, setJobs, // ADDED
+  jobs, setJobs,
   config, setConfig,
   onLogout 
 }: { 
@@ -114,12 +120,12 @@ export const AdminDashboard = ({
   gallery: GalleryItem[], setGallery: any,
   testimonials: Testimonial[], setTestimonials: any,
   articles: Article[], setArticles: any,
-  jobs: JobOpening[], setJobs: any, // ADDED
+  jobs: JobOpening[], setJobs: any,
   config: SiteConfig, setConfig: any,
   onLogout: () => void
 }) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'store' | 'gallery' | 'articles' | 'career' | 'settings'>('store');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'store' | 'gallery' | 'articles' | 'career' | 'settings'>('analytics');
   const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog'>('orders');
   const [showConnectAI, setShowConnectAI] = useState(false);
 
@@ -164,7 +170,8 @@ export const AdminDashboard = ({
         
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-wrap gap-2">
-            <TabButton id="store" label="PRODUK & ORDER" icon={ShoppingBag} />
+            <TabButton id="analytics" label="TRAFFIC" icon={BarChart} />
+            <TabButton id="store" label="TOKO & ORDER" icon={ShoppingBag} />
             <TabButton id="gallery" label="GALERI" icon={Image} />
             <TabButton id="articles" label="ARTIKEL" icon={FileText} />
             <TabButton id="career" label="KARIR" icon={Briefcase} /> 
@@ -205,6 +212,12 @@ export const AdminDashboard = ({
 
       <div className="bg-brand-card border border-white/10 rounded-2xl min-h-[600px] shadow-2xl relative overflow-hidden">
         
+        {activeTab === 'analytics' && (
+          <div className="animate-fade-in relative z-10 p-4 md:p-6">
+             <AnalyticsDashboard />
+          </div>
+        )}
+
         {activeTab === 'store' && (
           <div className="animate-fade-in relative z-10 p-4 md:p-6">
              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/5">
@@ -260,7 +273,6 @@ export const AdminDashboard = ({
           </div>
         )}
 
-        {/* ADDED CAREER TAB */}
         {activeTab === 'career' && (
           <div className="animate-fade-in relative z-10 p-4 md:p-6">
              <AdminCareer jobs={jobs} setJobs={setJobs} />

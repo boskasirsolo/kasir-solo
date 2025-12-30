@@ -5,6 +5,7 @@ import { useCart } from '../context/cart-context';
 import { SiteConfig } from '../types';
 import { SibosWidget } from './sibos-core/index';
 import { INITIAL_PRODUCTS } from '../utils';
+import { useAnalytics } from '../hooks/use-analytics'; // IMPORT TRACKER
 
 // Import Header Parts
 import { 
@@ -256,6 +257,9 @@ export const Layout = ({
   setConfig?: (c: SiteConfig) => void,
   session?: any
 }) => {
+  // ACTIVATE TRACKER HERE
+  useAnalytics();
+
   // Hide Header/Footer on Admin Page
   if (currentPage === 'admin') {
     return (

@@ -123,3 +123,14 @@ export interface OrderItem {
   quantity: number;
   price: number;
 }
+
+// --- ANALYTICS TYPES ---
+export interface AnalyticsLog {
+  id?: number;
+  visitor_id: string;
+  event_type: 'page_view' | 'click_action' | 'contact_wa';
+  page_path: string;
+  device_type: 'mobile' | 'desktop' | 'tablet';
+  referrer: string;
+  created_at?: string;
+}
