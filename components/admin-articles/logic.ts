@@ -113,7 +113,7 @@ export const useAIGenerator = () => {
         imageStyle: 'cinematic', narrative: 'narsis'
     });
 
-    // STEP 1: Research General Trending Topics
+    // STEP 1: Research Specific Keywords directly (Merged Step)
     const analyzeMarket = async () => {
         setLoading(p => ({ ...p, researching: true }));
         try {
@@ -121,11 +121,16 @@ export const useAIGenerator = () => {
             Act as a Senior SEO Strategist for the Indonesian Market.
             Industry: Retail Technology, Point of Sale (POS), UMKM Business, Digitalization, FnB Management.
             
-            Task: Identify 20 currently trending or high-potential topics/keywords in Indonesia for 2024-2025.
-            Focus: High search volume potential, solving real business problems (e.g. "Cara mencegah kasir curang", "Aplikasi kasir gratis vs berbayar").
+            Task: Identify 15 high-potential **Specific Long-tail Article Titles** (Keywords) for 2025.
+            Criteria: 
+            1. High Search Volume.
+            2. Low to Medium Competition (Easy to rank).
+            3. Solving real business problems.
             
-            Strict Output Format: JSON Array of strings ONLY.
-            Example: ["Strategi Marketing Kopi Kekinian", "Manajemen Stok Gudang", "Aplikasi Kasir Android Terbaik 2025"]
+            Strict Output Format: JSON Array of Objects.
+            Example: [{"keyword": "Cara Mencegah Kasir Curang di Cafe", "volume": "5.400/mo", "competition": "Low", "type": "Problem Solving"}]
+            
+            Sort the list by: Highest Volume first, then Lowest Competition.
             `;
             
             const result = await callGeminiWithRotation({ 
@@ -138,9 +143,9 @@ export const useAIGenerator = () => {
             const data = JSON.parse(text);
             
             if (Array.isArray(data) && data.length > 0) {
-                setTrendingTopics(data);
+                setKeywords(data); // Directly set keywords
             } else {
-                throw new Error("AI tidak menghasilkan topik valid.");
+                throw new Error("AI tidak menghasilkan data valid.");
             }
         } catch (e) {
             console.error("Market Analysis Error", e);
@@ -150,49 +155,16 @@ export const useAIGenerator = () => {
         }
     };
 
-    // STEP 2: Generate Specific Titles (Longtail Keywords)
-    const generateTitles = async (topics: string[]) => {
-        if (topics.length === 0) throw new Error("Pilih minimal 1 topik.");
-        setLoading(p => ({ ...p, researching: true }));
-        try {
-            const prompt = `
-            Act as a Senior SEO Strategist.
-            Context: Selected Topics: ${topics.join(', ')}.
-            Goal: Generate 10 specific Article Titles targeting LONG-TAIL KEYWORDS.
-            Criteria: High Volume Potential, Low-Medium Competition.
-            
-            Strict Output Format: JSON Array of Objects.
-            Example: [{"keyword": "Judul Artikel Longtail", "volume": "High", "competition": "Low", "type": "Evergreen"}]
-            `;
-            
-            const result = await callGeminiWithRotation({ 
-                model: 'gemini-3-flash-preview', 
-                contents: prompt, 
-                config: { responseMimeType: "application/json" } 
-            });
-            
-            const text = result.text || '[]';
-            const data = JSON.parse(text);
-            
-            if (Array.isArray(data) && data.length > 0) {
-                setKeywords(data);
-            } else {
-                throw new Error("AI tidak menghasilkan judul valid.");
-            }
-        } catch (e) {
-            console.error("Title Gen Error", e);
-            throw e; 
-        } finally {
-            setLoading(p => ({ ...p, researching: false }));
-        }
-    };
-
+    // STEP 2: Generate Content
     const generateContent = async (title: string, tones: string[], type: string, authorName: string) => {
         setLoading(p => ({ ...p, generatingText: true }));
         try {
             // --- DETECT POV BASED ON AUTHOR ---
-            const authorPreset = AUTHOR_PRESETS.find(p => p.name === authorName);
-            const pov = authorPreset?.mode === 'personal' ? 'First Person (POV: "Gue" or "Saya"). Use Storytelling, sharing personal struggles/success as a Founder.' : 'Professional (POV: "Kami"). Trustworthy, Expert, Corporate Tone.';
+            // STRICT RULE: If Amin Maghfuri, use 'gue'.
+            const isAmin = authorName === 'Amin Maghfuri';
+            const pov = isAmin 
+                ? "First Person Casual ('Gue'). You are Amin Maghfuri, the founder. Use 'Gue' to refer to yourself. Be gritty, real, street-smart. Share personal failures openly." 
+                : "Professional ('Kami'). Trustworthy, Expert, Corporate Tone.";
             
             // --- COMPILE TONE DESCRIPTION ---
             const toneDescriptions = tones.map(t => {
@@ -222,16 +194,13 @@ export const useAIGenerator = () => {
             [REQUIREMENTS]
             1. Language: Indonesian (Fluent, Engaging, Human-like).
             2. **NARRATIVE & TONE:**
-               - POV: ${pov}
+               - **POV RULE:** ${pov} (CRITICAL: If 'Gue' is requested, NEVER use 'Saya' or 'Aku').
                - Tone Mix: ${toneDescriptions}.
-               - Instruction: Blend these tones naturally. If 'Storytelling' is selected, start with a hook/story. If 'Opinion' is selected, be bold.
+               - Instruction: Blend these tones naturally.
             3. Article Type: ${type.toUpperCase()}.
             4. ${lengthInstruction}
             5. ${structureInstruction}
             6. **CRITICAL:** Integrate mentions of SIBOS or QALAM naturally where relevant. 
-               - If topic is Business/Retail -> Mention SIBOS features (Anti-fraud, Multi-business, Google Business Profile Integration).
-               - If topic is Education/Social -> Mention QALAM features.
-               - If topic is Hardware -> Mention our resilience and after-sales support.
             
             Start writing the content directly in Markdown format.
             `;
@@ -264,11 +233,9 @@ export const useAIGenerator = () => {
         const blob = await res.blob();
         
         // Use Supabase for temporary hosting (Hybrid Strategy)
-        // If not connected, return the pollUrl directly
         if (!supabase) return pollUrl;
 
         try {
-            // Convert blob to File object
             const file = new File([blob], `ai_gen_${seed}.jpg`, { type: "image/jpeg" });
             const { url } = await uploadToSupabase(file, 'ai-temp');
             return url;
@@ -278,7 +245,7 @@ export const useAIGenerator = () => {
         }
     };
 
-    return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateTitles, generateContent, getAIImageUrl };
+    return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateContent, getAIImageUrl };
 };
 
 // --- MAIN HOOK: ARTICLE MANAGER ---
@@ -329,7 +296,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     };
 
     const handleEditClick = (item: Article) => {
-        // CORRECTION: If article has no avatar, try to use the current persona's avatar if names match (or partially match)
         let effectiveAvatar = item.author_avatar;
         if (!effectiveAvatar && authorPersona.avatar && item.author.toLowerCase().includes(authorPersona.name.toLowerCase().split(' ')[0])) {
             effectiveAvatar = authorPersona.avatar;
@@ -347,29 +313,21 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             type: item.type || 'cluster', pillar_id: item.pillar_id || 0,
             cluster_ideas: item.cluster_ideas || [], scheduleStart: ''
         });
-        setAiStep(3); 
+        setAiStep(2); // Go to Editor Step
     };
 
-    // UPDATE: Handle Avatar Upload from PersonaSwitcher
     const updatePersonaAvatar = async (file: File) => {
         aiLogic.setLoading(p => ({ ...p, uploading: true }));
         try {
             let avatarUrl = '';
-            
-            // 1. Upload logic
             if (supabase) {
                 const { url } = await uploadToSupabase(file, 'avatars');
                 avatarUrl = url;
             } else {
-                avatarUrl = URL.createObjectURL(file); // Fallback for local demo
+                avatarUrl = URL.createObjectURL(file);
             }
-
-            // 2. Update Persona State
             setAuthorPersona(prev => ({ ...prev, avatar: avatarUrl }));
-
-            // 3. Update current form regardless of author name match (assume user wants to use this avatar for current edit)
             setForm(prev => ({ ...prev, authorAvatar: avatarUrl }));
-
         } catch (e) {
             console.error("Avatar Upload Failed", e);
             alert("Gagal upload foto profil.");
@@ -387,9 +345,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             let supabasePath = '';
             let fileToMigrate: File | null = form.uploadFile;
 
-            // --- HYBRID UPLOAD STRATEGY ---
             if (form.uploadFile && supabase) {
-                // 1. Upload to Supabase (Fast)
                 const { url, path } = await uploadToSupabase(form.uploadFile);
                 finalImageUrl = url;
                 supabasePath = path;
@@ -397,9 +353,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
 
             const now = new Date().toISOString();
             const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-
-            // Common Data for both Insert and Update (Including 'date')
-            // UPDATE: Save author_avatar from Form or Active Persona
             const finalAuthorAvatar = form.authorAvatar || authorPersona.avatar;
 
             const commonData = {
@@ -408,7 +361,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 content: form.content || '', 
                 category: form.category || 'General',
                 author: form.author, 
-                author_avatar: finalAuthorAvatar, // Save the avatar URL
+                author_avatar: finalAuthorAvatar, 
                 read_time: form.readTime, 
                 image_url: finalImageUrl,
                 status: form.status || 'draft',
@@ -416,31 +369,21 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 type: form.type, 
                 pillar_id: form.type === 'cluster' ? form.pillar_id : null,
                 cluster_ideas: form.cluster_ideas,
-                date: dateStr // Restore date field for backward compatibility
+                date: dateStr 
             };
 
             let savedId = form.id;
 
             if (form.id) {
-                // UPDATE MODE
-                // Update Local State Optimistically
                 setArticles((prev: Article[]) => prev.map(a => a.id === form.id ? { ...a, ...commonData, image: finalImageUrl } : a));
-                
                 if (supabase) {
                     const { error } = await supabase.from('articles').update(commonData).eq('id', form.id);
-                    if (error) {
-                        console.error("Supabase Update Error:", error);
-                        throw new Error("Gagal update ke database: " + error.message);
-                    }
+                    if (error) throw new Error("Gagal update ke database: " + error.message);
                 }
             } else {
-                // INSERT MODE
                 const insertData = { ...commonData, created_at: now };
                 const tempId = Date.now();
-                
-                // Add to Local State Optimistically
                 setArticles((prev: Article[]) => [{ ...insertData, id: tempId, image: finalImageUrl } as any, ...prev]);
-                
                 if (supabase) {
                     const { data, error } = await supabase.from('articles').insert([insertData]).select().single();
                     if (error) throw new Error("Gagal insert ke database: " + error.message);
@@ -448,7 +391,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 }
             }
 
-            // --- BACKGROUND MIGRATION ---
             if (supabasePath && fileToMigrate && savedId) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'articles', savedId, 'image_url')
                     .then((cloudUrl) => {
@@ -459,7 +401,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             }
 
             resetForm();
-            console.log("Artikel tersimpan:", form.status);
         } catch(e: any) {
             alert("Error: " + e.message);
         } finally {
@@ -474,7 +415,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         if (form.id === id) resetForm();
     };
 
-    // --- STEP 1: RESEARCH TRENDS ---
+    // --- STEP 1: RESEARCH DIRECTLY ---
     const runResearch = async () => {
         try { 
             await aiLogic.analyzeMarket(); 
@@ -482,26 +423,17 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         } catch(e: any) { alert(e.message); }
     };
 
-    // --- STEP 2: GENERATE TITLES ---
-    const runTitleGen = async (selectedTopics: string[]) => {
-        try {
-            await aiLogic.generateTitles(selectedTopics);
-            setAiStep(2);
-        } catch (e: any) { alert(e.message); }
-    };
-
-    // --- STEP 3: SELECT TITLE ---
+    // --- STEP 2: SELECT TITLE ---
     const selectTopic = (k: any) => { 
         setForm(p => ({ ...p, title: k.keyword })); 
-        setAiStep(3); 
+        setAiStep(2); // Jump to Config
     };
     
     const runWrite = async () => {
         try {
-            // Pass the selected Tones to the generator
             const { content, meta } = await aiLogic.generateContent(form.title, selectedTones, form.type, form.author);
             setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: meta.category, readTime: meta.readTime }));
-            setAiStep(3); // Stay on config/edit step after generation
+            setAiStep(2); // Stay on config
         } catch(e: any) { alert(e.message); }
     };
     
@@ -524,10 +456,10 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         aiState: { 
             step: aiStep, setStep: setAiStep, 
             selectedPresets, setSelectedPresets, 
-            trendingTopics: aiLogic.trendingTopics, // Pass trending topics
+            trendingTopics: aiLogic.trendingTopics, 
             keywords: aiLogic.keywords, 
             selectedTones, setSelectedTones 
         },
-        actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, runTitleGen, selectTopic, runWrite, runImage }
+        actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage }
     };
 };

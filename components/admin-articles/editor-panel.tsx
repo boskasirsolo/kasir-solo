@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart } from 'lucide-react';
 import { Article } from '../../types';
 import { Button } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
@@ -75,15 +75,6 @@ export const EditorPanel = ({
         }
     };
 
-    const togglePresetTopic = (topic: string) => {
-        const current = aiState.selectedPresets || [];
-        if (current.includes(topic)) {
-            aiState.setSelectedPresets(current.filter((t: string) => t !== topic));
-        } else {
-            aiState.setSelectedPresets([...current, topic]);
-        }
-    };
-
     // --- VIEW STEPS ---
 
     // STEP 0: INITIAL START
@@ -93,75 +84,32 @@ export const EditorPanel = ({
                 <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
                     <Search size={32} className="text-blue-400" />
                 </div>
-                <h3 className="text-white font-bold text-lg mb-2">Riset Topik</h3>
+                <h3 className="text-white font-bold text-lg mb-2">Riset Judul Viral</h3>
                 <p className="text-gray-500 text-xs max-w-[200px] mb-8 leading-relaxed">
-                    Biarkan AI menganalisis tren pasar terkini untuk menemukan ide konten viral.
+                    AI akan menganalisis volume pencarian dan kompetisi untuk menemukan 15 judul artikel terbaik.
                 </p>
                 <Button 
                     onClick={actions.runResearch} 
                     disabled={loading.researching}
                     className="w-full py-3 shadow-neon"
                 >
-                    {loading.researching ? <Loader2 size={16} className="animate-spin"/> : <><Sparkles size={16}/> RISET TOPIK TRENDING</>}
+                    {loading.researching ? <Loader2 size={16} className="animate-spin"/> : <><Sparkles size={16}/> RISET MARKET</>}
                 </Button>
             </div>
         );
     }
 
-    // STEP 1: TOPIC SELECTION (NEW)
+    // STEP 1: KEYWORD RESULTS (New Merged Step)
     if (aiState.step === 1 && !form.id) {
         return (
             <div className="flex flex-col h-full bg-brand-dark p-4">
                 <div className="flex items-center gap-2 mb-4 pb-4 border-b border-white/10">
                     <button onClick={() => aiState.setStep(0)} className="p-1 hover:bg-white/10 rounded"><ArrowLeft size={16} className="text-gray-400 hover:text-white"/></button>
-                    <h3 className="text-white font-bold text-sm">Pilih Topik</h3>
+                    <h3 className="text-white font-bold text-sm">Hasil Riset</h3>
                 </div>
                 
-                <p className="text-xs text-gray-500 mb-4">Pilih topik yang menarik untuk digali lebih dalam menjadi judul artikel.</p>
+                <p className="text-xs text-gray-500 mb-4">Pilih judul dengan volume tinggi & kompetisi rendah.</p>
 
-                <div className="flex-grow overflow-y-auto custom-scrollbar">
-                    <div className="flex flex-wrap gap-2">
-                        {aiState.trendingTopics?.map((topic: string, i: number) => {
-                            const isSelected = aiState.selectedPresets.includes(topic);
-                            return (
-                                <button
-                                    key={i}
-                                    onClick={() => togglePresetTopic(topic)}
-                                    className={`px-3 py-2 rounded-lg text-xs font-bold border text-left transition-all ${
-                                        isSelected 
-                                        ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text' 
-                                        : 'bg-black/20 text-gray-400 border-white/10 hover:border-white/30'
-                                    }`}
-                                >
-                                    {topic}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-white/10">
-                    <Button 
-                        onClick={() => actions.runTitleGen(aiState.selectedPresets)} 
-                        disabled={loading.researching || aiState.selectedPresets.length === 0}
-                        className="w-full py-3 shadow-neon"
-                    >
-                        {loading.researching ? <Loader2 size={16} className="animate-spin"/> : <><Wand2 size={16}/> GENERATE 10 JUDUL</>}
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
-    // STEP 2: TITLE SELECTION
-    if (aiState.step === 2 && !form.id) {
-        return (
-            <div className="flex flex-col h-full bg-brand-dark p-4">
-                <div className="flex items-center gap-2 mb-4 pb-4 border-b border-white/10">
-                    <button onClick={() => aiState.setStep(1)} className="p-1 hover:bg-white/10 rounded"><ArrowLeft size={16} className="text-gray-400 hover:text-white"/></button>
-                    <h3 className="text-white font-bold text-sm">Pilih Judul Artikel</h3>
-                </div>
-                
                 <div className="flex-grow overflow-y-auto custom-scrollbar space-y-2">
                     {aiState.keywords.map((k: any, i: number) => (
                         <div 
@@ -169,10 +117,14 @@ export const EditorPanel = ({
                             onClick={() => actions.selectTopic(k)}
                             className="p-3 rounded-lg bg-white/5 border border-white/5 hover:border-brand-orange hover:bg-brand-orange/5 cursor-pointer group transition-all"
                         >
-                            <h4 className="text-xs font-bold text-white mb-1 group-hover:text-brand-orange leading-snug">{k.keyword}</h4>
-                            <div className="flex gap-2 mt-2">
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded border ${k.competition === 'Low' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'}`}>{k.competition} Comp</span>
-                                <span className="text-[9px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20">{k.volume} Vol</span>
+                            <h4 className="text-xs font-bold text-white mb-2 group-hover:text-brand-orange leading-snug">{k.keyword}</h4>
+                            <div className="flex items-center gap-2">
+                                <span className={`text-[9px] px-2 py-0.5 rounded border flex items-center gap-1 ${k.competition === 'Low' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'}`}>
+                                    <BarChart size={8} /> {k.competition} Comp
+                                </span>
+                                <span className="text-[9px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 font-mono">
+                                    {k.volume} Vol
+                                </span>
                             </div>
                         </div>
                     ))}
@@ -181,14 +133,14 @@ export const EditorPanel = ({
         );
     }
 
-    // STEP 3 (OR EDIT MODE): CONFIGURATION
+    // STEP 2: CONFIGURATION (Was Step 3)
     return (
         <div className="flex flex-col h-full bg-brand-dark overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b border-white/5 flex justify-between items-center shrink-0 bg-brand-dark z-20">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2"><Wand2 size={14}/> Konfigurasi</h3>
                 <div className="flex gap-2">
-                    {!form.id && <button onClick={() => aiState.setStep(2)} className="text-[10px] text-gray-400 hover:text-white">Ganti Judul</button>}
+                    {!form.id && <button onClick={() => aiState.setStep(1)} className="text-[10px] text-gray-400 hover:text-white">Ganti Judul</button>}
                     <button onClick={actions.resetForm} className="text-[10px] text-red-400 hover:text-red-300 border border-red-500/20 px-2 py-1 rounded bg-red-500/10"><RefreshCw size={10} /> Reset</button>
                 </div>
             </div>

@@ -146,6 +146,8 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
             <LiveEditor 
                 content={form.content} 
                 onChange={(newContent) => manager.setForm((prev: any) => ({ ...prev, content: newContent }))}
+                onRegenerate={manager.actions.runWrite}
+                isGenerating={aiLogic.loading.generatingText}
             />
          </div>
 

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Image as ImageIcon, Youtube, MoveUp, MoveDown, Trash2, GripVertical, Type, Loader2, UploadCloud, Plus } from 'lucide-react';
+import { Image as ImageIcon, Youtube, MoveUp, MoveDown, Trash2, GripVertical, Type, Loader2, UploadCloud, Plus, Sparkles } from 'lucide-react';
 import { uploadToSupabase } from '../../utils';
 
 interface Block {
@@ -73,10 +74,14 @@ const AutoResizeTextArea = ({ value, onChange, placeholder, className, style }: 
 
 export const LiveEditor = ({ 
     content, 
-    onChange 
+    onChange,
+    onRegenerate,
+    isGenerating
 }: { 
     content: string, 
-    onChange: (val: string) => void 
+    onChange: (val: string) => void,
+    onRegenerate?: () => void,
+    isGenerating?: boolean
 }) => {
     const [blocks, setBlocks] = useState<Block[]>([]);
     const [hoverIndex, setHoverIndex] = useState<number | null>(null);
@@ -172,8 +177,25 @@ export const LiveEditor = ({
         return 'text-base text-gray-300 leading-relaxed';
     };
 
+    // Determine if empty (ignore initial empty block if content is empty string)
+    const isEmpty = blocks.length === 0 || (blocks.length === 1 && blocks[0].content === '');
+
     return (
-        <div className="pb-20">
+        <div className="pb-20 min-h-[400px]">
+            {/* GENERATE BUTTON IN EMPTY STATE */}
+            {isEmpty && onRegenerate && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onRegenerate(); }}
+                        disabled={isGenerating}
+                        className="pointer-events-auto bg-brand-gradient hover:bg-brand-gradient-hover text-white px-6 py-3 rounded-full font-bold shadow-neon flex items-center gap-2 transform hover:-translate-y-1 transition-all"
+                    >
+                        {isGenerating ? <Loader2 size={18} className="animate-spin"/> : <Sparkles size={18} />}
+                        {isGenerating ? 'Menulis Artikel...' : 'GENERATE ARTIKEL (AI)'}
+                    </button>
+                </div>
+            )}
+
             {blocks.map((block, index) => (
                 <div 
                     key={block.id} 
@@ -244,11 +266,11 @@ export const LiveEditor = ({
                 </div>
             ))}
 
-            {/* Empty State / Start */}
-            {blocks.length === 0 && (
-                <div className="text-center py-10">
-                    <button onClick={() => addBlock(-1, 'text')} className="text-gray-500 hover:text-brand-orange flex items-center justify-center gap-2 mx-auto">
-                        <Plus size={20}/> Mulai Menulis
+            {/* Empty State / Start (Only show if not empty to prevent double buttons) */}
+            {!isEmpty && (
+                <div className="text-center py-10 opacity-0 hover:opacity-100 transition-opacity">
+                    <button onClick={() => addBlock(blocks.length - 1, 'text')} className="text-gray-500 hover:text-brand-orange flex items-center justify-center gap-2 mx-auto">
+                        <Plus size={20}/> Tambah Blok Baru
                     </button>
                 </div>
             )}
