@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
 import { Article } from '../types';
-import { Eye, ImageOff } from 'lucide-react';
-import { SimpleMarkdown } from './admin-articles/markdown';
+import { Eye, Edit3 } from 'lucide-react';
 import { useArticleManager } from './admin-articles/logic';
 import { ListPanel } from './admin-articles/list-panel';
 import { EditorPanel } from './admin-articles/editor-panel';
+import { LiveEditor } from './admin-articles/live-editor'; // NEW IMPORT
 
 export const AdminArticles = ({ articles, setArticles }: { articles: Article[], setArticles: (a: Article[]) => void }) => {
   // Use the Centralized Logic Hook
@@ -21,14 +21,11 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
       deleteItem: actions.deleteItem
   };
 
-  // Image Error State for Preview
-  const [imgError, setImgError] = useState(false);
-
   return (
     <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
       
       {/* 1. LEFT PANEL: List & Filter & Persona */}
-      <div className="w-[30%] border-r border-white/5 min-w-[300px]">
+      <div className="w-[25%] border-r border-white/5 min-w-[280px]">
          <ListPanel 
             articles={articles}
             logic={{
@@ -41,8 +38,8 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
          />
       </div>
 
-      {/* 2. MIDDLE PANEL: Editor & AI */}
-      <div className="w-[30%] border-r border-white/5 min-w-[350px]">
+      {/* 2. MIDDLE PANEL: Command Center (Configuration) */}
+      <div className="w-[25%] border-r border-white/5 min-w-[300px]">
          <EditorPanel 
             form={form}
             setForm={manager.setForm}
@@ -61,31 +58,38 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
          />
       </div>
 
-      {/* 3. RIGHT PANEL: Live Preview */}
-      <div className="w-[40%] bg-black flex flex-col relative overflow-hidden">
-         <div className="p-4 border-b border-white/10 bg-brand-dark/50 flex justify-between items-center backdrop-blur-sm z-10 sticky top-0">
-            <h4 className="text-[10px] font-bold text-gray-400 uppercase flex items-center gap-2"><Eye size={12} /> Live Preview</h4>
-            <span className="text-[9px] text-gray-600 bg-white/5 px-2 py-1 rounded">Markdown Mode</span>
+      {/* 3. RIGHT PANEL: The Canvas (Live Editor) */}
+      <div className="w-[50%] bg-black flex flex-col relative overflow-hidden">
+         <div className="p-4 border-b border-white/10 bg-brand-dark/95 flex justify-between items-center backdrop-blur-sm z-10 sticky top-0">
+            <h4 className="text-[10px] font-bold text-gray-400 uppercase flex items-center gap-2"><Edit3 size={12} /> Interactive Editor (WYSIWYG)</h4>
+            <div className="flex items-center gap-2">
+                <span className="text-[9px] text-gray-600 bg-white/5 px-2 py-1 rounded">Markdown Enabled</span>
+                <span className="text-[9px] text-brand-orange bg-brand-orange/10 border border-brand-orange/20 px-2 py-1 rounded font-bold">Live Editing</span>
+            </div>
          </div>
+         
          <div className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
-            {/* Cover Image Preview */}
-            {form.imagePreview && !imgError ? (
-                <div className="mb-6 rounded-xl overflow-hidden border border-white/10 shadow-lg">
-                    <img 
-                        src={form.imagePreview} 
-                        alt="Article Cover" 
-                        className="w-full h-auto object-cover aspect-video" 
-                        onError={() => setImgError(true)}
-                    />
+            <div className="max-w-3xl mx-auto">
+                {/* Visual Header */}
+                <h1 className="text-4xl font-display font-bold text-white mb-4 leading-tight">{form.title || "Judul Artikel..."}</h1>
+                <div className="flex items-center gap-3 mb-8 pb-8 border-b border-white/10">
+                    {form.imagePreview && (
+                        <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
+                            <img src={form.authorAvatar || 'https://via.placeholder.com/50'} className="w-full h-full object-cover" />
+                        </div>
+                    )}
+                    <div>
+                        <p className="text-sm font-bold text-white">{form.author || "Penulis"}</p>
+                        <p className="text-xs text-gray-500">{new Date().toLocaleDateString()} • {form.readTime}</p>
+                    </div>
                 </div>
-            ) : form.imagePreview ? (
-                <div className="mb-6 rounded-xl overflow-hidden border border-white/10 shadow-lg bg-white/5 flex items-center justify-center aspect-video text-gray-500 gap-2">
-                    <ImageOff size={24} />
-                    <span className="text-xs">Gambar Tidak Dapat Dimuat</span>
-                </div>
-            ) : null}
-            
-            <SimpleMarkdown content={form.content} />
+
+                {/* Main Editor */}
+                <LiveEditor 
+                    content={form.content} 
+                    onChange={(newContent) => manager.setForm((prev: any) => ({ ...prev, content: newContent }))}
+                />
+            </div>
          </div>
       </div>
 
