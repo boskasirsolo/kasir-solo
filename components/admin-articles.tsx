@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap, ChevronDown, ChevronUp, MoreVertical, ArrowLeft, Mic, Camera, Users } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Target, List, CheckCircle2, RefreshCw, Eye, Image as ImageIcon, Wand2, LayoutTemplate, TrendingUp, User, Calendar, Clock, Check, Loader2, FileText, Palette, Link as LinkIcon, Crown, Network, CalendarClock, Zap, ChevronDown, ChevronUp, MoreVertical, ArrowLeft, Mic, Camera, Users, HelpCircle } from 'lucide-react';
 import { Article } from '../types';
 import { Button, Input, TextArea, LoadingSpinner, Badge } from './ui';
 import { supabase, CONFIG, ensureAPIKey, getEnv, slugify, callGeminiWithRotation } from '../utils';
@@ -276,11 +276,13 @@ const useArticleManager = (
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedPillarId, setExpandedPillarId] = useState<number | null>(null);
 
-    // Filter Logic for List (Shows Pillars OR Standalone articles)
+    // CRITICAL FIX: Show PILLARS OR ORPHANS (Items without parents)
     const filteredPillars = articles.filter(a => {
-        const isPillar = a.type === 'pillar' || !a.type; 
+        const isPillar = a.type === 'pillar';
+        const isOrphan = !a.pillar_id && a.type !== 'pillar'; // Cluster/null type but no parent
+        const isTopLevel = isPillar || isOrphan;
         const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase());
-        return isPillar && matchesSearch;
+        return isTopLevel && matchesSearch;
     });
 
     const totalPages = Math.ceil(filteredPillars.length / ITEMS_PER_PAGE);
@@ -796,13 +798,18 @@ export const AdminArticles = ({
          
          {/* LIST */}
          <div className="flex-grow overflow-y-auto p-2 space-y-2 custom-scrollbar">
-            {listData.paginated.map((pillar: Article) => {
-                const isExpanded = listData.expandedPillarId === pillar.id;
-                const linkedClusters = articles.filter(a => a.pillar_id === pillar.id);
+            {listData.paginated.length === 0 ? (
+                <div className="text-center py-10 text-gray-500 text-[10px]">
+                    <p>Tidak ada artikel ditemukan.</p>
+                </div>
+            ) : listData.paginated.map((article: Article) => {
+                const isExpanded = listData.expandedPillarId === article.id;
+                const isOrphan = !article.pillar_id && article.type !== 'pillar';
+                const linkedClusters = articles.filter(a => a.pillar_id === article.id);
                 
                 return (
                     <div 
-                        key={pillar.id}
+                        key={article.id}
                         className={`rounded-lg border transition-all overflow-hidden ${
                             isExpanded ? 'border-brand-orange/50 bg-white/5' : 'border-white/5 hover:border-white/20 bg-brand-card'
                         }`}
@@ -810,40 +817,63 @@ export const AdminArticles = ({
                         <div 
                             className="p-3 cursor-pointer flex gap-3 items-center"
                             onClick={() => {
-                                listData.setExpandedPillarId(isExpanded ? null : pillar.id);
-                                if (!isExpanded) {
-                                    setForm(prev => ({...prev, pillar_id: pillar.id}));
+                                // If orphan, we just select it. If pillar, we expand it.
+                                if (isOrphan) {
+                                    actions.handleEditClick(article);
+                                } else {
+                                    listData.setExpandedPillarId(isExpanded ? null : article.id);
+                                    if (!isExpanded) {
+                                        setForm(prev => ({...prev, pillar_id: article.id}));
+                                    }
                                 }
                             }}
                         >
-                            <img src={pillar.image} className="w-10 h-10 rounded object-cover bg-black" />
+                            <img src={article.image} className="w-10 h-10 rounded object-cover bg-black" />
                             <div className="flex-1 min-w-0">
-                                <h5 className={`text-[11px] font-bold truncate leading-tight ${isExpanded ? 'text-brand-orange' : 'text-white'}`}>
-                                    {pillar.title}
+                                <h5 className={`text-[11px] font-bold truncate leading-tight ${isExpanded || form.id === article.id ? 'text-brand-orange' : 'text-white'}`}>
+                                    {article.title}
                                 </h5>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-[9px] text-yellow-500 border border-yellow-500/30 bg-yellow-500/10 px-1.5 rounded-full flex items-center gap-1">
-                                        <Crown size={8}/> PILAR
-                                    </span>
-                                    <span className="text-[9px] text-gray-500">
-                                        {linkedClusters.length} Cluster
-                                    </span>
+                                    {isOrphan ? (
+                                        <span className="text-[9px] text-gray-400 border border-white/10 bg-white/5 px-1.5 rounded-full flex items-center gap-1">
+                                            <HelpCircle size={8}/> ORPHAN
+                                        </span>
+                                    ) : (
+                                        <span className="text-[9px] text-yellow-500 border border-yellow-500/30 bg-yellow-500/10 px-1.5 rounded-full flex items-center gap-1">
+                                            <Crown size={8}/> PILAR
+                                        </span>
+                                    )}
+                                    {!isOrphan && (
+                                        <span className="text-[9px] text-gray-500">
+                                            {linkedClusters.length} Cluster
+                                        </span>
+                                    )}
                                 </div>
                             </div>
-                            {isExpanded ? <ChevronUp size={14} className="text-gray-500"/> : <ChevronDown size={14} className="text-gray-500"/>}
+                            {/* Action Buttons for Orphans directly in list */}
+                            {isOrphan && (
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); actions.deleteItem(article.id); }}
+                                    className="p-1.5 text-gray-500 hover:text-red-500 transition-colors"
+                                >
+                                    <Trash2 size={12}/>
+                                </button>
+                            )}
+                            {!isOrphan && (isExpanded ? <ChevronUp size={14} className="text-gray-500"/> : <ChevronDown size={14} className="text-gray-500"/>)}
                         </div>
 
-                        {isExpanded && (
+                        {/* SUB-LIST FOR PILLARS */}
+                        {!isOrphan && isExpanded && (
                             <div className="bg-black/20 border-t border-white/5 p-3 animate-fade-in">
                                 <div className="flex gap-2 mb-3">
                                     <button 
-                                        onClick={() => actions.handleEditClick(pillar)}
+                                        onClick={() => actions.handleEditClick(article)}
                                         className="flex-1 py-1.5 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-500 rounded flex items-center justify-center gap-1"
                                     >
                                         <Edit size={10} /> Edit Pilar
                                     </button>
                                     <button 
-                                        onClick={() => actions.deleteItem(pillar.id)}
+                                        onClick={() => actions.deleteItem(article.id)}
                                         className="py-1.5 px-3 text-[10px] font-bold text-red-400 bg-red-900/20 hover:bg-red-900/40 rounded border border-red-900/30"
                                     >
                                         <Trash2 size={10} />

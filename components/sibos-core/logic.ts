@@ -51,8 +51,11 @@ export const useSibosChat = (
     // FIX: Changed from NodeJS.Timeout to any to avoid namespace errors in browser environment
     let timer: any;
 
-    if (isModeAdmin) {
-        // Reset timer whenever messages change (activity) or user is typing (inputValue changes)
+    // Logic: Timer runs only if Admin Mode is ON AND AI is NOT currently processing (isTyping).
+    // If AI is typing (processing tool/query), we pause the timer.
+    // Any change in 'messages' (new chat) or 'inputValue' (user typing) will trigger this effect,
+    // causing the cleanup function (clearTimeout) to run, effectively resetting the timer.
+    if (isModeAdmin && !isTyping) {
         timer = setTimeout(async () => {
             if (supabase) await supabase.auth.signOut();
             
@@ -70,7 +73,7 @@ export const useSibosChat = (
     }
 
     return () => clearTimeout(timer);
-  }, [isModeAdmin, messages, inputValue]); // Dependencies: Status, New Messages, Typing
+  }, [isModeAdmin, messages, inputValue, isTyping]); // Dependencies: Status, New Messages, User Typing, AI Processing
 
   const chatHistoryRef = useRef<any[]>([]);
 
@@ -181,9 +184,21 @@ export const useSibosChat = (
       }
       if (name === 'create_article') {
         const randomImage = "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=1200";
-        const { error } = await supabase.from('articles').insert([{ title: args.title, category: args.category, content: args.content, excerpt: args.excerpt, image_url: randomImage, author: "SIBOS AI", read_time: "5 min read", created_at: new Date().toISOString() }]);
+        // FORCE TYPE: 'pillar' to ensure it appears in Admin List (which filters for pillar)
+        const { error } = await supabase.from('articles').insert([{ 
+            title: args.title, 
+            category: args.category, 
+            content: args.content, 
+            excerpt: args.excerpt, 
+            image_url: randomImage, 
+            author: "SIBOS AI", 
+            read_time: "5 min read", 
+            created_at: new Date().toISOString(),
+            type: 'pillar', // CRITICAL FIX: Make sure it's a pillar page so it appears in list
+            status: 'published'
+        }]);
         if (error) throw error;
-        return `Artikel "${args.title}" berhasil diposting!`;
+        return `Artikel "${args.title}" berhasil diposting! Data akan muncul otomatis dalam beberapa saat.`;
       }
       if (name === 'delete_content') {
         const table = args.contentType;

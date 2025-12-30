@@ -106,6 +106,25 @@ const AppContent = () => {
 
   // --- Data Fetching & Realtime ---
   useEffect(() => {
+    // Defined separately to be callable by Realtime Subscription
+    const fetchArticles = async () => {
+        if (!supabase) return;
+        const { data: artData } = await supabase.from('articles').select('*');
+        if (artData) {
+            const mappedArticles = artData.map((item: any) => ({
+                ...item,
+                image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
+                readTime: item.read_time || item.readTime || '5 min read',
+                date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+            })).sort((a: any, b: any) => {
+                const dateA = a.created_at ? new Date(a.created_at) : parseDate(a.date);
+                const dateB = b.created_at ? new Date(b.created_at) : parseDate(b.date);
+                return dateB.getTime() - dateA.getTime();
+            });
+            setArticles(mappedArticles);
+        }
+    };
+
     const initializeData = async () => {
         // 1. CHECK CONNECTION
         if (!supabase) {
@@ -136,21 +155,8 @@ const AppContent = () => {
             const { data: galData } = await supabase.from('gallery').select('*').order('id', { ascending: false });
             if (galData) setGallery(galData);
 
-            // Fetch Articles
-            const { data: artData } = await supabase.from('articles').select('*');
-            if (artData) {
-                const mappedArticles = artData.map((item: any) => ({
-                    ...item,
-                    image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
-                    readTime: item.read_time || item.readTime || '5 min read',
-                    date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-                })).sort((a: any, b: any) => {
-                    const dateA = a.created_at ? new Date(a.created_at) : parseDate(a.date);
-                    const dateB = b.created_at ? new Date(b.created_at) : parseDate(b.date);
-                    return dateB.getTime() - dateA.getTime();
-                });
-                setArticles(mappedArticles);
-            }
+            // Fetch Articles (Using Helper)
+            await fetchArticles();
 
             // Fetch Testimonials
             const { data: testiData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
@@ -197,10 +203,12 @@ const AppContent = () => {
     // --- REALTIME SUBSCRIPTIONS ---
     let articlesChannel: any;
     if (supabase) {
+        // SUBSCRIBE TO ARTICLES TABLE CHANGES
         articlesChannel = supabase
             .channel('public:articles')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
-                // Simplified refresh logic or recall initializeData
+                console.log("Realtime: Article update detected!");
+                fetchArticles(); // Refetch when SIBOS creates an article
             })
             .subscribe();
             
