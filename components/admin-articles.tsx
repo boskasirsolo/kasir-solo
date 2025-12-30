@@ -580,9 +580,53 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
                 </div>
             ) : (
                 <div className="space-y-4">
-                    <Button onClick={actions.researchKeywords} disabled={loading.researching} className="w-full py-3 text-xs">{loading.researching ? <LoadingSpinner size={14}/> : "GENERATE TOPICS"}</Button>
+                    {/* ADDED: Topic Selection UI */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pilih Topik (Context)</label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {PRESET_TOPICS.map(topic => (
+                                <button 
+                                    key={topic.id}
+                                    onClick={() => aiState.togglePreset(topic.label)}
+                                    className={`text-[10px] p-2 rounded border transition-all text-left ${
+                                        aiState.selectedPresets.includes(topic.label)
+                                        ? 'bg-brand-orange text-white border-brand-orange shadow-sm'
+                                        : 'bg-black/20 text-gray-400 border-white/10 hover:border-brand-orange/30 hover:text-gray-300'
+                                    }`}
+                                >
+                                    {topic.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <Button onClick={actions.researchKeywords} disabled={loading.researching} className="w-full py-3 text-xs">
+                        {loading.researching ? <LoadingSpinner size={14}/> : <><Sparkles size={14} /> GENERATE TOPICS</>}
+                    </Button>
+                    
+                    {/* ADDED: Manual Write Button */}
+                    <div className="relative flex py-2 items-center">
+                        <div className="flex-grow border-t border-white/10"></div>
+                        <span className="flex-shrink-0 mx-2 text-[9px] text-gray-600 uppercase">Atau</span>
+                        <div className="flex-grow border-t border-white/10"></div>
+                    </div>
+                    
+                    <button 
+                        onClick={() => aiState.setStep(3)}
+                        className="w-full py-3 border border-white/10 rounded-lg text-gray-400 text-xs font-bold hover:bg-white/5 hover:text-white transition-all flex items-center justify-center gap-2"
+                    >
+                        <Edit size={14} /> TULIS MANUAL
+                    </button>
+
                     {aiState.keywords.length > 0 && (
-                        <div className="grid gap-2">{aiState.keywords.map((k, i) => <button key={i} onClick={() => actions.selectTopic(k)} className="text-left p-2 rounded border border-white/10 hover:border-brand-orange text-xs text-white">{k.keyword}</button>)}</div>
+                        <div className="grid gap-2 mt-4">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Hasil Riset AI:</label>
+                            {aiState.keywords.map((k, i) => (
+                                <button key={i} onClick={() => actions.selectTopic(k)} className="text-left p-2 rounded border border-white/10 hover:border-brand-orange text-xs text-white bg-black/20">
+                                    {k.keyword}
+                                </button>
+                            ))}
+                        </div>
                     )}
                 </div>
             )}
