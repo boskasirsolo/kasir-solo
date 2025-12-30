@@ -6,7 +6,7 @@ import {
   ArrowRight, Clock, Calendar, User, Tag, 
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
   Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
-  ChevronLeft, Send, Plus, Check
+  ChevronLeft, Send, Plus, Check, Briefcase, HeartHandshake
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
@@ -44,6 +44,33 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
 
     lines.forEach(line => {
       const trimmed = line.trim();
+
+      // --- ADVANCED CLEANING FILTERS ---
+      
+      // 1. Remove HTML Anchors artifacts (e.g. <a name="intro"></a> or <a name="bab-1"></a>)
+      // Regex menangkap <a name="..."></a> yang berdiri sendiri
+      if (/^<a\s+name=["'].*?["']\s*(\/?>|><\/a>)$/i.test(trimmed)) {
+        return;
+      }
+
+      // 2. Remove explicit "Daftar Isi" headers inside content body
+      if (/^(#+)?\s*(Daftar Isi|Table of Contents)/i.test(trimmed)) {
+        return;
+      }
+
+      // 3. Remove ToC List Items (lines that are just bullet points linking to internal anchors)
+      // Regex: Bullet/Number -> Space -> [Text] -> (#anchor) -> End of line
+      if (/^([\-\*+]|\d+\.)\s+\[.*?\]\(#.*?\)$/.test(trimmed)) {
+        return;
+      }
+
+      // 4. Remove empty anchor tags that might slip through
+      if (trimmed === '<a name="pendahuluan"></a>' || trimmed === '<a name="bab-1"></a>') {
+        return;
+      }
+
+      // --- END CLEANING ---
+
       if (trimmed.startsWith('|')) {
         tableBuffer.push(line);
       } else {
@@ -84,10 +111,17 @@ const parseLinks = (text: string) => {
     if (linkMatch) {
       const label = linkMatch[1];
       const url = linkMatch[2];
+      // Skip rendering empty internal anchor links if they slipped through
+      if (url.startsWith('#') && !label) return null;
+
       const isInternal = url.startsWith('/') || url.startsWith('#');
       const className = "text-brand-orange hover:text-white underline decoration-brand-orange/50 hover:decoration-white transition-colors font-medium break-words";
 
       if (isInternal) {
+          // If it's an anchor link, we might want to handle smooth scroll instead of router Link
+          if (url.startsWith('#')) {
+             return <a key={`link-${i}`} href={url} className={className}>{label}</a>;
+          }
           return <Link key={`link-${i}`} to={url} className={className}>{label}</Link>;
       }
       return <a key={`link-${i}`} href={url} target="_blank" rel="noreferrer" className={className}>{label}</a>;
@@ -175,6 +209,10 @@ const extractHeadings = (content: string) => {
   
   return nonEmptyLines.reduce((acc, line, index) => {
     const trimmed = line.trim();
+    
+    // Skip "Daftar Isi" from the generated sidebar as well
+    if (trimmed.toLowerCase().includes('daftar isi')) return acc;
+
     if (trimmed.startsWith('# ')) {
       acc.push({ 
         id: trimmed.replace('# ', '').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, ''), 
@@ -192,6 +230,22 @@ const extractHeadings = (content: string) => {
     }
     return acc;
   }, [] as { id: string, text: string, level: number, originalIndex: number }[]);
+};
+
+// Helper untuk deteksi role penulis
+const getAuthorRole = (authorName: string) => {
+    if (authorName === 'Amin Maghfuri') {
+        return {
+            role: 'Founder & CEO',
+            desc: 'Founder PT Mesin Kasir Solo. Inisiator platform SIBOS (ERP System) dan QALAM (Education Management). Berdedikasi membantu digitalisasi ribuan UMKM di Indonesia.',
+            initials: 'AM'
+        };
+    }
+    return {
+        role: 'Senior Content Writer',
+        desc: 'Tim Redaksi & Riset di PT Mesin Kasir Solo. Spesialis dalam edukasi bisnis, strategi kasir, dan manajemen ritel modern.',
+        initials: 'TR'
+    };
 };
 
 export const CategoryTab = ({ label, active, onClick }: { label: string, active: boolean, onClick: () => void }) => (
@@ -324,62 +378,88 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
   );
 };
 
-const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article }: any) => (
-  <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed space-y-6">
-      {blocks.map((paragraph: string, idx: number) => {
-          const p = paragraph.trim();
-          if (!p) return null;
-          
-          if (p.startsWith('|') && p.includes('|')) {
-              return <MarkdownTable key={idx} content={p} />;
-          }
+const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article }: any) => {
+  const authorInfo = getAuthorRole(article.author);
 
-          const cleanId = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-          
-          if (p.startsWith('# ')) {
-            const text = p.replace('# ', '');
-            return <h1 id={cleanId(text)} key={idx} className="scroll-mt-32 text-3xl font-bold text-white mt-12 mb-6 pb-4 border-b border-white/10 heading-observer">{text}</h1>;
-          }
-          if (p.startsWith('## ')) {
-            const text = p.replace('## ', '');
-            return <h2 id={cleanId(text)} key={idx} className="scroll-mt-32 text-2xl font-bold text-white mt-10 mb-4 border-l-4 border-brand-orange pl-4 heading-observer">{text}</h2>;
-          }
-          if (p.startsWith('### ')) return <h3 key={idx} className="text-xl font-bold text-brand-orange mt-8 mb-3">{p.replace('### ', '')}</h3>;
-          
-          if (p.startsWith('> ')) return <blockquote key={idx} className="border-l-4 border-gray-600 bg-white/5 p-6 italic text-gray-300 my-8 rounded-r-xl">{renderFormattedText(p.replace('> ', ''))}</blockquote>;
-          
-          if (p.startsWith('* ') || p.startsWith('- ')) return <div key={idx} className="flex gap-3 ml-2 mb-3"><div className="w-1.5 h-1.5 rounded-full bg-brand-orange mt-2.5 shrink-0"></div><span>{renderFormattedText(p.substring(2))}</span></div>;
+  return (
+    <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed space-y-6">
+        {blocks.map((paragraph: string, idx: number) => {
+            const p = paragraph.trim();
+            if (!p) return null;
+            
+            if (p.startsWith('|') && p.includes('|')) {
+                return <MarkdownTable key={idx} content={p} />;
+            }
 
-          if (/^\d+\.\s/.test(p)) {
-              const number = p.split('.')[0];
-              return <div key={idx} className="flex gap-3 ml-2 mb-3"><span className="text-brand-orange font-bold font-mono text-lg">{number}.</span><span className="mt-1">{renderFormattedText(p.substring(p.indexOf('.') + 1).trim())}</span></div>;
-          }
+            const cleanId = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+            
+            if (p.startsWith('# ')) {
+              const text = p.replace('# ', '');
+              return <h1 id={cleanId(text)} key={idx} className="scroll-mt-32 text-3xl font-bold text-white mt-12 mb-6 pb-4 border-b border-white/10 heading-observer">{text}</h1>;
+            }
+            if (p.startsWith('## ')) {
+              const text = p.replace('## ', '');
+              return <h2 id={cleanId(text)} key={idx} className="scroll-mt-32 text-2xl font-bold text-white mt-10 mb-4 border-l-4 border-brand-orange pl-4 heading-observer">{text}</h2>;
+            }
+            if (p.startsWith('### ')) return <h3 key={idx} className="text-xl font-bold text-brand-orange mt-8 mb-3">{p.replace('### ', '')}</h3>;
+            
+            if (p.startsWith('> ')) return <blockquote key={idx} className="border-l-4 border-gray-600 bg-white/5 p-6 italic text-gray-300 my-8 rounded-r-xl">{renderFormattedText(p.replace('> ', ''))}</blockquote>;
+            
+            if (p.startsWith('* ') || p.startsWith('- ')) return <div key={idx} className="flex gap-3 ml-2 mb-3"><div className="w-1.5 h-1.5 rounded-full bg-brand-orange mt-2.5 shrink-0"></div><span>{renderFormattedText(p.substring(2))}</span></div>;
 
-          if (p === '---') return <div key={idx} className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-12" />;
+            if (/^\d+\.\s/.test(p)) {
+                const number = p.split('.')[0];
+                return <div key={idx} className="flex gap-3 ml-2 mb-3"><span className="text-brand-orange font-bold font-mono text-lg">{number}.</span><span className="mt-1">{renderFormattedText(p.substring(p.indexOf('.') + 1).trim())}</span></div>;
+            }
 
-          return <p key={idx} className="text-lg leading-8 text-gray-300">{renderFormattedText(p)}</p>;
-      })}
-      
-      {totalPages > 1 && (
-        <div className="mt-12 pt-8 border-t border-white/10 flex items-center justify-between">
-            <Button variant="outline" onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="px-4 py-2"><ChevronLeft size={16} /> Sebelumnya</Button>
-            <span className="text-sm font-bold text-gray-400">Halaman <span className="text-brand-orange">{currentPage}</span> dari {totalPages}</span>
-            <Button variant="primary" onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="px-4 py-2">Selanjutnya <ChevronRight size={16} /></Button>
-        </div>
-      )}
+            if (p === '---') return <div key={idx} className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-12" />;
 
-      {currentPage === totalPages && (
-        <div className="mt-20 p-8 bg-brand-card rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left animate-fade-in">
-              <div className="w-20 h-20 bg-brand-orange/20 rounded-full flex items-center justify-center text-brand-orange border border-brand-orange/30 shrink-0"><User size={40} /></div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase font-bold mb-2">Tentang Penulis</p>
-                <h4 className="text-2xl font-bold text-white mb-2">{article.author || "Tim Redaksi"}</h4>
-                <p className="text-sm text-gray-400 leading-relaxed">Expert Consultant di PT Mesin Kasir Solo. Berpengalaman lebih dari 10 tahun membantu digitalisasi ribuan UMKM di Indonesia.</p>
+            return <p key={idx} className="text-lg leading-8 text-gray-300">{renderFormattedText(p)}</p>;
+        })}
+        
+        {totalPages > 1 && (
+          <div className="mt-12 pt-8 border-t border-white/10 flex items-center justify-between">
+              <Button variant="outline" onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="px-4 py-2"><ChevronLeft size={16} /> Sebelumnya</Button>
+              <span className="text-sm font-bold text-gray-400">Halaman <span className="text-brand-orange">{currentPage}</span> dari {totalPages}</span>
+              <Button variant="primary" onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="px-4 py-2">Selanjutnya <ChevronRight size={16} /></Button>
+          </div>
+        )}
+
+        {currentPage === totalPages && (
+          <div className="mt-16">
+              {/* Salam Penutup Hangat */}
+              <div className="mb-8 p-6 bg-brand-orange/5 border-l-4 border-brand-orange rounded-r-xl flex gap-4 items-start">
+                  <HeartHandshake className="text-brand-orange shrink-0 mt-1" size={24} />
+                  <div>
+                      <p className="text-gray-300 italic text-base leading-relaxed">
+                          "Semoga artikel ini bermanfaat dan memberikan wawasan baru untuk perkembangan bisnis Anda. Jangan ragu untuk memulai langkah kecil digitalisasi hari ini. Sukses selalu, Juragan!"
+                      </p>
+                  </div>
               </div>
-        </div>
-      )}
-  </div>
-);
+
+              {/* Author Box */}
+              <div className="p-8 bg-brand-card rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left animate-fade-in hover:border-brand-orange/30 transition-colors">
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center border-2 border-brand-orange/30 shrink-0 overflow-hidden bg-brand-dark shadow-neon">
+                       {/* Avatar Logic: Initials or Icon */}
+                       <div className="w-full h-full bg-brand-orange flex items-center justify-center text-white font-bold text-2xl">
+                           {authorInfo.initials}
+                       </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-brand-orange uppercase font-bold mb-1 tracking-widest flex items-center justify-center sm:justify-start gap-2">
+                          <Briefcase size={12} /> {authorInfo.role}
+                      </p>
+                      <h4 className="text-2xl font-bold text-white mb-3">{article.author || "Tim Redaksi"}</h4>
+                      <p className="text-sm text-gray-400 leading-relaxed max-w-xl">
+                          {authorInfo.desc}
+                      </p>
+                    </div>
+              </div>
+          </div>
+        )}
+    </div>
+  );
+};
 
 const ArticleSidebarLeft = ({ 
   article, 
@@ -450,6 +530,7 @@ const ArticleSidebarLeft = ({
       <div className="border-l border-white/10 pl-5 py-2 mb-10">
             <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2"><Hash size={14}/> Daftar Isi</h4>
             <ul className="space-y-4 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
+              {headings.length === 0 && <li className="text-xs text-gray-500 italic">Tidak ada sub-judul.</li>}
               {headings.map((h: any, idx: number) => (
                   <li key={idx}>
                       <button 

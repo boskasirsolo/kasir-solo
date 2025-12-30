@@ -1,7 +1,8 @@
+
 import { useState, useMemo, useEffect } from 'react';
 import { Article } from '../../types';
 import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration } from '../../utils';
-import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS } from './types';
+import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
 
 // --- BRAND CONTEXT KNOWLEDGE BASE ---
 const BRAND_CONTEXT = `
@@ -145,9 +146,19 @@ export const useAIGenerator = () => {
         }
     };
 
-    const generateContent = async (title: string, narrative: string, type: string) => {
+    const generateContent = async (title: string, tones: string[], type: string, authorName: string) => {
         setLoading(p => ({ ...p, generatingText: true }));
         try {
+            // --- DETECT POV BASED ON AUTHOR ---
+            const authorPreset = AUTHOR_PRESETS.find(p => p.name === authorName);
+            const pov = authorPreset?.mode === 'personal' ? 'First Person (POV: "Gue" or "Saya"). Use Storytelling, sharing personal struggles/success as a Founder.' : 'Professional (POV: "Kami"). Trustworthy, Expert, Corporate Tone.';
+            
+            // --- COMPILE TONE DESCRIPTION ---
+            const toneDescriptions = tones.map(t => {
+                const def = NARRATIVE_TONES.find(nt => nt.id === t);
+                return def ? `${def.label} (${def.desc})` : t;
+            }).join(', ');
+
             // --- LOGIKA PANJANG ARTIKEL ---
             const isPillar = type === 'pillar';
             const lengthInstruction = isPillar 
@@ -168,8 +179,11 @@ export const useAIGenerator = () => {
             Write an SEO Article about: "${title}".
             
             [REQUIREMENTS]
-            1. Language: Indonesian (Fluent, Engaging).
-            2. Narrative Style: ${narrative === 'narsis' ? 'Personal Storytelling (POV: Gue/Saya - Founder Perspective). Relatable, sharing struggle & success.' : 'Professional & Authoritative (POV: Kami). Trustworthy expert.'}
+            1. Language: Indonesian (Fluent, Engaging, Human-like).
+            2. **NARRATIVE & TONE:**
+               - POV: ${pov}
+               - Tone Mix: ${toneDescriptions}.
+               - Instruction: Blend these tones naturally. If 'Storytelling' is selected, start with a hook/story. If 'Opinion' is selected, be bold.
             3. Article Type: ${type.toUpperCase()}.
             4. ${lengthInstruction}
             5. ${structureInstruction}
@@ -242,6 +256,9 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         try { localStorage.setItem('mks_author_pref', JSON.stringify(authorPersona)); } catch (e) {}
     }, [authorPersona]);
 
+    // Added selectedTones state
+    const [selectedTones, setSelectedTones] = useState<string[]>(['story']); // Default
+
     const [form, setForm] = useState<ArticleFormState>({
         id: null, title: '', excerpt: '', content: '', category: '',
         readTime: '5 min read', imagePreview: '', uploadFile: null, 
@@ -265,6 +282,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         });
         setAiStep(0);
         setSelectedPresets([]);
+        setSelectedTones(['story']);
     };
 
     const handleEditClick = (item: Article) => {
@@ -382,15 +400,16 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         try { await aiLogic.researchKeywords(selectedPresets); setAiStep(1); } catch(e: any) { alert(e.message); }
     };
     const selectTopic = (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); };
+    
     const runWrite = async () => {
         try {
-            const selectedPreset = AUTHOR_PRESETS.find(p => p.name === form.author) || authorPersona;
-            const narrativeMode = selectedPreset.mode === 'personal' ? 'narsis' : 'umum';
-            const { content, meta } = await aiLogic.generateContent(form.title, narrativeMode, form.type);
+            // Pass the selected Tones to the generator
+            const { content, meta } = await aiLogic.generateContent(form.title, selectedTones, form.type, form.author);
             setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: meta.category, readTime: meta.readTime }));
             setAiStep(3); 
         } catch(e: any) { alert(e.message); }
     };
+    
     const runImage = async () => {
         aiLogic.setLoading(p => ({ ...p, generatingImage: true }));
         try {
@@ -407,7 +426,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         filterLogic,
         aiLogic,
         authorPersona, setAuthorPersona, updatePersonaAvatar,
-        aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, keywords: aiLogic.keywords },
+        aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, keywords: aiLogic.keywords, selectedTones, setSelectedTones },
         actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage }
     };
 };

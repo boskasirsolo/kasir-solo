@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, ArrowRight, Layout, Network, Image as ImageIcon, UploadCloud, CalendarClock, X as XIcon, User, Users } from 'lucide-react';
+import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, ArrowRight, Layout, Network, Image as ImageIcon, UploadCloud, CalendarClock, X as XIcon, User, Users, PenTool, Check } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, Input, TextArea, LoadingSpinner } from '../ui';
-import { PRESET_TOPICS, ARTICLE_CATEGORIES, AUTHOR_PRESETS } from './types';
+import { PRESET_TOPICS, ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
 
 // --- ATOM: Strategy Switcher ---
 const StrategySwitcher = ({ type, onChange }: { type: string, onChange: (t: 'pillar' | 'cluster') => void }) => (
@@ -78,6 +78,23 @@ export const EditorPanel = ({
         if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
             addCategory(catInput);
+        }
+    };
+
+    const toggleTone = (toneId: string) => {
+        const current = aiState.selectedTones || [];
+        const exists = current.includes(toneId);
+        
+        if (exists) {
+            aiState.setSelectedTones(current.filter((t: string) => t !== toneId));
+        } else {
+            // Logic: Max 3 Tones for clarity
+            if (current.length >= 3) {
+                // Remove first, add new (Queue behavior) or just block. Let's block.
+                alert("Maksimal 3 kombinasi tone.");
+            } else {
+                aiState.setSelectedTones([...current, toneId]);
+            }
         }
     };
 
@@ -194,10 +211,10 @@ export const EditorPanel = ({
                         }} 
                     />
 
-                    {/* 3. AUTHOR SELECTION (NEW) */}
+                    {/* 3. AUTHOR SELECTION (POV) */}
                     <div className="bg-white/5 p-3 rounded-lg border border-white/10">
                         <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
-                            <User size={10} /> Penulis Artikel
+                            <User size={10} /> Penulis (Point of View)
                         </label>
                         <div className="flex gap-2">
                             {AUTHOR_PRESETS.map((preset) => {
@@ -220,7 +237,38 @@ export const EditorPanel = ({
                         </div>
                     </div>
 
-                    {/* 4. Parent Selection (If Cluster) */}
+                    {/* 4. NARRATIVE TONE (NEW) */}
+                    <div className="bg-white/5 p-3 rounded-lg border border-white/10">
+                        <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
+                            <PenTool size={10} /> Tone & Gaya Bahasa (Max 3)
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {NARRATIVE_TONES.map((tone) => {
+                                const isActive = aiState.selectedTones?.includes(tone.id);
+                                return (
+                                    <button
+                                        key={tone.id}
+                                        onClick={() => toggleTone(tone.id)}
+                                        className={`flex items-start gap-2 p-2 rounded text-left transition-all border ${
+                                            isActive 
+                                            ? 'bg-brand-orange/20 border-brand-orange text-white' 
+                                            : 'bg-black/20 border-white/5 text-gray-400 hover:bg-white/5'
+                                        }`}
+                                    >
+                                        <div className={`w-3 h-3 mt-0.5 rounded-full border flex items-center justify-center ${isActive ? 'bg-brand-orange border-brand-orange' : 'border-gray-600'}`}>
+                                            {isActive && <Check size={8} className="text-white"/>}
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold">{tone.label}</p>
+                                            <p className="text-[8px] opacity-70 leading-tight">{tone.desc}</p>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* 5. Parent Selection (If Cluster) */}
                     {form.type === 'cluster' && (
                         <div className="bg-blue-500/5 p-3 rounded-lg border border-blue-500/20 animate-fade-in">
                             <label className="text-[9px] text-blue-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">

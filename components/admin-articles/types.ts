@@ -43,6 +43,16 @@ export const AUTHOR_PRESETS: AuthorPersona[] = [
     }
 ];
 
+export const NARRATIVE_TONES = [
+    { id: 'story', label: 'Storytelling (Pengalaman)', desc: 'Bercerita dari sudut pandang pelaku (Gue/Saya).' },
+    { id: 'opinion', label: 'Opini & Kritik', desc: 'Tajam, subjektif, dan berani mengambil sikap.' },
+    { id: 'analysis', label: 'Analisis Mendalam', desc: 'Berbasis data, fakta, dan riset komprehensif.' },
+    { id: 'tutorial', label: 'Tutorial / How-To', desc: 'Panduan teknis step-by-step yang jelas.' },
+    { id: 'case_study', label: 'Studi Kasus', desc: 'Bedah masalah real dan solusi spesifik.' },
+    { id: 'humor', label: 'Santai & Humoris', desc: 'Bahasa ringan, tidak kaku, menyisipkan jokes.' },
+    { id: 'formal', label: 'Formal / Korporat', desc: 'Bahasa baku, profesional, dan objektif.' }
+];
+
 export interface ArticleFormState {
     id: number | null;
     title: string;
