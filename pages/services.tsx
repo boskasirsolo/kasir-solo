@@ -4,7 +4,8 @@ import {
   Monitor, Smartphone, Globe, Zap, Database, Lock, Search, 
   BarChart, TrendingUp, RefreshCw, ShieldCheck, Server, 
   Code, ArrowRight, CheckCircle2, Layout, PenTool, Store, MousePointer2, Clock, ShoppingBag, Award,
-  FileSpreadsheet, Cpu, GitMerge, Users, PieChart, Layers
+  FileSpreadsheet, Cpu, GitMerge, Users, PieChart, Layers, 
+  Megaphone, Target, DollarSign, MapPin, Anchor, LineChart
 } from 'lucide-react';
 import { Button, Card, SectionHeader } from '../components/ui';
 
@@ -35,12 +36,12 @@ const ServiceHero = ({
       </p>
       <div className="flex justify-center gap-4">
         <a 
-          href="https://wa.me/6282325103336?text=Halo, saya ingin konsultasi sistem custom untuk efisiensi bisnis saya."
+          href="https://wa.me/6282325103336?text=Halo, saya ingin konsultasi strategi SEO agar tidak ketergantungan iklan."
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-2 px-8 py-3 bg-brand-action hover:bg-brand-actionGlow text-white rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong"
         >
-          Konsultasi Sistem <ArrowRight size={18} />
+          Konsultasi Strategi <ArrowRight size={18} />
         </a>
       </div>
     </div>
@@ -162,7 +163,7 @@ export const WebsiteServicePage = () => {
   );
 };
 
-// --- 2. WEB APP DEVELOPMENT PAGE (REVISED NARRATIVE) ---
+// --- 2. WEB APP DEVELOPMENT PAGE ---
 export const WebAppServicePage = () => {
   const features = [
     { title: "Business Automation", desc: "Ubah proses manual (tulis nota, rekap Excel) menjadi sistem otomatis. Hemat waktu admin hingga 70%.", icon: Cpu },
@@ -245,32 +246,83 @@ export const WebAppServicePage = () => {
   );
 };
 
-// --- 3. SEO OPTIMIZATION PAGE ---
+// --- 3. SEO OPTIMIZATION PAGE (REVISED NARRATIVE) ---
 export const SeoServicePage = () => {
   const features = [
-    { title: "Keyword Research", desc: "Riset mendalam untuk menemukan kata kunci yang sering dicari calon pembeli potensial.", icon: Search },
-    { title: "On-Page SEO", desc: "Optimasi struktur konten, meta tags, heading, dan internal linking di website Anda.", icon: Layout },
-    { title: "Technical SEO", desc: "Perbaikan teknis website (Sitemap, Robots.txt, Speed) agar mudah dirayapi Google.", icon: Zap },
-    { title: "Content Strategy", desc: "Pembuatan artikel pilar dan cluster konten untuk mendominasi topik bisnis Anda.", icon: PenTool },
-    { title: "Backlink Audit", desc: "Analisis dan pembersihan link spam serta strategi link building yang aman.", icon: ShieldCheck },
-    { title: "Monthly Report", desc: "Laporan perkembangan ranking dan traffic organik setiap bulan.", icon: BarChart },
+    { title: "Buying Intent Keywords", desc: "Kami tidak menargetkan 'kata kunci sampah' yang hanya mendatangkan traffic tanpa penjualan. Kami riset kata kunci yang diketik orang saat SIAP BELI.", icon: Target },
+    { title: "Stop 'Bakar Uang' Iklan", desc: "Iklan (Ads) itu seperti sewa rumah; berhenti bayar, Anda diusir. SEO adalah investasi properti; asetnya milik Anda selamanya.", icon: DollarSign },
+    { title: "Dominasi Lokal (GMB)", desc: "Pastikan toko Anda muncul di Google Maps saat orang mencari 'Kasir terdekat' atau produk Anda di kota Anda.", icon: MapPin },
+    { title: "Technical Audit", desc: "Google membenci web lambat & error. Kami perbaiki 'jeroan' website agar mudah dibaca robot Google.", icon: Layers },
+    { title: "Authority Content", desc: "Artikel yang tidak hanya disukai Google, tapi juga mengedukasi calon pembeli bahwa ANDALAH solusinya.", icon: PenTool },
+    { title: "Safe Backlink Strategy", desc: "Membangun reputasi digital dengan cara aman (White Hat), bukan cara curang yang berisiko di-banned Google.", icon: ShieldCheck },
   ];
 
   const steps = [
-    { step: "1", title: "Audit Website", desc: "Mengecek kesehatan website saat ini dan posisi ranking." },
-    { step: "2", title: "Strategi", desc: "Menentukan keyword target dan rencana konten." },
-    { step: "3", title: "Optimasi", desc: "Eksekusi perbaikan teknis dan produksi konten." },
-    { step: "4", title: "Monitoring", desc: "Evaluasi hasil dan penyesuaian strategi rutin." },
+    { step: "1", title: "Audit & Riset", desc: "Mencari celah kompetitor dan kata kunci 'uang' yang belum digarap." },
+    { step: "2", title: "On-Page Fix", desc: "Memperbaiki struktur website agar ramah Google (Speed, Mobile, Meta)." },
+    { step: "3", title: "Content Asset", desc: "Memproduksi konten pilar yang menjawab masalah customer." },
+    { step: "4", title: "Off-Page Authority", desc: "Meningkatkan kepercayaan domain di mata Google secara bertahap." },
   ];
 
   return (
     <div className="animate-fade-in">
       <ServiceHero 
-        title="Jasa Optimasi" 
-        highlight="SEO Google" 
-        subtitle="Tingkatkan ranking website Anda ke Halaman 1 Google. Datangkan traffic organik berkualitas tanpa biaya iklan terus-menerus."
-        icon={TrendingUp}
+        title="Berhenti Membakar" 
+        highlight="Uang Iklan." 
+        subtitle="Ubah Website Anda menjadi Aset Digital yang bekerja 24 jam. Datangkan pelanggan potensial secara organik tanpa perlu bayar per klik selamanya."
+        icon={LineChart}
       />
+
+      {/* NARRATIVE SECTION: THE TRAFFIC TRAP */}
+      <section className="py-16 bg-brand-black relative border-b border-white/5">
+         <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+               <div className="relative order-2 md:order-1">
+                  <div className="absolute inset-0 bg-brand-orange/10 blur-[80px] rounded-full"></div>
+                  <div className="relative bg-brand-dark border border-white/10 rounded-2xl p-8 space-y-6">
+                     <div className="flex items-center justify-between text-gray-500 mb-2">
+                        <div className="text-center">
+                            <Megaphone size={32} className="text-red-500 mx-auto mb-2" />
+                            <p className="text-xs font-bold text-red-500">PAID ADS</p>
+                            <p className="text-[10px]">Sewa Traffic</p>
+                        </div>
+                        <div className="h-px w-20 bg-gray-700"></div>
+                        <div className="text-center">
+                            <Anchor size={32} className="text-brand-orange mx-auto mb-2" />
+                            <p className="text-xs font-bold text-brand-orange">SEO ORGANIC</p>
+                            <p className="text-[10px]">Miliki Traffic</p>
+                        </div>
+                     </div>
+                     <h3 className="text-xl font-bold text-white">Investasi vs Pengeluaran</h3>
+                     <p className="text-gray-400 text-sm leading-relaxed">
+                        Saat Anda berhenti beriklan di Google/FB Ads, traffic Anda <strong>NOL</strong> detik itu juga. 
+                        Dengan SEO, traffic terus mengalir bahkan saat Anda sedang tidur atau liburan. 
+                        Bangun aset, jangan cuma menyewa.
+                     </p>
+                  </div>
+               </div>
+               
+               <div className="order-1 md:order-2">
+                  <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6 leading-tight">
+                     Dominasi <span className="text-brand-orange">Halaman 1</span> Google
+                  </h2>
+                  <p className="text-gray-400 leading-relaxed mb-6">
+                     Pelanggan tidak mencari Anda di halaman 2. Jika website Anda tidak ada di halaman 1, bisnis Anda <strong>tidak terlihat</strong>.
+                  </p>
+                  <p className="text-gray-400 leading-relaxed mb-6">
+                     Kami tidak menjanjikan trik sulap instan. SEO adalah maraton, bukan lari sprint. Tapi hasilnya adalah <strong>Monopoli Pasar</strong> jangka panjang yang sulit digoyahkan kompetitor.
+                  </p>
+                  <div className="flex gap-4">
+                      <div className="flex items-center gap-2 text-white font-bold bg-brand-orange/10 px-4 py-2 rounded-lg border border-brand-orange/20">
+                          <TrendingUp size={18} className="text-brand-orange"/>
+                          <span>Sustainable Growth</span>
+                      </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
+
       <FeatureGrid features={features} />
       <WorkflowSection steps={steps} />
     </div>
