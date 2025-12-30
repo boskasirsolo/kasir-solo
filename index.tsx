@@ -43,6 +43,7 @@ const AppContent = () => {
   const [config, setConfig] = useState<SiteConfig>({
     heroTitle: "MESIN KASIR DIGITAL",
     heroSubtitle: "Solusi kasir modern (POS) dan jasa pembuatan website profesional untuk UMKM Indonesia.",
+    aboutImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200", // Default Fallback
     sibosUrl: "https://sibos.id",
     qalamUrl: "https://qalam.id",
     whatsappNumber: "6282325103336",
@@ -153,6 +154,7 @@ const AppContent = () => {
          setConfig({
              heroTitle: settingsData.hero_title || config.heroTitle,
              heroSubtitle: settingsData.hero_subtitle || config.heroSubtitle,
+             aboutImage: settingsData.about_image || config.aboutImage, // ADDED
              sibosUrl: settingsData.sibos_url || config.sibosUrl,
              qalamUrl: settingsData.qalam_url || config.qalamUrl,
              whatsappNumber: settingsData.whatsapp_number || config.whatsappNumber,
@@ -245,7 +247,7 @@ const AppContent = () => {
           <Route path="/legal/:type" element={<LegalPage />} />
 
           <Route path="/about" element={<AboutPage config={config} />} />
-          <Route path="/about/vision" element={<VisionPage />} /> {/* NEW ROUTE */}
+          <Route path="/about/vision" element={<VisionPage />} /> 
           <Route path="/contact" element={<ContactPage config={config} />} /> 
           
           <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />

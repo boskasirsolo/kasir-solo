@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save, Sparkles, TrendingUp } from 'lucide-react';
+import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save, Sparkles, TrendingUp, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
-import { supabase, callGeminiWithRotation } from '../utils';
+import { supabase, callGeminiWithRotation, CONFIG } from '../utils';
 
 export const AdminSettings = ({
   config,
@@ -15,16 +15,37 @@ export const AdminSettings = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [magicContext, setMagicContext] = useState('');
+  
+  // Image Upload State
+  const [aboutImageFile, setAboutImageFile] = useState<File | null>(null);
+  const [aboutImagePreview, setAboutImagePreview] = useState(config.aboutImage || '');
 
   const saveSettings = async () => {
       if (!supabase) return alert("Koneksi Database bermasalah.");
       
       setIsSaving(true);
       try {
+          let finalAboutImage = aboutImagePreview;
+
+          // 1. Handle Upload if file selected
+          if (aboutImageFile && CONFIG.CLOUDINARY_CLOUD_NAME) {
+              const formData = new FormData();
+              formData.append('file', aboutImageFile);
+              formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
+              const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+              const data = await res.json();
+              if (data.secure_url) {
+                  finalAboutImage = data.secure_url;
+                  // Update local config immediately so UI reflects it even without refresh
+                  setConfig({ ...config, aboutImage: finalAboutImage });
+              }
+          }
+
           const dbData = {
               id: 1, // Singleton row concept
               hero_title: config.heroTitle,
               hero_subtitle: config.heroSubtitle,
+              about_image: finalAboutImage, // Save to DB
               sibos_url: config.sibosUrl,
               qalam_url: config.qalamUrl,
               whatsapp_number: config.whatsappNumber,
@@ -42,6 +63,7 @@ export const AdminSettings = ({
           const { error } = await supabase.from('site_settings').upsert(dbData);
           if(error) throw error;
           alert("Konfigurasi berhasil disimpan! Refresh halaman depan untuk melihat perubahan.");
+          setAboutImageFile(null); // Clear file input
       } catch(e: any) {
           alert("Gagal menyimpan: " + e.message);
       } finally {
@@ -192,8 +214,57 @@ export const AdminSettings = ({
             </div>
         </div>
 
-        {/* COLUMN 2: Links & Social */}
+        {/* COLUMN 2: Links & Social & IMAGES */}
         <div className="space-y-8">
+            
+            {/* NEW: About Page Image Config */}
+            <div className="space-y-4">
+                <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                    <ImageIcon size={14} /> Foto Kantor (About Page)
+                </h4>
+                
+                <div className="bg-brand-dark border border-white/10 rounded-xl overflow-hidden p-4">
+                    {/* Preview Area */}
+                    <div className="relative w-full h-40 bg-black/50 rounded-lg overflow-hidden border border-white/10 mb-4 group">
+                        {aboutImagePreview ? (
+                            <img src={aboutImagePreview} alt="Office Preview" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-2">
+                                <ImageIcon size={32} />
+                                <span className="text-xs">Belum ada foto</span>
+                            </div>
+                        )}
+                        {/* Overlay Hint */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <p className="text-white text-xs font-bold">Preview Tampilan</p>
+                        </div>
+                    </div>
+
+                    {/* Upload Input */}
+                    <div className="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-brand-orange/50 transition-colors bg-white/5 cursor-pointer relative">
+                        <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => {
+                                const file = e.target.files ? e.target.files[0] : null;
+                                if (file) {
+                                    setAboutImageFile(file);
+                                    setAboutImagePreview(URL.createObjectURL(file));
+                                }
+                            }} 
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
+                        />
+                        <div className="flex flex-col items-center gap-2 pointer-events-none">
+                            <UploadCloud size={24} className="text-gray-400" />
+                            <span className="text-gray-300 font-bold text-xs">
+                                {aboutImageFile ? aboutImageFile.name : "Klik untuk Ganti Foto"}
+                            </span>
+                            <span className="text-[10px] text-gray-500">Format: Landscape (16:9), Max 2MB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Dynamic Links */}
             <div className="space-y-4">
             <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">

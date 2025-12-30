@@ -62,6 +62,7 @@ export interface Testimonial {
 export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
+  aboutImage?: string; // NEW: Dynamic Office Photo
   sibosUrl?: string; 
   qalamUrl?: string; 
   // Contact & Footer Config

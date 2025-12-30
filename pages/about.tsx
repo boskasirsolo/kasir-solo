@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { History, Rocket, AlertTriangle, Sunrise, Users, Target } from 'lucide-react';
+import { History, Rocket, AlertTriangle, Sunrise, Users, Target, Building } from 'lucide-react';
 import { SiteConfig } from '../types';
 
 export const AboutPage = ({ config }: { config?: SiteConfig }) => (
@@ -126,5 +126,35 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
 
       </div>
     </div>
+
+    {/* OFFICE PHOTO SECTION */}
+    <section className="relative w-full h-[400px] md:h-[600px] overflow-hidden group border-t border-white/5">
+        <div className="absolute inset-0 bg-brand-dark flex items-center justify-center">
+            {config?.aboutImage ? (
+                <img 
+                    src={config.aboutImage} 
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80"
+                    alt="Kantor PT Mesin Kasir Solo" 
+                />
+            ) : (
+                <div className="text-gray-600 flex flex-col items-center">
+                    <Building size={48} className="mb-2"/>
+                    <p>Office Photo Placeholder</p>
+                </div>
+            )}
+        </div>
+        
+        {/* Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/20 to-transparent"></div>
+        
+        {/* Floating Badge */}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-center z-10">
+            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 bg-black/60 backdrop-blur-xl shadow-2xl">
+                <Building size={16} className="text-brand-orange" />
+                <span className="text-xs md:text-sm font-bold text-white uppercase tracking-[0.2em]">Markas Besar Kami</span>
+            </div>
+        </div>
+    </section>
+
   </div>
 );
