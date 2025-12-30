@@ -105,6 +105,7 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
 // --- SUB-HOOK: AI GENERATOR ---
 export const useAIGenerator = () => {
     const [loading, setLoading] = useState({ researching: false, generatingText: false, generatingImage: false, uploading: false });
+    const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
     
     const [genConfig, setGenConfig] = useState<GenConfig>({
@@ -112,17 +113,56 @@ export const useAIGenerator = () => {
         imageStyle: 'cinematic', narrative: 'narsis'
     });
 
-    const researchKeywords = async (topics: string[]) => {
+    // STEP 1: Research General Trending Topics
+    const analyzeMarket = async () => {
+        setLoading(p => ({ ...p, researching: true }));
+        try {
+            const prompt = `
+            Act as a Senior SEO Strategist for the Indonesian Market.
+            Industry: Retail Technology, Point of Sale (POS), UMKM Business, Digitalization, FnB Management.
+            
+            Task: Identify 20 currently trending or high-potential topics/keywords in Indonesia for 2024-2025.
+            Focus: High search volume potential, solving real business problems (e.g. "Cara mencegah kasir curang", "Aplikasi kasir gratis vs berbayar").
+            
+            Strict Output Format: JSON Array of strings ONLY.
+            Example: ["Strategi Marketing Kopi Kekinian", "Manajemen Stok Gudang", "Aplikasi Kasir Android Terbaik 2025"]
+            `;
+            
+            const result = await callGeminiWithRotation({ 
+                model: 'gemini-3-flash-preview', 
+                contents: prompt, 
+                config: { responseMimeType: "application/json" } 
+            });
+            
+            const text = result.text || '[]';
+            const data = JSON.parse(text);
+            
+            if (Array.isArray(data) && data.length > 0) {
+                setTrendingTopics(data);
+            } else {
+                throw new Error("AI tidak menghasilkan topik valid.");
+            }
+        } catch (e) {
+            console.error("Market Analysis Error", e);
+            throw e; 
+        } finally {
+            setLoading(p => ({ ...p, researching: false }));
+        }
+    };
+
+    // STEP 2: Generate Specific Titles (Longtail Keywords)
+    const generateTitles = async (topics: string[]) => {
         if (topics.length === 0) throw new Error("Pilih minimal 1 topik.");
         setLoading(p => ({ ...p, researching: true }));
         try {
             const prompt = `
-            Act as a Senior SEO Strategist for the Indonesian Market working for PT Mesin Kasir Solo.
-            Context: We sell POS Hardware, Website Services, and develop SIBOS (ERP) & QALAM (Edu App).
-            Selected Topics: ${topics.join(', ')}.
-            Task: Generate 10 high-potential article titles/keywords based on our products.
-            Strict Output Format: JSON Array ONLY.
-            Example: [{"keyword": "Judul", "volume": "High", "competition": "Low", "type": "Evergreen"}]
+            Act as a Senior SEO Strategist.
+            Context: Selected Topics: ${topics.join(', ')}.
+            Goal: Generate 10 specific Article Titles targeting LONG-TAIL KEYWORDS.
+            Criteria: High Volume Potential, Low-Medium Competition.
+            
+            Strict Output Format: JSON Array of Objects.
+            Example: [{"keyword": "Judul Artikel Longtail", "volume": "High", "competition": "Low", "type": "Evergreen"}]
             `;
             
             const result = await callGeminiWithRotation({ 
@@ -137,10 +177,10 @@ export const useAIGenerator = () => {
             if (Array.isArray(data) && data.length > 0) {
                 setKeywords(data);
             } else {
-                throw new Error("AI tidak menghasilkan data valid.");
+                throw new Error("AI tidak menghasilkan judul valid.");
             }
         } catch (e) {
-            console.error("Research Error", e);
+            console.error("Title Gen Error", e);
             throw e; 
         } finally {
             setLoading(p => ({ ...p, researching: false }));
@@ -238,7 +278,7 @@ export const useAIGenerator = () => {
         }
     };
 
-    return { loading, setLoading, keywords, genConfig, setGenConfig, researchKeywords, generateContent, getAIImageUrl };
+    return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateTitles, generateContent, getAIImageUrl };
 };
 
 // --- MAIN HOOK: ARTICLE MANAGER ---
@@ -434,17 +474,34 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         if (form.id === id) resetForm();
     };
 
+    // --- STEP 1: RESEARCH TRENDS ---
     const runResearch = async () => {
-        try { await aiLogic.researchKeywords(selectedPresets); setAiStep(1); } catch(e: any) { alert(e.message); }
+        try { 
+            await aiLogic.analyzeMarket(); 
+            setAiStep(1); 
+        } catch(e: any) { alert(e.message); }
     };
-    const selectTopic = (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); };
+
+    // --- STEP 2: GENERATE TITLES ---
+    const runTitleGen = async (selectedTopics: string[]) => {
+        try {
+            await aiLogic.generateTitles(selectedTopics);
+            setAiStep(2);
+        } catch (e: any) { alert(e.message); }
+    };
+
+    // --- STEP 3: SELECT TITLE ---
+    const selectTopic = (k: any) => { 
+        setForm(p => ({ ...p, title: k.keyword })); 
+        setAiStep(3); 
+    };
     
     const runWrite = async () => {
         try {
             // Pass the selected Tones to the generator
             const { content, meta } = await aiLogic.generateContent(form.title, selectedTones, form.type, form.author);
             setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: meta.category, readTime: meta.readTime }));
-            setAiStep(3); 
+            setAiStep(3); // Stay on config/edit step after generation
         } catch(e: any) { alert(e.message); }
     };
     
@@ -464,7 +521,13 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         filterLogic,
         aiLogic,
         authorPersona, setAuthorPersona, updatePersonaAvatar,
-        aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, keywords: aiLogic.keywords, selectedTones, setSelectedTones },
-        actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage }
+        aiState: { 
+            step: aiStep, setStep: setAiStep, 
+            selectedPresets, setSelectedPresets, 
+            trendingTopics: aiLogic.trendingTopics, // Pass trending topics
+            keywords: aiLogic.keywords, 
+            selectedTones, setSelectedTones 
+        },
+        actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, runTitleGen, selectTopic, runWrite, runImage }
     };
 };
