@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { 
   Monitor, Smartphone, Globe, Zap, Database, Lock, Search, 
   BarChart, TrendingUp, RefreshCw, ShieldCheck, Server, 
-  Code, ArrowRight, CheckCircle2, Layout, PenTool, Store, MousePointer2, Clock, ShoppingBag, Award
+  Code, ArrowRight, CheckCircle2, Layout, PenTool, Store, MousePointer2, Clock, ShoppingBag, Award,
+  FileSpreadsheet, Cpu, GitMerge, Users, PieChart, Layers
 } from 'lucide-react';
 import { Button, Card, SectionHeader } from '../components/ui';
 
@@ -33,12 +35,12 @@ const ServiceHero = ({
       </p>
       <div className="flex justify-center gap-4">
         <a 
-          href="https://wa.me/6282325103336?text=Halo, saya ingin konsultasi strategi website untuk bisnis saya."
+          href="https://wa.me/6282325103336?text=Halo, saya ingin konsultasi sistem custom untuk efisiensi bisnis saya."
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-2 px-8 py-3 bg-brand-action hover:bg-brand-actionGlow text-white rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong"
         >
-          Konsultasi Gratis <ArrowRight size={18} />
+          Konsultasi Sistem <ArrowRight size={18} />
         </a>
       </div>
     </div>
@@ -85,7 +87,7 @@ const WorkflowSection = ({ steps }: { steps: { step: string, title: string, desc
   </section>
 );
 
-// --- 1. WEBSITE DEVELOPMENT PAGE (REVISED NARRATIVE) ---
+// --- 1. WEBSITE DEVELOPMENT PAGE ---
 export const WebsiteServicePage = () => {
   const features = [
     { title: "SEO Domination", desc: "Kami tidak cuma bikin web cantik. Kami merancang struktur agar bisnis Anda mudah ditemukan di Google (Mesin Pencari Pelanggan).", icon: Search },
@@ -160,32 +162,83 @@ export const WebsiteServicePage = () => {
   );
 };
 
-// --- 2. WEB APP DEVELOPMENT PAGE ---
+// --- 2. WEB APP DEVELOPMENT PAGE (REVISED NARRATIVE) ---
 export const WebAppServicePage = () => {
   const features = [
-    { title: "Custom Logic", desc: "Sistem dibangun dari nol sesuai alur bisnis unik perusahaan Anda, bukan template.", icon: Code },
-    { title: "Scalable Database", desc: "Menggunakan database modern (Supabase/PostgreSQL) yang siap menampung jutaan data.", icon: Database },
-    { title: "Real-time Update", desc: "Data terupdate otomatis tanpa refresh halaman (cocok untuk dashboard monitoring).", icon: RefreshCw },
-    { title: "High Security", desc: "Proteksi data berlapis dengan enkripsi standar industri dan manajemen hak akses user.", icon: ShieldCheck },
-    { title: "API Integration", desc: "Bisa terhubung dengan layanan lain (Payment Gateway, WA Gateway, ERP, dll).", icon: Server },
-    { title: "Multi-Platform", desc: "Aplikasi berbasis web yang bisa diakses dari perangkat apapun via browser.", icon: Monitor },
+    { title: "Business Automation", desc: "Ubah proses manual (tulis nota, rekap Excel) menjadi sistem otomatis. Hemat waktu admin hingga 70%.", icon: Cpu },
+    { title: "Centralized Data", desc: "Satu database pusat untuk semua cabang. Tidak ada lagi drama 'file Excel yang mana yang terbaru?'.", icon: Database },
+    { title: "Real-time Dashboard", desc: "Pantau omzet, stok, dan kinerja karyawan detik ini juga dari HP Anda, di mana saja.", icon: PieChart },
+    { title: "Role Management", desc: "Batasi akses karyawan. Kasir hanya bisa input penjualan, tidak bisa melihat HPP atau laba bersih.", icon: Users },
+    { title: "API Integration", desc: "Hubungkan sistem dengan Payment Gateway, WhatsApp Notif, atau sistem Supplier.", icon: GitMerge },
+    { title: "Asset Ownership", desc: "Berbeda dengan langganan SaaS, aplikasi custom adalah ASET ANDA. Database milik Anda sepenuhnya.", icon: ShieldCheck },
   ];
 
   const steps = [
-    { step: "1", title: "Analisis Sistem", desc: "Membedah alur bisnis dan masalah yang ingin diselesaikan." },
-    { step: "2", title: "Prototyping", desc: "Pembuatan mockup desain interaktif sebelum coding dimulai." },
-    { step: "3", title: "Coding & Test", desc: "Pengerjaan backend & frontend serta uji coba bug ketat." },
-    { step: "4", title: "Deployment", desc: "Instalasi di server cloud dan pelatihan penggunaan." },
+    { step: "1", title: "Audit Alur", desc: "Kami memetakan 'benang kusut' di operasional Anda saat ini." },
+    { step: "2", title: "Blueprint", desc: "Merancang arsitektur database dan flow sistem yang efisien." },
+    { step: "3", title: "Agile Dev", desc: "Pengerjaan bertahap dengan feedback rutin agar sesuai ekspektasi." },
+    { step: "4", title: "UAT & Live", desc: "User Acceptance Test (Uji Coba) sebelum peluncuran resmi." },
   ];
 
   return (
     <div className="animate-fade-in">
       <ServiceHero 
-        title="Web App" 
-        highlight="Development" 
-        subtitle="Transformasi operasional bisnis manual menjadi sistem digital otomatis. SaaS, ERP, CRM, atau Internal Tools custom sesuai kebutuhan."
-        icon={Code}
+        title="Jangan Biarkan Bisnis" 
+        highlight="Diatur Spreadsheet." 
+        subtitle="Saatnya beralih ke Custom Web App. Sistem operasi digital yang dirancang khusus mengikuti alur unik bisnis Anda, bukan sebaliknya."
+        icon={Layers}
       />
+
+      {/* NARRATIVE SECTION: THE EXCEL TRAP */}
+      <section className="py-16 bg-brand-black relative border-b border-white/5">
+         <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+               <div>
+                  <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6 leading-tight">
+                     Keluar dari Jebakan <span className="text-red-500">Manual Admin</span>
+                  </h2>
+                  <p className="text-gray-400 leading-relaxed mb-6">
+                     Bisnis Anda tumbuh, tapi pekerjaan admin makin "menggila"? Data stok selisih, orderan tercecer di chat WhatsApp, dan Anda buta terhadap profit harian?
+                  </p>
+                  <p className="text-gray-400 leading-relaxed mb-6">
+                     Aplikasi Siap Pakai (SaaS) seringkali <strong>terlalu kaku</strong>. Fitur yang Anda butuhkan tidak ada, fitur yang tidak butuh malah menumpuk.
+                  </p>
+                  <div className="bg-brand-dark border-l-4 border-brand-orange p-4 rounded-r-lg">
+                     <p className="text-white italic">
+                        "Custom Web App adalah baju yang dijahit khusus untuk badan bisnis Anda. Pas, Nyaman, dan Membuat Anda Bergerak Lebih Cepat."
+                     </p>
+                  </div>
+               </div>
+               
+               <div className="relative">
+                  <div className="absolute inset-0 bg-red-500/10 blur-[80px] rounded-full"></div>
+                  <div className="relative bg-brand-dark border border-white/10 rounded-2xl p-8 space-y-6">
+                     <div className="flex items-center justify-between text-gray-500 mb-2">
+                        <FileSpreadsheet size={32} />
+                        <ArrowRight size={24} className="text-brand-orange animate-pulse" />
+                        <Cpu size={32} className="text-brand-orange" />
+                     </div>
+                     <h3 className="text-xl font-bold text-white">Transformasi Digital</h3>
+                     <ul className="space-y-3">
+                        <li className="flex gap-3 text-sm text-gray-400">
+                           <span className="text-red-500">❌</span> 
+                           <span>Rekap manual 3 jam/hari</span>
+                        </li>
+                        <li className="flex gap-3 text-sm text-gray-400">
+                           <span className="text-red-500">❌</span> 
+                           <span>Data tersebar di 5 file Excel</span>
+                        </li>
+                        <li className="flex gap-3 text-sm text-white font-bold bg-brand-orange/10 p-2 rounded">
+                           <CheckCircle2 className="text-brand-orange shrink-0" size={16} />
+                           <span>Laporan Otomatis Real-time (0 detik)</span>
+                        </li>
+                     </ul>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
+
       <FeatureGrid features={features} />
       <WorkflowSection steps={steps} />
     </div>
