@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { BarChart3, Users, MousePointer, Smartphone, Monitor, Eye, ArrowUp, ArrowDown, Calendar, ShieldCheck } from 'lucide-react';
+import { BarChart3, Users, MousePointer, Smartphone, Monitor, Eye, ArrowUp, ArrowDown, Calendar, ShieldCheck, Link as LinkIcon, Copy, Check } from 'lucide-react';
 import { supabase } from '../utils';
 import { AnalyticsLog } from '../types';
 import { LoadingSpinner } from './ui';
@@ -125,6 +125,45 @@ const DeviceBar = ({ label, count, total, icon: Icon }: { label: string, count: 
   );
 };
 
+// --- ATOM: Ghost Link Copier ---
+const GhostLinkCopier = () => {
+    const [copied, setCopied] = useState(false);
+    // Use window.location.origin to get current domain (localhost or production)
+    const ghostLink = typeof window !== 'undefined' ? `${window.location.origin}/?mode=ghost_access` : '';
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(ghostLink);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <div className="mt-6 p-4 bg-brand-dark border border-white/10 rounded-xl">
+            <h4 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
+                <ShieldCheck size={16} className="text-brand-orange"/> Ghost Access Link (Link Jimat)
+            </h4>
+            <p className="text-xs text-gray-400 mb-3 leading-relaxed">
+                Buka link ini di browser/HP lain agar trafiknya <strong>TIDAK DIHITUNG</strong> di analitik. 
+                Sistem akan menandai browser tersebut sebagai "Internal".
+            </p>
+            <div className="flex gap-2">
+                <input 
+                    readOnly 
+                    value={ghostLink} 
+                    className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 text-xs text-gray-300 focus:outline-none"
+                />
+                <button 
+                    onClick={handleCopy}
+                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold text-white transition-all"
+                >
+                    {copied ? <Check size={14} className="text-green-500"/> : <Copy size={14}/>}
+                    {copied ? "Disalin!" : "Copy"}
+                </button>
+            </div>
+        </div>
+    );
+};
+
 // --- ORGANISM: Main Dashboard View ---
 export const AnalyticsDashboard = () => {
   const { stats, loading, period, setPeriod } = useAnalyticsData();
@@ -148,9 +187,13 @@ export const AnalyticsDashboard = () => {
          </div>
 
          <div className="flex items-center gap-3">
-            {isGhostMode && (
+            {isGhostMode ? (
                 <span className="text-[10px] font-bold text-green-500 flex items-center gap-1 bg-green-900/20 px-3 py-1.5 rounded-full border border-green-500/30">
-                    <ShieldCheck size={12}/> Ghost Mode Active (Device ini tidak dilacak)
+                    <ShieldCheck size={12}/> Ghost Mode Active
+                </span>
+            ) : (
+                <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1 bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+                    <Eye size={12}/> Tracking Active
                 </span>
             )}
             <div className="bg-black/40 rounded-lg p-1 border border-white/10 flex">
@@ -187,13 +230,18 @@ export const AnalyticsDashboard = () => {
          </div>
 
          {/* Device Breakdown */}
-         <div className="bg-brand-dark border border-white/5 rounded-xl p-6">
+         <div className="bg-brand-dark border border-white/5 rounded-xl p-6 flex flex-col">
             <h4 className="text-white font-bold text-sm mb-6 flex items-center gap-2">
                 <Smartphone size={16} className="text-brand-orange"/> Device User
             </h4>
-            <DeviceBar label="Mobile (HP)" count={stats.devices.mobile} total={stats.totalViews} icon={Smartphone} />
-            <DeviceBar label="Desktop (PC/Laptop)" count={stats.devices.desktop} total={stats.totalViews} icon={Monitor} />
-            <DeviceBar label="Tablet" count={stats.devices.tablet} total={stats.totalViews} icon={Monitor} />
+            <div className="flex-grow">
+                <DeviceBar label="Mobile (HP)" count={stats.devices.mobile} total={stats.totalViews} icon={Smartphone} />
+                <DeviceBar label="Desktop (PC/Laptop)" count={stats.devices.desktop} total={stats.totalViews} icon={Monitor} />
+                <DeviceBar label="Tablet" count={stats.devices.tablet} total={stats.totalViews} icon={Monitor} />
+            </div>
+            
+            {/* ADDED: Ghost Link Copier here for easy access */}
+            <GhostLinkCopier />
          </div>
 
       </div>

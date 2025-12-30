@@ -1,6 +1,6 @@
 
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils';
 
 const GHOST_KEY = 'mks_ghost_mode';
@@ -27,42 +27,59 @@ const getVisitorId = () => {
 // --- MAIN HOOK ---
 export const useAnalytics = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  // Use a ref to ensure we only track once per page load/change, preventing strict mode double firing
+  const trackedPath = useRef<string | null>(null);
 
   // 1. Ghost Mode Logic (The Invisible Cloak)
+  // Logic ini harus jalan SEBELUM tracking
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get('mode') === 'hantu') {
+    if (params.get('mode') === 'ghost_access') {
       localStorage.setItem(GHOST_KEY, 'true');
-      alert("👻 GHOST MODE ACTIVATED! Traffic Anda tidak akan dilacak.");
+      alert("👻 GHOST MODE ACTIVATED! Perangkat ini aman dari tracking.");
+      
+      // Clean up URL agar rapi (hapus parameter mode=ghost_access)
+      // Kita pakai navigate dengan replace: true agar tidak merusak history back button
+      navigate(location.pathname, { replace: true });
     }
-  }, [location.search]);
+  }, [location.search, navigate, location.pathname]);
 
   // 2. Tracking Logic
   useEffect(() => {
-    // Stop if Ghost Mode is active
-    if (localStorage.getItem(GHOST_KEY) === 'true') {
-      // console.log("👻 Analytics bypassed (Ghost Mode)");
-      return;
-    }
+    // Delay sedikit untuk memastikan logic Ghost Mode (efek di atas) selesai dijalankan dulu
+    const timer = setTimeout(() => {
+        // Cek status Ghost Mode SAAT INI
+        const isGhost = localStorage.getItem(GHOST_KEY) === 'true';
+        const isAdminRoute = location.pathname.startsWith('/admin');
 
-    if (!supabase) return;
+        if (isGhost) return; // Silent return for ghost
+        if (isAdminRoute) return; // Silent return for admin page
 
-    const trackPageView = async () => {
-      try {
-        await supabase.from('analytics_logs').insert([{
-          visitor_id: getVisitorId(),
-          event_type: 'page_view',
-          page_path: location.pathname,
-          device_type: getDeviceType(),
-          referrer: document.referrer || 'direct'
-        }]);
-      } catch (e) {
-        // Silent fail (jangan ganggu user experience)
-        console.error("Analytics Error", e);
-      }
-    };
+        if (!supabase) return;
 
-    trackPageView();
+        // Prevent double tracking same path (React.StrictMode mitigation)
+        if (trackedPath.current === location.pathname) return;
+        trackedPath.current = location.pathname;
+
+        const trackPageView = async () => {
+            try {
+                await supabase.from('analytics_logs').insert([{
+                    visitor_id: getVisitorId(),
+                    event_type: 'page_view',
+                    page_path: location.pathname,
+                    device_type: getDeviceType(),
+                    referrer: document.referrer || 'direct'
+                }]);
+            } catch (e) {
+                console.error("Analytics Error", e);
+            }
+        };
+
+        trackPageView();
+    }, 1500); // 1.5 detik delay cukup
+
+    return () => clearTimeout(timer);
   }, [location.pathname]);
 
   // 3. Manual Event Trigger (untuk tombol WA/Beli)
