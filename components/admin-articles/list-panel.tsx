@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera } from 'lucide-react';
 import { Article } from '../../types';
 import { FilterType, AuthorPersona } from './types';
@@ -41,10 +41,23 @@ const PersonaSwitcher = ({
     onAvatarUpload: (file: File) => void
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [localPreview, setLocalPreview] = useState<string | null>(null);
+
+    // Sync local preview with saved persona avatar on mount or change
+    useEffect(() => {
+        setLocalPreview(persona.avatar);
+    }, [persona.avatar]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            onAvatarUpload(e.target.files[0]);
+            const file = e.target.files[0];
+            
+            // 1. Instant UI Feedback (Local Preview)
+            const objectUrl = URL.createObjectURL(file);
+            setLocalPreview(objectUrl);
+
+            // 2. Process Upload in Background
+            onAvatarUpload(file);
         }
     };
 
@@ -63,8 +76,8 @@ const PersonaSwitcher = ({
                     className="relative w-12 h-12 rounded-full border-2 border-white/10 cursor-pointer group overflow-hidden bg-black flex-shrink-0"
                     onClick={() => fileInputRef.current?.click()}
                 >
-                    {persona.avatar ? (
-                        <img src={persona.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    {localPreview ? (
+                        <img src={localPreview} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-500">
                             {persona.mode === 'personal' ? <User size={20}/> : <Users size={20}/>}

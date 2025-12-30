@@ -63,6 +63,17 @@ export const EditorPanel = ({
         setForm((p: any) => ({ ...p, category: newCats.join(', ') }));
     };
 
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setCatInput(val);
+        
+        // Auto-add if it matches a preset (Case insensitive check, but add formatted preset)
+        const match = ARTICLE_CATEGORIES.find(c => c.toLowerCase() === val.toLowerCase());
+        if (match) {
+            addCategory(match);
+        }
+    };
+
     const handleCatKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
@@ -74,7 +85,7 @@ export const EditorPanel = ({
     if (!form.id && aiState.step === 0) {
         return (
             <div className="flex flex-col h-full bg-brand-dark">
-                <div className="p-4 border-b border-white/5 flex justify-between items-center">
+                <div className="p-4 border-b border-white/5 flex justify-between items-center shrink-0">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2"><Sparkles size={14}/> AI Studio - Riset Topik</h3>
                 </div>
                 
@@ -129,7 +140,7 @@ export const EditorPanel = ({
     if (!form.id && aiState.step === 1) {
         return (
             <div className="flex flex-col h-full bg-brand-dark">
-                <div className="p-4 border-b border-white/5 flex justify-between items-center">
+                <div className="p-4 border-b border-white/5 flex justify-between items-center shrink-0">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2"><TrendingUp size={14}/> Pilih Topik</h3>
                     <button onClick={() => aiState.setStep(0)} className="text-[10px] text-gray-500 hover:text-white">Ulangi</button>
                 </div>
@@ -163,7 +174,7 @@ export const EditorPanel = ({
     if (!form.id && aiState.step === 2) {
         return (
             <div className="flex flex-col h-full bg-brand-dark">
-                <div className="p-4 border-b border-white/5 flex justify-between items-center">
+                <div className="p-4 border-b border-white/5 flex justify-between items-center shrink-0">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2"><Wand2 size={14}/> Konfigurasi Artikel</h3>
                     <button onClick={() => aiState.setStep(1)} className="text-[10px] text-gray-500 hover:text-white">Kembali</button>
                 </div>
@@ -215,9 +226,15 @@ export const EditorPanel = ({
     }
 
     // --- MODE 2: EDITOR (Writing/Editing - Step 3) ---
+    // Layout: 
+    // 1. Header (Fixed)
+    // 2. Meta Controls (Fixed / Non-Scrollable)
+    // 3. Content Editor (Scrollable)
+    // 4. Footer (Fixed)
     return (
-        <div className="flex flex-col h-full bg-brand-dark">
-            <div className="p-4 border-b border-white/5 flex justify-between items-center">
+        <div className="flex flex-col h-full bg-brand-dark overflow-hidden">
+            {/* 1. Header (Fixed) */}
+            <div className="p-4 border-b border-white/5 flex justify-between items-center shrink-0 z-20 bg-brand-dark">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2"><Edit size={14}/> Editor Final</h3>
                 <div className="flex gap-2">
                     <button onClick={() => aiState.setStep(2)} className="text-[10px] text-gray-500 hover:text-white border border-white/10 px-2 py-1 rounded">Config</button>
@@ -225,95 +242,94 @@ export const EditorPanel = ({
                 </div>
             </div>
 
-            <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-4">
+            {/* 2. Top Meta Section (Shrink-0) */}
+            <div className="shrink-0 p-4 border-b border-white/5 bg-brand-dark/50 space-y-4 z-10">
                 <Input value={form.title} onChange={e => setForm((p:any) => ({...p, title: e.target.value}))} placeholder="Judul Artikel"/>
                 
-                {/* 1. SHORT DESCRIPTION FIELD (NEW) */}
-                <div>
-                    <label className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Deskripsi Singkat (SEO Excerpt)</label>
-                    <TextArea 
-                        value={form.excerpt} 
-                        onChange={e => setForm((p:any) => ({...p, excerpt: e.target.value}))} 
-                        placeholder="Ringkasan artikel untuk meta description..." 
-                        className="h-20 text-xs text-gray-300 leading-relaxed custom-scrollbar"
-                    />
-                </div>
-
-                {/* 2. COVER IMAGE GENERATOR */}
-                <div className="relative w-full h-32 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
-                    {form.imagePreview ? (
-                        <img src={form.imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-1">
-                            <ImageIcon size={20} />
-                            <span className="text-[9px]">Cover Image</span>
+                <div className="flex gap-4">
+                    {/* Small Image Preview */}
+                    <div className="w-24 h-24 bg-black/40 rounded-lg overflow-hidden border border-white/10 group relative shrink-0">
+                        {form.imagePreview ? (
+                            <img src={form.imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                <ImageIcon size={16} />
+                            </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1 gap-1">
+                             <button onClick={actions.runImage} disabled={loading.generatingImage} className="w-full py-1 bg-blue-600 text-white text-[8px] font-bold rounded hover:bg-blue-500">AI</button>
+                             <label className="w-full py-1 bg-white/10 text-white text-[8px] font-bold rounded hover:bg-white/20 cursor-pointer text-center">
+                                Upload
+                                <input type="file" accept="image/*" onChange={(e) => {
+                                    const file = e.target.files ? e.target.files[0] : null;
+                                    if (file) setForm((prev: any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
+                                }} className="hidden" />
+                             </label>
                         </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
-                         <button onClick={actions.runImage} disabled={loading.generatingImage} className="w-full py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-500">
-                            {loading.generatingImage ? <LoadingSpinner size={12}/> : <><Wand2 size={12}/> AI Generate</>}
-                         </button>
-                         <label className="w-full py-1.5 bg-white/10 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-white/20 cursor-pointer border border-white/20">
-                            <UploadCloud size={12}/> Upload
-                            <input type="file" accept="image/*" onChange={(e) => {
-                                const file = e.target.files ? e.target.files[0] : null;
-                                if (file) setForm((prev: any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
-                            }} className="hidden" />
-                         </label>
-                    </div>
-                </div>
-
-                {/* 3. CATEGORY SELECTOR (MULTI-TAG) */}
-                <div>
-                    <label className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Kategori Artikel (Multi)</label>
-                    
-                    {/* Selected Tags */}
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                        {selectedCats.map((cat: string, i: number) => (
-                            <span key={i} className="bg-brand-orange/20 text-brand-orange border border-brand-orange/30 rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
-                                {cat}
-                                <button onClick={() => removeCategory(cat)} className="hover:text-white"><XIcon size={10}/></button>
-                            </span>
-                        ))}
                     </div>
 
-                    {/* Input Hybrid */}
-                    <input 
-                        list="categories" 
-                        value={catInput}
-                        onChange={(e) => setCatInput(e.target.value)}
-                        onKeyDown={handleCatKeyDown}
-                        onBlur={() => { if(catInput) addCategory(catInput); }} // Add on blur if typed
-                        placeholder="Pilih atau Ketik Baru + Enter..."
-                        className="w-full bg-brand-card border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-orange outline-none"
-                    />
-                    <datalist id="categories">
-                        {ARTICLE_CATEGORIES.map(cat => (
-                            <option key={cat} value={cat} />
-                        ))}
-                    </datalist>
-                </div>
+                    {/* Metadata Inputs */}
+                    <div className="flex-grow space-y-2">
+                        {/* Tags */}
+                        <div>
+                            <div className="flex flex-wrap gap-1.5 mb-1.5 min-h-[22px]">
+                                {selectedCats.map((cat: string, i: number) => (
+                                    <span key={i} className="bg-brand-orange/20 text-brand-orange border border-brand-orange/30 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1">
+                                        {cat}
+                                        <button onClick={() => removeCategory(cat)} className="hover:text-white"><XIcon size={8}/></button>
+                                    </span>
+                                ))}
+                            </div>
+                            <input 
+                                list="categories" 
+                                value={catInput}
+                                onChange={handleCategoryChange}
+                                onKeyDown={handleCatKeyDown}
+                                placeholder="Kategori... (Pilih / Ketik)"
+                                className="w-full bg-brand-card border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:border-brand-orange outline-none"
+                            />
+                            <datalist id="categories">
+                                {ARTICLE_CATEGORIES.map(cat => (
+                                    <option key={cat} value={cat} />
+                                ))}
+                            </datalist>
+                        </div>
 
-                {/* 4. Content Editor */}
-                <div className="relative group">
-                    <TextArea value={form.content} onChange={e => setForm((p:any) => ({...p, content: e.target.value}))} placeholder="# Konten..." className="h-96 text-[10px] font-mono pb-12 resize-none custom-scrollbar"/>
-                    
-                    {/* Floating AI Button */}
-                    <div className="absolute bottom-4 right-4 flex gap-2">
-                            <button 
-                            onClick={actions.runWrite}
-                            disabled={loading.generatingText}
-                            className="bg-brand-orange/90 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 rounded-full shadow-lg hover:bg-brand-orange flex items-center gap-1 border border-white/20 transition-all transform hover:scale-105"
-                            >
-                            {loading.generatingText ? <Loader2 size={10} className="animate-spin"/> : <Wand2 size={10}/>}
-                            Regenerate
-                            </button>
+                        {/* Excerpt */}
+                        <TextArea 
+                            value={form.excerpt} 
+                            onChange={e => setForm((p:any) => ({...p, excerpt: e.target.value}))} 
+                            placeholder="Deskripsi Singkat..." 
+                            className="h-12 text-[10px] leading-relaxed resize-none custom-scrollbar"
+                        />
                     </div>
                 </div>
             </div>
 
-            {/* Footer Actions */}
-            <div className="p-4 border-t border-white/5 bg-brand-dark/90 backdrop-blur-sm sticky bottom-0 z-10">
+            {/* 3. Main Content Editor (Scrollable) */}
+            <div className="flex-grow overflow-y-auto p-4 custom-scrollbar relative">
+                <TextArea 
+                    value={form.content} 
+                    onChange={e => setForm((p:any) => ({...p, content: e.target.value}))} 
+                    placeholder="# Konten Artikel..." 
+                    className="w-full h-full min-h-[500px] text-xs font-mono resize-none bg-transparent border-none focus:ring-0 p-0 text-gray-300 leading-relaxed custom-scrollbar"
+                />
+                
+                {/* Floating AI Button inside Scroll Area */}
+                <div className="absolute bottom-4 right-6 sticky float-right">
+                    <button 
+                    onClick={actions.runWrite}
+                    disabled={loading.generatingText}
+                    className="bg-brand-orange/90 backdrop-blur-sm text-white text-[10px] px-3 py-1.5 rounded-full shadow-lg hover:bg-brand-orange flex items-center gap-1 border border-white/20 transition-all transform hover:scale-105"
+                    >
+                    {loading.generatingText ? <Loader2 size={10} className="animate-spin"/> : <Wand2 size={10}/>}
+                    Regenerate
+                    </button>
+                </div>
+            </div>
+
+            {/* 4. Footer Actions (Fixed) */}
+            <div className="p-4 border-t border-white/5 bg-brand-dark/90 backdrop-blur-sm shrink-0 z-20">
                 <div className="grid grid-cols-2 gap-2 mb-2">
                     <select value={form.status} onChange={(e) => setForm((p:any) => ({...p, status: e.target.value}))} className="bg-black/40 text-white text-[10px] rounded border border-white/10 px-2 focus:border-brand-orange outline-none h-8">
                         <option value="draft">Draft</option>
