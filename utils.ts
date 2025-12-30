@@ -50,14 +50,60 @@ export const callGeminiWithRotation = async (params: {
   contents: any,
   config?: any
 }) => {
-  // 1. Ensure API Key is ready/selected
-  await ensureAPIKey();
+  // 1. CHECK & ROTATE KEYS
+  let selectedKey = '';
+  
+  // @ts-ignore
+  const isAIStudio = typeof window !== 'undefined' && window.aistudio;
 
-  // 2. Initialize Client using strictly process.env.API_KEY
-  // This assumes the environment or the ensureAPIKey call populates/validates this.
+  if (isAIStudio) {
+      await ensureAPIKey();
+      // In AI Studio, process.env.API_KEY is injected by the environment automatically.
+      selectedKey = process.env.API_KEY || '';
+  } else {
+      // --- MANUAL ROTATION LOGIC FOR VERCEL/PRODUCTION ---
+      const keys: string[] = [];
+      
+      // Check for numbered keys (1-10) to support rotation (e.g., VITE_GEMINI_API_KEY_1)
+      for (let i = 1; i <= 10; i++) {
+          const k = getEnv(`VITE_GEMINI_API_KEY_${i}`) || getEnv(`VITE_API_KEY_${i}`);
+          if (k && k.length > 10) keys.push(k);
+      }
+      
+      // Check standard single keys
+      const kSingle = getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY') || getEnv('API_KEY');
+      if (kSingle && kSingle.length > 10) keys.push(kSingle);
+
+      const uniqueKeys = [...new Set(keys)];
+      
+      if (uniqueKeys.length > 0) {
+          // Pick a random key from the pool
+          selectedKey = uniqueKeys[Math.floor(Math.random() * uniqueKeys.length)];
+          console.log(`[System] API Key Rotated. Active Pool: ${uniqueKeys.length} keys.`);
+      }
+  }
+
+  // 2. INJECT KEY FOR SDK (Polyfill process.env.API_KEY)
+  if (selectedKey) {
+      // @ts-ignore
+      if (typeof window !== 'undefined') {
+          // @ts-ignore
+          window.process = window.process || { env: {} };
+          // @ts-ignore
+          window.process.env = window.process.env || {};
+          // @ts-ignore
+          window.process.env.API_KEY = selectedKey;
+      }
+      try { process.env.API_KEY = selectedKey; } catch(e) {}
+  } else {
+      console.warn("Warning: No API Key found in environment variables. Features utilizing AI might fail.");
+  }
+
+  // 3. Initialize Client
+  // Now process.env.API_KEY is populated with our rotated key
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-  // 3. Make the call
+  // 4. Make the call
   try {
     const result = await ai.models.generateContent({
       model: params.model,
@@ -66,7 +112,6 @@ export const callGeminiWithRotation = async (params: {
     });
     return result;
   } catch (error: any) {
-    // Pass error up to the UI
     console.error("Gemini API Call Failed:", error);
     throw error;
   }

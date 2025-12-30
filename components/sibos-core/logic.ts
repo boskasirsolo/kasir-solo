@@ -33,21 +33,27 @@ export const useSibosChat = (
   useEffect(() => { if (isAdmin) setIsModeAdmin(true); }, [isAdmin]);
   useEffect(() => { if (!session) setIsModeAdmin(false); }, [session]);
 
-  // --- AUTO LOGOUT ADMIN (20s Inactivity) ---
+  // --- AUTO LOGOUT ADMIN LOGIC ---
   useEffect(() => {
     let timer: any;
-    // RESET TIMER on: Message Change, Typing, or when AI finishes (isTyping false)
-    if (isModeAdmin && !isTyping) {
+    
+    // Only trigger auto-logout if:
+    // 1. User is in Admin Mode
+    // 2. AI is not currently typing
+    // 3. IMPORTANT: User is NOT on the main '/admin' dashboard page. 
+    //    (If they are on the dashboard, we rely on Supabase session, not this widget's timer)
+    
+    if (isModeAdmin && !isTyping && currentPage !== 'admin') {
         timer = setTimeout(async () => {
             if (supabase) await supabase.auth.signOut();
             setIsModeAdmin(false);
             setAuthState('IDLE');
-            setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: "🔒 **AUTO LOGOUT**. Sesi Admin berakhir karena tidak ada aktivitas (20s).", time: 'System' }]);
+            setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', text: "🔒 **AUTO LOGOUT**. Sesi Admin Chat berakhir karena tidak ada aktivitas.", time: 'System' }]);
             chatHistoryRef.current = [];
-        }, 20000); 
+        }, 300000); // Increased to 5 minutes (300s) for Chat-Only mode
     }
     return () => clearTimeout(timer);
-  }, [isModeAdmin, messages, inputValue, isTyping]);
+  }, [isModeAdmin, messages, inputValue, isTyping, currentPage]);
 
   const chatHistoryRef = useRef<any[]>([]);
 
