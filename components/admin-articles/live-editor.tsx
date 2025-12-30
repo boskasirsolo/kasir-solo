@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Image as ImageIcon, Youtube, Plus, X, MoveUp, MoveDown, Trash2, GripVertical, Type, Loader2 } from 'lucide-react';
+import { Image as ImageIcon, Youtube, MoveUp, MoveDown, Trash2, GripVertical, Type, Loader2, UploadCloud, Plus } from 'lucide-react';
 import { uploadToSupabase } from '../../utils';
 
 interface Block {
@@ -80,20 +79,31 @@ export const LiveEditor = ({
     onChange: (val: string) => void 
 }) => {
     const [blocks, setBlocks] = useState<Block[]>([]);
-    const [isInitialized, setIsInitialized] = useState(false);
     const [hoverIndex, setHoverIndex] = useState<number | null>(null);
     const [uploading, setUploading] = useState(false);
+    
+    // Track source of update to prevent loops
+    const isInternalChange = useRef(false);
 
-    // Initial Load
+    // Sync from Prop (External Source: AI or DB Load)
     useEffect(() => {
-        if (!isInitialized) {
-            setBlocks(parseMarkdownToBlocks(content));
-            setIsInitialized(true);
+        // If this update was triggered by our own typing, ignore it to prevent cursor jumps/re-renders
+        if (isInternalChange.current) {
+            isInternalChange.current = false;
+            return;
         }
-    }, [content, isInitialized]);
 
-    // Update Parent on Change (Debounced slightly ideally, but direct for now)
+        // Check if content actually changed significantly (avoid minor formatting loops)
+        const currentSerialized = serializeBlocksToMarkdown(blocks);
+        if (content !== currentSerialized) {
+            // External update detected (AI Generation or Article Switch)
+            setBlocks(parseMarkdownToBlocks(content));
+        }
+    }, [content]);
+
+    // Update Parent on Change
     const updateParent = (newBlocks: Block[]) => {
+        isInternalChange.current = true; // Mark as internal
         setBlocks(newBlocks);
         const md = serializeBlocksToMarkdown(newBlocks);
         onChange(md);
@@ -105,7 +115,7 @@ export const LiveEditor = ({
     };
 
     const addBlock = (index: number, type: 'text' | 'image' | 'video', content: string = '') => {
-        const newBlock: Block = { id: `new-${Date.now()}`, type, content };
+        const newBlock: Block = { id: `new-${Date.now()}-${Math.random()}`, type, content };
         const newBlocks = [...blocks];
         newBlocks.splice(index + 1, 0, newBlock);
         updateParent(newBlocks);
@@ -140,7 +150,6 @@ export const LiveEditor = ({
     const handleVideoInsert = (index: number) => {
         const url = prompt("Masukkan Link Embed Youtube (atau URL Youtube biasa):");
         if (url) {
-            // Simple converter standard youtube link to embed
             let embedUrl = url;
             if (url.includes('watch?v=')) {
                 const videoId = url.split('v=')[1]?.split('&')[0];
