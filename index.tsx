@@ -13,7 +13,8 @@ import { ShopPage, ProductDetailPage } from './pages/shop';
 import { GalleryPage, ProjectDetailPage } from './pages/gallery';
 import { ArticlesPage, ArticleDetailPage } from './pages/articles';
 import { AboutPage } from './pages/about';
-import { ContactPage } from './pages/contact'; // NEW IMPORT
+import { VisionPage } from './pages/vision'; // NEW IMPORT
+import { ContactPage } from './pages/contact';
 import { AdminDashboard, AdminLogin } from './pages/admin';
 import { CheckoutPage } from './pages/checkout';
 import { InnovationPage } from './pages/innovation';
@@ -244,7 +245,8 @@ const AppContent = () => {
           <Route path="/legal/:type" element={<LegalPage />} />
 
           <Route path="/about" element={<AboutPage config={config} />} />
-          <Route path="/contact" element={<ContactPage config={config} />} /> {/* NEW ROUTE */}
+          <Route path="/about/vision" element={<VisionPage />} /> {/* NEW ROUTE */}
+          <Route path="/contact" element={<ContactPage config={config} />} /> 
           
           <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
           <Route path="/innovation" element={<InnovationPage config={config} />} />
