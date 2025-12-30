@@ -18,18 +18,22 @@ export interface GenConfig {
     narrative: 'narsis' | 'umum'; 
 }
 
+export interface AuthorPersona {
+    name: string;
+    role: string; // 'Founder' | 'Editor'
+    mode: 'personal' | 'team';
+}
+
 export interface ArticleFormState {
     id: number | null;
     title: string;
     excerpt: string;
     content: string;
     category: string;
-    author: string;
-    authorAvatar: string;
+    // author field removed from form state, handled by global persona
     readTime: string;
     imagePreview: string;
     uploadFile: File | null;
-    uploadAuthorFile: File | null;
     status: 'published' | 'draft' | 'scheduled';
     scheduled_for: string;
     type: 'pillar' | 'cluster';
@@ -47,4 +51,11 @@ export const PRESET_TOPICS = [
     { id: 'hr', label: 'Manajemen Karyawan' },
     { id: 'franchise', label: 'Sistem Franchise' },
     { id: 'scam', label: 'Keamanan & Fraud' }
+];
+
+// Sesuai dengan data frontend (Category Tree)
+export const ARTICLE_CATEGORIES = [
+    "Bisnis Tips", "Manajemen", "Keuangan", "HR", "Franchise", // Business
+    "Hardware Review", "Android POS", "Windows POS", "Teknologi", "Tutorial", // Tech
+    "Digital Marketing", "Branding", "Loyalty Program", "Promosi" // Marketing
 ];

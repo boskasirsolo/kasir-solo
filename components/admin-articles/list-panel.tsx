@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit } from 'lucide-react';
+import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users } from 'lucide-react';
 import { Article } from '../../types';
 import { FilterType } from './types';
 
@@ -28,7 +28,42 @@ const FilterTab: React.FC<FilterTabProps> = ({
     </button>
 );
 
-// --- MOLECULE: Article Card (With Pillar Logic) ---
+// --- ATOM: Persona Switcher (Global) ---
+const PersonaSwitcher = ({ persona, setPersona }: { persona: any, setPersona: any }) => (
+    <div className="mb-4 bg-white/5 border border-white/10 rounded-lg p-3">
+        <div className="flex justify-between items-center mb-2">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Penulis Aktif</span>
+            <span className={`text-[9px] px-2 py-0.5 rounded border ${persona.mode === 'personal' ? 'bg-brand-orange/10 border-brand-orange text-brand-orange' : 'bg-purple-500/10 border-purple-500 text-purple-400'}`}>
+                {persona.mode === 'personal' ? 'PERSONAL' : 'REDAKSI'}
+            </span>
+        </div>
+        <div className="flex gap-2">
+            <button 
+                onClick={() => setPersona({ name: 'Amin Maghfuri', role: 'Founder, CEO', mode: 'personal' })}
+                className={`flex-1 p-2 rounded border transition-all flex flex-col items-center gap-1 ${persona.mode === 'personal' ? 'bg-brand-orange text-white border-brand-orange' : 'bg-black/20 text-gray-500 border-white/10 hover:bg-white/5'}`}
+            >
+                <User size={14} />
+                <span className="text-[9px] font-bold">Gue (Amin)</span>
+            </button>
+            <button 
+                onClick={() => setPersona({ name: 'Tim Redaksi', role: 'Content Team', mode: 'team' })}
+                className={`flex-1 p-2 rounded border transition-all flex flex-col items-center gap-1 ${persona.mode === 'team' ? 'bg-purple-600 text-white border-purple-600' : 'bg-black/20 text-gray-500 border-white/10 hover:bg-white/5'}`}
+            >
+                <Users size={14} />
+                <span className="text-[9px] font-bold">Tim Redaksi</span>
+            </button>
+        </div>
+        <input 
+            type="text" 
+            value={persona.name}
+            onChange={(e) => setPersona({...persona, name: e.target.value})}
+            className="w-full mt-2 bg-black/30 border border-white/10 rounded px-2 py-1 text-[10px] text-white focus:outline-none focus:border-white/30 text-center"
+            placeholder="Custom Name..."
+        />
+    </div>
+);
+
+// --- MOLECULE: Article Card ---
 const ArticleCard = ({ 
     article, 
     activeId,
@@ -72,6 +107,7 @@ const ArticleCard = ({
                         {isOrphan && (
                             <span className="text-[9px] text-gray-400 border border-white/10 bg-white/5 px-1.5 rounded-full flex items-center gap-1"><HelpCircle size={8}/> ORPHAN</span>
                         )}
+                        <span className="text-[9px] text-gray-500 ml-auto">{article.category}</span>
                     </div>
                 </div>
                 
@@ -84,7 +120,7 @@ const ArticleCard = ({
                 )}
             </div>
             
-            {/* Expanded Content (Sub-list for Pillar) */}
+            {/* Expanded Content */}
             {canExpand && isExpanded && (
                 <div className="bg-black/20 border-t border-white/5 p-3 animate-fade-in">
                     <div className="flex gap-2 mb-3">
@@ -113,20 +149,28 @@ const ArticleCard = ({
 export const ListPanel = ({
     articles,
     logic,
-    onReset
+    onReset,
+    personaState 
 }: {
     articles: Article[],
     logic: any,
-    onReset: () => void
+    onReset: () => void,
+    personaState: any 
 }) => {
     return (
         <div className="flex flex-col h-full bg-brand-dark/50">
-            {/* Header */}
+            {/* Header with Persona Switcher */}
             <div className="p-4 border-b border-white/5 space-y-3 bg-brand-dark sticky top-0 z-10">
                 <div className="flex justify-between items-center">
                     <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><List size={12}/> Arsip Artikel</h4>
                     <button onClick={onReset} className="text-[10px] font-bold text-brand-orange border border-brand-orange/30 hover:bg-brand-orange hover:text-white transition-all px-2 py-1 rounded flex items-center gap-1"><Plus size={10} /> BARU</button>
                 </div>
+
+                {/* GLOBAL PERSONA SETTINGS (Moved here as requested) */}
+                <PersonaSwitcher 
+                    persona={personaState.authorPersona} 
+                    setPersona={personaState.setAuthorPersona} 
+                />
                 
                 {/* Filter Tabs */}
                 <div className="flex gap-1 bg-black/20 p-1 rounded-lg border border-white/5 overflow-x-auto custom-scrollbar">
@@ -161,9 +205,7 @@ export const ListPanel = ({
                         <p>Tidak ada artikel di kategori ini.</p>
                     </div>
                 ) : logic.paginatedList.map((article: Article) => {
-                    // Props Calculation
                     const isPillar = article.type === 'pillar';
-                    // Show expand ONLY if it's a pillar AND we are in 'all' view (to show hierarchy)
                     const canExpand = isPillar && logic.filterType === 'all';
                     const linkedClusters = articles.filter(a => a.pillar_id === article.id);
 
@@ -171,14 +213,14 @@ export const ListPanel = ({
                         <ArticleCard 
                             key={article.id}
                             article={article}
-                            activeId={null} // TODO: pass current form id
+                            activeId={null} 
                             expandedId={logic.expandedPillarId}
                             onExpand={() => logic.setExpandedPillarId(logic.expandedPillarId === article.id ? null : article.id)}
                             onEdit={(a) => { /* passed from parent logic */ }}
                             onDelete={(id) => { /* passed from parent logic */ }}
                             canExpand={canExpand}
                             linkedClusters={linkedClusters}
-                            {...logic.actions} // HACK: Passing actions directly
+                            {...logic.actions} 
                         />
                     );
                 })}

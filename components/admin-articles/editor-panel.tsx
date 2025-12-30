@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, ArrowRight, User, Users, ChevronRight, Layout, Network } from 'lucide-react';
+import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, ArrowRight, Layout, Network, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, Input, TextArea, LoadingSpinner } from '../ui';
-import { PRESET_TOPICS } from './types';
+import { PRESET_TOPICS, ARTICLE_CATEGORIES } from './types';
 
 // --- ATOM: Strategy Switcher ---
 const StrategySwitcher = ({ type, onChange }: { type: string, onChange: (t: 'pillar' | 'cluster') => void }) => (
@@ -24,54 +24,6 @@ const StrategySwitcher = ({ type, onChange }: { type: string, onChange: (t: 'pil
             >
                 <div className="w-2 h-2 rounded-sm bg-current"></div> Cluster Content
             </button>
-        </div>
-    </div>
-);
-
-// --- ATOM: Author & Tone Switcher ---
-const AuthorSwitcher = ({ 
-    author, 
-    setAuthor, 
-    narrative, 
-    setNarrative 
-}: { 
-    author: string, 
-    setAuthor: (s: string) => void,
-    narrative: 'narsis' | 'umum', 
-    setNarrative: (n: 'narsis' | 'umum') => void
-}) => (
-    <div className="bg-white/5 p-3 rounded-lg border border-white/10 mb-4">
-        <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
-            <User size={10} /> Gaya Penulisan & Penulis
-        </label>
-        
-        {/* Narrative Style */}
-        <div className="flex gap-2 mb-3">
-            <button 
-                onClick={() => { setNarrative('narsis'); setAuthor('Amin Maghfuri'); }} // Default personal name
-                className={`flex-1 py-2 px-2 text-[10px] rounded border transition-all flex flex-col items-center gap-1 ${narrative === 'narsis' ? 'bg-brand-orange/20 border-brand-orange text-brand-orange font-bold' : 'bg-black/20 border-white/10 text-gray-500 hover:bg-white/5'}`}
-            >
-                <User size={14} />
-                <span>Personal (Gue/Saya)</span>
-            </button>
-            <button 
-                onClick={() => { setNarrative('umum'); setAuthor('Tim Redaksi'); }} // Default team name
-                className={`flex-1 py-2 px-2 text-[10px] rounded border transition-all flex flex-col items-center gap-1 ${narrative === 'umum' ? 'bg-purple-500/20 border-purple-500 text-purple-400 font-bold' : 'bg-black/20 border-white/10 text-gray-500 hover:bg-white/5'}`}
-            >
-                <Users size={14} />
-                <span>Formal (Kami/Netral)</span>
-            </button>
-        </div>
-
-        {/* Manual Author Name Override */}
-        <div>
-            <label className="text-[9px] text-gray-500 mb-1 block">Nama Penulis (Tampil di Blog)</label>
-            <input 
-                type="text" 
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:border-brand-orange outline-none"
-            />
         </div>
     </div>
 );
@@ -228,15 +180,7 @@ export const EditorPanel = ({
                         </div>
                     )}
 
-                    {/* 4. Author & Tone (RESTORED) */}
-                    <AuthorSwitcher 
-                        author={form.author}
-                        setAuthor={(s) => setForm((p:any) => ({...p, author: s}))}
-                        narrative={aiState.narrative}
-                        setNarrative={(n) => aiState.setNarrative(n)}
-                    />
-
-                    {/* 5. Action */}
+                    {/* Action */}
                     <Button onClick={actions.runWrite} disabled={loading.generatingText} className="w-full py-4 text-xs font-bold shadow-neon mt-4">
                         {loading.generatingText ? <LoadingSpinner size={16}/> : <><Sparkles size={16} /> GENERATE KONTEN SEKARANG</>}
                     </Button>
@@ -259,31 +203,46 @@ export const EditorPanel = ({
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-4">
                 <Input value={form.title} onChange={e => setForm((p:any) => ({...p, title: e.target.value}))} placeholder="Judul Artikel"/>
                 
-                {/* Compact Config View in Editor */}
-                <div className="grid grid-cols-2 gap-2">
-                    <StrategySwitcher 
-                        type={form.type} 
-                        onChange={(t) => setForm((p:any) => ({...p, type: t, pillar_id: t === 'pillar' ? 0 : p.pillar_id}))} 
-                    />
-                    <div className="bg-white/5 p-3 rounded-lg border border-white/10 mb-4">
-                        <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Penulis</label>
-                        <Input value={form.author} onChange={e => setForm((p:any) => ({...p, author: e.target.value}))} className="text-[10px] py-1 h-8" />
+                {/* 1. COVER IMAGE GENERATOR (RESTORED) */}
+                <div className="relative w-full h-32 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
+                    {form.imagePreview ? (
+                        <img src={form.imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-1">
+                            <ImageIcon size={20} />
+                            <span className="text-[9px]">Cover Image</span>
+                        </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
+                         <button onClick={actions.runImage} disabled={loading.generatingImage} className="w-full py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-500">
+                            {loading.generatingImage ? <LoadingSpinner size={12}/> : <><Wand2 size={12}/> AI Generate</>}
+                         </button>
+                         <label className="w-full py-1.5 bg-white/10 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-white/20 cursor-pointer border border-white/20">
+                            <UploadCloud size={12}/> Upload
+                            <input type="file" accept="image/*" onChange={(e) => {
+                                const file = e.target.files ? e.target.files[0] : null;
+                                if (file) setForm((prev: any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
+                            }} className="hidden" />
+                         </label>
                     </div>
                 </div>
 
-                {form.type === 'cluster' && (
+                {/* 2. CATEGORY SELECTOR (REPLACED Strategy/Author) */}
+                <div>
+                    <label className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Kategori Artikel</label>
                     <select 
-                        value={form.pillar_id || 0}
-                        onChange={(e) => setForm((p:any) => ({...p, pillar_id: parseInt(e.target.value)}))}
-                        className="w-full bg-black text-white text-[10px] border border-white/10 rounded px-2 py-2 focus:border-brand-orange outline-none mb-4"
+                        value={form.category} 
+                        onChange={(e) => setForm((p:any) => ({...p, category: e.target.value}))}
+                        className="w-full bg-brand-card border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-brand-orange outline-none"
                     >
-                        <option value={0}>-- Pilih Induk (Pillar) --</option>
-                        {availablePillars.filter(p => p.id !== form.id).map(p => (
-                            <option key={p.id} value={p.id}>{p.title}</option>
+                        <option value="">-- Pilih Kategori --</option>
+                        {ARTICLE_CATEGORIES.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
                         ))}
                     </select>
-                )}
+                </div>
 
+                {/* 3. Content Editor */}
                 <div className="relative group">
                     <TextArea value={form.content} onChange={e => setForm((p:any) => ({...p, content: e.target.value}))} placeholder="# Konten..." className="h-96 text-[10px] font-mono pb-12 resize-none custom-scrollbar"/>
                     

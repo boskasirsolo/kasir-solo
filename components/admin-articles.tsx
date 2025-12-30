@@ -10,16 +10,12 @@ import { EditorPanel } from './admin-articles/editor-panel';
 export const AdminArticles = ({ articles, setArticles }: { articles: Article[], setArticles: (a: Article[]) => void }) => {
   // Use the Centralized Logic Hook
   const manager = useArticleManager(articles, setArticles);
-  const { form, filterLogic, aiLogic, aiState, actions } = manager;
+  const { form, filterLogic, aiLogic, aiState, actions, authorPersona, setAuthorPersona } = manager;
 
   // Filter out the Pillars for the Select Dropdown
   const availablePillars = articles.filter(a => a.type === 'pillar');
 
-  // Inject Keywords into AI State for UI consumption if needed
-  // (In a real app, this would be cleaner, but passing via props is fine for now)
-  
   // Handling List Item Actions Wrapper
-  // We need to bridge the UI events from ListPanel to Logic Actions
   const listActions = {
       onEdit: actions.handleEditClick,
       onDelete: actions.deleteItem
@@ -28,15 +24,16 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
   return (
     <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
       
-      {/* 1. LEFT PANEL: List & Filter */}
+      {/* 1. LEFT PANEL: List & Filter & Persona */}
       <div className="w-[30%] border-r border-white/5 min-w-[300px]">
          <ListPanel 
             articles={articles}
             logic={{
-                ...filterLogic, // paginatedList, filterType, etc.
-                actions: listActions // Bridge edit/delete
+                ...filterLogic,
+                actions: listActions
             }}
             onReset={actions.resetForm}
+            personaState={{ authorPersona, setAuthorPersona }} // Pass Persona State
          />
       </div>
 
@@ -48,11 +45,11 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
             loading={aiLogic.loading}
             aiState={{
                 ...aiState,
-                keywords: aiLogic.keywords // Pass generated keywords
+                keywords: aiLogic.keywords
             }}
             actions={{
                 ...actions,
-                runResearch: manager.actions.runResearch, // Wrapped helpers
+                runResearch: manager.actions.runResearch,
                 runWrite: manager.actions.runWrite,
                 runImage: manager.actions.runImage
             }}

@@ -2,7 +2,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Article } from '../../types';
 import { supabase, CONFIG, callGeminiWithRotation } from '../../utils';
-import { KeywordData, GenConfig, ArticleFormState, FilterType } from './types';
+import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona } from './types';
 
 // --- SUB-HOOK: FILTER & PAGINATION ---
 export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
@@ -11,7 +11,6 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
     const [filterType, setFilterType] = useState<FilterType>('all');
     const [expandedPillarId, setExpandedPillarId] = useState<number | null>(null);
 
-    // Reset pagination and expansions when filters change
     useEffect(() => {
         setPage(1);
         setExpandedPillarId(null);
@@ -49,11 +48,9 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
 
 // --- SUB-HOOK: AI GENERATOR ---
 export const useAIGenerator = () => {
-    const [loading, setLoading] = useState({ researching: false, generatingText: false, generatingImage: false });
+    const [loading, setLoading] = useState({ researching: false, generatingText: false, generatingImage: false, uploading: false });
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
     
-    // Store narrative preference here or in main hook? 
-    // Let's keep general config here but let UI override
     const [genConfig, setGenConfig] = useState<GenConfig>({
         autoImage: true, autoCategory: true, autoAuthor: true,
         imageStyle: 'cinematic', narrative: 'narsis'
@@ -143,7 +140,7 @@ export const useAIGenerator = () => {
         return `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt + ' ' + style)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
     };
 
-    return { loading, keywords, genConfig, setGenConfig, researchKeywords, generateContent, getAIImageUrl, setLoading };
+    return { loading, setLoading, keywords, genConfig, setGenConfig, researchKeywords, generateContent, getAIImageUrl };
 };
 
 // --- MAIN HOOK: ARTICLE MANAGER ---
@@ -152,35 +149,43 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
     const filterLogic = useArticleFilter(articles, 7); // 7 Items per page
     const aiLogic = useAIGenerator();
 
-    // 2. Form State
+    // 2. Global Author State (Lifted Up)
+    const [authorPersona, setAuthorPersona] = useState<AuthorPersona>({
+        name: 'Amin Maghfuri',
+        role: 'Founder, CEO',
+        mode: 'personal'
+    });
+
+    // 3. Form State
     const [form, setForm] = useState<ArticleFormState>({
         id: null, title: '', excerpt: '', content: '', category: '',
-        author: 'Admin', authorAvatar: '', uploadAuthorFile: null, readTime: '5 min read',
-        imagePreview: '', uploadFile: null, status: 'draft', scheduled_for: '',
+        readTime: '5 min read', imagePreview: '', uploadFile: null, 
+        author: '', authorAvatar: '', uploadAuthorFile: null, // Legacy fields kept for TS, but controlled by Persona
+        status: 'draft', scheduled_for: '',
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
     });
 
     const [aiStep, setAiStep] = useState(0);
     const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
-    const [narrative, setNarrative] = useState<'narsis' | 'umum'>('narsis'); // Local UI State for Step 2
 
-    // 3. Actions
+    // 4. Actions
     const resetForm = () => {
         setForm({
             id: null, title: '', excerpt: '', content: '', category: '',
-            author: 'Admin', authorAvatar: '', uploadAuthorFile: null, readTime: '5 min read',
-            imagePreview: '', uploadFile: null, status: 'draft', scheduled_for: '',
+            author: '', authorAvatar: '', uploadAuthorFile: null, 
+            readTime: '5 min read', imagePreview: '', uploadFile: null, 
+            status: 'draft', scheduled_for: '',
             type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
         });
         setAiStep(0);
         setSelectedPresets([]);
-        setNarrative('narsis');
     };
 
     const handleEditClick = (item: Article) => {
         setForm({
             id: item.id, title: item.title, excerpt: item.excerpt, content: item.content,
-            category: item.category, author: item.author, authorAvatar: '', uploadAuthorFile: null,
+            category: item.category, 
+            author: item.author, authorAvatar: '', uploadAuthorFile: null,
             readTime: item.readTime, imagePreview: item.image, uploadFile: null,
             status: item.status || 'published', scheduled_for: item.scheduled_for || '',
             type: item.type || 'cluster', pillar_id: item.pillar_id || 0,
@@ -207,11 +212,18 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
             }
 
             const dbData = {
-                title: form.title, excerpt: form.excerpt, content: form.content, category: form.category,
-                author: form.author, read_time: form.readTime, image_url: finalImageUrl,
-                status: form.status, scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
-                type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
-                cluster_ideas: form.cluster_ideas, author_avatar: form.authorAvatar
+                title: form.title, 
+                excerpt: form.excerpt, 
+                content: form.content, 
+                category: form.category,
+                author: authorPersona.name, // Use Global Persona
+                read_time: form.readTime, 
+                image_url: finalImageUrl,
+                status: form.status, 
+                scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
+                type: form.type, 
+                pillar_id: form.type === 'cluster' ? form.pillar_id : null,
+                cluster_ideas: form.cluster_ideas
             };
 
             if (form.id) {
@@ -238,41 +250,45 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
         if (form.id === id) resetForm();
     };
 
-    // Helper for AI Workflow
     const runResearch = async () => {
         try {
             await aiLogic.researchKeywords(selectedPresets);
-            setAiStep(1); // Proceed to selection step
+            setAiStep(1); 
         } catch(e: any) { alert(e.message); }
     };
 
     const selectTopic = (k: any) => {
         setForm(p => ({ ...p, title: k.keyword }));
-        setAiStep(2); // Proceed to config step
+        setAiStep(2); 
     };
 
     const runWrite = async () => {
         try {
-            // Use the locally selected narrative state
-            const { content, meta } = await aiLogic.generateContent(form.title, narrative, form.type);
+            // Use Global Persona Narrative Mode
+            const narrativeMode = authorPersona.mode === 'personal' ? 'narsis' : 'umum';
+            const { content, meta } = await aiLogic.generateContent(form.title, narrativeMode, form.type);
             setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: meta.category, readTime: meta.readTime }));
-            setAiStep(3); // Move to final editor
+            setAiStep(3); 
         } catch(e: any) { alert(e.message); }
     };
 
     const runImage = async () => {
+        aiLogic.setLoading(p => ({ ...p, generatingImage: true }));
         try {
-            const url = aiLogic.getAIImageUrl(form.title, aiLogic.genConfig.imageStyle);
+            const style = authorPersona.mode === 'personal' ? 'cinematic' : 'corporate';
+            const url = aiLogic.getAIImageUrl(form.title, style);
             setForm(p => ({ ...p, imagePreview: url }));
         } catch(e) { console.error(e); }
+        finally { aiLogic.setLoading(p => ({ ...p, generatingImage: false })); }
     };
 
     return {
         form, setForm,
         filterLogic,
         aiLogic,
-        // Add narrative state here to be accessible by UI
-        aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, narrative, setNarrative, keywords: aiLogic.keywords },
+        // Expose Persona State
+        authorPersona, setAuthorPersona,
+        aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, keywords: aiLogic.keywords },
         actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage }
     };
 };
