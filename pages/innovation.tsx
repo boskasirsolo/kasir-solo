@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { 
   Cpu, Heart, ShieldCheck, Cloud, Smartphone, TrendingUp, 
   BookOpen, Users, Award, ExternalLink, ArrowRight, AlertTriangle, Calculator,
-  Layers, WifiOff, Printer, Scale
+  Layers, WifiOff, Printer, Scale, Quote, Zap
 } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Button, Input, SectionHeader } from '../components/ui';
@@ -109,6 +109,26 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
             Lahir kembali dari puing kegagalan masa lalu. Kami membangun ekosistem digital <strong>SIBOS</strong> & <strong>QALAM</strong> bukan sekadar untuk profit, tapi sebagai solusi peradaban untuk Bisnis dan Pendidikan.
           </p>
         </div>
+      </section>
+
+      {/* NEW SECTION: NARRATIVE BRIDGE (Why We Built This) */}
+      <section className="py-16 bg-brand-dark/50 border-b border-white/5 relative">
+         <div className="container mx-auto px-4 max-w-4xl text-center relative z-10">
+            <Quote className="mx-auto text-brand-orange mb-6 opacity-50" size={40} />
+            <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-6 leading-relaxed">
+               "Kami pernah berada di titik terendah: <span className="text-red-500">Kebangkrutan</span> karena data yang berantakan."
+            </h3>
+            <div className="prose prose-invert prose-lg mx-auto text-gray-400 leading-relaxed">
+               <p>
+                  Tahun 2022 mengajarkan kami satu hal fatal: <strong>Tanpa sistem yang kuat, kerja keras saja tidak cukup.</strong> 
+                  Kami kehilangan aset, kehilangan domain, tapi kami tidak kehilangan visi.
+               </p>
+               <p>
+                  SIBOS dan QALAM bukan sekadar produk jualan. Ini adalah <em>blueprint</em> kebangkitan yang kami bagikan kepada Anda. 
+                  Kami membangun sistem yang kami harap kami miliki saat kami jatuh dulu. Agar Anda tidak perlu mengalami kegagalan yang sama.
+               </p>
+            </div>
+         </div>
       </section>
 
       {/* SIBOS SECTION (The Brain) */}
@@ -264,6 +284,44 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
 
           </div>
         </div>
+      </section>
+
+      {/* NEW SECTION: CLOSING MANIFESTO (The Invitation) */}
+      <section className="py-20 relative overflow-hidden">
+         {/* Background Gradient */}
+         <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/20 to-brand-black z-0"></div>
+         
+         <div className="container mx-auto px-4 relative z-10 text-center">
+            <div className="max-w-3xl mx-auto">
+                <div className="inline-flex items-center justify-center p-3 rounded-full bg-white/5 mb-6 animate-pulse-slow">
+                    <Zap className="text-brand-orange" size={24} />
+                </div>
+                <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6 leading-tight">
+                    Masa Depan Tidak Menunggu.
+                </h2>
+                <p className="text-lg text-gray-300 mb-8 leading-relaxed">
+                    Kami sedang membangun ekosistem ini dengan sangat hati-hati. Akses awal (Waiting List) dibuka terbatas untuk menjaga kualitas server dan support.
+                    <br/><br/>
+                    Jadilah bagian dari <strong className="text-brand-orange">Generasi Pertama</strong> yang merasakan revolusi manajemen bisnis dan pendidikan ini.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <SmartLinkButton 
+                        url={config.sibosUrl} 
+                        defaultLabel="Amankan Slot SIBOS" 
+                        waLabel="Daftar Antrian SIBOS" 
+                    />
+                    <SmartLinkButton 
+                        url={config.qalamUrl} 
+                        defaultLabel="Amankan Slot QALAM" 
+                        waLabel="Daftar Antrian QALAM" 
+                    />
+                </div>
+                <p className="mt-8 text-xs text-gray-500 uppercase tracking-widest">
+                    Reborn 2025 • PT Mesin Kasir Solo
+                </p>
+            </div>
+         </div>
       </section>
 
     </div>
