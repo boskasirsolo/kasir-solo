@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save } from 'lucide-react';
+import { Sparkles, Edit, RefreshCw, Wand2, Loader2, Save, TrendingUp, AlertCircle, ArrowRight } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, Input, TextArea, LoadingSpinner } from '../ui';
 import { PRESET_TOPICS } from './types';
@@ -54,7 +54,7 @@ export const EditorPanel = ({
                 <div className="p-4 space-y-6 overflow-y-auto custom-scrollbar flex-grow">
                     {/* Topic Selection */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Pilih Topik (Context)</label>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">1. Pilih Topik (Context)</label>
                         <div className="grid grid-cols-2 gap-2">
                             {PRESET_TOPICS.map(topic => (
                                 <button 
@@ -79,8 +79,47 @@ export const EditorPanel = ({
                     </div>
 
                     <Button onClick={actions.runResearch} disabled={loading.researching} className="w-full py-3 text-xs">
-                        {loading.researching ? <LoadingSpinner size={14}/> : <><Sparkles size={14} /> GENERATE TOPICS</>}
+                        {loading.researching ? <LoadingSpinner size={14}/> : <><Sparkles size={14} /> RISET KEYWORD (SEO)</>}
                     </Button>
+
+                    {/* AI Results - FIX: Now Properly Renders the Keywords */}
+                    {aiState.step >= 1 && (
+                        <div className="space-y-3 animate-fade-in pt-4 border-t border-white/10">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                <TrendingUp size={12} className="text-brand-orange"/> Hasil Riset Keyword:
+                            </label>
+                            
+                            {/* The List */}
+                            <div className="space-y-2">
+                                {(!aiState.keywords || aiState.keywords.length === 0) ? (
+                                    <div className="text-center py-4 bg-white/5 rounded-lg border border-white/10 border-dashed">
+                                        <p className="text-[10px] text-gray-500">Belum ada hasil riset.</p>
+                                    </div>
+                                ) : (
+                                    aiState.keywords.map((k: any, i: number) => (
+                                        <div 
+                                            key={i} 
+                                            onClick={() => actions.selectTopic(k)}
+                                            className="group bg-brand-card border border-white/10 hover:border-brand-orange rounded-lg p-3 cursor-pointer transition-all hover:bg-white/5 relative"
+                                        >
+                                            <h5 className="text-xs font-bold text-white mb-1 group-hover:text-brand-orange transition-colors pr-6">
+                                                {k.keyword}
+                                            </h5>
+                                            <div className="flex gap-2">
+                                                <span className={`text-[9px] px-1.5 py-0.5 rounded border border-white/10 ${k.competition === 'Low' ? 'text-green-400 bg-green-900/20' : 'text-yellow-400 bg-yellow-900/20'}`}>
+                                                    Comp: {k.competition}
+                                                </span>
+                                                <span className="text-[9px] px-1.5 py-0.5 rounded border border-white/10 text-blue-400 bg-blue-900/20">
+                                                    Vol: {k.volume}
+                                                </span>
+                                            </div>
+                                            <ArrowRight size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 group-hover:text-brand-orange group-hover:translate-x-1 transition-all" />
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Manual Override */}
                     <div className="relative flex py-2 items-center">
@@ -93,18 +132,8 @@ export const EditorPanel = ({
                         onClick={() => aiState.setStep(3)}
                         className="w-full py-3 border border-white/10 rounded-lg text-gray-400 text-xs font-bold hover:bg-white/5 hover:text-white transition-all flex items-center justify-center gap-2"
                     >
-                        <Edit size={14} /> TULIS MANUAL
+                        <Edit size={14} /> TULIS MANUAL SAJA
                     </button>
-
-                    {/* AI Results */}
-                    {aiState.step === 1 && (
-                        <div className="grid gap-2 mt-4 animate-fade-in">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Hasil Riset AI:</label>
-                            {/* Assuming keywords is populated in logic layer */}
-                            {/* In real implementation, pass keywords via props. For now using placeholder logic as data is in parent */}
-                            <p className="text-[10px] text-gray-500 italic">Pilih topik dari hasil riset di atas (Data keywords di-handle oleh logic layer).</p>
-                        </div>
-                    )}
                 </div>
             </div>
         );

@@ -24,14 +24,7 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
 
             if (filterType === 'all') {
                 const isPillar = a.type === 'pillar';
-                // Show orphans in 'All' view as well? Let's say yes for comprehensive view
-                // But logically 'All' usually shows hierarchy.
-                // Let's stick to: Pillars + Independent Articles (Orphans). Clusters are hidden inside Pillars.
                 const isOrphan = !a.pillar_id && a.type !== 'pillar'; 
-                const isIndependent = a.type !== 'cluster'; // Simple check: anything not a cluster
-                
-                // Correction: In 'All', we want to see top-level items. 
-                // Pillars are top level. Orphans are top level. Clusters are children.
                 return isPillar || isOrphan;
             }
             if (filterType === 'pillar') return a.type === 'pillar';
@@ -67,10 +60,44 @@ export const useAIGenerator = () => {
         if (topics.length === 0) throw new Error("Pilih minimal 1 topik.");
         setLoading(p => ({ ...p, researching: true }));
         try {
-            const prompt = `Role: SEO Strategist. Context: POS System. Topics: ${topics.join(', ')}. Task: Generate 5 article titles. Format: JSON Array [{"keyword": "...", "volume": "...", "competition": "...", "type": "..."}].`;
-            const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
-            const data = JSON.parse(result.text || '[]');
-            if (Array.isArray(data)) setKeywords(data);
+            // REVISED PROMPT FOR SEO STRATEGY
+            const prompt = `
+            Act as a Senior SEO Strategist for the Indonesian Market.
+            Context: Point of Sale (POS) System & Business Management Software.
+            Selected Topics: ${topics.join(', ')}.
+            
+            Task: Generate 5 high-potential article titles/keywords.
+            Criteria:
+            1. Search Volume: High / Trending.
+            2. Competition: Low to Medium (Easy to rank).
+            3. Intent: Transactional or Informational.
+            4. Language: Indonesian.
+            
+            Strict Output Format: JSON Array ONLY. No markdown, no explanation.
+            Example:
+            [
+              {"keyword": "Cara Mengelola Karyawan Shift Malam", "volume": "High", "competition": "Low", "type": "Evergreen"},
+              {"keyword": "Aplikasi Kasir Gratis vs Berbayar", "volume": "Very High", "competition": "Medium", "type": "Comparison"}
+            ]
+            `;
+            
+            const result = await callGeminiWithRotation({ 
+                model: 'gemini-3-flash-preview', 
+                contents: prompt, 
+                config: { responseMimeType: "application/json" } 
+            });
+            
+            const text = result.text || '[]';
+            const data = JSON.parse(text);
+            
+            if (Array.isArray(data) && data.length > 0) {
+                setKeywords(data);
+            } else {
+                throw new Error("AI tidak menghasilkan data valid.");
+            }
+        } catch (e) {
+            console.error("Research Error", e);
+            throw e; 
         } finally {
             setLoading(p => ({ ...p, researching: false }));
         }
@@ -79,10 +106,26 @@ export const useAIGenerator = () => {
     const generateContent = async (title: string, narrative: string, type: string) => {
         setLoading(p => ({ ...p, generatingText: true }));
         try {
-            const contentPrompt = `Write Article: "${title}". Language: Indonesian. Format: Markdown. Use H2, H3, Bullet points. Length: 800 words. Narrative: ${narrative}. Type: ${type}. Include links to relevant sources or products if applicable.`;
+            const contentPrompt = `
+            Write a complete SEO Article.
+            Title: "${title}"
+            Language: Indonesian.
+            Format: Markdown.
+            Structure:
+            - H1 Title
+            - Introduction (Hook the reader)
+            - H2 Subheadings (Use LSI Keywords)
+            - Bullet points for readability
+            - Conclusion & Call to Action (Soft sell POS System).
+            
+            Narrative Style: ${narrative === 'narsis' ? 'Personal, opinionated, storytelling from a business owner perspective.' : 'Professional, objective, educational.'}
+            Article Type: ${type} (Pillar or Cluster).
+            Length: 800-1000 words.
+            `;
+            
             const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
             
-            const metaPrompt = `Generate JSON Metadata for this article content: {"excerpt": "...", "category": "...", "readTime": "..."}`;
+            const metaPrompt = `Generate JSON Metadata for an article with title "${title}". Format: {"excerpt": "...", "category": "...", "readTime": "..."}`;
             const metaRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
             const metaData = JSON.parse(metaRes.text || '{}');
 
@@ -195,13 +238,13 @@ export const useArticleManager = (articles: Article[], setArticles: (a: Article[
     const runResearch = async () => {
         try {
             await aiLogic.researchKeywords(selectedPresets);
-            setAiStep(1);
+            setAiStep(1); // Proceed to selection step
         } catch(e: any) { alert(e.message); }
     };
 
     const selectTopic = (k: any) => {
         setForm(p => ({ ...p, title: k.keyword }));
-        setAiStep(2);
+        setAiStep(2); // Proceed to config step
     };
 
     const runWrite = async () => {
