@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Phone, Lock, ChevronRight, Instagram, Facebook, Youtube, Linkedin, Video, ArrowUp } from 'lucide-react';
+import { MapPin, Phone, Instagram, Facebook, Youtube, Linkedin, Video, ArrowUp } from 'lucide-react';
 import { useCart } from '../context/cart-context';
 import { SiteConfig } from '../types';
 import { SibosWidget } from './sibos-core/index';
 import { INITIAL_PRODUCTS } from '../utils';
 
-// Import Atomic Header Components
+// Import Header Parts
 import { 
   Logo, 
   DesktopMenu, 
@@ -16,6 +16,16 @@ import {
   MobileMenu,
   NavItem 
 } from './header-parts';
+
+// Import Footer Parts
+import {
+  FooterContainer,
+  BrandColumn,
+  FooterColumn,
+  SectionTitle,
+  ContactItem,
+  FooterBottom
+} from './footer-parts';
 
 // --- DATA: NAVIGATION STRUCTURE ---
 const NAV_ITEMS: NavItem[] = [
@@ -55,22 +65,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'articles', label: 'Wawasan' },
 ];
 
-// --- ATOMS: Footer Atoms ---
-
-const SocialButton = ({ icon: Icon, href }: { icon: any, href?: string }) => {
-  if (!href) return null;
-  return (
-    <a 
-      href={href} 
-      target="_blank" 
-      rel="noreferrer" 
-      className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon"
-    >
-      <Icon size={20} />
-    </a>
-  );
-};
-
 // --- ORGANISMS: Main Blocks ---
 
 const Header = ({ 
@@ -82,9 +76,6 @@ const Header = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { totalItems } = useCart(); 
-
-  // Logic: Close menu when page changes (handled inside components) or reset state on route change
-  // For now, the components handle close on click.
 
   return (
     <>
@@ -133,121 +124,83 @@ const Header = ({
   );
 };
 
-const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: SiteConfig }) => (
-  <footer className="bg-brand-dark border-t border-white/5 py-16 mt-20 relative overflow-hidden">
-    {/* Decorative Top Line */}
-    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-transparent via-brand-orange to-transparent shadow-neon opacity-70"></div>
-    
-    <div className="container mx-auto px-4">
+const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: SiteConfig }) => {
+  
+  // Logic: Prepare Data for Footer Columns
+  const solutionsLinks = [
+    { label: 'Hardware Kasir', action: () => setPage('shop') },
+    { label: 'Inovasi Aplikasi', action: () => setPage('innovation') },
+    { label: 'Jasa Website', action: () => setPage('services/website') },
+    { label: 'Jasa SEO', action: () => setPage('services/seo') },
+    { label: 'Maintenance', action: () => setPage('services/maintenance') },
+  ];
+
+  const companyLinks = [
+    { label: 'Tentang Kami', action: () => setPage('about') },
+    { label: 'Klien & Portfolio', action: () => setPage('gallery') },
+    { label: 'Karir', action: () => setPage('career') },
+    { label: 'Hubungi Kami', action: () => setPage('contact') },
+  ];
+
+  const socialLinks = [
+    { icon: Instagram, url: config.instagramUrl },
+    { icon: Facebook, url: config.facebookUrl },
+    { icon: Youtube, url: config.youtubeUrl },
+    { icon: Linkedin, url: config.linkedinUrl },
+    { icon: Video, url: config.tiktokUrl },
+  ];
+
+  return (
+    <FooterContainer>
       <div className="grid md:grid-cols-4 gap-12">
-        {/* Brand Section */}
-        <div className="md:col-span-1 space-y-6">
-          <div>
-            <h3 className="text-2xl font-display font-bold text-white mb-2">PT MESIN KASIR SOLO</h3>
-            <div className="h-1 w-12 bg-brand-orange rounded-full"></div>
-          </div>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            Mitra teknologi terpercaya untuk digitalisasi bisnis di Indonesia. Menyediakan solusi Hardware POS, Software SaaS, dan Jasa Pengembangan Website sejak 2015.
-          </p>
-          <div className="flex gap-3 flex-wrap">
-            <SocialButton icon={Instagram} href={config.instagramUrl} />
-            <SocialButton icon={Facebook} href={config.facebookUrl} />
-            <SocialButton icon={Youtube} href={config.youtubeUrl} />
-            <SocialButton icon={Linkedin} href={config.linkedinUrl} />
-            <SocialButton icon={Video} href={config.tiktokUrl} /> 
-          </div>
-        </div>
         
-        {/* Solusi Bisnis Section */}
+        {/* 1. Brand Section */}
+        <BrandColumn 
+          description="Mitra teknologi terpercaya untuk digitalisasi bisnis di Indonesia. Menyediakan solusi Hardware POS, Software SaaS, dan Jasa Pengembangan Website sejak 2015."
+          socials={socialLinks}
+        />
+        
+        {/* 2. Solusi Bisnis Section */}
+        <FooterColumn title="Solusi Digital" links={solutionsLinks} />
+
+        {/* 3. Perusahaan Section */}
+        <FooterColumn title="Perusahaan" links={companyLinks} />
+
+        {/* 4. Contact Section */}
         <div className="md:col-span-1">
-          <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs border-l-2 border-brand-orange pl-3">Solusi Digital</h4>
-          <ul className="space-y-3 text-gray-400 text-sm">
-            <li><button onClick={() => setPage('shop')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Hardware Kasir</button></li>
-            <li><button onClick={() => setPage('innovation')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Inovasi Aplikasi</button></li>
-            <li><button onClick={() => setPage('services/website')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Jasa Website</button></li>
-            <li><button onClick={() => setPage('services/seo')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Jasa SEO</button></li>
-            <li><button onClick={() => setPage('services/maintenance')} className="hover:text-brand-orange transition-colors flex items-center gap-2"><ChevronRight size={12}/> Maintenance</button></li>
-          </ul>
-        </div>
-
-        {/* Perusahaan & Legal Section */}
-        <div className="md:col-span-1">
-          <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs border-l-2 border-brand-orange pl-3">Perusahaan</h4>
-          <ul className="space-y-3 text-gray-400 text-sm">
-            <li><button onClick={() => setPage('about')} className="hover:text-brand-orange transition-colors">Tentang Kami</button></li>
-            <li><button onClick={() => setPage('gallery')} className="hover:text-brand-orange transition-colors">Klien & Portfolio</button></li>
-            <li><button onClick={() => setPage('career')} className="hover:text-brand-orange transition-colors">Karir</button></li>
-            <li><button onClick={() => setPage('contact')} className="hover:text-brand-orange transition-colors">Hubungi Kami</button></li>
-          </ul>
-        </div>
-
-        {/* Contact Section */}
-        <div className="md:col-span-1">
-          <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-xs border-l-2 border-brand-orange pl-3">Hubungi Kami</h4>
-          <ul className="space-y-5 text-gray-400 text-sm">
-            
-            {/* HEAD OFFICE (SOLO) */}
-            <li className="flex items-start gap-3 group cursor-pointer" onClick={() => window.open(config.mapSoloLink, '_blank')}>
-                <div className="p-2 bg-white/5 rounded-lg text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-colors">
-                    <MapPin size={18} />
-                </div>
-                <div>
-                    <span className="text-white font-bold text-xs block mb-1">HEAD OFFICE (SOLO)</span>
-                    <span className="leading-tight block">{config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura"}</span>
-                </div>
-            </li>
-
-            {/* OPERATIONAL OFFICE (BLORA) */}
-            <li className="flex items-start gap-3 group cursor-pointer" onClick={() => window.open(config.mapBloraLink, '_blank')}>
-                <div className="p-2 bg-white/5 rounded-lg text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-colors">
-                    <MapPin size={18} />
-                </div>
-                <div>
-                    <span className="text-white font-bold text-xs block mb-1">KANTOR OPERASIONAL</span>
-                    <span className="leading-tight block">{config.addressBlora || "Gumiring 04/04, Banjarejo"}</span>
-                </div>
-            </li>
-
-            {/* HOTLINE */}
-            <li className="flex items-start gap-3 group cursor-pointer" onClick={() => window.open(`https://wa.me/${config.whatsappNumber}`, '_blank')}>
-              <div className="p-2 bg-white/5 rounded-lg text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-colors">
-                  <Phone size={18} />
-              </div>
-              <div>
-                  <span className="text-white font-bold text-xs block mb-1">HOTLINE (24/7)</span>
-                  <span className="text-lg font-bold text-gray-400 group-hover:text-brand-orange transition-colors">
-                    {config.whatsappNumber ? (config.whatsappNumber.startsWith('62') ? `+${config.whatsappNumber}` : config.whatsappNumber) : "0823 2510 3336"}
-                  </span>
-              </div>
-            </li>
+          <SectionTitle>Hubungi Kami</SectionTitle>
+          <ul className="space-y-5">
+            <ContactItem 
+              icon={MapPin}
+              label="HEAD OFFICE (SOLO)"
+              value={config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura"}
+              onClick={() => window.open(config.mapSoloLink, '_blank')}
+            />
+            <ContactItem 
+              icon={MapPin}
+              label="KANTOR OPERASIONAL"
+              value={config.addressBlora || "Gumiring 04/04, Banjarejo"}
+              onClick={() => window.open(config.mapBloraLink, '_blank')}
+            />
+            <ContactItem 
+              icon={Phone}
+              label="HOTLINE (24/7)"
+              value={config.whatsappNumber ? (config.whatsappNumber.startsWith('62') ? `+${config.whatsappNumber}` : config.whatsappNumber) : "0823 2510 3336"}
+              onClick={() => window.open(`https://wa.me/${config.whatsappNumber}`, '_blank')}
+            />
           </ul>
         </div>
       </div>
 
-      {/* Copyright & Legal - UPDATED LAYOUT */}
-      <div className="border-t border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-4">
-        
-        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-center md:text-left">
-            <p className="text-gray-600 text-xs">
-                © {new Date().getFullYear()} <strong className="text-gray-500">PT Mesin Kasir Solo</strong>. All Rights Reserved.
-            </p>
-            {/* NEW LEGAL LINKS PLACEMENT */}
-            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                <button onClick={() => setPage('legal/refund')} className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Kebijakan Refund & Garansi</button>
-                <button onClick={() => setPage('legal/privacy')} className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Kebijakan Privasi</button>
-                <button onClick={() => setPage('legal/terms')} className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Syarat dan Ketentuan</button>
-            </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-            <button onClick={() => setPage('admin')} className="text-gray-800 hover:text-brand-orange transition-colors p-2" title="Admin Login">
-                <Lock size={12} />
-            </button>
-        </div>
-      </div>
-    </div>
-  </footer>
-);
+      {/* 5. Bottom Bar */}
+      <FooterBottom 
+        year={new Date().getFullYear()} 
+        onLegalClick={setPage}
+        onAdminClick={() => setPage('admin')}
+      />
+    </FooterContainer>
+  );
+};
 
 // --- ATOM: Scroll To Top Button ---
 const ScrollToTop = () => {
