@@ -41,7 +41,7 @@ const NAV_ITEMS = [
     ]
   },
   { id: 'articles', label: 'Wawasan' },
-  { id: 'about', label: 'Kontak' },
+  { id: 'contact', label: 'Kontak' }, // UPDATED: Changed from 'about' to 'contact'
 ];
 
 // --- ATOMS: Visual Components ---
@@ -331,8 +331,7 @@ const Header = ({
         </div>
       </nav>
 
-      {/* Render overlay outside of nav structure for better stacking context management if needed, 
-          but usually fixed/fixed works. Keeping it separate to ensure z-index clarity relative to document */}
+      {/* Render overlay outside of nav structure for better stacking context management */}
       <MobileMenuOverlay 
         isOpen={isMenuOpen} 
         current={currentPage} 
@@ -386,7 +385,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
           <ul className="space-y-3 text-gray-400 text-sm">
             <li><button onClick={() => setPage('about')} className="hover:text-brand-orange transition-colors">Tentang Kami</button></li>
             <li><button onClick={() => setPage('gallery')} className="hover:text-brand-orange transition-colors">Klien & Portfolio</button></li>
-            <li><button onClick={() => setPage('articles')} className="hover:text-brand-orange transition-colors">Blog & Wawasan</button></li>
+            <li><button onClick={() => setPage('contact')} className="hover:text-brand-orange transition-colors">Hubungi Kami</button></li>
             <li className="pt-2 border-t border-white/5 mt-2">
                 <button onClick={() => setPage('legal/refund')} className="hover:text-brand-orange transition-colors text-xs text-gray-500 hover:text-gray-300">Kebijakan Refund</button>
             </li>

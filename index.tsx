@@ -13,11 +13,12 @@ import { ShopPage, ProductDetailPage } from './pages/shop';
 import { GalleryPage, ProjectDetailPage } from './pages/gallery';
 import { ArticlesPage, ArticleDetailPage } from './pages/articles';
 import { AboutPage } from './pages/about';
+import { ContactPage } from './pages/contact'; // NEW IMPORT
 import { AdminDashboard, AdminLogin } from './pages/admin';
 import { CheckoutPage } from './pages/checkout';
 import { InnovationPage } from './pages/innovation';
 import { WebsiteServicePage, WebAppServicePage, SeoServicePage, MaintenanceServicePage } from './pages/services';
-import { LegalPage } from './pages/legal'; // NEW IMPORT
+import { LegalPage } from './pages/legal'; 
 import { NotFoundPage } from './pages/not-found';
 
 const AppContent = () => {
@@ -100,7 +101,7 @@ const AppContent = () => {
     return new Date(0);
   };
 
-  // --- Initial Data Fetching ---
+  // --- Data Fetching & Realtime ---
   useEffect(() => {
     if (!supabase) {
         // Fallback for Demo Mode (No DB Connection)
@@ -114,7 +115,6 @@ const AppContent = () => {
       if (prodData && prodData.length > 0) {
         const mappedProducts = prodData.map((item: any) => ({
           ...item,
-          // FIX: Map DB column 'image_url' to Frontend 'image' property
           image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800'
         }));
         setProducts(mappedProducts);
@@ -124,32 +124,29 @@ const AppContent = () => {
       if (galData && galData.length > 0) setGallery(galData);
 
       // 2. Fetch Articles & Sort
-      const { data: artData } = await supabase.from('articles').select('*');
-      if (artData && artData.length > 0) {
-        const mappedArticles = artData.map((item: any) => ({
-          ...item,
-          // FIX: Map DB column 'image_url' to Frontend 'image'
-          image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
-          // FIX: Map DB column 'read_time' to Frontend 'readTime'
-          readTime: item.read_time || item.readTime || '5 min read',
-          // Ensure Date exists
-          date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-        })).sort((a: any, b: any) => {
-           // Sort Descending (Newest First) using Smart Parser or Created_At
-           const dateA = a.created_at ? new Date(a.created_at) : parseDate(a.date);
-           const dateB = b.created_at ? new Date(b.created_at) : parseDate(b.date);
-           return dateB.getTime() - dateA.getTime();
-        });
-        setArticles(mappedArticles);
-      } else {
-        // If DB is empty or connection fails, show initial mock data? 
-        // User requested NO dummy data ghosting, so we leave it empty if DB returns 0.
-      }
+      const fetchArticles = async () => {
+        const { data: artData } = await supabase.from('articles').select('*');
+        if (artData && artData.length > 0) {
+          const mappedArticles = artData.map((item: any) => ({
+            ...item,
+            image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
+            readTime: item.read_time || item.readTime || '5 min read',
+            date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+          })).sort((a: any, b: any) => {
+             const dateA = a.created_at ? new Date(a.created_at) : parseDate(a.date);
+             const dateB = b.created_at ? new Date(b.created_at) : parseDate(b.date);
+             return dateB.getTime() - dateA.getTime();
+          });
+          setArticles(mappedArticles);
+        }
+      };
       
+      fetchArticles();
+
       const { data: testiData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
       if (testiData && testiData.length > 0) setTestimonials(testiData);
 
-      // 3. Fetch Site Settings (FIX: Load from DB)
+      // 3. Fetch Site Settings
       const { data: settingsData } = await supabase.from('site_settings').select('*').single();
       if (settingsData) {
          setConfig({
@@ -169,9 +166,22 @@ const AppContent = () => {
              linkedinUrl: settingsData.linkedin_url || config.linkedinUrl,
          });
       }
+
+      // --- REALTIME SUBSCRIPTIONS ---
+      const articlesChannel = supabase
+        .channel('public:articles')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
+          fetchArticles(); // Refetch articles when DB changes
+        })
+        .subscribe();
+
+      // Cleanup
+      return () => {
+        supabase.removeChannel(articlesChannel);
+      };
     };
 
-    fetchData();
+    const cleanupPromise = fetchData();
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -181,7 +191,11 @@ const AppContent = () => {
       setSession(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+        subscription.unsubscribe();
+        // Since cleanupPromise returns a promise that resolves to a cleanup function (which removes channel)
+        cleanupPromise.then((cleanup) => cleanup && cleanup());
+    };
   }, []);
 
   return (
@@ -191,7 +205,7 @@ const AppContent = () => {
         currentPage={getCurrentPageId()} 
         config={config} 
         setConfig={setConfig}
-        session={session} // PASS SESSION HERE
+        session={session} 
       >
         <Routes>
           <Route path="/" element={
@@ -230,6 +244,7 @@ const AppContent = () => {
           <Route path="/legal/:type" element={<LegalPage />} />
 
           <Route path="/about" element={<AboutPage config={config} />} />
+          <Route path="/contact" element={<ContactPage config={config} />} /> {/* NEW ROUTE */}
           
           <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
           <Route path="/innovation" element={<InnovationPage config={config} />} />
