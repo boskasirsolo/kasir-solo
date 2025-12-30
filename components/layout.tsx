@@ -419,15 +419,15 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
             </li>
 
             {/* HOTLINE */}
-            <li className="flex items-start gap-3">
-              <div className="p-2 bg-white/5 rounded-lg text-brand-orange">
+            <li className="flex items-start gap-3 group cursor-pointer" onClick={() => window.open(`https://wa.me/${config.whatsappNumber}`, '_blank')}>
+              <div className="p-2 bg-white/5 rounded-lg text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-colors">
                   <Phone size={18} />
               </div>
               <div>
                   <span className="text-white font-bold text-xs block mb-1">HOTLINE (24/7)</span>
-                  <a href={`https://wa.me/${config.whatsappNumber}`} target="_blank" rel="noreferrer" className="hover:text-brand-orange transition-colors text-lg font-bold">
+                  <span className="text-lg font-bold text-gray-400 group-hover:text-brand-orange transition-colors">
                     {config.whatsappNumber ? (config.whatsappNumber.startsWith('62') ? `+${config.whatsappNumber}` : config.whatsappNumber) : "0823 2510 3336"}
-                  </a>
+                  </span>
               </div>
             </li>
           </ul>
