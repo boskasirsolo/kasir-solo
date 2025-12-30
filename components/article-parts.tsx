@@ -6,7 +6,7 @@ import {
   ArrowRight, Clock, Calendar, User, Tag, 
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
   Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
-  ChevronLeft, Send, Plus, Check, Briefcase, HeartHandshake
+  ChevronLeft, Send, Plus, Check, Briefcase, HeartHandshake, Quote
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
@@ -414,6 +414,21 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
 
   return (
     <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed space-y-6">
+        
+        {/* --- EXCERPT AS BLOCKQUOTE (Only on Page 1) --- */}
+        {currentPage === 1 && article.excerpt && (
+            <div className="mb-10 relative">
+                <div className="absolute -top-4 -left-2 text-brand-orange opacity-20">
+                    <Quote size={40} fill="currentColor" />
+                </div>
+                <blockquote className="relative z-10 border-l-4 border-brand-orange bg-gradient-to-r from-brand-orange/10 to-transparent p-6 rounded-r-xl shadow-lg my-8">
+                    <p className="text-xl text-white font-medium italic leading-relaxed m-0">
+                        "{article.excerpt}"
+                    </p>
+                </blockquote>
+            </div>
+        )}
+
         {blocks.map((paragraph: string, idx: number) => {
             const p = paragraph.trim();
             if (!p) return null;
@@ -424,15 +439,18 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
 
             const cleanId = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
             
+            // GRADIENT HEADINGS LOGIC
             if (p.startsWith('# ')) {
               const text = p.replace('# ', '');
-              return <h1 id={cleanId(text)} key={idx} className="scroll-mt-32 text-3xl font-bold text-white mt-12 mb-6 pb-4 border-b border-white/10 heading-observer">{text}</h1>;
+              return <h1 id={cleanId(text)} key={idx} className="scroll-mt-32 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-600 mt-12 mb-6 pb-4 border-b border-white/10 heading-observer">{text}</h1>;
             }
             if (p.startsWith('## ')) {
               const text = p.replace('## ', '');
-              return <h2 id={cleanId(text)} key={idx} className="scroll-mt-32 text-2xl font-bold text-white mt-10 mb-4 border-l-4 border-brand-orange pl-4 heading-observer">{text}</h2>;
+              return <h2 id={cleanId(text)} key={idx} className="scroll-mt-32 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-600 mt-10 mb-4 border-l-4 border-brand-orange pl-4 heading-observer">{text}</h2>;
             }
-            if (p.startsWith('### ')) return <h3 key={idx} className="text-xl font-bold text-brand-orange mt-8 mb-3">{p.replace('### ', '')}</h3>;
+            if (p.startsWith('### ')) {
+              return <h3 key={idx} className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-500 mt-8 mb-3">{p.replace('### ', '')}</h3>;
+            }
             
             if (p.startsWith('> ')) return <blockquote key={idx} className="border-l-4 border-gray-600 bg-white/5 p-6 italic text-gray-300 my-8 rounded-r-xl">{renderFormattedText(p.replace('> ', ''))}</blockquote>;
             
