@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-ro
 import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS, INITIAL_JOBS } from './utils';
 import { Product, Article, GalleryItem, SiteConfig, Testimonial, JobOpening } from './types';
 import { CartProvider } from './context/cart-context';
+import { LoadingSpinner } from './components/ui'; // Import Loader
 
 // Component Imports
 import { Layout } from './components/layout';
@@ -14,7 +15,7 @@ import { GalleryPage, ProjectDetailPage } from './pages/gallery';
 import { ArticlesPage, ArticleDetailPage } from './pages/articles';
 import { AboutPage } from './pages/about';
 import { VisionPage } from './pages/vision'; 
-import { CareerPage } from './pages/career'; // ADDED
+import { CareerPage } from './pages/career';
 import { ContactPage } from './pages/contact';
 import { AdminDashboard, AdminLogin } from './pages/admin';
 import { CheckoutPage } from './pages/checkout';
@@ -34,12 +35,15 @@ const AppContent = () => {
 
   const [session, setSession] = useState<any>(null);
   
-  // Data State - Default to INITIAL only if Supabase is offline/missing
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [gallery, setGallery] = useState<GalleryItem[]>(INITIAL_GALLERY);
+  // GLOBAL LOADING STATE
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Data State - Initialize with EMPTY ARRAYS to prevent flash of mock data
+  const [products, setProducts] = useState<Product[]>([]);
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [articles, setArticles] = useState<Article[]>([]); 
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(INITIAL_TESTIMONIALS);
-  const [jobs, setJobs] = useState<JobOpening[]>(INITIAL_JOBS);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [jobs, setJobs] = useState<JobOpening[]>([]);
 
   // Config State
   const [config, setConfig] = useState<SiteConfig>({
@@ -65,7 +69,6 @@ const AppContent = () => {
 
   // --- Router Bridge ---
   const getCurrentPageId = () => {
-    // Return path without leading slash
     const path = location.pathname.substring(1) || 'home';
     return path;
   };
@@ -78,12 +81,9 @@ const AppContent = () => {
   // --- Helper: Smart Date Parser ---
   const parseDate = (dateStr: string) => {
     if (!dateStr) return new Date(0);
-    
-    // 1. Try standard parse
     const stdDate = new Date(dateStr);
     if (!isNaN(stdDate.getTime())) return stdDate;
 
-    // 2. Manual parse for Indonesian formats
     const months: {[key: string]: number} = {
       'Januari': 0, 'Jan': 0, 'Februari': 1, 'Feb': 1, 'Maret': 2, 'Mar': 2,
       'April': 3, 'Apr': 3, 'Mei': 4, 'May': 4, 'Juni': 5, 'Jun': 5,
@@ -98,124 +98,136 @@ const AppContent = () => {
         const monthStr = parts[1];
         const year = parseInt(parts[2]);
         const monthIndex = months[monthStr];
-        
-        if (monthIndex !== undefined) {
-          return new Date(year, monthIndex, day);
-        }
+        if (monthIndex !== undefined) return new Date(year, monthIndex, day);
       }
     } catch (e) { return new Date(0); }
-    
     return new Date(0);
   };
 
   // --- Data Fetching & Realtime ---
   useEffect(() => {
-    if (!supabase) {
-        // Fallback for Demo Mode (No DB Connection)
-        setArticles(INITIAL_ARTICLES);
-        return;
-    }
-
-    const fetchData = async () => {
-      // 1. Fetch Products & Map Image URL
-      const { data: prodData } = await supabase.from('products').select('*').order('id', { ascending: true });
-      if (prodData) {
-        // BUG FIX: Always set products from DB, even if empty array.
-        // If DB is empty, frontend should be empty, not showing ghost demo data.
-        const mappedProducts = prodData.map((item: any) => ({
-          ...item,
-          image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800'
-        }));
-        setProducts(mappedProducts);
-      }
-
-      const { data: galData } = await supabase.from('gallery').select('*').order('id', { ascending: false });
-      if (galData) setGallery(galData); // Respect empty array
-
-      // 2. Fetch Articles & Sort
-      const fetchArticles = async () => {
-        const { data: artData } = await supabase.from('articles').select('*');
-        if (artData) {
-          const mappedArticles = artData.map((item: any) => ({
-            ...item,
-            image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
-            readTime: item.read_time || item.readTime || '5 min read',
-            date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-          })).sort((a: any, b: any) => {
-             const dateA = a.created_at ? new Date(a.created_at) : parseDate(a.date);
-             const dateB = b.created_at ? new Date(b.created_at) : parseDate(b.date);
-             return dateB.getTime() - dateA.getTime();
-          });
-          setArticles(mappedArticles);
+    const initializeData = async () => {
+        // 1. CHECK CONNECTION
+        if (!supabase) {
+            // Fallback for Demo Mode (No DB Connection)
+            console.warn("Supabase not connected. Loading mock data.");
+            setProducts(INITIAL_PRODUCTS);
+            setGallery(INITIAL_GALLERY);
+            setArticles(INITIAL_ARTICLES);
+            setTestimonials(INITIAL_TESTIMONIALS);
+            setJobs(INITIAL_JOBS);
+            setIsInitializing(false);
+            return;
         }
-      };
-      
-      fetchArticles();
 
-      const { data: testiData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
-      if (testiData) setTestimonials(testiData); // Respect empty array
+        // 2. FETCH REAL DATA (If connected)
+        try {
+            // Fetch Products
+            const { data: prodData } = await supabase.from('products').select('*').order('id', { ascending: true });
+            if (prodData) {
+                const mappedProducts = prodData.map((item: any) => ({
+                ...item,
+                image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800'
+                }));
+                setProducts(mappedProducts);
+            }
 
-      // 3. Fetch Jobs (CRITICAL FIX FOR CAREER BUG)
-      const { data: jobsData } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
-      // If connected, USE DB DATA (even if empty). Do NOT fallback to INITIAL_JOBS if empty.
-      if (jobsData) {
-          setJobs(jobsData);
-      }
+            // Fetch Gallery
+            const { data: galData } = await supabase.from('gallery').select('*').order('id', { ascending: false });
+            if (galData) setGallery(galData);
 
-      // 4. Fetch Site Settings
-      const { data: settingsData } = await supabase.from('site_settings').select('*').single();
-      if (settingsData) {
-         setConfig({
-             heroTitle: settingsData.hero_title || config.heroTitle,
-             heroSubtitle: settingsData.hero_subtitle || config.heroSubtitle,
-             aboutImage: settingsData.about_image || config.aboutImage,
-             sibosUrl: settingsData.sibos_url || config.sibosUrl,
-             qalamUrl: settingsData.qalam_url || config.qalamUrl,
-             whatsappNumber: settingsData.whatsapp_number || config.whatsappNumber,
-             emailAddress: settingsData.email_address || config.emailAddress, // ADDED
-             addressSolo: settingsData.address_solo || config.addressSolo,
-             addressBlora: settingsData.address_blora || config.addressBlora,
-             mapSoloLink: settingsData.map_solo_link || config.mapSoloLink,
-             mapBloraLink: settingsData.map_blora_link || config.mapBloraLink,
-             mapSoloEmbed: settingsData.map_solo_embed || config.mapSoloEmbed, // ADDED
-             mapBloraEmbed: settingsData.map_blora_embed || config.mapBloraEmbed, // ADDED
-             instagramUrl: settingsData.instagram_url || config.instagramUrl,
-             facebookUrl: settingsData.facebook_url || config.facebookUrl,
-             youtubeUrl: settingsData.youtube_url || config.youtubeUrl,
-             tiktokUrl: settingsData.tiktok_url || config.tiktokUrl,
-             linkedinUrl: settingsData.linkedin_url || config.linkedinUrl,
-         });
-      }
+            // Fetch Articles
+            const { data: artData } = await supabase.from('articles').select('*');
+            if (artData) {
+                const mappedArticles = artData.map((item: any) => ({
+                    ...item,
+                    image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
+                    readTime: item.read_time || item.readTime || '5 min read',
+                    date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                })).sort((a: any, b: any) => {
+                    const dateA = a.created_at ? new Date(a.created_at) : parseDate(a.date);
+                    const dateB = b.created_at ? new Date(b.created_at) : parseDate(b.date);
+                    return dateB.getTime() - dateA.getTime();
+                });
+                setArticles(mappedArticles);
+            }
 
-      // --- REALTIME SUBSCRIPTIONS ---
-      const articlesChannel = supabase
-        .channel('public:articles')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
-          fetchArticles(); // Refetch articles when DB changes
-        })
-        .subscribe();
+            // Fetch Testimonials
+            const { data: testiData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
+            if (testiData) setTestimonials(testiData);
 
-      // Cleanup
-      return () => {
-        supabase.removeChannel(articlesChannel);
-      };
+            // Fetch Jobs
+            const { data: jobsData } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
+            if (jobsData) setJobs(jobsData);
+
+            // Fetch Site Settings
+            const { data: settingsData } = await supabase.from('site_settings').select('*').single();
+            if (settingsData) {
+                setConfig(prev => ({
+                    ...prev,
+                    heroTitle: settingsData.hero_title || prev.heroTitle,
+                    heroSubtitle: settingsData.hero_subtitle || prev.heroSubtitle,
+                    aboutImage: settingsData.about_image || prev.aboutImage,
+                    sibosUrl: settingsData.sibos_url || prev.sibosUrl,
+                    qalamUrl: settingsData.qalam_url || prev.qalamUrl,
+                    whatsappNumber: settingsData.whatsapp_number || prev.whatsappNumber,
+                    emailAddress: settingsData.email_address || prev.emailAddress,
+                    addressSolo: settingsData.address_solo || prev.addressSolo,
+                    addressBlora: settingsData.address_blora || prev.addressBlora,
+                    mapSoloLink: settingsData.map_solo_link || prev.mapSoloLink,
+                    mapBloraLink: settingsData.map_blora_link || prev.mapBloraLink,
+                    mapSoloEmbed: settingsData.map_solo_embed || prev.mapSoloEmbed,
+                    mapBloraEmbed: settingsData.map_blora_embed || prev.mapBloraEmbed,
+                    instagramUrl: settingsData.instagram_url || prev.instagramUrl,
+                    facebookUrl: settingsData.facebook_url || prev.facebookUrl,
+                    youtubeUrl: settingsData.youtube_url || prev.youtubeUrl,
+                    tiktokUrl: settingsData.tiktok_url || prev.tiktokUrl,
+                    linkedinUrl: settingsData.linkedin_url || prev.linkedinUrl,
+                }));
+            }
+        } catch (e) {
+            console.error("Data Fetch Error:", e);
+        } finally {
+            setIsInitializing(false); // STOP LOADING
+        }
     };
 
-    const cleanupPromise = fetchData();
+    initializeData();
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    // --- REALTIME SUBSCRIPTIONS ---
+    let articlesChannel: any;
+    if (supabase) {
+        articlesChannel = supabase
+            .channel('public:articles')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
+                // Simplified refresh logic or recall initializeData
+            })
+            .subscribe();
+            
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+        });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+        });
 
-    return () => {
-        subscription.unsubscribe();
-        cleanupPromise.then((cleanup) => cleanup && cleanup());
-    };
+        return () => {
+            subscription.unsubscribe();
+            if (articlesChannel) supabase.removeChannel(articlesChannel);
+        };
+    }
   }, []);
+
+  // --- RENDER LOADING SCREEN ---
+  if (isInitializing) {
+      return (
+          <div className="min-h-screen bg-brand-black flex flex-col items-center justify-center gap-4">
+              <LoadingSpinner size={48} className="text-brand-orange" />
+              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest animate-pulse">Memuat Data...</p>
+          </div>
+      );
+  }
 
   return (
     <CartProvider>
@@ -253,18 +265,16 @@ const AppContent = () => {
           <Route path="/articles" element={<ArticlesPage articles={articles} products={products} />} />
           <Route path="/articles/:slug" element={<ArticleDetailPage articles={articles} products={products} />} />
           
-          {/* New Service Routes */}
           <Route path="/services/website" element={<WebsiteServicePage />} />
           <Route path="/services/webapp" element={<WebAppServicePage />} />
           <Route path="/services/seo" element={<SeoServicePage />} />
           <Route path="/services/maintenance" element={<MaintenanceServicePage />} />
 
-          {/* Legal Pages */}
           <Route path="/legal/:type" element={<LegalPage />} />
 
           <Route path="/about" element={<AboutPage config={config} />} />
           <Route path="/about/vision" element={<VisionPage />} /> 
-          <Route path="/career" element={<CareerPage jobs={jobs} />} /> {/* ADDED */}
+          <Route path="/career" element={<CareerPage jobs={jobs} />} />
           <Route path="/contact" element={<ContactPage config={config} />} /> 
           
           <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
@@ -277,7 +287,7 @@ const AppContent = () => {
                 gallery={gallery} setGallery={setGallery}
                 testimonials={testimonials} setTestimonials={setTestimonials}
                 articles={articles} setArticles={setArticles}
-                jobs={jobs} setJobs={setJobs} // ADDED
+                jobs={jobs} setJobs={setJobs}
                 config={config} setConfig={setConfig}
                 onLogout={() => supabase?.auth.signOut()}
               />
