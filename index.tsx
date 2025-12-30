@@ -34,12 +34,12 @@ const AppContent = () => {
 
   const [session, setSession] = useState<any>(null);
   
-  // Data State - Initialize Articles empty to prevent ghosting
+  // Data State - Default to INITIAL only if Supabase is offline/missing
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [gallery, setGallery] = useState<GalleryItem[]>(INITIAL_GALLERY);
   const [articles, setArticles] = useState<Article[]>([]); 
   const [testimonials, setTestimonials] = useState<Testimonial[]>(INITIAL_TESTIMONIALS);
-  const [jobs, setJobs] = useState<JobOpening[]>(INITIAL_JOBS); // ADDED
+  const [jobs, setJobs] = useState<JobOpening[]>(INITIAL_JOBS);
 
   // Config State
   const [config, setConfig] = useState<SiteConfig>({
@@ -118,8 +118,10 @@ const AppContent = () => {
 
     const fetchData = async () => {
       // 1. Fetch Products & Map Image URL
-      const { data: prodData } = await supabase.from('products').select('*');
-      if (prodData && prodData.length > 0) {
+      const { data: prodData } = await supabase.from('products').select('*').order('id', { ascending: true });
+      if (prodData) {
+        // BUG FIX: Always set products from DB, even if empty array.
+        // If DB is empty, frontend should be empty, not showing ghost demo data.
         const mappedProducts = prodData.map((item: any) => ({
           ...item,
           image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800'
@@ -127,13 +129,13 @@ const AppContent = () => {
         setProducts(mappedProducts);
       }
 
-      const { data: galData } = await supabase.from('gallery').select('*');
-      if (galData && galData.length > 0) setGallery(galData);
+      const { data: galData } = await supabase.from('gallery').select('*').order('id', { ascending: false });
+      if (galData) setGallery(galData); // Respect empty array
 
       // 2. Fetch Articles & Sort
       const fetchArticles = async () => {
         const { data: artData } = await supabase.from('articles').select('*');
-        if (artData && artData.length > 0) {
+        if (artData) {
           const mappedArticles = artData.map((item: any) => ({
             ...item,
             image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
@@ -151,11 +153,14 @@ const AppContent = () => {
       fetchArticles();
 
       const { data: testiData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
-      if (testiData && testiData.length > 0) setTestimonials(testiData);
+      if (testiData) setTestimonials(testiData); // Respect empty array
 
-      // 3. Fetch Jobs
+      // 3. Fetch Jobs (CRITICAL FIX FOR CAREER BUG)
       const { data: jobsData } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
-      if (jobsData && jobsData.length > 0) setJobs(jobsData);
+      // If connected, USE DB DATA (even if empty). Do NOT fallback to INITIAL_JOBS if empty.
+      if (jobsData) {
+          setJobs(jobsData);
+      }
 
       // 4. Fetch Site Settings
       const { data: settingsData } = await supabase.from('site_settings').select('*').single();
@@ -208,7 +213,6 @@ const AppContent = () => {
 
     return () => {
         subscription.unsubscribe();
-        // Since cleanupPromise returns a promise that resolves to a cleanup function (which removes channel)
         cleanupPromise.then((cleanup) => cleanup && cleanup());
     };
   }, []);

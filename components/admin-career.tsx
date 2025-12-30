@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Edit, Save, X as XIcon, Briefcase, MapPin, Search } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, X as XIcon, Briefcase, MapPin, Search, CheckCircle2 } from 'lucide-react';
 import { JobOpening } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase } from '../utils';
@@ -67,10 +67,9 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
 
                 // Update State Lokal
                 setJobs((prev: JobOpening[]) => prev.map(j => j.id === form.id ? { ...j, ...dbData } : j));
-                alert("Lowongan berhasil diupdate!");
+                alert("Lowongan berhasil diperbarui! (Langsung live)");
             } else {
-                // --- CREATE MODE (CRITICAL FIX) ---
-                // Kita gunakan .select() untuk mendapatkan ID asli dari database
+                // --- CREATE MODE ---
                 const { data, error } = await supabase
                     .from('jobs')
                     .insert([dbData])
@@ -80,9 +79,8 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
                 if (error) throw error;
 
                 if (data) {
-                    // Masukkan data ASLI dari DB ke state (bukan data dummy Date.now())
                     setJobs((prev: JobOpening[]) => [data, ...prev]);
-                    alert("Lowongan berhasil diterbitkan!");
+                    alert("Lowongan berhasil diterbitkan! (Langsung live)");
                 }
             }
             resetForm();
@@ -95,12 +93,12 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
     };
 
     const deleteJob = async (id: number) => {
-        if(!confirm("Yakin hapus lowongan ini?")) return;
+        if(!confirm("Yakin hapus lowongan ini? Data akan hilang permanen.")) return;
         
         // 1. Backup state
         const previousJobs = [...jobs];
 
-        // 2. Optimistic Update (Hapus dari layar)
+        // 2. Optimistic Update
         setJobs((prev: JobOpening[]) => prev.filter(j => j.id !== id));
 
         // 3. Hapus dari Database
@@ -114,8 +112,6 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
                 // Rollback jika gagal
                 setJobs(previousJobs);
             }
-        } else {
-            // Jika demo mode (tanpa supabase), biarkan terhapus di layar
         }
 
         if (form.id === id) resetForm();
@@ -149,7 +145,7 @@ export const AdminCareer = ({ jobs, setJobs }: { jobs: JobOpening[], setJobs: (j
                 </div>
 
                 <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
-                    {filtered.length === 0 && <p className="text-center text-gray-500 text-xs py-10">Belum ada data lowongan.</p>}
+                    {filtered.length === 0 && <p className="text-center text-gray-500 text-xs py-10">Belum ada lowongan aktif.</p>}
                     {filtered.map(job => (
                         <div key={job.id} className="bg-brand-card p-4 rounded-lg border border-white/5 flex justify-between items-start group hover:border-brand-orange/30 transition-colors">
                             <div>
@@ -174,7 +170,7 @@ export const AdminCareer = ({ jobs, setJobs }: { jobs: JobOpening[], setJobs: (j
 
             {/* FORM */}
             <div className="lg:col-span-5 bg-brand-dark p-6 rounded-xl border border-white/5 sticky top-6">
-                <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
+                <div className="flex justify-between items-center mb-4 pb-4 border-b border-white/5">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
                         <Briefcase size={18} className="text-brand-orange"/>
                         {form.id ? "Edit Lowongan" : "Buat Lowongan"}
@@ -184,6 +180,13 @@ export const AdminCareer = ({ jobs, setJobs }: { jobs: JobOpening[], setJobs: (j
                             <XIcon size={12} /> Batal
                         </button>
                     )}
+                </div>
+
+                <div className="bg-blue-500/5 border border-blue-500/20 p-3 rounded-lg mb-4 flex gap-2 items-start">
+                    <CheckCircle2 size={14} className="text-blue-400 mt-0.5 shrink-0" />
+                    <p className="text-[10px] text-gray-300">
+                        Data lowongan tersimpan <strong>otomatis & langsung</strong> ke database saat tombol simpan ditekan. Tidak perlu menekan tombol 'Simpan Pengaturan' di menu lain.
+                    </p>
                 </div>
 
                 <div className="space-y-4">
@@ -231,7 +234,7 @@ export const AdminCareer = ({ jobs, setJobs }: { jobs: JobOpening[], setJobs: (j
                     </div>
 
                     <Button onClick={handleSubmit} disabled={loading} className="w-full py-2.5 text-sm mt-2">
-                        {loading ? <LoadingSpinner /> : (form.id ? <><Save size={16}/> Update Lowongan</> : <><Plus size={16}/> Publish Lowongan</>)}
+                        {loading ? <LoadingSpinner /> : (form.id ? <><Save size={16}/> Update & Publish</> : <><Plus size={16}/> Publish Sekarang</>)}
                     </Button>
                 </div>
             </div>
