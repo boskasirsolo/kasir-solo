@@ -43,14 +43,17 @@ const AppContent = () => {
   const [config, setConfig] = useState<SiteConfig>({
     heroTitle: "MESIN KASIR DIGITAL",
     heroSubtitle: "Solusi kasir modern (POS) dan jasa pembuatan website profesional untuk UMKM Indonesia.",
-    aboutImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200", // Default Fallback
+    aboutImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200", 
     sibosUrl: "https://sibos.id",
     qalamUrl: "https://qalam.id",
     whatsappNumber: "6282325103336",
+    emailAddress: "admin@kasirsolo.com",
     addressSolo: "Perum Graha Tiara 2 B1, Kartasura",
     addressBlora: "Gumiring 04/04, Banjarejo",
     mapSoloLink: "https://maps.google.com/?q=Perum+Graha+Tiara+2+B1+Kartasura",
     mapBloraLink: "https://maps.google.com/?q=Gumiring+Banjarejo+Blora",
+    mapSoloEmbed: "", // Default empty
+    mapBloraEmbed: "", // Default empty
     instagramUrl: "https://instagram.com/",
     facebookUrl: "https://facebook.com/",
     youtubeUrl: "https://youtube.com/",
@@ -154,14 +157,17 @@ const AppContent = () => {
          setConfig({
              heroTitle: settingsData.hero_title || config.heroTitle,
              heroSubtitle: settingsData.hero_subtitle || config.heroSubtitle,
-             aboutImage: settingsData.about_image || config.aboutImage, // ADDED
+             aboutImage: settingsData.about_image || config.aboutImage,
              sibosUrl: settingsData.sibos_url || config.sibosUrl,
              qalamUrl: settingsData.qalam_url || config.qalamUrl,
              whatsappNumber: settingsData.whatsapp_number || config.whatsappNumber,
+             emailAddress: settingsData.email_address || config.emailAddress, // ADDED
              addressSolo: settingsData.address_solo || config.addressSolo,
              addressBlora: settingsData.address_blora || config.addressBlora,
              mapSoloLink: settingsData.map_solo_link || config.mapSoloLink,
              mapBloraLink: settingsData.map_blora_link || config.mapBloraLink,
+             mapSoloEmbed: settingsData.map_solo_embed || config.mapSoloEmbed, // ADDED
+             mapBloraEmbed: settingsData.map_blora_embed || config.mapBloraEmbed, // ADDED
              instagramUrl: settingsData.instagram_url || config.instagramUrl,
              facebookUrl: settingsData.facebook_url || config.facebookUrl,
              youtubeUrl: settingsData.youtube_url || config.youtubeUrl,

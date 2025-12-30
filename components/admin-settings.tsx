@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save, Sparkles, TrendingUp, Image as ImageIcon, UploadCloud } from 'lucide-react';
+import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save, Sparkles, TrendingUp, Image as ImageIcon, UploadCloud, Mail } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
 import { supabase, callGeminiWithRotation, CONFIG } from '../utils';
@@ -49,10 +49,13 @@ export const AdminSettings = ({
               sibos_url: config.sibosUrl,
               qalam_url: config.qalamUrl,
               whatsapp_number: config.whatsappNumber,
+              email_address: config.emailAddress, // Added
               address_solo: config.addressSolo,
               address_blora: config.addressBlora,
               map_solo_link: config.mapSoloLink,
               map_blora_link: config.mapBloraLink,
+              map_solo_embed: config.mapSoloEmbed, // Added
+              map_blora_embed: config.mapBloraEmbed, // Added
               instagram_url: config.instagramUrl,
               facebook_url: config.facebookUrl,
               youtube_url: config.youtubeUrl,
@@ -183,34 +186,50 @@ export const AdminSettings = ({
 
             {/* Contact Info */}
             <div className="space-y-4">
-            <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
-                <MapPin size={14} /> Alamat & Kontak
-            </h4>
-            <div>
-                <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Alamat Kantor 1 (Solo)</label>
-                <Input value={config.addressSolo || ''} onChange={(e) => setConfig({...config, addressSolo: e.target.value})} placeholder="Perum Graha Tiara..." />
-            </div>
-            <div>
-                <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Alamat Kantor 2 (Blora)</label>
-                <Input value={config.addressBlora || ''} onChange={(e) => setConfig({...config, addressBlora: e.target.value})} placeholder="Banjarejo..." />
-            </div>
-            
-            {/* New Map Coordinates */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Compass size={12}/> Link Map Solo</label>
-                    <Input value={config.mapSoloLink || ''} onChange={(e) => setConfig({...config, mapSoloLink: e.target.value})} placeholder="https://maps.app.goo.gl/..." className="text-xs" />
+                <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                    <MapPin size={14} /> Alamat & Kontak
+                </h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Phone size={12}/> No. WhatsApp</label>
+                        <Input value={config.whatsappNumber || ''} onChange={(e) => setConfig({...config, whatsappNumber: e.target.value})} placeholder="08xxxx (Tanpa +62)" />
+                    </div>
+                    <div>
+                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Mail size={12}/> Email Resmi</label>
+                        <Input value={config.emailAddress || ''} onChange={(e) => setConfig({...config, emailAddress: e.target.value})} placeholder="admin@..." />
+                    </div>
                 </div>
-                <div>
-                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Compass size={12}/> Link Map Blora</label>
-                    <Input value={config.mapBloraLink || ''} onChange={(e) => setConfig({...config, mapBloraLink: e.target.value})} placeholder="https://maps.app.goo.gl/..." className="text-xs" />
-                </div>
-            </div>
 
-            <div>
-                <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Phone size={12}/> No. WhatsApp Utama</label>
-                <Input value={config.whatsappNumber || ''} onChange={(e) => setConfig({...config, whatsappNumber: e.target.value})} placeholder="08xxxx (Tanpa +62)" />
-            </div>
+                <div>
+                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Alamat Legal (Solo)</label>
+                    <Input value={config.addressSolo || ''} onChange={(e) => setConfig({...config, addressSolo: e.target.value})} placeholder="Perum Graha Tiara..." />
+                </div>
+                <div>
+                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Embed Map Solo (Iframe)</label>
+                    <TextArea value={config.mapSoloEmbed || ''} onChange={(e) => setConfig({...config, mapSoloEmbed: e.target.value})} placeholder="<iframe src=... ></iframe>" className="h-20 text-[10px] font-mono" />
+                </div>
+
+                <div>
+                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Alamat Operasional (Blora)</label>
+                    <Input value={config.addressBlora || ''} onChange={(e) => setConfig({...config, addressBlora: e.target.value})} placeholder="Banjarejo..." />
+                </div>
+                <div>
+                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Embed Map Blora (Iframe)</label>
+                    <TextArea value={config.mapBloraEmbed || ''} onChange={(e) => setConfig({...config, mapBloraEmbed: e.target.value})} placeholder="<iframe src=... ></iframe>" className="h-20 text-[10px] font-mono" />
+                </div>
+                
+                {/* Map Coordinates Links */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Compass size={12}/> Link Map Solo</label>
+                        <Input value={config.mapSoloLink || ''} onChange={(e) => setConfig({...config, mapSoloLink: e.target.value})} placeholder="https://maps.app.goo.gl/..." className="text-xs" />
+                    </div>
+                    <div>
+                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Compass size={12}/> Link Map Blora</label>
+                        <Input value={config.mapBloraLink || ''} onChange={(e) => setConfig({...config, mapBloraLink: e.target.value})} placeholder="https://maps.app.goo.gl/..." className="text-xs" />
+                    </div>
+                </div>
             </div>
         </div>
 

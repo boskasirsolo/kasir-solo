@@ -11,7 +11,7 @@ const ContactItem = ({ icon: Icon, title, value, sub, action }: { icon: any, tit
     </div>
     <div>
       <h4 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">{title}</h4>
-      <p className="text-white font-bold text-base md:text-lg leading-tight">{value}</p>
+      <p className="text-white font-bold text-base md:text-lg leading-tight truncate max-w-[250px]">{value}</p>
       {sub && <p className="text-gray-500 text-xs mt-1">{sub}</p>}
     </div>
   </div>
@@ -37,6 +37,26 @@ const FaqItem = ({ q, a }: { q: string, a: string }) => {
   );
 };
 
+// Component helper to clean iframe code if pasted with tags
+const MapEmbed = ({ embedCode, title, fallbackImage }: { embedCode?: string, title: string, fallbackImage: string }) => {
+    if (!embedCode || embedCode.length < 10) {
+        return <img src={fallbackImage} className="w-full h-full object-cover opacity-40 group-hover:opacity-30 transition-opacity" alt={title} />;
+    }
+
+    // Sanitize width/height to force fill parent
+    const cleanEmbed = embedCode
+        .replace(/width="[^"]*"/g, 'width="100%"')
+        .replace(/height="[^"]*"/g, 'height="100%"')
+        .replace(/style="[^"]*"/g, 'style="border:0;"');
+
+    return (
+        <div 
+            className="w-full h-full opacity-60 group-hover:opacity-100 transition-opacity iframe-map-container"
+            dangerouslySetInnerHTML={{ __html: cleanEmbed }} 
+        />
+    );
+};
+
 export const ContactPage = ({ config }: { config: SiteConfig }) => {
   const [form, setForm] = useState({
     name: '',
@@ -54,6 +74,8 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
     const url = `https://wa.me/${config.whatsappNumber}?text=${text}`;
     window.open(url, '_blank');
   };
+
+  const email = config.emailAddress || "admin@kasirsolo.com";
 
   return (
     <div className="animate-fade-in">
@@ -99,9 +121,9 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                   <ContactItem 
                      icon={Mail} 
                      title="Email Resmi" 
-                     value="admin@kasirsolo.com" 
+                     value={email} 
                      sub="Untuk penawaran korporat / tender"
-                     action={() => window.location.href = "mailto:admin@kasirsolo.com"}
+                     action={() => window.location.href = `mailto:${email}`}
                   />
                </div>
 
@@ -112,37 +134,57 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                   </h3>
                   
                   {/* Solo Map Card */}
-                  <div className="group relative h-40 bg-gray-800 rounded-xl overflow-hidden border border-white/10 cursor-pointer" onClick={() => window.open(config.mapSoloLink, '_blank')}>
-                     <img src="https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?auto=format&fit=crop&q=80&w=600" className="w-full h-full object-cover opacity-40 group-hover:opacity-30 transition-opacity" alt="Office Solo" />
-                     <div className="absolute inset-0 p-5 flex flex-col justify-end">
+                  <div className="group relative h-48 bg-gray-800 rounded-xl overflow-hidden border border-white/10 cursor-pointer">
+                     <div className="absolute inset-0 z-0">
+                        <MapEmbed 
+                            embedCode={config.mapSoloEmbed} 
+                            title="Office Solo" 
+                            fallbackImage="https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?auto=format&fit=crop&q=80&w=600"
+                        />
+                     </div>
+                     <div className="absolute inset-0 p-5 flex flex-col justify-end pointer-events-none">
                         <div className="flex items-start justify-between">
                            <div>
-                              <span className="text-brand-orange font-bold text-xs uppercase tracking-widest bg-black/50 px-2 py-1 rounded backdrop-blur-sm">Head Office</span>
-                              <p className="text-white font-bold text-lg mt-2 leading-tight">Solo Raya</p>
-                              <p className="text-gray-400 text-xs line-clamp-1">{config.addressSolo}</p>
+                              <span className="text-brand-orange font-bold text-xs uppercase tracking-widest bg-black/80 px-2 py-1 rounded backdrop-blur-sm shadow-lg">KANTOR LEGAL (SOLO RAYA)</span>
+                              <p className="text-white font-bold text-lg mt-2 leading-tight drop-shadow-md">Head Office</p>
+                              <p className="text-gray-200 text-xs line-clamp-2 mt-1 bg-black/60 p-1 rounded inline-block">{config.addressSolo}</p>
                            </div>
-                           <div className="bg-brand-orange p-2 rounded-full text-white shadow-lg transform group-hover:-translate-y-2 transition-transform">
-                              <MapPin size={20} />
-                           </div>
+                           {/* Only show icon if no embed, or as an overlay button */}
+                           {!config.mapSoloEmbed && (
+                               <div className="bg-brand-orange p-2 rounded-full text-white shadow-lg transform group-hover:-translate-y-2 transition-transform">
+                                  <MapPin size={20} />
+                               </div>
+                           )}
                         </div>
                      </div>
+                     {/* Click overlay for external link if embed is missing or user wants full map */}
+                     <a href={config.mapSoloLink} target="_blank" rel="noreferrer" className="absolute inset-0 z-10" aria-label="Open Map"></a>
                   </div>
 
                   {/* Blora Map Card */}
-                  <div className="group relative h-40 bg-gray-800 rounded-xl overflow-hidden border border-white/10 cursor-pointer" onClick={() => window.open(config.mapBloraLink, '_blank')}>
-                     <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600" className="w-full h-full object-cover opacity-40 group-hover:opacity-30 transition-opacity" alt="Office Blora" />
-                     <div className="absolute inset-0 p-5 flex flex-col justify-end">
+                  <div className="group relative h-48 bg-gray-800 rounded-xl overflow-hidden border border-white/10 cursor-pointer">
+                     <div className="absolute inset-0 z-0">
+                        <MapEmbed 
+                            embedCode={config.mapBloraEmbed} 
+                            title="Office Blora" 
+                            fallbackImage="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600"
+                        />
+                     </div>
+                     <div className="absolute inset-0 p-5 flex flex-col justify-end pointer-events-none">
                         <div className="flex items-start justify-between">
                            <div>
-                              <span className="text-blue-400 font-bold text-xs uppercase tracking-widest bg-black/50 px-2 py-1 rounded backdrop-blur-sm">Cabang</span>
-                              <p className="text-white font-bold text-lg mt-2 leading-tight">Blora</p>
-                              <p className="text-gray-400 text-xs line-clamp-1">{config.addressBlora}</p>
+                              <span className="text-blue-400 font-bold text-xs uppercase tracking-widest bg-black/80 px-2 py-1 rounded backdrop-blur-sm shadow-lg">KANTOR OPERASIONAL & SHOWROOM</span>
+                              <p className="text-white font-bold text-lg mt-2 leading-tight drop-shadow-md">Blora - Jawa Tengah</p>
+                              <p className="text-gray-200 text-xs line-clamp-2 mt-1 bg-black/60 p-1 rounded inline-block">{config.addressBlora}</p>
                            </div>
-                           <div className="bg-brand-dark border border-brand-orange text-brand-orange p-2 rounded-full shadow-lg transform group-hover:-translate-y-2 transition-transform">
-                              <MapPin size={20} />
-                           </div>
+                           {!config.mapBloraEmbed && (
+                               <div className="bg-brand-dark border border-brand-orange text-brand-orange p-2 rounded-full shadow-lg transform group-hover:-translate-y-2 transition-transform">
+                                  <MapPin size={20} />
+                               </div>
+                           )}
                         </div>
                      </div>
+                     <a href={config.mapBloraLink} target="_blank" rel="noreferrer" className="absolute inset-0 z-10" aria-label="Open Map"></a>
                   </div>
 
                </div>
@@ -222,7 +264,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                   <div className="bg-brand-card rounded-xl border border-white/5 px-6">
                      <FaqItem 
                         q="Apakah tersedia toko fisik untuk melihat barang?" 
-                        a="Ya, tentu saja. Anda bisa mengunjungi Showroom utama kami di Kartasura, Solo Raya. Silakan lihat peta di bagian kiri halaman ini atau hubungi admin untuk share location." 
+                        a="Ya, tentu saja. Anda bisa mengunjungi SHOWROOM dan KANTOR OPERASIONAL kami di Banjarejo, Blora. Silakan lihat peta di bagian kiri halaman ini atau hubungi admin untuk share location." 
                      />
                      <FaqItem 
                         q="Apakah melayani pengiriman ke luar kota/pulau?" 
@@ -234,7 +276,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                      />
                      <FaqItem 
                         q="Apakah saya akan diajari cara pakainya?" 
-                        a="Pasti. Setiap pembelian paket kasir sudah termasuk layanan Training (Pelatihan) untuk owner dan staff sampai bisa. Bisa via Zoom (jarak jauh) atau tatap muka (jika di area Solo)." 
+                        a="Pasti. Setiap pembelian paket kasir sudah termasuk layanan Training (Pelatihan) untuk owner dan staff sampai bisa. Bisa via Zoom (jarak jauh) atau tatap muka (jika di area jangkauan)." 
                      />
                   </div>
                </div>

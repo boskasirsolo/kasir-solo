@@ -62,15 +62,18 @@ export interface Testimonial {
 export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
-  aboutImage?: string; // NEW: Dynamic Office Photo
+  aboutImage?: string; 
   sibosUrl?: string; 
   qalamUrl?: string; 
   // Contact & Footer Config
   whatsappNumber?: string;
+  emailAddress?: string; // NEW
   addressSolo?: string;
   addressBlora?: string;
-  mapSoloLink?: string; // New Map Link
-  mapBloraLink?: string; // New Map Link
+  mapSoloLink?: string; 
+  mapBloraLink?: string; 
+  mapSoloEmbed?: string; // NEW: HTML String for Iframe
+  mapBloraEmbed?: string; // NEW: HTML String for Iframe
   instagramUrl?: string;
   facebookUrl?: string;
   youtubeUrl?: string;
