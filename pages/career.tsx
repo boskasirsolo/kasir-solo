@@ -1,18 +1,21 @@
 
 import React, { useState } from 'react';
-import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Coffee, Ghost } from 'lucide-react';
+import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Zap, Target, Shield, Flame, XCircle, HeartHandshake } from 'lucide-react';
 import { JobOpening } from '../types';
 import { Button, Card, Badge, SectionHeader } from '../components/ui';
 
 const JobCard: React.FC<{ job: JobOpening, onClick: () => void }> = ({ job, onClick }) => (
   <div onClick={onClick} className="h-full">
-    <Card className="p-6 border border-white/5 hover:border-brand-orange/50 transition-all cursor-pointer group hover:-translate-y-1 h-full">
+    <Card className="p-6 border border-white/5 hover:border-brand-orange/50 transition-all cursor-pointer group hover:-translate-y-1 h-full bg-brand-dark hover:bg-brand-card">
       <div className="flex justify-between items-start mb-4">
         <div>
           <Badge className="mb-2 bg-brand-orange/10 text-brand-orange border-brand-orange/20">{job.division}</Badge>
           <h3 className="text-xl font-bold text-white group-hover:text-brand-orange transition-colors">{job.title}</h3>
         </div>
-        {job.is_active && <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>}
+        {job.is_active && <span className="relative flex h-3 w-3">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        </span>}
       </div>
       
       <div className="flex items-center gap-4 text-xs text-gray-400 mb-6">
@@ -24,7 +27,7 @@ const JobCard: React.FC<{ job: JobOpening, onClick: () => void }> = ({ job, onCl
         {job.description}
       </p>
 
-      <div className="flex items-center text-brand-orange text-xs font-bold uppercase tracking-widest gap-2">
+      <div className="flex items-center text-brand-orange text-xs font-bold uppercase tracking-widest gap-2 mt-auto">
         Lihat Detail <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/>
       </div>
     </Card>
@@ -92,26 +95,90 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
 
   return (
     <div className="animate-fade-in">
-      {/* Hero Section */}
+      {/* Hero Section - The Hook */}
       <section className="relative py-24 overflow-hidden border-b border-white/5">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-orange/5 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-6">
             <UserPlus size={14} className="text-brand-orange" />
-            <span className="text-xs font-bold text-gray-300 tracking-[0.2em] uppercase">We Are Hiring</span>
+            <span className="text-xs font-bold text-gray-300 tracking-[0.2em] uppercase">Join The Resistance</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-display font-bold text-white mb-6 leading-tight">
-            Bangun Masa Depan <br/><span className="text-brand-orange">Digital Indonesia</span>
+          <h1 className="text-4xl md:text-7xl font-display font-bold text-white mb-6 leading-tight">
+            Kami Tidak Mencari Karyawan,<br/>
+            Kami Mencari <span className="text-brand-orange">Partner Perjuangan.</span>
           </h1>
-          <p className="max-w-2xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
-            Bergabunglah dengan tim yang berdedikasi membantu jutaan UMKM naik kelas melalui teknologi. Bukan sekadar kerja, tapi berkarya.
+          <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
+            PT Mesin Kasir Solo bukan tempat untuk orang yang mencari kenyamanan 9-to-5. <br/>
+            Ini adalah tempat bagi mereka yang ingin membangun sistem yang menyelamatkan ribuan UMKM dari kebangkrutan.
           </p>
         </div>
       </section>
 
-      {/* Content Section */}
-      <section className="py-20 bg-brand-black">
+      {/* CULTURE MANIFESTO - The Why */}
+      <section className="py-20 bg-brand-dark relative overflow-hidden">
+         <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+               <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">DNA <span className="text-brand-orange">KAMI</span></h2>
+               <p className="text-gray-400 text-sm max-w-2xl mx-auto">Kami pernah jatuh di tahun 2022. Kehilangan domain, kehilangan aset. Kami bangkit kembali dengan mental baja. Jika Anda tidak memiliki mental ini, Anda tidak akan bertahan di sini.</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+               {/* Value 1 */}
+               <div className="p-8 bg-brand-card/30 border border-white/5 rounded-2xl hover:border-brand-orange/30 transition-all group">
+                  <div className="w-14 h-14 bg-brand-dark border border-brand-orange/20 rounded-xl flex items-center justify-center text-brand-orange mb-6 group-hover:scale-110 transition-transform shadow-neon-text">
+                     <Flame size={28} />
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-3">Resilience (Tahan Banting)</h4>
+                  <p className="text-gray-400 text-sm leading-relaxed">
+                     Masalah teknis, komplain klien, dan deadline adalah makanan sehari-hari. Kami tidak butuh orang yang mudah mengeluh. Kami butuh <em>Problem Solver</em> yang tenang di tengah badai.
+                  </p>
+               </div>
+
+               {/* Value 2 */}
+               <div className="p-8 bg-brand-card/30 border border-white/5 rounded-2xl hover:border-brand-orange/30 transition-all group">
+                  <div className="w-14 h-14 bg-brand-dark border border-brand-orange/20 rounded-xl flex items-center justify-center text-brand-orange mb-6 group-hover:scale-110 transition-transform shadow-neon-text">
+                     <Target size={28} />
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-3">Impact Over Output</h4>
+                  <p className="text-gray-400 text-sm leading-relaxed">
+                     Jangan bangga hanya karena sudah "bekerja keras". Kami menilai hasil. Apakah kode yang Anda tulis mempercepat transaksi UMKM? Apakah desain Anda memudahkan kasir lansia?
+                  </p>
+               </div>
+
+               {/* Value 3 */}
+               <div className="p-8 bg-brand-card/30 border border-white/5 rounded-2xl hover:border-brand-orange/30 transition-all group">
+                  <div className="w-14 h-14 bg-brand-dark border border-brand-orange/20 rounded-xl flex items-center justify-center text-brand-orange mb-6 group-hover:scale-110 transition-transform shadow-neon-text">
+                     <HeartHandshake size={28} />
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-3">Empathy for Users</h4>
+                  <p className="text-gray-400 text-sm leading-relaxed">
+                     Klien kami bukan perusahaan Fortune 500. Klien kami adalah pemilik toko kelontong, ustadz TPA, dan pengusaha kafe rintisan. Sistem Anda harus bisa dipakai oleh mereka tanpa manual tebal.
+                  </p>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      {/* FILTER SECTION - The Filter */}
+      <section className="py-16 bg-red-900/10 border-y border-red-500/10">
+         <div className="container mx-auto px-4 text-center">
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-8 flex items-center justify-center gap-2">
+               <XCircle className="text-red-500" /> JANGAN MELAMAR JIKA:
+            </h3>
+            <div className="flex flex-wrap justify-center gap-4 md:gap-8">
+               {["Hanya mencari gaji aman akhir bulan", "Anti terhadap kritik & revisi", "Tidak mau belajar hal baru di luar jobdesk", "Bekerja seperti robot tanpa inisiatif"].map((item, i) => (
+                  <div key={i} className="bg-brand-black px-6 py-3 rounded-full border border-red-500/30 text-gray-300 text-sm flex items-center gap-2">
+                     <span className="w-2 h-2 bg-red-500 rounded-full"></span> {item}
+                  </div>
+               ))}
+            </div>
+         </div>
+      </section>
+
+      {/* OPEN POSITIONS - The Opportunity */}
+      <section className="py-24 bg-brand-black" id="openings">
         <div className="container mx-auto px-4">
+          <SectionHeader title="Posisi" highlight="Terbuka" subtitle="Jika Anda merasa cocok dengan DNA kami, silakan ambil tantangan ini." />
           
           {activeJobs.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -120,42 +187,21 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 px-4 bg-brand-card/50 rounded-3xl border-2 border-dashed border-brand-orange/20">
-               <div className="w-24 h-24 bg-brand-orange/10 rounded-full flex items-center justify-center mx-auto mb-6 text-brand-orange shadow-neon">
-                  <Ghost size={40} />
+            <div className="flex flex-col items-center justify-center py-20 px-4 bg-brand-card/30 rounded-3xl border border-white/5">
+               <div className="w-20 h-20 bg-brand-orange/10 rounded-full flex items-center justify-center mb-6 text-brand-orange shadow-neon">
+                  <Shield size={32} />
                </div>
-               <h3 className="text-2xl font-bold text-white mb-2">Belum Ada Lowongan</h3>
-               <p className="text-gray-400 max-w-md mx-auto mb-0">
-                 Saat ini belum ada posisi terbuka. Pantau terus halaman ini atau sosial media kami untuk update info rekrutmen terbaru.
+               <h3 className="text-2xl font-bold text-white mb-2">Skuad Sedang Lengkap</h3>
+               <p className="text-gray-400 max-w-md text-center mb-6 leading-relaxed">
+                 Saat ini semua pos tempur sudah terisi. Namun, jika Anda yakin skill Anda di atas rata-rata dan bisa memberikan impact, kirimkan CV spontan Anda.
                </p>
+               <Button onClick={() => window.open('mailto:karir@kasirsolo.com', '_blank')} variant="outline">
+                  Kirim CV Spontan
+               </Button>
             </div>
           )}
 
         </div>
-      </section>
-
-      {/* Culture Teaser */}
-      <section className="py-20 bg-brand-dark border-t border-white/5">
-         <div className="container mx-auto px-4 text-center">
-            <h2 className="text-2xl font-bold text-white mb-8">Kenapa Bergabung?</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-               <div className="p-6">
-                  <div className="text-brand-orange font-display font-bold text-4xl mb-2">01</div>
-                  <h4 className="text-white font-bold mb-2">Impactful Work</h4>
-                  <p className="text-gray-400 text-sm">Karyamu dipakai ribuan bisnis setiap hari.</p>
-               </div>
-               <div className="p-6">
-                  <div className="text-brand-orange font-display font-bold text-4xl mb-2">02</div>
-                  <h4 className="text-white font-bold mb-2">Continuous Learning</h4>
-                  <p className="text-gray-400 text-sm">Akses ke course premium & mentorship.</p>
-               </div>
-               <div className="p-6">
-                  <div className="text-brand-orange font-display font-bold text-4xl mb-2">03</div>
-                  <h4 className="text-white font-bold mb-2">Cool Office</h4>
-                  <p className="text-gray-400 text-sm">Lingkungan kerja nyaman, free coffee & snacks.</p>
-               </div>
-            </div>
-         </div>
       </section>
 
       {/* Modal */}
