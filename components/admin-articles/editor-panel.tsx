@@ -228,7 +228,18 @@ export const EditorPanel = ({
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-4">
                 <Input value={form.title} onChange={e => setForm((p:any) => ({...p, title: e.target.value}))} placeholder="Judul Artikel"/>
                 
-                {/* 1. COVER IMAGE GENERATOR (RESTORED) */}
+                {/* 1. SHORT DESCRIPTION FIELD (NEW) */}
+                <div>
+                    <label className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Deskripsi Singkat (SEO Excerpt)</label>
+                    <TextArea 
+                        value={form.excerpt} 
+                        onChange={e => setForm((p:any) => ({...p, excerpt: e.target.value}))} 
+                        placeholder="Ringkasan artikel untuk meta description..." 
+                        className="h-20 text-xs text-gray-300 leading-relaxed custom-scrollbar"
+                    />
+                </div>
+
+                {/* 2. COVER IMAGE GENERATOR */}
                 <div className="relative w-full h-32 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
                     {form.imagePreview ? (
                         <img src={form.imagePreview} alt="Preview" className="w-full h-full object-cover" />
@@ -252,7 +263,7 @@ export const EditorPanel = ({
                     </div>
                 </div>
 
-                {/* 2. CATEGORY SELECTOR (MULTI-TAG) */}
+                {/* 3. CATEGORY SELECTOR (MULTI-TAG) */}
                 <div>
                     <label className="text-[9px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Kategori Artikel (Multi)</label>
                     
@@ -283,7 +294,7 @@ export const EditorPanel = ({
                     </datalist>
                 </div>
 
-                {/* 3. Content Editor */}
+                {/* 4. Content Editor */}
                 <div className="relative group">
                     <TextArea value={form.content} onChange={e => setForm((p:any) => ({...p, content: e.target.value}))} placeholder="# Konten..." className="h-96 text-[10px] font-mono pb-12 resize-none custom-scrollbar"/>
                     

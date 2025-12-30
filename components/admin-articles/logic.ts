@@ -105,18 +105,32 @@ export const useAIGenerator = () => {
         setLoading(p => ({ ...p, generatingText: true }));
         try {
             const contentPrompt = `
-            Write a complete SEO Article.
-            Title: "${title}"
+            You are a Modern SEO Content Expert. Write an article about: "${title}".
             Language: Indonesian.
             Format: Markdown.
-            Narrative Style: ${narrative === 'narsis' ? 'Personal (POV: Gue/Saya), opinionated, storytelling.' : 'Professional (POV: Kami/Kita), objective, educational.'}
-            Article Type: ${type} (Pillar or Cluster).
-            Length: 800-1000 words.
+            
+            CRITICAL "NO-FLUFF" RULES:
+            1. **NO INTRODUCTIONS**: Do NOT start with "Pada artikel ini...", "Selamat datang...", "Tahukah Anda...". Start DIRECTLY with the core definition or answer.
+            2. **NO CONCLUSIONS**: Do NOT end with "Kesimpulannya...", "Semoga bermanfaat...". End with a strong Call to Action (CTA) or a final punchline.
+            3. **Google Snippet Optimized**: The first paragraph must be a direct, concise answer (40-60 words) defining the main topic.
+            4. **Structure**: Use H2 and H3 for subheadings. Use bullet points for readability.
+            5. **Experience (E-E-A-T)**: Include specific examples, data, or technical details about POS systems/Business.
+            
+            Narrative Style: ${narrative === 'narsis' ? 'Personal (POV: Gue/Saya as Business Owner). Honest, direct, slightly opinionated.' : 'Professional (POV: Kami). Objective, authoritative, data-driven.'}
+            Article Type: ${type} (Structure for ${type === 'pillar' ? 'Broad coverage & Definitions' : 'Specific depth & actionable steps'}).
+            Length: 800-1200 words.
             `;
             
             const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
             
-            const metaPrompt = `Generate JSON Metadata for article "${title}". Format: {"excerpt": "...", "category": "...", "readTime": "..."}`;
+            // Meta Prompt also updated for SEO focus
+            const metaPrompt = `
+            Generate JSON Metadata for article "${title}". 
+            1. "excerpt": A compelling Meta Description (max 160 chars). Must include the main keyword. No clickbait, just value.
+            2. "category": Best fitting category (Business/Tech/Marketing).
+            3. "readTime": Estimated reading time.
+            Format: {"excerpt": "...", "category": "...", "readTime": "..."}
+            `;
             const metaRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
             const metaData = JSON.parse(metaRes.text || '{}');
 
@@ -127,10 +141,16 @@ export const useAIGenerator = () => {
     };
 
     const getAIImageUrl = async (prompt: string, style: string) => {
-        // 1. Generate URL from Pollinations
+        // 1. Generate URL from Pollinations with Modern SEO Prompt Engineering
         const seed = Math.floor(Math.random() * 9999999);
-        let cleanPrompt = prompt.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 80).trim();
-        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt + ' ' + style)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
+        
+        // Clean the prompt to be visual-focused
+        let visualPrompt = prompt.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 100).trim();
+        
+        // Modern SEO Image Prompt: Clean, High Contrast, Contextual, No Text
+        const enhancedPrompt = `editorial photography of ${visualPrompt}, ${style} style, modern office context or point of sale technology, shallow depth of field, 8k resolution, highly detailed, professional lighting, NO TEXT, NO WORDS, minimalist composition`;
+        
+        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
         
         // 2. Fetch the image as Blob
         const res = await fetch(pollUrl);
