@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from 'react';
 import { Article } from '../../types';
 import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration } from '../../utils';
@@ -71,7 +70,7 @@ export const useAIGenerator = () => {
             Act as a Senior SEO Strategist for the Indonesian Market.
             Context: Point of Sale (POS) System & Business Management Software.
             Selected Topics: ${topics.join(', ')}.
-            Task: Generate 5 high-potential article titles/keywords.
+            Task: Generate 10 high-potential article titles/keywords.
             Strict Output Format: JSON Array ONLY.
             Example: [{"keyword": "Judul", "volume": "High", "competition": "Low", "type": "Evergreen"}]
             `;
