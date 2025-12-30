@@ -10,7 +10,7 @@ import { Button, Input, LoadingSpinner } from './ui';
 
 export const AdminArticles = ({ articles, setArticles }: { articles: Article[], setArticles: (a: Article[]) => void }) => {
   const manager = useArticleManager(articles, setArticles);
-  const { form, filterLogic, aiLogic, aiState, actions, authorPersona, setAuthorPersona, updatePersonaAvatar } = manager;
+  const { form, filterLogic, aiLogic, aiState, actions, personas, activePersonaId, setActivePersonaId, updatePersonaAvatar } = manager;
   const availablePillars = articles.filter(a => a.type === 'pillar');
 
   // Handle uploading cover image directly from right panel
@@ -30,7 +30,7 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
             articles={articles}
             logic={{ ...filterLogic, actions: { handleEditClick: actions.handleEditClick, deleteItem: actions.deleteItem } }}
             onReset={actions.resetForm}
-            personaState={{ authorPersona, setAuthorPersona, updatePersonaAvatar }}
+            personaState={{ personas, activePersonaId, setActivePersonaId, updatePersonaAvatar }}
             form={form} 
          />
       </div>
@@ -94,7 +94,7 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
                 {/* Author Info */}
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                        <img src={form.authorAvatar || 'https://via.placeholder.com/30'} className="w-6 h-6 rounded-full border border-white/20" />
+                        <img src={form.authorAvatar || 'https://via.placeholder.com/30'} className="w-6 h-6 rounded-full border border-white/20 object-cover" />
                         <span className="text-sm font-bold text-gray-300">{form.author}</span>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -110,39 +110,57 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
 
                 {/* Publish Controls (Top Right) */}
                 <div className="flex flex-col gap-2 items-end">
-                    <div className="flex items-center gap-2 bg-black/40 rounded-lg p-1 border border-white/10">
-                        <select 
-                            value={form.status} 
-                            onChange={(e) => manager.setForm((p:any) => ({...p, status: e.target.value}))} 
-                            className={`bg-transparent text-[10px] font-bold uppercase outline-none px-2 py-1 rounded cursor-pointer ${
-                                form.status === 'published' ? 'text-green-400' : 
-                                form.status === 'scheduled' ? 'text-purple-400' : 'text-gray-400'
-                            }`}
-                        >
-                            <option value="draft">Draft</option>
-                            <option value="published">Published</option>
-                            <option value="scheduled">Scheduled</option>
-                        </select>
-                    </div>
                     
-                    {form.status === 'scheduled' && (
-                        <input 
-                            type="datetime-local" 
-                            value={form.scheduled_for} 
-                            onChange={(e) => manager.setForm((p:any) => ({...p, scheduled_for: e.target.value}))}
-                            className="bg-black/40 text-[10px] text-gray-300 border border-white/10 rounded px-2 py-1 outline-none focus:border-brand-orange w-32"
-                        />
-                    )}
+                    <div className="flex items-center gap-2">
+                        {/* SCHEDULE INPUT (MOVED TO LEFT) */}
+                        {form.status === 'scheduled' && (
+                            <input 
+                                type="datetime-local" 
+                                value={form.scheduled_for} 
+                                onChange={(e) => manager.setForm((p:any) => ({...p, scheduled_for: e.target.value}))}
+                                className="bg-black/40 text-[10px] text-gray-300 border border-white/10 rounded px-2 py-1.5 outline-none focus:border-brand-orange w-32 h-[30px]"
+                            />
+                        )}
 
-                    <Button onClick={actions.saveArticle} disabled={aiLogic.loading.uploading} className="px-6 py-2 h-9 text-xs shadow-neon">
-                        {aiLogic.loading.uploading ? <LoadingSpinner size={14}/> : <><Save size={14}/> Simpan</>}
-                    </Button>
+                        <div className="flex items-center bg-black/40 rounded-lg p-1 border border-white/10 h-[30px]">
+                            <select 
+                                value={form.status} 
+                                onChange={(e) => manager.setForm((p:any) => ({...p, status: e.target.value}))} 
+                                className={`bg-transparent text-[10px] font-bold uppercase outline-none px-2 rounded cursor-pointer h-full ${
+                                    form.status === 'published' ? 'text-green-400' : 
+                                    form.status === 'scheduled' ? 'text-purple-400' : 'text-gray-400'
+                                }`}
+                            >
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                                <option value="scheduled">Scheduled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        {/* REGENERATE BUTTON (AI) */}
+                        {form.content.length > 50 && (
+                            <button 
+                                onClick={manager.actions.runWrite} 
+                                disabled={aiLogic.loading.generatingText}
+                                className="px-3 py-2 h-9 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors flex items-center gap-1 shadow-lg"
+                                title="Regenerate Content"
+                            >
+                                {aiLogic.loading.generatingText ? <Loader2 size={14} className="animate-spin"/> : <Sparkles size={14} />}
+                            </button>
+                        )}
+
+                        <Button onClick={actions.saveArticle} disabled={aiLogic.loading.uploading} className="px-6 py-2 h-9 text-xs shadow-neon">
+                            {aiLogic.loading.uploading ? <LoadingSpinner size={14}/> : <><Save size={14}/> Simpan</>}
+                        </Button>
+                    </div>
                 </div>
             </div>
          </div>
          
          {/* Live Editor Area */}
-         <div className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
+         <div id="live-editor-area" className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
             <LiveEditor 
                 content={form.content} 
                 onChange={(newContent) => manager.setForm((prev: any) => ({ ...prev, content: newContent }))}

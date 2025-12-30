@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera } from 'lucide-react';
 import { Article } from '../../types';
-import { FilterType, AuthorPersona, AUTHOR_PRESETS } from './types';
+import { FilterType, AuthorPersona } from './types';
 
 // --- ATOM: Filter Tab ---
 interface FilterTabProps {
@@ -32,46 +32,23 @@ const FilterTab: React.FC<FilterTabProps> = ({
 
 // --- ATOM: Persona Switcher (Global) ---
 const PersonaSwitcher = ({ 
-    persona, 
-    setPersona,
+    personas, 
+    activePersonaId,
+    setActivePersonaId,
     onAvatarUpload 
 }: { 
-    persona: AuthorPersona, 
-    setPersona: any,
+    personas: AuthorPersona[], 
+    activePersonaId: string,
+    setActivePersonaId: (id: string) => void,
     onAvatarUpload: (file: File) => void
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [localPreview, setLocalPreview] = useState<string | null>(null);
-
-    // Sync local preview with saved persona avatar on mount or change
-    useEffect(() => {
-        setLocalPreview(persona.avatar);
-    }, [persona.avatar]);
+    const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            
-            // 1. Instant UI Feedback (Local Preview)
-            const objectUrl = URL.createObjectURL(file);
-            setLocalPreview(objectUrl);
-
-            // 2. Process Upload in Background
             onAvatarUpload(file);
-        }
-    };
-
-    // Helper to switch persona based on preset ID
-    const switchPersona = (presetId: string) => {
-        const preset = AUTHOR_PRESETS.find(p => p.id === presetId);
-        if (preset) {
-            // Keep current avatar if switching, or use preset default?
-            // For now, let's reset to preset default but preserve avatar if it's the same logical user (simplified here)
-            // Ideally, avatar is part of the preset, but we are allowing dynamic avatar upload.
-            // We will just switch the ID/Name/Role/Mode.
-            setPersona({ ...persona, ...preset, avatar: persona.avatar }); // Preserve avatar for now or reset?
-            // Actually, better to reset to preset base, but we need avatar per preset in DB ideally.
-            // Simplified: Just switch name/role/mode.
         }
     };
 
@@ -79,8 +56,8 @@ const PersonaSwitcher = ({
         <div className="mb-4 bg-white/5 border border-white/10 rounded-lg p-3">
             <div className="flex justify-between items-center mb-3">
                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Penulis Aktif</span>
-                <span className={`text-[9px] px-2 py-0.5 rounded border ${persona.mode === 'personal' ? 'bg-brand-orange/10 border-brand-orange text-brand-orange' : 'bg-purple-500/10 border-purple-500 text-purple-400'}`}>
-                    {persona.mode === 'personal' ? 'PERSONAL' : 'REDAKSI'}
+                <span className={`text-[9px] px-2 py-0.5 rounded border ${activePersona.mode === 'personal' ? 'bg-brand-orange/10 border-brand-orange text-brand-orange' : 'bg-purple-500/10 border-purple-500 text-purple-400'}`}>
+                    {activePersona.mode === 'personal' ? 'PERSONAL' : 'REDAKSI'}
                 </span>
             </div>
             
@@ -90,11 +67,11 @@ const PersonaSwitcher = ({
                     className="relative w-12 h-12 rounded-full border-2 border-white/10 cursor-pointer group overflow-hidden bg-black flex-shrink-0"
                     onClick={() => fileInputRef.current?.click()}
                 >
-                    {localPreview ? (
-                        <img src={localPreview} alt="Avatar" className="w-full h-full object-cover" />
+                    {activePersona.avatar ? (
+                        <img src={activePersona.avatar} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-500">
-                            {persona.mode === 'personal' ? <User size={20}/> : <Users size={20}/>}
+                            {activePersona.mode === 'personal' ? <User size={20}/> : <Users size={20}/>}
                         </div>
                     )}
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -110,24 +87,18 @@ const PersonaSwitcher = ({
                 </div>
 
                 <div className="flex-1">
-                    <input 
-                        type="text" 
-                        value={persona.name}
-                        onChange={(e) => setPersona({...persona, name: e.target.value})}
-                        className="w-full bg-transparent border-b border-white/10 py-1 text-xs text-white font-bold focus:outline-none focus:border-brand-orange placeholder-gray-600"
-                        placeholder="Nama Penulis..."
-                    />
-                    <p className="text-[9px] text-gray-500 mt-1">{persona.role}</p>
+                    <p className="text-xs text-white font-bold">{activePersona.name}</p>
+                    <p className="text-[9px] text-gray-500 mt-1">{activePersona.role}</p>
                 </div>
             </div>
 
             <div className="flex gap-2">
-                {AUTHOR_PRESETS.map((preset) => (
+                {personas.map((preset) => (
                     <button 
                         key={preset.id}
-                        onClick={() => switchPersona(preset.id)}
+                        onClick={() => setActivePersonaId(preset.id)}
                         className={`flex-1 py-1.5 rounded text-[9px] font-bold border transition-all ${
-                            persona.id === preset.id || persona.mode === preset.mode // Fallback check mode if ID lost
+                            activePersonaId === preset.id 
                             ? (preset.mode === 'personal' ? 'bg-brand-orange text-white border-brand-orange' : 'bg-purple-600 text-white border-purple-600')
                             : 'bg-white/5 text-gray-500 border-transparent hover:bg-white/10'
                         }`}
@@ -261,8 +232,9 @@ export const ListPanel = ({
 
                 {/* GLOBAL PERSONA SETTINGS (Avatar + Name) */}
                 <PersonaSwitcher 
-                    persona={personaState.authorPersona} 
-                    setPersona={personaState.setAuthorPersona}
+                    personas={personaState.personas} 
+                    activePersonaId={personaState.activePersonaId}
+                    setActivePersonaId={personaState.setActivePersonaId}
                     onAvatarUpload={personaState.updatePersonaAvatar}
                 />
                 

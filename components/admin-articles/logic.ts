@@ -253,25 +253,32 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     const filterLogic = useArticleFilter(articles, 7);
     const aiLogic = useAIGenerator();
 
-    const [authorPersona, setAuthorPersona] = useState<AuthorPersona>(() => {
+    // --- PERSONA MANAGEMENT (ARRAY) ---
+    const [personas, setPersonas] = useState<AuthorPersona[]>(() => {
         try {
-            const saved = localStorage.getItem('mks_author_pref');
-            return saved ? JSON.parse(saved) : AUTHOR_PRESETS[0];
-        } catch (e) { return AUTHOR_PRESETS[0]; }
+            const saved = localStorage.getItem('mks_personas');
+            return saved ? JSON.parse(saved) : AUTHOR_PRESETS;
+        } catch (e) { return AUTHOR_PRESETS; }
     });
 
+    const [activePersonaId, setActivePersonaId] = useState<string>('personal');
+
+    // Sync to local storage
     useEffect(() => {
-        try { localStorage.setItem('mks_author_pref', JSON.stringify(authorPersona)); } catch (e) {}
-    }, [authorPersona]);
+        try { localStorage.setItem('mks_personas', JSON.stringify(personas)); } catch (e) {}
+    }, [personas]);
+
+    // Derived active persona object
+    const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
 
     // Added selectedTones state
-    const [selectedTones, setSelectedTones] = useState<string[]>(['story']); // Default
+    const [selectedTones, setSelectedTones] = useState<string[]>(['story']); 
 
     const [form, setForm] = useState<ArticleFormState>({
         id: null, title: '', excerpt: '', content: '', category: '',
         readTime: '5 min read', imagePreview: '', uploadFile: null, 
-        author: authorPersona.name,
-        authorAvatar: authorPersona.avatar || '',
+        author: activePersona.name,
+        authorAvatar: activePersona.avatar || '',
         uploadAuthorFile: null, 
         status: 'draft', scheduled_for: '',
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
@@ -280,11 +287,20 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     const [aiStep, setAiStep] = useState(0);
     const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
 
+    // Update form author when persona switches
+    useEffect(() => {
+        setForm(prev => ({
+            ...prev,
+            author: activePersona.name,
+            authorAvatar: activePersona.avatar || ''
+        }));
+    }, [activePersonaId, personas]);
+
     const resetForm = () => {
         setForm({
             id: null, title: '', excerpt: '', content: '', category: '',
-            author: authorPersona.name,
-            authorAvatar: authorPersona.avatar || '', 
+            author: activePersona.name,
+            authorAvatar: activePersona.avatar || '', 
             uploadAuthorFile: null, 
             readTime: '5 min read', imagePreview: '', uploadFile: null, 
             status: 'draft', scheduled_for: '',
@@ -296,16 +312,17 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     };
 
     const handleEditClick = (item: Article) => {
-        let effectiveAvatar = item.author_avatar;
-        if (!effectiveAvatar && authorPersona.avatar && item.author.toLowerCase().includes(authorPersona.name.toLowerCase().split(' ')[0])) {
-            effectiveAvatar = authorPersona.avatar;
+        // Try to match article author to persona to switch active persona state
+        const matchedPersona = personas.find(p => item.author.includes(p.name));
+        if (matchedPersona) {
+            setActivePersonaId(matchedPersona.id);
         }
 
         setForm({
             id: item.id, title: item.title, excerpt: item.excerpt, content: item.content,
             category: item.category, 
             author: item.author,
-            authorAvatar: effectiveAvatar || '', 
+            authorAvatar: item.author_avatar || activePersona.avatar || '', 
             uploadAuthorFile: null,
             readTime: item.readTime, imagePreview: item.image, uploadFile: null,
             status: item.status || 'draft', 
@@ -326,8 +343,15 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             } else {
                 avatarUrl = URL.createObjectURL(file);
             }
-            setAuthorPersona(prev => ({ ...prev, avatar: avatarUrl }));
+            
+            // Update specific persona in array
+            setPersonas(prev => prev.map(p => 
+                p.id === activePersonaId ? { ...p, avatar: avatarUrl } : p
+            ));
+            
+            // Update current form if applicable
             setForm(prev => ({ ...prev, authorAvatar: avatarUrl }));
+
         } catch (e) {
             console.error("Avatar Upload Failed", e);
             alert("Gagal upload foto profil.");
@@ -353,7 +377,9 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
 
             const now = new Date().toISOString();
             const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-            const finalAuthorAvatar = form.authorAvatar || authorPersona.avatar;
+            
+            // Use current persona avatar as source of truth if form is default
+            const finalAuthorAvatar = form.authorAvatar || activePersona.avatar;
 
             const commonData = {
                 title: form.title, 
@@ -440,8 +466,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     const runImage = async () => {
         aiLogic.setLoading(p => ({ ...p, generatingImage: true }));
         try {
-            const selectedPreset = AUTHOR_PRESETS.find(p => p.name === form.author) || authorPersona;
-            const style = selectedPreset.mode === 'personal' ? 'cinematic' : 'corporate';
+            const style = activePersona.mode === 'personal' ? 'cinematic' : 'corporate';
             const url = await aiLogic.getAIImageUrl(form.title, style);
             setForm(p => ({ ...p, imagePreview: url }));
         } catch(e) { console.error(e); }
@@ -452,7 +477,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         form, setForm,
         filterLogic,
         aiLogic,
-        authorPersona, setAuthorPersona, updatePersonaAvatar,
+        // Persona Props
+        personas, activePersonaId, setActivePersonaId, updatePersonaAvatar,
         aiState: { 
             step: aiStep, setStep: setAiStep, 
             selectedPresets, setSelectedPresets, 

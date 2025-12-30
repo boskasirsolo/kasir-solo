@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save } from 'lucide-react';
 import { Article } from '../../types';
 import { Button } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
@@ -214,25 +214,10 @@ export const EditorPanel = ({
                         <User size={10} /> Penulis & Tone (Gaya Bahasa)
                     </label>
                     
-                    {/* Author Chips */}
-                    <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
-                        {AUTHOR_PRESETS.map((preset) => {
-                            const isActive = form.author === preset.name;
-                            return (
-                                <button 
-                                    key={preset.id}
-                                    onClick={() => setForm((p:any) => ({...p, author: preset.name}))}
-                                    className={`shrink-0 px-2 py-1 text-[9px] rounded border transition-all flex items-center gap-1 ${
-                                        isActive 
-                                        ? 'bg-brand-orange text-white border-brand-orange' 
-                                        : 'bg-black/20 border-white/10 text-gray-500'
-                                    }`}
-                                >
-                                    {preset.mode === 'personal' ? <User size={8} /> : <Users size={8} />}
-                                    {preset.name}
-                                </button>
-                            );
-                        })}
+                    {/* Author is now set by Global Switcher in Left Panel, but display here for confirmation */}
+                    <div className="flex items-center gap-2 bg-black/20 p-2 rounded border border-white/5">
+                        <img src={form.authorAvatar || 'https://via.placeholder.com/30'} className="w-5 h-5 rounded-full object-cover"/>
+                        <span className="text-[9px] font-bold text-gray-300">{form.author} (Aktif)</span>
                     </div>
 
                     {/* Tone Chips */}
@@ -259,9 +244,16 @@ export const EditorPanel = ({
                     </div>
                 </div>
 
-                {/* 5. GENERATE BUTTON */}
-                <Button onClick={actions.runWrite} disabled={loading.generatingText} className="w-full py-4 text-xs font-bold shadow-neon bg-gradient-to-r from-blue-600 to-purple-600 border-none hover:brightness-110">
-                    {loading.generatingText ? <Loader2 size={16} className="animate-spin"/> : <><Sparkles size={16} /> GENERATE CONTENT (AI)</>}
+                {/* 5. SAVE CONFIG BUTTON (Action is now just to lock/save state visually, generation happens on Right) */}
+                <Button 
+                    onClick={() => {
+                        // Just visually confirm, maybe move focus to right panel
+                        const editor = document.getElementById('live-editor-area');
+                        if(editor) editor.scrollIntoView({ behavior: 'smooth' });
+                    }} 
+                    className="w-full py-4 text-xs font-bold shadow-neon bg-white/5 border border-white/10 hover:border-brand-orange hover:bg-brand-orange/10 hover:text-brand-orange transition-all"
+                >
+                    <Save size={16} /> SIMPAN KONFIGURASI
                 </Button>
 
             </div>
