@@ -1,17 +1,67 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Product } from '../types';
-import { ShopHeader, ProductCard, ShopPagination, ProductDetailView } from '../components/shop-parts';
+import { 
+  ShopHero, 
+  SearchWidget, 
+  ProductCard, 
+  ProductGrid, 
+  EmptyState, 
+  PaginationControl, 
+  ProductDetailView 
+} from '../components/shop-parts';
 import { useNavigate, useParams } from 'react-router-dom';
 import { slugify } from '../utils';
 import { NotFoundPage } from './not-found';
 
 const ITEMS_PER_PAGE = 4;
 
+// --- LOGIC HOOK ---
+const useShopLogic = (products: Product[]) => {
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filtering Logic
+  const filteredProducts = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return products.filter(p => 
+      p.name.toLowerCase().includes(term) || 
+      p.category.toLowerCase().includes(term)
+    );
+  }, [products, searchTerm]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const displayedProducts = useMemo(() => {
+    return filteredProducts.slice(
+      (page - 1) * ITEMS_PER_PAGE, 
+      page * ITEMS_PER_PAGE
+    );
+  }, [filteredProducts, page]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
+
+  return {
+    searchTerm,
+    setSearchTerm,
+    page,
+    setPage,
+    totalPages,
+    displayedProducts,
+    hasResults: displayedProducts.length > 0
+  };
+};
+
+// --- PAGES ---
+
 export const ProductDetailPage = ({ products }: { products: Product[] }) => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  // Matching logic: simple slugify check
+  
+  // Find product by slug
   const product = products.find(p => slugify(p.name) === slug);
 
   if (!product) {
@@ -28,26 +78,15 @@ export const ProductDetailPage = ({ products }: { products: Product[] }) => {
 
 export const ShopPage = ({ products }: { products: Product[] }) => {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Filter Logic
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Pagination Logic
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-  const displayedProducts = filteredProducts.slice(
-    (page - 1) * ITEMS_PER_PAGE, 
-    page * ITEMS_PER_PAGE
-  );
-
-  // Reset page to 1 when search changes
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm]);
+  const { 
+    searchTerm, 
+    setSearchTerm, 
+    page, 
+    setPage, 
+    totalPages, 
+    displayedProducts,
+    hasResults 
+  } = useShopLogic(products);
 
   const handleProductClick = (product: Product) => {
     navigate(`/shop/${slugify(product.name)}`);
@@ -56,15 +95,18 @@ export const ShopPage = ({ products }: { products: Product[] }) => {
   return (
     <div className="container mx-auto px-4 py-10 animate-fade-in relative">
       
-      {/* Modular Header */}
-      <ShopHeader 
-        searchTerm={searchTerm} 
-        onSearchChange={setSearchTerm} 
-      />
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-white/5 pb-8">
+        <ShopHero />
+        <SearchWidget 
+          value={searchTerm} 
+          onChange={setSearchTerm} 
+        />
+      </div>
 
-      {/* Product Grid */}
-      {displayedProducts.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+      {/* Content Section */}
+      {hasResults ? (
+        <ProductGrid>
           {displayedProducts.map((product) => (
             <React.Fragment key={product.id}>
               <ProductCard 
@@ -73,15 +115,13 @@ export const ShopPage = ({ products }: { products: Product[] }) => {
               />
             </React.Fragment>
           ))}
-        </div>
+        </ProductGrid>
       ) : (
-        <div className="text-center py-20">
-          <p className="text-gray-500">Produk tidak ditemukan.</p>
-        </div>
+        <EmptyState />
       )}
 
-      {/* Modular Pagination */}
-      <ShopPagination 
+      {/* Pagination */}
+      <PaginationControl 
         page={page} 
         totalPages={totalPages} 
         setPage={setPage} 

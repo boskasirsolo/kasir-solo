@@ -6,13 +6,243 @@ import {
   ArrowRight, Clock, Calendar, User, Tag, 
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
   Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
-  ChevronLeft, Send, Plus, Check, Briefcase, HeartHandshake, Quote
+  ChevronLeft, Send, Plus, Check, Briefcase, HeartHandshake, Quote,
+  Search, Filter, FolderOpen, ChevronDown
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
 import { formatRupiah, slugify } from '../utils';
 import { useCart } from '../context/cart-context';
 import { ProductDetailModal } from './shop-parts'; 
+
+// --- DATA CONSTANTS ---
+export const CATEGORY_TREE = [
+  {
+    id: 'business',
+    label: 'Wawasan Bisnis',
+    subCategories: ['Bisnis Tips', 'Manajemen', 'Keuangan', 'HR', 'Franchise']
+  },
+  {
+    id: 'tech',
+    label: 'Teknologi & Hardware',
+    subCategories: ['Hardware Review', 'Android POS', 'Windows POS', 'Teknologi', 'Tutorial']
+  },
+  {
+    id: 'marketing',
+    label: 'Marketing & Sales',
+    subCategories: ['Digital Marketing', 'Branding', 'Loyalty Program', 'Promosi']
+  }
+];
+
+// --- ATOMS & MOLECULES FOR SIDEBAR ---
+
+export const ArticleSearchWidget = ({ 
+  value, 
+  onChange 
+}: { 
+  value: string, 
+  onChange: (val: string) => void 
+}) => (
+  <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
+     <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+        <Search size={14} className="text-brand-orange"/> Pencarian
+     </h4>
+     <div className="relative group">
+        <Input 
+          value={value} 
+          onChange={(e) => onChange(e.target.value)} 
+          placeholder="Cari topik..." 
+          className="pl-10 py-2 text-sm bg-black/40 border-white/5 focus:border-brand-orange/50"
+        />
+        <Search className="absolute left-3 top-2.5 text-gray-500 w-4 h-4" />
+     </div>
+  </div>
+);
+
+export const CategorySidebar = ({
+  selectedFilter,
+  onSelect
+}: {
+  selectedFilter: { type: 'parent' | 'sub' | 'all', value: string },
+  onSelect: (type: 'parent' | 'sub' | 'all', value: string) => void
+}) => {
+  const [expandedParent, setExpandedParent] = useState<string | null>('business');
+
+  const toggleParent = (id: string) => {
+    setExpandedParent(expandedParent === id ? null : id);
+  };
+
+  return (
+    <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
+       <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/5">
+          <h4 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+              <Filter size={14} className="text-brand-orange"/> Kategori
+          </h4>
+          <button 
+            onClick={() => onSelect('all', '')}
+            className={`text-[10px] px-2 py-1 rounded transition-colors ${selectedFilter.type === 'all' ? 'bg-brand-orange text-white' : 'text-gray-500 hover:text-white'}`}
+          >
+            RESET
+          </button>
+       </div>
+
+       <div className="space-y-2">
+          {CATEGORY_TREE.map((parent) => {
+             const isExpanded = expandedParent === parent.id;
+             const isActiveParent = selectedFilter.type === 'parent' && selectedFilter.value === parent.id;
+
+             return (
+               <div key={parent.id} className="overflow-hidden">
+                  {/* Parent Button */}
+                  <button 
+                    onClick={() => toggleParent(parent.id)}
+                    className={`w-full flex items-center justify-between p-2 rounded-lg transition-all group ${
+                       isActiveParent ? 'bg-white/10 text-brand-orange' : 'hover:bg-white/5 text-gray-300'
+                    }`}
+                  >
+                     <div className="flex items-center gap-2">
+                        <FolderOpen size={16} className={isActiveParent ? "text-brand-orange" : "text-gray-500 group-hover:text-white"} />
+                        <span className="text-sm font-bold">{parent.label}</span>
+                     </div>
+                     {isExpanded ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
+                  </button>
+
+                  {/* Sub Menu (Accordion Body) */}
+                  <div className={`pl-4 space-y-1 overflow-hidden transition-all duration-300 ${isExpanded ? 'max-h-96 pt-2 opacity-100' : 'max-h-0 opacity-0'}`}>
+                     
+                     {/* Option to select ALL in Parent */}
+                     <button
+                        onClick={() => onSelect('parent', parent.id)}
+                        className={`w-full text-left text-xs py-1.5 px-3 rounded border-l-2 transition-all flex items-center gap-2 ${
+                           isActiveParent 
+                           ? 'border-brand-orange text-white bg-brand-orange/5' 
+                           : 'border-white/10 text-gray-500 hover:text-white hover:border-white/30'
+                        }`}
+                     >
+                        <div className={`w-1.5 h-1.5 rounded-full ${isActiveParent ? 'bg-brand-orange' : 'bg-transparent border border-gray-600'}`}></div>
+                        Semua {parent.label}
+                     </button>
+
+                     {/* Specific Sub Categories */}
+                     {parent.subCategories.map(sub => {
+                        const isActiveSub = selectedFilter.type === 'sub' && selectedFilter.value === sub;
+                        return (
+                          <button
+                            key={sub}
+                            onClick={() => onSelect('sub', sub)}
+                            className={`w-full text-left text-xs py-1.5 px-3 rounded border-l-2 transition-all flex items-center gap-2 ${
+                               isActiveSub 
+                               ? 'border-brand-orange text-brand-orange bg-brand-orange/5' 
+                               : 'border-white/5 text-gray-500 hover:text-white hover:border-white/30'
+                            }`}
+                          >
+                             <span className="text-[10px] opacity-50">#</span> {sub}
+                          </button>
+                        );
+                     })}
+                  </div>
+               </div>
+             );
+          })}
+       </div>
+    </div>
+  );
+};
+
+export const TagCloudWidget = ({ onSelectTag }: { onSelectTag: (tag: string) => void }) => (
+  <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
+     <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+        <Hash size={14} className="text-brand-orange"/> Trending
+     </h4>
+     <div className="flex flex-wrap gap-2">
+        {['Android POS', 'Bisnis F&B', 'Tips Hemat', 'Promo', 'Tutorial'].map((tag, i) => (
+           <button 
+             key={i}
+             onClick={() => onSelectTag(tag)}
+             className="text-[10px] bg-black/40 border border-white/10 hover:border-brand-orange/50 hover:text-brand-orange text-gray-400 px-2 py-1 rounded-md transition-all"
+           >
+              #{tag}
+           </button>
+        ))}
+     </div>
+  </div>
+);
+
+export const ProductSidebarWidget = ({ 
+  products, 
+  onDetail 
+}: { 
+  products: Product[], 
+  onDetail: (p: Product) => void 
+}) => (
+  <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
+     <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
+        <TrendingUp size={16} className="text-brand-orange" />
+        <h4 className="text-sm font-bold text-white uppercase tracking-widest">Produk Terlaris</h4>
+     </div>
+     <div className="space-y-4">
+        {products.slice(0, 2).map((product) => (
+           <React.Fragment key={product.id}>
+              <SidebarProductCard 
+                product={product} 
+                onDetail={() => onDetail(product)} 
+              />
+           </React.Fragment>
+        ))}
+     </div>
+  </div>
+);
+
+export const EmptyArticleState = ({ onReset }: { onReset: () => void }) => (
+  <div className="text-center py-20 bg-brand-card rounded-3xl border border-white/5 border-dashed">
+    <Search size={48} className="mx-auto text-gray-600 mb-4" />
+    <h3 className="text-xl font-bold text-white mb-2">Artikel tidak ditemukan</h3>
+    <p className="text-gray-400">Coba kata kunci lain atau ganti kategori di sidebar.</p>
+    <button 
+      onClick={onReset}
+      className="mt-4 text-brand-orange hover:underline text-sm font-bold"
+    >
+      Reset Filter
+    </button>
+  </div>
+);
+
+export const ArticlePaginationControl = ({ 
+  currentPage, 
+  totalPages, 
+  setPage 
+}: { 
+  currentPage: number, 
+  totalPages: number, 
+  setPage: (p: any) => void 
+}) => {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex justify-center items-center gap-4 py-6">
+      <button 
+        onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+        disabled={currentPage === 1}
+        className="p-2 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
+      >
+        <ChevronLeft size={20} />
+      </button>
+      
+      <span className="text-brand-orange font-bold text-sm">
+        Hal {currentPage} dari {totalPages}
+      </span>
+
+      <button 
+        onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))}
+        disabled={currentPage === totalPages}
+        className="p-2 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
+      >
+        <ChevronRight size={20} />
+      </button>
+    </div>
+  );
+};
+
+// --- EXISTING COMPONENTS (PRESERVED) ---
 
 export const useReadingProgress = () => {
   const [progress, setProgress] = useState(0);
@@ -41,66 +271,31 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
     const lines = content.split('\n');
     const grouped: string[] = [];
     let tableBuffer: string[] = [];
-    
-    // --- STATE MACHINE FOR TOC FILTERING ---
     let inTocBlock = false;
 
     lines.forEach((line, index) => {
       const trimmed = line.trim();
-
-      // 1. Detect start of TOC block
-      // Matches "Daftar Isi", "**Daftar Isi**", "## Daftar Isi"
-      // Also handles "---" if it appears just before (checked in previous lines logic conceptually, but here we just ignore the line)
       if (/^(#+)?\s*(\*\*|__)?(Daftar Isi|Table of Contents)(\*\*|__)?/i.test(trimmed)) {
         inTocBlock = true;
-        return; // Skip the "Daftar Isi" header line
+        return; 
       }
-
-      // 2. If inside TOC block, determine if we should exit
       if (inTocBlock) {
-        // If line is empty, stay in TOC block (usually spacing)
         if (!trimmed) return;
-
-        // If line is a list item (numbered or bullet), it's part of TOC -> Skip
-        // Regex: Starts with Number. or Bullet (- or *)
-        if (/^(\d+\.|[\-\*])\s/.test(trimmed)) {
-            return;
-        }
-
-        // If line matches a link [Text](#anchor), likely TOC -> Skip
-        if (/^\[.*\]\(#.*\)$/.test(trimmed)) {
-            return;
-        }
-
-        // If we hit a Horizontal Rule '---' right after TOC, likely end of TOC -> Skip but end block?
-        // Usually '---' starts content. Let's assume '---' ends TOC.
+        if (/^(\d+\.|[\-\*])\s/.test(trimmed)) return;
+        if (/^\[.*\]\(#.*\)$/.test(trimmed)) return;
         if (trimmed === '---') {
             inTocBlock = false;
-            return; // Skip the separator
+            return; 
         }
-
-        // If we hit a standard Heading (# Title), TOC is over.
         if (trimmed.startsWith('#')) {
             inTocBlock = false;
-            // Do NOT return, process this line as it is the first real heading
         } else {
-            // Found text that isn't a list, link, or separator. Assume content started.
-            // However, be careful of "intro text" before the list. 
-            // Aggressive approach: If it looks like normal text, assume TOC ended.
             inTocBlock = false;
         }
       }
-
-      // --- GENERAL ARTIFACT CLEANING ---
       
-      // Remove HTML Anchor tags <a name="..."></a> that might be stand-alone
-      if (/^<a\s+name=["'].*?["']\s*(\/?>|><\/a>)$/i.test(trimmed)) {
-        return;
-      }
-      // Remove standalone horizontal rules if they are redundant (optional style choice)
-      // Keeping '---' for now as it maps to a divider component
+      if (/^<a\s+name=["'].*?["']\s*(\/?>|><\/a>)$/i.test(trimmed)) return;
 
-      // --- TABLE BUFFERING ---
       if (trimmed.startsWith('|')) {
         tableBuffer.push(line);
       } else {
@@ -122,7 +317,6 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
   }, [content]);
 
   const totalPages = Math.ceil(allBlocks.length / itemsPerPage);
-  
   const currentBlocks = allBlocks.slice(
     (currentPage - 1) * itemsPerPage, 
     currentPage * itemsPerPage
@@ -131,9 +325,7 @@ export const useArticlePagination = (content: string, itemsPerPage: number = 30)
   return { currentPage, setCurrentPage, totalPages, currentBlocks, allBlocks };
 };
 
-// --- HELPER: Parse Links only ---
 const parseLinks = (text: string) => {
-  // Regex to match markdown links: [label](url)
   const linkRegex = /(\[.*?\]\s*\(.*?\))/g;
   const parts = text.split(linkRegex);
 
@@ -142,14 +334,12 @@ const parseLinks = (text: string) => {
     if (linkMatch) {
       const label = linkMatch[1];
       const url = linkMatch[2];
-      // Skip rendering empty internal anchor links if they slipped through
       if (url.startsWith('#') && !label) return null;
 
       const isInternal = url.startsWith('/') || url.startsWith('#');
       const className = "text-brand-orange hover:text-white underline decoration-brand-orange/50 hover:decoration-white transition-colors font-medium break-words";
 
       if (isInternal) {
-          // If it's an anchor link, we might want to handle smooth scroll instead of router Link
           if (url.startsWith('#')) {
              return <a key={`link-${i}`} href={url} className={className}>{label}</a>;
           }
@@ -158,7 +348,6 @@ const parseLinks = (text: string) => {
       return <a key={`link-${i}`} href={url} target="_blank" rel="noreferrer" className={className}>{label}</a>;
     }
     
-    // Handle Italics inside standard text
     const italicParts = part.split(/(\*.*?\*)/g);
     return (
         <span key={`text-${i}`}>
@@ -173,9 +362,7 @@ const parseLinks = (text: string) => {
   });
 };
 
-// --- HELPER: Main Formatter (Bold First, Then Links) ---
 export const renderFormattedText = (text: string) => {
-  // Split by Bold syntax: **text**
   const boldRegex = /(\*\*.*?\*\*)/g;
   const parts = text.split(boldRegex);
 
@@ -183,11 +370,9 @@ export const renderFormattedText = (text: string) => {
     <>
       {parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
-          // This part is bold. Strip asterisks and parse links inside.
           const content = part.slice(2, -2);
           return <strong key={i} className="text-white font-bold bg-brand-orange/10 px-1 rounded">{parseLinks(content)}</strong>;
         }
-        // This part is normal text. Parse links inside.
         return <span key={i}>{parseLinks(part)}</span>;
       })}
     </>
@@ -240,8 +425,6 @@ const extractHeadings = (content: string) => {
   
   return nonEmptyLines.reduce((acc, line, index) => {
     const trimmed = line.trim();
-    
-    // Skip "Daftar Isi" from the generated sidebar as well
     if (trimmed.toLowerCase().includes('daftar isi')) return acc;
 
     if (trimmed.startsWith('# ')) {
@@ -263,7 +446,6 @@ const extractHeadings = (content: string) => {
   }, [] as { id: string, text: string, level: number, originalIndex: number }[]);
 };
 
-// Helper untuk deteksi role penulis
 const getAuthorRole = (authorName: string) => {
     if (authorName === 'Amin Maghfuri') {
         return {

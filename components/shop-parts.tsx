@@ -1,42 +1,88 @@
 
-import React, { useEffect, useState, useRef } from 'react';
-import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus, Check, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus, Check, ArrowLeft, PackageOpen } from 'lucide-react';
 import { Product } from '../types';
-import { Badge, Card, Input, Button } from './ui';
+import { Badge, Card, Input } from './ui';
 import { formatRupiah } from '../utils';
 import { useCart } from '../context/cart-context';
 import { createPortal } from 'react-dom';
 
-// --- ATOM: SEARCH HEADER ---
-export const ShopHeader = ({ 
-  searchTerm, 
-  onSearchChange 
-}: { 
-  searchTerm: string, 
-  onSearchChange: (val: string) => void 
-}) => (
-  <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-    <div className="text-left">
-      <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
-        Katalog <span className="text-brand-orange">Mesin Kasir</span>
-      </h2>
-      <p className="text-gray-400 text-lg">Pilihan paket POS terbaik untuk Retail, F&B, dan Jasa</p>
-    </div>
-    <div className="relative group w-full md:w-80">
-      <Input 
-        value={searchTerm} 
-        onChange={(e) => onSearchChange(e.target.value)} 
-        placeholder="Cari hardware..." 
-        className="pl-12 py-3 rounded-full"
-      />
-      <Search className="absolute left-4 top-3.5 text-gray-500 w-5 h-5 group-hover:text-brand-orange transition-colors" />
-    </div>
+// --- ATOMS ---
+
+export const ShopHero = () => (
+  <div className="text-left mb-8 md:mb-0">
+    <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
+      Katalog <span className="text-brand-orange">Mesin Kasir</span>
+    </h2>
+    <p className="text-gray-400 text-lg">Pilihan paket POS terbaik untuk Retail, F&B, dan Jasa</p>
   </div>
 );
 
-// --- ATOMS: PRODUCT CARD PARTS ---
+export const SearchWidget = ({ 
+  value, 
+  onChange 
+}: { 
+  value: string, 
+  onChange: (val: string) => void 
+}) => (
+  <div className="relative group w-full md:w-80">
+    <Input 
+      value={value} 
+      onChange={(e) => onChange(e.target.value)} 
+      placeholder="Cari hardware..." 
+      className="pl-12 py-3 rounded-full bg-brand-card/50 border-white/10 focus:border-brand-orange transition-all"
+    />
+    <Search className="absolute left-4 top-3.5 text-gray-500 w-5 h-5 group-hover:text-brand-orange transition-colors" />
+  </div>
+);
 
-export const ProductImage = ({ image, name, category }: { image: string, name: string, category: string }) => (
+export const EmptyState = () => (
+  <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-white/5 rounded-2xl bg-white/5">
+    <PackageOpen size={48} className="text-gray-600 mb-4" />
+    <h3 className="text-xl font-bold text-white mb-2">Produk Tidak Ditemukan</h3>
+    <p className="text-gray-500 text-sm">Coba gunakan kata kunci lain atau ubah pencarian.</p>
+  </div>
+);
+
+export const PaginationControl = ({ 
+  page, 
+  totalPages, 
+  setPage 
+}: { 
+  page: number, 
+  totalPages: number, 
+  setPage: (p: number) => void 
+}) => {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex justify-center items-center gap-4 py-8 border-t border-white/5 mt-8">
+      <button 
+        onClick={() => setPage(Math.max(1, page - 1))}
+        disabled={page === 1}
+        className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white group"
+      >
+        <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+      </button>
+      
+      <span className="text-brand-orange font-display font-bold px-4 py-2 bg-brand-orange/10 rounded-lg border border-brand-orange/20">
+        Page {page} / {totalPages}
+      </span>
+
+      <button 
+        onClick={() => setPage(Math.min(totalPages, page + 1))}
+        disabled={page === totalPages}
+        className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white group"
+      >
+        <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
+      </button>
+    </div>
+  );
+};
+
+// --- MOLECULES: PRODUCT CARD ---
+
+const ProductImage = ({ image, name, category }: { image: string, name: string, category: string }) => (
   <div className="relative h-56 overflow-hidden bg-black">
     <img 
       src={image} 
@@ -45,21 +91,9 @@ export const ProductImage = ({ image, name, category }: { image: string, name: s
     />
     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-60"></div>
     <div className="absolute top-3 right-3">
-      <Badge>{category}</Badge>
+      <Badge className="backdrop-blur-md bg-black/50 border-white/10">{category}</Badge>
     </div>
   </div>
-);
-
-export const ProductTitle = ({ title }: { title: string }) => (
-  <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-brand-orange transition-colors">{title}</h3>
-);
-
-export const ProductDescription = ({ description }: { description: string }) => (
-  <p className="text-gray-400 text-sm mb-6 line-clamp-3 flex-grow">{description}</p>
-);
-
-export const ProductPrice = ({ price }: { price: number }) => (
-  <div className="text-2xl font-display font-bold text-brand-orange">{formatRupiah(price)}</div>
 );
 
 // --- COMPONENT: FLYING IMAGE ANIMATION ---
@@ -99,7 +133,7 @@ const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: string,
   return <img src={src} style={style} alt="flying-product" />;
 };
 
-export const ProductActions = ({ 
+const ProductActions = ({ 
   product, 
   onDetail 
 }: { 
@@ -155,7 +189,6 @@ export const ProductActions = ({
       )}
 
       <div className="grid grid-cols-2 gap-3">
-        {/* UPDATED: Detail button with Orange Outline */}
         <button 
           onClick={(e) => { e.stopPropagation(); onDetail(); }}
           className="px-4 py-2 rounded-lg border border-brand-orange text-gray-300 hover:text-white hover:bg-brand-orange font-bold text-sm transition-all hover:shadow-neon"
@@ -182,7 +215,6 @@ export const ProductActions = ({
   );
 }
 
-// --- MOLECULE: PRODUCT CARD ---
 export const ProductCard = ({ 
   product, 
   onDetail 
@@ -195,11 +227,15 @@ export const ProductCard = ({
       <ProductImage image={product.image} name={product.name} category={product.category} />
       
       <div className="p-6 flex flex-col flex-grow relative">
-        <ProductTitle title={product.name} />
-        <ProductDescription description={product.description} />
+        <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-brand-orange transition-colors">
+            {product.name}
+        </h3>
+        <p className="text-gray-400 text-sm mb-6 line-clamp-3 flex-grow">
+            {product.description}
+        </p>
         
         <div className="mt-auto pt-4 border-t border-white/5 space-y-4">
-          <ProductPrice price={product.price} />
+          <div className="text-2xl font-display font-bold text-brand-orange">{formatRupiah(product.price)}</div>
           <ProductActions product={product} onDetail={() => onDetail(product)} />
         </div>
       </div>
@@ -207,44 +243,14 @@ export const ProductCard = ({
   </div>
 );
 
-// --- ATOM: PAGINATION ---
-export const ShopPagination = ({ 
-  page, 
-  totalPages, 
-  setPage 
-}: { 
-  page: number, 
-  totalPages: number, 
-  setPage: (p: number) => void 
-}) => {
-  if (totalPages <= 1) return null;
+export const ProductGrid = ({ children }: { children?: React.ReactNode }) => (
+  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+    {children}
+  </div>
+);
 
-  return (
-    <div className="flex justify-center items-center gap-4 py-8 border-t border-white/5">
-      <button 
-        onClick={() => setPage(Math.max(1, page - 1))}
-        disabled={page === 1}
-        className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
-      >
-        <ChevronLeft size={20} />
-      </button>
-      
-      <span className="text-brand-orange font-display font-bold">
-        Page {page} / {totalPages}
-      </span>
+// --- ORGANISMS: DETAIL VIEW ---
 
-      <button 
-        onClick={() => setPage(Math.min(totalPages, page + 1))}
-        disabled={page === totalPages}
-        className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
-      >
-        <ChevronRight size={20} />
-      </button>
-    </div>
-  );
-};
-
-// --- MOLECULE: DETAIL VIEW ---
 export const ProductDetailView = ({ 
   product, 
   onClose,
@@ -328,7 +334,6 @@ export const ProductDetailView = ({
               {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} 
               {isAnimating ? "Berhasil" : "Beli Sekarang"}
             </button>
-            {/* UPDATED: Tanya Sales button with Orange Outline */}
             <a 
               href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
               target="_blank"
