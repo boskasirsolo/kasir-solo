@@ -30,7 +30,8 @@ Halaman About Reference: Kisah kegagalan adalah kekuatan kami. Kami mengerti per
   7. **Integrasi**: Website Usaha, WhatsApp API, Payment Gateway.
   8. **Omnichannel**: Terhubung ke Medsos, Marketplace, dan Website.
   9. **Hybrid Mode**: Bisa jalan Offline dan Online.
-- Status: Prototipe (Rencana Rilis 2026).
+- **STATUS SAAT INI: WAITING LIST SUDAH DIBUKA**.
+- **Akses**: Calon pengguna dapat mendaftar waiting list di website resmi (sibos.id) yang bisa diakses melalui halaman "Innovation" di website ini.
 - Model Bisnis: Freemium (Standar Premium Gratis), Premium, Enterprise, Dedicated.
 - Konsep Komunitas: Saham dibatasi max 5%, sistem Partner Piramida Terbalik (pemerataan income).
 
@@ -42,9 +43,12 @@ Halaman About Reference: Kisah kegagalan adalah kekuatan kami. Kami mengerti per
   2. Transparansi Keuangan.
   3. Integrasi AI (Laporan perkembangan santri otomatis, Konsultasi psikologis wali dengan Asisten Qalam).
   4. Payment Gateway & Whatsapp API.
+- **STATUS SAAT INI: WAITING LIST SUDAH DIBUKA**.
+- **Akses**: Calon pengguna dapat mendaftar waiting list di website resmi (qalam.id) yang bisa diakses melalui halaman "Innovation" di website ini.
 
 [STRATEGI KONTEN]
-Setiap artikel harus melakukan "Soft Selling" yang elegan. Posisikan SIBOS atau QALAM sebagai solusi masa depan, namun tetap berikan nilai edukasi yang tinggi (jangan hard selling murahan).
+Setiap artikel harus melakukan "Soft Selling" yang elegan. Posisikan SIBOS atau QALAM sebagai solusi masa depan. 
+**Call To Action (CTA):** Arahkan pembaca untuk bergabung dalam Waiting List sekarang juga melalui halaman Innovation agar tidak ketinggalan akses Freemium.
 `;
 
 // --- SUB-HOOK: FILTER & PAGINATION ---
