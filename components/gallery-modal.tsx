@@ -70,48 +70,73 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
         <div className="w-full md:w-8/12 h-[500px] md:h-auto bg-black flex flex-col relative border-b md:border-b-0 md:border-r border-white/10">
            
            {/* CAROUSEL AREA */}
-           <div className="flex-grow relative overflow-hidden bg-gray-900 group">
+           <div className="flex-grow relative overflow-hidden bg-gray-900 group flex items-center justify-center">
               {item.type === 'video' && item.video_url ? (
                  <div className="w-full h-full flex items-center justify-center bg-black">
                     <iframe src={item.video_url} title={item.title} className="w-full aspect-video" allowFullScreen></iframe>
                  </div>
               ) : (
-                 <div className="w-full h-full relative">
-                    <img 
-                        src={allImages[currentImageIndex]} 
-                        alt={item.title} 
-                        className={`w-full h-full ${item.category_type === 'digital' ? 'object-cover object-top' : 'object-contain'} transition-all duration-300`} 
-                    />
-                    
-                    {/* Navigation Buttons (Only if > 1 image) */}
+                 <>
+                    <div className="w-full h-full relative z-10">
+                        <img 
+                            src={allImages[currentImageIndex]} 
+                            alt={item.title} 
+                            className={`w-full h-full ${item.category_type === 'digital' ? 'object-cover object-top' : 'object-contain'} transition-all duration-300`} 
+                        />
+                        
+                        {/* Navigation Buttons (Only if > 1 image) */}
+                        {allImages.length > 1 && (
+                            <>
+                                <button 
+                                    onClick={handlePrev} 
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-brand-orange p-2 rounded-full text-white backdrop-blur-sm border border-white/10 transition-colors z-20 opacity-0 group-hover:opacity-100 md:opacity-100"
+                                >
+                                    <ChevronLeft size={24} />
+                                </button>
+                                <button 
+                                    onClick={handleNext} 
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-brand-orange p-2 rounded-full text-white backdrop-blur-sm border border-white/10 transition-colors z-20 opacity-0 group-hover:opacity-100 md:opacity-100"
+                                >
+                                    <ChevronRight size={24} />
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Thumbnails Overlay */}
                     {allImages.length > 1 && (
-                        <>
-                            <button 
-                                onClick={handlePrev} 
-                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-brand-orange p-2 rounded-full text-white backdrop-blur-sm border border-white/10 transition-colors z-20"
-                            >
-                                <ChevronLeft size={24} />
-                            </button>
-                            <button 
-                                onClick={handleNext} 
-                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-brand-orange p-2 rounded-full text-white backdrop-blur-sm border border-white/10 transition-colors z-20"
-                            >
-                                <ChevronRight size={24} />
-                            </button>
-                            
-                            {/* Slide Counter */}
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded-full text-xs text-white font-bold backdrop-blur-sm border border-white/10 flex items-center gap-2">
-                                <Layers size={12} className="text-brand-orange"/>
-                                {currentImageIndex + 1} / {allImages.length}
+                        <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center px-4 pointer-events-none">
+                            <div className="flex gap-2 overflow-x-auto max-w-full p-2 bg-black/70 backdrop-blur-md rounded-xl border border-white/10 pointer-events-auto shadow-2xl custom-scrollbar">
+                                {allImages.map((img, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(idx); }}
+                                        className={`relative w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-lg overflow-hidden transition-all border-2 ${
+                                            currentImageIndex === idx 
+                                            ? 'border-brand-orange opacity-100 scale-105 shadow-neon' 
+                                            : 'border-transparent opacity-50 hover:opacity-100 hover:border-white/30 grayscale hover:grayscale-0'
+                                        }`}
+                                    >
+                                        <img src={img} className="w-full h-full object-cover" alt={`thumb-${idx}`} />
+                                    </button>
+                                ))}
                             </div>
-                        </>
+                        </div>
                     )}
-                 </div>
+
+                    {/* Counter (Moved to Top Left) */}
+                    {allImages.length > 1 && (
+                        <div className="absolute top-4 left-4 bg-black/60 px-3 py-1 rounded-full text-xs text-white font-bold backdrop-blur-sm border border-white/10 flex items-center gap-2 z-20">
+                            <Layers size={12} className="text-brand-orange"/>
+                            {currentImageIndex + 1} / {allImages.length}
+                        </div>
+                    )}
+                 </>
               )}
            </div>
 
            {/* FOOTER INFO */}
-           <div className="shrink-0 bg-brand-dark border-t border-white/10 h-auto md:h-40 flex flex-col md:flex-row">
+           <div className="shrink-0 bg-brand-dark border-t border-white/10 h-auto md:h-40 flex flex-col md:flex-row relative z-20">
                
                <div className="flex-1 p-5 flex items-center border-b md:border-b-0 md:border-r border-white/10">
                    {activeTestimonial && (
