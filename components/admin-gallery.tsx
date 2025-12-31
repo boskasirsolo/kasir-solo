@@ -147,15 +147,51 @@ const useIntegratedGalleryManager = (
         setLoadingState(prev => ({ ...prev, generatingSpecific: target }));
 
         try {
+            // BUILD RICH CONTEXT
+            // Include existing fields to ensure continuity
+            let contextData = `Project Name: "${form.title}"\nCategory: ${form.category_type}`;
+            
+            if (form.cs_challenge) {
+                contextData += `\nSpecific Pain Point/Challenge: "${form.cs_challenge}" (Use this as the PRIMARY problem to solve)`;
+            }
+            if (form.cs_solution) {
+                contextData += `\nSolution Implemented: "${form.cs_solution}"`;
+            }
+
             let prompt = "";
-            const baseContext = `Project: ${form.title}. Type: ${form.category_type}.`;
 
             if (target === 'challenge') {
-                prompt = `Based on the project "${form.title}" (${form.category_type}), write a 1-sentence business challenge or pain point that this project solves. Language: Indonesian. Tone: Professional Case Study. Example: "Keterbatasan sinyal internet di area gedung menghambat transaksi online."`;
+                prompt = `
+                Context:
+                ${contextData}
+                
+                Task: Write a 1-sentence business challenge/pain point relevant to this project title.
+                Language: Indonesian.
+                Tone: Professional Case Study.
+                STRICT RULE: Output ONLY the sentence. No "Berikut adalah", no quotes.
+                `;
             } else if (target === 'solution') {
-                prompt = `Based on the project "${form.title}" (${form.category_type}), write a 1-sentence technical solution provided by "Tim Mesin Kasir Solo". Focus on the tech/action. Language: Indonesian. Example: "Implementasi server lokal hybrid dengan sinkronisasi otomatis saat online."`;
+                prompt = `
+                Context:
+                ${contextData}
+                
+                Task: Write a 1-sentence technical solution provided by "Tim Mesin Kasir Solo".
+                IMPORTANT: The solution MUST directly address the 'Specific Pain Point' mentioned in the context (if available).
+                Focus on the tech/action.
+                Language: Indonesian.
+                STRICT RULE: Output ONLY the sentence. Do NOT use introductory phrases.
+                `;
             } else if (target === 'result') {
-                prompt = `Based on the project "${form.title}", write a 1-sentence positive business outcome/result. Use metrics if possible. Language: Indonesian. Example: "Efisiensi kasir meningkat 40% dan antrian terurai dengan cepat."`;
+                prompt = `
+                Context:
+                ${contextData}
+                
+                Task: Write a 1-sentence positive business outcome/result.
+                IMPORTANT: The result must be the logical outcome of solving the 'Specific Pain Point' with the 'Solution'.
+                Use metrics if possible.
+                Language: Indonesian.
+                STRICT RULE: Output ONLY the sentence. Do NOT use introductory phrases like "Berikut hasil...".
+                `;
             }
 
             const response = await callGeminiWithRotation({
@@ -163,8 +199,11 @@ const useIntegratedGalleryManager = (
                 contents: prompt
             });
 
-            const text = response.text?.trim() || "";
-            
+            // Clean up if AI still disobeys (remove quotes and common prefixes)
+            let text = response.text?.trim() || "";
+            text = text.replace(/^"|"$/g, ''); // Remove surrounding quotes
+            text = text.replace(/^(Berikut|Ini|Here|Result|Solution|Challenge).*?:/i, '').trim(); // Remove prefixes
+
             if (target === 'challenge') setForm(p => ({...p, cs_challenge: text}));
             if (target === 'solution') setForm(p => ({...p, cs_solution: text}));
             if (target === 'result') setForm(p => ({...p, cs_result: text}));
