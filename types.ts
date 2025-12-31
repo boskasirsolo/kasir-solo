@@ -32,7 +32,8 @@ export interface Article {
 export interface GalleryItem {
   id: number;
   title: string;
-  image_url: string;
+  image_url: string; // Cover Image
+  gallery_images?: string[]; // NEW: Array of additional images
   description?: string;     
   type?: 'image' | 'video'; 
   video_url?: string;

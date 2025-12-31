@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon, Wand2 } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon, Wand2, Layers } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, callGeminiWithRotation } from '../utils';
@@ -27,8 +27,11 @@ const useIntegratedGalleryManager = (
         cs_challenge: '',
         cs_solution: '',
         cs_result: '',
-        imagePreview: '',
-        uploadFile: null as File | null
+        imagePreview: '', // Cover Image
+        uploadFile: null as File | null,
+        // NEW: Multi Image Support
+        galleryImages: [] as string[], // Existing URLs
+        newGalleryFiles: [] as File[] // New files to upload
     });
 
     // TESTIMONIAL STATE (Linked)
@@ -45,7 +48,7 @@ const useIntegratedGalleryManager = (
     const [loadingState, setLoadingState] = useState({
         generatingAI: false,
         uploading: false,
-        generatingSpecific: null as 'challenge' | 'solution' | 'result' | null // NEW: Track specific field loading
+        generatingSpecific: null as 'challenge' | 'solution' | 'result' | null 
     });
 
     const [page, setPage] = useState(1);
@@ -65,7 +68,9 @@ const useIntegratedGalleryManager = (
             cs_solution: '',
             cs_result: '',
             imagePreview: '',
-            uploadFile: null
+            uploadFile: null,
+            galleryImages: [],
+            newGalleryFiles: []
         });
         setTestiForm({
             id: null,
@@ -93,10 +98,12 @@ const useIntegratedGalleryManager = (
             cs_solution: item.case_study?.solution || '',
             cs_result: item.case_study?.result || '',
             imagePreview: item.image_url,
-            uploadFile: null
+            uploadFile: null,
+            galleryImages: item.gallery_images || [],
+            newGalleryFiles: []
         });
 
-        // 2. Find Linked Testimonial (By matching Business Name == Project Title)
+        // 2. Find Linked Testimonial
         const linkedTestimonial = testimonials.find(t => 
             t.business_name.toLowerCase() === item.title.toLowerCase() ||
             item.title.toLowerCase().includes(t.business_name.toLowerCase())
@@ -140,142 +147,76 @@ const useIntegratedGalleryManager = (
         return form.platform; // web, mobile, desktop
     };
 
-    // --- NEW: Generate Specific Case Study Points ---
+    // --- NEW: Multi Image Handlers ---
+    const handleGalleryFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const files = Array.from(e.target.files);
+            setForm(prev => ({
+                ...prev,
+                newGalleryFiles: [...prev.newGalleryFiles, ...files]
+            }));
+        }
+    };
+
+    const removeExistingGalleryImage = (index: number) => {
+        setForm(prev => ({
+            ...prev,
+            galleryImages: prev.galleryImages.filter((_, i) => i !== index)
+        }));
+    };
+
+    const removeNewGalleryFile = (index: number) => {
+        setForm(prev => ({
+            ...prev,
+            newGalleryFiles: prev.newGalleryFiles.filter((_, i) => i !== index)
+        }));
+    };
+
+    // ... (Keep generateSpecificPoint & generateAINarrative logic same as previous) ...
+    // [OMITTED FOR BREVITY - Assume logic from previous step is here]
     const generateSpecificPoint = async (target: 'challenge' | 'solution' | 'result') => {
         if (!form.title) return alert("Isi Judul Proyek dulu sebagai konteks.");
-        
         setLoadingState(prev => ({ ...prev, generatingSpecific: target }));
-
         try {
-            // BUILD RICH CONTEXT
-            // Include existing fields to ensure continuity
             let contextData = `Project Name: "${form.title}"\nCategory: ${form.category_type}`;
-            
-            if (form.cs_challenge) {
-                contextData += `\nSpecific Pain Point/Challenge: "${form.cs_challenge}" (Use this as the PRIMARY problem to solve)`;
-            }
-            if (form.cs_solution) {
-                contextData += `\nSolution Implemented: "${form.cs_solution}"`;
-            }
+            if (form.cs_challenge) contextData += `\nSpecific Pain Point/Challenge: "${form.cs_challenge}" (This is the CORE problem)`;
+            if (form.cs_solution) contextData += `\nSolution Implemented: "${form.cs_solution}"`;
 
             let prompt = "";
-
             if (target === 'challenge') {
-                prompt = `
-                Context:
-                ${contextData}
-                
-                Task: Write a 1-sentence business challenge/pain point relevant to this project title.
-                Language: Indonesian.
-                Tone: Professional Case Study.
-                STRICT RULE: Output ONLY the sentence. No "Berikut adalah", no quotes.
-                `;
+                prompt = `Context:\n${contextData}\nTask: Write a realistic business challenge/pain point. Guideline: DO NOT sugarcoat it. Expand on the "messiness" of the problem (e.g., financial leaks, chaotic queues, inventory fraud, data loss). Make it sound like a real struggle before the system was fixed. Language: Indonesian. Tone: Professional but Gritty/Real. Length: 1-2 detailed sentences. STRICT RULE: Output ONLY the text. No "Here is the challenge", no quotes.`;
             } else if (target === 'solution') {
-                prompt = `
-                Context:
-                ${contextData}
-                
-                Task: Write a 1-sentence technical solution provided by "Tim Mesin Kasir Solo".
-                IMPORTANT: The solution MUST directly address the 'Specific Pain Point' mentioned in the context (if available).
-                Focus on the tech/action.
-                Language: Indonesian.
-                STRICT RULE: Output ONLY the sentence. Do NOT use introductory phrases.
-                `;
+                prompt = `Context:\n${contextData}\nTask: Write the specific technical solution provided by "Tim Mesin Kasir Solo". IMPORTANT: The solution MUST directly resolve the chaos mentioned in the 'Specific Pain Point' context. Guideline: Be specific about the tech/strategy (e.g., "Deployed Hybrid Server", "Implemented Cloud Sync", "Anti-Fraud System"). Language: Indonesian. Length: 1-2 sentences. STRICT RULE: Output ONLY the text. No intro phrases.`;
             } else if (target === 'result') {
-                prompt = `
-                Context:
-                ${contextData}
-                
-                Task: Write a 1-sentence positive business outcome/result.
-                IMPORTANT: The result must be the logical outcome of solving the 'Specific Pain Point' with the 'Solution'.
-                Use metrics if possible.
-                Language: Indonesian.
-                STRICT RULE: Output ONLY the sentence. Do NOT use introductory phrases like "Berikut hasil...".
-                `;
+                prompt = `Context:\n${contextData}\nTask: Write the final business outcome. Guideline: Describe the relief/improvement clearly. Connect it back to the initial problem (e.g. "Leaks stopped", "Queues vanished"). Language: Indonesian. Length: 1 sentence. STRICT RULE: Output ONLY the text. No intro phrases.`;
             }
 
-            const response = await callGeminiWithRotation({
-                model: 'gemini-3-flash-preview',
-                contents: prompt
-            });
-
-            // Clean up if AI still disobeys (remove quotes and common prefixes)
+            const response = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
             let text = response.text?.trim() || "";
-            text = text.replace(/^"|"$/g, ''); // Remove surrounding quotes
-            text = text.replace(/^(Berikut|Ini|Here|Result|Solution|Challenge).*?:/i, '').trim(); // Remove prefixes
+            text = text.replace(/^"|"$/g, '').replace(/^(Berikut|Ini|Here|Result|Solution|Challenge).*?:/i, '').trim();
 
             if (target === 'challenge') setForm(p => ({...p, cs_challenge: text}));
             if (target === 'solution') setForm(p => ({...p, cs_solution: text}));
             if (target === 'result') setForm(p => ({...p, cs_result: text}));
-
-        } catch (e: any) {
-            console.error("AI Gen Error", e);
-        } finally {
-            setLoadingState(prev => ({ ...prev, generatingSpecific: null }));
-        }
+        } catch (e: any) { console.error("AI Gen Error", e); } 
+        finally { setLoadingState(prev => ({ ...prev, generatingSpecific: null })); }
     };
 
     const generateAINarrative = async () => {
-        // Validasi input minimal untuk konteks AI
-        if (!form.title) return alert("Isi Judul Proyek dulu agar AI mengerti konteksnya.");
-        
-        // Buat konteks dari field yang sudah diisi manual
-        const contextString = `
-            Project: ${form.title}
-            Type: ${form.category_type}
-            Challenge: ${form.cs_challenge}
-            Solution: ${form.cs_solution}
-            Result: ${form.cs_result}
-        `;
-
+        if (!form.title) return alert("Isi Judul Proyek dulu.");
+        const contextString = `Project: ${form.title}\nType: ${form.category_type}\nChallenge: ${form.cs_challenge}\nSolution: ${form.cs_solution}\nResult: ${form.cs_result}`;
         setLoadingState(prev => ({ ...prev, generatingAI: true }));
-
         try {
-            // 1. Generate Main Description using CENTRALIZED ROTATION
-            const mainPrompt = `
-            Role: Senior Portfolio Copywriter.
-            Task: Write a compelling project description (Case Study Summary).
-            Context Data: ${contextString}
-            
-            STRICT RULES:
-            1. Language: Indonesian (Professional, Result-Oriented).
-            2. Format: Plain text, 2 paragraphs max.
-            3. Content: Blend the challenge, solution, and result into a narrative.
-            4. NO INTRO like "Here is the text". Just the text.
-            `;
-            
-            const mainResponse = await callGeminiWithRotation({ 
-                model: 'gemini-3-flash-preview', 
-                contents: mainPrompt 
-            });
+            const mainPrompt = `Role: Senior Portfolio Copywriter.\nTask: Write a compelling project description (Case Study Summary).\nContext Data: ${contextString}\nSTRICT RULES:\n1. Language: Indonesian (Professional, Result-Oriented).\n2. Format: Plain text, 2 paragraphs max.\n3. Content: Blend the challenge, solution, and result into a narrative. Start with the problem context.\n4. NO INTRO like "Here is the text". Just the text.`;
+            const mainResponse = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: mainPrompt });
             setForm(prev => ({ ...prev, longDesc: mainResponse.text?.trim() || '' }));
 
-            // 2. Generate Testimonial (Only if checkbox is checked)
             if (testiForm.hasTestimonial) {
-                 const testiPrompt = `
-                 Role: A satisfied client owner.
-                 Task: Write a short testimonial (1-2 sentences) about the project "${form.title}".
-                 Context: We are happy because ${form.cs_result || "the service was excellent"}.
-                 Language: Indonesian (Casual/Semi-formal).
-                 STRICT: Output ONLY the testimonial text. No quotes, no intro.
-                 `;
-                 
-                 const testiResponse = await callGeminiWithRotation({ 
-                     model: 'gemini-3-flash-preview', 
-                     contents: testiPrompt 
-                 });
-                 
-                 setTestiForm(prev => ({
-                     ...prev, 
-                     content: testiResponse.text?.trim() || '',
-                     client_name: prev.client_name || "Nama Klien (Edit)", // Placeholder if empty
-                 }));
+                 const testiPrompt = `Role: A satisfied client owner.\nTask: Write a short testimonial (1-2 sentences) about the project "${form.title}".\nContext: We are happy because ${form.cs_result || "the service was excellent"}.\nLanguage: Indonesian (Casual/Semi-formal).\nSTRICT: Output ONLY the testimonial text. No quotes, no intro.`;
+                 const testiResponse = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: testiPrompt });
+                 setTestiForm(prev => ({ ...prev, content: testiResponse.text?.trim() || '', client_name: prev.client_name || "Nama Klien (Edit)" }));
             }
-
-        } catch (e: any) { 
-            console.error(e); 
-            alert(`AI Error: ${e.message || "Gagal menghubungi AI."}`);
-        } 
+        } catch (e: any) { alert(`AI Error: ${e.message}`); } 
         finally { setLoadingState(prev => ({ ...prev, generatingAI: false })); }
     };
 
@@ -285,27 +226,45 @@ const useIntegratedGalleryManager = (
 
         setLoadingState(prev => ({ ...prev, uploading: true }));
         try {
-            // 1. Upload Project Image
-            let finalImageUrl = form.imagePreview;
+            // 1. Upload Cover Image (If Changed)
+            let finalCoverUrl = form.imagePreview;
             if (form.uploadFile) {
                 const formData = new FormData();
                 formData.append('file', form.uploadFile);
                 formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
-                if (data.secure_url) finalImageUrl = data.secure_url;
+                if (data.secure_url) finalCoverUrl = data.secure_url;
             }
 
-            // 2. Prepare Gallery Data
+            // 2. Upload New Extra Images
+            const newUploadedUrls: string[] = [];
+            if (form.newGalleryFiles.length > 0) {
+                const uploadPromises = form.newGalleryFiles.map(async (file) => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+                    const data = await res.json();
+                    return data.secure_url;
+                });
+                const results = await Promise.all(uploadPromises);
+                results.forEach(url => { if(url) newUploadedUrls.push(url); });
+            }
+
+            // Combine Existing + New
+            const finalGalleryImages = [...form.galleryImages, ...newUploadedUrls];
+
+            // 3. Prepare Gallery Data
             const dbData: Partial<GalleryItem> = {
                 title: form.title,
-                image_url: finalImageUrl || 'https://via.placeholder.com/800x600',
+                image_url: finalCoverUrl || 'https://via.placeholder.com/800x600',
+                gallery_images: finalGalleryImages, // SAVE ARRAY
                 type: 'image',
                 category_type: form.category_type,
                 description: form.longDesc || form.cs_solution, 
                 platform: form.platform,
                 client_url: form.client_url,
-                // Default stack if empty, split by comma if string
                 tech_stack: form.tech_stack_str ? form.tech_stack_str.split(',').map(s => s.trim()) : ['Solusi Bisnis'],
                 case_study: {
                     challenge: form.cs_challenge,
@@ -314,7 +273,7 @@ const useIntegratedGalleryManager = (
                 }
             };
 
-            // 3. Save Gallery Item
+            // 4. Save Gallery Item
             if (form.id) {
                 const updatedItem = { ...gallery.find(g => g.id === form.id)!, ...dbData };
                 setGallery(gallery.map(g => g.id === form.id ? updatedItem : g));
@@ -326,7 +285,7 @@ const useIntegratedGalleryManager = (
                 if (supabase) await supabase.from('gallery').insert([dbData]);
             }
 
-            // 4. Handle Testimonial Save
+            // 5. Handle Testimonial Save (Same as before)
             if (testiForm.hasTestimonial) {
                 let finalTestiImage = testiForm.imagePreview;
                 if (testiForm.uploadFile) {
@@ -337,16 +296,14 @@ const useIntegratedGalleryManager = (
                     const data = await res.json();
                     if (data.secure_url) finalTestiImage = data.secure_url;
                 }
-
                 const testiData = {
                     client_name: testiForm.client_name || "Pelanggan Puas",
-                    business_name: form.title, // LINKED BY PROJECT TITLE
+                    business_name: form.title, 
                     content: testiForm.content,
                     rating: testiForm.rating,
                     image_url: finalTestiImage,
                     is_featured: true
                 };
-
                 if (testiForm.id) {
                      const updatedTesti = { ...testimonials.find(t => t.id === testiForm.id)!, ...testiData };
                      setTestimonials(testimonials.map(t => t.id === testiForm.id ? updatedTesti : t));
@@ -385,9 +342,12 @@ const useIntegratedGalleryManager = (
         resetForm,
         deleteItem,
         generateAINarrative,
-        generateSpecificPoint, // EXPORTED
+        generateSpecificPoint, 
         handleTypeChange,
         getCurrentType,
+        handleGalleryFilesSelect, // NEW
+        removeExistingGalleryImage, // NEW
+        removeNewGalleryFile, // NEW
         listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
     };
 };
@@ -401,14 +361,16 @@ export const AdminGallery = ({
   const { 
     form, setForm, 
     testiForm, setTestiForm,
-    loadingState, handleSubmit, handleEditClick, resetForm, deleteItem, generateAINarrative, generateSpecificPoint, handleTypeChange, getCurrentType, listData 
+    loadingState, handleSubmit, handleEditClick, resetForm, deleteItem, generateAINarrative, generateSpecificPoint, handleTypeChange, getCurrentType, 
+    handleGalleryFilesSelect, removeExistingGalleryImage, removeNewGalleryFile,
+    listData 
   } = useIntegratedGalleryManager(gallery, setGallery, testimonials, setTestimonials);
 
   return (
     <div className="flex h-[850px] border-t border-white/5">
       
-      {/* COLUMN 1: LIST (30%) */}
-      <div className="w-[30%] border-r border-white/5 bg-black/20 flex flex-col">
+      {/* COLUMN 1: LIST (25%) */}
+      <div className="w-[25%] border-r border-white/5 bg-black/20 flex flex-col">
           <div className="p-4 border-b border-white/5">
              <div className="relative">
                 <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
@@ -461,28 +423,67 @@ export const AdminGallery = ({
           )}
       </div>
 
-      {/* COLUMN 2: EDITOR FORM (30%) - REDESIGNED VERTICAL */}
-      <div className="w-[30%] border-r border-white/5 flex flex-col bg-brand-dark">
+      {/* COLUMN 2: EDITOR FORM (40%) - WIDER FOR GALLERY */}
+      <div className="w-[40%] border-r border-white/5 flex flex-col bg-brand-dark">
          <div className="flex-grow overflow-y-auto p-4 custom-scrollbar">
              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/10 pb-2">
                 <Edit size={12}/> Project Details
              </h4>
              
              <div className="space-y-3">
-                 {/* 1. Image Upload */}
-                 <div className="w-full h-32 bg-black rounded-lg border border-white/10 relative group overflow-hidden">
-                    {form.imagePreview ? (
-                        <img src={form.imagePreview} className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-2">
-                            <UploadCloud size={24} />
-                            <span className="text-[10px]">Upload Foto Proyek</span>
-                        </div>
-                    )}
-                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
+                 {/* 1. Main Cover Image */}
+                 <div>
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Foto Utama (Cover)</label>
+                    <div className="w-full h-32 bg-black rounded-lg border border-white/10 relative group overflow-hidden">
+                        {form.imagePreview ? (
+                            <img src={form.imagePreview} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-2">
+                                <UploadCloud size={24} />
+                                <span className="text-[10px]">Upload Cover</span>
+                            </div>
+                        )}
+                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
+                    </div>
                  </div>
 
-                 {/* 2. Type & URL */}
+                 {/* 2. Extra Gallery Images (NEW) */}
+                 <div>
+                    <div className="flex justify-between items-center mb-1">
+                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Dokumentasi Tambahan</label>
+                        <span className="text-[9px] text-gray-500">{form.galleryImages.length + form.newGalleryFiles.length} foto</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-2 mb-2">
+                        {/* Existing Images */}
+                        {form.galleryImages.map((url, idx) => (
+                            <div key={`exist-${idx}`} className="relative aspect-square rounded bg-black border border-white/10 group">
+                                <img src={url} className="w-full h-full object-cover rounded" />
+                                <button onClick={() => removeExistingGalleryImage(idx)} className="absolute top-0.5 right-0.5 bg-red-500/80 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <XIcon size={10} />
+                                </button>
+                            </div>
+                        ))}
+                        {/* New Pending Files */}
+                        {form.newGalleryFiles.map((file, idx) => (
+                            <div key={`new-${idx}`} className="relative aspect-square rounded bg-black border border-green-500/30 group">
+                                <img src={URL.createObjectURL(file)} className="w-full h-full object-cover rounded opacity-80" />
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none"><span className="text-[8px] font-bold text-green-400 bg-black/50 px-1 rounded">NEW</span></div>
+                                <button onClick={() => removeNewGalleryFile(idx)} className="absolute top-0.5 right-0.5 bg-red-500/80 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <XIcon size={10} />
+                                </button>
+                            </div>
+                        ))}
+                        {/* Add Button */}
+                        <label className="relative aspect-square rounded bg-white/5 border border-dashed border-white/20 hover:border-brand-orange/50 hover:bg-brand-orange/10 cursor-pointer flex flex-col items-center justify-center text-gray-500 hover:text-brand-orange transition-colors">
+                            <Plus size={16} />
+                            <span className="text-[8px] mt-1">Add</span>
+                            <input type="file" multiple accept="image/*" className="hidden" onChange={handleGalleryFilesSelect} />
+                        </label>
+                    </div>
+                 </div>
+
+                 {/* 3. Type & URL */}
                  <div className="grid grid-cols-2 gap-2">
                      <select 
                         value={getCurrentType()} 
@@ -500,10 +501,9 @@ export const AdminGallery = ({
                      </div>
                  </div>
 
-                 {/* 3. Title */}
+                 {/* 4. Title & Case Study */}
                  <input value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} placeholder="Judul Proyek" className="w-full bg-black text-white text-xs font-bold py-2 px-3 rounded border border-white/10 focus:border-brand-orange outline-none" />
 
-                 {/* 4. Case Study Fields (WITH MAGIC BUTTONS) */}
                  <div className="space-y-2">
                      <div className="relative">
                         <input value={form.cs_challenge} onChange={e => setForm(p => ({...p, cs_challenge: e.target.value}))} placeholder="Tantangan (Challenge)" className="w-full bg-black text-white text-[10px] p-2 pr-8 rounded border border-white/10 focus:border-brand-orange outline-none" />
@@ -511,7 +511,7 @@ export const AdminGallery = ({
                             onClick={() => generateSpecificPoint('challenge')}
                             disabled={loadingState.generatingSpecific === 'challenge'}
                             className="absolute right-1 top-1 p-1 text-gray-500 hover:text-brand-orange disabled:text-brand-orange/50 transition-colors"
-                            title="Generate Challenge"
+                            title="Generate Challenge (Realistic)"
                         >
                             {loadingState.generatingSpecific === 'challenge' ? <LoadingSpinner size={10}/> : <Wand2 size={12}/>}
                         </button>
@@ -543,7 +543,7 @@ export const AdminGallery = ({
                  </div>
 
                  {/* 5. Separator & Testimonial Toggle */}
-                 <div className="py-2 flex items-center justify-between">
+                 <div className="py-2 flex items-center justify-between border-t border-white/5 mt-2">
                      <label className="flex items-center gap-2 cursor-pointer select-none">
                          <input type="checkbox" checked={testiForm.hasTestimonial} onChange={e => setTestiForm(p => ({...p, hasTestimonial: e.target.checked}))} className="accent-brand-orange w-3 h-3" />
                          <span className="text-[10px] font-bold text-white uppercase tracking-wider">Include Testimoni?</span>
@@ -576,21 +576,15 @@ export const AdminGallery = ({
                     className="w-full h-24 bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none leading-relaxed custom-scrollbar resize-none" 
                  />
 
-                 {/* 8. Testimonial Box (Orange Border Concept) */}
+                 {/* 8. Testimonial Box */}
                  {testiForm.hasTestimonial && (
                      <div className="border border-brand-orange/30 bg-brand-orange/5 rounded-lg p-3 space-y-2 animate-fade-in">
                          <div className="flex gap-2">
-                             {/* Client Photo */}
                              <div className="w-10 h-10 rounded bg-black border border-brand-orange/20 overflow-hidden shrink-0 relative group">
                                 {testiForm.imagePreview ? <img src={testiForm.imagePreview} className="w-full h-full object-cover" /> : <User size={16} className="text-brand-orange m-auto mt-2"/>}
                                 <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setTestiForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
                              </div>
-                             {/* Client Info */}
                              <div className="flex-1 space-y-1">
-                                 {/* Contextual Tag */}
-                                 <div className="bg-black/50 border border-white/10 text-[9px] text-gray-400 px-2 py-1 rounded truncate">
-                                     {form.title || "Project Context"}
-                                 </div>
                                  <input 
                                     value={testiForm.client_name} 
                                     onChange={e => setTestiForm(p => ({...p, client_name: e.target.value}))} 
@@ -615,8 +609,8 @@ export const AdminGallery = ({
          </div>
       </div>
 
-      {/* COLUMN 3: PREVIEW (40%) */}
-      <div className="w-[40%] bg-black flex items-center justify-center p-8 overflow-hidden relative">
+      {/* COLUMN 3: PREVIEW (35%) */}
+      <div className="w-[35%] bg-black flex items-center justify-center p-8 overflow-hidden relative">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
           
           <div className="w-full max-w-sm">
@@ -628,11 +622,12 @@ export const AdminGallery = ({
                 <div className="relative bg-gray-900 pt-4 px-4 pb-0 border-b border-white/5">
                     <div className="relative rounded-t-xl bg-black border-[4px] border-gray-800 border-b-0 overflow-hidden aspect-[16/10]">
                         {form.imagePreview ? <img src={form.imagePreview} className="w-full h-full object-cover object-top" /> : <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-600 text-xs">No Image</div>}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                            <div className="bg-black/60 p-2 rounded-full border border-white/10">
-                               {form.category_type === 'physical' ? <Hammer size={16} className="text-white"/> : form.platform === 'mobile' ? <Smartphone size={16} className="text-white"/> : <Globe size={16} className="text-white"/>}
+                        {/* Count Indicator */}
+                        {(form.galleryImages.length + form.newGalleryFiles.length) > 0 && (
+                            <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-md px-2 py-1 rounded text-[9px] text-white flex items-center gap-1 border border-white/10">
+                                <Layers size={8} /> +{form.galleryImages.length + form.newGalleryFiles.length}
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
                 <div className="p-4 flex flex-col">
@@ -641,7 +636,7 @@ export const AdminGallery = ({
                            {form.category_type === 'physical' ? 'HARDWARE' : 'SOFTWARE'}
                        </span>
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-1">{form.title || 'Judul Project'}</h3>
+                    <h3 className="text-lg font-bold text-white mb-1 line-clamp-1">{form.title || 'Judul Project'}</h3>
                     <div className="space-y-1 mt-2">
                         {form.cs_challenge && (
                             <p className="text-[10px] text-gray-400 line-clamp-1"><span className="text-red-400 font-bold">Challenge:</span> {form.cs_challenge}</p>

@@ -1,7 +1,7 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Globe, MessageCircle, ShieldCheck, Star, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { X, Globe, MessageCircle, ShieldCheck, Star, CheckCircle2, ArrowLeft, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Badge } from './ui';
 
@@ -13,7 +13,11 @@ interface ProjectDetailProps {
 }
 
 export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false }: ProjectDetailProps) => {
-  
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Combine cover image + additional gallery images
+  const allImages = [item.image_url, ...(item.gallery_images || [])].filter(Boolean);
+
   const activeTestimonial = testimonials.find(t => 
     item.title.toLowerCase().includes(t.business_name.toLowerCase()) || 
     t.business_name.toLowerCase().includes(item.title.toLowerCase())
@@ -34,6 +38,14 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
     }
   }, [isModal]);
 
+  const handleNext = () => {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const handlePrev = () => {
+      setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
   const Wrapper = isModal ? 
     ({children}: any) => createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6" role="dialog" aria-modal="true">
@@ -51,34 +63,54 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
   return (
     <Wrapper>
       <div className={`relative w-full max-w-7xl ${isModal ? 'h-[90vh]' : 'min-h-[80vh]'} rounded-2xl bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row z-[10000] overflow-hidden`}>
-        <button onClick={onClose} className="absolute top-4 right-4 z-50 bg-black/50 p-2 rounded-full text-white backdrop-blur-sm hover:bg-brand-orange transition-colors border border-white/10">
+        <button onClick={onClose} className="absolute top-4 right-4 z-50 bg-black/50 p-2 rounded-full text-white backdrop-blur-sm hover:bg-brand-orange transition-colors border border-white/10 shadow-lg">
           {isModal ? <X size={24} /> : <ArrowLeft size={24} />}
         </button>
 
         <div className="w-full md:w-8/12 h-[500px] md:h-auto bg-black flex flex-col relative border-b md:border-b-0 md:border-r border-white/10">
            
+           {/* CAROUSEL AREA */}
            <div className="flex-grow relative overflow-hidden bg-gray-900 group">
-              {item.category_type === 'digital' ? (
-                 <div className="w-full h-full overflow-y-auto custom-scrollbar">
-                    <img 
-                        src={item.image_url} 
-                        alt={item.title} 
-                        className="w-full min-h-full object-cover object-top" 
-                    />
+              {item.type === 'video' && item.video_url ? (
+                 <div className="w-full h-full flex items-center justify-center bg-black">
+                    <iframe src={item.video_url} title={item.title} className="w-full aspect-video" allowFullScreen></iframe>
                  </div>
               ) : (
-                 item.type === 'video' && item.video_url ? (
-                    <div className="w-full h-full flex items-center justify-center bg-black">
-                        <iframe src={item.video_url} title={item.title} className="w-full aspect-video" allowFullScreen></iframe>
-                    </div>
-                 ) : (
-                    <div className="w-full h-full flex items-center justify-center p-4">
-                        <img src={item.image_url} alt={item.title} className="max-w-full max-h-full object-contain" />
-                    </div>
-                 )
+                 <div className="w-full h-full relative">
+                    <img 
+                        src={allImages[currentImageIndex]} 
+                        alt={item.title} 
+                        className={`w-full h-full ${item.category_type === 'digital' ? 'object-cover object-top' : 'object-contain'} transition-all duration-300`} 
+                    />
+                    
+                    {/* Navigation Buttons (Only if > 1 image) */}
+                    {allImages.length > 1 && (
+                        <>
+                            <button 
+                                onClick={handlePrev} 
+                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-brand-orange p-2 rounded-full text-white backdrop-blur-sm border border-white/10 transition-colors z-20"
+                            >
+                                <ChevronLeft size={24} />
+                            </button>
+                            <button 
+                                onClick={handleNext} 
+                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-brand-orange p-2 rounded-full text-white backdrop-blur-sm border border-white/10 transition-colors z-20"
+                            >
+                                <ChevronRight size={24} />
+                            </button>
+                            
+                            {/* Slide Counter */}
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded-full text-xs text-white font-bold backdrop-blur-sm border border-white/10 flex items-center gap-2">
+                                <Layers size={12} className="text-brand-orange"/>
+                                {currentImageIndex + 1} / {allImages.length}
+                            </div>
+                        </>
+                    )}
+                 </div>
               )}
            </div>
 
+           {/* FOOTER INFO */}
            <div className="shrink-0 bg-brand-dark border-t border-white/10 h-auto md:h-40 flex flex-col md:flex-row">
                
                <div className="flex-1 p-5 flex items-center border-b md:border-b-0 md:border-r border-white/10">
@@ -121,7 +153,6 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
                             href={item.client_url} 
                             target="_blank" 
                             rel="noreferrer"
-                            // UPDATED: Use Orange Outline
                             className="w-full flex items-center justify-center py-3 border border-brand-orange text-white hover:bg-brand-orange rounded-lg font-bold transition-all gap-2 text-xs"
                          >
                             <Globe size={16}/> Visit Project
