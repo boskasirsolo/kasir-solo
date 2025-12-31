@@ -81,7 +81,8 @@ export const FooterColumn = ({
   title: string, 
   links: { label: string, action: () => void }[] 
 }) => (
-  <div className="md:col-span-1">
+  // Update: Only allow 1 column span on all breakpoints (allows side-by-side on mobile)
+  <div className="col-span-1">
     <SectionTitle>{title}</SectionTitle>
     <ul className="space-y-3">
       {links.map((link, idx) => (
@@ -100,7 +101,8 @@ export const BrandColumn = ({
   description: string, 
   socials: { icon: any, url?: string }[] 
 }) => (
-  <div className="md:col-span-1 space-y-6">
+  // Update: Span 2 cols on mobile (full width top), 1 col on desktop
+  <div className="col-span-2 lg:col-span-1 space-y-6">
     <div>
       <h3 className="text-2xl font-display font-bold text-white mb-2">PT MESIN KASIR SOLO</h3>
       <div className="h-1 w-12 bg-brand-orange rounded-full"></div>

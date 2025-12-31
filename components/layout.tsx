@@ -153,22 +153,28 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
 
   return (
     <FooterContainer>
-      <div className="grid md:grid-cols-4 gap-12">
+      {/* 
+         LAYOUT UPDATE:
+         Mobile/Tablet: grid-cols-2 (2 kolom)
+         Desktop: lg:grid-cols-4 (4 kolom)
+         Effect: Solusi & Perusahaan side-by-side on mobile.
+      */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
         
-        {/* 1. Brand Section */}
+        {/* 1. Brand Section (Full Width on Mobile/Tablet) */}
         <BrandColumn 
           description="Mitra teknologi terpercaya untuk digitalisasi bisnis di Indonesia. Menyediakan solusi Hardware POS, Software SaaS, dan Jasa Pengembangan Website sejak 2015."
           socials={socialLinks}
         />
         
-        {/* 2. Solusi Bisnis Section */}
+        {/* 2. Solusi Bisnis Section (Left on Mobile) */}
         <FooterColumn title="Solusi Digital" links={solutionsLinks} />
 
-        {/* 3. Perusahaan Section */}
+        {/* 3. Perusahaan Section (Right on Mobile) - This moves next to Solusi */}
         <FooterColumn title="Perusahaan" links={companyLinks} />
 
-        {/* 4. Contact Section */}
-        <div className="md:col-span-1">
+        {/* 4. Contact Section (Full Width on Mobile/Tablet) */}
+        <div className="col-span-2 lg:col-span-1">
           <SectionTitle>Hubungi Kami</SectionTitle>
           <ul className="space-y-5">
             <ContactItem 
