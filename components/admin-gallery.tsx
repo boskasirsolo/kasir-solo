@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon, Wand2 } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, callGeminiWithRotation } from '../utils';
@@ -44,7 +44,8 @@ const useIntegratedGalleryManager = (
 
     const [loadingState, setLoadingState] = useState({
         generatingAI: false,
-        uploading: false
+        uploading: false,
+        generatingSpecific: null as 'challenge' | 'solution' | 'result' | null // NEW: Track specific field loading
     });
 
     const [page, setPage] = useState(1);
@@ -137,6 +138,42 @@ const useIntegratedGalleryManager = (
     const getCurrentType = () => {
         if (form.category_type === 'physical') return 'hardware';
         return form.platform; // web, mobile, desktop
+    };
+
+    // --- NEW: Generate Specific Case Study Points ---
+    const generateSpecificPoint = async (target: 'challenge' | 'solution' | 'result') => {
+        if (!form.title) return alert("Isi Judul Proyek dulu sebagai konteks.");
+        
+        setLoadingState(prev => ({ ...prev, generatingSpecific: target }));
+
+        try {
+            let prompt = "";
+            const baseContext = `Project: ${form.title}. Type: ${form.category_type}.`;
+
+            if (target === 'challenge') {
+                prompt = `Based on the project "${form.title}" (${form.category_type}), write a 1-sentence business challenge or pain point that this project solves. Language: Indonesian. Tone: Professional Case Study. Example: "Keterbatasan sinyal internet di area gedung menghambat transaksi online."`;
+            } else if (target === 'solution') {
+                prompt = `Based on the project "${form.title}" (${form.category_type}), write a 1-sentence technical solution provided by "Tim Mesin Kasir Solo". Focus on the tech/action. Language: Indonesian. Example: "Implementasi server lokal hybrid dengan sinkronisasi otomatis saat online."`;
+            } else if (target === 'result') {
+                prompt = `Based on the project "${form.title}", write a 1-sentence positive business outcome/result. Use metrics if possible. Language: Indonesian. Example: "Efisiensi kasir meningkat 40% dan antrian terurai dengan cepat."`;
+            }
+
+            const response = await callGeminiWithRotation({
+                model: 'gemini-3-flash-preview',
+                contents: prompt
+            });
+
+            const text = response.text?.trim() || "";
+            
+            if (target === 'challenge') setForm(p => ({...p, cs_challenge: text}));
+            if (target === 'solution') setForm(p => ({...p, cs_solution: text}));
+            if (target === 'result') setForm(p => ({...p, cs_result: text}));
+
+        } catch (e: any) {
+            console.error("AI Gen Error", e);
+        } finally {
+            setLoadingState(prev => ({ ...prev, generatingSpecific: null }));
+        }
     };
 
     const generateAINarrative = async () => {
@@ -309,6 +346,7 @@ const useIntegratedGalleryManager = (
         resetForm,
         deleteItem,
         generateAINarrative,
+        generateSpecificPoint, // EXPORTED
         handleTypeChange,
         getCurrentType,
         listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
@@ -324,7 +362,7 @@ export const AdminGallery = ({
   const { 
     form, setForm, 
     testiForm, setTestiForm,
-    loadingState, handleSubmit, handleEditClick, resetForm, deleteItem, generateAINarrative, handleTypeChange, getCurrentType, listData 
+    loadingState, handleSubmit, handleEditClick, resetForm, deleteItem, generateAINarrative, generateSpecificPoint, handleTypeChange, getCurrentType, listData 
   } = useIntegratedGalleryManager(gallery, setGallery, testimonials, setTestimonials);
 
   return (
@@ -426,11 +464,43 @@ export const AdminGallery = ({
                  {/* 3. Title */}
                  <input value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} placeholder="Judul Proyek" className="w-full bg-black text-white text-xs font-bold py-2 px-3 rounded border border-white/10 focus:border-brand-orange outline-none" />
 
-                 {/* 4. Case Study Fields */}
+                 {/* 4. Case Study Fields (WITH MAGIC BUTTONS) */}
                  <div className="space-y-2">
-                     <input value={form.cs_challenge} onChange={e => setForm(p => ({...p, cs_challenge: e.target.value}))} placeholder="Tantangan (Challenge)" className="w-full bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
-                     <input value={form.cs_solution} onChange={e => setForm(p => ({...p, cs_solution: e.target.value}))} placeholder="Solusi (Solution)" className="w-full bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
-                     <input value={form.cs_result} onChange={e => setForm(p => ({...p, cs_result: e.target.value}))} placeholder="Hasil (Result)" className="w-full bg-black text-white text-[10px] p-2 rounded border border-white/10 focus:border-brand-orange outline-none" />
+                     <div className="relative">
+                        <input value={form.cs_challenge} onChange={e => setForm(p => ({...p, cs_challenge: e.target.value}))} placeholder="Tantangan (Challenge)" className="w-full bg-black text-white text-[10px] p-2 pr-8 rounded border border-white/10 focus:border-brand-orange outline-none" />
+                        <button 
+                            onClick={() => generateSpecificPoint('challenge')}
+                            disabled={loadingState.generatingSpecific === 'challenge'}
+                            className="absolute right-1 top-1 p-1 text-gray-500 hover:text-brand-orange disabled:text-brand-orange/50 transition-colors"
+                            title="Generate Challenge"
+                        >
+                            {loadingState.generatingSpecific === 'challenge' ? <LoadingSpinner size={10}/> : <Wand2 size={12}/>}
+                        </button>
+                     </div>
+                     
+                     <div className="relative">
+                        <input value={form.cs_solution} onChange={e => setForm(p => ({...p, cs_solution: e.target.value}))} placeholder="Solusi (Solution)" className="w-full bg-black text-white text-[10px] p-2 pr-8 rounded border border-white/10 focus:border-brand-orange outline-none" />
+                        <button 
+                            onClick={() => generateSpecificPoint('solution')}
+                            disabled={loadingState.generatingSpecific === 'solution'}
+                            className="absolute right-1 top-1 p-1 text-gray-500 hover:text-brand-orange disabled:text-brand-orange/50 transition-colors"
+                            title="Generate Solution"
+                        >
+                            {loadingState.generatingSpecific === 'solution' ? <LoadingSpinner size={10}/> : <Wand2 size={12}/>}
+                        </button>
+                     </div>
+
+                     <div className="relative">
+                        <input value={form.cs_result} onChange={e => setForm(p => ({...p, cs_result: e.target.value}))} placeholder="Hasil (Result)" className="w-full bg-black text-white text-[10px] p-2 pr-8 rounded border border-white/10 focus:border-brand-orange outline-none" />
+                        <button 
+                            onClick={() => generateSpecificPoint('result')}
+                            disabled={loadingState.generatingSpecific === 'result'}
+                            className="absolute right-1 top-1 p-1 text-gray-500 hover:text-brand-orange disabled:text-brand-orange/50 transition-colors"
+                            title="Generate Result"
+                        >
+                            {loadingState.generatingSpecific === 'result' ? <LoadingSpinner size={10}/> : <Wand2 size={12}/>}
+                        </button>
+                     </div>
                  </div>
 
                  {/* 5. Separator & Testimonial Toggle */}
@@ -448,7 +518,7 @@ export const AdminGallery = ({
                         disabled={loadingState.generatingAI}
                         className="flex-1 bg-brand-orange text-white py-2 rounded text-[10px] font-bold hover:bg-brand-glow flex items-center justify-center gap-2 transition-all shadow-action"
                     >
-                        {loadingState.generatingAI ? <LoadingSpinner size={14}/> : <><Sparkles size={14}/> MAGIC AI</>}
+                        {loadingState.generatingAI ? <LoadingSpinner size={14}/> : <><Sparkles size={14}/> MAGIC NARRATIVE</>}
                     </button>
                     {testiForm.hasTestimonial && (
                         <div className="flex bg-black/40 border border-white/10 rounded px-2 items-center gap-1">
