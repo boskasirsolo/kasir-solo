@@ -62,12 +62,16 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
 
   return (
     <Wrapper>
-      <div className={`relative w-full max-w-7xl ${isModal ? 'h-[90vh]' : 'min-h-[80vh]'} rounded-2xl bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row z-[10000] overflow-hidden`}>
+      {/* CONTAINER UTAMA: Set fixed height on desktop to enable internal scrolling */}
+      <div className={`relative w-full max-w-7xl ${isModal ? 'h-[90vh]' : 'min-h-[80vh] md:h-[90vh]'} rounded-2xl bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row z-[10000] overflow-hidden`}>
+        
+        {/* CLOSE BUTTON */}
         <button onClick={onClose} className="absolute top-4 right-4 z-50 bg-black/50 p-2 rounded-full text-white backdrop-blur-sm hover:bg-brand-orange transition-colors border border-white/10 shadow-lg">
           {isModal ? <X size={24} /> : <ArrowLeft size={24} />}
         </button>
 
-        <div className="w-full md:w-8/12 h-[500px] md:h-auto bg-black flex flex-col relative border-b md:border-b-0 md:border-r border-white/10">
+        {/* LEFT COLUMN: IMAGE AREA (Fixed Height on Desktop) */}
+        <div className="w-full md:w-8/12 h-[500px] md:h-full bg-black flex flex-col relative border-b md:border-b-0 md:border-r border-white/10">
            
            {/* CAROUSEL AREA */}
            <div className="flex-grow relative overflow-hidden bg-gray-900 group flex items-center justify-center">
@@ -124,7 +128,7 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
                         </div>
                     )}
 
-                    {/* Counter (Moved to Top Left) */}
+                    {/* Counter (Top Left) */}
                     {allImages.length > 1 && (
                         <div className="absolute top-4 left-4 bg-black/60 px-3 py-1 rounded-full text-xs text-white font-bold backdrop-blur-sm border border-white/10 flex items-center gap-2 z-20">
                             <Layers size={12} className="text-brand-orange"/>
@@ -135,7 +139,7 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
               )}
            </div>
 
-           {/* FOOTER INFO */}
+           {/* FOOTER INFO (Fixed at bottom of left column) */}
            <div className="shrink-0 bg-brand-dark border-t border-white/10 h-auto md:h-40 flex flex-col md:flex-row relative z-20">
                
                <div className="flex-1 p-5 flex items-center border-b md:border-b-0 md:border-r border-white/10">
@@ -187,8 +191,10 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
            </div>
         </div>
 
-        <div className="w-full md:w-4/12 h-auto md:h-auto bg-brand-card flex flex-col relative z-20">
+        {/* RIGHT COLUMN: SCROLLABLE CONTENT (Independent Scroll) */}
+        <div className="w-full md:w-4/12 bg-brand-card flex flex-col relative z-20 md:h-full md:overflow-hidden">
           
+          {/* HEADER (Sticky Sticky) */}
           <div className="p-6 md:p-8 border-b border-white/10 bg-brand-card sticky top-0 z-10 shrink-0">
             <div className="flex items-center gap-2 mb-3">
                <Badge className="bg-brand-orange text-white border-transparent">{item.category_type === 'digital' ? 'Software' : 'Hardware'}</Badge>
@@ -205,7 +211,8 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
             )}
           </div>
 
-          <div className="p-6 md:p-8 flex-grow overflow-y-auto custom-scrollbar text-left space-y-8 max-h-[600px] md:max-h-none">
+          {/* SCROLLABLE BODY */}
+          <div className="p-6 md:p-8 flex-grow md:overflow-y-auto custom-scrollbar text-left space-y-8">
             {item.case_study ? (
                <>
                   <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
