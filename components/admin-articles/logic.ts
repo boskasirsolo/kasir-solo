@@ -157,6 +157,47 @@ export const useAIGenerator = () => {
         }
     };
 
+    // NEW: Generate Cluster Ideas based on Pillar
+    const generateClusterIdeas = async (pillar: Article) => {
+        setLoading(p => ({ ...p, researching: true }));
+        try {
+            const prompt = `
+            Context: We have a PILLAR ARTICLE titled "${pillar.title}".
+            Excerpt: "${pillar.excerpt || 'No excerpt'}".
+            
+            Task: Act as an SEO Strategist. Generate 10 **Cluster Article Titles** (Sub-topics) that support this pillar.
+            
+            Strategy:
+            1. Focus on specific long-tail keywords related to the pillar.
+            2. Address specific questions (What, Why, How).
+            3. Target different intents (Informational, Transactional).
+            
+            Strict Output Format: JSON Array of Objects.
+            Example: [{"keyword": "Judul Artikel Cluster 1", "volume": "High", "competition": "Low", "type": "Cluster"}]
+            `;
+
+            const result = await callGeminiWithRotation({
+                model: 'gemini-3-flash-preview',
+                contents: prompt,
+                config: { responseMimeType: "application/json" }
+            });
+
+            const text = result.text || '[]';
+            const data = JSON.parse(text);
+
+            if (Array.isArray(data) && data.length > 0) {
+                setKeywords(data);
+            } else {
+                throw new Error("AI tidak menghasilkan data cluster valid.");
+            }
+        } catch (e) {
+            console.error("Cluster Generation Error", e);
+            throw e;
+        } finally {
+            setLoading(p => ({ ...p, researching: false }));
+        }
+    };
+
     // STEP 2: Generate Content
     const generateContent = async (title: string, tones: string[], type: string, authorName: string) => {
         setLoading(p => ({ ...p, generatingText: true }));
@@ -247,7 +288,7 @@ export const useAIGenerator = () => {
         }
     };
 
-    return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateContent, getAIImageUrl };
+    return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateContent, getAIImageUrl, generateClusterIdeas };
 };
 
 // --- MAIN HOOK: ARTICLE MANAGER ---
@@ -454,6 +495,28 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         } catch(e: any) { alert(e.message); }
     };
 
+    // --- NEW: RUN CLUSTER RESEARCH FOR SPECIFIC PILLAR ---
+    const runClusterResearch = async (pillar: Article) => {
+        try {
+            // 1. Prepare Form for Cluster
+            resetForm();
+            setForm(prev => ({
+                ...prev,
+                type: 'cluster',
+                pillar_id: pillar.id,
+                category: pillar.category // Inherit category for better context
+            }));
+
+            // 2. Generate Ideas via AI
+            await aiLogic.generateClusterIdeas(pillar);
+
+            // 3. Switch View to Step 1 (Result List)
+            setAiStep(1);
+        } catch (e: any) {
+            alert(e.message);
+        }
+    };
+
     // --- STEP 2: SELECT TITLE ---
     const selectTopic = (k: any) => { 
         setForm(p => ({ ...p, title: k.keyword })); 
@@ -491,6 +554,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             keywords: aiLogic.keywords, 
             selectedTones, setSelectedTones 
         },
-        actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage }
+        actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage, runClusterResearch }
     };
 };

@@ -28,7 +28,11 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
       <div className="w-[25%] border-r border-white/5 min-w-[280px]">
          <ListPanel 
             articles={articles}
-            logic={{ ...filterLogic, actions: { handleEditClick: actions.handleEditClick, deleteItem: actions.deleteItem } }}
+            logic={{ ...filterLogic, actions: { 
+                handleEditClick: actions.handleEditClick, 
+                deleteItem: actions.deleteItem,
+                runClusterResearch: actions.runClusterResearch // NEW
+            } }}
             onReset={actions.resetForm}
             personaState={{ personas, activePersonaId, setActivePersonaId, updatePersonaAvatar }}
             form={form} 

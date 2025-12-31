@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera } from 'lucide-react';
+import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera, Sparkles } from 'lucide-react';
 import { Article } from '../../types';
 import { FilterType, AuthorPersona } from './types';
 
@@ -121,6 +121,7 @@ interface ArticleCardProps {
     onDelete: (id: number) => void;
     canExpand: boolean;
     linkedClusters: Article[];
+    onAddCluster: (pillar: Article) => void; // NEW PROP
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ 
@@ -131,7 +132,8 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     onEdit,
     onDelete,
     canExpand,
-    linkedClusters
+    linkedClusters,
+    onAddCluster
 }) => {
     const isPillar = article.type === 'pillar';
     const isCluster = article.type === 'cluster' && article.pillar_id;
@@ -189,6 +191,14 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
                         <button onClick={(e) => { e.stopPropagation(); onEdit(article); }} className="flex-1 py-1.5 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-500 rounded flex items-center justify-center gap-1 transition-colors"><Edit size={10} /> Edit Master Pilar</button>
                         <button onClick={(e) => { e.stopPropagation(); onDelete(article.id); }} className="py-1.5 px-3 text-[10px] font-bold text-red-400 bg-red-900/20 hover:bg-red-900/40 rounded border border-red-900/30 transition-colors"><Trash2 size={10} /></button>
                     </div>
+
+                    {/* NEW: ADD CLUSTER BUTTON */}
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onAddCluster(article); }} 
+                        className="w-full mb-3 py-1.5 text-[10px] font-bold text-brand-orange bg-brand-orange/10 border border-brand-orange/30 hover:bg-brand-orange/20 rounded flex items-center justify-center gap-1 transition-colors"
+                    >
+                        <Sparkles size={10} /> Tambah Cluster (AI)
+                    </button>
                     
                     <h6 className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-1"><Network size={10}/> Cluster ({linkedClusters.length})</h6>
                     
@@ -299,6 +309,7 @@ export const ListPanel = ({
                             onDelete={logic.actions.deleteItem}
                             canExpand={canExpand}
                             linkedClusters={linkedClusters}
+                            onAddCluster={logic.actions.runClusterResearch} // Pass Handler Here
                         />
                     );
                 })}
