@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText } from 'lucide-react';
 import { Article } from '../../types';
 import { Button } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
@@ -208,7 +208,31 @@ export const EditorPanel = ({
                     </datalist>
                 </div>
 
-                {/* 4. AUTHOR & TONE */}
+                {/* 4. WORD COUNT SELECTOR (NEW) */}
+                <div className="bg-white/5 p-3 rounded-lg border border-white/10">
+                    <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center justify-between">
+                        <span className="flex items-center gap-2"><FileText size={10} /> Target Panjang Artikel</span>
+                        <span className="text-brand-orange">{form.targetWordCount || 1000} Kata</span>
+                    </label>
+                    
+                    <input 
+                        type="range" 
+                        min="400" 
+                        max="5000" 
+                        step="100" 
+                        value={form.targetWordCount || 1000}
+                        onChange={(e) => setForm((p:any) => ({...p, targetWordCount: parseInt(e.target.value)}))}
+                        className="w-full h-1.5 bg-black rounded-lg appearance-none cursor-pointer accent-brand-orange mb-3"
+                    />
+                    
+                    <div className="flex justify-between text-[8px] text-gray-500 font-mono">
+                        <span>400 (Short)</span>
+                        <span>2500 (Deep)</span>
+                        <span>5000 (Epic)</span>
+                    </div>
+                </div>
+
+                {/* 5. AUTHOR & TONE */}
                 <div className="bg-white/5 p-3 rounded-lg border border-white/10 space-y-3">
                     <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block flex items-center gap-2">
                         <User size={10} /> Penulis & Tone (Gaya Bahasa)

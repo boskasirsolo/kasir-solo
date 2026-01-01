@@ -184,7 +184,14 @@ export const useAIGenerator = () => {
         finally { setLoading(p => ({ ...p, researching: false })); }
     };
 
-    const generateContent = async (title: string, tones: string[], type: string, authorName: string, pillarContext?: { title: string, slug: string }) => {
+    const generateContent = async (
+        title: string, 
+        tones: string[], 
+        type: string, 
+        authorName: string, 
+        wordCount: number, // ADDED WORD COUNT
+        pillarContext?: { title: string, slug: string }
+    ) => {
         setLoading(p => ({ ...p, generatingText: true }));
         try {
             const isAmin = authorName === 'Amin Maghfuri';
@@ -211,6 +218,20 @@ export const useAIGenerator = () => {
                 return def ? `${def.label} (${def.desc})` : t;
             }).join(', ');
 
+            // --- LENGTH & DEPTH CONTROL ---
+            let lengthInstruction = `Target Length: Approximately ${wordCount} words.`;
+            if (wordCount > 2000) {
+                lengthInstruction += `
+                IMPORTANT: This is a DEEP DIVE. 
+                - Do not be repetitive. 
+                - Go extremely deep into details, examples, and nuances. 
+                - Break down every concept into sub-sections.
+                - Use tables, lists, and case studies to expand content naturally.
+                `;
+            } else {
+                lengthInstruction += `Keep it focused and concise.`;
+            }
+
             // --- CLUSTER STRATEGY INJECTION ---
             let clusterInstruction = "";
             if (type === 'cluster' && pillarContext) {
@@ -236,7 +257,7 @@ export const useAIGenerator = () => {
             Tone Mix: ${toneDescriptions}.
             Opening Strategy: ${selectedHook}
             Type: ${type.toUpperCase()}.
-            Length: ${type === 'pillar' ? '2500+ words (Deep Dive)' : '800-1200 words (Focused)'}.
+            ${lengthInstruction}
             Format: Markdown (Use Headers #, ##, ###, Lists, Bold).
             
             ${clusterInstruction}
@@ -250,11 +271,18 @@ export const useAIGenerator = () => {
             
             const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
             
-            const metaPrompt = `Generate JSON Metadata for "${title}". Format: {"excerpt": "...", "category": "...", "readTime": "..."}`;
+            // Adjust read time estimation based on word count
+            const generatedWordCount = (contentRes.text || '').split(/\s+/).length;
+            const readTimeMin = Math.ceil(generatedWordCount / 200);
+            
+            const metaPrompt = `Generate JSON Metadata for "${title}". Format: {"excerpt": "...", "category": "..."}`;
             const metaRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
             const metaData = JSON.parse(metaRes.text || '{}');
 
-            return { content: contentRes.text || '', meta: metaData };
+            return { 
+                content: contentRes.text || '', 
+                meta: { ...metaData, readTime: `${readTimeMin} min read` } 
+            };
         } finally {
             setLoading(p => ({ ...p, generatingText: false }));
         }
@@ -298,7 +326,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         author: activePersona.name, authorAvatar: activePersona.avatar || '',
         uploadAuthorFile: null, status: 'draft', scheduled_for: '',
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
-        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) // Default date
+        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+        targetWordCount: 1000 // DEFAULT WORD COUNT
     });
 
     const [aiStep, setAiStep] = useState(0);
@@ -314,7 +343,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             author: activePersona.name, authorAvatar: activePersona.avatar || '', 
             uploadAuthorFile: null, readTime: '5 min read', imagePreview: '', uploadFile: null, 
             status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
-            date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+            date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+            targetWordCount: 1000
         });
         setAiStep(0); setSelectedPresets([]); setSelectedTones(['gritty']);
     };
@@ -322,13 +352,18 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     const handleEditClick = (item: Article) => {
         const matchedPersona = personas.find(p => item.author.includes(p.name));
         if (matchedPersona) setActivePersonaId(matchedPersona.id);
+        
+        // Estimate current word count if editing
+        const estimatedCount = item.content ? item.content.split(/\s+/).length : 1000;
+
         setForm({
             id: item.id, title: item.title, excerpt: item.excerpt, content: item.content,
             category: item.category, author: item.author, authorAvatar: item.author_avatar || activePersona.avatar || '', 
             uploadAuthorFile: null, readTime: item.readTime, imagePreview: item.image, uploadFile: null,
             status: item.status || 'draft', scheduled_for: item.scheduled_for || '',
             type: item.type || 'cluster', pillar_id: item.pillar_id || 0, cluster_ideas: item.cluster_ideas || [], scheduleStart: '',
-            date: item.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+            date: item.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+            targetWordCount: estimatedCount
         });
         setAiStep(2);
     };
@@ -436,7 +471,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 pillar_id: pillar.id, // Explicitly Set Pillar Link
                 cluster_ideas: [], 
                 scheduleStart: '',
-                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+                targetWordCount: 1000
             });
             
             // Set AI Step to Keywords Selection
@@ -462,10 +498,16 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 }
             }
 
-            const { content, meta } = await aiLogic.generateContent(form.title, selectedTones, form.type, form.author, pillarContext); 
+            const { content, meta } = await aiLogic.generateContent(
+                form.title, 
+                selectedTones, 
+                form.type, 
+                form.author, 
+                form.targetWordCount, // PASS WORD COUNT
+                pillarContext
+            ); 
             
             // FIX: Only overwrite category if it's empty or the user hasn't set one yet.
-            // This prevents the AI from overwriting manual category selections.
             setForm(p => ({ 
                 ...p, 
                 content, 

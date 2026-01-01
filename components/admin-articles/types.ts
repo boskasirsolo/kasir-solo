@@ -63,6 +63,7 @@ export interface ArticleFormState {
     authorAvatar: string;
     readTime: string;
     date: string; // Added editable date field
+    targetWordCount: number; // New field for Word Count Control
     imagePreview: string;
     uploadFile: File | null;
     status: 'published' | 'draft' | 'scheduled';
