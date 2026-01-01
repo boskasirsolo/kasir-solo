@@ -130,8 +130,21 @@ export const useAIGenerator = () => {
 
     const generateClusterIdeas = async (pillar: Article) => {
         setLoading(p => ({ ...p, researching: true }));
+        setKeywords([]); // Clear old keywords first
         try {
-            const prompt = `Context: Pillar "${pillar.title}". Task: Generate 10 Cluster Titles. Format: JSON Array.`;
+            const prompt = `
+            Act as SEO Specialist.
+            Context: We have a Pillar Page titled "${pillar.title}".
+            Task: Generate 10 Specific Cluster Content Ideas (Sub-topics) that link back to this pillar.
+            
+            STRICT JSON Output Format: Array of objects with keys: "keyword", "volume", "competition", "type".
+            
+            Example: 
+            [
+              {"keyword": "Detail sub topic related to pillar", "volume": "300/mo", "competition": "Low", "type": "Cluster"},
+              {"keyword": "Another specific angle", "volume": "1.2k/mo", "competition": "Medium", "type": "Cluster"}
+            ]
+            `;
             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
             const data = JSON.parse(result.text || '[]');
             if (Array.isArray(data)) setKeywords(data);
@@ -348,7 +361,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
 
     const runResearch = async () => { try { await aiLogic.analyzeMarket(); setAiStep(1); } catch(e: any) { alert(e.message); } };
     
-    // REVISED: Direct state update without resetForm dependency to avoid batching issues
     const runClusterResearch = async (pillar: Article) => { 
         try { 
             // Manual Reset + Set Initial State for Cluster
