@@ -189,7 +189,7 @@ export const useAIGenerator = () => {
         tones: string[], 
         type: string, 
         authorName: string, 
-        wordCount: number, // ADDED WORD COUNT
+        wordCount: number, 
         pillarContext?: { title: string, slug: string }
     ) => {
         setLoading(p => ({ ...p, generatingText: true }));
@@ -327,7 +327,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         uploadAuthorFile: null, status: 'draft', scheduled_for: '',
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
         date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-        targetWordCount: 1000 // DEFAULT WORD COUNT
+        targetWordCount: 1000,
+        related_pillars: [] // Initial State
     });
 
     const [aiStep, setAiStep] = useState(0);
@@ -344,7 +345,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             uploadAuthorFile: null, readTime: '5 min read', imagePreview: '', uploadFile: null, 
             status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
             date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-            targetWordCount: 1000
+            targetWordCount: 1000,
+            related_pillars: []
         });
         setAiStep(0); setSelectedPresets([]); setSelectedTones(['gritty']);
     };
@@ -363,7 +365,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             status: item.status || 'draft', scheduled_for: item.scheduled_for || '',
             type: item.type || 'cluster', pillar_id: item.pillar_id || 0, cluster_ideas: item.cluster_ideas || [], scheduleStart: '',
             date: item.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-            targetWordCount: estimatedCount
+            targetWordCount: estimatedCount,
+            related_pillars: item.related_pillars || []
         });
         setAiStep(2);
     };
@@ -413,7 +416,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
                 type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
                 cluster_ideas: form.cluster_ideas, 
-                date: dateStr // Use date from form
+                date: dateStr, // Use date from form
+                related_pillars: form.related_pillars // Save related pillars
             };
 
             let savedId = form.id;
@@ -472,7 +476,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 cluster_ideas: [], 
                 scheduleStart: '',
                 date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-                targetWordCount: 1000
+                targetWordCount: 1000,
+                related_pillars: []
             });
             
             // Set AI Step to Keywords Selection

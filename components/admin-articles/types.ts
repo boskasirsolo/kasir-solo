@@ -71,6 +71,8 @@ export interface ArticleFormState {
     type: 'pillar' | 'cluster';
     pillar_id: number;
     cluster_ideas: string[];
+    // NEW: Related Pillars for Pillar-to-Pillar linking
+    related_pillars: number[]; 
     scheduleStart: string;
     uploadAuthorFile: File | null;
 }

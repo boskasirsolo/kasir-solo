@@ -7,7 +7,7 @@ import {
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
   Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
   ChevronLeft, Send, Plus, Check, Briefcase, HeartHandshake, Quote,
-  Search, Filter, FolderOpen, ChevronDown
+  Search, Filter, FolderOpen, ChevronDown, Network
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
@@ -1039,9 +1039,21 @@ const ArticleSidebarRight = ({
     recommendedProducts = recommendedProducts.slice(0, 3);
   }
 
-  const relatedArticles = allArticles
+  // --- RELATED ARTICLES LOGIC ---
+  let relatedArticles: Article[] = [];
+  let relatedTitle = "Baca Juga";
+
+  // Check if current article has RELATED PILLARS linked manually (For Pillar pages)
+  if (article.type === 'pillar' && article.related_pillars && article.related_pillars.length > 0) {
+      relatedArticles = allArticles.filter(a => article.related_pillars?.includes(a.id));
+      relatedTitle = "Topik Utama Terkait";
+  } 
+  // Fallback: Show random recent posts except self
+  else {
+      relatedArticles = allArticles
       .filter(a => a.id !== article.id)
       .slice(0, 4);
+  }
 
   return (
       <div className="space-y-6 sticky top-28">
@@ -1049,8 +1061,8 @@ const ArticleSidebarRight = ({
             {relatedArticles.length > 0 && (
                 <div className="bg-brand-card border border-white/5 rounded-xl p-5 shadow-lg">
                     <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
-                        <TrendingUp size={16} className="text-brand-orange" />
-                        <h5 className="text-xs font-bold text-white uppercase tracking-widest">Baca Juga</h5>
+                        <Network size={16} className="text-brand-orange" />
+                        <h5 className="text-xs font-bold text-white uppercase tracking-widest">{relatedTitle}</h5>
                     </div>
                     <div className="space-y-4">
                         {relatedArticles.map(a => (

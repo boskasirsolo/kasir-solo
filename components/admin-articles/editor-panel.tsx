@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2 } from 'lucide-react';
 import { Article } from '../../types';
 import { Button } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
@@ -72,6 +72,16 @@ export const EditorPanel = ({
         } else {
             if (current.length >= 3) alert("Maksimal 3 kombinasi tone.");
             else aiState.setSelectedTones([...current, toneId]);
+        }
+    };
+
+    // Toggle Related Pillar ID
+    const toggleRelatedPillar = (id: number) => {
+        const current = form.related_pillars || [];
+        if (current.includes(id)) {
+            setForm((p: any) => ({ ...p, related_pillars: current.filter((pid: number) => pid !== id) }));
+        } else {
+            setForm((p: any) => ({ ...p, related_pillars: [...current, id] }));
         }
     };
 
@@ -155,6 +165,43 @@ export const EditorPanel = ({
                         setForm((p:any) => ({...p, type: t, pillar_id: t === 'pillar' ? 0 : p.pillar_id}));
                     }} 
                 />
+
+                {/* 1.5 INTER-PILLAR LINKING (New Feature) */}
+                {form.type === 'pillar' && (
+                    <div className="bg-yellow-500/5 p-3 rounded-lg border border-yellow-500/20">
+                        <label className="text-[9px] text-yellow-500 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
+                            <Share2 size={10} /> Koneksi Antar Pilar (Content Web)
+                        </label>
+                        <p className="text-[9px] text-gray-500 mb-2 leading-relaxed">
+                            Hubungkan pilar ini dengan pilar lain untuk memperkuat struktur SEO.
+                        </p>
+                        <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                            {availablePillars
+                                .filter(p => p.id !== form.id) // Exclude self
+                                .map(p => {
+                                    const isLinked = (form.related_pillars || []).includes(p.id);
+                                    return (
+                                        <button 
+                                            key={p.id}
+                                            onClick={() => toggleRelatedPillar(p.id)}
+                                            className={`w-full text-left text-[10px] px-2 py-1.5 rounded flex items-center justify-between border transition-all ${
+                                                isLinked 
+                                                ? 'bg-yellow-500/20 text-white border-yellow-500/50' 
+                                                : 'bg-black/20 text-gray-400 border-transparent hover:bg-white/5'
+                                            }`}
+                                        >
+                                            <span className="truncate">{p.title}</span>
+                                            {isLinked && <CheckCircle2 size={10} className="text-yellow-500 shrink-0"/>}
+                                        </button>
+                                    );
+                                })
+                            }
+                            {availablePillars.filter(p => p.id !== form.id).length === 0 && (
+                                <p className="text-[9px] text-gray-500 italic">Belum ada artikel pilar lain.</p>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* 2. PILLAR LINK (If Cluster) */}
                 {form.type === 'cluster' && (

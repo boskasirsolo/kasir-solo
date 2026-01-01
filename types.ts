@@ -27,6 +27,8 @@ export interface Article {
   pillar_id?: number; 
   // NEW: Stored AI suggestions for pillar pages
   cluster_ideas?: string[]; 
+  // NEW: Manual links to other Pillar Pages (Inter-linking)
+  related_pillars?: number[];
 }
 
 export interface GalleryItem {
