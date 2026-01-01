@@ -225,7 +225,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     });
     const [activePersonaId, setActivePersonaId] = useState<string>('personal');
     const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
-    const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']); // Default tone changed to Gritty
+    const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']); 
 
     useEffect(() => { try { localStorage.setItem('mks_personas', JSON.stringify(personas)); } catch (e) {} }, [personas]);
 
@@ -283,6 +283,11 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
 
     const saveArticle = async () => {
         if (!form.title) return alert("Judul wajib diisi.");
+        // VALIDATION FOR CLUSTER
+        if (form.type === 'cluster' && (!form.pillar_id || form.pillar_id === 0)) {
+            return alert("Peringatan: Artikel tipe 'Cluster' WAJIB memilih Pillar Page induknya! Silakan set di panel Konfigurasi.");
+        }
+
         aiLogic.setLoading(p => ({ ...p, uploading: true }));
         try {
             let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/800';
@@ -342,9 +347,39 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     };
 
     const runResearch = async () => { try { await aiLogic.analyzeMarket(); setAiStep(1); } catch(e: any) { alert(e.message); } };
+    
+    // REVISED: Direct state update without resetForm dependency to avoid batching issues
     const runClusterResearch = async (pillar: Article) => { 
-        try { resetForm(); setForm(p => ({...p, type: 'cluster', pillar_id: pillar.id, category: pillar.category})); await aiLogic.generateClusterIdeas(pillar); setAiStep(1); } catch(e: any) { alert(e.message); } 
+        try { 
+            // Manual Reset + Set Initial State for Cluster
+            setForm({
+                id: null, 
+                title: '', 
+                excerpt: '', 
+                content: '', 
+                category: pillar.category, // Inherit Category
+                author: activePersona.name, 
+                authorAvatar: activePersona.avatar || '', 
+                uploadAuthorFile: null, 
+                readTime: '5 min read', 
+                imagePreview: '', 
+                uploadFile: null, 
+                status: 'draft', 
+                scheduled_for: '', 
+                type: 'cluster', 
+                pillar_id: pillar.id, // Explicitly Set Pillar Link
+                cluster_ideas: [], 
+                scheduleStart: ''
+            });
+            
+            // Set AI Step to Keywords Selection
+            setAiStep(1); 
+            
+            // Generate Ideas
+            await aiLogic.generateClusterIdeas(pillar); 
+        } catch(e: any) { alert(e.message); } 
     };
+
     const selectTopic = (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); };
     const runWrite = async () => { 
         try { 
