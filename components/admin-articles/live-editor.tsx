@@ -199,31 +199,37 @@ export const LiveEditor = ({
             {blocks.map((block, index) => (
                 <div 
                     key={block.id} 
-                    className="relative group/block"
+                    className="relative group/block pl-16 pr-4 py-2" // Added Left Padding for Gutter
                     onMouseEnter={() => setHoverIndex(index)}
                     onMouseLeave={() => setHoverIndex(null)}
                 >
-                    {/* Controls (Appear on Hover) */}
-                    <div className="absolute -left-10 top-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover/block:opacity-100 transition-opacity z-20">
-                        <button onClick={() => moveBlock(index, -1)} className="p-1 hover:text-brand-orange text-gray-600"><MoveUp size={12}/></button>
-                        <div className="cursor-grab active:cursor-grabbing text-gray-700"><GripVertical size={12}/></div>
-                        <button onClick={() => moveBlock(index, 1)} className="p-1 hover:text-brand-orange text-gray-600"><MoveDown size={12}/></button>
-                        <button onClick={() => removeBlock(index)} className="p-1 hover:text-red-500 text-gray-600 mt-2"><Trash2 size={12}/></button>
+                    {/* Controls (HORIZONTAL PILL - TOP ALIGNED) */}
+                    <div className="absolute left-2 top-2 flex flex-row gap-1 opacity-0 group-hover/block:opacity-100 transition-opacity z-20 bg-brand-dark/90 border border-white/10 rounded-lg p-1 shadow-lg items-center backdrop-blur-md">
+                        <button onClick={() => moveBlock(index, -1)} className="p-1 hover:text-brand-orange text-gray-400 hover:bg-white/5 rounded transition-colors" title="Geser Atas">
+                            <MoveUp size={14}/>
+                        </button>
+                        <button onClick={() => moveBlock(index, 1)} className="p-1 hover:text-brand-orange text-gray-400 hover:bg-white/5 rounded transition-colors" title="Geser Bawah">
+                            <MoveDown size={14}/>
+                        </button>
+                        <div className="w-px h-3 bg-white/10 mx-0.5"></div>
+                        <button onClick={() => removeBlock(index)} className="p-1 hover:text-red-500 text-gray-400 hover:bg-red-500/10 rounded transition-colors" title="Hapus Blok">
+                            <Trash2 size={14}/>
+                        </button>
                     </div>
 
                     {/* Block Content */}
-                    <div className="px-2 py-1">
+                    <div className="w-full">
                         {block.type === 'text' && (
                             <AutoResizeTextArea
                                 value={block.content}
                                 onChange={(e: any) => updateBlockContent(block.id, e.target.value)}
-                                placeholder="Ketik '/' untuk perintah atau mulai menulis..."
+                                placeholder="Mulai menulis..."
                                 className={`w-full bg-transparent outline-none resize-none transition-all ${getTextStyle(block.content)}`}
                             />
                         )}
 
                         {block.type === 'image' && (
-                            <div className="relative group/media my-4">
+                            <div className="relative group/media my-2">
                                 <img src={block.content} alt="Content" className="w-full rounded-xl border border-white/10" />
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/media:opacity-100 flex items-center justify-center transition-opacity">
                                     <p className="text-xs text-white font-bold">Image Block</p>
@@ -232,7 +238,7 @@ export const LiveEditor = ({
                         )}
 
                         {block.type === 'video' && (
-                            <div className="relative my-4 aspect-video bg-black rounded-xl border border-white/10 overflow-hidden">
+                            <div className="relative my-2 aspect-video bg-black rounded-xl border border-white/10 overflow-hidden">
                                 <iframe src={block.content} className="w-full h-full" title="Video" frameBorder="0" allowFullScreen></iframe>
                                 <div className="absolute inset-0 bg-transparent pointer-events-none border-2 border-transparent group-hover/block:border-brand-orange/30 rounded-xl transition-colors"></div>
                             </div>
@@ -266,11 +272,11 @@ export const LiveEditor = ({
                 </div>
             ))}
 
-            {/* Empty State / Start (Only show if not empty to prevent double buttons) */}
+            {/* Empty State / Start */}
             {!isEmpty && (
-                <div className="text-center py-10 opacity-0 hover:opacity-100 transition-opacity">
-                    <button onClick={() => addBlock(blocks.length - 1, 'text')} className="text-gray-500 hover:text-brand-orange flex items-center justify-center gap-2 mx-auto">
-                        <Plus size={20}/> Tambah Blok Baru
+                <div className="text-center py-6 opacity-0 hover:opacity-100 transition-opacity">
+                    <button onClick={() => addBlock(blocks.length - 1, 'text')} className="text-gray-500 hover:text-brand-orange flex items-center justify-center gap-2 mx-auto text-xs font-bold uppercase tracking-wider border border-dashed border-gray-700 px-4 py-2 rounded-full hover:border-brand-orange transition-all">
+                        <Plus size={14}/> Tambah Paragraf Baru
                     </button>
                 </div>
             )}
