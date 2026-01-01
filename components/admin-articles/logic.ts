@@ -463,7 +463,19 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             }
 
             const { content, meta } = await aiLogic.generateContent(form.title, selectedTones, form.type, form.author, pillarContext); 
-            setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: meta.category, readTime: meta.readTime })); setAiStep(2); 
+            
+            // FIX: Only overwrite category if it's empty or the user hasn't set one yet.
+            // This prevents the AI from overwriting manual category selections.
+            setForm(p => ({ 
+                ...p, 
+                content, 
+                excerpt: meta.excerpt, 
+                // Prioritize existing user selection if available and not empty
+                category: p.category && p.category.length > 2 ? p.category : meta.category, 
+                readTime: meta.readTime 
+            })); 
+            
+            setAiStep(2); 
         } catch(e: any) { alert(e.message); } 
     };
     const runImage = async () => { 
