@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon, Wand2, Layers } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, callGeminiWithRotation } from '../utils';
+import { supabase, CONFIG, callGeminiWithRotation, slugify, renameFile } from '../utils';
 
 const ITEMS_PER_PAGE = 8; 
 
@@ -229,8 +229,12 @@ const useIntegratedGalleryManager = (
             // 1. Upload Cover Image (If Changed)
             let finalCoverUrl = form.imagePreview;
             if (form.uploadFile) {
+                // SEO OPTIMIZATION: Cover
+                const seoName = `${slugify(form.title)}-cover-project`;
+                const fileToUpload = renameFile(form.uploadFile, seoName);
+
                 const formData = new FormData();
-                formData.append('file', form.uploadFile);
+                formData.append('file', fileToUpload);
                 formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
@@ -240,9 +244,13 @@ const useIntegratedGalleryManager = (
             // 2. Upload New Extra Images
             const newUploadedUrls: string[] = [];
             if (form.newGalleryFiles.length > 0) {
-                const uploadPromises = form.newGalleryFiles.map(async (file) => {
+                const uploadPromises = form.newGalleryFiles.map(async (file, idx) => {
+                    // SEO OPTIMIZATION: Extra Images
+                    const seoName = `${slugify(form.title)}-gallery-${idx+1}`;
+                    const fileToUpload = renameFile(file, seoName);
+
                     const formData = new FormData();
-                    formData.append('file', file);
+                    formData.append('file', fileToUpload);
                     formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
                     const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                     const data = await res.json();
@@ -285,12 +293,17 @@ const useIntegratedGalleryManager = (
                 if (supabase) await supabase.from('gallery').insert([dbData]);
             }
 
-            // 5. Handle Testimonial Save (Same as before)
+            // 5. Handle Testimonial Save (Linked)
             if (testiForm.hasTestimonial) {
                 let finalTestiImage = testiForm.imagePreview;
                 if (testiForm.uploadFile) {
+                    // SEO OPTIMIZATION: Testimonial Avatar
+                    const clientSlug = slugify(testiForm.client_name || 'klien');
+                    const seoName = `${clientSlug}-testimoni-avatar`;
+                    const fileToUpload = renameFile(testiForm.uploadFile, seoName);
+
                     const formData = new FormData();
-                    formData.append('file', testiForm.uploadFile);
+                    formData.append('file', fileToUpload);
                     formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
                     const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                     const data = await res.json();
@@ -345,9 +358,9 @@ const useIntegratedGalleryManager = (
         generateSpecificPoint, 
         handleTypeChange,
         getCurrentType,
-        handleGalleryFilesSelect, // NEW
-        removeExistingGalleryImage, // NEW
-        removeNewGalleryFile, // NEW
+        handleGalleryFilesSelect, 
+        removeExistingGalleryImage, 
+        removeNewGalleryFile,
         listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm }
     };
 };

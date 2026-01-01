@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save, Sparkles, TrendingUp, Image as ImageIcon, UploadCloud, Mail, BarChart, Globe } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
-import { supabase, callGeminiWithRotation, CONFIG } from '../utils';
+import { supabase, callGeminiWithRotation, CONFIG, renameFile } from '../utils';
 
 export const AdminSettings = ({
   config,
@@ -29,8 +29,12 @@ export const AdminSettings = ({
 
           // 1. Handle Upload if file selected
           if (aboutImageFile && CONFIG.CLOUDINARY_CLOUD_NAME) {
+              // SEO OPTIMIZATION: About Page Image
+              const seoName = 'kantor-mesin-kasir-solo-hq-about';
+              const fileToUpload = renameFile(aboutImageFile, seoName);
+
               const formData = new FormData();
-              formData.append('file', aboutImageFile);
+              formData.append('file', fileToUpload);
               formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
               const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
               const data = await res.json();

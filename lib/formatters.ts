@@ -29,3 +29,15 @@ export const slugify = (text: string) => {
     .replace(/[^\w\-]+/g, '') 
     .replace(/\-\-+/g, '-');  
 };
+
+// NEW: Rename File Object
+export const renameFile = (originalFile: File, newName: string): File => {
+  const ext = originalFile.name.split('.').pop() || 'jpg';
+  // Ensure the new name has an extension
+  const finalName = newName.endsWith(`.${ext}`) ? newName : `${newName}.${ext}`;
+  
+  return new File([originalFile], finalName, {
+    type: originalFile.type,
+    lastModified: originalFile.lastModified,
+  });
+};

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw, Filter } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, formatRupiah, callGeminiWithRotation, formatNumberInput, cleanNumberInput } from '../utils';
+import { supabase, CONFIG, formatRupiah, callGeminiWithRotation, formatNumberInput, cleanNumberInput, slugify, renameFile } from '../utils';
 
 const ITEMS_PER_PAGE = 8; 
 
@@ -128,17 +128,18 @@ const useProductManager = (
             const prompt = `${cleanName} ${form.category} modern point of sale hardware machine, sleek, white background, high quality, 8k, realistic product photography`;
             const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=800&model=flux&nologo=true&seed=${seed}`;
             
-            const img = new Image();
-            img.src = url;
-            img.onload = () => {
-                setForm(p => ({...p, imagePreview: url, uploadFile: null}));
-                setLoadingState(p => ({...p, generatingImage: false}));
-            };
-            img.onerror = () => {
-                alert("Gagal generate gambar. Coba lagi.");
-                setLoadingState(p => ({...p, generatingImage: false}));
-            }
-        } catch(e) { setLoadingState(p => ({...p, generatingImage: false})); }
+            // Create a SEO friendly file from AI Blob
+            const res = await fetch(url);
+            const blob = await res.blob();
+            const fileName = `${slugify(form.name)}-${slugify(form.category)}-pos.jpg`;
+            const file = new File([blob], fileName, { type: "image/jpeg" });
+
+            setForm(p => ({...p, imagePreview: url, uploadFile: file}));
+            setLoadingState(p => ({...p, generatingImage: false}));
+        } catch(e) { 
+            console.error(e);
+            setLoadingState(p => ({...p, generatingImage: false})); 
+        }
     };
 
     const handleSubmit = async () => {
@@ -151,8 +152,12 @@ const useProductManager = (
             let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/400';
 
             if (form.uploadFile) {
+                // SEO OPTIMIZATION: Rename file based on Product Name before upload
+                const seoName = `${slugify(form.name)}-mesin-kasir`;
+                const fileToUpload = renameFile(form.uploadFile, seoName);
+
                 const formData = new FormData();
-                formData.append('file', form.uploadFile);
+                formData.append('file', fileToUpload);
                 formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();

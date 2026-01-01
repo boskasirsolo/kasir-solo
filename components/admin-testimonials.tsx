@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Quote, Star, UploadCloud } from 'lucide-react';
 import { Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG } from '../utils';
+import { supabase, CONFIG, slugify, renameFile } from '../utils';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -63,8 +63,12 @@ const useTestimonialManager = (
             let finalImageUrl = form.imagePreview;
 
             if (form.uploadFile) {
+                // SEO OPTIMIZATION: Rename file
+                const seoName = `${slugify(form.client_name)}-review-klien`;
+                const fileToUpload = renameFile(form.uploadFile, seoName);
+
                 const formData = new FormData();
-                formData.append('file', form.uploadFile);
+                formData.append('file', fileToUpload);
                 formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();

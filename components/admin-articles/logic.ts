@@ -1,7 +1,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Article, GalleryItem } from '../../types';
-import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration, slugify } from '../../utils';
+import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration, slugify, renameFile } from '../../utils';
 import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
 
 // --- FOUNDER STORY VARIATIONS (ANEKDOT DATABASE) ---
@@ -459,19 +459,46 @@ export const useAIGenerator = () => {
         return { ...metaData, readTime: `${readTimeMin} min read` };
     };
 
-    const getAIImageUrl = async (prompt: string, style: string) => {
+    // --- REVISED AI IMAGE GENERATOR WITH SEO OPTIMIZATION ---
+    const getAIImageUrl = async (title: string, category: string, style: string) => {
         const seed = Math.floor(Math.random() * 9999999);
-        const enhancedPrompt = `editorial photography of ${prompt}, ${style} style, modern tech context, indonesia, 8k, detailed, no text`;
+        
+        // 1. TIGHT CONTEXTUAL PROMPT ENGINEERING
+        let visualContext = "modern minimalist business setting";
+        const lowerCat = (category || "").toLowerCase();
+        
+        if (lowerCat.includes('hardware') || lowerCat.includes('pos') || lowerCat.includes('kasir')) {
+            visualContext = "close up shot of modern white point of sale cashier machine on wooden counter, coffee shop background, depth of field, sleek technology product photography, clean minimalistic design";
+        } else if (lowerCat.includes('software') || lowerCat.includes('app') || lowerCat.includes('digital') || lowerCat.includes('toko online')) {
+            visualContext = "close up over shoulder shot of person using tablet with colorful business analytics dashboard, modern office environment, smart business concept, data visualization on screen, soft bokeh background";
+        } else if (lowerCat.includes('tips') || lowerCat.includes('bisnis') || lowerCat.includes('manajemen') || lowerCat.includes('keuangan')) {
+            visualContext = "successful indonesian small business owner smiling in a modern retail store, warm lighting, cinematic portrait, authentic emotion, professional attire, blurry store background";
+        } else if (lowerCat.includes('franchise') || lowerCat.includes('kuliner')) {
+            visualContext = "busy modern coffee shop counter, barista serving customer, point of sale machine in foreground, warm ambient lighting, bustling atmosphere, hyperrealistic";
+        }
+
+        const enhancedPrompt = `editorial photography of ${title}, ${visualContext}, ${style} style, high resolution, 8k, soft lighting, indonesia context, no text overlay, photorealistic, cinematic composition`;
         const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
         
-        if (!supabase) return pollUrl;
+        if (!supabase) return { url: pollUrl, file: null };
+        
         try {
             const res = await fetch(pollUrl);
             const blob = await res.blob();
-            const file = new File([blob], `ai_gen_${seed}.jpg`, { type: "image/jpeg" });
-            const { url } = await uploadToSupabase(file, 'ai-temp');
-            return url;
-        } catch(e) { return pollUrl; }
+            
+            // 2. SEO FILENAME OPTIMIZATION (Before Cloudinary)
+            // Create a file object with a slugified, keyword-rich filename
+            const cleanFileName = `${slugify(title)}-${slugify(category)}-2025.jpg`;
+            const file = new File([blob], cleanFileName, { type: "image/jpeg" });
+            
+            // Return Local Object URL for instant preview + The File for uploading
+            const localUrl = URL.createObjectURL(blob);
+            
+            return { url: localUrl, file: file };
+        } catch(e) { 
+            console.error("AI Image Gen Error", e);
+            return { url: pollUrl, file: null }; 
+        }
     };
 
     return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateContent, getAIImageUrl, generateClusterIdeas };
@@ -544,8 +571,13 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         aiLogic.setLoading(p => ({ ...p, uploading: true, progressMessage: 'Uploading Avatar...' }));
         try {
             let avatarUrl = URL.createObjectURL(file);
+            
+            // SEO OPTIMIZATION: Rename avatar file
+            const seoName = `${slugify(activePersona.name)}-author-avatar`;
+            const fileToUpload = renameFile(file, seoName);
+
             if (supabase) {
-                const { url } = await uploadToSupabase(file, 'avatars');
+                const { url } = await uploadToSupabase(fileToUpload, 'avatars');
                 avatarUrl = url;
             }
             setPersonas(prev => prev.map(p => p.id === activePersonaId ? { ...p, avatar: avatarUrl } : p));
@@ -566,10 +598,19 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             let supabasePath = '';
             let fileToMigrate: File | null = form.uploadFile;
 
-            if (form.uploadFile && supabase) {
-                const { url, path } = await uploadToSupabase(form.uploadFile);
-                finalImageUrl = url;
-                supabasePath = path;
+            // UPLOAD LOGIC: If a file exists (Manual or AI Generated with SEO Filename)
+            if (form.uploadFile) {
+                // Double check rename if it's a manual upload (not from AI generation flow which already handles it)
+                // AI generated files already have clean names. Manual uploads need renaming.
+                // We'll just rename it again to be safe based on the current Title.
+                const seoName = `${slugify(form.title)}-artikel-cover`;
+                fileToMigrate = renameFile(form.uploadFile, seoName);
+
+                if (supabase) {
+                    const { url, path } = await uploadToSupabase(fileToMigrate);
+                    finalImageUrl = url;
+                    supabasePath = path;
+                }
             }
 
             const now = new Date().toISOString();
@@ -602,6 +643,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 }
             }
 
+            // MIGRATION: Send the file to Cloudinary in background
+            // This ensures the SEO-named file is what ends up in Cloudinary
             if (supabasePath && fileToMigrate && savedId) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'articles', savedId, 'image_url')
                     .then((cloudUrl) => {
@@ -696,13 +739,21 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         } catch(e: any) { alert(e.message); } 
     };
     
+    // UPDATED RUN IMAGE HANDLER TO ACCEPT FILE
     const runImage = async () => { 
         aiLogic.setLoading(p => ({ ...p, generatingImage: true, progressMessage: 'Generating AI Image...' })); 
         try { 
             const style = activePersona.mode === 'personal' ? 'cinematic' : 'corporate'; 
-            const url = await aiLogic.getAIImageUrl(form.title, style); 
-            setForm(p => ({ ...p, imagePreview: url })); 
-        } catch(e) {} finally { aiLogic.setLoading(p => ({ ...p, generatingImage: false, progressMessage: '' })); } 
+            // Pass Category for better context
+            const { url, file } = await aiLogic.getAIImageUrl(form.title, form.category, style); 
+            
+            // Set both Preview URL and Upload File (for SEO filename upload later)
+            setForm(p => ({ ...p, imagePreview: url, uploadFile: file })); 
+        } catch(e) {
+            console.error(e);
+        } finally { 
+            aiLogic.setLoading(p => ({ ...p, generatingImage: false, progressMessage: '' })); 
+        } 
     };
 
     return {
