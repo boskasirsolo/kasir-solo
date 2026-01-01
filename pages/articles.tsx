@@ -28,18 +28,26 @@ const useArticleLogic = (articles: Article[], itemsPerPage: number = 9) => {
   // Filter Logic
   const filteredArticles = useMemo(() => {
     return articles.filter(article => {
-      // 1. Search Filter
-      const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            article.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+      // 1. Search Filter (Safe Check)
+      const titleMatch = (article.title || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const excerptMatch = (article.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = titleMatch || excerptMatch;
       
-      // 2. Category Filter
+      // 2. Category Filter (Robust Check)
       let matchesCategory = true;
+      const articleCat = (article.category || '').toLowerCase().trim();
+
       if (selectedFilter.type === 'sub') {
-        matchesCategory = article.category === selectedFilter.value;
+        // Check if the article category CONTAINS the filter (handles "Teknologi" vs "Teknologi, Tips")
+        const filterVal = selectedFilter.value.toLowerCase().trim();
+        matchesCategory = articleCat.includes(filterVal);
       } else if (selectedFilter.type === 'parent') {
         const parentGroup = CATEGORY_TREE.find(p => p.id === selectedFilter.value);
         if (parentGroup) {
-          matchesCategory = parentGroup.subCategories.includes(article.category || '');
+          // Check if article category matches ANY of the subcategories in this parent group
+          matchesCategory = parentGroup.subCategories.some(sub => 
+            articleCat.includes(sub.toLowerCase().trim())
+          );
         }
       }
 
