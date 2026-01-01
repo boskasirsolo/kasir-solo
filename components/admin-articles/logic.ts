@@ -700,24 +700,25 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const runGenerateCategory = async () => {
         if (!form.title && !form.content) return alert("Mohon isi Judul atau Konten terlebih dahulu sebagai konteks.");
         
-        aiLogic.setLoading(p => ({ ...p, researching: true, progressMessage: 'Analyzing Category...' }));
+        aiLogic.setLoading(p => ({ ...p, researching: true, progressMessage: 'Brainstorming 5 Categories...' }));
         
         try {
             const contextText = form.content.length > 50 ? form.content.substring(0, 500) : form.title;
             const prompt = `
             Role: SEO Specialist for "Kasir Solo".
-            Task: Analyze the context below and suggest relevant Article Categories.
+            Task: Analyze the context below and generate Article Categories/Tags.
             Context: "${contextText}"
             
             Constraint:
-            - Suggest MAXIMUM 3 categories.
-            - Format: Comma-separated string (e.g., "Bisnis Tips, Manajemen Stok").
+            - Generate EXACTLY 5 categories.
+            - Strategy: Mix broad topics (e.g., "Bisnis Tips") with specific niche tags (e.g., "Manajemen Stok Gudang").
+            - You CAN create NEW categories not in the list if they are relevant.
+            - Format: Comma-separated string (e.g., "Bisnis, Keuangan, Tips, Kasir, UMKM").
             - Language: Indonesian.
-            - Short (1-2 words per category).
+            - Short (1-3 words per category).
             - Use Title Case.
-            - Prefer existing categories if relevant: ${ARTICLE_CATEGORIES.join(', ')}.
             
-            Output: JUST the text categories.
+            Output: JUST the comma-separated text.
             `;
             
             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
@@ -728,9 +729,14 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                     const currentCats = prev.category ? prev.category.split(',').map((s: any) => s.trim()).filter(Boolean) : [];
                     const newCats = newCatsString.split(',').map(s => s.trim());
                     
-                    // Merge and unique
-                    const mergedCats = Array.from(new Set([...currentCats, ...newCats]));
-                    return { ...prev, category: mergedCats.join(', ') };
+                    // Merge and unique (Case insensitive check, preserve original casing)
+                    const uniqueCats = [...currentCats];
+                    newCats.forEach(newC => {
+                        const exists = uniqueCats.some(existing => existing.toLowerCase() === newC.toLowerCase());
+                        if (!exists) uniqueCats.push(newC);
+                    });
+                    
+                    return { ...prev, category: uniqueCats.join(', ') };
                 });
             }
         } catch (e: any) {
