@@ -4,55 +4,33 @@ import { Article } from '../../types';
 import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration } from '../../utils';
 import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
 
+// --- FOUNDER STORY VARIATIONS (ANEKDOT) ---
+// AI akan memilih salah satu dari ini secara acak untuk disuntikkan ke artikel
+const FOUNDER_ANECDOTES = [
+    `ANGLE 1 (THE SHOCK): "Pagi itu di 2022, gue bangun dan cek HP. Notif masuk: domain kantor 'expired' dan sudah dibeli orang lain seharga puluhan juta. Gue lemes. Itu bukan cuma alamat web, itu identitas kami selama 7 tahun. Hilang dalam sekejap karena keteledoran administrasi."`,
+    `ANGLE 2 (THE RESTART): "Lo pernah main game, udah level 99, terus save file-nya corrupt? Itu rasanya PT Mesin Kasir Solo di tahun 2022. Kami harus mulai lagi dari Level 1. Tapi bedanya, kali ini kami punya 'Cheat Code': Pengalaman."`,
+    `ANGLE 3 (THE EMPATHY): "Kenapa gue ngotot bikin SIBOS? Karena gue tau rasanya bangkrut gara-gara data berantakan. Gue nggak mau klien gue ngerasain hal yang sama. Gue jualan sistem ini bukan cuma cari untung, tapi cari temen seperjuangan biar nggak jatuh di lubang yang sama."`,
+    `ANGLE 4 (THE GRIT): "Orang bilang bisnis teknologi itu glamor. Bullsh*t. 2015 gue jalan kaki door-to-door nawarin kasir ditolak satpam. 2022 gue kehilangan aset digital. Tapi gue masih di sini. Kenapa? Karena visi gue belum kelar."`,
+    `ANGLE 5 (THE TECHNICAL FAILURE): "Server down, data klien sempat freeze, dan gue dimaki-maki customer. Itu momen paling memalukan sebagai vendor IT. Tapi dari situ SIBOS lahir dengan arsitektur Hybrid. Kami belajar dari darah dan keringat sendiri."`
+];
+
 // --- BRAND CONTEXT KNOWLEDGE BASE ---
 const BRAND_CONTEXT = `
 [IDENTITAS PERUSAHAAN]
 Nama: PT Mesin Kasir Solo.
-Sejarah: Berdiri 2015, sempat "mati suri" & kehilangan aset digital pada 2022 akibat pandemi, kini bangkit kembali (Reborn 2025).
+Sejarah: Berdiri 2015, sempat "mati suri" & kehilangan aset digital pada 2022, kini bangkit kembali (Reborn 2025).
 Karakter: Resilien (Tahan Banting), Jujur, Solutif, dan Berorientasi Komunitas.
-Halaman About Reference: Kisah kegagalan adalah kekuatan kami. Kami mengerti perjuangan UMKM karena kami pernah di posisi terendah.
 
-[PRODUK 1: SIBOS - Smart Integrated Back Office System]
-- Definisi: Platform ekosistem ERP komplit, bukan sekadar POS biasa.
-- Modul Utama: POS, CRM, IRM, HRM, Accounting, Omnichannel, dan AI.
-- Platform: Android, iOS, Windows, Linux, dan Web-base.
-- Target Bisnis: 
-  1. Kuliner (Resto, F&B, Cafe).
-  2. Ritel (Supermarket, Minimarket, Swalayan, Distributor, Grosir).
-  3. Jasa, Bengkel, Fashion, Elektronik, Apotek/Farmasi.
-  4. Industri Berat (Pabrik, Konstruksi, Pertambangan).
-- Fitur "Killer" (Keunggulan Mutlak):
-  1. **Multi Bisnis dalam 1 Akun**: Satu akun bisa handle bisnis Kuliner DAN Ritel sekaligus dengan flow berbeda.
-  2. **Multi Outlet**: Mengelola banyak cabang tanpa batas.
-  3. **Fleksibilitas Produk**: Multi varian, multi harga, multi satuan, multi ukuran, dan supports Transaksi Desimal.
-  4. **Manufaktur/Produksi**: Hitung bahan baku (recipe/ingredients) dan penggabungan produk (bundling).
-  5. **Database Server**: User bisa impor data produk pabrikan langsung dari server (tidak perlu input manual satu-satu).
-  6. **Hardware Support**: Timbangan Digital, Printer Barcode, KDS (Kitchen Display System), Layar Pelanggan (CDS), Layar Dapur, Sistem Antrian.
-  7. **Integrasi**: Website Usaha, WhatsApp API, Payment Gateway.
-  8. **Omnichannel**: Terhubung ke Medsos, Marketplace, dan Website.
-  9. **Google Business Profile Integration**: Sinkronisasi produk dan jam operasional langsung ke Profil Bisnis Google (GMB/Maps).
-  10. **Hybrid Mode**: Bisa jalan Offline dan Online.
-- **STATUS SAAT INI: WAITING LIST SUDAH DIBUKA**.
-- **Akses**: Calon pengguna dapat mendaftar waiting list di website resmi (sibos.id) yang bisa diakses melalui halaman "Innovation" di website ini.
-- Model Bisnis: Freemium (Standar Premium Gratis), Premium, Enterprise, Dedicated.
-- Konsep Komunitas: Saham dibatasi max 5%, sistem Partner Piramida Terbalik (pemerataan income).
+[PRODUK]
+1. SIBOS (ERP System): Multi-bisnis, Hybrid, Waiting List Open.
+2. QALAM (Edu App): Manajemen TPA, Subsidi Silang, Waiting List Open.
+3. Hardware: POS, Printer, Kiosk.
 
-[PRODUK 2: QALAM]
-- Definisi: Aplikasi Manajemen TPA/Pendidikan Islam Standar Premium.
-- Biaya: GRATIS untuk lembaga <200 santri.
-- Model Bisnis: Subsidi Silang (Versi Enterprise/Berbayar mensubsidi versi Gratis).
-- Fitur Unggulan: 
-  1. Integrasi Civitas (Guru, Kyai, Staf), Wali, dan Donatur.
-  2. Transparansi Keuangan.
-  3. Integrasi AI (Laporan perkembangan santri otomatis, Konsultasi psikologis wali dengan Asisten Qalam).
-  4. Payment Gateway & Whatsapp API.
-- **STATUS SAAT INI: WAITING LIST SUDAH DIBUKA**.
-- **Akses**: Calon pengguna dapat mendaftar waiting list di website resmi (qalam.id) yang bisa diakses melalui halaman "Innovation" di website ini.
-- **ATURAN NARASI PENTING**: JANGAN PERNAH menyebutkan bahwa QALAM disubsidi dari keuntungan SIBOS atau penjualan kasir. QALAM adalah entitas mandiri yang menerapkan subsidi silang internal (Pengguna Qalam Enterprise mensubsidi Pengguna Qalam Gratis).
-
-[STRATEGI KONTEN]
-Setiap artikel harus melakukan "Soft Selling" yang elegan. Posisikan SIBOS atau QALAM sebagai solusi masa depan. 
-**Call To Action (CTA):** Arahkan pembaca untuk bergabung dalam Waiting List sekarang juga melalui halaman Innovation agar tidak ketinggalan akses Freemium.
+[GAYA PENULISAN - "ANTI-TEMPLATE"]
+- JANGAN gunakan kalimat pembuka klise seperti "Di era digital ini..." atau "Pada kesempatan kali ini...". Langsung masuk ke masalah (Hook).
+- Gunakan analogi sehari-hari yang relatable.
+- Variasikan panjang kalimat. Ada yang pendek tegas. Ada yang panjang menjelaskan.
+- Jika menggunakan POV Founder (Amin Maghfuri), gunakan kata ganti "Gue/Saya" yang konsisten, bahasa agak 'street-smart', berani, dan emosional.
 `;
 
 // --- SUB-HOOK: FILTER & PAGINATION ---
@@ -82,7 +60,6 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
         });
     }, [articles, searchTerm, filterType]);
 
-    // Sorting: Newest First based on created_at
     const sortedList = useMemo(() => {
         return [...filteredList].sort((a, b) => {
             const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -115,148 +92,68 @@ export const useAIGenerator = () => {
         imageStyle: 'cinematic', narrative: 'narsis'
     });
 
-    // STEP 1: Research Specific Keywords directly (Merged Step)
     const analyzeMarket = async () => {
         setLoading(p => ({ ...p, researching: true }));
         try {
             const prompt = `
             Act as a Senior SEO Strategist for the Indonesian Market.
-            Industry: Retail Technology, Point of Sale (POS), UMKM Business, Digitalization, FnB Management.
-            
+            Industry: Retail Technology, Point of Sale (POS), UMKM Business.
             Task: Identify 15 high-potential **Specific Long-tail Article Titles** (Keywords) for 2025.
-            Criteria: 
-            1. High Search Volume.
-            2. Low to Medium Competition (Easy to rank).
-            3. Solving real business problems.
-            
             Strict Output Format: JSON Array of Objects.
-            Example: [{"keyword": "Cara Mencegah Kasir Curang di Cafe", "volume": "5.400/mo", "competition": "Low", "type": "Problem Solving"}]
-            
-            Sort the list by: Highest Volume first, then Lowest Competition.
+            Example: [{"keyword": "Cara Mencegah Kasir Curang", "volume": "5.400/mo", "competition": "Low", "type": "Problem Solving"}]
             `;
-            
-            const result = await callGeminiWithRotation({ 
-                model: 'gemini-3-flash-preview', 
-                contents: prompt, 
-                config: { responseMimeType: "application/json" } 
-            });
-            
-            const text = result.text || '[]';
-            const data = JSON.parse(text);
-            
-            if (Array.isArray(data) && data.length > 0) {
-                setKeywords(data); // Directly set keywords
-            } else {
-                throw new Error("AI tidak menghasilkan data valid.");
-            }
-        } catch (e) {
-            console.error("Market Analysis Error", e);
-            throw e; 
-        } finally {
-            setLoading(p => ({ ...p, researching: false }));
-        }
+            const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
+            const data = JSON.parse(result.text || '[]');
+            if (Array.isArray(data)) setKeywords(data);
+        } catch (e) { console.error(e); } 
+        finally { setLoading(p => ({ ...p, researching: false })); }
     };
 
-    // NEW: Generate Cluster Ideas based on Pillar
     const generateClusterIdeas = async (pillar: Article) => {
         setLoading(p => ({ ...p, researching: true }));
         try {
-            const prompt = `
-            Context: We have a PILLAR ARTICLE titled "${pillar.title}".
-            Excerpt: "${pillar.excerpt || 'No excerpt'}".
-            
-            Task: Act as an SEO Strategist. Generate 10 **Cluster Article Titles** (Sub-topics) that support this pillar.
-            
-            Strategy:
-            1. Focus on specific long-tail keywords related to the pillar.
-            2. Address specific questions (What, Why, How).
-            3. Target different intents (Informational, Transactional).
-            
-            Strict Output Format: JSON Array of Objects.
-            Example: [{"keyword": "Judul Artikel Cluster 1", "volume": "High", "competition": "Low", "type": "Cluster"}]
-            `;
-
-            const result = await callGeminiWithRotation({
-                model: 'gemini-3-flash-preview',
-                contents: prompt,
-                config: { responseMimeType: "application/json" }
-            });
-
-            const text = result.text || '[]';
-            const data = JSON.parse(text);
-
-            if (Array.isArray(data) && data.length > 0) {
-                setKeywords(data);
-            } else {
-                throw new Error("AI tidak menghasilkan data cluster valid.");
-            }
-        } catch (e) {
-            console.error("Cluster Generation Error", e);
-            throw e;
-        } finally {
-            setLoading(p => ({ ...p, researching: false }));
-        }
+            const prompt = `Context: Pillar "${pillar.title}". Task: Generate 10 Cluster Titles. Format: JSON Array.`;
+            const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
+            const data = JSON.parse(result.text || '[]');
+            if (Array.isArray(data)) setKeywords(data);
+        } catch (e) { console.error(e); } 
+        finally { setLoading(p => ({ ...p, researching: false })); }
     };
 
-    // STEP 2: Generate Content
     const generateContent = async (title: string, tones: string[], type: string, authorName: string) => {
         setLoading(p => ({ ...p, generatingText: true }));
         try {
-            // --- DETECT POV BASED ON AUTHOR ---
-            // STRICT RULE: If Amin Maghfuri, use 'gue'.
             const isAmin = authorName === 'Amin Maghfuri';
+            // Pick a random anecdote to inject flavor
+            const selectedAnecdote = FOUNDER_ANECDOTES[Math.floor(Math.random() * FOUNDER_ANECDOTES.length)];
+            
             const pov = isAmin 
-                ? "First Person Casual ('Gue'). You are Amin Maghfuri, the founder. Use 'Gue' to refer to yourself. Be gritty, real, street-smart. Share personal failures openly." 
+                ? `First Person Casual ('Gue'). You are Amin Maghfuri. Use 'Gue'. Be gritty, raw. Include this specific story element naturally if relevant: ${selectedAnecdote}` 
                 : "Professional ('Kami'). Trustworthy, Expert, Corporate Tone.";
             
-            // --- COMPILE TONE DESCRIPTION ---
             const toneDescriptions = tones.map(t => {
                 const def = NARRATIVE_TONES.find(nt => nt.id === t);
                 return def ? `${def.label} (${def.desc})` : t;
             }).join(', ');
 
-            // --- LOGIKA PANJANG ARTIKEL ---
-            const isPillar = type === 'pillar';
-            const lengthInstruction = isPillar 
-                ? "EXTREME LENGTH REQUIREMENT: 4000 - 5000 WORDS. This is a Pillar Page. Must be exhaustive, covering every angle, history, future trends, and detailed guides."
-                : "LENGTH REQUIREMENT: 700 - 1000 WORDS. This is a Cluster Article. Be specific, focused, and concise.";
-
-            const structureInstruction = isPillar
-                ? "Structure: Table of Contents, Deep Dive Introduction, Multiple H2 & H3 Chapters, Case Studies, FAQ Section, Conclusion."
-                : "Structure: Direct Intro, 3-4 Key Points (H2), Conclusion.";
-
             const contentPrompt = `
-            You are a Senior Content Writer for **PT Mesin Kasir Solo**.
+            Role: Expert Copywriter for PT Mesin Kasir Solo.
+            Task: Write an Article about "${title}".
+            Brand Context: ${BRAND_CONTEXT}
             
-            [BRAND KNOWLEDGE BASE]
-            ${BRAND_CONTEXT}
-
-            [TASK]
-            Write an SEO Article about: "${title}".
+            [STYLE GUIDE]
+            POV: ${pov}
+            Tone Mix: ${toneDescriptions}.
+            Type: ${type.toUpperCase()}.
+            Length: ${type === 'pillar' ? '3000+ words (Comprehensive)' : '800-1200 words (Focused)'}.
+            Format: Markdown.
             
-            [REQUIREMENTS]
-            1. Language: Indonesian (Fluent, Engaging, Human-like).
-            2. **NARRATIVE & TONE:**
-               - **POV RULE:** ${pov} (CRITICAL: If 'Gue' is requested, NEVER use 'Saya' or 'Aku').
-               - Tone Mix: ${toneDescriptions}.
-               - Instruction: Blend these tones naturally.
-            3. Article Type: ${type.toUpperCase()}.
-            4. ${lengthInstruction}
-            5. ${structureInstruction}
-            6. **CRITICAL:** Integrate mentions of SIBOS or QALAM naturally where relevant. 
-            
-            Start writing the content directly in Markdown format.
+            **CRITICAL:** Write like a human. Avoid repetitive AI patterns. Use short sentences for impact.
             `;
             
             const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
             
-            const metaPrompt = `
-            Generate JSON Metadata for article "${title}". 
-            1. "excerpt": Meta Description (max 160 chars). Persuasive.
-            2. "category": Best fitting category based on title.
-            3. "readTime": Estimate reading time based on ${isPillar ? '4000' : '800'} words (e.g. "${isPillar ? '20 min read' : '5 min read'}").
-            Format: {"excerpt": "...", "category": "...", "readTime": "..."}
-            `;
+            const metaPrompt = `Generate JSON Metadata for "${title}". Format: {"excerpt": "...", "category": "...", "readTime": "..."}`;
             const metaRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
             const metaData = JSON.parse(metaRes.text || '{}');
 
@@ -268,145 +165,91 @@ export const useAIGenerator = () => {
 
     const getAIImageUrl = async (prompt: string, style: string) => {
         const seed = Math.floor(Math.random() * 9999999);
-        const enhancedPrompt = `editorial photography of ${prompt}, ${style} style, modern tech office context, indonesia, 8k, detailed, no text`;
+        const enhancedPrompt = `editorial photography of ${prompt}, ${style} style, modern tech context, indonesia, 8k, detailed, no text`;
         const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
         
-        // Fetch as blob to upload
-        const res = await fetch(pollUrl);
-        const blob = await res.blob();
-        
-        // Use Supabase for temporary hosting (Hybrid Strategy)
         if (!supabase) return pollUrl;
-
         try {
+            const res = await fetch(pollUrl);
+            const blob = await res.blob();
             const file = new File([blob], `ai_gen_${seed}.jpg`, { type: "image/jpeg" });
             const { url } = await uploadToSupabase(file, 'ai-temp');
             return url;
-        } catch(e) {
-            console.error("Supabase upload failed, using direct link", e);
-            return pollUrl;
-        }
+        } catch(e) { return pollUrl; }
     };
 
     return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateContent, getAIImageUrl, generateClusterIdeas };
 };
 
-// --- MAIN HOOK: ARTICLE MANAGER ---
+// --- MAIN HOOK ---
 export const useArticleManager = (articles: Article[], setArticles: any) => {
     const filterLogic = useArticleFilter(articles, 7);
     const aiLogic = useAIGenerator();
 
-    // --- PERSONA MANAGEMENT (ARRAY) ---
     const [personas, setPersonas] = useState<AuthorPersona[]>(() => {
-        try {
-            const saved = localStorage.getItem('mks_personas');
-            return saved ? JSON.parse(saved) : AUTHOR_PRESETS;
-        } catch (e) { return AUTHOR_PRESETS; }
+        try { return JSON.parse(localStorage.getItem('mks_personas') || '') || AUTHOR_PRESETS; } catch (e) { return AUTHOR_PRESETS; }
     });
-
     const [activePersonaId, setActivePersonaId] = useState<string>('personal');
-
-    // Sync to local storage
-    useEffect(() => {
-        try { localStorage.setItem('mks_personas', JSON.stringify(personas)); } catch (e) {}
-    }, [personas]);
-
-    // Derived active persona object
     const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
+    const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']); // Default tone changed to Gritty
 
-    // Added selectedTones state
-    const [selectedTones, setSelectedTones] = useState<string[]>(['story']); 
+    useEffect(() => { try { localStorage.setItem('mks_personas', JSON.stringify(personas)); } catch (e) {} }, [personas]);
 
     const [form, setForm] = useState<ArticleFormState>({
         id: null, title: '', excerpt: '', content: '', category: '',
         readTime: '5 min read', imagePreview: '', uploadFile: null, 
-        author: activePersona.name,
-        authorAvatar: activePersona.avatar || '',
-        uploadAuthorFile: null, 
-        status: 'draft', scheduled_for: '',
+        author: activePersona.name, authorAvatar: activePersona.avatar || '',
+        uploadAuthorFile: null, status: 'draft', scheduled_for: '',
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
     });
 
     const [aiStep, setAiStep] = useState(0);
     const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
 
-    // Update form author when persona switches
     useEffect(() => {
-        setForm(prev => ({
-            ...prev,
-            author: activePersona.name,
-            authorAvatar: activePersona.avatar || ''
-        }));
+        setForm(prev => ({ ...prev, author: activePersona.name, authorAvatar: activePersona.avatar || '' }));
     }, [activePersonaId, personas]);
 
     const resetForm = () => {
         setForm({
             id: null, title: '', excerpt: '', content: '', category: '',
-            author: activePersona.name,
-            authorAvatar: activePersona.avatar || '', 
-            uploadAuthorFile: null, 
-            readTime: '5 min read', imagePreview: '', uploadFile: null, 
-            status: 'draft', scheduled_for: '',
-            type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
+            author: activePersona.name, authorAvatar: activePersona.avatar || '', 
+            uploadAuthorFile: null, readTime: '5 min read', imagePreview: '', uploadFile: null, 
+            status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
         });
-        setAiStep(0);
-        setSelectedPresets([]);
-        setSelectedTones(['story']);
+        setAiStep(0); setSelectedPresets([]); setSelectedTones(['gritty']);
     };
 
     const handleEditClick = (item: Article) => {
-        // Try to match article author to persona to switch active persona state
         const matchedPersona = personas.find(p => item.author.includes(p.name));
-        if (matchedPersona) {
-            setActivePersonaId(matchedPersona.id);
-        }
-
+        if (matchedPersona) setActivePersonaId(matchedPersona.id);
         setForm({
             id: item.id, title: item.title, excerpt: item.excerpt, content: item.content,
-            category: item.category, 
-            author: item.author,
-            authorAvatar: item.author_avatar || activePersona.avatar || '', 
-            uploadAuthorFile: null,
-            readTime: item.readTime, imagePreview: item.image, uploadFile: null,
-            status: item.status || 'draft', 
-            scheduled_for: item.scheduled_for || '',
-            type: item.type || 'cluster', pillar_id: item.pillar_id || 0,
-            cluster_ideas: item.cluster_ideas || [], scheduleStart: ''
+            category: item.category, author: item.author, authorAvatar: item.author_avatar || activePersona.avatar || '', 
+            uploadAuthorFile: null, readTime: item.readTime, imagePreview: item.image, uploadFile: null,
+            status: item.status || 'draft', scheduled_for: item.scheduled_for || '',
+            type: item.type || 'cluster', pillar_id: item.pillar_id || 0, cluster_ideas: item.cluster_ideas || [], scheduleStart: ''
         });
-        setAiStep(2); // Go to Editor Step
+        setAiStep(2);
     };
 
     const updatePersonaAvatar = async (file: File) => {
         aiLogic.setLoading(p => ({ ...p, uploading: true }));
         try {
-            let avatarUrl = '';
+            let avatarUrl = URL.createObjectURL(file);
             if (supabase) {
                 const { url } = await uploadToSupabase(file, 'avatars');
                 avatarUrl = url;
-            } else {
-                avatarUrl = URL.createObjectURL(file);
             }
-            
-            // Update specific persona in array
-            setPersonas(prev => prev.map(p => 
-                p.id === activePersonaId ? { ...p, avatar: avatarUrl } : p
-            ));
-            
-            // Update current form if applicable
+            setPersonas(prev => prev.map(p => p.id === activePersonaId ? { ...p, avatar: avatarUrl } : p));
             setForm(prev => ({ ...prev, authorAvatar: avatarUrl }));
-
-        } catch (e) {
-            console.error("Avatar Upload Failed", e);
-            alert("Gagal upload foto profil.");
-        } finally {
-            aiLogic.setLoading(p => ({ ...p, uploading: false }));
-        }
+        } catch (e) { alert("Gagal upload avatar"); } 
+        finally { aiLogic.setLoading(p => ({ ...p, uploading: false })); }
     };
 
     const saveArticle = async () => {
         if (!form.title) return alert("Judul wajib diisi.");
         aiLogic.setLoading(p => ({ ...p, uploading: true }));
-        
         try {
             let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/800';
             let supabasePath = '';
@@ -420,45 +263,28 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
 
             const now = new Date().toISOString();
             const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-            
-            // Use current persona avatar as source of truth if form is default
             const finalAuthorAvatar = form.authorAvatar || activePersona.avatar;
-
-            // Ensure status is normalized to lowercase to prevent filter issues on frontend
             const statusNormalized = (form.status || 'draft').toLowerCase().trim();
 
             const commonData = {
-                title: form.title, 
-                excerpt: form.excerpt || '', 
-                content: form.content || '', 
-                category: form.category || 'General',
-                author: form.author, 
-                author_avatar: finalAuthorAvatar, 
-                read_time: form.readTime, 
-                image_url: finalImageUrl,
-                status: statusNormalized as any, // Force normalized status
+                title: form.title, excerpt: form.excerpt || '', content: form.content || '', 
+                category: form.category || 'General', author: form.author, author_avatar: finalAuthorAvatar, 
+                read_time: form.readTime, image_url: finalImageUrl, status: statusNormalized as any,
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
-                type: form.type, 
-                pillar_id: form.type === 'cluster' ? form.pillar_id : null,
-                cluster_ideas: form.cluster_ideas,
-                date: dateStr 
+                type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
+                cluster_ideas: form.cluster_ideas, date: dateStr 
             };
 
             let savedId = form.id;
-
             if (form.id) {
                 setArticles((prev: Article[]) => prev.map(a => a.id === form.id ? { ...a, ...commonData, image: finalImageUrl } : a));
-                if (supabase) {
-                    const { error } = await supabase.from('articles').update(commonData).eq('id', form.id);
-                    if (error) throw new Error("Gagal update ke database: " + error.message);
-                }
+                if (supabase) await supabase.from('articles').update(commonData).eq('id', form.id);
             } else {
                 const insertData = { ...commonData, created_at: now };
                 const tempId = Date.now();
                 setArticles((prev: Article[]) => [{ ...insertData, id: tempId, image: finalImageUrl } as any, ...prev]);
                 if (supabase) {
-                    const { data, error } = await supabase.from('articles').insert([insertData]).select().single();
-                    if (error) throw new Error("Gagal insert ke database: " + error.message);
+                    const { data } = await supabase.from('articles').insert([insertData]).select().single();
                     if (data) savedId = data.id;
                 }
             }
@@ -466,94 +292,40 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             if (supabasePath && fileToMigrate && savedId) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'articles', savedId, 'image_url')
                     .then((cloudUrl) => {
-                        if (cloudUrl) {
-                            setArticles((prev: any[]) => prev.map(a => a.id === savedId ? { ...a, image: cloudUrl } : a));
-                        }
+                        if (cloudUrl) setArticles((prev: any[]) => prev.map(a => a.id === savedId ? { ...a, image: cloudUrl } : a));
                     });
             }
-
             resetForm();
-        } catch(e: any) {
-            alert("Error: " + e.message);
-        } finally {
-            aiLogic.setLoading(p => ({ ...p, uploading: false }));
-        }
+        } catch(e: any) { alert("Error: " + e.message); } 
+        finally { aiLogic.setLoading(p => ({ ...p, uploading: false })); }
     };
 
     const deleteItem = async (id: number) => {
-        if(!confirm("Hapus artikel ini?")) return;
+        if(!confirm("Hapus artikel?")) return;
         setArticles((prev: Article[]) => prev.filter(a => a.id !== id));
         if (supabase) await supabase.from('articles').delete().eq('id', id);
         if (form.id === id) resetForm();
     };
 
-    // --- STEP 1: RESEARCH DIRECTLY ---
-    const runResearch = async () => {
+    const runResearch = async () => { try { await aiLogic.analyzeMarket(); setAiStep(1); } catch(e: any) { alert(e.message); } };
+    const runClusterResearch = async (pillar: Article) => { 
+        try { resetForm(); setForm(p => ({...p, type: 'cluster', pillar_id: pillar.id, category: pillar.category})); await aiLogic.generateClusterIdeas(pillar); setAiStep(1); } catch(e: any) { alert(e.message); } 
+    };
+    const selectTopic = (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); };
+    const runWrite = async () => { 
         try { 
-            await aiLogic.analyzeMarket(); 
-            setAiStep(1); 
-        } catch(e: any) { alert(e.message); }
+            const { content, meta } = await aiLogic.generateContent(form.title, selectedTones, form.type, form.author); 
+            setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: meta.category, readTime: meta.readTime })); setAiStep(2); 
+        } catch(e: any) { alert(e.message); } 
     };
-
-    // --- NEW: RUN CLUSTER RESEARCH FOR SPECIFIC PILLAR ---
-    const runClusterResearch = async (pillar: Article) => {
-        try {
-            // 1. Prepare Form for Cluster
-            resetForm();
-            setForm(prev => ({
-                ...prev,
-                type: 'cluster',
-                pillar_id: pillar.id,
-                category: pillar.category // Inherit category for better context
-            }));
-
-            // 2. Generate Ideas via AI
-            await aiLogic.generateClusterIdeas(pillar);
-
-            // 3. Switch View to Step 1 (Result List)
-            setAiStep(1);
-        } catch (e: any) {
-            alert(e.message);
-        }
-    };
-
-    // --- STEP 2: SELECT TITLE ---
-    const selectTopic = (k: any) => { 
-        setForm(p => ({ ...p, title: k.keyword })); 
-        setAiStep(2); // Jump to Config
-    };
-    
-    const runWrite = async () => {
-        try {
-            const { content, meta } = await aiLogic.generateContent(form.title, selectedTones, form.type, form.author);
-            setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: meta.category, readTime: meta.readTime }));
-            setAiStep(2); // Stay on config
-        } catch(e: any) { alert(e.message); }
-    };
-    
-    const runImage = async () => {
-        aiLogic.setLoading(p => ({ ...p, generatingImage: true }));
-        try {
-            const style = activePersona.mode === 'personal' ? 'cinematic' : 'corporate';
-            const url = await aiLogic.getAIImageUrl(form.title, style);
-            setForm(p => ({ ...p, imagePreview: url }));
-        } catch(e) { console.error(e); }
-        finally { aiLogic.setLoading(p => ({ ...p, generatingImage: false })); }
+    const runImage = async () => { 
+        aiLogic.setLoading(p => ({ ...p, generatingImage: true })); 
+        try { const style = activePersona.mode === 'personal' ? 'cinematic' : 'corporate'; const url = await aiLogic.getAIImageUrl(form.title, style); setForm(p => ({ ...p, imagePreview: url })); } catch(e) {} finally { aiLogic.setLoading(p => ({ ...p, generatingImage: false })); } 
     };
 
     return {
-        form, setForm,
-        filterLogic,
-        aiLogic,
-        // Persona Props
-        personas, activePersonaId, setActivePersonaId, updatePersonaAvatar,
-        aiState: { 
-            step: aiStep, setStep: setAiStep, 
-            selectedPresets, setSelectedPresets, 
-            trendingTopics: aiLogic.trendingTopics, 
-            keywords: aiLogic.keywords, 
-            selectedTones, setSelectedTones 
-        },
+        form, setForm, filterLogic, aiLogic, personas, activePersonaId, setActivePersonaId, updatePersonaAvatar,
+        aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, trendingTopics: aiLogic.trendingTopics, keywords: aiLogic.keywords, selectedTones, setSelectedTones },
         actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage, runClusterResearch }
     };
 };

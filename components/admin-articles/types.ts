@@ -44,13 +44,13 @@ export const AUTHOR_PRESETS: AuthorPersona[] = [
 ];
 
 export const NARRATIVE_TONES = [
-    { id: 'story', label: 'Storytelling (Pengalaman)', desc: 'Bercerita dari sudut pandang pelaku (Gue/Saya).' },
-    { id: 'opinion', label: 'Opini & Kritik', desc: 'Tajam, subjektif, dan berani mengambil sikap.' },
-    { id: 'analysis', label: 'Analisis Mendalam', desc: 'Berbasis data, fakta, dan riset komprehensif.' },
-    { id: 'tutorial', label: 'Tutorial / How-To', desc: 'Panduan teknis step-by-step yang jelas.' },
-    { id: 'case_study', label: 'Studi Kasus', desc: 'Bedah masalah real dan solusi spesifik.' },
-    { id: 'humor', label: 'Santai & Humoris', desc: 'Bahasa ringan, tidak kaku, menyisipkan jokes.' },
-    { id: 'formal', label: 'Formal / Korporat', desc: 'Bahasa baku, profesional, dan objektif.' }
+    { id: 'gritty', label: 'Gritty & Raw (Jujur Brutal)', desc: 'Cerita kegagalan tanpa filter, emosional, "Gue" banget.' },
+    { id: 'visionary', label: 'Visionary (Comeback)', desc: 'Fokus pada kebangkitan, masa depan, dan inovasi.' },
+    { id: 'reflective', label: 'Reflektif (Bijak)', desc: 'Mengambil hikmah, nada tenang, seperti mentor.' },
+    { id: 'story', label: 'Storytelling (Novel)', desc: 'Bercerita dengan alur plot yang menarik.' },
+    { id: 'satire', label: 'Satire / Kritik', desc: 'Menyindir kesalahan umum pebisnis (termasuk diri sendiri).' },
+    { id: 'tutorial', label: 'Edukatif & Taktis', desc: 'Fokus ke solusi teknis (How-to), minim drama.' },
+    { id: 'formal', label: 'Formal Professional', desc: 'Bahasa baku korporat (Gunakan jarang-jarang).' }
 ];
 
 export interface ArticleFormState {
