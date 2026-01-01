@@ -268,21 +268,25 @@ export const useAIGenerator = () => {
                 relatedPillarInstruction = `[SEO]: Weave links to these related pillars naturally:\n${linksList}`;
             }
 
-            // NEW: PROJECT SHOWCASE INSTRUCTION
+            // NEW: PROJECT SHOWCASE INSTRUCTION WITH IMAGE
             let galleryInstruction = "";
             if (galleryContextString) {
                 galleryInstruction = `
                 [PORTFOLIO SHOWCASE STRATEGY - IMPORTANT]
                 You have access to our Gallery/Portfolio database.
-                Available Projects:
+                Available Projects (Use the specific "ImageURL" provided):
                 ${galleryContextString}
 
                 **INSTRUCTION:** 
-                Check if the article topic (e.g. Retail, Cafe, Hardware, Software) matches any of the projects above.
-                IF MATCH FOUND: Insert a "Case Study" or "Real Example" blockquote in the middle of the article to prove our credibility.
+                Check if the article topic matches any of the projects above.
+                IF MATCH FOUND: Insert a "Case Study" blockquote in the middle of the article.
+                
+                **CRITICAL VISUAL REQUIREMENT:** 
+                You MUST insert the project image inside the blockquote using Markdown syntax.
                 
                 Format to use:
                 > **Studi Kasus: [Project Name](/gallery/slug-title)**
+                > ![Project Photo](INSERT_EXACT_IMAGE_URL_FROM_DATA)
                 > *Implementasi Nyata*: [Write 1-2 sentences connecting the article advice to this specific client project].
                 
                 IF NO MATCH: Do not force it.
@@ -411,7 +415,9 @@ export const useAIGenerator = () => {
                 Projects:
                 ${galleryContextString}
                 INSTRUCTION: If applicable, insert a "Case Study" block for one relevant project here.
-                Format: > **Studi Kasus: [Project Name](/gallery/slug)**
+                Format: 
+                > **Studi Kasus: [Project Name](/gallery/slug)**
+                > ![Project Image](Exact_Image_URL_From_Data)
                 `;
             }
 
@@ -660,11 +666,19 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                     .filter(Boolean) as {title: string, slug: string}[];
             }
 
-            // NEW: Prepare Gallery Context
+            // NEW: Prepare Gallery Context with IMAGE FILTER
             let galleryContextString = "";
             if (gallery && gallery.length > 0) {
-                galleryContextString = gallery.map(g => 
-                    `- ${g.title} | ${g.category_type} | /gallery/${slugify(g.title)}`
+                // Filter: Only include projects that have a valid image URL
+                // We exclude items with no image or default placeholders to ensure visual quality
+                const validProjects = gallery.filter(g => 
+                    g.image_url && 
+                    g.image_url.length > 10 &&
+                    !g.image_url.includes('placeholder')
+                );
+
+                galleryContextString = validProjects.map(g => 
+                    `- ${g.title} | ${g.category_type} | ImageURL: ${g.image_url} | /gallery/${slugify(g.title)}`
                 ).join('\n');
             }
 
