@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2 } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target } from 'lucide-react';
 import { Article } from '../../types';
 import { Button } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
@@ -47,6 +47,7 @@ export const EditorPanel = ({
     
     // Multi Category Logic
     const [catInput, setCatInput] = useState('');
+    const [researchTopicInput, setResearchTopicInput] = useState(''); // NEW STATE
     const selectedCats = form.category ? form.category.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
 
     const addCategory = (cat: string) => {
@@ -100,6 +101,20 @@ export const EditorPanel = ({
                     Tentukan jenis artikel, lalu AI akan mencari topik dengan volume pencarian tertinggi.
                 </p>
 
+                {/* INSERTED: Manual Topic Input */}
+                <div className="w-full max-w-[250px] mb-4 text-left">
+                    <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
+                        <Target size={10} /> Topik Spesifik (Opsional)
+                    </label>
+                    <input 
+                        type="text" 
+                        value={researchTopicInput}
+                        onChange={(e) => setResearchTopicInput(e.target.value)}
+                        placeholder="Contoh: Pajak, Stok, Promo..."
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-orange placeholder-gray-600"
+                    />
+                </div>
+
                 {/* INSERTED: Strategy Switcher for Pre-Research Context */}
                 <div className="w-full max-w-[250px] mb-6 text-left">
                     <StrategySwitcher 
@@ -111,7 +126,7 @@ export const EditorPanel = ({
                 </div>
 
                 <Button 
-                    onClick={actions.runResearch} 
+                    onClick={() => actions.runResearch(researchTopicInput)} // PASS INPUT VALUE
                     disabled={loading.researching}
                     className="w-full max-w-[250px] py-3 shadow-neon"
                 >

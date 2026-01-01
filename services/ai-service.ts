@@ -21,12 +21,12 @@ export const ensureAPIKey = async () => {
   return false;
 };
 
-// --- CENTRALIZED API CALLER ---
+// --- CENTRALIZED API CALLER WITH RETRY ---
 export const callGeminiWithRotation = async (params: {
   model: string,
   contents: any,
   config?: any
-}) => {
+}, retries = 3) => {
   let selectedKey = '';
   // @ts-ignore
   const isAIStudio = typeof window !== 'undefined' && window.aistudio;
@@ -34,7 +34,9 @@ export const callGeminiWithRotation = async (params: {
   if (isAIStudio) {
       await ensureAPIKey();
       selectedKey = process.env.API_KEY || '';
-  } else {
+  } 
+
+  if (!selectedKey) {
       const keys: string[] = [];
       for (let i = 1; i <= 10; i++) {
           const k = getEnv(`VITE_GEMINI_API_KEY_${i}`) || getEnv(`VITE_API_KEY_${i}`);
@@ -49,30 +51,36 @@ export const callGeminiWithRotation = async (params: {
       }
   }
 
-  if (selectedKey) {
-      // @ts-ignore
-      if (typeof window !== 'undefined') {
-          // @ts-ignore
-          window.process = window.process || { env: {} };
-          // @ts-ignore
-          window.process.env = window.process.env || {};
-          // @ts-ignore
-          window.process.env.API_KEY = selectedKey;
-      }
-      try { process.env.API_KEY = selectedKey; } catch(e) {}
+  if (!selectedKey) {
+      throw new Error("API Key not found. Please connect AI Studio or set VITE_GEMINI_API_KEY.");
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: selectedKey });
 
-  try {
-    const result = await ai.models.generateContent({
-      model: params.model,
-      contents: params.contents,
-      config: params.config
-    });
-    return result;
-  } catch (error: any) {
-    console.error("Gemini API Call Failed:", error);
-    throw error;
+  // RETRY LOOP
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const result = await ai.models.generateContent({
+        model: params.model,
+        contents: params.contents,
+        config: params.config
+      });
+      return result;
+    } catch (error: any) {
+      const isLastAttempt = attempt === retries - 1;
+      // Check for fetch/network errors
+      const isNetworkError = error.message?.toLowerCase().includes('fetch') || 
+                             error.message?.toLowerCase().includes('network') ||
+                             error.message?.toLowerCase().includes('failed');
+      
+      if (isNetworkError && !isLastAttempt) {
+        console.warn(`Gemini API Call Failed (Attempt ${attempt + 1}/${retries}). Retrying in 2s...`, error);
+        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1))); // Exponential wait
+        continue;
+      }
+      
+      console.error("Gemini API Fatal Error:", error);
+      throw new Error(`Gemini Error: ${error.message || 'Unknown error'}`);
+    }
   }
 };

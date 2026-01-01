@@ -93,13 +93,12 @@ const parseVolume = (volStr: string): number => {
 };
 
 export const useAIGenerator = () => {
-    // UPDATED: Loading state now includes detailed progress message
     const [loading, setLoading] = useState({ 
         researching: false, 
         generatingText: false, 
         generatingImage: false, 
         uploading: false,
-        progressMessage: '' // NEW: To show "Writing Section 1/5..."
+        progressMessage: '' 
     });
     const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
@@ -109,14 +108,27 @@ export const useAIGenerator = () => {
         imageStyle: 'cinematic', narrative: 'narsis'
     });
 
-    const analyzeMarket = async (articleType: 'pillar' | 'cluster') => {
-        setLoading(p => ({ ...p, researching: true, progressMessage: 'Analyzing Market Data...' }));
+    // MODIFIED: Accept optional specificTopic
+    const analyzeMarket = async (articleType: 'pillar' | 'cluster', specificTopic?: string) => {
+        const loadingMsg = specificTopic 
+            ? `Scanning Market for Topic: "${specificTopic}"...` 
+            : 'Analyzing General Market Trends...';
+            
+        setLoading(p => ({ ...p, researching: true, progressMessage: loadingMsg }));
+        
         try {
             let prompt = "";
+            const industryContext = "Retail Technology, Point of Sale (POS), Business Management, UMKM Indonesia";
+            
+            // Build Context: Either General or Specific
+            const topicContext = specificTopic 
+                ? `FOCUS TOPIC: "${specificTopic}". Find keywords specifically related to this topic within the context of ${industryContext}.`
+                : `BROAD SCOPE: Find general trending topics in ${industryContext}.`;
+
             if (articleType === 'pillar') {
                 prompt = `
                 Act as a Senior SEO Strategist for the Indonesian Market.
-                Industry: Retail Technology, Point of Sale (POS), Business Management.
+                ${topicContext}
                 Task: Identify 10 **Broad, High-Volume "Ultimate Guide" Article Titles** (Pillar Content) for 2025.
                 These should be comprehensive topics that can be broken down into many sub-topics later.
                 **CRITICAL FILTER:** Only find keywords with **LOW or MEDIUM** competition. Do NOT include 'High' competition keywords.
@@ -126,7 +138,7 @@ export const useAIGenerator = () => {
             } else {
                 prompt = `
                 Act as a Senior SEO Strategist for the Indonesian Market.
-                Industry: Retail Technology, Point of Sale (POS), UMKM Business.
+                ${topicContext}
                 Task: Identify 15 **Specific, Long-tail, Problem-Solving Article Titles** (Cluster Content) for 2025.
                 **CRITICAL FILTER:** Only find keywords with **LOW or MEDIUM** competition. Do NOT include 'High' competition keywords.
                 Strict Output Format: JSON Array of Objects.
@@ -280,13 +292,25 @@ export const useAIGenerator = () => {
         Example: ["Introduction: Why X Matters", "Chapter 1: The Basics", "Chapter 2: Advanced Strategy", ...]
         `;
 
-        const outlineRes = await callGeminiWithRotation({ 
-            model: 'gemini-3-flash-preview', 
-            contents: outlinePrompt, 
-            config: { responseMimeType: "application/json" } 
-        });
+        let sections: string[] = [];
+        try {
+            const outlineRes = await callGeminiWithRotation({ 
+                model: 'gemini-3-flash-preview', 
+                contents: outlinePrompt, 
+                config: { responseMimeType: "application/json" } 
+            });
+            sections = JSON.parse(outlineRes.text || '[]');
+        } catch (error) {
+            console.warn("Outline Gen failed, retrying once...", error);
+            await new Promise(r => setTimeout(r, 1000));
+            const outlineResRetry = await callGeminiWithRotation({ 
+                model: 'gemini-3-flash-preview', 
+                contents: outlinePrompt, 
+                config: { responseMimeType: "application/json" } 
+            });
+            sections = JSON.parse(outlineResRetry.text || '[]');
+        }
         
-        const sections = JSON.parse(outlineRes.text || '[]');
         let fullContent = "";
         let previousContext = "";
 
@@ -294,7 +318,6 @@ export const useAIGenerator = () => {
         for (let i = 0; i < sections.length; i++) {
             const sectionTitle = sections[i];
             const isFirst = i === 0;
-            const isLast = i === sections.length - 1;
             
             setLoading(p => ({ ...p, progressMessage: `Writing Section ${i + 1}/${sections.length}: ${sectionTitle}...` }));
 
@@ -318,7 +341,6 @@ export const useAIGenerator = () => {
             // SEO Linking Logic (Distribute links across sections)
             let linkInstruction = "";
             if (relatedPillarsData && relatedPillarsData.length > 0) {
-                // Only ask to link 1 related pillar per section to avoid spamming
                 const linkTarget = relatedPillarsData[i % relatedPillarsData.length]; 
                 linkInstruction = `Try to naturally mention and link to: [${linkTarget.title}](/articles/${linkTarget.slug}) in this section.`;
             }
@@ -342,7 +364,7 @@ export const useAIGenerator = () => {
             const sectionText = sectionRes.text || "";
             
             fullContent += sectionText + "\n\n";
-            previousContext = sectionText; // Update context for next loop
+            previousContext = sectionText; 
         }
 
         const meta = await generateMeta(title, fullContent);
@@ -520,9 +542,10 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         if (form.id === id) resetForm();
     };
 
-    const runResearch = async () => { 
+    // UPDATED: runResearch accepts specific topic
+    const runResearch = async (specificTopic?: string) => { 
         try { 
-            await aiLogic.analyzeMarket(form.type as 'pillar' | 'cluster'); 
+            await aiLogic.analyzeMarket(form.type as 'pillar' | 'cluster', specificTopic); 
             setAiStep(1); 
         } catch(e: any) { alert(e.message); } 
     };
