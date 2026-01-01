@@ -327,7 +327,7 @@ export const useAIGenerator = () => {
         tones: string[], 
         type: string, 
         authorName: string, 
-        wordCount: number,
+        wordCount: number, 
         pillarContext?: { title: string, slug: string },
         relatedPillarsData?: { title: string, slug: string }[],
         galleryContextString?: string // NEW
@@ -448,11 +448,37 @@ export const useAIGenerator = () => {
         return { content: fullContent, meta };
     };
 
+    // --- ENHANCED METADATA GENERATOR (SEO CATEGORY EXPANSION) ---
     const generateMeta = async (title: string, content: string) => {
         const generatedWordCount = content.split(/\s+/).length;
         const readTimeMin = Math.ceil(generatedWordCount / 200);
         
-        const metaPrompt = `Generate JSON Metadata for "${title}". Format: {"excerpt": "...", "category": "..."}. Base it on this content: ${content.substring(0, 500)}...`;
+        // List existing base categories for context, but allow expansion
+        const existingCategories = [
+            "Bisnis Tips", "Manajemen", "Keuangan", "HR", "Franchise", 
+            "Hardware Review", "Android POS", "Windows POS", "Teknologi", "Tutorial",
+            "Digital Marketing", "Branding", "Loyalty Program", "Promosi"
+        ].join(', ');
+
+        const metaPrompt = `
+        Role: Senior SEO Strategist for PT Mesin Kasir Solo.
+        Task: Generate metadata for the article "${title}".
+        Context Snippet: "${content.substring(0, 1000)}..."
+
+        1. EXCERPT: Write a persuasive meta description (max 150 chars) containing the focus keyword.
+        
+        2. CATEGORY STRATEGY (CRITICAL):
+           - Don't just use generic categories if a specific one is better for SEO.
+           - Analyze the content for **Niche Keywords** with high traffic potential in Indonesia.
+           - You can select from our standard list: [${existingCategories}].
+           - **BETTER OPTION:** If a specific long-tail keyword represents the category better, USE IT. 
+           - Examples of Expanded Categories: "Manajemen Stok", "Pajak UMKM", "Strategi Diskon", "Kasir Coffee Shop", "Pembukuan Digital".
+           - The category must be short (2-3 words), Title Case, and sound like a professional blog section.
+
+        Output JSON:
+        { "excerpt": "...", "category": "..." }
+        `;
+        
         const metaRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
         const metaData = JSON.parse(metaRes.text || '{}');
         
