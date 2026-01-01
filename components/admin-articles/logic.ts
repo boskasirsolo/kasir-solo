@@ -39,6 +39,32 @@ Produk: SIBOS (App Kasir), QALAM (App Sekolah), Hardware POS.
 - Variasikan panjang kalimat. Kadang satu kata. Kadang satu paragraf.
 `;
 
+// --- NEW: INTERNAL LINKING STRATEGY (SPIDER WEB) ---
+const INTERNAL_LINKING_RULES = `
+[STRATEGI INTERNAL LINK - WAJIB DIIMPLEMENTASIKAN]
+Kamu harus secara cerdas menyisipkan link ke halaman lain di website KasirSolo.com agar struktur SEO menjadi kuat (Spider Web Structure).
+Gunakan format Markdown: [Anchor Text](/path).
+
+ATURAN LINKING (Gunakan jika konteks kalimat relevan):
+1. Jika membahas **Hardware, Alat Kasir, Printer, Scanner**:
+   -> Link ke: [Katalog Hardware](/shop) atau [Paket Kasir](/shop)
+2. Jika membahas **Pembuatan Website, SEO, Toko Online**:
+   -> Link ke: [Jasa Pembuatan Website](/services/website)
+3. Jika membahas **Aplikasi Custom, Software Gudang, ERP Custom**:
+   -> Link ke: [Layanan Web App](/services/webapp)
+4. Jika membahas **SIBOS, Sistem Kasir Pintar, Manajemen Stok, Franchise**:
+   -> Link ke: [Inovasi SIBOS](/innovation)
+5. Jika membahas **QALAM, Aplikasi Sekolah, Pesantren**:
+   -> Link ke: [Aplikasi Pendidikan QALAM](/innovation)
+6. Jika membahas **Bukti, Klien, Portfolio, Hasil Kerja**:
+   -> Link ke: [Lihat Portfolio Kami](/gallery)
+7. Jika kalimat bersifat **Call to Action (CTA), Konsultasi, Tanya Harga**:
+   -> Link ke: [Hubungi Tim Kami](/contact)
+
+CONTOH INTEGRASI NATURAL:
+"Banyak pengusaha gagal karena meremehkan pembukuan. Padahal dengan [Sistem SIBOS](/innovation), semua bisa otomatis. Kalau kamu butuh alat tempurnya juga, cek [Katalog Hardware](/shop) yang kami sediakan."
+`;
+
 export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
@@ -245,6 +271,7 @@ export const useAIGenerator = () => {
             ${clusterInstruction}
             ${relatedPillarInstruction}
             Brand Context: ${BRAND_CONTEXT}
+            ${INTERNAL_LINKING_RULES}
             `;
             
             const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
@@ -352,6 +379,7 @@ export const useAIGenerator = () => {
             POV: ${pov}.
             Style: Detailed, Deep, Actionable. Use Subheaders (##, ###), Lists, and Bold text.
             Brand Context: ${BRAND_CONTEXT}
+            ${INTERNAL_LINKING_RULES}
             
             ${connectionInstruction}
             
