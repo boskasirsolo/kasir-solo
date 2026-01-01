@@ -177,7 +177,7 @@ export const EditorPanel = ({
                 )}
             </div>
 
-            {/* 3. CATEGORIES */}
+            {/* 3. CATEGORIES (UPDATED WITH MAGIC CAT) */}
             <div className="space-y-3 pt-4 border-t border-white/5">
                 <div className="flex justify-between items-center mb-2">
                     <label className="text-[9px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-2">

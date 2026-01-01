@@ -285,12 +285,25 @@ export const useArticleManager = (
             };
 
             if (form.id) {
-                const updated = { ...articles.find(a => a.id === form.id)!, ...dbData, image: finalImage, id: form.id };
+                const updated = { 
+                    ...articles.find(a => a.id === form.id)!, 
+                    ...dbData, 
+                    image: finalImage, 
+                    readTime: form.readTime,
+                    id: form.id 
+                } as unknown as Article;
+                
                 setArticles(articles.map(a => a.id === form.id ? updated : a));
                 if (supabase) await supabase.from('articles').update(dbData).eq('id', form.id);
             } else {
                 const newId = Date.now();
-                const newItem = { ...dbData, id: newId, image: finalImage } as Article;
+                const newItem = { 
+                    ...dbData, 
+                    id: newId, 
+                    image: finalImage,
+                    readTime: form.readTime
+                } as unknown as Article;
+                
                 setArticles([newItem, ...articles]);
                 if (supabase) await supabase.from('articles').insert([dbData]);
             }
@@ -318,6 +331,7 @@ export const useArticleManager = (
         } catch(e: any) { alert(e.message); } 
     };
 
+    // NEW: GENERATE CATEGORY FROM CONTEXT
     const runGenerateCategory = async () => {
         if (!form.title && !form.content) return alert("Mohon isi Judul atau Konten terlebih dahulu sebagai konteks.");
         
@@ -336,7 +350,7 @@ export const useArticleManager = (
             - Title Case.
             - Examples: "Manajemen Stok", "Tips Bisnis", "Tutorial POS".
             
-            Output: JUST the Category Name string.
+            Output: JUST the Category Name string. No quotes.
             `;
             
             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
@@ -344,9 +358,14 @@ export const useArticleManager = (
             
             if (newCat) {
                 setForm((prev: any) => {
-                    const currentCats = prev.category ? prev.category.split(',').map((s: any) => s.trim()).filter(Boolean) : [];
-                    if (!currentCats.includes(newCat)) {
-                        return { ...prev, category: [...currentCats, newCat].join(', ') };
+                    // Check if category already exists to prevent dupes (case insensitive)
+                    const currentCats = prev.category ? prev.category.split(',').map((s: any) => s.trim()) : [];
+                    const exists = currentCats.some((c: string) => c.toLowerCase() === newCat.toLowerCase());
+                    
+                    if (!exists) {
+                        // Append to existing or set as new
+                        const updatedCat = prev.category ? `${prev.category}, ${newCat}` : newCat;
+                        return { ...prev, category: updatedCat };
                     }
                     return prev;
                 });
