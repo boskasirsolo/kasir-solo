@@ -102,12 +102,18 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
                         <span className="text-sm font-bold text-gray-300">{form.author}</span>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-gray-500">
-                        <span>{new Date().toLocaleDateString('id-ID')}</span>
+                        {/* EDITABLE PUBLISH DATE (Previously static) */}
+                        <input 
+                            value={form.date} 
+                            onChange={(e) => manager.setForm((p:any) => ({...p, date: e.target.value}))}
+                            placeholder="Tanggal Publish"
+                            className="bg-transparent border-b border-white/10 w-24 focus:border-brand-orange outline-none text-gray-400 hover:text-white transition-colors"
+                        />
                         <span>•</span>
                         <input 
                             value={form.readTime} 
                             onChange={e => manager.setForm((p:any) => ({...p, readTime: e.target.value}))}
-                            className="bg-transparent border-b border-white/10 w-16 focus:border-brand-orange outline-none text-gray-400"
+                            className="bg-transparent border-b border-white/10 w-16 focus:border-brand-orange outline-none text-gray-400 hover:text-white transition-colors"
                         />
                     </div>
                 </div>

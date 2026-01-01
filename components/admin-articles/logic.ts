@@ -265,7 +265,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         readTime: '5 min read', imagePreview: '', uploadFile: null, 
         author: activePersona.name, authorAvatar: activePersona.avatar || '',
         uploadAuthorFile: null, status: 'draft', scheduled_for: '',
-        type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
+        type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
+        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) // Default date
     });
 
     const [aiStep, setAiStep] = useState(0);
@@ -280,7 +281,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             id: null, title: '', excerpt: '', content: '', category: '',
             author: activePersona.name, authorAvatar: activePersona.avatar || '', 
             uploadAuthorFile: null, readTime: '5 min read', imagePreview: '', uploadFile: null, 
-            status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: ''
+            status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
+            date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
         });
         setAiStep(0); setSelectedPresets([]); setSelectedTones(['gritty']);
     };
@@ -293,7 +295,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             category: item.category, author: item.author, authorAvatar: item.author_avatar || activePersona.avatar || '', 
             uploadAuthorFile: null, readTime: item.readTime, imagePreview: item.image, uploadFile: null,
             status: item.status || 'draft', scheduled_for: item.scheduled_for || '',
-            type: item.type || 'cluster', pillar_id: item.pillar_id || 0, cluster_ideas: item.cluster_ideas || [], scheduleStart: ''
+            type: item.type || 'cluster', pillar_id: item.pillar_id || 0, cluster_ideas: item.cluster_ideas || [], scheduleStart: '',
+            date: item.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
         });
         setAiStep(2);
     };
@@ -332,7 +335,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
             }
 
             const now = new Date().toISOString();
-            const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            const dateStr = form.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
             const finalAuthorAvatar = form.authorAvatar || activePersona.avatar;
             const statusNormalized = (form.status || 'draft').toLowerCase().trim();
 
@@ -342,7 +345,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 read_time: form.readTime, image_url: finalImageUrl, status: statusNormalized as any,
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
                 type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
-                cluster_ideas: form.cluster_ideas, date: dateStr 
+                cluster_ideas: form.cluster_ideas, 
+                date: dateStr // Use date from form
             };
 
             let savedId = form.id;
@@ -399,7 +403,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 type: 'cluster', 
                 pillar_id: pillar.id, // Explicitly Set Pillar Link
                 cluster_ideas: [], 
-                scheduleStart: ''
+                scheduleStart: '',
+                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
             });
             
             // Set AI Step to Keywords Selection

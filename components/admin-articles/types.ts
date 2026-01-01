@@ -62,6 +62,7 @@ export interface ArticleFormState {
     author: string; // Added author to form state for per-article override
     authorAvatar: string;
     readTime: string;
+    date: string; // Added editable date field
     imagePreview: string;
     uploadFile: File | null;
     status: 'published' | 'draft' | 'scheduled';
