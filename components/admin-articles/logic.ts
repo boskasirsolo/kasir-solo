@@ -1,7 +1,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Article } from '../../types';
-import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration } from '../../utils';
+import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration, slugify } from '../../utils';
 import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
 
 // --- FOUNDER STORY VARIATIONS (ANEKDOT DATABASE) ---
@@ -152,7 +152,7 @@ export const useAIGenerator = () => {
         finally { setLoading(p => ({ ...p, researching: false })); }
     };
 
-    const generateContent = async (title: string, tones: string[], type: string, authorName: string) => {
+    const generateContent = async (title: string, tones: string[], type: string, authorName: string, pillarContext?: { title: string, slug: string }) => {
         setLoading(p => ({ ...p, generatingText: true }));
         try {
             const isAmin = authorName === 'Amin Maghfuri';
@@ -179,6 +179,21 @@ export const useAIGenerator = () => {
                 return def ? `${def.label} (${def.desc})` : t;
             }).join(', ');
 
+            // --- CLUSTER STRATEGY INJECTION ---
+            let clusterInstruction = "";
+            if (type === 'cluster' && pillarContext) {
+                clusterInstruction = `
+                [SEO STRATEGY: CLUSTER CONTENT]
+                This article is a "Cluster" supporting topic for the Pillar Page: "${pillarContext.title}".
+                
+                **MANDATORY INTERNAL LINKING:**
+                1. You MUST explicitly mention and link back to the Pillar Page within the **first 3 paragraphs**.
+                2. Use this exact Markdown Link format: [${pillarContext.title}](/articles/${pillarContext.slug})
+                3. Narrative Example: "Topik ini sebenarnya adalah bagian mendalam dari panduan utama kami di [${pillarContext.title}](/articles/${pillarContext.slug}), tapi kali ini gue mau fokus ke..."
+                4. Ensure the connection feels natural and adds value (Contextual Linking).
+                `;
+            }
+
             const contentPrompt = `
             Role: Expert Copywriter for PT Mesin Kasir Solo.
             Task: Write an Article about "${title}".
@@ -192,10 +207,13 @@ export const useAIGenerator = () => {
             Length: ${type === 'pillar' ? '2500+ words (Deep Dive)' : '800-1200 words (Focused)'}.
             Format: Markdown (Use Headers #, ##, ###, Lists, Bold).
             
+            ${clusterInstruction}
+            
             **CRITICAL INSTRUCTIONS:**
             1. Start IMMEDIATELY with the ${selectedHook}. NO "Halo", NO "Selamat datang", NO "Di artikel ini".
             2. Write like a human speaking, not an AI writing. Use rhetorical questions, short sentences, and emotional hooks.
             3. If using 'Gue', be consistent. Don't switch to 'Saya'.
+            ${type === 'cluster' && pillarContext ? '4. DO NOT FORGET THE PILLAR LINK IN THE INTRO.' : ''}
             `;
             
             const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
@@ -395,7 +413,19 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     const selectTopic = (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); };
     const runWrite = async () => { 
         try { 
-            const { content, meta } = await aiLogic.generateContent(form.title, selectedTones, form.type, form.author); 
+            // Lookup Pillar Context if Cluster
+            let pillarContext = undefined;
+            if (form.type === 'cluster' && form.pillar_id) {
+                const pillar = articles.find(a => a.id === form.pillar_id);
+                if (pillar) {
+                    pillarContext = {
+                        title: pillar.title,
+                        slug: slugify(pillar.title)
+                    };
+                }
+            }
+
+            const { content, meta } = await aiLogic.generateContent(form.title, selectedTones, form.type, form.author, pillarContext); 
             setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: meta.category, readTime: meta.readTime })); setAiStep(2); 
         } catch(e: any) { alert(e.message); } 
     };
