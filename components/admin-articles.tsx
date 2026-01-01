@@ -177,6 +177,14 @@ export const AdminArticles = ({ articles, setArticles }: { articles: Article[], 
                 onRegenerate={manager.actions.runWrite}
                 isGenerating={aiLogic.loading.generatingText}
             />
+            {/* PROGRESS OVERLAY */}
+            {aiLogic.loading.generatingText && aiLogic.loading.progressMessage && (
+                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-50 animate-fade-in backdrop-blur-sm">
+                    <Loader2 size={40} className="text-brand-orange animate-spin mb-4"/>
+                    <p className="text-white font-bold text-lg animate-pulse">{aiLogic.loading.progressMessage}</p>
+                    <p className="text-gray-500 text-xs mt-2">Generating deep long-form content...</p>
+                </div>
+            )}
          </div>
 
          {/* Bottom Status Bar */}
