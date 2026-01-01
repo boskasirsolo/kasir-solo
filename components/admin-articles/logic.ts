@@ -580,11 +580,25 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         if (matchedPersona) setActivePersonaId(matchedPersona.id);
         const estimatedCount = item.content ? item.content.split(/\s+/).length : 1000;
 
+        // FORMAT SCHEDULED DATE FOR INPUT (datetime-local expects "YYYY-MM-DDThh:mm")
+        let formattedSchedule = '';
+        if (item.scheduled_for) {
+            try {
+                const date = new Date(item.scheduled_for);
+                // Adjust for local timezone offset so it appears correct in the input
+                const offsetMs = date.getTimezoneOffset() * 60000;
+                formattedSchedule = new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+            } catch (e) {
+                console.warn("Invalid schedule date", e);
+            }
+        }
+
         setForm({
             id: item.id, title: item.title, excerpt: item.excerpt, content: item.content,
             category: item.category, author: item.author, authorAvatar: item.author_avatar || activePersona.avatar || '', 
             uploadAuthorFile: null, readTime: item.readTime, imagePreview: item.image, uploadFile: null,
-            status: item.status || 'draft', scheduled_for: item.scheduled_for || '',
+            status: item.status || 'draft', 
+            scheduled_for: formattedSchedule, // Use formatted date
             type: item.type || 'cluster', pillar_id: item.pillar_id || 0, cluster_ideas: item.cluster_ideas || [], scheduleStart: '',
             date: item.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
             targetWordCount: estimatedCount,
