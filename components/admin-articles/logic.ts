@@ -1,329 +1,694 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Article, GalleryItem } from '../../types';
-import { supabase, callGeminiWithRotation, slugify, renameFile, uploadToSupabase } from '../../utils';
-import { AUTHOR_PRESETS, AuthorPersona, RESEARCH_TOPICS, ARTICLE_CATEGORIES, FilterType, KeywordData } from './types';
+import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration, slugify, renameFile } from '../../utils';
+import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS, NARRATIVE_TONES, ARTICLE_CATEGORIES } from './types';
 
-const ITEMS_PER_PAGE = 8;
+// --- FOUNDER STORY VARIATIONS (ANEKDOT DATABASE) ---
+const FOUNDER_ANECDOTES = [
+    `"Jujur aja, 2022 itu tahun neraka buat gue. Domain kantor 'expired' dan diambil orang. Rasanya kayak rumah lo digusur padahal sertifikatnya lengkap. Dari situ gue belajar: detail kecil itu mematikan."`,
+    `"Pas gue liat notifikasi server down dan aset digital hilang, dengkul gue lemes. Itu momen gue sadar, bisnis tanpa backup system itu sama aja bunuh diri pelan-pelan."`,
+    `"Jangan pikir gue langsung duduk enak di kursi CEO. 2015 gue jalan kaki, door-to-door nawarin mesin kasir, diusir satpam, diketawain owner toko. Mental gue ditempa di aspal panas."`,
+    `"Klien pertama gue itu warung kelontong kecil. Dia bayar pake uang receh hasil dagang seharian. Gue terima duit itu sambil gemeter, gue janji software ini gak boleh ngecewain dia."`,
+    `"Gue pernah gak tidur 48 jam cuma gara-gara selisih 50 perak di laporan closing. Orang bilang lebay, gue bilang itu integritas. Kalau 50 perak aja lolos, gimana 50 juta?"`,
+    `"Bikin software itu gampang. Bikin software yang bisa dipake sama Ibu-ibu pasar yang gak ngerti gadget? Itu baru tantangan. SIBOS lahir dari situ."`,
+    `"Banyak motivator bisnis bilang 'Fokus Omzet!', tai kucing lah. Fokus itu di Profit dan Data. Omzet gede kalau bocor di operasional buat apa? Capek doang."`,
+    `"Stop dewa-dewain teknologi mahal. POS 50 juta gak guna kalau kasir lo masih bisa nyatet manual di buku utang. Sistem itu soal habit, bukan cuma alat."`,
+    `"Gue sering banget denger curhatan owner yang duitnya dicolong karyawan kepercayaan. Sakitnya bukan di duitnya, tapi di khianatnya. Gue bangun sistem ini biar lo gak ngerasain sakit itu."`,
+    `"Gue ngerti rasanya pusing ngurus stok opname tiap akhir bulan. Mata sepet, fisik capek, data gak klop. Gue pernah di posisi lo, Makanya gue bikin fitur auto-stock."`
+];
 
-export const useAiLogic = () => {
-    const [loading, setLoading] = useState({
-        researching: false,
-        generatingText: false,
-        generatingImage: false,
-        uploading: false,
-        progressMessage: ''
-    });
-    const [trendingTopics, setTrendingTopics] = useState<string[]>(RESEARCH_TOPICS);
-    const [keywords, setKeywords] = useState<KeywordData[]>([]);
+const OPENING_HOOKS = [
+    "THE PUNCH: Mulai dengan satu kalimat pendek yang menohok/keras.",
+    "THE QUESTION: Mulai dengan pertanyaan retoris yang relate dengan masalah pembaca.",
+    "THE STAT: Mulai dengan fakta atau data statistik yang mengejutkan.",
+    "THE STORY: Mulai langsung di tengah cerita (In Media Res) tanpa basa-basi.",
+    "THE CONTRAST: Mulai dengan 'Banyak orang pikir X, padahal aslinya Y'."
+];
 
-    const analyzeMarket = async (type: 'pillar' | 'cluster', specificTopic?: string) => {
-        setLoading(p => ({...p, researching: true, progressMessage: 'Analyzing Market Trends...'}));
-        try {
-            const prompt = `
-            Role: SEO Strategist for 'Mesin Kasir Solo'.
-            Task: Analyze current trends for POS/Kasir Systems & UMKM Business in Indonesia.
-            Focus: ${type === 'pillar' ? 'Broad, evergreen topics (High Volume)' : 'Specific, long-tail problems (Low Competition)'}.
-            Context: ${specificTopic || 'General Market'}.
-            
-            Output: JSON Array of 5 Keyword Objects.
-            Format: [{"keyword": "...", "volume": "High/Med/Low", "competition": "High/Med/Low", "type": "Trend/Evergreen"}]
-            `;
-            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
-            const data = JSON.parse(res.text || '[]');
-            setKeywords(data);
-        } catch (e) {
-            console.error(e);
-            // Fallback data
-            setKeywords([
-                { keyword: "Aplikasi Kasir Android Gratis", volume: "High", competition: "High", type: "Evergreen" },
-                { keyword: "Cara Mengelola Stok Barang", volume: "Med", competition: "Med", type: "Evergreen" }
-            ]);
-        } finally {
-            setLoading(p => ({...p, researching: false, progressMessage: ''}));
+const BRAND_CONTEXT = `
+[IDENTITAS]
+Nama: PT Mesin Kasir Solo.
+DNA: Resilien, Jujur, Street-Smart, Anti-Ribet.
+Produk: SIBOS (App Kasir), QALAM (App Sekolah), Hardware POS.
+
+[GAYA BAHASA - STRICT]
+- JANGAN PERNAH gunakan kalimat pembuka standar AI seperti "Di era digital yang semakin pesat..." atau "Pada artikel kali ini...".
+- HINDARI kata-kata kaku/baku berlebihan. Gunakan bahasa lisan yang cerdas.
+- Gunakan analogi 'jalanan' atau 'warung kopi' yang mudah dimengerti.
+- Variasikan panjang kalimat. Kadang satu kata. Kadang satu paragraf.
+`;
+
+// --- NEW: INTERNAL LINKING STRATEGY (SPIDER WEB) ---
+const INTERNAL_LINKING_RULES = `
+[STRATEGI INTERNAL LINK - WAJIB DIIMPLEMENTASIKAN]
+Kamu harus secara cerdas menyisipkan link ke halaman lain di website KasirSolo.com agar struktur SEO menjadi kuat (Spider Web Structure).
+Gunakan format Markdown: [Anchor Text](/path).
+
+ATURAN LINKING (Gunakan jika konteks kalimat relevan):
+1. Jika membahas **Hardware, Alat Kasir, Printer, Scanner**:
+   -> Link ke: [Katalog Hardware](/shop) atau [Paket Kasir](/shop)
+2. Jika membahas **Pembuatan Website, SEO, Toko Online**:
+   -> Link ke: [Jasa Pembuatan Website](/services/website)
+3. Jika membahas **Aplikasi Custom, Software Gudang, ERP Custom**:
+   -> Link ke: [Layanan Web App](/services/webapp)
+4. Jika membahas **SIBOS, Sistem Kasir Pintar, Manajemen Stok, Franchise**:
+   -> Link ke: [Inovasi SIBOS](/innovation)
+5. Jika membahas **QALAM, Aplikasi Sekolah, Pesantren**:
+   -> Link ke: [Aplikasi Pendidikan QALAM](/innovation)
+6. Jika membahas **Bukti, Klien, Portfolio, Hasil Kerja**:
+   -> Link ke: [Lihat Portfolio Kami](/gallery)
+7. Jika kalimat bersifat **Call to Action (CTA), Konsultasi, Tanya Harga**:
+   -> Link ke: [Hubungi Tim Kami](/contact)
+
+CONTOH INTEGRASI NATURAL:
+"Banyak pengusaha gagal karena meremehkan pembukuan. Padahal dengan [Sistem SIBOS](/innovation), semua bisa otomatis. Kalau kamu butuh alat tempurnya juga, cek [Katalog Hardware](/shop) yang kami sediakan."
+`;
+
+export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
+    const [page, setPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterType, setFilterType] = useState<FilterType>('all');
+    const [expandedPillarId, setExpandedPillarId] = useState<number | null>(null);
+
+    useEffect(() => {
+        setPage(1);
+        setExpandedPillarId(null);
+    }, [searchTerm, filterType]);
+
+    const filteredList = useMemo(() => {
+        return articles.filter(a => {
+            const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase());
+            if (!matchesSearch) return false;
+
+            if (filterType === 'all') return true; 
+            if (filterType === 'pillar') return a.type === 'pillar';
+            if (filterType === 'cluster') return a.type === 'cluster';
+            if (filterType === 'orphan') return !a.pillar_id && a.type !== 'pillar';
+            if (filterType === 'draft') return a.status === 'draft' || !a.status; 
+            if (filterType === 'scheduled') return a.status === 'scheduled';
+            return false;
+        });
+    }, [articles, searchTerm, filterType]);
+
+    const sortedList = useMemo(() => {
+        return [...filteredList].sort((a, b) => {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateB - dateA; // Descending
+        });
+    }, [filteredList]);
+
+    const totalPages = Math.ceil(sortedList.length / itemsPerPage);
+    const paginatedList = sortedList.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+    return { searchTerm, setSearchTerm, filterType, setFilterType, page, setPage, totalPages, paginatedList, expandedPillarId, setExpandedPillarId };
+};
+
+// IMPROVED VOLUME PARSER
+const parseVolume = (volStr: string): number => {
+    if (!volStr) return 0;
+    try {
+        let clean = volStr.toLowerCase().replace(/\/mo/g, '').replace(/vol/g, '').trim();
+        
+        // Handle 'k' (thousands) e.g., 5.4k, 5,4k
+        if (clean.includes('k')) {
+            clean = clean.replace('k', '').trim();
+            clean = clean.replace(',', '.'); // Ensure decimal format
+            const numPart = parseFloat(clean);
+            return isNaN(numPart) ? 0 : Math.round(numPart * 1000);
         }
+
+        // Handle standard numbers (remove dots and commas as thousands separators)
+        // Assumption: If no 'k', it's an integer. 1.200 = 1200.
+        clean = clean.replace(/[\.,]/g, '');
+        const num = parseInt(clean);
+        return isNaN(num) ? 0 : num;
+    } catch (e) { return 0; }
+};
+
+export const useAIGenerator = () => {
+    const [loading, setLoading] = useState({ 
+        researching: false, 
+        generatingText: false, 
+        generatingImage: false, 
+        uploading: false,
+        progressMessage: '' 
+    });
+    const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
+    const [keywords, setKeywords] = useState<KeywordData[]>([]);
+    
+    const [genConfig, setGenConfig] = useState<GenConfig>({
+        autoImage: true, autoCategory: true, autoAuthor: true,
+        imageStyle: 'cinematic', narrative: 'narsis'
+    });
+
+    const analyzeMarket = async (articleType: 'pillar' | 'cluster', specificTopic?: string) => {
+        const loadingMsg = specificTopic 
+            ? `Scanning Market for Topic: "${specificTopic}"...` 
+            : 'Analyzing General Market Trends...';
+            
+        setLoading(p => ({ ...p, researching: true, progressMessage: loadingMsg }));
+        
+        try {
+            let prompt = "";
+            const industryContext = "Retail Technology, Point of Sale (POS), Business Management, UMKM Indonesia";
+            const topicContext = specificTopic 
+                ? `FOCUS TOPIC: "${specificTopic}". Find keywords specifically related to this topic within the context of ${industryContext}.`
+                : `BROAD SCOPE: Find general trending topics in ${industryContext}.`;
+
+            if (articleType === 'pillar') {
+                prompt = `
+                Act as a Senior SEO Strategist for the Indonesian Market.
+                ${topicContext}
+                Task: Identify 10 **Broad, High-Volume "Ultimate Guide" Article Titles** (Pillar Content) for 2025.
+                These should be comprehensive topics that can be broken down into many sub-topics later.
+                **CRITICAL FILTER:** Only find keywords with **LOW or MEDIUM** competition. Do NOT include 'High' competition keywords.
+                Strict Output Format: JSON Array of Objects.
+                Example: [{"keyword": "Panduan Lengkap Bisnis Ritel", "volume": "12k/mo", "competition": "Medium", "type": "Pillar"}]
+                `;
+            } else {
+                prompt = `
+                Act as a Senior SEO Strategist for the Indonesian Market.
+                ${topicContext}
+                Task: Identify 15 **Specific, Long-tail, Problem-Solving Article Titles** (Cluster Content) for 2025.
+                **CRITICAL FILTER:** Only find keywords with **LOW or MEDIUM** competition. Do NOT include 'High' competition keywords.
+                Strict Output Format: JSON Array of Objects.
+                Example: [{"keyword": "Cara Mencegah Kasir Curang", "volume": "5.400/mo", "competition": "Low", "type": "Cluster"}]
+                `;
+            }
+
+            const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
+            const data = JSON.parse(result.text || '[]');
+            
+            if (Array.isArray(data)) {
+                const filteredData = data.filter((item: any) => {
+                    const comp = (item.competition || '').toLowerCase();
+                    return comp !== 'high' && !comp.includes('high'); 
+                });
+                const sortedData = filteredData.sort((a: any, b: any) => parseVolume(b.volume) - parseVolume(a.volume));
+                setKeywords(sortedData);
+            }
+        } catch (e) { console.error(e); } 
+        finally { setLoading(p => ({ ...p, researching: false, progressMessage: '' })); }
     };
 
     const generateClusterIdeas = async (pillar: Article) => {
-        setLoading(p => ({...p, researching: true, progressMessage: 'Brainstorming Clusters...'}));
+        setLoading(p => ({ ...p, researching: true, progressMessage: 'Generating Cluster Topics...' }));
+        setKeywords([]);
         try {
             const prompt = `
-            Pillar Content: "${pillar.title}"
-            Task: Generate 5 specific "Cluster Content" ideas that support this pillar.
-            Target: Internal Linking strategy.
-            Output: JSON Array of strings (Titles only).
+            Act as SEO Specialist. Context: We have a Pillar Page titled "${pillar.title}".
+            Task: Generate 15 Specific Cluster Content Ideas (Sub-topics) that link back to this pillar.
+            **CRITICAL FILTER:** Only find keywords with **LOW or MEDIUM** competition.
+            STRICT JSON Output Format: Array of objects with keys: "keyword", "volume", "competition", "type".
+            Example: [{"keyword": "Strategi X", "volume": "2.5k", "competition": "Low", "type": "Cluster"}]
             `;
-            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
-            const data = JSON.parse(res.text || '[]');
-            setKeywords(data.map((k: string) => ({ keyword: k, volume: 'N/A', competition: 'Low', type: 'Niche' })));
+            const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
+            const data = JSON.parse(result.text || '[]');
+            if (Array.isArray(data)) {
+                const filteredData = data.filter((item: any) => {
+                    const comp = (item.competition || '').toLowerCase();
+                    return comp !== 'high' && !comp.includes('high'); 
+                });
+                const sortedData = filteredData.sort((a: any, b: any) => parseVolume(b.volume) - parseVolume(a.volume));
+                setKeywords(sortedData);
+            }
         } catch (e) { console.error(e); } 
-        finally { setLoading(p => ({...p, researching: false, progressMessage: ''})); }
+        finally { setLoading(p => ({ ...p, researching: false, progressMessage: '' })); }
     };
 
+    // --- MAIN GENERATION LOGIC ---
     const generateContent = async (
-        topic: string, 
+        title: string, 
         tones: string[], 
         type: string, 
-        author: string, 
-        wordCount: number,
+        authorName: string, 
+        wordCount: number, 
         pillarContext?: { title: string, slug: string },
         relatedPillarsData?: { title: string, slug: string }[],
-        galleryContext?: string
+        galleryContextString?: string // NEW: Receive Gallery Projects Data
     ) => {
-        setLoading(p => ({...p, generatingText: true, progressMessage: 'Writing Article...'}));
+        setLoading(p => ({ ...p, generatingText: true }));
+        
         try {
-            const toneStr = tones.join(', ');
-            let contextPrompt = `Topic: "${topic}"\nType: ${type}\nAuthor Persona: ${author}\nTone: ${toneStr}\nTarget Length: ${wordCount} words.\nLanguage: Indonesian (Natural, Engaging).`;
-            
-            if (pillarContext) {
-                contextPrompt += `\nSEO Context: This is a Cluster page for Pillar "${pillarContext.title}". You MUST include an internal link to /articles/${pillarContext.slug} in the intro or conclusion.`;
+            // IF WORD COUNT > 2000, USE MULTI-STEP GENERATION
+            if (wordCount >= 2000) {
+                return await generateLongFormContent(title, tones, type, authorName, wordCount, pillarContext, relatedPillarsData, galleryContextString);
             }
 
+            // --- STANDARD GENERATION (< 2000 words) ---
+            setLoading(p => ({ ...p, progressMessage: 'Writing Standard Article...' }));
+            const isAmin = authorName === 'Amin Maghfuri';
+            const selectedAnecdote = FOUNDER_ANECDOTES[Math.floor(Math.random() * FOUNDER_ANECDOTES.length)];
+            const selectedHook = OPENING_HOOKS[Math.floor(Math.random() * OPENING_HOOKS.length)];
+            const shouldInjectStory = isAmin ? (Math.random() > 0.2) : (Math.random() > 0.8);
+            
+            const storyInstruction = shouldInjectStory 
+                ? `Story Element to Weave In: ${selectedAnecdote} (Make it flow naturally).`
+                : `Story Element: SKIP personal story this time. Focus purely on technical advice.`;
+
+            const pov = isAmin 
+                ? `First Person Casual ('Gue'). You are Amin Maghfuri (Founder). Use 'Gue/Lo'. Be gritty, street-smart. ${storyInstruction}` 
+                : "Professional ('Kami'). Trustworthy, Expert, Corporate Tone.";
+            
+            const toneDescriptions = tones.map(t => {
+                const def = NARRATIVE_TONES.find(nt => nt.id === t);
+                return def ? `${def.label}` : t;
+            }).join(', ');
+
+            let clusterInstruction = "";
+            if (type === 'cluster' && pillarContext) {
+                clusterInstruction = `[SEO]: Link back to [${pillarContext.title}](/articles/${pillarContext.slug}) in first 3 paragraphs.`;
+            }
+
+            let relatedPillarInstruction = "";
             if (relatedPillarsData && relatedPillarsData.length > 0) {
-                contextPrompt += `\nInter-linking: This is a Pillar page. Mention and recommend these related topics: ${relatedPillarsData.map(r => `${r.title} (/articles/${r.slug})`).join(', ')}.`;
+                const linksList = relatedPillarsData.map(p => `- [${p.title}](/articles/${p.slug})`).join('\n');
+                relatedPillarInstruction = `[SEO]: Weave links to these related pillars naturally:\n${linksList}`;
             }
 
-            if (galleryContext) {
-                contextPrompt += `\nCase Study Reference (Use 1-2 if relevant): \n${galleryContext}`;
+            // NEW: PROJECT SHOWCASE INSTRUCTION WITH IMAGE
+            let galleryInstruction = "";
+            if (galleryContextString) {
+                galleryInstruction = `
+                [PORTFOLIO SHOWCASE STRATEGY - IMPORTANT]
+                You have access to our Gallery/Portfolio database.
+                Available Projects (Use the specific "ImageURL" provided):
+                ${galleryContextString}
+
+                **INSTRUCTION:** 
+                Check if the article topic matches any of the projects above.
+                IF MATCH FOUND: Insert a "Case Study" blockquote in the middle of the article.
+                
+                **CRITICAL VISUAL REQUIREMENT:** 
+                You MUST insert the project image inside the blockquote using Markdown syntax.
+                
+                Format to use:
+                > **Studi Kasus: [Project Name](/gallery/slug-title)**
+                > ![Project Photo](INSERT_EXACT_IMAGE_URL_FROM_DATA)
+                > *Implementasi Nyata*: [Write 1-2 sentences connecting the article advice to this specific client project].
+                
+                IF NO MATCH: Do not force it.
+                `;
             }
 
-            const prompt = `
-            ${contextPrompt}
-            
-            Structure:
-            1. H1 Title (Catchy, SEO optimized).
-            2. Introduction (Hook the reader, state the problem).
-            3. Body Paragraphs (Use H2, H3, Bullet points). Deep dive into the topic.
-            4. Conclusion (Summary + Call to Action).
-            
-            STRICT RULES:
-            - Output valid Markdown.
-            - Use **bold** for key phrases.
-            - No "Here is the article" preamble. Start with content.
+            const contentPrompt = `
+            Role: Expert Copywriter PT Mesin Kasir Solo.
+            Task: Write Article "${title}".
+            Length: Approx ${wordCount} words.
+            POV: ${pov}
+            Tone: ${toneDescriptions}.
+            Opening: ${selectedHook}
+            Structure: Use Headers #, ##, ###, Lists, Bold.
+            ${clusterInstruction}
+            ${relatedPillarInstruction}
+            ${galleryInstruction}
+            Brand Context: ${BRAND_CONTEXT}
+            ${INTERNAL_LINKING_RULES}
             `;
-
-            const res = await callGeminiWithRotation({ model: 'gemini-3-pro-preview', contents: prompt }); // Use Pro for writing
-            const content = res.text || '';
-
-            // Extract Meta
-            const metaPrompt = `Extract meta from this content:\n${content.substring(0, 500)}...\nOutput JSON: { "excerpt": "2 sentences max", "category": "1-2 words", "readTime": "X min read" }`;
-            const metaRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
-            const meta = JSON.parse(metaRes.text || '{}');
+            
+            const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
+            const content = contentRes.text || '';
+            const meta = await generateMeta(title, content);
 
             return { content, meta };
-        } catch (e) {
-            throw e;
+
+        } catch (e: any) { 
+            throw e; 
         } finally {
-            setLoading(p => ({...p, generatingText: false, progressMessage: ''}));
+            setLoading(p => ({ ...p, generatingText: false, progressMessage: '' }));
         }
     };
 
-    const getAIImageUrl = async (title: string, category: string, style: string) => {
-        // Pollinations AI logic
-        const seed = Math.floor(Math.random() * 999999);
-        const prompt = `${title}, ${category}, ${style} style, professional photography, high quality, 4k, trending on unsplash`;
-        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1200&height=630&model=flux&nologo=true&seed=${seed}`;
+    // --- NEW: LONG FORM GENERATOR (MULTI-STEP) ---
+    const generateLongFormContent = async (
+        title: string, 
+        tones: string[], 
+        type: string, 
+        authorName: string, 
+        wordCount: number, 
+        pillarContext?: { title: string, slug: string },
+        relatedPillarsData?: { title: string, slug: string }[],
+        galleryContextString?: string // NEW
+    ) => {
+        // 1. SETUP PHASE
+        const isAmin = authorName === 'Amin Maghfuri';
+        const pov = isAmin ? "First Person 'Gue' (Amin Maghfuri)" : "Professional 'Kami'";
+        const sectionsCount = Math.ceil(wordCount / 1000); // 1000 words per section
         
-        // Fetch blob to creating a File object for potential upload
-        const res = await fetch(url);
-        const blob = await res.blob();
-        const file = new File([blob], `${slugify(title)}.jpg`, { type: 'image/jpeg' });
+        // 2. BLUEPRINT PHASE (Generate Outline)
+        setLoading(p => ({ ...p, progressMessage: `Designing Outline for ${wordCount} words...` }));
         
-        return { url, file };
+        const outlinePrompt = `
+        Act as a Content Architect.
+        Task: Create a detailed Table of Contents (Outline) for a **${wordCount}-word Ultimate Guide** titled "${title}".
+        Target: Break this into exactly **${sectionsCount} Distinct Major Sections** (Chapters).
+        
+        Structure Requirements:
+        - Section 1: Introduction (Hook + Problem Agitation + Thesis).
+        - Middle Sections: Deep dive into technical details, strategies, comparisons, or case studies.
+        - Last Section: Conclusion & Call to Action.
+        
+        Output Format: JSON Array of Strings (Section Titles Only).
+        Example: ["Introduction: Why X Matters", "Chapter 1: The Basics", "Chapter 2: Advanced Strategy", ...]
+        `;
+
+        let sections: string[] = [];
+        try {
+            const outlineRes = await callGeminiWithRotation({ 
+                model: 'gemini-3-flash-preview', 
+                contents: outlinePrompt, 
+                config: { responseMimeType: "application/json" } 
+            });
+            sections = JSON.parse(outlineRes.text || '[]');
+        } catch (error) {
+            console.warn("Outline Gen failed, retrying once...", error);
+            await new Promise(r => setTimeout(r, 1000));
+            const outlineResRetry = await callGeminiWithRotation({ 
+                model: 'gemini-3-flash-preview', 
+                contents: outlinePrompt, 
+                config: { responseMimeType: "application/json" } 
+            });
+            sections = JSON.parse(outlineResRetry.text || '[]');
+        }
+        
+        let fullContent = "";
+        let previousContext = "";
+
+        // 3. ASSEMBLY PHASE (Looping)
+        for (let i = 0; i < sections.length; i++) {
+            const sectionTitle = sections[i];
+            const isFirst = i === 0;
+            
+            setLoading(p => ({ ...p, progressMessage: `Writing Section ${i + 1}/${sections.length}: ${sectionTitle}...` }));
+
+            // Smart Context for Continuity
+            let connectionInstruction = "";
+            if (!isFirst) {
+                connectionInstruction = `
+                [CRITICAL CONTINUITY INSTRUCTION]
+                This is Part ${i + 1} of the article.
+                The PREVIOUS PART ended with these sentences: "...${previousContext.slice(-300)}..."
+                
+                **YOUR TASK:**
+                1. Do NOT write a new introduction like "Welcome back" or "In this section".
+                2. Start IMMEDIATELY by connecting to the previous thought.
+                3. Maintain the flow as if it is one continuous text.
+                `;
+            } else {
+                connectionInstruction = `Start with a strong Hook.`;
+            }
+
+            // SEO Linking Logic (Distribute links across sections)
+            let linkInstruction = "";
+            if (relatedPillarsData && relatedPillarsData.length > 0) {
+                const linkTarget = relatedPillarsData[i % relatedPillarsData.length]; 
+                linkInstruction = `Try to naturally mention and link to: [${linkTarget.title}](/articles/${linkTarget.slug}) in this section.`;
+            }
+
+            // NEW: PROJECT SHOWCASE INSTRUCTION (Inject randomly in middle sections)
+            let galleryInstruction = "";
+            if (galleryContextString && i === Math.floor(sections.length / 2)) {
+                 galleryInstruction = `
+                [PORTFOLIO SHOWCASE]
+                Projects:
+                ${galleryContextString}
+                INSTRUCTION: If applicable, insert a "Case Study" block for one relevant project here.
+                Format: 
+                > **Studi Kasus: [Project Name](/gallery/slug)**
+                > ![Project Image](Exact_Image_URL_From_Data)
+                `;
+            }
+
+            const sectionPrompt = `
+            Role: Expert Writer for PT Mesin Kasir Solo.
+            Task: Write **Section ${i + 1}: ${sectionTitle}** for the article "${title}".
+            Target Length for THIS section: **1000 words**.
+            POV: ${pov}.
+            Style: Detailed, Deep, Actionable. Use Subheaders (##, ###), Lists, and Bold text.
+            Brand Context: ${BRAND_CONTEXT}
+            ${INTERNAL_LINKING_RULES}
+            
+            ${connectionInstruction}
+            ${linkInstruction}
+            ${galleryInstruction}
+            
+            OUTPUT: Markdown content for this section only.
+            `;
+
+            const sectionRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: sectionPrompt });
+            const sectionText = sectionRes.text || "";
+            
+            fullContent += sectionText + "\n\n";
+            previousContext = sectionText; 
+        }
+
+        const meta = await generateMeta(title, fullContent);
+        return { content: fullContent, meta };
     };
 
-    return { loading, setLoading, trendingTopics, keywords, analyzeMarket, generateClusterIdeas, generateContent, getAIImageUrl };
+    // --- ENHANCED METADATA GENERATOR (SEO CATEGORY EXPANSION) ---
+    const generateMeta = async (title: string, content: string) => {
+        const generatedWordCount = content.split(/\s+/).length;
+        const readTimeMin = Math.ceil(generatedWordCount / 200);
+        
+        // List existing base categories for context, but allow expansion
+        const existingCategories = [
+            "Bisnis Tips", "Manajemen", "Keuangan", "HR", "Franchise", 
+            "Hardware Review", "Android POS", "Windows POS", "Teknologi", "Tutorial",
+            "Digital Marketing", "Branding", "Loyalty Program", "Promosi"
+        ].join(', ');
+
+        const metaPrompt = `
+        Role: Senior SEO Strategist for PT Mesin Kasir Solo.
+        Task: Generate metadata for the article "${title}".
+        Context Snippet: "${content.substring(0, 1000)}..."
+
+        1. EXCERPT: Write a persuasive meta description (max 150 chars) containing the focus keyword.
+        
+        2. CATEGORY STRATEGY (CRITICAL):
+           - Don't just use generic categories if a specific one is better for SEO.
+           - Analyze the content for **Niche Keywords** with high traffic potential in Indonesia.
+           - You can select from our standard list: [${existingCategories}].
+           - **BETTER OPTION:** If a specific long-tail keyword represents the category better, USE IT. 
+           - Examples of Expanded Categories: "Manajemen Stok", "Pajak UMKM", "Strategi Diskon", "Kasir Coffee Shop", "Pembukuan Digital".
+           - The category must be short (2-3 words), Title Case, and sound like a professional blog section.
+
+        Output JSON:
+        { "excerpt": "...", "category": "..." }
+        `;
+        
+        const metaRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
+        const metaData = JSON.parse(metaRes.text || '{}');
+        
+        return { ...metaData, readTime: `${readTimeMin} min read` };
+    };
+
+    // --- REVISED AI IMAGE GENERATOR WITH SEO OPTIMIZATION ---
+    const getAIImageUrl = async (title: string, category: string, style: string) => {
+        const seed = Math.floor(Math.random() * 9999999);
+        
+        // 1. TIGHT CONTEXTUAL PROMPT ENGINEERING
+        let visualContext = "modern minimalist business setting";
+        const lowerCat = (category || "").toLowerCase();
+        
+        if (lowerCat.includes('hardware') || lowerCat.includes('pos') || lowerCat.includes('kasir')) {
+            visualContext = "close up shot of modern white point of sale cashier machine on wooden counter, coffee shop background, depth of field, sleek technology product photography, clean minimalistic design";
+        } else if (lowerCat.includes('software') || lowerCat.includes('app') || lowerCat.includes('digital') || lowerCat.includes('toko online')) {
+            visualContext = "close up over shoulder shot of person using tablet with colorful business analytics dashboard, modern office environment, smart business concept, data visualization on screen, soft bokeh background";
+        } else if (lowerCat.includes('tips') || lowerCat.includes('bisnis') || lowerCat.includes('manajemen') || lowerCat.includes('keuangan')) {
+            visualContext = "successful indonesian small business owner smiling in a modern retail store, warm lighting, cinematic portrait, authentic emotion, professional attire, blurry store background";
+        } else if (lowerCat.includes('franchise') || lowerCat.includes('kuliner')) {
+            visualContext = "busy modern coffee shop counter, barista serving customer, point of sale machine in foreground, warm ambient lighting, bustling atmosphere, hyperrealistic";
+        }
+
+        const enhancedPrompt = `editorial photography of ${title}, ${visualContext}, ${style} style, high resolution, 8k, soft lighting, indonesia context, no text overlay, photorealistic, cinematic composition`;
+        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
+        
+        if (!supabase) return { url: pollUrl, file: null };
+        
+        try {
+            const res = await fetch(pollUrl);
+            const blob = await res.blob();
+            
+            // 2. SEO FILENAME OPTIMIZATION (Before Cloudinary)
+            // Create a file object with a slugified, keyword-rich filename
+            const cleanFileName = `${slugify(title)}-${slugify(category)}-2025.jpg`;
+            const file = new File([blob], cleanFileName, { type: "image/jpeg" });
+            
+            // Return Local Object URL for instant preview + The File for uploading
+            const localUrl = URL.createObjectURL(blob);
+            
+            return { url: localUrl, file: file };
+        } catch(e) { 
+            console.error("AI Image Gen Error", e);
+            return { url: pollUrl, file: null }; 
+        }
+    };
+
+    return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateContent, getAIImageUrl, generateClusterIdeas };
 };
 
-export const useArticleManager = (
-    articles: Article[], 
-    setArticles: (a: Article[]) => void,
-    gallery: GalleryItem[]
-) => {
-    // 1. STATE
-    const [form, setForm] = useState({
-        id: null as number | null,
-        title: '',
-        excerpt: '',
-        content: '',
-        category: 'Bisnis Tips',
-        author: AUTHOR_PRESETS[0].name,
-        authorAvatar: AUTHOR_PRESETS[0].avatar,
-        uploadAuthorFile: null as File | null,
-        readTime: '3 min read',
+// UPDATED: useArticleManager to accept GALLERY data
+export const useArticleManager = (articles: Article[], setArticles: any, gallery: GalleryItem[] = []) => {
+    const filterLogic = useArticleFilter(articles, 7);
+    const aiLogic = useAIGenerator();
+
+    const [personas, setPersonas] = useState<AuthorPersona[]>(() => {
+        try { return JSON.parse(localStorage.getItem('mks_personas') || '') || AUTHOR_PRESETS; } catch (e) { return AUTHOR_PRESETS; }
+    });
+    const [activePersonaId, setActivePersonaId] = useState<string>('personal');
+    const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
+    const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']); 
+
+    useEffect(() => { try { localStorage.setItem('mks_personas', JSON.stringify(personas)); } catch (e) {} }, [personas]);
+
+    const [form, setForm] = useState<ArticleFormState>({
+        id: null, title: '', excerpt: '', content: '', category: '',
+        readTime: '5 min read', imagePreview: '', uploadFile: null, 
+        author: activePersona.name, authorAvatar: activePersona.avatar || '',
+        uploadAuthorFile: null, status: 'draft', scheduled_for: '',
+        type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
         date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-        imagePreview: '',
-        uploadFile: null as File | null,
-        status: 'draft' as 'draft' | 'published' | 'scheduled',
-        scheduled_for: '',
-        type: 'cluster' as 'pillar' | 'cluster',
-        pillar_id: 0 as number,
-        cluster_ideas: [] as string[],
-        related_pillars: [] as number[],
-        scheduleStart: '',
-        targetWordCount: 800
+        targetWordCount: 1000,
+        related_pillars: []
     });
 
-    const [activePersonaId, setActivePersonaId] = useState(AUTHOR_PRESETS[0].id);
-    const [personas, setPersonas] = useState<AuthorPersona[]>(AUTHOR_PRESETS);
-    const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
+    const [aiStep, setAiStep] = useState(0);
+    const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
 
-    // Sync form author when persona changes
     useEffect(() => {
-        setForm(prev => ({
-            ...prev,
-            author: activePersona.name,
-            authorAvatar: activePersona.avatar
-        }));
+        setForm(prev => ({ ...prev, author: activePersona.name, authorAvatar: activePersona.avatar || '' }));
     }, [activePersonaId, personas]);
 
-    const updatePersonaAvatar = (file: File) => {
-        const url = URL.createObjectURL(file);
-        setPersonas(prev => prev.map(p => p.id === activePersonaId ? { ...p, avatar: url } : p));
-        // Also update current form if it uses this persona
-        if (form.author === activePersona.name) {
-            setForm(prev => ({ ...prev, authorAvatar: url, uploadAuthorFile: file }));
-        }
-    };
-
-    const [aiStep, setAiStep] = useState(0); // 0: Research, 1: Outline/Setup, 2: Done
-    const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
-    const [selectedTones, setSelectedTones] = useState<string[]>(['Tutorial']);
-    
-    // Filter State
-    const [filterType, setFilterType] = useState<FilterType>('all');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [page, setPage] = useState(1);
-    const [expandedPillarId, setExpandedPillarId] = useState<number | null>(null);
-
-    // AI Logic Hook
-    const aiLogic = useAiLogic();
-
-    // 2. ACTIONS
     const resetForm = () => {
         setForm({
-            id: null, title: '', excerpt: '', content: '', category: 'Bisnis Tips',
-            author: activePersona.name, authorAvatar: activePersona.avatar, uploadAuthorFile: null,
-            readTime: '3 min read', date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-            imagePreview: '', uploadFile: null, status: 'draft', scheduled_for: '',
-            type: 'cluster', pillar_id: 0, cluster_ideas: [], related_pillars: [],
-            scheduleStart: '', targetWordCount: 800
+            id: null, title: '', excerpt: '', content: '', category: '',
+            author: activePersona.name, authorAvatar: activePersona.avatar || '', 
+            uploadAuthorFile: null, readTime: '5 min read', imagePreview: '', uploadFile: null, 
+            status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
+            date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+            targetWordCount: 1000,
+            related_pillars: []
         });
-        setAiStep(0);
+        setAiStep(0); setSelectedPresets([]); setSelectedTones(['gritty']);
     };
 
-    const handleEditClick = (article: Article) => {
+    const handleEditClick = (item: Article) => {
+        const matchedPersona = personas.find(p => item.author.includes(p.name));
+        if (matchedPersona) setActivePersonaId(matchedPersona.id);
+        const estimatedCount = item.content ? item.content.split(/\s+/).length : 1000;
+
         setForm({
-            id: article.id,
-            title: article.title,
-            excerpt: article.excerpt,
-            content: article.content,
-            category: article.category,
-            author: article.author,
-            authorAvatar: article.author_avatar || '',
-            uploadAuthorFile: null,
-            readTime: article.readTime,
-            date: article.date,
-            imagePreview: article.image,
-            uploadFile: null,
-            status: (article.status as any) || 'draft',
-            scheduled_for: article.scheduled_for || '',
-            type: article.type || 'cluster',
-            pillar_id: article.pillar_id || 0,
-            cluster_ideas: article.cluster_ideas || [],
-            related_pillars: article.related_pillars || [],
-            scheduleStart: '',
-            targetWordCount: article.content.split(' ').length || 800
+            id: item.id, title: item.title, excerpt: item.excerpt, content: item.content,
+            category: item.category, author: item.author, authorAvatar: item.author_avatar || activePersona.avatar || '', 
+            uploadAuthorFile: null, readTime: item.readTime, imagePreview: item.image, uploadFile: null,
+            status: item.status || 'draft', scheduled_for: item.scheduled_for || '',
+            type: item.type || 'cluster', pillar_id: item.pillar_id || 0, cluster_ideas: item.cluster_ideas || [], scheduleStart: '',
+            date: item.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+            targetWordCount: estimatedCount,
+            related_pillars: item.related_pillars || []
         });
-        setAiStep(2); // Jump to editor
+        setAiStep(2);
+    };
+
+    const updatePersonaAvatar = async (file: File) => {
+        aiLogic.setLoading(p => ({ ...p, uploading: true, progressMessage: 'Uploading Avatar...' }));
+        try {
+            let avatarUrl = URL.createObjectURL(file);
+            
+            // SEO OPTIMIZATION: Rename avatar file
+            const seoName = `${slugify(activePersona.name)}-author-avatar`;
+            const fileToUpload = renameFile(file, seoName);
+
+            if (supabase) {
+                const { url } = await uploadToSupabase(fileToUpload, 'avatars');
+                avatarUrl = url;
+            }
+            setPersonas(prev => prev.map(p => p.id === activePersonaId ? { ...p, avatar: avatarUrl } : p));
+            setForm(prev => ({ ...prev, authorAvatar: avatarUrl }));
+        } catch (e) { alert("Gagal upload avatar"); } 
+        finally { aiLogic.setLoading(p => ({ ...p, uploading: false, progressMessage: '' })); }
     };
 
     const saveArticle = async () => {
         if (!form.title) return alert("Judul wajib diisi.");
-        aiLogic.setLoading(p => ({...p, uploading: true}));
+        if (form.type === 'cluster' && (!form.pillar_id || form.pillar_id === 0)) {
+            return alert("Peringatan: Artikel 'Cluster' WAJIB memilih Pillar Page induknya!");
+        }
 
+        aiLogic.setLoading(p => ({ ...p, uploading: true, progressMessage: 'Saving Article...' }));
         try {
-            let finalImage = form.imagePreview;
+            let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/800';
+            let supabasePath = '';
+            let fileToMigrate: File | null = form.uploadFile;
+
+            // UPLOAD LOGIC: If a file exists (Manual or AI Generated with SEO Filename)
             if (form.uploadFile) {
-                // SEO Rename
-                const seoName = `${slugify(form.title)}-cover`;
-                const fileToUpload = renameFile(form.uploadFile, seoName);
-                // Assume uploadToSupabase handles Cloudinary inside or we use it directly. 
-                // Using the util we defined (which might handle SB or Cloudinary based on config)
-                // For this component, we use the storage-service util:
-                const { url } = await uploadToSupabase(fileToUpload, 'articles');
-                finalImage = url;
-            } else if (form.imagePreview && form.imagePreview.startsWith('blob:')) {
-                 // If it's a blob from AI but no file object (shouldn't happen with current logic, but safe check)
-                 // You might need to fetch blob and upload if file is missing
+                // Double check rename if it's a manual upload (not from AI generation flow which already handles it)
+                // AI generated files already have clean names. Manual uploads need renaming.
+                // We'll just rename it again to be safe based on the current Title.
+                const seoName = `${slugify(form.title)}-artikel-cover`;
+                fileToMigrate = renameFile(form.uploadFile, seoName);
+
+                if (supabase) {
+                    const { url, path } = await uploadToSupabase(fileToMigrate);
+                    finalImageUrl = url;
+                    supabasePath = path;
+                }
             }
 
-            let finalAvatar = form.authorAvatar;
-            if (form.uploadAuthorFile) {
-                const seoName = `${slugify(form.author)}-avatar`;
-                const fileToUpload = renameFile(form.uploadAuthorFile, seoName);
-                const { url } = await uploadToSupabase(fileToUpload, 'avatars');
-                finalAvatar = url;
-            }
+            const now = new Date().toISOString();
+            const dateStr = form.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            const finalAuthorAvatar = form.authorAvatar || activePersona.avatar;
+            const statusNormalized = (form.status || 'draft').toLowerCase().trim();
 
-            const dbData = {
-                title: form.title,
-                excerpt: form.excerpt,
-                content: form.content,
-                category: form.category,
-                author: form.author,
-                author_avatar: finalAvatar,
-                read_time: form.readTime,
-                date: form.date,
-                image_url: finalImage,
-                status: form.status,
-                scheduled_for: form.scheduled_for,
-                type: form.type,
-                pillar_id: form.type === 'cluster' ? form.pillar_id : null,
-                cluster_ideas: form.cluster_ideas,
-                related_pillars: form.related_pillars
+            const commonData = {
+                title: form.title, excerpt: form.excerpt || '', content: form.content || '', 
+                category: form.category || 'General', author: form.author, author_avatar: finalAuthorAvatar, 
+                read_time: form.readTime, image_url: finalImageUrl, status: statusNormalized as any,
+                scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
+                type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
+                cluster_ideas: form.cluster_ideas, 
+                date: dateStr, 
+                related_pillars: form.related_pillars 
             };
 
+            let savedId = form.id;
             if (form.id) {
-                const updated = { 
-                    ...articles.find(a => a.id === form.id)!, 
-                    ...dbData, 
-                    image: finalImage, 
-                    readTime: form.readTime,
-                    id: form.id 
-                } as unknown as Article;
-                
-                setArticles(articles.map(a => a.id === form.id ? updated : a));
-                if (supabase) await supabase.from('articles').update(dbData).eq('id', form.id);
+                setArticles((prev: Article[]) => prev.map(a => a.id === form.id ? { ...a, ...commonData, image: finalImageUrl } : a));
+                if (supabase) await supabase.from('articles').update(commonData).eq('id', form.id);
             } else {
-                const newId = Date.now();
-                const newItem = { 
-                    ...dbData, 
-                    id: newId, 
-                    image: finalImage,
-                    readTime: form.readTime
-                } as unknown as Article;
-                
-                setArticles([newItem, ...articles]);
-                if (supabase) await supabase.from('articles').insert([dbData]);
+                const insertData = { ...commonData, created_at: now };
+                const tempId = Date.now();
+                setArticles((prev: Article[]) => [{ ...insertData, id: tempId, image: finalImageUrl } as any, ...prev]);
+                if (supabase) {
+                    const { data } = await supabase.from('articles').insert([insertData]).select().single();
+                    if (data) savedId = data.id;
+                }
             }
-            alert("Artikel tersimpan!");
-        } catch (e: any) {
-            console.error(e);
-            alert("Gagal menyimpan: " + e.message);
-        } finally {
-            aiLogic.setLoading(p => ({...p, uploading: false}));
-        }
+
+            // MIGRATION: Send the file to Cloudinary in background
+            // This ensures the SEO-named file is what ends up in Cloudinary
+            if (supabasePath && fileToMigrate && savedId) {
+                processBackgroundMigration(fileToMigrate, supabasePath, 'articles', savedId, 'image_url')
+                    .then((cloudUrl) => {
+                        if (cloudUrl) setArticles((prev: any[]) => prev.map(a => a.id === savedId ? { ...a, image: cloudUrl } : a));
+                    });
+            }
+            resetForm();
+        } catch(e: any) { alert("Error: " + e.message); } 
+        finally { aiLogic.setLoading(p => ({ ...p, uploading: false, progressMessage: '' })); }
     };
 
     const deleteItem = async (id: number) => {
-        if (!confirm("Hapus artikel ini?")) return;
-        setArticles(articles.filter(a => a.id !== id));
+        if(!confirm("Hapus artikel?")) return;
+        setArticles((prev: Article[]) => prev.filter(a => a.id !== id));
         if (supabase) await supabase.from('articles').delete().eq('id', id);
         if (form.id === id) resetForm();
     };
 
-    // --- AI RUNNERS ---
     const runResearch = async (specificTopic?: string) => { 
         try { 
             await aiLogic.analyzeMarket(form.type as 'pillar' | 'cluster', specificTopic); 
@@ -341,33 +706,31 @@ export const useArticleManager = (
             const contextText = form.content.length > 50 ? form.content.substring(0, 500) : form.title;
             const prompt = `
             Role: SEO Specialist for "Kasir Solo".
-            Task: Suggest 1 highly relevant Article Category based on this context.
+            Task: Analyze the context below and suggest relevant Article Categories.
             Context: "${contextText}"
             
             Constraint:
-            - Short (2-3 words).
-            - Indonesian.
-            - Title Case.
-            - Examples: "Manajemen Stok", "Tips Bisnis", "Tutorial POS".
+            - Suggest MAXIMUM 3 categories.
+            - Format: Comma-separated string (e.g., "Bisnis Tips, Manajemen Stok").
+            - Language: Indonesian.
+            - Short (1-2 words per category).
+            - Use Title Case.
+            - Prefer existing categories if relevant: ${ARTICLE_CATEGORIES.join(', ')}.
             
-            Output: JUST the Category Name string. No quotes.
+            Output: JUST the text categories.
             `;
             
             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            const newCat = result.text?.trim().replace(/['"]/g, '') || "";
+            const newCatsString = result.text?.trim().replace(/['"]/g, '') || "";
             
-            if (newCat) {
+            if (newCatsString) {
                 setForm((prev: any) => {
-                    // Check if category already exists to prevent dupes (case insensitive)
-                    const currentCats = prev.category ? prev.category.split(',').map((s: any) => s.trim()) : [];
-                    const exists = currentCats.some((c: string) => c.toLowerCase() === newCat.toLowerCase());
+                    const currentCats = prev.category ? prev.category.split(',').map((s: any) => s.trim()).filter(Boolean) : [];
+                    const newCats = newCatsString.split(',').map(s => s.trim());
                     
-                    if (!exists) {
-                        // Append to existing or set as new
-                        const updatedCat = prev.category ? `${prev.category}, ${newCat}` : newCat;
-                        return { ...prev, category: updatedCat };
-                    }
-                    return prev;
+                    // Merge and unique
+                    const mergedCats = Array.from(new Set([...currentCats, ...newCats]));
+                    return { ...prev, category: mergedCats.join(', ') };
                 });
             }
         } catch (e: any) {
@@ -464,30 +827,8 @@ export const useArticleManager = (
         } 
     };
 
-    // 3. FILTERING
-    const filteredList = useMemo(() => {
-        let list = articles;
-        if (filterType === 'pillar') list = list.filter(a => a.type === 'pillar');
-        else if (filterType === 'cluster') list = list.filter(a => a.type === 'cluster');
-        else if (filterType === 'orphan') list = list.filter(a => a.type !== 'pillar' && !a.pillar_id);
-        else if (filterType === 'draft') list = list.filter(a => a.status === 'draft');
-        else if (filterType === 'scheduled') list = list.filter(a => a.status === 'scheduled');
-
-        if (searchTerm) {
-            list = list.filter(a => a.title.toLowerCase().includes(searchTerm.toLowerCase()));
-        }
-        return list;
-    }, [articles, filterType, searchTerm]);
-
-    const paginatedList = useMemo(() => {
-        return filteredList.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-    }, [filteredList, page]);
-
     return {
-        form, setForm, 
-        filterLogic: { filterType, setFilterType, searchTerm, setSearchTerm, paginatedList, page, setPage, expandedPillarId, setExpandedPillarId, actions: { handleEditClick, deleteItem, runClusterResearch } },
-        aiLogic, // Expose aiLogic fully
-        personas, activePersonaId, setActivePersonaId, updatePersonaAvatar,
+        form, setForm, filterLogic, aiLogic, personas, activePersonaId, setActivePersonaId, updatePersonaAvatar,
         aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, trendingTopics: aiLogic.trendingTopics, keywords: aiLogic.keywords, selectedTones, setSelectedTones },
         actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage, runClusterResearch, runGenerateCategory }
     };
