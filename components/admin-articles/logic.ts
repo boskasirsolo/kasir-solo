@@ -100,6 +100,28 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
     };
 };
 
+// --- HELPER: VOLUME PARSER ---
+const parseVolume = (volStr: string): number => {
+    try {
+        // Normalize: remove /mo, lowercase, trim
+        const lower = volStr.toLowerCase().replace(/\/mo/g, '').trim();
+        
+        // Handle 'k' (e.g., 1.2k -> 1200)
+        if (lower.includes('k')) {
+            const numPart = parseFloat(lower.replace('k', ''));
+            return isNaN(numPart) ? 0 : numPart * 1000;
+        }
+        
+        // Handle dots as thousand separators (e.g., 5.400 -> 5400)
+        // Remove dots and commas to get raw integer
+        const clean = lower.replace(/\./g, '').replace(/,/g, '');
+        const num = parseInt(clean);
+        return isNaN(num) ? 0 : num;
+    } catch (e) {
+        return 0;
+    }
+};
+
 // --- SUB-HOOK: AI GENERATOR ---
 export const useAIGenerator = () => {
     const [loading, setLoading] = useState({ researching: false, generatingText: false, generatingImage: false, uploading: false });
@@ -123,7 +145,12 @@ export const useAIGenerator = () => {
             `;
             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
             const data = JSON.parse(result.text || '[]');
-            if (Array.isArray(data)) setKeywords(data);
+            
+            if (Array.isArray(data)) {
+                // Sort by Volume (Highest First)
+                const sortedData = data.sort((a: any, b: any) => parseVolume(b.volume) - parseVolume(a.volume));
+                setKeywords(sortedData);
+            }
         } catch (e) { console.error(e); } 
         finally { setLoading(p => ({ ...p, researching: false })); }
     };
@@ -147,7 +174,12 @@ export const useAIGenerator = () => {
             `;
             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
             const data = JSON.parse(result.text || '[]');
-            if (Array.isArray(data)) setKeywords(data);
+            
+            if (Array.isArray(data)) {
+                // Sort by Volume (Highest First)
+                const sortedData = data.sort((a: any, b: any) => parseVolume(b.volume) - parseVolume(a.volume));
+                setKeywords(sortedData);
+            }
         } catch (e) { console.error(e); } 
         finally { setLoading(p => ({ ...p, researching: false })); }
     };
