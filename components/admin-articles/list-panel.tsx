@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera, Sparkles } from 'lucide-react';
+import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera, Sparkles, Calendar } from 'lucide-react';
 import { Article } from '../../types';
 import { FilterType, AuthorPersona } from './types';
 
@@ -147,6 +147,24 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     else if (isExpanded) bgClass = 'bg-white/5 border-white/20';
     else bgClass = 'bg-brand-card border-white/5 hover:border-white/20';
 
+    // Date Logic
+    let displayDate = article.date;
+    let DateIcon = Calendar;
+    let dateColor = "text-gray-500";
+
+    if (article.status === 'scheduled' && article.scheduled_for) {
+        displayDate = new Date(article.scheduled_for).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        DateIcon = Clock;
+        dateColor = "text-purple-400";
+    } else if (article.status === 'published') {
+        DateIcon = Calendar;
+        dateColor = "text-green-400";
+    } else {
+        // Draft
+        DateIcon = FileEdit;
+        dateColor = "text-gray-500";
+    }
+
     return (
         <div className={`rounded-lg border transition-all overflow-hidden mb-2 ${bgClass}`}>
             <div className="p-3 cursor-pointer flex gap-3 items-center" onClick={() => { 
@@ -158,20 +176,25 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
                     <h5 className={`text-[11px] font-bold truncate leading-tight ${isSelected ? 'text-brand-orange' : 'text-white'}`}>
                         {article.title}
                     </h5>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <div className="flex items-center gap-2 mt-1.5">
                         {isPillar && (
                             <span className="text-[9px] text-yellow-500 border border-yellow-500/30 bg-yellow-500/10 px-1.5 rounded-full flex items-center gap-1"><Crown size={8}/> PILAR</span>
                         )}
                         {isCluster && (
                             <span className="text-[9px] text-blue-400 border border-blue-400/30 bg-blue-400/10 px-1.5 rounded-full flex items-center gap-1"><Network size={8}/> CLUSTER</span>
                         )}
-                        {article.status === 'scheduled' && (
-                            <span className="text-[9px] text-purple-400 border border-purple-400/30 bg-purple-400/10 px-1.5 rounded-full flex items-center gap-1"><Clock size={8}/> SCHEDULED</span>
-                        )}
-                        {article.status === 'draft' && (
-                            <span className="text-[9px] text-gray-400 border border-gray-500/30 bg-gray-500/10 px-1.5 rounded-full flex items-center gap-1"><FileEdit size={8}/> DRAFT</span>
-                        )}
-                        <span className="text-[9px] text-gray-500 ml-auto truncate max-w-[80px]">{article.category}</span>
+                        
+                        {/* Right Side Meta: Category & Date */}
+                        <div className="ml-auto flex items-center gap-2">
+                            <span className={`text-[9px] flex items-center gap-1 ${dateColor}`}>
+                                <DateIcon size={8} /> {displayDate}
+                            </span>
+                            {article.category && (
+                                <span className="text-[9px] text-gray-500 bg-white/5 px-1.5 rounded truncate max-w-[80px]">
+                                    {article.category.split(',')[0]}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
                 
