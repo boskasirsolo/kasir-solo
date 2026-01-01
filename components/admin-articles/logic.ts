@@ -4,33 +4,52 @@ import { Article } from '../../types';
 import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration } from '../../utils';
 import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
 
-// --- FOUNDER STORY VARIATIONS (ANEKDOT) ---
-// AI akan memilih salah satu dari ini secara acak untuk disuntikkan ke artikel
+// --- FOUNDER STORY VARIATIONS (ANEKDOT DATABASE) ---
+// Database cerita yang lebih luas: Sedih, Marah, Teknis, Lucu, Inspiratif.
 const FOUNDER_ANECDOTES = [
-    `ANGLE 1 (THE SHOCK): "Pagi itu di 2022, gue bangun dan cek HP. Notif masuk: domain kantor 'expired' dan sudah dibeli orang lain seharga puluhan juta. Gue lemes. Itu bukan cuma alamat web, itu identitas kami selama 7 tahun. Hilang dalam sekejap karena keteledoran administrasi."`,
-    `ANGLE 2 (THE RESTART): "Lo pernah main game, udah level 99, terus save file-nya corrupt? Itu rasanya PT Mesin Kasir Solo di tahun 2022. Kami harus mulai lagi dari Level 1. Tapi bedanya, kali ini kami punya 'Cheat Code': Pengalaman."`,
-    `ANGLE 3 (THE EMPATHY): "Kenapa gue ngotot bikin SIBOS? Karena gue tau rasanya bangkrut gara-gara data berantakan. Gue nggak mau klien gue ngerasain hal yang sama. Gue jualan sistem ini bukan cuma cari untung, tapi cari temen seperjuangan biar nggak jatuh di lubang yang sama."`,
-    `ANGLE 4 (THE GRIT): "Orang bilang bisnis teknologi itu glamor. Bullsh*t. 2015 gue jalan kaki door-to-door nawarin kasir ditolak satpam. 2022 gue kehilangan aset digital. Tapi gue masih di sini. Kenapa? Karena visi gue belum kelar."`,
-    `ANGLE 5 (THE TECHNICAL FAILURE): "Server down, data klien sempat freeze, dan gue dimaki-maki customer. Itu momen paling memalukan sebagai vendor IT. Tapi dari situ SIBOS lahir dengan arsitektur Hybrid. Kami belajar dari darah dan keringat sendiri."`
+    // THE FALL (2022) - Vulnerable
+    `"Jujur aja, 2022 itu tahun neraka buat gue. Domain kantor 'expired' dan diambil orang. Rasanya kayak rumah lo digusur padahal sertifikatnya lengkap. Dari situ gue belajar: detail kecil itu mematikan."`,
+    `"Pas gue liat notifikasi server down dan aset digital hilang, dengkul gue lemes. Itu momen gue sadar, bisnis tanpa backup system itu sama aja bunuh diri pelan-pelan."`,
+    
+    // THE HUSTLE (2015) - Grit
+    `"Jangan pikir gue langsung duduk enak di kursi CEO. 2015 gue jalan kaki, door-to-door nawarin mesin kasir, diusir satpam, diketawain owner toko. Mental gue ditempa di aspal panas."`,
+    `"Klien pertama gue itu warung kelontong kecil. Dia bayar pake uang receh hasil dagang seharian. Gue terima duit itu sambil gemeter, gue janji software ini gak boleh ngecewain dia."`,
+
+    // THE TECH (Nerd/Obsessive)
+    `"Gue pernah gak tidur 48 jam cuma gara-gara selisih 50 perak di laporan closing. Orang bilang lebay, gue bilang itu integritas. Kalau 50 perak aja lolos, gimana 50 juta?"`,
+    `"Bikin software itu gampang. Bikin software yang bisa dipake sama Ibu-ibu pasar yang gak ngerti gadget? Itu baru tantangan. SIBOS lahir dari situ."`,
+
+    // THE CONTRARIAN (Opinionated/Spicy)
+    `"Banyak motivator bisnis bilang 'Fokus Omzet!', tai kucing lah. Fokus itu di Profit dan Data. Omzet gede kalau bocor di operasional buat apa? Capek doang."`,
+    `"Stop dewa-dewain teknologi mahal. POS 50 juta gak guna kalau kasir lo masih bisa nyatet manual di buku utang. Sistem itu soal habit, bukan cuma alat."`,
+
+    // THE EMPATHY (Friend/Mentor)
+    `"Gue sering banget denger curhatan owner yang duitnya dicolong karyawan kepercayaan. Sakitnya bukan di duitnya, tapi di khianatnya. Gue bangun sistem ini biar lo gak ngerasain sakit itu."`,
+    `"Gue ngerti rasanya pusing ngurus stok opname tiap akhir bulan. Mata sepet, fisik capek, data gak klop. Gue pernah di posisi lo, Makanya gue bikin fitur auto-stock."`
+];
+
+// --- OPENING HOOK STRATEGIES ---
+// Cara memulai artikel agar tidak selalu "Halo" atau "Jujur..."
+const OPENING_HOOKS = [
+    "THE PUNCH: Mulai dengan satu kalimat pendek yang menohok/keras.",
+    "THE QUESTION: Mulai dengan pertanyaan retoris yang relate dengan masalah pembaca.",
+    "THE STAT: Mulai dengan fakta atau data statistik yang mengejutkan.",
+    "THE STORY: Mulai langsung di tengah cerita (In Media Res) tanpa basa-basi.",
+    "THE CONTRAST: Mulai dengan 'Banyak orang pikir X, padahal aslinya Y'."
 ];
 
 // --- BRAND CONTEXT KNOWLEDGE BASE ---
 const BRAND_CONTEXT = `
-[IDENTITAS PERUSAHAAN]
+[IDENTITAS]
 Nama: PT Mesin Kasir Solo.
-Sejarah: Berdiri 2015, sempat "mati suri" & kehilangan aset digital pada 2022, kini bangkit kembali (Reborn 2025).
-Karakter: Resilien (Tahan Banting), Jujur, Solutif, dan Berorientasi Komunitas.
+DNA: Resilien, Jujur, Street-Smart, Anti-Ribet.
+Produk: SIBOS (App Kasir), QALAM (App Sekolah), Hardware POS.
 
-[PRODUK]
-1. SIBOS (ERP System): Multi-bisnis, Hybrid, Waiting List Open.
-2. QALAM (Edu App): Manajemen TPA, Subsidi Silang, Waiting List Open.
-3. Hardware: POS, Printer, Kiosk.
-
-[GAYA PENULISAN - "ANTI-TEMPLATE"]
-- JANGAN gunakan kalimat pembuka klise seperti "Di era digital ini..." atau "Pada kesempatan kali ini...". Langsung masuk ke masalah (Hook).
-- Gunakan analogi sehari-hari yang relatable.
-- Variasikan panjang kalimat. Ada yang pendek tegas. Ada yang panjang menjelaskan.
-- Jika menggunakan POV Founder (Amin Maghfuri), gunakan kata ganti "Gue/Saya" yang konsisten, bahasa agak 'street-smart', berani, dan emosional.
+[GAYA BAHASA - STRICT]
+- JANGAN PERNAH gunakan kalimat pembuka standar AI seperti "Di era digital yang semakin pesat..." atau "Pada artikel kali ini...".
+- HINDARI kata-kata kaku/baku berlebihan. Gunakan bahasa lisan yang cerdas.
+- Gunakan analogi 'jalanan' atau 'warung kopi' yang mudah dimengerti.
+- Variasikan panjang kalimat. Kadang satu kata. Kadang satu paragraf.
 `;
 
 // --- SUB-HOOK: FILTER & PAGINATION ---
@@ -124,12 +143,23 @@ export const useAIGenerator = () => {
         setLoading(p => ({ ...p, generatingText: true }));
         try {
             const isAmin = authorName === 'Amin Maghfuri';
-            // Pick a random anecdote to inject flavor
+            
+            // 1. Select Random Anecdote (Flavor)
             const selectedAnecdote = FOUNDER_ANECDOTES[Math.floor(Math.random() * FOUNDER_ANECDOTES.length)];
             
+            // 2. Select Random Opening Strategy (Structure)
+            const selectedHook = OPENING_HOOKS[Math.floor(Math.random() * OPENING_HOOKS.length)];
+
+            // 3. Determine Probability of Story Injection (80% chance for Amin, 20% for Team)
+            const shouldInjectStory = isAmin ? (Math.random() > 0.2) : (Math.random() > 0.8);
+            
+            const storyInstruction = shouldInjectStory 
+                ? `Story Element to Weave In: ${selectedAnecdote} (Make it flow naturally, don't force it if it doesn't fit).`
+                : `Story Element: SKIP personal story this time. Focus purely on technical/tactical advice.`;
+
             const pov = isAmin 
-                ? `First Person Casual ('Gue'). You are Amin Maghfuri. Use 'Gue'. Be gritty, raw. Include this specific story element naturally if relevant: ${selectedAnecdote}` 
-                : "Professional ('Kami'). Trustworthy, Expert, Corporate Tone.";
+                ? `First Person Casual ('Gue'). You are Amin Maghfuri (Founder). Use 'Gue/Lo'. Be gritty, street-smart, opinionated. ${storyInstruction}` 
+                : "Professional ('Kami'). Trustworthy, Expert, Corporate Tone but not boring.";
             
             const toneDescriptions = tones.map(t => {
                 const def = NARRATIVE_TONES.find(nt => nt.id === t);
@@ -141,14 +171,18 @@ export const useAIGenerator = () => {
             Task: Write an Article about "${title}".
             Brand Context: ${BRAND_CONTEXT}
             
-            [STYLE GUIDE]
+            [STYLE GUIDE & CONFIG]
             POV: ${pov}
             Tone Mix: ${toneDescriptions}.
+            Opening Strategy: ${selectedHook}
             Type: ${type.toUpperCase()}.
-            Length: ${type === 'pillar' ? '3000+ words (Comprehensive)' : '800-1200 words (Focused)'}.
-            Format: Markdown.
+            Length: ${type === 'pillar' ? '2500+ words (Deep Dive)' : '800-1200 words (Focused)'}.
+            Format: Markdown (Use Headers #, ##, ###, Lists, Bold).
             
-            **CRITICAL:** Write like a human. Avoid repetitive AI patterns. Use short sentences for impact.
+            **CRITICAL INSTRUCTIONS:**
+            1. Start IMMEDIATELY with the ${selectedHook}. NO "Halo", NO "Selamat datang", NO "Di artikel ini".
+            2. Write like a human speaking, not an AI writing. Use rhetorical questions, short sentences, and emotional hooks.
+            3. If using 'Gue', be consistent. Don't switch to 'Saya'.
             `;
             
             const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
