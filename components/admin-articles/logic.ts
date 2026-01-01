@@ -1,6 +1,6 @@
 
 import { useState, useMemo, useEffect } from 'react';
-import { Article } from '../../types';
+import { Article, GalleryItem } from '../../types';
 import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration, slugify } from '../../utils';
 import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
 
@@ -105,14 +105,23 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
     return { searchTerm, setSearchTerm, filterType, setFilterType, page, setPage, totalPages, paginatedList, expandedPillarId, setExpandedPillarId };
 };
 
+// IMPROVED VOLUME PARSER
 const parseVolume = (volStr: string): number => {
+    if (!volStr) return 0;
     try {
-        const lower = volStr.toLowerCase().replace(/\/mo/g, '').trim();
-        if (lower.includes('k')) {
-            const numPart = parseFloat(lower.replace('k', ''));
-            return isNaN(numPart) ? 0 : numPart * 1000;
+        let clean = volStr.toLowerCase().replace(/\/mo/g, '').replace(/vol/g, '').trim();
+        
+        // Handle 'k' (thousands) e.g., 5.4k, 5,4k
+        if (clean.includes('k')) {
+            clean = clean.replace('k', '').trim();
+            clean = clean.replace(',', '.'); // Ensure decimal format
+            const numPart = parseFloat(clean);
+            return isNaN(numPart) ? 0 : Math.round(numPart * 1000);
         }
-        const clean = lower.replace(/\./g, '').replace(/,/g, '');
+
+        // Handle standard numbers (remove dots and commas as thousands separators)
+        // Assumption: If no 'k', it's an integer. 1.200 = 1200.
+        clean = clean.replace(/[\.,]/g, '');
         const num = parseInt(clean);
         return isNaN(num) ? 0 : num;
     } catch (e) { return 0; }
@@ -134,7 +143,6 @@ export const useAIGenerator = () => {
         imageStyle: 'cinematic', narrative: 'narsis'
     });
 
-    // MODIFIED: Accept optional specificTopic
     const analyzeMarket = async (articleType: 'pillar' | 'cluster', specificTopic?: string) => {
         const loadingMsg = specificTopic 
             ? `Scanning Market for Topic: "${specificTopic}"...` 
@@ -145,8 +153,6 @@ export const useAIGenerator = () => {
         try {
             let prompt = "";
             const industryContext = "Retail Technology, Point of Sale (POS), Business Management, UMKM Indonesia";
-            
-            // Build Context: Either General or Specific
             const topicContext = specificTopic 
                 ? `FOCUS TOPIC: "${specificTopic}". Find keywords specifically related to this topic within the context of ${industryContext}.`
                 : `BROAD SCOPE: Find general trending topics in ${industryContext}.`;
@@ -193,9 +199,10 @@ export const useAIGenerator = () => {
         try {
             const prompt = `
             Act as SEO Specialist. Context: We have a Pillar Page titled "${pillar.title}".
-            Task: Generate 10 Specific Cluster Content Ideas (Sub-topics) that link back to this pillar.
+            Task: Generate 15 Specific Cluster Content Ideas (Sub-topics) that link back to this pillar.
             **CRITICAL FILTER:** Only find keywords with **LOW or MEDIUM** competition.
             STRICT JSON Output Format: Array of objects with keys: "keyword", "volume", "competition", "type".
+            Example: [{"keyword": "Strategi X", "volume": "2.5k", "competition": "Low", "type": "Cluster"}]
             `;
             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
             const data = JSON.parse(result.text || '[]');
@@ -219,14 +226,15 @@ export const useAIGenerator = () => {
         authorName: string, 
         wordCount: number, 
         pillarContext?: { title: string, slug: string },
-        relatedPillarsData?: { title: string, slug: string }[] 
+        relatedPillarsData?: { title: string, slug: string }[],
+        galleryContextString?: string // NEW: Receive Gallery Projects Data
     ) => {
         setLoading(p => ({ ...p, generatingText: true }));
         
         try {
             // IF WORD COUNT > 2000, USE MULTI-STEP GENERATION
             if (wordCount >= 2000) {
-                return await generateLongFormContent(title, tones, type, authorName, wordCount, pillarContext, relatedPillarsData);
+                return await generateLongFormContent(title, tones, type, authorName, wordCount, pillarContext, relatedPillarsData, galleryContextString);
             }
 
             // --- STANDARD GENERATION (< 2000 words) ---
@@ -260,6 +268,27 @@ export const useAIGenerator = () => {
                 relatedPillarInstruction = `[SEO]: Weave links to these related pillars naturally:\n${linksList}`;
             }
 
+            // NEW: PROJECT SHOWCASE INSTRUCTION
+            let galleryInstruction = "";
+            if (galleryContextString) {
+                galleryInstruction = `
+                [PORTFOLIO SHOWCASE STRATEGY - IMPORTANT]
+                You have access to our Gallery/Portfolio database.
+                Available Projects:
+                ${galleryContextString}
+
+                **INSTRUCTION:** 
+                Check if the article topic (e.g. Retail, Cafe, Hardware, Software) matches any of the projects above.
+                IF MATCH FOUND: Insert a "Case Study" or "Real Example" blockquote in the middle of the article to prove our credibility.
+                
+                Format to use:
+                > **Studi Kasus: [Project Name](/gallery/slug-title)**
+                > *Implementasi Nyata*: [Write 1-2 sentences connecting the article advice to this specific client project].
+                
+                IF NO MATCH: Do not force it.
+                `;
+            }
+
             const contentPrompt = `
             Role: Expert Copywriter PT Mesin Kasir Solo.
             Task: Write Article "${title}".
@@ -270,6 +299,7 @@ export const useAIGenerator = () => {
             Structure: Use Headers #, ##, ###, Lists, Bold.
             ${clusterInstruction}
             ${relatedPillarInstruction}
+            ${galleryInstruction}
             Brand Context: ${BRAND_CONTEXT}
             ${INTERNAL_LINKING_RULES}
             `;
@@ -295,7 +325,8 @@ export const useAIGenerator = () => {
         authorName: string, 
         wordCount: number,
         pillarContext?: { title: string, slug: string },
-        relatedPillarsData?: { title: string, slug: string }[] 
+        relatedPillarsData?: { title: string, slug: string }[],
+        galleryContextString?: string // NEW
     ) => {
         // 1. SETUP PHASE
         const isAmin = authorName === 'Amin Maghfuri';
@@ -372,6 +403,18 @@ export const useAIGenerator = () => {
                 linkInstruction = `Try to naturally mention and link to: [${linkTarget.title}](/articles/${linkTarget.slug}) in this section.`;
             }
 
+            // NEW: PROJECT SHOWCASE INSTRUCTION (Inject randomly in middle sections)
+            let galleryInstruction = "";
+            if (galleryContextString && i === Math.floor(sections.length / 2)) {
+                 galleryInstruction = `
+                [PORTFOLIO SHOWCASE]
+                Projects:
+                ${galleryContextString}
+                INSTRUCTION: If applicable, insert a "Case Study" block for one relevant project here.
+                Format: > **Studi Kasus: [Project Name](/gallery/slug)**
+                `;
+            }
+
             const sectionPrompt = `
             Role: Expert Writer for PT Mesin Kasir Solo.
             Task: Write **Section ${i + 1}: ${sectionTitle}** for the article "${title}".
@@ -382,8 +425,8 @@ export const useAIGenerator = () => {
             ${INTERNAL_LINKING_RULES}
             
             ${connectionInstruction}
-            
             ${linkInstruction}
+            ${galleryInstruction}
             
             OUTPUT: Markdown content for this section only.
             `;
@@ -428,7 +471,8 @@ export const useAIGenerator = () => {
     return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateContent, getAIImageUrl, generateClusterIdeas };
 };
 
-export const useArticleManager = (articles: Article[], setArticles: any) => {
+// UPDATED: useArticleManager to accept GALLERY data
+export const useArticleManager = (articles: Article[], setArticles: any, gallery: GalleryItem[] = []) => {
     const filterLogic = useArticleFilter(articles, 7);
     const aiLogic = useAIGenerator();
 
@@ -570,7 +614,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         if (form.id === id) resetForm();
     };
 
-    // UPDATED: runResearch accepts specific topic
     const runResearch = async (specificTopic?: string) => { 
         try { 
             await aiLogic.analyzeMarket(form.type as 'pillar' | 'cluster', specificTopic); 
@@ -617,9 +660,17 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                     .filter(Boolean) as {title: string, slug: string}[];
             }
 
+            // NEW: Prepare Gallery Context
+            let galleryContextString = "";
+            if (gallery && gallery.length > 0) {
+                galleryContextString = gallery.map(g => 
+                    `- ${g.title} | ${g.category_type} | /gallery/${slugify(g.title)}`
+                ).join('\n');
+            }
+
             const { content, meta } = await aiLogic.generateContent(
                 form.title, selectedTones, form.type, form.author, form.targetWordCount, 
-                pillarContext, relatedPillarsData
+                pillarContext, relatedPillarsData, galleryContextString // PASS CONTEXT
             ); 
             
             setForm(p => ({ 

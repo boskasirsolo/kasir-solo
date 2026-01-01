@@ -269,7 +269,8 @@ export const AdminDashboard = ({
 
         {activeTab === 'articles' && (
           <div className="animate-fade-in relative z-10 p-4 md:p-6">
-             <AdminArticles articles={articles} setArticles={setArticles} />
+             {/* Pass gallery data for AI Content Generation */}
+             <AdminArticles articles={articles} setArticles={setArticles} gallery={gallery} />
           </div>
         )}
 

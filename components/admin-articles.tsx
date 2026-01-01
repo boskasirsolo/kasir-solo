@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Article } from '../types';
+import { Article, GalleryItem } from '../types';
 import { Eye, Edit3, Save, CalendarClock, RefreshCw, UploadCloud, Image as ImageIcon, CheckCircle2, Sparkles, Loader2, ArrowRight } from 'lucide-react';
 import { useArticleManager } from './admin-articles/logic';
 import { ListPanel } from './admin-articles/list-panel';
@@ -8,8 +8,17 @@ import { EditorPanel } from './admin-articles/editor-panel';
 import { LiveEditor } from './admin-articles/live-editor';
 import { Button, Input, LoadingSpinner } from './ui';
 
-export const AdminArticles = ({ articles, setArticles }: { articles: Article[], setArticles: (a: Article[]) => void }) => {
-  const manager = useArticleManager(articles, setArticles);
+export const AdminArticles = ({ 
+    articles, 
+    setArticles,
+    gallery 
+}: { 
+    articles: Article[], 
+    setArticles: (a: Article[]) => void,
+    gallery: GalleryItem[] 
+}) => {
+  // Pass gallery to the manager hook so AI can use it
+  const manager = useArticleManager(articles, setArticles, gallery);
   const { form, filterLogic, aiLogic, aiState, actions, personas, activePersonaId, setActivePersonaId, updatePersonaAvatar } = manager;
   const availablePillars = articles.filter(a => a.type === 'pillar');
 
