@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Image as ImageIcon, Youtube, MoveUp, MoveDown, Trash2, GripVertical, Type, Loader2, UploadCloud, Plus, Sparkles } from 'lucide-react';
+import { Image as ImageIcon, Youtube, MoveUp, MoveDown, Trash2, GripVertical, Type, Loader2, UploadCloud, Plus, Sparkles, FileText, Download } from 'lucide-react';
 import { uploadToSupabase } from '../../utils';
 
 interface Block {
     id: string;
-    type: 'text' | 'image' | 'video';
+    type: 'text' | 'image' | 'video' | 'file';
     content: string; // Markdown text or URL
-    meta?: any; // Extra data like alt text
+    meta?: any; // Extra data like alt text or filename
 }
 
 // Helper: Parse Markdown String to Blocks
@@ -27,7 +27,13 @@ const parseMarkdownToBlocks = (md: string): Block[] => {
             return { id, type: 'image', content: imgMatch[2], meta: { alt: imgMatch[1] } };
         }
 
-        // 2. Detect Youtube/Iframe
+        // 2. Detect File Download: [FILE: label](url)
+        const fileMatch = trimmed.match(/^\[FILE: (.*?)\]\((.*?)\)$/);
+        if (fileMatch) {
+            return { id, type: 'file', content: fileMatch[2], meta: { label: fileMatch[1] } };
+        }
+
+        // 3. Detect Youtube/Iframe
         if (trimmed.startsWith('<iframe') || (trimmed.startsWith('https://') && trimmed.includes('youtube.com/embed'))) {
              // Extract src if iframe tag
              const srcMatch = trimmed.match(/src="([^"]+)"/);
@@ -35,7 +41,7 @@ const parseMarkdownToBlocks = (md: string): Block[] => {
              return { id, type: 'video', content };
         }
 
-        // 3. Default: Text
+        // 4. Default: Text
         return { id, type: 'text', content: raw };
     });
 };
@@ -44,6 +50,7 @@ const parseMarkdownToBlocks = (md: string): Block[] => {
 const serializeBlocksToMarkdown = (blocks: Block[]): string => {
     return blocks.map(b => {
         if (b.type === 'image') return `![${b.meta?.alt || 'image'}](${b.content})`;
+        if (b.type === 'file') return `[FILE: ${b.meta?.label || 'Download File'}](${b.content})`;
         if (b.type === 'video') return `<iframe width="100%" height="400" src="${b.content}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         return b.content;
     }).join('\n\n');
@@ -119,8 +126,8 @@ export const LiveEditor = ({
         updateParent(newBlocks);
     };
 
-    const addBlock = (index: number, type: 'text' | 'image' | 'video', content: string = '') => {
-        const newBlock: Block = { id: `new-${Date.now()}-${Math.random()}`, type, content };
+    const addBlock = (index: number, type: 'text' | 'image' | 'video' | 'file', content: string = '', meta: any = {}) => {
+        const newBlock: Block = { id: `new-${Date.now()}-${Math.random()}`, type, content, meta };
         const newBlocks = [...blocks];
         newBlocks.splice(index + 1, 0, newBlock);
         updateParent(newBlocks);
@@ -140,13 +147,15 @@ export const LiveEditor = ({
         updateParent(newBlocks);
     };
 
-    const handleImageUpload = async (index: number, file: File) => {
+    const handleUpload = async (index: number, file: File, type: 'image' | 'file') => {
         setUploading(true);
         try {
             const { url } = await uploadToSupabase(file, 'articles');
-            addBlock(index, 'image', url);
+            // Default label for file is filename
+            const meta = type === 'file' ? { label: file.name } : { alt: 'image' };
+            addBlock(index, type, url, meta);
         } catch (e) {
-            alert("Gagal upload gambar.");
+            alert("Gagal upload file.");
         } finally {
             setUploading(false);
         }
@@ -237,6 +246,30 @@ export const LiveEditor = ({
                             </div>
                         )}
 
+                        {block.type === 'file' && (
+                            <div className="my-4 bg-brand-card border border-white/10 rounded-xl p-4 flex items-center gap-4 group/file">
+                                <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center border border-blue-500/30">
+                                    <FileText size={24} className="text-blue-400"/>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <input 
+                                        value={block.meta?.label} 
+                                        onChange={(e) => {
+                                            const newBlocks = [...blocks];
+                                            newBlocks[index].meta.label = e.target.value;
+                                            updateParent(newBlocks);
+                                        }}
+                                        className="bg-transparent text-sm font-bold text-white w-full outline-none focus:border-b focus:border-brand-orange mb-1"
+                                        placeholder="Nama File..."
+                                    />
+                                    <p className="text-xs text-gray-500 truncate">{block.content}</p>
+                                </div>
+                                <div className="p-2 bg-white/5 rounded-lg text-gray-400">
+                                    <Download size={18} />
+                                </div>
+                            </div>
+                        )}
+
                         {block.type === 'video' && (
                             <div className="relative my-2 aspect-video bg-black rounded-xl border border-white/10 overflow-hidden">
                                 <iframe src={block.content} className="w-full h-full" title="Video" frameBorder="0" allowFullScreen></iframe>
@@ -258,8 +291,15 @@ export const LiveEditor = ({
                             </button>
                             <label className="bg-brand-dark border border-white/10 hover:border-brand-orange text-gray-400 hover:text-brand-orange p-1.5 rounded-full shadow-lg transition-all transform hover:scale-110 cursor-pointer" title="Add Image">
                                 {uploading ? <Loader2 size={14} className="animate-spin"/> : <ImageIcon size={14} />}
-                                <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(index, e.target.files[0])} />
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(index, e.target.files[0], 'image')} />
                             </label>
+                            
+                            {/* NEW: FILE UPLOAD BUTTON */}
+                            <label className="bg-brand-dark border border-white/10 hover:border-brand-orange text-gray-400 hover:text-brand-orange p-1.5 rounded-full shadow-lg transition-all transform hover:scale-110 cursor-pointer" title="Add File Download">
+                                {uploading ? <Loader2 size={14} className="animate-spin"/> : <FileText size={14} />}
+                                <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(index, e.target.files[0], 'file')} />
+                            </label>
+
                             <button 
                                 onClick={() => handleVideoInsert(index)}
                                 className="bg-brand-dark border border-white/10 hover:border-brand-orange text-gray-400 hover:text-brand-orange p-1.5 rounded-full shadow-lg transition-all transform hover:scale-110"

@@ -8,11 +8,13 @@ import { CONFIG } from '../config/env';
 export const uploadToSupabase = async (file: File, folder: string = 'temp') => {
     if (!supabase) throw new Error("Supabase not connected");
     
+    // Sanitize filename
     const fileExt = file.name.split('.').pop();
-    const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const cleanName = file.name.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 20);
+    const fileName = `${folder}/${Date.now()}_${cleanName}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
-        .from('images') // Assumes bucket 'images' exists
+        .from('images') // Ensure your bucket is public and allows all mime types if possible, or create a 'files' bucket
         .upload(fileName, file);
 
     if (uploadError) throw uploadError;
@@ -22,15 +24,23 @@ export const uploadToSupabase = async (file: File, folder: string = 'temp') => {
 };
 
 // 2. Upload to Cloudinary (Permanent, Optimized)
+// UPDATED: Supports raw files (ZIP, PDF, Drivers) by using 'auto' resource type in URL
 export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
     if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Cloudinary Config Missing");
+    
     const formData = new FormData();
     formData.append('file', fileOrBlob);
     formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+    
+    // USE 'auto' instead of 'image' to let Cloudinary decide (supports raw files like .zip, .exe, .pdf)
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/auto/upload`, { 
+        method: 'POST', 
+        body: formData 
+    });
+    
     if (!res.ok) throw new Error("Cloudinary Upload Failed");
     const data = await res.json();
-    return data.secure_url;
+    return data.secure_url; // Returns the permanent URL
 };
 
 // 3. Delete from Supabase

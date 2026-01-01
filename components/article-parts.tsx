@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
@@ -7,7 +6,7 @@ import {
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
   Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
   ChevronLeft, Send, Plus, Check, Briefcase, HeartHandshake, Quote,
-  Search, Filter, FolderOpen, ChevronDown, Network
+  Search, Filter, FolderOpen, ChevronDown, Network, FileText, Download, HardDrive
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
@@ -379,6 +378,31 @@ export const renderFormattedText = (text: string) => {
   );
 };
 
+// --- FILE DOWNLOAD CARD COMPONENT ---
+const FileDownloadCard: React.FC<{ label: string, url: string }> = ({ label, url }) => {
+    return (
+        <div className="my-6 p-4 rounded-xl border border-blue-500/30 bg-blue-900/10 flex items-center gap-4 hover:bg-blue-900/20 transition-all group">
+            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center border border-blue-500/30 text-blue-400 shrink-0">
+                <FileText size={24} />
+            </div>
+            <div className="flex-1 min-w-0">
+                <h5 className="font-bold text-white text-sm truncate">{label}</h5>
+                <p className="text-xs text-blue-300/70 truncate flex items-center gap-1 mt-0.5">
+                    <HardDrive size={10} /> File Attachment
+                </p>
+            </div>
+            <a 
+                href={url} 
+                target="_blank" 
+                rel="noreferrer"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs flex items-center gap-2 shadow-lg transition-all"
+            >
+                <Download size={14} /> <span className="hidden sm:inline">Download</span>
+            </a>
+        </div>
+    );
+};
+
 const MarkdownTable: React.FC<{ content: string }> = ({ content }) => {
     const rows = content.trim().split('\n');
     if (rows.length < 2) return <pre className="whitespace-pre-wrap">{content}</pre>;
@@ -617,6 +641,12 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
             
             if (p.startsWith('|') && p.includes('|')) {
                 return <MarkdownTable key={idx} content={p} />;
+            }
+
+            // CHECK FOR FILE DOWNLOAD BLOCK
+            const fileMatch = p.match(/^\[FILE: (.*?)\]\((.*?)\)$/);
+            if (fileMatch) {
+                return <FileDownloadCard key={idx} label={fileMatch[1]} url={fileMatch[2]} />;
             }
 
             const cleanId = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
