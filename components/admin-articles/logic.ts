@@ -5,31 +5,19 @@ import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBack
 import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
 
 // --- FOUNDER STORY VARIATIONS (ANEKDOT DATABASE) ---
-// Database cerita yang lebih luas: Sedih, Marah, Teknis, Lucu, Inspiratif.
 const FOUNDER_ANECDOTES = [
-    // THE FALL (2022) - Vulnerable
     `"Jujur aja, 2022 itu tahun neraka buat gue. Domain kantor 'expired' dan diambil orang. Rasanya kayak rumah lo digusur padahal sertifikatnya lengkap. Dari situ gue belajar: detail kecil itu mematikan."`,
     `"Pas gue liat notifikasi server down dan aset digital hilang, dengkul gue lemes. Itu momen gue sadar, bisnis tanpa backup system itu sama aja bunuh diri pelan-pelan."`,
-    
-    // THE HUSTLE (2015) - Grit
     `"Jangan pikir gue langsung duduk enak di kursi CEO. 2015 gue jalan kaki, door-to-door nawarin mesin kasir, diusir satpam, diketawain owner toko. Mental gue ditempa di aspal panas."`,
     `"Klien pertama gue itu warung kelontong kecil. Dia bayar pake uang receh hasil dagang seharian. Gue terima duit itu sambil gemeter, gue janji software ini gak boleh ngecewain dia."`,
-
-    // THE TECH (Nerd/Obsessive)
     `"Gue pernah gak tidur 48 jam cuma gara-gara selisih 50 perak di laporan closing. Orang bilang lebay, gue bilang itu integritas. Kalau 50 perak aja lolos, gimana 50 juta?"`,
     `"Bikin software itu gampang. Bikin software yang bisa dipake sama Ibu-ibu pasar yang gak ngerti gadget? Itu baru tantangan. SIBOS lahir dari situ."`,
-
-    // THE CONTRARIAN (Opinionated/Spicy)
     `"Banyak motivator bisnis bilang 'Fokus Omzet!', tai kucing lah. Fokus itu di Profit dan Data. Omzet gede kalau bocor di operasional buat apa? Capek doang."`,
     `"Stop dewa-dewain teknologi mahal. POS 50 juta gak guna kalau kasir lo masih bisa nyatet manual di buku utang. Sistem itu soal habit, bukan cuma alat."`,
-
-    // THE EMPATHY (Friend/Mentor)
     `"Gue sering banget denger curhatan owner yang duitnya dicolong karyawan kepercayaan. Sakitnya bukan di duitnya, tapi di khianatnya. Gue bangun sistem ini biar lo gak ngerasain sakit itu."`,
     `"Gue ngerti rasanya pusing ngurus stok opname tiap akhir bulan. Mata sepet, fisik capek, data gak klop. Gue pernah di posisi lo, Makanya gue bikin fitur auto-stock."`
 ];
 
-// --- OPENING HOOK STRATEGIES ---
-// Cara memulai artikel agar tidak selalu "Halo" atau "Jujur..."
 const OPENING_HOOKS = [
     "THE PUNCH: Mulai dengan satu kalimat pendek yang menohok/keras.",
     "THE QUESTION: Mulai dengan pertanyaan retoris yang relate dengan masalah pembaca.",
@@ -38,7 +26,6 @@ const OPENING_HOOKS = [
     "THE CONTRAST: Mulai dengan 'Banyak orang pikir X, padahal aslinya Y'."
 ];
 
-// --- BRAND CONTEXT KNOWLEDGE BASE ---
 const BRAND_CONTEXT = `
 [IDENTITAS]
 Nama: PT Mesin Kasir Solo.
@@ -52,7 +39,6 @@ Produk: SIBOS (App Kasir), QALAM (App Sekolah), Hardware POS.
 - Variasikan panjang kalimat. Kadang satu kata. Kadang satu paragraf.
 `;
 
-// --- SUB-HOOK: FILTER & PAGINATION ---
 export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
@@ -90,39 +76,22 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
     const totalPages = Math.ceil(sortedList.length / itemsPerPage);
     const paginatedList = sortedList.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-    return {
-        searchTerm, setSearchTerm,
-        filterType, setFilterType,
-        page, setPage,
-        totalPages,
-        paginatedList,
-        expandedPillarId, setExpandedPillarId
-    };
+    return { searchTerm, setSearchTerm, filterType, setFilterType, page, setPage, totalPages, paginatedList, expandedPillarId, setExpandedPillarId };
 };
 
-// --- HELPER: VOLUME PARSER ---
 const parseVolume = (volStr: string): number => {
     try {
-        // Normalize: remove /mo, lowercase, trim
         const lower = volStr.toLowerCase().replace(/\/mo/g, '').trim();
-        
-        // Handle 'k' (e.g., 1.2k -> 1200)
         if (lower.includes('k')) {
             const numPart = parseFloat(lower.replace('k', ''));
             return isNaN(numPart) ? 0 : numPart * 1000;
         }
-        
-        // Handle dots as thousand separators (e.g., 5.400 -> 5400)
-        // Remove dots and commas to get raw integer
         const clean = lower.replace(/\./g, '').replace(/,/g, '');
         const num = parseInt(clean);
         return isNaN(num) ? 0 : num;
-    } catch (e) {
-        return 0;
-    }
+    } catch (e) { return 0; }
 };
 
-// --- SUB-HOOK: AI GENERATOR ---
 export const useAIGenerator = () => {
     const [loading, setLoading] = useState({ researching: false, generatingText: false, generatingImage: false, uploading: false });
     const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
@@ -133,21 +102,40 @@ export const useAIGenerator = () => {
         imageStyle: 'cinematic', narrative: 'narsis'
     });
 
-    const analyzeMarket = async () => {
+    // MODIFIED: Accept articleType to tailor research
+    const analyzeMarket = async (articleType: 'pillar' | 'cluster') => {
         setLoading(p => ({ ...p, researching: true }));
         try {
-            const prompt = `
-            Act as a Senior SEO Strategist for the Indonesian Market.
-            Industry: Retail Technology, Point of Sale (POS), UMKM Business.
-            Task: Identify 15 high-potential **Specific Long-tail Article Titles** (Keywords) for 2025.
-            Strict Output Format: JSON Array of Objects.
-            Example: [{"keyword": "Cara Mencegah Kasir Curang", "volume": "5.400/mo", "competition": "Low", "type": "Problem Solving"}]
-            `;
+            let prompt = "";
+            
+            if (articleType === 'pillar') {
+                prompt = `
+                Act as a Senior SEO Strategist for the Indonesian Market.
+                Industry: Retail Technology, Point of Sale (POS), Business Management.
+                Task: Identify 10 **Broad, High-Volume "Ultimate Guide" Article Titles** (Pillar Content) for 2025.
+                These should be comprehensive topics that can be broken down into many sub-topics later.
+                Examples: "Panduan Lengkap Manajemen Operasional Ritel", "Strategi Bisnis F&B Modern 2025", "Mastering Sistem Kasir Digital".
+                
+                Strict Output Format: JSON Array of Objects.
+                Example: [{"keyword": "Panduan Lengkap Bisnis Ritel", "volume": "12k/mo", "competition": "High", "type": "Pillar"}]
+                `;
+            } else {
+                prompt = `
+                Act as a Senior SEO Strategist for the Indonesian Market.
+                Industry: Retail Technology, Point of Sale (POS), UMKM Business.
+                Task: Identify 15 **Specific, Long-tail, Problem-Solving Article Titles** (Cluster Content) for 2025.
+                These should be specific "How-to", comparisons, or niche problem solving.
+                Examples: "Cara Mencegah Kasir Curang", "Android POS vs Windows POS", "Tips Stock Opname Cepat".
+                
+                Strict Output Format: JSON Array of Objects.
+                Example: [{"keyword": "Cara Mencegah Kasir Curang", "volume": "5.400/mo", "competition": "Low", "type": "Cluster"}]
+                `;
+            }
+
             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
             const data = JSON.parse(result.text || '[]');
             
             if (Array.isArray(data)) {
-                // Sort by Volume (Highest First)
                 const sortedData = data.sort((a: any, b: any) => parseVolume(b.volume) - parseVolume(a.volume));
                 setKeywords(sortedData);
             }
@@ -157,26 +145,17 @@ export const useAIGenerator = () => {
 
     const generateClusterIdeas = async (pillar: Article) => {
         setLoading(p => ({ ...p, researching: true }));
-        setKeywords([]); // Clear old keywords first
+        setKeywords([]);
         try {
             const prompt = `
             Act as SEO Specialist.
             Context: We have a Pillar Page titled "${pillar.title}".
             Task: Generate 10 Specific Cluster Content Ideas (Sub-topics) that link back to this pillar.
-            
             STRICT JSON Output Format: Array of objects with keys: "keyword", "volume", "competition", "type".
-            
-            Example: 
-            [
-              {"keyword": "Detail sub topic related to pillar", "volume": "300/mo", "competition": "Low", "type": "Cluster"},
-              {"keyword": "Another specific angle", "volume": "1.2k/mo", "competition": "Medium", "type": "Cluster"}
-            ]
             `;
             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
             const data = JSON.parse(result.text || '[]');
-            
             if (Array.isArray(data)) {
-                // Sort by Volume (Highest First)
                 const sortedData = data.sort((a: any, b: any) => parseVolume(b.volume) - parseVolume(a.volume));
                 setKeywords(sortedData);
             }
@@ -190,19 +169,14 @@ export const useAIGenerator = () => {
         type: string, 
         authorName: string, 
         wordCount: number, 
-        pillarContext?: { title: string, slug: string }
+        pillarContext?: { title: string, slug: string },
+        relatedPillarsData?: { title: string, slug: string }[] 
     ) => {
         setLoading(p => ({ ...p, generatingText: true }));
         try {
             const isAmin = authorName === 'Amin Maghfuri';
-            
-            // 1. Select Random Anecdote (Flavor)
             const selectedAnecdote = FOUNDER_ANECDOTES[Math.floor(Math.random() * FOUNDER_ANECDOTES.length)];
-            
-            // 2. Select Random Opening Strategy (Structure)
             const selectedHook = OPENING_HOOKS[Math.floor(Math.random() * OPENING_HOOKS.length)];
-
-            // 3. Determine Probability of Story Injection (80% chance for Amin, 20% for Team)
             const shouldInjectStory = isAmin ? (Math.random() > 0.2) : (Math.random() > 0.8);
             
             const storyInstruction = shouldInjectStory 
@@ -218,15 +192,32 @@ export const useAIGenerator = () => {
                 return def ? `${def.label} (${def.desc})` : t;
             }).join(', ');
 
-            // --- LENGTH & DEPTH CONTROL ---
+            // --- AGGRESSIVE LENGTH & DEPTH CONTROL ---
             let lengthInstruction = `Target Length: Approximately ${wordCount} words.`;
-            if (wordCount > 2000) {
-                lengthInstruction += `
-                IMPORTANT: This is a DEEP DIVE. 
-                - Do not be repetitive. 
-                - Go extremely deep into details, examples, and nuances. 
-                - Break down every concept into sub-sections.
-                - Use tables, lists, and case studies to expand content naturally.
+            
+            if (wordCount >= 2500) {
+                // EPIC GUIDE MODE - Forces AI to output a book chapter basically
+                lengthInstruction = `
+                [CRITICAL REQUIREMENT: EPIC MASTERCLASS - ${wordCount} WORDS]
+                This is NOT a blog post. This is a COMPREHENSIVE GUIDE.
+                
+                **MANDATORY STRUCTURE TO HIT WORD COUNT:**
+                1. **Introduction (300+ words)**: Hook + Deep Context + Problem Agitation.
+                2. **The "Why" & "Philosophy" (400+ words)**: Don't just explain 'how', explain the underlying principles.
+                3. **Core Analysis (1000+ words)**: Break down into at least 8-10 Sub-chapters (##). Each sub-chapter must have 3-4 paragraphs.
+                4. **Scenarios/Case Studies (500+ words)**: Provide 3 distinct fictional examples (e.g. "Studi Kasus Warung Bu Tejo", "Studi Kasus Cafe Senja").
+                5. **Implementation Guide (500+ words)**: Step-by-step technical details.
+                6. **Common Pitfalls (300+ words)**: What goes wrong and how to fix it.
+                7. **FAQ Section (300+ words)**: 5-7 Detailed Q&A.
+                
+                **STRICT RULE**: DO NOT SUMMARIZE. EXPAND EVERY CONCEPT. If you think you're done, ADD MORE EXAMPLES.
+                `;
+            } else if (wordCount > 1000) {
+                lengthInstruction = `
+                Target: ${wordCount} words. Deep Dive.
+                - Break down concepts into actionable steps.
+                - Use examples for every point.
+                - Use at least 5 subheadings (##).
                 `;
             } else {
                 lengthInstruction += `Keep it focused and concise.`;
@@ -237,13 +228,30 @@ export const useAIGenerator = () => {
             if (type === 'cluster' && pillarContext) {
                 clusterInstruction = `
                 [SEO STRATEGY: CLUSTER CONTENT]
-                This article is a "Cluster" supporting topic for the Pillar Page: "${pillarContext.title}".
+                This article supports the Pillar: "${pillarContext.title}".
+                MANDATORY: Link back to [${pillarContext.title}](/articles/${pillarContext.slug}) in the first 3 paragraphs naturally.
+                `;
+            }
+
+            // --- INTER-PILLAR LINKING STRATEGY (IMPROVED) ---
+            let relatedPillarInstruction = "";
+            if (relatedPillarsData && relatedPillarsData.length > 0) {
+                const linksList = relatedPillarsData.map(p => `- [${p.title}](/articles/${p.slug})`).join('\n');
+                relatedPillarInstruction = `
+                [SEO STRATEGY: CONTENT WEB / INTER-LINKING]
+                **CRITICAL TASK**: You must weave contextual links to other pillar pages within the body text. 
                 
-                **MANDATORY INTERNAL LINKING:**
-                1. You MUST explicitly mention and link back to the Pillar Page within the **first 3 paragraphs**.
-                2. Use this exact Markdown Link format: [${pillarContext.title}](/articles/${pillarContext.slug})
-                3. Narrative Example: "Topik ini sebenarnya adalah bagian mendalam dari panduan utama kami di [${pillarContext.title}](/articles/${pillarContext.slug}), tapi kali ini gue mau fokus ke..."
-                4. Ensure the connection feels natural and adds value (Contextual Linking).
+                Available Links:
+                ${linksList}
+                
+                **HOW TO DO IT**: 
+                Do NOT create a "Read Also" list at the bottom.
+                Instead, when discussing a related concept, insert the link naturally.
+                
+                *Bad Example:* "We also have an article about Hardware here: [Link]."
+                *Good Example:* "Pemilihan software yang tepat harus didukung dengan [Hardware Kasir yang Mumpuni](/articles/slug-hardware) agar performa maksimal."
+                
+                Ensure at least 2-3 of these links are used naturally in the text.
                 `;
             }
 
@@ -257,21 +265,21 @@ export const useAIGenerator = () => {
             Tone Mix: ${toneDescriptions}.
             Opening Strategy: ${selectedHook}
             Type: ${type.toUpperCase()}.
+            Format: Markdown (Use Headers #, ##, ###, Lists, Bold, Tables).
+            
             ${lengthInstruction}
-            Format: Markdown (Use Headers #, ##, ###, Lists, Bold).
             
             ${clusterInstruction}
             
+            ${relatedPillarInstruction}
+            
             **CRITICAL INSTRUCTIONS:**
-            1. Start IMMEDIATELY with the ${selectedHook}. NO "Halo", NO "Selamat datang", NO "Di artikel ini".
-            2. Write like a human speaking, not an AI writing. Use rhetorical questions, short sentences, and emotional hooks.
-            3. If using 'Gue', be consistent. Don't switch to 'Saya'.
-            ${type === 'cluster' && pillarContext ? '4. DO NOT FORGET THE PILLAR LINK IN THE INTRO.' : ''}
+            1. Start IMMEDIATELY with the ${selectedHook}. NO "Halo", NO "Selamat datang".
+            2. Write like a human speaking. Use rhetorical questions and short sentences.
             `;
             
             const contentRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: contentPrompt });
             
-            // Adjust read time estimation based on word count
             const generatedWordCount = (contentRes.text || '').split(/\s+/).length;
             const readTimeMin = Math.ceil(generatedWordCount / 200);
             
@@ -306,7 +314,6 @@ export const useAIGenerator = () => {
     return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateContent, getAIImageUrl, generateClusterIdeas };
 };
 
-// --- MAIN HOOK ---
 export const useArticleManager = (articles: Article[], setArticles: any) => {
     const filterLogic = useArticleFilter(articles, 7);
     const aiLogic = useAIGenerator();
@@ -328,7 +335,7 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
         date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
         targetWordCount: 1000,
-        related_pillars: [] // Initial State
+        related_pillars: []
     });
 
     const [aiStep, setAiStep] = useState(0);
@@ -354,8 +361,6 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
     const handleEditClick = (item: Article) => {
         const matchedPersona = personas.find(p => item.author.includes(p.name));
         if (matchedPersona) setActivePersonaId(matchedPersona.id);
-        
-        // Estimate current word count if editing
         const estimatedCount = item.content ? item.content.split(/\s+/).length : 1000;
 
         setForm({
@@ -387,9 +392,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
 
     const saveArticle = async () => {
         if (!form.title) return alert("Judul wajib diisi.");
-        // VALIDATION FOR CLUSTER
         if (form.type === 'cluster' && (!form.pillar_id || form.pillar_id === 0)) {
-            return alert("Peringatan: Artikel tipe 'Cluster' WAJIB memilih Pillar Page induknya! Silakan set di panel Konfigurasi.");
+            return alert("Peringatan: Artikel 'Cluster' WAJIB memilih Pillar Page induknya!");
         }
 
         aiLogic.setLoading(p => ({ ...p, uploading: true }));
@@ -416,8 +420,8 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
                 scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
                 type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
                 cluster_ideas: form.cluster_ideas, 
-                date: dateStr, // Use date from form
-                related_pillars: form.related_pillars // Save related pillars
+                date: dateStr, 
+                related_pillars: form.related_pillars 
             };
 
             let savedId = form.id;
@@ -452,82 +456,74 @@ export const useArticleManager = (articles: Article[], setArticles: any) => {
         if (form.id === id) resetForm();
     };
 
-    const runResearch = async () => { try { await aiLogic.analyzeMarket(); setAiStep(1); } catch(e: any) { alert(e.message); } };
+    // MODIFIED: Pass form.type to analyzeMarket
+    const runResearch = async () => { 
+        try { 
+            await aiLogic.analyzeMarket(form.type as 'pillar' | 'cluster'); 
+            setAiStep(1); 
+        } catch(e: any) { alert(e.message); } 
+    };
     
     const runClusterResearch = async (pillar: Article) => { 
         try { 
-            // Manual Reset + Set Initial State for Cluster
             setForm({
-                id: null, 
-                title: '', 
-                excerpt: '', 
-                content: '', 
-                category: pillar.category, // Inherit Category
-                author: activePersona.name, 
-                authorAvatar: activePersona.avatar || '', 
-                uploadAuthorFile: null, 
-                readTime: '5 min read', 
-                imagePreview: '', 
-                uploadFile: null, 
-                status: 'draft', 
-                scheduled_for: '', 
-                type: 'cluster', 
-                pillar_id: pillar.id, // Explicitly Set Pillar Link
-                cluster_ideas: [], 
-                scheduleStart: '',
+                id: null, title: '', excerpt: '', content: '', category: pillar.category,
+                author: activePersona.name, authorAvatar: activePersona.avatar || '', 
+                uploadAuthorFile: null, readTime: '5 min read', imagePreview: '', uploadFile: null, 
+                status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: pillar.id, 
+                cluster_ideas: [], scheduleStart: '',
                 date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
                 targetWordCount: 1000,
                 related_pillars: []
             });
-            
-            // Set AI Step to Keywords Selection
             setAiStep(1); 
-            
-            // Generate Ideas
             await aiLogic.generateClusterIdeas(pillar); 
         } catch(e: any) { alert(e.message); } 
     };
 
     const selectTopic = (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); };
+    
     const runWrite = async () => { 
         try { 
-            // Lookup Pillar Context if Cluster
             let pillarContext = undefined;
             if (form.type === 'cluster' && form.pillar_id) {
                 const pillar = articles.find(a => a.id === form.pillar_id);
                 if (pillar) {
-                    pillarContext = {
-                        title: pillar.title,
-                        slug: slugify(pillar.title)
-                    };
+                    pillarContext = { title: pillar.title, slug: slugify(pillar.title) };
                 }
             }
 
+            let relatedPillarsData: {title: string, slug: string}[] = [];
+            if (form.type === 'pillar' && form.related_pillars && form.related_pillars.length > 0) {
+                relatedPillarsData = form.related_pillars
+                    .map((id) => {
+                        const related = articles.find(a => a.id === id);
+                        return related ? { title: related.title, slug: slugify(related.title) } : null;
+                    })
+                    .filter(Boolean) as {title: string, slug: string}[];
+            }
+
             const { content, meta } = await aiLogic.generateContent(
-                form.title, 
-                selectedTones, 
-                form.type, 
-                form.author, 
-                form.targetWordCount, // PASS WORD COUNT
-                pillarContext
+                form.title, selectedTones, form.type, form.author, form.targetWordCount, 
+                pillarContext, relatedPillarsData
             ); 
             
-            // FIX: Only overwrite category if it's empty or the user hasn't set one yet.
             setForm(p => ({ 
-                ...p, 
-                content, 
-                excerpt: meta.excerpt, 
-                // Prioritize existing user selection if available and not empty
+                ...p, content, excerpt: meta.excerpt, 
                 category: p.category && p.category.length > 2 ? p.category : meta.category, 
                 readTime: meta.readTime 
             })); 
-            
             setAiStep(2); 
         } catch(e: any) { alert(e.message); } 
     };
+    
     const runImage = async () => { 
         aiLogic.setLoading(p => ({ ...p, generatingImage: true })); 
-        try { const style = activePersona.mode === 'personal' ? 'cinematic' : 'corporate'; const url = await aiLogic.getAIImageUrl(form.title, style); setForm(p => ({ ...p, imagePreview: url })); } catch(e) {} finally { aiLogic.setLoading(p => ({ ...p, generatingImage: false })); } 
+        try { 
+            const style = activePersona.mode === 'personal' ? 'cinematic' : 'corporate'; 
+            const url = await aiLogic.getAIImageUrl(form.title, style); 
+            setForm(p => ({ ...p, imagePreview: url })); 
+        } catch(e) {} finally { aiLogic.setLoading(p => ({ ...p, generatingImage: false })); } 
     };
 
     return {

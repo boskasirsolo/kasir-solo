@@ -87,23 +87,35 @@ export const EditorPanel = ({
 
     // --- VIEW STEPS ---
 
-    // STEP 0: INITIAL START
+    // STEP 0: INITIAL START (Pre-Research)
     if (aiState.step === 0 && !form.id) {
         return (
             <div className="flex flex-col h-full bg-brand-dark p-4 items-center justify-center text-center">
-                <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+                <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
                     <Search size={32} className="text-blue-400" />
                 </div>
+                
                 <h3 className="text-white font-bold text-lg mb-2">Riset Judul Viral</h3>
-                <p className="text-gray-500 text-xs max-w-[200px] mb-8 leading-relaxed">
-                    AI akan menganalisis volume pencarian dan kompetisi untuk menemukan 15 judul artikel terbaik.
+                <p className="text-gray-500 text-xs max-w-[220px] mb-6 leading-relaxed">
+                    Tentukan jenis artikel, lalu AI akan mencari topik dengan volume pencarian tertinggi.
                 </p>
+
+                {/* INSERTED: Strategy Switcher for Pre-Research Context */}
+                <div className="w-full max-w-[250px] mb-6 text-left">
+                    <StrategySwitcher 
+                        type={form.type} 
+                        onChange={(t) => {
+                            setForm((p:any) => ({...p, type: t}));
+                        }} 
+                    />
+                </div>
+
                 <Button 
                     onClick={actions.runResearch} 
                     disabled={loading.researching}
-                    className="w-full py-3 shadow-neon"
+                    className="w-full max-w-[250px] py-3 shadow-neon"
                 >
-                    {loading.researching ? <Loader2 size={16} className="animate-spin"/> : <><Sparkles size={16}/> RISET MARKET</>}
+                    {loading.researching ? <Loader2 size={16} className="animate-spin"/> : <><Sparkles size={16}/> RISET MARKET ({form.type.toUpperCase()})</>}
                 </Button>
             </div>
         );
@@ -115,7 +127,7 @@ export const EditorPanel = ({
             <div className="flex flex-col h-full bg-brand-dark p-4">
                 <div className="flex items-center gap-2 mb-4 pb-4 border-b border-white/10">
                     <button onClick={() => aiState.setStep(0)} className="p-1 hover:bg-white/10 rounded"><ArrowLeft size={16} className="text-gray-400 hover:text-white"/></button>
-                    <h3 className="text-white font-bold text-sm">Hasil Riset</h3>
+                    <h3 className="text-white font-bold text-sm">Hasil Riset ({form.type === 'pillar' ? 'Pillar' : 'Cluster'})</h3>
                 </div>
                 
                 <p className="text-xs text-gray-500 mb-4">Pilih judul dengan volume tinggi & kompetisi rendah.</p>
