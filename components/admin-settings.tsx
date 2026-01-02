@@ -1,9 +1,22 @@
 
 import React, { useState } from 'react';
-import { CheckCircle2, Link as LinkIcon, AlertCircle, Share2, MapPin, Phone, Compass, Save, Sparkles, TrendingUp, Image as ImageIcon, UploadCloud, Mail, BarChart, Globe } from 'lucide-react';
+import { 
+    Layout, MapPin, Share2, Settings as SettingsIcon, 
+    Save, UploadCloud, Image as ImageIcon, Sparkles, 
+    TrendingUp, Monitor, Globe, BarChart, Clock, 
+    Smartphone, Mail, Compass 
+} from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
-import { supabase, callGeminiWithRotation, CONFIG, renameFile } from '../utils';
+import { supabase, callGeminiWithRotation, CONFIG, renameFile, INDONESIA_TIMEZONES } from '../utils';
+
+// --- MENU TABS ---
+const TABS = [
+    { id: 'general', label: 'Umum & Hero', icon: Layout },
+    { id: 'contact', label: 'Kontak & Lokasi', icon: MapPin },
+    { id: 'social', label: 'Sosial & Link', icon: Share2 },
+    { id: 'system', label: 'Sistem & Timezone', icon: SettingsIcon },
+];
 
 export const AdminSettings = ({
   config,
@@ -12,6 +25,7 @@ export const AdminSettings = ({
   config: SiteConfig,
   setConfig: (c: SiteConfig) => void
 }) => {
+  const [activeTab, setActiveTab] = useState('general');
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [magicContext, setMagicContext] = useState('');
@@ -29,7 +43,6 @@ export const AdminSettings = ({
 
           // 1. Handle Upload if file selected
           if (aboutImageFile && CONFIG.CLOUDINARY_CLOUD_NAME) {
-              // SEO OPTIMIZATION: About Page Image
               const seoName = 'kantor-mesin-kasir-solo-hq-about';
               const fileToUpload = renameFile(aboutImageFile, seoName);
 
@@ -40,16 +53,15 @@ export const AdminSettings = ({
               const data = await res.json();
               if (data.secure_url) {
                   finalAboutImage = data.secure_url;
-                  // Update local config immediately so UI reflects it even without refresh
                   setConfig({ ...config, aboutImage: finalAboutImage });
               }
           }
 
           const dbData = {
-              id: 1, // Singleton row concept
+              id: 1, // Singleton row
               hero_title: config.heroTitle,
               hero_subtitle: config.heroSubtitle,
-              about_image: finalAboutImage, // Save to DB
+              about_image: finalAboutImage,
               sibos_url: config.sibosUrl,
               qalam_url: config.qalamUrl,
               whatsapp_number: config.whatsappNumber,
@@ -65,15 +77,15 @@ export const AdminSettings = ({
               youtube_url: config.youtubeUrl,
               tiktok_url: config.tiktokUrl,
               linkedin_url: config.linkedinUrl,
-              // Google Integration Fields
               google_analytics_id: config.googleAnalyticsId,
-              google_search_console_code: config.googleSearchConsoleCode
+              google_search_console_code: config.googleSearchConsoleCode,
+              timezone: config.timezone
           };
           
           const { error } = await supabase.from('site_settings').upsert(dbData);
           if(error) throw error;
-          alert("Konfigurasi berhasil disimpan! Refresh halaman depan untuk melihat perubahan.");
-          setAboutImageFile(null); // Clear file input
+          alert("Pengaturan berhasil disimpan.");
+          setAboutImageFile(null); 
       } catch(e: any) {
           alert("Gagal menyimpan: " + e.message);
       } finally {
@@ -85,299 +97,278 @@ export const AdminSettings = ({
     setIsGenerating(true);
     try {
         const prompt = `
-        Role: Senior SEO Strategist & Conversion Copywriter (Indonesian Market Expert).
-        Task: Generate a high-converting Hero Section for 'PT MESIN KASIR SOLO'.
-        
-        Business Context: 
-        - Selling: Mesin Kasir (POS), Software (SIBOS, QALAM), Web Development.
-        - Target: UMKM, Cafe, Retail, Corporate.
-        - User Input Context: "${magicContext || "General Promotion"}"
-
-        SEO STRATEGY (Modern & Trending):
-        1. Analyze predicted trending keywords for 2024/2025 in Indonesia (e.g., 'Kasir Android', 'Digitalisasi UMKM', 'Omnichannel POS').
-        2. Focus on "Transactional Intent" (keywords that drive sales).
-        3. Use "Semantic SEO" to include related terms naturally in the subtitle.
-        
-        OUTPUT RULES:
-        - Hero Title: Maximum 6 words. Powerful, keyword-rich, attention-grabbing.
-        - Hero Subtitle: Maximum 25 words. Explains the value proposition + solves a pain point + includes secondary keywords.
-        - Language: Indonesian (Professional, Persuasive, Trustworthy).
-        
-        STRICT JSON OUTPUT FORMAT:
-        {
-            "heroTitle": "YOUR TITLE HERE",
-            "heroSubtitle": "YOUR SUBTITLE HERE"
-        }
+        Role: Senior Copywriter. Task: Generate Hero Section for 'PT MESIN KASIR SOLO'.
+        Context: "${magicContext || "General Promotion"}"
+        Output JSON: { "heroTitle": "...", "heroSubtitle": "..." }
         `;
-        
-        // USE CENTRALIZED ROTATION CALLER
         const result = await callGeminiWithRotation({
             model: 'gemini-3-flash-preview',
             contents: prompt,
             config: { responseMimeType: "application/json" }
         });
-        
-        const text = result.text || "{}";
-        const data = JSON.parse(text);
-        
-        if(data.heroTitle && data.heroSubtitle) {
-            setConfig({ 
-                ...config, 
-                heroTitle: data.heroTitle, 
-                heroSubtitle: data.heroSubtitle 
-            });
-        }
-    } catch(e: any) {
-        alert("Gagal generate AI: " + e.message);
-    } finally {
-        setIsGenerating(false);
-    }
+        const data = JSON.parse(result.text || "{}");
+        if(data.heroTitle) setConfig({ ...config, heroTitle: data.heroTitle, heroSubtitle: data.heroSubtitle });
+    } catch(e: any) { alert("Gagal generate: " + e.message); } 
+    finally { setIsGenerating(false); }
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
-        {/* Header with Save Button */}
-        <div className="flex justify-between items-center pb-4 border-b border-white/10 sticky top-0 bg-brand-dark z-10 py-2">
-            <div>
-                <h3 className="text-white font-bold text-lg">Konfigurasi Umum</h3>
-                <p className="text-gray-500 text-xs">Pengaturan global website.</p>
+    <div className="flex flex-col md:flex-row gap-8 h-full min-h-[600px] animate-fade-in">
+        
+        {/* LEFT SIDEBAR NAVIGATION */}
+        <div className="w-full md:w-64 shrink-0 space-y-2">
+            <div className="p-4 mb-4 bg-brand-orange/10 border border-brand-orange/20 rounded-xl">
+                <h3 className="text-white font-bold text-lg">Konfigurasi</h3>
+                <p className="text-xs text-gray-400">Pusat kontrol website.</p>
             </div>
-            <Button onClick={saveSettings} disabled={isSaving} className="px-6">
-                {isSaving ? <LoadingSpinner size={16}/> : <><Save size={16} /> SIMPAN PERUBAHAN</>}
+            
+            {TABS.map((tab) => (
+                <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all ${
+                        activeTab === tab.id 
+                        ? 'bg-brand-card text-white border-l-4 border-brand-orange shadow-lg' 
+                        : 'text-gray-500 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                    <tab.icon size={18} className={activeTab === tab.id ? 'text-brand-orange' : ''} />
+                    {tab.label}
+                </button>
+            ))}
+
+            <Button onClick={saveSettings} disabled={isSaving} className="w-full mt-8 shadow-neon">
+                {isSaving ? <LoadingSpinner size={16}/> : <><Save size={16} /> SIMPAN SEMUA</>}
             </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* COLUMN 1: General, Google & Contact */}
-        <div className="space-y-8">
-            {/* General Config */}
-            <div className="space-y-4">
-                <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2">Hero Section</h4>
-                
-                {/* AI MAGIC BOX */}
-                <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-white/10 rounded-lg p-4 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-30 transition-opacity">
-                        <Sparkles size={40} className="text-white"/>
-                    </div>
-                    <label className="text-[10px] text-blue-300 font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <TrendingUp size={12}/> SEO Magic Writer
-                    </label>
-                    <div className="flex gap-2">
-                        <input 
-                            value={magicContext}
-                            onChange={(e) => setMagicContext(e.target.value)}
-                            placeholder="Target: 'Promo Lebaran', 'Kasir Cafe', 'Jasa Web'..."
-                            className="bg-black/40 border border-white/10 rounded px-3 text-xs w-full focus:outline-none focus:border-blue-400 text-white placeholder-gray-500"
-                        />
-                        <button 
-                            onClick={generateHeroContent}
-                            disabled={isGenerating}
-                            className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold px-4 py-2 rounded flex items-center gap-2 whitespace-nowrap transition-all shadow-lg"
-                        >
-                            {isGenerating ? <LoadingSpinner size={14}/> : <><Sparkles size={14}/> RESEARCH & WRITE</>}
-                        </button>
-                    </div>
-                    <p className="text-[9px] text-gray-400 mt-2 italic">*AI akan meriset keyword populer terbaru sebelum menulis.</p>
-                </div>
+        {/* RIGHT CONTENT AREA */}
+        <div className="flex-1 bg-brand-card border border-white/5 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+            {/* Background Decor */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-orange/5 rounded-full blur-[80px] pointer-events-none"></div>
 
-                <div>
-                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Hero Title (H1)</label>
-                    <Input value={config.heroTitle} onChange={(e) => setConfig({...config, heroTitle: e.target.value})} />
-                </div>
-                <div>
-                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Hero Subtitle</label>
-                    <TextArea value={config.heroSubtitle} onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})} className="h-28" />
-                </div>
-            </div>
+            {/* TAB: GENERAL */}
+            {activeTab === 'general' && (
+                <div className="space-y-8 animate-fade-in">
+                    <div>
+                        <h3 className="text-xl font-bold text-white mb-1">Tampilan Utama (Hero)</h3>
+                        <p className="text-gray-400 text-xs">Mengatur teks utama yang muncul di halaman depan.</p>
+                    </div>
 
-            {/* GOOGLE INTEGRATION SECTION (NEW) */}
-            <div className="space-y-4">
-                <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
-                    <Globe size={14} /> Integrasi Pihak Ketiga
-                </h4>
-                
-                <div className="bg-brand-card border border-white/5 p-4 rounded-lg space-y-4">
-                    <div>
-                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1">
-                            <BarChart size={12}/> Google Analytics 4 (GA4)
-                        </label>
-                        <Input 
-                            value={config.googleAnalyticsId || ''} 
-                            onChange={(e) => setConfig({...config, googleAnalyticsId: e.target.value})} 
-                            placeholder="G-XXXXXXXXXX" 
-                            className="font-mono text-xs"
-                        />
-                        <p className="text-[10px] text-gray-500 mt-1">Masukkan Measurement ID.</p>
+                    {/* AI Generator */}
+                    <div className="bg-brand-dark/50 p-4 rounded-xl border border-white/10 flex flex-col md:flex-row gap-4 items-end">
+                        <div className="flex-1 w-full">
+                            <label className="text-[10px] text-blue-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
+                                <Sparkles size={12}/> AI Writer
+                            </label>
+                            <Input 
+                                value={magicContext}
+                                onChange={(e) => setMagicContext(e.target.value)}
+                                placeholder="Konteks: 'Promo Lebaran', 'Kasir Cafe'..."
+                                className="bg-black/40 text-xs"
+                            />
+                        </div>
+                        <Button onClick={generateHeroContent} disabled={isGenerating} variant="outline" className="w-full md:w-auto h-[42px] text-xs">
+                            {isGenerating ? <LoadingSpinner size={14}/> : 'GENERATE'}
+                        </Button>
                     </div>
-                    <div>
-                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1">
-                            <Globe size={12}/> Google Search Console (GSC)
-                        </label>
-                        <Input 
-                            value={config.googleSearchConsoleCode || ''} 
-                            onChange={(e) => setConfig({...config, googleSearchConsoleCode: e.target.value})} 
-                            placeholder="Kode verifikasi (HTML Tag Content)" 
-                            className="font-mono text-xs"
-                        />
-                        <p className="text-[10px] text-gray-500 mt-1">Hanya kode di dalam content (contoh: 'abc12345...').</p>
-                    </div>
-                </div>
-            </div>
 
-            {/* Contact Info */}
-            <div className="space-y-4">
-                <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
-                    <MapPin size={14} /> Alamat & Kontak
-                </h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Phone size={12}/> No. WhatsApp</label>
-                        <Input value={config.whatsappNumber || ''} onChange={(e) => setConfig({...config, whatsappNumber: e.target.value})} placeholder="08xxxx (Tanpa +62)" />
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Judul Besar (H1)</label>
+                            <Input value={config.heroTitle} onChange={(e) => setConfig({...config, heroTitle: e.target.value})} />
+                        </div>
+                        <div>
+                            <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Sub-Judul</label>
+                            <TextArea value={config.heroSubtitle} onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})} className="h-24" />
+                        </div>
                     </div>
-                    <div>
-                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Mail size={12}/> Email Resmi</label>
-                        <Input value={config.emailAddress || ''} onChange={(e) => setConfig({...config, emailAddress: e.target.value})} placeholder="admin@..." />
-                    </div>
-                </div>
 
-                <div>
-                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Alamat Legal (Solo)</label>
-                    <Input value={config.addressSolo || ''} onChange={(e) => setConfig({...config, addressSolo: e.target.value})} placeholder="Perum Graha Tiara..." />
-                </div>
-                <div>
-                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Embed Map Solo (Iframe)</label>
-                    <TextArea value={config.mapSoloEmbed || ''} onChange={(e) => setConfig({...config, mapSoloEmbed: e.target.value})} placeholder="<iframe src=... ></iframe>" className="h-20 text-[10px] font-mono" />
-                </div>
-
-                <div>
-                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Alamat Operasional (Blora)</label>
-                    <Input value={config.addressBlora || ''} onChange={(e) => setConfig({...config, addressBlora: e.target.value})} placeholder="Banjarejo..." />
-                </div>
-                <div>
-                    <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">Embed Map Blora (Iframe)</label>
-                    <TextArea value={config.mapBloraEmbed || ''} onChange={(e) => setConfig({...config, mapBloraEmbed: e.target.value})} placeholder="<iframe src=... ></iframe>" className="h-20 text-[10px] font-mono" />
-                </div>
-                
-                {/* Map Coordinates Links */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Compass size={12}/> Link Map Solo</label>
-                        <Input value={config.mapSoloLink || ''} onChange={(e) => setConfig({...config, mapSoloLink: e.target.value})} placeholder="https://maps.app.goo.gl/..." className="text-xs" />
-                    </div>
-                    <div>
-                        <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block flex items-center gap-1"><Compass size={12}/> Link Map Blora</label>
-                        <Input value={config.mapBloraLink || ''} onChange={(e) => setConfig({...config, mapBloraLink: e.target.value})} placeholder="https://maps.app.goo.gl/..." className="text-xs" />
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {/* COLUMN 2: Links & Social & IMAGES */}
-        <div className="space-y-8">
-            
-            {/* NEW: About Page Image Config */}
-            <div className="space-y-4">
-                <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
-                    <ImageIcon size={14} /> Foto Kantor (About Page)
-                </h4>
-                
-                <div className="bg-brand-dark border border-white/10 rounded-xl overflow-hidden p-4">
-                    {/* Preview Area */}
-                    <div className="relative w-full h-40 bg-black/50 rounded-lg overflow-hidden border border-white/10 mb-4 group">
-                        {aboutImagePreview ? (
-                            <img src={aboutImagePreview} alt="Office Preview" className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-2">
-                                <ImageIcon size={32} />
-                                <span className="text-xs">Belum ada foto</span>
+                    <div className="pt-6 border-t border-white/5">
+                        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2"><ImageIcon size={16}/> Foto Kantor (About Page)</h3>
+                        <div className="flex gap-6 items-start">
+                            <div className="w-40 h-24 bg-black rounded-lg overflow-hidden border border-white/10 shrink-0">
+                                <img src={aboutImagePreview || "https://via.placeholder.com/150"} className="w-full h-full object-cover" />
                             </div>
-                        )}
-                        {/* Overlay Hint */}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <p className="text-white text-xs font-bold">Preview Tampilan</p>
-                        </div>
-                    </div>
-
-                    {/* Upload Input */}
-                    <div className="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-brand-orange/50 transition-colors bg-white/5 cursor-pointer relative">
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={(e) => {
-                                const file = e.target.files ? e.target.files[0] : null;
-                                if (file) {
-                                    setAboutImageFile(file);
-                                    setAboutImagePreview(URL.createObjectURL(file));
-                                }
-                            }} 
-                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
-                        />
-                        <div className="flex flex-col items-center gap-2 pointer-events-none">
-                            <UploadCloud size={24} className="text-gray-400" />
-                            <span className="text-gray-300 font-bold text-xs">
-                                {aboutImageFile ? aboutImageFile.name : "Klik untuk Ganti Foto"}
-                            </span>
-                            <span className="text-[10px] text-gray-500">Format: Landscape (16:9), Max 2MB</span>
+                            <div className="flex-1">
+                                <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-brand-orange/50 transition-colors cursor-pointer relative bg-white/5">
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        onChange={(e) => {
+                                            const file = e.target.files ? e.target.files[0] : null;
+                                            if(file) {
+                                                setAboutImageFile(file);
+                                                setAboutImagePreview(URL.createObjectURL(file));
+                                            }
+                                        }} 
+                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
+                                    />
+                                    <div className="flex flex-col items-center gap-1 pointer-events-none">
+                                        <UploadCloud size={20} className="text-gray-400" />
+                                        <span className="text-gray-300 font-bold text-xs">{aboutImageFile ? aboutImageFile.name : "Upload Foto Baru"}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
-            {/* Dynamic Links */}
-            <div className="space-y-4">
-            <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
-                <LinkIcon size={14} /> Software Links
-            </h4>
-            <div className="bg-brand-orange/5 border border-brand-orange/20 p-4 rounded-lg">
-                <h4 className="text-brand-orange font-bold text-sm mb-2 flex items-center gap-2"><AlertCircle size={14}/> Petunjuk</h4>
-                <p className="text-gray-400 text-xs leading-relaxed">
-                    Jika link diisi, tombol di halaman Inovasi akan mengarah ke URL tersebut. 
-                    Jika dikosongkan, tombol otomatis mengarah ke WhatsApp Admin (Mode Waitlist).
-                </p>
-            </div>
-            <div>
-                <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">SIBOS URL</label>
-                <Input value={config.sibosUrl || ''} onChange={(e) => setConfig({...config, sibosUrl: e.target.value})} placeholder="https://sibos.id" />
-            </div>
-            <div>
-                <label className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1 block">QALAM URL</label>
-                <Input value={config.qalamUrl || ''} onChange={(e) => setConfig({...config, qalamUrl: e.target.value})} placeholder="https://app.qalam.id" />
-            </div>
-            </div>
+            {/* TAB: CONTACT */}
+            {activeTab === 'contact' && (
+                <div className="space-y-8 animate-fade-in">
+                    <div>
+                        <h3 className="text-xl font-bold text-white mb-1">Kontak & Alamat</h3>
+                        <p className="text-gray-400 text-xs">Informasi yang ditampilkan di Footer dan Halaman Kontak.</p>
+                    </div>
 
-            {/* Social Media */}
-            <div className="space-y-4">
-            <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
-                <Share2 size={14} /> Sosial Media
-            </h4>
-            <p className="text-gray-500 text-xs">Kosongkan kolom jika tidak ingin menampilkan ikon di footer.</p>
-            
-            <div className="grid grid-cols-1 gap-3">
-                <div>
-                    <label className="text-xs text-gray-400 font-bold mb-1 block">Instagram URL</label>
-                    <Input value={config.instagramUrl || ''} onChange={(e) => setConfig({...config, instagramUrl: e.target.value})} placeholder="https://instagram.com/..." />
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="text-xs text-gray-500 font-bold uppercase mb-1 block flex items-center gap-1"><Smartphone size={12}/> WhatsApp (Tanpa +62)</label>
+                            <Input value={config.whatsappNumber || ''} onChange={(e) => setConfig({...config, whatsappNumber: e.target.value})} placeholder="812xxxx" />
+                        </div>
+                        <div>
+                            <label className="text-xs text-gray-500 font-bold uppercase mb-1 block flex items-center gap-1"><Mail size={12}/> Email Resmi</label>
+                            <Input value={config.emailAddress || ''} onChange={(e) => setConfig({...config, emailAddress: e.target.value})} placeholder="admin@..." />
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/10 pb-2">Kantor Solo (Pusat)</h4>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold mb-1 block">Alamat Lengkap</label>
+                                <Input value={config.addressSolo || ''} onChange={(e) => setConfig({...config, addressSolo: e.target.value})} />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold mb-1 block">Link Google Maps</label>
+                                <Input value={config.mapSoloLink || ''} onChange={(e) => setConfig({...config, mapSoloLink: e.target.value})} className="text-xs" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold mb-1 block">Embed HTML Map</label>
+                                <TextArea value={config.mapSoloEmbed || ''} onChange={(e) => setConfig({...config, mapSoloEmbed: e.target.value})} className="h-20 text-[10px] font-mono" placeholder="<iframe src=...>" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h4 className="text-blue-400 font-bold text-xs uppercase tracking-widest border-b border-white/10 pb-2">Kantor Blora (Cabang)</h4>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold mb-1 block">Alamat Lengkap</label>
+                                <Input value={config.addressBlora || ''} onChange={(e) => setConfig({...config, addressBlora: e.target.value})} />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold mb-1 block">Link Google Maps</label>
+                                <Input value={config.mapBloraLink || ''} onChange={(e) => setConfig({...config, mapBloraLink: e.target.value})} className="text-xs" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold mb-1 block">Embed HTML Map</label>
+                                <TextArea value={config.mapBloraEmbed || ''} onChange={(e) => setConfig({...config, mapBloraEmbed: e.target.value})} className="h-20 text-[10px] font-mono" placeholder="<iframe src=...>" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label className="text-xs text-gray-400 font-bold mb-1 block">Facebook URL</label>
-                    <Input value={config.facebookUrl || ''} onChange={(e) => setConfig({...config, facebookUrl: e.target.value})} placeholder="https://facebook.com/..." />
+            )}
+
+            {/* TAB: SOCIALS */}
+            {activeTab === 'social' && (
+                <div className="space-y-8 animate-fade-in">
+                    <div>
+                        <h3 className="text-xl font-bold text-white mb-1">Sosial Media & Link</h3>
+                        <p className="text-gray-400 text-xs">Tautan eksternal ke platform lain.</p>
+                    </div>
+
+                    <div className="bg-brand-orange/5 border border-brand-orange/20 p-4 rounded-xl space-y-4">
+                        <h4 className="text-brand-orange font-bold text-sm">Software Links (Inovasi)</h4>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold mb-1 block">Link SIBOS</label>
+                                <Input value={config.sibosUrl || ''} onChange={(e) => setConfig({...config, sibosUrl: e.target.value})} />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold mb-1 block">Link QALAM</label>
+                                <Input value={config.qalamUrl || ''} onChange={(e) => setConfig({...config, qalamUrl: e.target.value})} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h4 className="text-white font-bold text-sm border-b border-white/10 pb-2">Akun Sosmed</h4>
+                        {['Instagram', 'Facebook', 'YouTube', 'TikTok', 'LinkedIn'].map((platform) => {
+                            const key = `${platform.toLowerCase()}Url` as keyof SiteConfig;
+                            return (
+                                <div key={platform}>
+                                    <label className="text-xs text-gray-500 font-bold mb-1 block">{platform} URL</label>
+                                    <Input 
+                                        value={String(config[key] || '')} 
+                                        onChange={(e) => setConfig({...config, [key]: e.target.value})} 
+                                        placeholder={`https://${platform.toLowerCase()}.com/...`}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
-                <div>
-                    <label className="text-xs text-gray-400 font-bold mb-1 block">YouTube URL</label>
-                    <Input value={config.youtubeUrl || ''} onChange={(e) => setConfig({...config, youtubeUrl: e.target.value})} placeholder="https://youtube.com/..." />
+            )}
+
+            {/* TAB: SYSTEM & TIMEZONE */}
+            {activeTab === 'system' && (
+                <div className="space-y-8 animate-fade-in">
+                    <div>
+                        <h3 className="text-xl font-bold text-white mb-1">Sistem & Integrasi</h3>
+                        <p className="text-gray-400 text-xs">Pengaturan teknis dan tracking.</p>
+                    </div>
+
+                    {/* TIMEZONE SECTION */}
+                    <div className="bg-brand-dark/50 p-6 rounded-xl border border-white/10 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-brand-orange/10 rounded-full blur-xl pointer-events-none"></div>
+                        <h4 className="text-brand-orange font-bold text-sm mb-4 flex items-center gap-2">
+                            <Clock size={16}/> Zona Waktu (Timezone)
+                        </h4>
+                        <div className="max-w-md">
+                            <label className="text-xs text-gray-500 font-bold uppercase mb-2 block">Pilih Zona Waktu Kantor</label>
+                            <select 
+                                value={config.timezone || 'Asia/Jakarta'}
+                                onChange={(e) => setConfig({...config, timezone: e.target.value})}
+                                className="w-full bg-black border border-white/20 rounded-lg px-4 py-3 text-white focus:border-brand-orange outline-none cursor-pointer hover:border-white/30 transition-colors"
+                            >
+                                {INDONESIA_TIMEZONES.map(tz => (
+                                    <option key={tz.value} value={tz.value}>{tz.label} (GMT {tz.offset > 0 ? '+' : ''}{tz.offset})</option>
+                                ))}
+                            </select>
+                            <p className="text-[10px] text-gray-500 mt-2 leading-relaxed">
+                                *Pengaturan ini akan mempengaruhi jadwal posting artikel otomatis. Pastikan sesuai dengan lokasi operasional Anda agar artikel terbit tepat waktu.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* GOOGLE INTEGRATION */}
+                    <div className="space-y-4">
+                        <h4 className="text-white font-bold text-sm mb-2 flex items-center gap-2 border-b border-white/10 pb-2">
+                            <Globe size={16}/> Google Integration
+                        </h4>
+                        <div>
+                            <label className="text-xs text-gray-500 font-bold mb-1 block flex items-center gap-1"><BarChart size={12}/> Google Analytics 4 (GA4)</label>
+                            <Input 
+                                value={config.googleAnalyticsId || ''} 
+                                onChange={(e) => setConfig({...config, googleAnalyticsId: e.target.value})} 
+                                placeholder="G-XXXXXXXXXX" 
+                                className="font-mono text-xs"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs text-gray-500 font-bold mb-1 block flex items-center gap-1"><Monitor size={12}/> Search Console Verification</label>
+                            <Input 
+                                value={config.googleSearchConsoleCode || ''} 
+                                onChange={(e) => setConfig({...config, googleSearchConsoleCode: e.target.value})} 
+                                placeholder="Paste meta tag content here" 
+                                className="font-mono text-xs"
+                            />
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label className="text-xs text-gray-400 font-bold mb-1 block">LinkedIn URL</label>
-                    <Input value={config.linkedinUrl || ''} onChange={(e) => setConfig({...config, linkedinUrl: e.target.value})} placeholder="https://linkedin.com/..." />
-                </div>
-                <div>
-                    <label className="text-xs text-gray-400 font-bold mb-1 block">TikTok URL</label>
-                    <Input value={config.tiktokUrl || ''} onChange={(e) => setConfig({...config, tiktokUrl: e.target.value})} placeholder="https://tiktok.com/..." />
-                </div>
-            </div>
-            </div>
-        </div>
+            )}
+
         </div>
     </div>
   );

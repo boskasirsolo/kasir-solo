@@ -1,7 +1,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
-import { Article, GalleryItem } from '../../types';
-import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration, slugify, renameFile } from '../../utils';
+import { Article, GalleryItem, SiteConfig } from '../../types';
+import { supabase, CONFIG, callGeminiWithRotation, uploadToSupabase, processBackgroundMigration, slugify, renameFile, convertLocalToUTC, convertUTCToLocal } from '../../utils';
 import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS, NARRATIVE_TONES, ARTICLE_CATEGORIES } from './types';
 
 // --- FOUNDER STORY VARIATIONS (ANEKDOT DATABASE) ---
@@ -526,8 +526,8 @@ export const useAIGenerator = () => {
     return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateContent, getAIImageUrl, generateClusterIdeas };
 };
 
-// UPDATED: useArticleManager to accept GALLERY data
-export const useArticleManager = (articles: Article[], setArticles: any, gallery: GalleryItem[] = []) => {
+// UPDATED: useArticleManager to accept GALLERY data and CONFIG
+export const useArticleManager = (articles: Article[], setArticles: any, gallery: GalleryItem[] = [], config?: SiteConfig) => {
     const filterLogic = useArticleFilter(articles, 7);
     const aiLogic = useAIGenerator();
 
@@ -576,21 +576,14 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         if (matchedPersona) setActivePersonaId(matchedPersona.id);
         const estimatedCount = item.content ? item.content.split(/\s+/).length : 1000;
 
-        // FORMAT SCHEDULED DATE FOR INPUT (datetime-local expects "YYYY-MM-DDThh:mm")
+        // FIXED: Handle incoming UTC ISO string properly using configured Timezone
         let formattedSchedule = '';
-        if (item.scheduled_for) {
-            try {
-                // FIXED: Handle incoming UTC ISO string properly for local input
-                const date = new Date(item.scheduled_for);
-                // Adjust for local timezone offset so it appears correct in the input
-                // .toISOString() always returns UTC. We want a string that "looks like" local time when read as ISO.
-                // Example: UTC 00:00 -> Local 07:00. We want "2024-01-01T07:00" string.
-                const offsetMs = date.getTimezoneOffset() * 60000; 
-                // Subtracting the offset (which is negative for zones ahead) adds hours to make it match local visual time
-                formattedSchedule = new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-            } catch (e) {
-                console.warn("Invalid schedule date", e);
-            }
+        if (item.scheduled_for && config?.timezone) {
+            // Convert UTC DB time to Admin's configured Local Time for Input
+            formattedSchedule = convertUTCToLocal(item.scheduled_for, config.timezone);
+        } else if (item.scheduled_for) {
+            // Fallback if no timezone configured (should not happen with default)
+            formattedSchedule = item.scheduled_for.slice(0, 16); 
         }
 
         setForm({
@@ -598,7 +591,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             category: item.category, author: item.author, authorAvatar: item.author_avatar || activePersona.avatar || '', 
             uploadAuthorFile: null, readTime: item.readTime, imagePreview: item.image, uploadFile: null,
             status: item.status || 'draft', 
-            scheduled_for: formattedSchedule, // Use formatted date
+            scheduled_for: formattedSchedule, 
             type: item.type || 'cluster', pillar_id: item.pillar_id || 0, cluster_ideas: item.cluster_ideas || [], scheduleStart: '',
             date: item.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
             targetWordCount: estimatedCount,
@@ -655,14 +648,18 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             const finalAuthorAvatar = form.authorAvatar || activePersona.avatar;
             const statusNormalized = (form.status || 'draft').toLowerCase().trim();
 
-            // --- FIX: TIMEZONE HANDLING FOR SCHEDULED_FOR ---
-            // If user picks 07:00 in input, `form.scheduled_for` is "YYYY-MM-DDT07:00".
-            // We must create a Date object which interprets this string as Local Time,
-            // then convert to ISO UTC to store in DB.
+            // --- FIXED: TIMEZONE HANDLING FOR SCHEDULED_FOR ---
+            // We convert the Local Input Time (e.g. 07:00 WIB) to UTC ISO String
+            // using the Admin's configured Timezone.
             let finalScheduledFor = null;
             if (form.status === 'scheduled' && form.scheduled_for) {
-                const localDate = new Date(form.scheduled_for); // Implicitly treats as local time
-                finalScheduledFor = localDate.toISOString(); // Converts local 07:00 to UTC (e.g. 00:00)
+                if (config?.timezone) {
+                    finalScheduledFor = convertLocalToUTC(form.scheduled_for, config.timezone);
+                } else {
+                    // Fallback to previous logic if no timezone set
+                    const localDate = new Date(form.scheduled_for); 
+                    finalScheduledFor = localDate.toISOString(); 
+                }
             }
 
             const commonData = {

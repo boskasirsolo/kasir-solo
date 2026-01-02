@@ -66,7 +66,8 @@ const AppContent = () => {
     tiktokUrl: "https://tiktok.com/",
     linkedinUrl: "https://linkedin.com/",
     googleAnalyticsId: "",
-    googleSearchConsoleCode: ""
+    googleSearchConsoleCode: "",
+    timezone: "Asia/Jakarta" // DEFAULT TIMEZONE
   });
 
   // --- Router Bridge ---
@@ -197,7 +198,9 @@ const AppContent = () => {
                     linkedinUrl: settingsData.linkedin_url || config.linkedinUrl,
                     // Load Google IDs
                     googleAnalyticsId: settingsData.google_analytics_id || '',
-                    googleSearchConsoleCode: settingsData.google_search_console_code || ''
+                    googleSearchConsoleCode: settingsData.google_search_console_code || '',
+                    // Timezone
+                    timezone: settingsData.timezone || config.timezone
                 };
                 setConfig(newConfig);
                 

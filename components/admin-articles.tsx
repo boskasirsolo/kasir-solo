@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Article, GalleryItem } from '../types';
+import { Article, GalleryItem, SiteConfig } from '../types';
 import { Eye, Edit3, Save, CalendarClock, RefreshCw, UploadCloud, Image as ImageIcon, CheckCircle2, Sparkles, Loader2, ArrowRight } from 'lucide-react';
 import { useArticleManager } from './admin-articles/logic';
 import { ListPanel } from './admin-articles/list-panel';
@@ -11,14 +11,16 @@ import { Button, Input, LoadingSpinner } from './ui';
 export const AdminArticles = ({ 
     articles, 
     setArticles,
-    gallery 
+    gallery,
+    config
 }: { 
     articles: Article[], 
     setArticles: (a: Article[]) => void,
-    gallery: GalleryItem[] 
+    gallery: GalleryItem[],
+    config: SiteConfig
 }) => {
-  // Pass gallery to the manager hook so AI can use it
-  const manager = useArticleManager(articles, setArticles, gallery);
+  // Pass config (with timezone) to the manager hook
+  const manager = useArticleManager(articles, setArticles, gallery, config);
   const { form, filterLogic, aiLogic, aiState, actions, personas, activePersonaId, setActivePersonaId, updatePersonaAvatar } = manager;
   const availablePillars = articles.filter(a => a.type === 'pillar');
 
@@ -201,6 +203,7 @@ export const AdminArticles = ({
             <div className="flex gap-4">
                 <span>Words: {form.content.split(/\s+/).length}</span>
                 <span>Blocks: {form.content.split('\n\n').length}</span>
+                {config.timezone && <span className="text-brand-orange">Timezone: {config.timezone}</span>}
             </div>
             {form.status === 'draft' && (
                 <div className="flex items-center gap-2 text-yellow-500">

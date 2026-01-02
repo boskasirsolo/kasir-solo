@@ -124,10 +124,10 @@ const ApplicationModal = ({
                         <CheckCircle2 size={32} />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2">Lamaran Terkirim!</h3>
-                    <p className="text-gray-400 text-sm mb-6">
-                        Terima kasih, {form.full_name}. Data Anda sudah masuk ke sistem kami. Tim HRD akan menghubungi Anda jika profil cocok.
+                    <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                        Terima kasih, <span className="text-white font-bold">{form.full_name}</span>. Data Anda sudah masuk ke sistem kami. Tim HRD akan menghubungi Anda jika profil cocok.
                     </p>
-                    <Button onClick={onClose} className="w-full">Kembali</Button>
+                    <Button onClick={onClose} className="px-8 py-3 mx-auto shadow-neon">Kembali</Button>
                 </div>
             </div>
         );
