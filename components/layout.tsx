@@ -58,6 +58,7 @@ const NAV_ITEMS: NavItem[] = [
     id: 'support', 
     label: 'Pusat Bantuan',
     children: [
+      { id: 'support', label: 'Download & Support Center' }, // NEW LINK ADDED HERE
       { id: 'legal/refund', label: 'Klaim Garansi & Retur' },
       { id: 'legal/privacy', label: 'Kebijakan Privasi' },
       { id: 'legal/terms', label: 'Syarat & Ketentuan' },
@@ -137,8 +138,9 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
   ];
 
   const companyLinks = [
-    { label: 'Tentang Kami', action: () => setPage('about') },
+    { label: 'Download Center', action: () => setPage('support') }, // ADDED TO FOOTER
     { label: 'Klien & Portfolio', action: () => setPage('gallery') },
+    { label: 'Tentang Kami', action: () => setPage('about') },
     { label: 'Karir', action: () => setPage('career') },
     { label: 'Hubungi Kami', action: () => setPage('contact') },
   ];
@@ -172,7 +174,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
         <FooterColumn title="Solusi Digital" links={solutionsLinks} />
 
         {/* 3. Perusahaan Section (Right on Mobile) - This moves next to Solusi */}
-        <FooterColumn title="Perusahaan" links={companyLinks} />
+        <FooterColumn title="Perusahaan & Support" links={companyLinks} />
 
         {/* 4. Contact Section (Full Width on Mobile/Tablet) */}
         <div className="col-span-2 lg:col-span-1">

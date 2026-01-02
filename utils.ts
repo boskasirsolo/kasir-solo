@@ -1,5 +1,5 @@
 
-import { Product, Article, GalleryItem, Testimonial, JobOpening } from './types';
+import { Product, Article, GalleryItem, Testimonial, JobOpening, DownloadItem } from './types';
 
 // --- RE-EXPORTS FROM MODULAR ARCHITECTURE ---
 export { getEnv, CONFIG } from './config/env';
@@ -108,4 +108,63 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
 
 export const INITIAL_JOBS: JobOpening[] = [
   { id: 1, title: "Marketing", division: "Sales", type: "Full-time", location: "Solo", description: "Jualan.", requirements: "Semangat.", is_active: true }
+];
+
+// --- NEW: DOWNLOADS MOCK DATA ---
+export const INITIAL_DOWNLOADS: DownloadItem[] = [
+  {
+    id: "drv-001",
+    title: "Driver Printer Thermal 58mm (XPrinter/Iware)",
+    category: "driver",
+    description: "Driver universal untuk printer kasir thermal ukuran 58mm.",
+    file_url: "#",
+    file_size: "15 MB",
+    version: "v2.4.1",
+    os_support: "Windows",
+    updated_at: "2024-01-10"
+  },
+  {
+    id: "drv-002",
+    title: "Driver Printer Thermal 80mm Auto-Cutter",
+    category: "driver",
+    description: "Driver untuk printer dapur/kasir 80mm dengan fitur auto-cutter.",
+    file_url: "#",
+    file_size: "18 MB",
+    version: "v3.0.5",
+    os_support: "Windows",
+    updated_at: "2024-02-15"
+  },
+  {
+    id: "man-001",
+    title: "Panduan Setting Laci Kasir (Cash Drawer)",
+    category: "manual",
+    description: "Cara setting agar laci kasir terbuka otomatis saat cetak struk.",
+    file_url: "#",
+    file_size: "2 MB",
+    version: "PDF",
+    os_support: "All",
+    updated_at: "2023-11-20"
+  },
+  {
+    id: "soft-001",
+    title: "Aplikasi Kasir Android (Trial APK)",
+    category: "software",
+    description: "Installer APK untuk tablet/HP Android. Free trial 14 hari.",
+    file_url: "#",
+    file_size: "45 MB",
+    version: "v5.2.1",
+    os_support: "Android",
+    updated_at: "2024-03-01"
+  },
+  {
+    id: "tool-001",
+    title: "TeamViewer QuickSupport",
+    category: "tools",
+    description: "Aplikasi remote desktop untuk bantuan teknis jarak jauh oleh tim support kami.",
+    file_url: "https://download.teamviewer.com/download/TeamViewerQS.exe",
+    file_size: "30 MB",
+    version: "Latest",
+    os_support: "Windows",
+    updated_at: "2024-01-01"
+  }
 ];

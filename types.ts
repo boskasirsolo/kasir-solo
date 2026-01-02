@@ -75,6 +75,19 @@ export interface JobOpening {
   created_at?: string;
 }
 
+// --- NEW: SUPPORT CENTER TYPES ---
+export interface DownloadItem {
+  id: string;
+  title: string;
+  category: 'driver' | 'manual' | 'software' | 'tools';
+  description: string;
+  file_url: string; // Link ke file (Google Drive / Direct)
+  file_size?: string;
+  version?: string;
+  os_support?: 'Windows' | 'Android' | 'iOS' | 'All';
+  updated_at: string;
+}
+
 export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
