@@ -144,7 +144,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                         <div className="flex items-start justify-between">
                            <div>
                               <span className="text-brand-orange font-bold text-xs uppercase tracking-widest bg-black/80 px-2 py-1 rounded backdrop-blur-sm shadow-lg">KANTOR LEGAL (SOLO RAYA)</span>
-                              <p className="text-white font-bold text-lg mt-2 leading-tight drop-shadow-md">Head Office</p>
+                              <p className="text-white font-bold text-lg mt-2 leading-tight drop-shadow-md">Kantor Legal</p>
                               <p className="text-gray-200 text-xs line-clamp-2 mt-1 bg-black/60 p-1 rounded inline-block">{config.addressSolo}</p>
                            </div>
                            {!config.mapSoloEmbed && (

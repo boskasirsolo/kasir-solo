@@ -236,7 +236,7 @@ export const AdminSettings = ({
 
                     <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                            <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/10 pb-2">Kantor Solo (Pusat)</h4>
+                            <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest border-b border-white/10 pb-2">Kantor Legal (Solo)</h4>
                             <div>
                                 <label className="text-xs text-gray-500 font-bold mb-1 block">Alamat Lengkap</label>
                                 <Input value={config.addressSolo || ''} onChange={(e) => setConfig({...config, addressSolo: e.target.value})} />

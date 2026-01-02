@@ -179,7 +179,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
           <ul className="space-y-5">
             <ContactItem 
               icon={MapPin}
-              label="HEAD OFFICE (SOLO)"
+              label="KANTOR LEGAL"
               value={config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura"}
               onClick={() => window.open(config.mapSoloLink, '_blank')}
             />
