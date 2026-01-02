@@ -71,10 +71,10 @@ const useDownloadManager = () => {
                 const seoName = `${slugify(form.title || 'download')}-${slugify(form.version || 'v1')}`;
                 const fileToUpload = renameFile(uploadFile, seoName);
                 
-                // Upload to 'downloads' folder in 'public' bucket (or whatever bucket you configured)
-                // Using existing uploadToSupabase utility
+                // Upload to 'files' folder in 'downloads' bucket (Specific Bucket created by User)
                 if (supabase) {
-                    const { url } = await uploadToSupabase(fileToUpload, 'downloads');
+                    // Param 1: File, Param 2: Folder, Param 3: Bucket Name
+                    const { url } = await uploadToSupabase(fileToUpload, 'files', 'downloads');
                     finalFileUrl = url;
                     
                     // Auto-set size if empty
