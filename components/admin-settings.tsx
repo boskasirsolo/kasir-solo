@@ -93,7 +93,12 @@ export const AdminSettings = ({
           alert("Pengaturan berhasil disimpan.");
           setAboutImageFile(null); 
       } catch(e: any) {
-          alert("Gagal menyimpan: " + e.message);
+          // Robust Error Handling for Schema Mismatch
+          if (e.message && (e.message.includes('column') || e.message.includes('timezone'))) {
+             alert("Gagal menyimpan: Struktur Database belum update. Harap jalankan script SQL 'ADD COLUMN timezone' di Supabase.");
+          } else {
+             alert("Gagal menyimpan: " + e.message);
+          }
       } finally {
           setIsSaving(false);
       }
