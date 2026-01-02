@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Image as ImageIcon, Youtube, MoveUp, MoveDown, Trash2, GripVertical, Type, Loader2, UploadCloud, Plus, Sparkles, FileText, Download } from 'lucide-react';
+import { Image as ImageIcon, Youtube, MoveUp, MoveDown, Trash2, GripVertical, Type, Loader2, UploadCloud, Plus, Sparkles, FileText, Download, Layers } from 'lucide-react';
 import { uploadToSupabase } from '../../utils';
 
 interface Block {
     id: string;
-    type: 'text' | 'image' | 'video' | 'file';
+    type: 'text' | 'image' | 'video' | 'file' | 'project';
     content: string; // Markdown text or URL
     meta?: any; // Extra data like alt text or filename
 }
@@ -33,7 +33,23 @@ const parseMarkdownToBlocks = (md: string): Block[] => {
             return { id, type: 'file', content: fileMatch[2], meta: { label: fileMatch[1] } };
         }
 
-        // 3. Detect Youtube/Iframe
+        // 3. Detect Project Card: [PROJECT: ...]
+        const projectMatch = trimmed.match(/^\[PROJECT: (.*?) \| (.*?) \| (.*?) \| (.*?)\]$/);
+        if (projectMatch) {
+            return { 
+                id, 
+                type: 'project', 
+                content: trimmed, // Keep raw string as content for storage, but use meta for display
+                meta: { 
+                    title: projectMatch[1],
+                    url: projectMatch[2],
+                    image: projectMatch[3],
+                    desc: projectMatch[4]
+                } 
+            };
+        }
+
+        // 4. Detect Youtube/Iframe
         if (trimmed.startsWith('<iframe') || (trimmed.startsWith('https://') && trimmed.includes('youtube.com/embed'))) {
              // Extract src if iframe tag
              const srcMatch = trimmed.match(/src="([^"]+)"/);
@@ -41,7 +57,7 @@ const parseMarkdownToBlocks = (md: string): Block[] => {
              return { id, type: 'video', content };
         }
 
-        // 4. Default: Text
+        // 5. Default: Text
         return { id, type: 'text', content: raw };
     });
 };
@@ -51,6 +67,7 @@ const serializeBlocksToMarkdown = (blocks: Block[]): string => {
     return blocks.map(b => {
         if (b.type === 'image') return `![${b.meta?.alt || 'image'}](${b.content})`;
         if (b.type === 'file') return `[FILE: ${b.meta?.label || 'Download File'}](${b.content})`;
+        if (b.type === 'project') return `[PROJECT: ${b.meta?.title} | ${b.meta?.url} | ${b.meta?.image} | ${b.meta?.desc}]`;
         if (b.type === 'video') return `<iframe width="100%" height="400" src="${b.content}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
         return b.content;
     }).join('\n\n');
@@ -266,6 +283,44 @@ export const LiveEditor = ({
                                 </div>
                                 <div className="p-2 bg-white/5 rounded-lg text-gray-400">
                                     <Download size={18} />
+                                </div>
+                            </div>
+                        )}
+
+                        {block.type === 'project' && (
+                            <div className="my-4 bg-brand-dark border border-brand-orange/30 rounded-xl p-4 flex gap-4 group/project">
+                                <div className="w-24 h-24 bg-black rounded-lg border border-white/10 overflow-hidden shrink-0">
+                                    {block.meta?.image ? (
+                                        <img src={block.meta.image} className="w-full h-full object-cover"/>
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-500"><Layers size={24}/></div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-[10px] bg-brand-orange text-white px-2 py-0.5 rounded font-bold">PROJECT CARD</span>
+                                    </div>
+                                    <input 
+                                        value={block.meta?.title} 
+                                        onChange={(e) => {
+                                            const newBlocks = [...blocks];
+                                            newBlocks[index].meta.title = e.target.value;
+                                            updateParent(newBlocks);
+                                        }}
+                                        className="bg-transparent text-lg font-bold text-white w-full outline-none border-b border-transparent focus:border-brand-orange mb-1"
+                                        placeholder="Nama Project"
+                                    />
+                                    <textarea 
+                                        value={block.meta?.desc} 
+                                        onChange={(e) => {
+                                            const newBlocks = [...blocks];
+                                            newBlocks[index].meta.desc = e.target.value;
+                                            updateParent(newBlocks);
+                                        }}
+                                        className="bg-transparent text-xs text-gray-400 w-full outline-none resize-none focus:text-white"
+                                        rows={2}
+                                        placeholder="Deskripsi singkat..."
+                                    />
                                 </div>
                             </div>
                         )}

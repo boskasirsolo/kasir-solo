@@ -268,28 +268,25 @@ export const useAIGenerator = () => {
                 relatedPillarInstruction = `[SEO]: Weave links to these related pillars naturally:\n${linksList}`;
             }
 
-            // NEW: PROJECT SHOWCASE INSTRUCTION WITH IMAGE
+            // NEW: PROJECT SHOWCASE INSTRUCTION WITH ROBUST SHORTCODE
             let galleryInstruction = "";
             if (galleryContextString) {
                 galleryInstruction = `
                 [PORTFOLIO SHOWCASE STRATEGY - IMPORTANT]
                 You have access to our Gallery/Portfolio database.
-                Available Projects (Use the specific "ImageURL" provided):
+                Available Projects:
                 ${galleryContextString}
 
                 **INSTRUCTION:** 
                 Check if the article topic matches any of the projects above.
-                IF MATCH FOUND: Insert a "Case Study" blockquote in the middle of the article.
+                IF MATCH FOUND: Insert a "Project Card" in the middle of the article using THIS EXACT SHORTCODE FORMAT:
                 
-                **CRITICAL VISUAL REQUIREMENT:** 
-                You MUST insert the project image inside the blockquote using Markdown syntax.
+                [PROJECT: Project Name | /gallery/slug-title | INSERT_EXACT_IMAGE_URL_FROM_DATA | A short 1-sentence description of the implementation]
                 
-                Format to use:
-                > **Studi Kasus: [Project Name](/gallery/slug-title)**
-                > ![Project Photo](INSERT_EXACT_IMAGE_URL_FROM_DATA)
-                > *Implementasi Nyata*: [Write 1-2 sentences connecting the article advice to this specific client project].
-                
-                IF NO MATCH: Do not force it.
+                Example:
+                [PROJECT: Kopi Senja | /gallery/kopi-senja | https://image.com/1.jpg | Implementasi 5 tablet POS untuk mempercepat pesanan di jam sibuk.]
+
+                DO NOT use Markdown Images or Blockquotes for this. Use the [PROJECT: ...] shortcode on its own line.
                 `;
             }
 
@@ -414,10 +411,9 @@ export const useAIGenerator = () => {
                 [PORTFOLIO SHOWCASE]
                 Projects:
                 ${galleryContextString}
-                INSTRUCTION: If applicable, insert a "Case Study" block for one relevant project here.
+                INSTRUCTION: If applicable, insert a "Project Card" shortcode here.
                 Format: 
-                > **Studi Kasus: [Project Name](/gallery/slug)**
-                > ![Project Image](Exact_Image_URL_From_Data)
+                [PROJECT: Title | /gallery/slug | ImageURL | Short Description]
                 `;
             }
 

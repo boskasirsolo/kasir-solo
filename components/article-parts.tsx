@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
@@ -6,7 +7,7 @@ import {
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
   Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
   ChevronLeft, Send, Plus, Check, Briefcase, HeartHandshake, Quote,
-  Search, Filter, FolderOpen, ChevronDown, Network, FileText, Download, HardDrive
+  Search, Filter, FolderOpen, ChevronDown, Network, FileText, Download, HardDrive, Layers
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
@@ -403,6 +404,41 @@ const FileDownloadCard: React.FC<{ label: string, url: string }> = ({ label, url
     );
 };
 
+// --- NEW: PROJECT EMBED CARD (Replaces text-only blockquote) ---
+const ProjectEmbedCard: React.FC<{ title: string, url: string, image: string, desc: string }> = ({ title, url, image, desc }) => {
+    return (
+        <div className="my-10 bg-brand-dark rounded-2xl border border-white/5 overflow-hidden group hover:border-brand-orange/30 transition-all shadow-lg">
+            <div className="flex flex-col md:flex-row h-full">
+                {/* Image Section */}
+                <div className="w-full md:w-56 h-48 md:h-auto relative bg-black shrink-0">
+                    <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute top-3 left-3 bg-brand-orange text-white text-[10px] font-bold px-2 py-1 rounded shadow-neon">
+                        STUDI KASUS
+                    </div>
+                </div>
+                
+                {/* Content Section */}
+                <div className="p-6 flex flex-col justify-between flex-1">
+                    <div>
+                        <h4 className="text-xl font-bold text-white mb-2 leading-tight">{title}</h4>
+                        <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-4">
+                            {desc}
+                        </p>
+                    </div>
+                    <div className="flex justify-end pt-4 border-t border-white/5">
+                        <Link 
+                            to={url} 
+                            className="inline-flex items-center gap-2 text-brand-orange font-bold text-sm uppercase tracking-widest hover:gap-3 transition-all"
+                        >
+                            Lihat Detail <ArrowRight size={16} />
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const MarkdownTable: React.FC<{ content: string }> = ({ content }) => {
     const rows = content.trim().split('\n');
     if (rows.length < 2) return <pre className="whitespace-pre-wrap">{content}</pre>;
@@ -647,6 +683,12 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
             const fileMatch = p.match(/^\[FILE: (.*?)\]\((.*?)\)$/);
             if (fileMatch) {
                 return <FileDownloadCard key={idx} label={fileMatch[1]} url={fileMatch[2]} />;
+            }
+
+            // CHECK FOR PROJECT EMBED CARD (NEW FEATURE)
+            const projectMatch = p.match(/^\[PROJECT: (.*?) \| (.*?) \| (.*?) \| (.*?)\]$/);
+            if (projectMatch) {
+                return <ProjectEmbedCard key={idx} title={projectMatch[1]} url={projectMatch[2]} image={projectMatch[3]} desc={projectMatch[4]} />;
             }
 
             const cleanId = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
