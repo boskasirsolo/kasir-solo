@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink, User, MessageCircle, ShieldCheck, MapPin, Clock, Activity } from 'lucide-react';
+import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink, User, MessageCircle, ShieldCheck, MapPin, Clock, Activity, XCircle, CheckCircle2, TrendingUp, Layers, Heart } from 'lucide-react';
 import { SiteConfig, GalleryItem, Testimonial } from '../types';
 import { Button, Card, Badge } from '../components/ui';
 import { ProjectDetailModal } from '../components/gallery-modal'; // Import Modal
@@ -11,9 +11,9 @@ const getTestimonialForProject = (projectTitle: string, testimonials: Testimonia
     projectTitle.toLowerCase().includes(t.business_name.toLowerCase()) || 
     t.business_name.toLowerCase().includes(projectTitle.toLowerCase())
   ) || {
-    // Placeholder data if no specific testimonial found
-    client_name: "Klien Prioritas",
-    content: "Pelayanan sangat personal, Mas Amin bantu setup sistem sampai benar-benar jalan lancar di toko kami.",
+    // UPDATED PLACEHOLDER: Narasi Personal Touch
+    client_name: "Owner Business",
+    content: "Awalnya ragu karena saya gaptek, tapi Mas Amin sabar banget ngajarin staf saya sampai bisa. Tanya jam 11 malam pun masih dibalas.",
     rating: 5,
     image_url: "" 
   };
@@ -143,13 +143,9 @@ export const HomePage = ({
 
       {/* --- TRUST STRIP (VALIDATION BAR) --- */}
       <div className="border-y border-white/5 bg-black/40 backdrop-blur-sm relative z-20 overflow-hidden group">
-        {/* Subtle animated gradient line */}
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-orange/50 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-[2s]"></div>
-        
         <div className="container mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/5">
-             
-             {/* Stat 1 */}
              <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
                 <div className="w-12 h-12 rounded-full bg-brand-dark border border-white/10 flex items-center justify-center text-brand-orange shadow-neon-text">
                    <User size={24} />
@@ -159,8 +155,6 @@ export const HomePage = ({
                    <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Mitra UMKM</p>
                 </div>
              </div>
-
-             {/* Stat 2 */}
              <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
                 <div className="w-12 h-12 rounded-full bg-brand-dark border border-white/10 flex items-center justify-center text-blue-400">
                    <MapPin size={24} />
@@ -170,8 +164,6 @@ export const HomePage = ({
                    <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Provinsi</p>
                 </div>
              </div>
-
-             {/* Stat 3 */}
              <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
                 <div className="w-12 h-12 rounded-full bg-brand-dark border border-white/10 flex items-center justify-center text-green-400">
                    <Activity size={24} />
@@ -181,8 +173,6 @@ export const HomePage = ({
                    <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Uptime Server</p>
                 </div>
              </div>
-
-             {/* Stat 4 */}
              <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
                 <div className="w-12 h-12 rounded-full bg-brand-dark border border-white/10 flex items-center justify-center text-purple-400">
                    <Clock size={24} />
@@ -192,51 +182,190 @@ export const HomePage = ({
                    <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Support Teknis</p>
                 </div>
              </div>
-
           </div>
         </div>
       </div>
 
-      {/* Features / Services Section - REVISED COPYWRITING */}
-      <section className="py-24 bg-brand-card border-t border-white/5">
-        <div className="container mx-auto px-4">
+      {/* --- PROBLEM vs SOLUTION SECTION (THE REALITY CHECK) --- */}
+      <section className="py-24 bg-brand-black border-t border-white/5 relative overflow-hidden">
+        <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-red-500/5 rounded-full blur-[150px] -translate-y-1/2 pointer-events-none"></div>
+        <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-brand-orange/5 rounded-full blur-[150px] -translate-y-1/2 pointer-events-none"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
-              <div className="max-w-3xl mx-auto">
-                <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">
-                  Sistem yang <span className="text-brand-orange">Bekerja Untuk Anda</span>
-                </h2>
-                <p className="text-gray-400 text-lg">
-                  Hemat gaji karyawan admin. Biarkan sistem SIBOS yang membereskan stok dan laporan keuangan Anda secara otomatis.
-                </p>
-              </div>
+              <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6">
+                Bisnis Tanpa Sistem = <span className="text-red-500">Bom Waktu</span>
+              </h2>
+              <p className="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
+                Sadarkah Anda? Tanpa sistem yang benar, Anda tidak sedang berbisnis. Anda sedang "diperbudak" oleh toko Anda sendiri.
+              </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { 
-                icon: Zap, 
-                title: "Training Sampai Bisa", 
-                desc: "Kami tidak akan meninggalkan Anda setelah pembayaran. Garansi training operator sampai mahir, gratis konsultasi kendala di lapangan." 
-              },
-              { 
-                icon: Monitor, 
-                title: "Anti-Fraud System", 
-                desc: "Cegah kebocoran kas dan stok. Sistem kami dirancang untuk mendeteksi kecurangan karyawan dengan log aktivitas yang detail." 
-              },
-              { 
-                icon: BarChart3, 
-                title: "Support Langsung Ahlinya", 
-                desc: "Anda tidak akan dilayani oleh Chatbot. Support teknis ditangani langsung oleh praktisi yang mengerti alur bisnis dan IT." 
-              }
-            ].map((feature, idx) => (
-              <div key={idx} className="p-8 border border-white/5 rounded-2xl bg-brand-dark/80 hover:border-brand-orange transition-all duration-300 group hover:shadow-neon hover:-translate-y-2 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-orange/5 rounded-full blur-2xl group-hover:bg-brand-orange/10 transition-colors"></div>
-                <feature.icon className="w-14 h-14 text-brand-orange mb-6 group-hover:scale-110 transition-transform duration-300 drop-shadow-neon" />
-                <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
-                <p className="text-gray-400 leading-relaxed text-sm md:text-base">{feature.desc}</p>
-              </div>
-            ))}
+
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+             
+             {/* LEFT: THE PAIN (Problem) */}
+             <div className="bg-red-950/20 border border-red-500/20 rounded-3xl p-8 relative overflow-hidden group hover:border-red-500/40 transition-colors">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                   <XCircle size={100} className="text-red-500" />
+                </div>
+                <div className="relative z-10">
+                   <h3 className="text-xl font-bold text-red-500 mb-6 flex items-center gap-2">
+                      <XCircle size={24}/> CARA LAMA (MANUAL)
+                   </h3>
+                   <ul className="space-y-6">
+                      <li className="flex gap-4">
+                         <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 shrink-0 font-bold">1</div>
+                         <div>
+                            <h4 className="text-white font-bold mb-1">Uang Bocor Halus</h4>
+                            <p className="text-gray-400 text-sm">Kembalian salah, nota hilang, atau mark-up harga oleh karyawan. Sedikit tapi tiap hari.</p>
+                         </div>
+                      </li>
+                      <li className="flex gap-4">
+                         <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 shrink-0 font-bold">2</div>
+                         <div>
+                            <h4 className="text-white font-bold mb-1">Stok Selisih Terus</h4>
+                            <p className="text-gray-400 text-sm">Barang di rak habis, tapi di catatan masih ada. Akhirnya mengecewakan pelanggan.</p>
+                         </div>
+                      </li>
+                      <li className="flex gap-4">
+                         <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 shrink-0 font-bold">3</div>
+                         <div>
+                            <h4 className="text-white font-bold mb-1">Owner Jadi Tahanan Kota</h4>
+                            <p className="text-gray-400 text-sm">Gak berani ninggalin toko karena takut dikadalin. Bisnis jalan, tapi hidup tidak tenang.</p>
+                         </div>
+                      </li>
+                   </ul>
+                </div>
+             </div>
+
+             {/* RIGHT: THE SOLUTION (Gain) */}
+             <div className="bg-brand-dark border border-brand-orange/30 rounded-3xl p-8 relative overflow-hidden shadow-neon group hover:border-brand-orange transition-colors">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                   <CheckCircle2 size={100} className="text-brand-orange" />
+                </div>
+                <div className="relative z-10">
+                   <h3 className="text-xl font-bold text-brand-orange mb-6 flex items-center gap-2">
+                      <CheckCircle2 size={24}/> SOLUSI MESIN KASIR SOLO
+                   </h3>
+                   <ul className="space-y-6">
+                      <li className="flex gap-4">
+                         <div className="w-8 h-8 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange shrink-0 font-bold">1</div>
+                         <div>
+                            <h4 className="text-white font-bold mb-1">Anti-Fraud System</h4>
+                            <p className="text-gray-400 text-sm">Setiap sen tercatat. Void/Pembatalan transaksi butuh password owner. Karyawan kerja jujur.</p>
+                         </div>
+                      </li>
+                      <li className="flex gap-4">
+                         <div className="w-8 h-8 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange shrink-0 font-bold">2</div>
+                         <div>
+                            <h4 className="text-white font-bold mb-1">Stok Opname Otomatis</h4>
+                            <p className="text-gray-400 text-sm">Peringatan otomatis saat stok menipis. Belanja barang jadi terukur dan efisien.</p>
+                         </div>
+                      </li>
+                      <li className="flex gap-4">
+                         <div className="w-8 h-8 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange shrink-0 font-bold">3</div>
+                         <div>
+                            <h4 className="text-white font-bold mb-1">Karyawan Digital 24 Jam</h4>
+                            <p className="text-gray-400 text-sm">Sistem kami bekerja seperti manajer yang tidak pernah sakit, cuti, atau resign. Hemat gaji admin.</p>
+                         </div>
+                      </li>
+                   </ul>
+                </div>
+             </div>
+
           </div>
         </div>
+      </section>
+
+      {/* --- INNOVATION TEASER (TECH COMPANY POSITIONING) --- */}
+      <section className="py-24 relative overflow-hidden bg-[#050505]">
+         {/* Background Elements */}
+         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none"></div>
+         <div className="absolute left-0 top-0 w-full h-px bg-gradient-to-r from-transparent via-brand-orange/50 to-transparent"></div>
+         
+         <div className="container mx-auto px-4 relative z-10">
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+               
+               {/* Content */}
+               <div className="lg:w-1/2 text-center lg:text-left">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 mb-6">
+                     <Monitor size={14} className="text-blue-400" />
+                     <span className="text-xs font-bold text-blue-200 tracking-[0.2em] uppercase">R&D Division 2025</span>
+                  </div>
+                  <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight">
+                     Lebih Dari Sekadar <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">Mesin Kasir.</span>
+                  </h2>
+                  <p className="text-gray-400 text-lg leading-relaxed mb-8">
+                     Kami bukan cuma toko elektronik. Kami adalah <strong>Perusahaan Teknologi</strong>. 
+                     Memperkenalkan <strong>SIBOS</strong> (ERP System) dan <strong>QALAM</strong> (Education App). 
+                     Ekosistem digital yang dirancang untuk skala Enterprise, kini tersedia untuk UMKM.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                     <Button onClick={() => setPage('innovation')} className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] border-none">
+                        LIHAT INOVASI <ArrowRight size={18} />
+                     </Button>
+                  </div>
+               </div>
+
+               {/* Visuals */}
+               <div className="lg:w-1/2 relative group">
+                  {/* Decorative Glow */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-teal-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+                  
+                  {/* Cards Composition */}
+                  <div className="relative z-10 transform md:rotate-y-12 md:rotate-x-6 transition-transform duration-700 group-hover:rotate-0">
+                     {/* Back Card (SIBOS) */}
+                     <div className="absolute top-[-20px] right-[-20px] w-full h-full bg-brand-dark border border-brand-orange/30 rounded-2xl p-6 opacity-60 scale-95 transform translate-x-4 -translate-y-4">
+                        <div className="flex items-center gap-2 mb-4">
+                           <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                           <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                           <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div className="space-y-3">
+                           <div className="h-20 bg-brand-orange/10 rounded-lg w-full"></div>
+                           <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+                           <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+                        </div>
+                     </div>
+
+                     {/* Front Card (QALAM/DASHBOARD) */}
+                     <div className="bg-[#0f172a] border border-blue-500/30 rounded-2xl p-6 shadow-2xl relative">
+                        <div className="flex justify-between items-center mb-6">
+                           <div className="flex items-center gap-2">
+                              <Layers className="text-blue-400" size={24} />
+                              <span className="text-white font-bold tracking-widest">DASHBOARD</span>
+                           </div>
+                           <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-1 rounded">LIVE DATA</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                           <div className="bg-blue-900/20 p-4 rounded-xl border border-blue-500/20">
+                              <p className="text-gray-400 text-xs mb-1">Total Omzet</p>
+                              <p className="text-white font-bold text-xl">Rp 45.2M</p>
+                              <div className="mt-2 text-[10px] text-green-400 flex items-center gap-1"><TrendingUp size={10}/> +12%</div>
+                           </div>
+                           <div className="bg-blue-900/20 p-4 rounded-xl border border-blue-500/20">
+                              <p className="text-gray-400 text-xs mb-1">Active User</p>
+                              <p className="text-white font-bold text-xl">1,240</p>
+                              <div className="mt-2 text-[10px] text-blue-400">Real-time</div>
+                           </div>
+                        </div>
+
+                        <div className="space-y-2">
+                           <div className="h-2 bg-gray-700 rounded-full w-full overflow-hidden">
+                              <div className="h-full bg-blue-500 w-[70%]"></div>
+                           </div>
+                           <div className="flex justify-between text-[10px] text-gray-500">
+                              <span>System Load</span>
+                              <span>70%</span>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+            </div>
+         </div>
       </section>
 
       {/* --- GALLERY & TESTIMONIALS (SLOW MARQUEE) --- */}
