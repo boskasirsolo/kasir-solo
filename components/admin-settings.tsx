@@ -4,7 +4,7 @@ import {
     Layout, MapPin, Share2, Settings as SettingsIcon, 
     Save, UploadCloud, Image as ImageIcon, Sparkles, 
     TrendingUp, Monitor, Globe, BarChart, Clock, 
-    Smartphone, Mail, Compass 
+    Smartphone, Mail, Compass, ShieldCheck 
 } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
@@ -64,6 +64,12 @@ export const AdminSettings = ({
               about_image: finalAboutImage,
               sibos_url: config.sibosUrl,
               qalam_url: config.qalamUrl,
+              // LEGAL DATA
+              company_legal_name: config.companyLegalName,
+              nib_number: config.nibNumber,
+              ahu_number: config.ahuNumber,
+              npwp_number: config.npwpNumber,
+              
               whatsapp_number: config.whatsappNumber,
               email_address: config.emailAddress, 
               address_solo: config.addressSolo,
@@ -181,6 +187,29 @@ export const AdminSettings = ({
                         <div>
                             <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Sub-Judul</label>
                             <TextArea value={config.heroSubtitle} onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})} className="h-24" />
+                        </div>
+                    </div>
+
+                    {/* LEGALITAS SECTION (NEW) */}
+                    <div className="pt-6 border-t border-white/5">
+                        <h3 className="text-sm font-bold text-brand-orange mb-4 flex items-center gap-2"><ShieldCheck size={16}/> Legalitas Perusahaan (Footer & About)</h3>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="md:col-span-2">
+                                <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Nama Resmi (PT)</label>
+                                <Input value={config.companyLegalName || ''} onChange={(e) => setConfig({...config, companyLegalName: e.target.value})} placeholder="PT MESIN KASIR SOLO" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">NIB (Nomor Induk Berusaha)</label>
+                                <Input value={config.nibNumber || ''} onChange={(e) => setConfig({...config, nibNumber: e.target.value})} placeholder="1234xxx" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">SK Kemenkumham (AHU)</label>
+                                <Input value={config.ahuNumber || ''} onChange={(e) => setConfig({...config, ahuNumber: e.target.value})} placeholder="AHU-00123.AH.01.01..." />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">NPWP Perusahaan</label>
+                                <Input value={config.npwpNumber || ''} onChange={(e) => setConfig({...config, npwpNumber: e.target.value})} placeholder="XX.XXX.XXX.X-XXX.XXX" />
+                            </div>
                         </div>
                     </div>
 

@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { ChevronRight, MapPin, Phone, Lock, LucideIcon } from 'lucide-react';
+import { ChevronRight, MapPin, Phone, Lock, LucideIcon, BadgeCheck } from 'lucide-react';
+import { SiteConfig } from '../types';
 
 // --- ATOMS ---
 
@@ -96,10 +97,12 @@ export const FooterColumn = ({
 
 export const BrandColumn = ({ 
   description, 
-  socials 
+  socials,
+  config // ACCEPT CONFIG
 }: { 
   description: string, 
-  socials: { icon: any, url?: string }[] 
+  socials: { icon: any, url?: string }[],
+  config: SiteConfig
 }) => (
   // Update: Span 2 cols on mobile (full width top), 1 col on desktop
   <div className="col-span-2 lg:col-span-1 space-y-6">
@@ -110,6 +113,34 @@ export const BrandColumn = ({
     <p className="text-gray-400 text-sm leading-relaxed">
       {description}
     </p>
+    
+    {/* LEGALITAS SECTION (NEW) */}
+    {(config.nibNumber || config.ahuNumber || config.npwpNumber) && (
+      <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-xs space-y-1">
+         {config.companyLegalName && (
+            <div className="flex items-center gap-2 text-white font-bold mb-1">
+               <BadgeCheck size={14} className="text-blue-400" />
+               {config.companyLegalName}
+            </div>
+         )}
+         {config.ahuNumber && (
+            <div className="flex justify-between text-gray-500">
+               <span>AHU:</span> <span className="font-mono text-gray-400">{config.ahuNumber}</span>
+            </div>
+         )}
+         {config.nibNumber && (
+            <div className="flex justify-between text-gray-500">
+               <span>NIB:</span> <span className="font-mono text-gray-400">{config.nibNumber}</span>
+            </div>
+         )}
+         {config.npwpNumber && (
+            <div className="flex justify-between text-gray-500">
+               <span>NPWP:</span> <span className="font-mono text-gray-400">{config.npwpNumber}</span>
+            </div>
+         )}
+      </div>
+    )}
+
     <div className="flex gap-3 flex-wrap">
       {socials.map((s, idx) => (
         <SocialButton key={idx} icon={s.icon} href={s.url} />

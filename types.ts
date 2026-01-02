@@ -81,6 +81,11 @@ export interface SiteConfig {
   aboutImage?: string; 
   sibosUrl?: string; 
   qalamUrl?: string; 
+  // Legalitas
+  companyLegalName?: string;
+  nibNumber?: string;
+  ahuNumber?: string;
+  npwpNumber?: string;
   // Contact & Footer Config
   whatsappNumber?: string;
   emailAddress?: string; 

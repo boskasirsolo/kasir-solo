@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { History, Rocket, AlertTriangle, Sunrise, Users, Target, Building, Quote } from 'lucide-react';
+import { History, Rocket, AlertTriangle, Sunrise, Users, Target, Building, Quote, ShieldCheck, BadgeCheck, FileText, Lock } from 'lucide-react';
 import { SiteConfig } from '../types';
+import { Button } from '../components/ui';
 
 export const AboutPage = ({ config }: { config?: SiteConfig }) => (
   <div className="animate-fade-in">
@@ -60,6 +61,85 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
             </div>
         </div>
     </section>
+
+    {/* LEGALITAS & VERIFIKASI (NEW SECTION) */}
+    {(config?.companyLegalName || config?.nibNumber) && (
+      <section className="py-16 bg-brand-dark border-t border-white/5 relative">
+         <div className="container mx-auto px-4 max-w-4xl">
+            <div className="bg-brand-card border border-white/10 rounded-2xl p-8 relative overflow-hidden shadow-2xl">
+               {/* Background Watermark */}
+               <div className="absolute -right-10 -bottom-10 opacity-5 pointer-events-none">
+                  <ShieldCheck size={200} />
+               </div>
+
+               <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+                  <div className="flex-1">
+                     <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                        <BadgeCheck className="text-blue-400" />
+                        Legalitas & Izin Usaha
+                     </h3>
+                     <p className="text-gray-400 text-sm mb-6">
+                        Kami beroperasi di bawah payung hukum yang sah dan terdaftar di kementerian terkait. 
+                        Transparansi adalah fondasi kepercayaan B2B kami.
+                     </p>
+                     
+                     <div className="space-y-3 bg-black/40 p-4 rounded-xl border border-white/5">
+                        <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                           <span className="text-gray-500 text-xs uppercase font-bold">Badan Hukum</span>
+                           <span className="text-white font-bold text-sm">{config?.companyLegalName || "PT MESIN KASIR SOLO"}</span>
+                        </div>
+                        {config?.ahuNumber && (
+                           <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                              <span className="text-gray-500 text-xs uppercase font-bold">SK Kemenkumham (AHU)</span>
+                              <span className="text-gray-300 font-mono text-xs">{config.ahuNumber}</span>
+                           </div>
+                        )}
+                        {config?.nibNumber && (
+                           <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                              <span className="text-gray-500 text-xs uppercase font-bold">NIB (Nomor Induk Berusaha)</span>
+                              <span className="text-gray-300 font-mono text-xs">{config.nibNumber}</span>
+                           </div>
+                        )}
+                        {config?.npwpNumber && (
+                           <div className="flex justify-between items-center">
+                              <span className="text-gray-500 text-xs uppercase font-bold">NPWP Perusahaan</span>
+                              <span className="text-gray-300 font-mono text-xs">{config.npwpNumber}</span>
+                           </div>
+                        )}
+                     </div>
+                  </div>
+
+                  <div className="w-full md:w-auto flex flex-col gap-4 text-center md:text-right">
+                     <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl">
+                        <Lock className="mx-auto mb-2 text-blue-400" size={24}/>
+                        <p className="text-xs text-blue-200 font-bold mb-1">DATA TERVERIFIKASI</p>
+                        <a 
+                           href="https://oss.go.id" 
+                           target="_blank" 
+                           rel="noreferrer" 
+                           className="text-[10px] text-blue-400 underline hover:text-white"
+                        >
+                           Cek di OSS RBA & AHU Online
+                        </a>
+                     </div>
+                     <div className="space-y-2">
+                        <p className="text-[10px] text-gray-500 max-w-[200px] mx-auto">
+                           Butuh scan dokumen asli untuk vendor list / tender?
+                        </p>
+                        <Button 
+                           variant="outline"
+                           onClick={() => window.open(`https://wa.me/${config?.whatsappNumber}?text=Halo Admin, saya dari perusahaan [Sebutkan Nama PT], ingin request dokumen legalitas lengkap untuk keperluan verifikasi vendor.`, '_blank')}
+                           className="w-full text-xs font-bold border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white"
+                        >
+                           <FileText size={14}/> Request Dokumen Legalitas
+                        </Button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
+    )}
 
     {/* TIMELINE STORY ARC */}
     <div className="container mx-auto px-4 py-20 relative border-t border-white/5 bg-brand-dark/30">

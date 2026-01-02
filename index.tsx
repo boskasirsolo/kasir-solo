@@ -52,6 +52,11 @@ const AppContent = () => {
     aboutImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200", 
     sibosUrl: "https://sibos.id",
     qalamUrl: "https://qalam.id",
+    // Legal Defaults
+    companyLegalName: "PT MESIN KASIR SOLO",
+    nibNumber: "",
+    ahuNumber: "",
+    npwpNumber: "",
     whatsappNumber: "6282325103336",
     emailAddress: "admin@kasirsolo.com",
     addressSolo: "Perum Graha Tiara 2 B1, Kartasura",
@@ -183,6 +188,12 @@ const AppContent = () => {
                     aboutImage: settingsData.about_image || config.aboutImage,
                     sibosUrl: settingsData.sibos_url || config.sibosUrl,
                     qalamUrl: settingsData.qalam_url || config.qalamUrl,
+                    // Legal Info
+                    companyLegalName: settingsData.company_legal_name || config.companyLegalName,
+                    nibNumber: settingsData.nib_number || config.nibNumber,
+                    ahuNumber: settingsData.ahu_number || config.ahuNumber,
+                    npwpNumber: settingsData.npwp_number || config.npwpNumber,
+                    
                     whatsappNumber: settingsData.whatsapp_number || config.whatsappNumber,
                     emailAddress: settingsData.email_address || config.emailAddress,
                     addressSolo: settingsData.address_solo || config.addressSolo,

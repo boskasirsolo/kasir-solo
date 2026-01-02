@@ -165,6 +165,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
         <BrandColumn 
           description="Mitra teknologi terpercaya untuk digitalisasi bisnis di Indonesia. Menyediakan solusi Hardware POS, Software SaaS, dan Jasa Pengembangan Website sejak 2015."
           socials={socialLinks}
+          config={config} // PASS CONFIG FOR LEGAL
         />
         
         {/* 2. Solusi Bisnis Section (Left on Mobile) */}
