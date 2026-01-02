@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Download, FileText, Smartphone, Monitor, Search, 
   HelpCircle, PlayCircle, HardDrive, Package, 
   ChevronRight, AlertTriangle, MessageCircle, Wrench
 } from 'lucide-react';
-import { SectionHeader, Button, Input } from '../components/ui';
-import { INITIAL_DOWNLOADS } from '../utils';
+import { SectionHeader, Button } from '../components/ui';
+import { INITIAL_DOWNLOADS, supabase } from '../utils'; // Import supabase
 import { DownloadItem } from '../types';
 
 // --- COMPONENTS ---
@@ -90,11 +90,48 @@ const FaqAccordion = ({ q, a }: { q: string, a: string }) => {
 // --- MAIN PAGE ---
 
 export const SupportPage = () => {
+  const [downloads, setDownloads] = useState<DownloadItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'driver' | 'manual' | 'software' | 'tools'>('all');
 
+  // --- FETCH DATA FROM DB ---
+  useEffect(() => {
+    const fetchData = async () => {
+        if (!supabase) {
+            // Fallback to static if no DB
+            setDownloads(INITIAL_DOWNLOADS);
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from('downloads')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            
+            if (data && data.length > 0) {
+                setDownloads(data);
+            } else {
+                // Keep static if DB empty to avoid blank page
+                setDownloads(INITIAL_DOWNLOADS);
+            }
+        } catch (e) {
+            console.error("Error fetching downloads:", e);
+            setDownloads(INITIAL_DOWNLOADS); // Safe fallback
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchData();
+  }, []);
+
   // Filter Logic
-  const filteredItems = INITIAL_DOWNLOADS.filter(item => {
+  const filteredItems = downloads.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           item.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
@@ -159,7 +196,9 @@ export const SupportPage = () => {
                 </div>
 
                 {/* GRID ITEMS */}
-                {filteredItems.length > 0 ? (
+                {loading ? (
+                    <div className="text-center py-20 text-gray-500">Loading data...</div>
+                ) : filteredItems.length > 0 ? (
                     <div className="grid md:grid-cols-2 gap-4">
                         {filteredItems.map(item => (
                             <React.Fragment key={item.id}>
