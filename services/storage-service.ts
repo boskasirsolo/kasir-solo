@@ -4,27 +4,42 @@ import { CONFIG } from '../config/env';
 
 // --- STORAGE HELPERS (HYBRID STRATEGY) ---
 
-// 1. Upload to Supabase (Fast, Temporary)
-export const uploadToSupabase = async (file: File, folder: string = 'temp') => {
+// 1. Upload to Supabase (Fast, Temporary or Private)
+export const uploadToSupabase = async (file: File, folder: string = 'temp', bucketName: string = 'images') => {
     if (!supabase) throw new Error("Supabase not connected");
     
     // Sanitize filename
     const fileExt = file.name.split('.').pop();
-    const cleanName = file.name.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 20);
+    const cleanName = file.name.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 30);
     const fileName = `${folder}/${Date.now()}_${cleanName}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
-        .from('images') // Ensure your bucket is public and allows all mime types if possible, or create a 'files' bucket
+        .from(bucketName) // Use dynamic bucket
         .upload(fileName, file);
 
     if (uploadError) throw uploadError;
 
-    const { data } = supabase.storage.from('images').getPublicUrl(fileName);
+    // For public buckets, we return the public URL.
+    // For private buckets (like 'careers'), this URL won't work publicly, 
+    // but we still return it structure-wise. 
+    // IMPORTANT: Caller must use `path` for private buckets.
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(fileName);
     return { url: data.publicUrl, path: fileName };
 };
 
+// NEW: Get Signed URL for Private Access (Secure Download)
+export const getSignedUrl = async (bucketName: string, path: string, expiresIn: number = 60) => {
+    if (!supabase) throw new Error("Supabase not connected");
+    
+    const { data, error } = await supabase.storage
+        .from(bucketName)
+        .createSignedUrl(path, expiresIn); // URL valid for 60 seconds by default
+
+    if (error) throw error;
+    return data.signedUrl;
+};
+
 // 2. Upload to Cloudinary (Permanent, Optimized)
-// UPDATED: Supports raw files (ZIP, PDF, Drivers) by using 'auto' resource type in URL
 export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
     if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Cloudinary Config Missing");
     
@@ -32,7 +47,7 @@ export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
     formData.append('file', fileOrBlob);
     formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
     
-    // USE 'auto' instead of 'image' to let Cloudinary decide (supports raw files like .zip, .exe, .pdf)
+    // USE 'auto' instead of 'image' to let Cloudinary decide
     const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/auto/upload`, { 
         method: 'POST', 
         body: formData 
@@ -40,13 +55,13 @@ export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
     
     if (!res.ok) throw new Error("Cloudinary Upload Failed");
     const data = await res.json();
-    return data.secure_url; // Returns the permanent URL
+    return data.secure_url; 
 };
 
 // 3. Delete from Supabase
-export const deleteFromSupabase = async (path: string) => {
+export const deleteFromSupabase = async (path: string, bucketName: string = 'images') => {
     if (!supabase) return;
-    await supabase.storage.from('images').remove([path]);
+    await supabase.storage.from(bucketName).remove([path]);
 };
 
 // 4. Background Migration Process
@@ -55,7 +70,7 @@ export const processBackgroundMigration = async (
     sbPath: string, 
     tableName: string, 
     recordId: number,
-    columnName: string = 'image_url' // 'image' or 'image_url'
+    columnName: string = 'image_url' 
 ) => {
     try {
         console.log(`[Background] Migrating ${tableName} #${recordId} to Cloudinary...`);
@@ -68,7 +83,7 @@ export const processBackgroundMigration = async (
         }
 
         // C. Delete Temp File from Supabase
-        await deleteFromSupabase(sbPath);
+        await deleteFromSupabase(sbPath, 'images');
         
         console.log(`[Background] Migration Complete for ${tableName} #${recordId}`);
         return cloudUrl;

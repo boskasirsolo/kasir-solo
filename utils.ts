@@ -6,7 +6,7 @@ export { getEnv, CONFIG } from './config/env';
 export { supabase } from './lib/supabase-client';
 export { formatRupiah, formatNumberInput, cleanNumberInput, slugify, renameFile } from './lib/formatters';
 export { ensureAPIKey, callGeminiWithRotation } from './services/ai-service';
-export { uploadToSupabase, uploadToCloudinary, deleteFromSupabase, processBackgroundMigration } from './services/storage-service';
+export { uploadToSupabase, uploadToCloudinary, deleteFromSupabase, processBackgroundMigration, getSignedUrl } from './services/storage-service';
 
 // --- DOM UTILITIES (Kept here as they manipulate DOM directly) ---
 export const injectGoogleTags = (gaId?: string, gscCode?: string) => {

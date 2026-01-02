@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
-import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Zap, Target, Shield, Flame, XCircle, HeartHandshake, Mail } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Zap, Target, Shield, Flame, XCircle, HeartHandshake, Mail, UploadCloud, FileText, CheckCircle2, Loader2, X } from 'lucide-react';
 import { JobOpening } from '../types';
-import { Button, Card, Badge, SectionHeader } from '../components/ui';
+import { Button, Card, Badge, SectionHeader, Input, TextArea } from '../components/ui';
+import { uploadToSupabase, supabase, renameFile, slugify } from '../utils';
 
 const JobCard: React.FC<{ job: JobOpening, onClick: () => void }> = ({ job, onClick }) => (
   <div onClick={onClick} className="h-full">
@@ -34,7 +35,190 @@ const JobCard: React.FC<{ job: JobOpening, onClick: () => void }> = ({ job, onCl
   </div>
 );
 
-const JobDetailModal = ({ job, onClose }: { job: JobOpening, onClose: () => void }) => {
+// --- COMPONENT: APPLICATION FORM MODAL ---
+const ApplicationModal = ({ 
+    positionTitle, 
+    onClose 
+}: { 
+    positionTitle: string, 
+    onClose: () => void 
+}) => {
+    const [form, setForm] = useState({
+        full_name: '',
+        email: '',
+        phone: '',
+        portfolio_url: '',
+        cover_letter: ''
+    });
+    const [cvFile, setCvFile] = useState<File | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            if (file.size > 2 * 1024 * 1024) { // 2MB Limit
+                alert("Ukuran file maksimal 2MB.");
+                return;
+            }
+            if (file.type !== 'application/pdf') {
+                alert("Hanya format PDF yang diperbolehkan.");
+                return;
+            }
+            setCvFile(file);
+        }
+    };
+
+    const handleSubmit = async (e?: React.SyntheticEvent) => {
+        if (e) e.preventDefault();
+        if (!form.full_name || !form.email || !form.phone || !cvFile) {
+            return alert("Mohon lengkapi Nama, Email, No. HP, dan Upload CV.");
+        }
+
+        if (!supabase) {
+            alert("Mode Demo: Form ini membutuhkan koneksi database Supabase.");
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            // 1. Upload CV to 'careers' bucket
+            const seoName = `${slugify(form.full_name)}-cv-${slugify(positionTitle)}`;
+            const fileToUpload = renameFile(cvFile, seoName);
+            
+            // NOTE: Uploading to 'careers' bucket, folder 'resumes'
+            // We use 'path' here because for PRIVATE buckets, the URL is useless without signing.
+            const { path: cvPath } = await uploadToSupabase(fileToUpload, 'resumes', 'careers');
+
+            // 2. Insert into 'applicants' table
+            const { error } = await supabase.from('applicants').insert([{
+                full_name: form.full_name,
+                email: form.email,
+                phone: form.phone,
+                portfolio_url: form.portfolio_url,
+                cv_url: cvPath, // STORE THE PATH (e.g., resumes/andi-cv.pdf)
+                cover_letter: form.cover_letter,
+                position: positionTitle,
+                status: 'pending'
+            }]);
+
+            if (error) throw error;
+
+            setIsSuccess(true);
+        } catch (error: any) {
+            console.error("Application Error:", error);
+            alert(`Gagal mengirim lamaran: ${error.message}. Pastikan bucket 'careers' sudah dibuat di Supabase.`);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (isSuccess) {
+        return (
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/95 backdrop-blur-sm" onClick={onClose}></div>
+                <div className="relative bg-brand-dark border border-green-500/30 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl animate-fade-in">
+                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
+                        <CheckCircle2 size={32} />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">Lamaran Terkirim!</h3>
+                    <p className="text-gray-400 text-sm mb-6">
+                        Terima kasih, {form.full_name}. Data Anda sudah masuk ke sistem kami. Tim HRD akan menghubungi Anda jika profil cocok.
+                    </p>
+                    <Button onClick={onClose} className="w-full">Kembali</Button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto">
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+            <div className="relative w-full max-w-lg bg-brand-dark border border-white/10 rounded-2xl shadow-2xl flex flex-col my-8 animate-fade-in">
+                
+                {/* Header */}
+                <div className="p-5 border-b border-white/10 bg-brand-card rounded-t-2xl flex justify-between items-center">
+                    <div>
+                        <h3 className="text-lg font-bold text-white">Apply Position</h3>
+                        <p className="text-xs text-brand-orange font-bold uppercase tracking-wider">{positionTitle}</p>
+                    </div>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white"><X size={20}/></button>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar max-h-[70vh]">
+                    <div>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Data Diri</label>
+                        <Input value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})} placeholder="Nama Lengkap" className="mb-2 text-sm"/>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="Email Aktif" type="email" className="text-sm"/>
+                            <Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="No. WhatsApp" type="tel" className="text-sm"/>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Portfolio / LinkedIn (Opsional)</label>
+                        <Input value={form.portfolio_url} onChange={e => setForm({...form, portfolio_url: e.target.value})} placeholder="https://..." className="text-sm"/>
+                    </div>
+
+                    <div>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Upload CV (Wajib)</label>
+                        <div 
+                            onClick={() => fileInputRef.current?.click()}
+                            className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                                cvFile ? 'border-brand-orange bg-brand-orange/5' : 'border-white/10 hover:border-white/30 hover:bg-white/5'
+                            }`}
+                        >
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                className="hidden" 
+                                accept="application/pdf" 
+                                onChange={handleFileChange}
+                            />
+                            <UploadCloud size={24} className={`mx-auto mb-2 ${cvFile ? 'text-brand-orange' : 'text-gray-500'}`} />
+                            {cvFile ? (
+                                <div>
+                                    <p className="text-brand-orange text-sm font-bold truncate px-4">{cvFile.name}</p>
+                                    <p className="text-gray-500 text-[10px]">Klik untuk ganti</p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <p className="text-gray-300 text-sm font-bold">Upload CV (PDF)</p>
+                                    <p className="text-gray-500 text-[10px] mt-1">Maks. 2MB. Pastikan data terupdate.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Why You? (Cover Letter)</label>
+                        <TextArea 
+                            value={form.cover_letter} 
+                            onChange={e => setForm({...form, cover_letter: e.target.value})} 
+                            placeholder="Ceritakan singkat kenapa Anda cocok..." 
+                            className="h-24 text-sm"
+                        />
+                    </div>
+                </form>
+
+                {/* Footer */}
+                <div className="p-5 border-t border-white/10 bg-brand-card rounded-b-2xl">
+                    <Button onClick={() => handleSubmit()} disabled={isSubmitting} className="w-full py-3 shadow-neon">
+                        {isSubmitting ? <Loader2 className="animate-spin" /> : <><Mail size={16}/> KIRIM LAMARAN</>}
+                    </Button>
+                    <p className="text-[10px] text-gray-500 text-center mt-3">
+                        Dengan mengirim lamaran, Anda setuju data Anda disimpan untuk proses rekrutmen.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const JobDetailModal = ({ job, onClose, onApply }: { job: JobOpening, onClose: () => void, onApply: () => void }) => {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
@@ -75,14 +259,12 @@ const JobDetailModal = ({ job, onClose }: { job: JobOpening, onClose: () => void
         {/* Footer */}
         <div className="p-6 border-t border-white/10 bg-brand-card rounded-b-2xl flex justify-end gap-3">
            <Button variant="outline" onClick={onClose}>Tutup</Button>
-           <a 
-             href={`https://wa.me/6282325103336?text=Halo HRD PT Mesin Kasir Solo, saya ingin melamar posisi: ${job.title}. Berikut CV saya...`}
-             target="_blank"
-             rel="noreferrer"
+           <button 
+             onClick={onApply}
              className="px-6 py-2 bg-brand-orange hover:bg-brand-action text-white rounded-lg font-bold shadow-neon hover:shadow-neon-strong transition-all flex items-center gap-2"
            >
              <Briefcase size={18}/> Lamar Sekarang
-           </a>
+           </button>
         </div>
       </div>
     </div>
@@ -91,7 +273,16 @@ const JobDetailModal = ({ job, onClose }: { job: JobOpening, onClose: () => void
 
 export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
   const [selectedJob, setSelectedJob] = useState<JobOpening | null>(null);
+  const [showAppForm, setShowAppForm] = useState(false);
+  const [applyPosition, setApplyPosition] = useState("Spontaneous Application");
+  
   const activeJobs = jobs.filter(j => j.is_active);
+
+  const handleApplyClick = (title: string) => {
+      setApplyPosition(title);
+      setSelectedJob(null); // Close detail modal
+      setShowAppForm(true); // Open form modal
+  };
 
   return (
     <div className="animate-fade-in">
@@ -196,10 +387,10 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                  Saat ini semua pos tempur sudah terisi. Namun, jika Anda yakin skill Anda di atas rata-rata dan bisa memberikan impact, kirimkan CV spontan Anda.
                </p>
                <Button 
-                  onClick={() => window.open('mailto:karir@kasirsolo.com', '_blank')} 
+                  onClick={() => handleApplyClick("Spontaneous Application (General)")} 
                   className="px-8 py-4 text-base font-bold shadow-neon hover:shadow-neon-strong transition-transform hover:-translate-y-1 bg-gradient-to-r from-brand-orange to-red-600 text-white border-0"
                >
-                  <Mail size={18} className="mr-2" /> Kirim CV Spontan
+                  <FileText size={18} className="mr-2" /> Upload CV Spontan
                </Button>
             </div>
           )}
@@ -207,8 +398,21 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
         </div>
       </section>
 
-      {/* Modal */}
-      {selectedJob && <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
+      {/* Modals */}
+      {selectedJob && (
+          <JobDetailModal 
+            job={selectedJob} 
+            onClose={() => setSelectedJob(null)} 
+            onApply={() => handleApplyClick(selectedJob.title)}
+          />
+      )}
+
+      {showAppForm && (
+          <ApplicationModal 
+            positionTitle={applyPosition} 
+            onClose={() => setShowAppForm(false)} 
+          />
+      )}
     </div>
   );
 };
