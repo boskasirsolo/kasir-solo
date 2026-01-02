@@ -8,7 +8,9 @@ import {
   ProductGrid, 
   EmptyState, 
   PaginationControl, 
-  ProductDetailView 
+  ProductDetailView,
+  ComparisonBar, 
+  ComparisonModal 
 } from '../components/shop-parts';
 import { useNavigate, useParams } from 'react-router-dom';
 import { slugify } from '../utils';
@@ -20,6 +22,10 @@ const ITEMS_PER_PAGE = 4;
 const useShopLogic = (products: Product[]) => {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // COMPARISON STATE
+  const [compareIds, setCompareIds] = useState<number[]>([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
 
   // Filtering Logic
   const filteredProducts = useMemo(() => {
@@ -44,6 +50,29 @@ const useShopLogic = (products: Product[]) => {
     setPage(1);
   }, [searchTerm]);
 
+  // Comparison Handlers
+  const toggleCompare = (product: Product) => {
+      setCompareIds(prev => {
+          if (prev.includes(product.id)) {
+              return prev.filter(id => id !== product.id);
+          } else {
+              if (prev.length >= 3) {
+                  alert("Maksimal 3 produk untuk dibandingkan.");
+                  return prev;
+              }
+              return [...prev, product.id];
+          }
+      });
+  };
+
+  const removeCompare = (id: number) => {
+      setCompareIds(prev => prev.filter(pid => pid !== id));
+  };
+
+  const clearCompare = () => setCompareIds([]);
+
+  const comparedProducts = products.filter(p => compareIds.includes(p.id));
+
   return {
     searchTerm,
     setSearchTerm,
@@ -51,7 +80,15 @@ const useShopLogic = (products: Product[]) => {
     setPage,
     totalPages,
     displayedProducts,
-    hasResults: displayedProducts.length > 0
+    hasResults: displayedProducts.length > 0,
+    // Compare Props
+    compareIds,
+    toggleCompare,
+    removeCompare,
+    clearCompare,
+    comparedProducts,
+    showCompareModal,
+    setShowCompareModal
   };
 };
 
@@ -85,7 +122,8 @@ export const ShopPage = ({ products }: { products: Product[] }) => {
     setPage, 
     totalPages, 
     displayedProducts,
-    hasResults 
+    hasResults,
+    compareIds, toggleCompare, removeCompare, clearCompare, comparedProducts, showCompareModal, setShowCompareModal
   } = useShopLogic(products);
 
   const handleProductClick = (product: Product) => {
@@ -111,7 +149,9 @@ export const ShopPage = ({ products }: { products: Product[] }) => {
             <React.Fragment key={product.id}>
               <ProductCard 
                 product={product} 
-                onDetail={() => handleProductClick(product)} 
+                onDetail={() => handleProductClick(product)}
+                onCompare={toggleCompare}
+                isSelected={compareIds.includes(product.id)}
               />
             </React.Fragment>
           ))}
@@ -126,6 +166,25 @@ export const ShopPage = ({ products }: { products: Product[] }) => {
         totalPages={totalPages} 
         setPage={setPage} 
       />
+
+      {/* COMPARISON WIDGETS */}
+      <ComparisonBar 
+         selectedProducts={comparedProducts}
+         onRemove={removeCompare}
+         onClear={clearCompare}
+         onCompare={() => setShowCompareModal(true)}
+      />
+
+      {showCompareModal && (
+         <ComparisonModal 
+            products={comparedProducts} 
+            onClose={() => setShowCompareModal(false)}
+            onRemove={(id) => {
+                removeCompare(id);
+                if (comparedProducts.length <= 1) setShowCompareModal(false);
+            }}
+         />
+      )}
 
     </div>
   );

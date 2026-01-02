@@ -22,7 +22,8 @@ import { CheckoutPage } from './pages/checkout';
 import { InnovationPage } from './pages/innovation';
 import { WebsiteServicePage, WebAppServicePage, SeoServicePage, MaintenanceServicePage } from './pages/services';
 import { LegalPage } from './pages/legal'; 
-import { SupportPage } from './pages/support'; // NEW IMPORT
+import { SupportPage } from './pages/support'; 
+import { TrackOrderPage } from './pages/track-order'; // NEW IMPORT
 import { NotFoundPage } from './pages/not-found';
 
 const AppContent = () => {
@@ -123,7 +124,7 @@ const AppContent = () => {
             const mappedArticles = artData.map((item: any) => ({
                 ...item,
                 // Ensure image is mapped correctly
-                image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800',
+                image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=1200',
                 readTime: item.read_time || item.readTime || '5 min read',
                 author_avatar: item.author_avatar, // EXPLICIT MAPPING FOR AVATAR
                 date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -320,6 +321,7 @@ const AppContent = () => {
 
           <Route path="/legal/:type" element={<LegalPage />} />
           <Route path="/support" element={<SupportPage />} />
+          <Route path="/track-order" element={<TrackOrderPage />} /> 
 
           <Route path="/about" element={<AboutPage config={config} />} />
           <Route path="/about/vision" element={<VisionPage />} /> 

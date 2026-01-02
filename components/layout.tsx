@@ -58,7 +58,8 @@ const NAV_ITEMS: NavItem[] = [
     id: 'support', 
     label: 'Pusat Bantuan',
     children: [
-      { id: 'support', label: 'Download & Support Center' }, // NEW LINK ADDED HERE
+      { id: 'support', label: 'Download & Support Center' }, 
+      { id: 'track-order', label: 'Lacak Status Pesanan' }, // NEW
       { id: 'legal/refund', label: 'Klaim Garansi & Retur' },
       { id: 'legal/privacy', label: 'Kebijakan Privasi' },
       { id: 'legal/terms', label: 'Syarat & Ketentuan' },
@@ -138,10 +139,10 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
   ];
 
   const companyLinks = [
-    { label: 'Download Center', action: () => setPage('support') }, // ADDED TO FOOTER
+    { label: 'Cek Resi Pesanan', action: () => setPage('track-order') }, // NEW FOOTER LINK
+    { label: 'Download Center', action: () => setPage('support') },
     { label: 'Klien & Portfolio', action: () => setPage('gallery') },
     { label: 'Tentang Kami', action: () => setPage('about') },
-    { label: 'Karir', action: () => setPage('career') },
     { label: 'Hubungi Kami', action: () => setPage('contact') },
   ];
 

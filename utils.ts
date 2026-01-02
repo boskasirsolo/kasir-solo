@@ -90,8 +90,38 @@ export const injectGoogleTags = (gaId?: string, gscCode?: string) => {
 
 // --- MOCK DATA (Static Content) ---
 export const INITIAL_PRODUCTS: Product[] = [
-  { id: 1, name: "Paket Kasir Android Lite", price: 2500000, category: "Android POS", description: "Solusi hemat untuk UMKM.", image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800" },
-  { id: 2, name: "Paket Resto Pro Windows", price: 7500000, category: "Windows POS", description: "Sistem kasir restoran lengkap.", image: "https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&q=80&w=800" }
+  { 
+    id: 1, 
+    name: "Paket Kasir Android Lite", 
+    price: 2500000, 
+    category: "Android POS", 
+    description: "Solusi hemat untuk UMKM.", 
+    image: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800",
+    specs: {
+        "OS": "Android 11 Go",
+        "RAM": "2GB",
+        "Storage": "16GB",
+        "Printer": "Thermal 58mm (Built-in)",
+        "Layar": "5.5 Inch IPS",
+        "Koneksi": "WiFi, 4G, Bluetooth"
+    }
+  },
+  { 
+    id: 2, 
+    name: "Paket Resto Pro Windows", 
+    price: 7500000, 
+    category: "Windows POS", 
+    description: "Sistem kasir restoran lengkap.", 
+    image: "https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&q=80&w=800",
+    specs: {
+        "OS": "Windows 10 IoT",
+        "RAM": "4GB",
+        "Storage": "128GB SSD",
+        "Printer": "Thermal 80mm Auto-Cutter",
+        "Layar": "15.6 Inch Touchscreen",
+        "Koneksi": "LAN, WiFi, USB x4"
+    }
+  }
 ];
 
 export const INITIAL_ARTICLES: Article[] = [

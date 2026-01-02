@@ -6,6 +6,10 @@ export interface Product {
   category: string;
   description: string;
   image: string;
+  // NEW: Technical Specifications for Comparison
+  specs?: {
+    [key: string]: string; // Flexible key-value pairs (e.g., "RAM": "4GB")
+  };
 }
 
 export interface Article {
@@ -136,6 +140,9 @@ export interface Order {
   total_amount: number;
   status: 'pending' | 'paid' | 'processed' | 'completed' | 'cancelled';
   payment_method: string;
+  // NEW: Shipping Info
+  tracking_number?: string;
+  courier?: string;
 }
 
 export interface OrderItem {
