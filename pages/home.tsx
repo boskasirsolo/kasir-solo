@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink, User, MessageCircle, ShieldCheck, MapPin, Clock, Activity, XCircle, CheckCircle2, TrendingUp, Layers, Heart } from 'lucide-react';
+import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink, User, MessageCircle, ShieldCheck, MapPin, Clock, Activity, XCircle, CheckCircle2, TrendingUp, Layers, Heart, Calculator } from 'lucide-react';
 import { SiteConfig, GalleryItem, Testimonial } from '../types';
 import { Button, Card, Badge } from '../components/ui';
 import { ProjectDetailModal } from '../components/gallery-modal'; // Import Modal
@@ -477,8 +477,17 @@ export const HomePage = ({
                     {service.desc}
                   </p>
 
-                  <div className="mt-auto flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest group-hover:gap-3 transition-all">
-                    Lihat Detail <ArrowRight size={14} className={service.color} />
+                  <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest group-hover:gap-3 transition-all">
+                        Detail <ArrowRight size={14} className={service.color} />
+                    </span>
+                    
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); setPage(service.link); }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-orange/10 border border-brand-orange/20 text-brand-orange hover:bg-brand-orange hover:text-white text-[10px] font-bold transition-all hover:shadow-neon"
+                    >
+                        <Calculator size={12} /> Simulasi
+                    </button>
                   </div>
                 </Card>
               </div>
