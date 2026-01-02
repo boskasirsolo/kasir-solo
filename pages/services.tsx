@@ -9,9 +9,10 @@ import {
   ShieldAlert, Activity, LifeBuoy, PenTool
 } from 'lucide-react';
 import { ServiceHero, FeatureGrid, WorkflowSection, NarrativeSection } from '../components/service-parts';
+import { InvestmentSimulator, CalcData } from '../components/calculator';
 
 // ==========================================
-// 1. DATA CONSTANTS
+// 1. DATA CONSTANTS & CALCULATOR DATA
 // ==========================================
 
 const WEBSITE_DATA = {
@@ -28,6 +29,24 @@ const WEBSITE_DATA = {
     { step: "2", title: "Strategi Konten", desc: "Merancang struktur halaman yang menjual dan SEO-friendly." },
     { step: "3", title: "Development", desc: "Coding & Desain oleh tim yang mengerti UI/UX Retail." },
     { step: "4", title: "Launch & Training", desc: "Web rilis + Pelatihan cara update konten mandiri." },
+  ]
+};
+
+const WEBSITE_CALC: CalcData = {
+  title: "Simulasi Biaya Website",
+  subtitle: "Cek estimasi biaya pembuatan aset digital Anda.",
+  baseLabel: "Pilih Skala Website",
+  baseOptions: [
+    { id: 'lp', label: 'Landing Page (Single Page)', price: 1500000, desc: 'Fokus konversi satu produk/jasa.' },
+    { id: 'compro', label: 'Company Profile (Multi Page)', price: 3500000, desc: 'Branding perusahaan lengkap + Blog.' },
+    { id: 'toko', label: 'Toko Online (E-Commerce)', price: 6500000, desc: 'Fitur keranjang belanja & katalog produk.' }
+  ],
+  addonLabel: "Fitur Tambahan (Power-Ups)",
+  addons: [
+    { id: 'domain', label: 'Domain .COM / .ID Premium', price: 300000 },
+    { id: 'copy', label: 'Professional Copywriting', price: 750000 },
+    { id: 'seo_basic', label: 'SEO Setup Basic', price: 500000 },
+    { id: 'wa_rotator', label: 'WhatsApp Rotator (CS Banyak)', price: 400000 }
   ]
 };
 
@@ -48,6 +67,24 @@ const WEBAPP_DATA = {
   ]
 };
 
+const WEBAPP_CALC: CalcData = {
+  title: "Simulasi Sistem Custom (ERP)",
+  subtitle: "Rancang sistem sesuai alur bisnis unik Anda.",
+  baseLabel: "Kompleksitas Sistem",
+  baseOptions: [
+    { id: 'simple', label: 'Simple Automation (CRUD)', price: 5000000, desc: 'Pencatatan data sederhana & Laporan.' },
+    { id: 'mid', label: 'Business Operation (Mid)', price: 12000000, desc: 'Stok, Keuangan, Kasir, Multi-User.' },
+    { id: 'high', label: 'Full Custom ERP (Enterprise)', price: 25000000, desc: 'Manufaktur, HR, API Integrations, Custom Logic.' }
+  ],
+  addonLabel: "Modul Tambahan",
+  addons: [
+    { id: 'server', label: 'Setup VPS/Cloud Server', price: 1000000 },
+    { id: 'wa_notif', label: 'WhatsApp Notification Bot', price: 1500000 },
+    { id: 'payment', label: 'Payment Gateway Integration', price: 2000000 },
+    { id: 'mobile', label: 'Android App Wrapper (.APK)', price: 1500000 }
+  ]
+};
+
 const SEO_DATA = {
   features: [
     { title: "Buying Intent Keywords", desc: "Target kata kunci 'siap beli', bukan sekadar traffic sampah.", icon: Target },
@@ -65,6 +102,24 @@ const SEO_DATA = {
   ]
 };
 
+const SEO_CALC: CalcData = {
+  title: "Simulasi Investasi SEO",
+  subtitle: "Bukan biaya, tapi investasi traffic jangka panjang.",
+  baseLabel: "Target Kompetisi",
+  baseOptions: [
+    { id: 'local', label: 'Local SEO (Maps/Kota)', price: 2500000, desc: 'Dominasi pencarian nama kota.' },
+    { id: 'niche', label: 'Niche Market (Nasional)', price: 5000000, desc: 'Target kata kunci spesifik produk.' },
+    { id: 'high', label: 'High Competition', price: 10000000, desc: 'Industri padat (Properti, Kesehatan, Otomotif).' }
+  ],
+  addonLabel: "Booster Pack",
+  addons: [
+    { id: 'audit', label: 'Deep Technical Audit', price: 1000000 },
+    { id: 'content', label: '10x SEO Articles / Month', price: 1500000 },
+    { id: 'backlink', label: 'Authority Backlink Pack', price: 2000000 },
+    { id: 'speed', label: 'Speed Optimization (Core Web Vitals)', price: 1000000 }
+  ]
+};
+
 const MAINTENANCE_DATA = {
   features: [
     { title: "Digital Insurance", desc: "Backup rutin 'Time Machine' untuk memulihkan website jika terjadi error.", icon: ShieldCheck },
@@ -79,6 +134,23 @@ const MAINTENANCE_DATA = {
     { step: "2", title: "Hardening", desc: "Penguatan sistem pertahanan website." },
     { step: "3", title: "Monitoring", desc: "Pemantauan real-time 24/7." },
     { step: "4", title: "Monthly Report", desc: "Laporan kesehatan website rutin." },
+  ]
+};
+
+const MAINTENANCE_CALC: CalcData = {
+  title: "Simulasi Maintenance",
+  subtitle: "Asuransi kesehatan untuk website bisnis Anda.",
+  baseLabel: "Paket Bulanan",
+  baseOptions: [
+    { id: 'basic', label: 'Basic Guard', price: 500000, desc: 'Backup mingguan & Update plugin.' },
+    { id: 'pro', label: 'Business Pro', price: 1500000, desc: 'Backup harian, Security Scan, Uptime Monitor.' },
+    { id: 'vip', label: 'Enterprise VIP', price: 3000000, desc: 'Priority Support, Custom Dev Hours, Audit.' }
+  ],
+  addonLabel: "Add-on Services",
+  addons: [
+    { id: 'clean', label: 'Malware Removal (Sekali bayar)', price: 1000000 },
+    { id: 'content', label: 'Jasa Update Konten / Artikel', price: 500000 },
+    { id: 'migrasi', label: 'Migrasi Server / Hosting', price: 750000 }
   ]
 };
 
@@ -133,6 +205,14 @@ export const WebsiteServicePage = () => {
       </NarrativeSection>
 
       <FeatureGrid features={WEBSITE_DATA.features} />
+      
+      {/* CALCULATOR SECTION */}
+      <section className="py-16 bg-brand-dark border-t border-white/5">
+         <div className="container mx-auto px-4">
+            <InvestmentSimulator data={WEBSITE_CALC} serviceName="Jasa Pembuatan Website" />
+         </div>
+      </section>
+
       <WorkflowSection steps={WEBSITE_DATA.steps} />
     </div>
   );
@@ -191,6 +271,14 @@ export const WebAppServicePage = () => {
       </NarrativeSection>
 
       <FeatureGrid features={WEBAPP_DATA.features} />
+
+      {/* CALCULATOR SECTION */}
+      <section className="py-16 bg-brand-dark border-t border-white/5">
+         <div className="container mx-auto px-4">
+            <InvestmentSimulator data={WEBAPP_CALC} serviceName="Jasa Custom Web App (ERP)" />
+         </div>
+      </section>
+
       <WorkflowSection steps={WEBAPP_DATA.steps} />
     </div>
   );
@@ -248,6 +336,14 @@ export const SeoServicePage = () => {
       </NarrativeSection>
 
       <FeatureGrid features={SEO_DATA.features} />
+
+      {/* CALCULATOR SECTION */}
+      <section className="py-16 bg-brand-dark border-t border-white/5">
+         <div className="container mx-auto px-4">
+            <InvestmentSimulator data={SEO_CALC} serviceName="Jasa SEO & Traffic" />
+         </div>
+      </section>
+
       <WorkflowSection steps={SEO_DATA.steps} />
     </div>
   );
@@ -310,6 +406,14 @@ export const MaintenanceServicePage = () => {
       </NarrativeSection>
 
       <FeatureGrid features={MAINTENANCE_DATA.features} />
+
+      {/* CALCULATOR SECTION */}
+      <section className="py-16 bg-brand-dark border-t border-white/5">
+         <div className="container mx-auto px-4">
+            <InvestmentSimulator data={MAINTENANCE_CALC} serviceName="Jasa Maintenance Website" />
+         </div>
+      </section>
+
       <WorkflowSection steps={MAINTENANCE_DATA.steps} />
     </div>
   );
