@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera, Sparkles, Calendar } from 'lucide-react';
+import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera, Sparkles, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Article } from '../../types';
 import { FilterType, AuthorPersona } from './types';
 
@@ -352,6 +352,29 @@ export const ListPanel = ({
                     );
                 })}
             </div>
+
+            {/* VISUAL PAGINATION */}
+            {logic.totalPages > 1 && (
+                <div className="p-3 border-t border-white/5 flex justify-between items-center bg-brand-dark shrink-0">
+                    <button 
+                        onClick={() => logic.setPage(Math.max(1, logic.page - 1))} 
+                        disabled={logic.page === 1} 
+                        className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronLeft size={14}/>
+                    </button>
+                    <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-1 rounded border border-brand-orange/20">
+                        Halaman {logic.page} / {logic.totalPages}
+                    </span>
+                    <button 
+                        onClick={() => logic.setPage(Math.min(logic.totalPages, logic.page + 1))} 
+                        disabled={logic.page === logic.totalPages} 
+                        className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronRight size={14}/>
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
