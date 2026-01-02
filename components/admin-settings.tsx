@@ -168,7 +168,7 @@ export const AdminSettings = ({
                                 className="bg-black/40 text-xs"
                             />
                         </div>
-                        <Button onClick={generateHeroContent} disabled={isGenerating} variant="outline" className="w-full md:w-auto h-[42px] text-xs">
+                        <Button onClick={generateHeroContent} disabled={isGenerating} variant="outline" className="w-full md:w-auto h-[42px] text-xs px-8">
                             {isGenerating ? <LoadingSpinner size={14}/> : 'GENERATE'}
                         </Button>
                     </div>
