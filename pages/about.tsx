@@ -109,10 +109,10 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                      </div>
                   </div>
 
-                  <div className="w-full md:w-auto flex flex-col gap-4 text-center md:text-right">
-                     <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl">
-                        <Lock className="mx-auto mb-2 text-blue-400" size={24}/>
-                        <p className="text-xs text-blue-200 font-bold mb-1">DATA TERVERIFIKASI</p>
+                  <div className="w-full md:w-auto flex flex-col gap-4 text-center md:text-right min-w-[250px]">
+                     <div className="bg-blue-500/10 border border-blue-500/30 p-5 rounded-xl">
+                        <Lock className="mx-auto mb-2 text-blue-400" size={28}/>
+                        <p className="text-xs text-blue-200 font-bold mb-1 tracking-widest uppercase">DATA TERVERIFIKASI</p>
                         <a 
                            href="https://oss.go.id" 
                            target="_blank" 
@@ -122,16 +122,16 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                            Cek di OSS RBA & AHU Online
                         </a>
                      </div>
-                     <div className="space-y-2">
-                        <p className="text-[10px] text-gray-500 max-w-[200px] mx-auto">
-                           Butuh scan dokumen asli untuk vendor list / tender?
+                     <div className="space-y-3">
+                        <p className="text-[10px] text-gray-500 max-w-[200px] mx-auto leading-tight">
+                           Butuh scan dokumen asli untuk administrasi vendor / tender?
                         </p>
                         <Button 
                            variant="outline"
                            onClick={() => window.open(`https://wa.me/${config?.whatsappNumber}?text=Halo Admin, saya dari perusahaan [Sebutkan Nama PT], ingin request dokumen legalitas lengkap untuk keperluan verifikasi vendor.`, '_blank')}
-                           className="w-full text-xs font-bold border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white"
+                           className="w-full py-4 text-xs font-bold uppercase tracking-wider border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white shadow-neon hover:shadow-neon-strong transition-all flex items-center justify-center gap-2"
                         >
-                           <FileText size={14}/> Request Dokumen Legalitas
+                           <FileText size={16}/> Request Dokumen Asli
                         </Button>
                      </div>
                   </div>
