@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink, User, MessageCircle, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink, User, MessageCircle, ShieldCheck, MapPin, Clock, Activity } from 'lucide-react';
 import { SiteConfig, GalleryItem, Testimonial } from '../types';
 import { Button, Card, Badge } from '../components/ui';
 import { ProjectDetailModal } from '../components/gallery-modal'; // Import Modal
@@ -140,6 +140,62 @@ export const HomePage = ({
           </div>
         </div>
       </section>
+
+      {/* --- TRUST STRIP (VALIDATION BAR) --- */}
+      <div className="border-y border-white/5 bg-black/40 backdrop-blur-sm relative z-20 overflow-hidden group">
+        {/* Subtle animated gradient line */}
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-orange/50 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-[2s]"></div>
+        
+        <div className="container mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/5">
+             
+             {/* Stat 1 */}
+             <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-brand-dark border border-white/10 flex items-center justify-center text-brand-orange shadow-neon-text">
+                   <User size={24} />
+                </div>
+                <div>
+                   <h4 className="text-2xl md:text-3xl font-display font-bold text-white">500+</h4>
+                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Mitra UMKM</p>
+                </div>
+             </div>
+
+             {/* Stat 2 */}
+             <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-brand-dark border border-white/10 flex items-center justify-center text-blue-400">
+                   <MapPin size={24} />
+                </div>
+                <div>
+                   <h4 className="text-2xl md:text-3xl font-display font-bold text-white">34</h4>
+                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Provinsi</p>
+                </div>
+             </div>
+
+             {/* Stat 3 */}
+             <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-brand-dark border border-white/10 flex items-center justify-center text-green-400">
+                   <Activity size={24} />
+                </div>
+                <div>
+                   <h4 className="text-2xl md:text-3xl font-display font-bold text-white">99%</h4>
+                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Uptime Server</p>
+                </div>
+             </div>
+
+             {/* Stat 4 */}
+             <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-brand-dark border border-white/10 flex items-center justify-center text-purple-400">
+                   <Clock size={24} />
+                </div>
+                <div>
+                   <h4 className="text-2xl md:text-3xl font-display font-bold text-white">24/7</h4>
+                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Support Teknis</p>
+                </div>
+             </div>
+
+          </div>
+        </div>
+      </div>
 
       {/* Features / Services Section - REVISED COPYWRITING */}
       <section className="py-24 bg-brand-card border-t border-white/5">
