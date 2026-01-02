@@ -132,7 +132,7 @@ export const useAIGenerator = () => {
         researching: false, 
         generatingText: false, 
         generatingImage: false, 
-        uploading: false,
+        uploading: false, 
         progressMessage: '' 
     });
     const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
@@ -484,23 +484,30 @@ export const useAIGenerator = () => {
     // --- REVISED AI IMAGE GENERATOR WITH SEO OPTIMIZATION ---
     const getAIImageUrl = async (title: string, category: string, style: string) => {
         const seed = Math.floor(Math.random() * 9999999);
+        const cleanTitle = title.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 50); // Remove special chars for image prompt
         
         // 1. TIGHT CONTEXTUAL PROMPT ENGINEERING
-        let visualContext = "modern minimalist business setting";
+        let visualContext = "professional business environment";
         const lowerCat = (category || "").toLowerCase();
         
         if (lowerCat.includes('hardware') || lowerCat.includes('pos') || lowerCat.includes('kasir')) {
-            visualContext = "close up shot of modern white point of sale cashier machine on wooden counter, coffee shop background, depth of field, sleek technology product photography, clean minimalistic design";
+            visualContext = "close up product shot of a sleek modern white point of sale cashier machine on a wooden coffee shop counter, shallow depth of field, high tech equipment";
         } else if (lowerCat.includes('software') || lowerCat.includes('app') || lowerCat.includes('digital') || lowerCat.includes('toko online')) {
-            visualContext = "close up over shoulder shot of person using tablet with colorful business analytics dashboard, modern office environment, smart business concept, data visualization on screen, soft bokeh background";
+            visualContext = "close up over shoulder shot of person utilizing a tablet displaying a colorful sophisticated business analytics dashboard, modern bright office, data visualization on screen";
         } else if (lowerCat.includes('tips') || lowerCat.includes('bisnis') || lowerCat.includes('manajemen') || lowerCat.includes('keuangan')) {
-            visualContext = "successful indonesian small business owner smiling in a modern retail store, warm lighting, cinematic portrait, authentic emotion, professional attire, blurry store background";
+            visualContext = "portrait of a successful indonesian small business owner in a modern retail store, confident expression, warm lighting, cinematic composition";
         } else if (lowerCat.includes('franchise') || lowerCat.includes('kuliner')) {
-            visualContext = "busy modern coffee shop counter, barista serving customer, point of sale machine in foreground, warm ambient lighting, bustling atmosphere, hyperrealistic";
+            visualContext = "busy modern coffee shop counter scene, barista serving customer, point of sale machine in foreground, warm ambient lighting, bustling atmosphere";
+        } else if (lowerCat.includes('marketing') || lowerCat.includes('branding')) {
+            visualContext = "creative modern workspace, team brainstorming on whiteboard, bright natural light, energetic atmosphere, startups";
         }
 
-        const enhancedPrompt = `editorial photography of ${title}, ${visualContext}, ${style} style, high resolution, 8k, soft lighting, indonesia context, no text overlay, photorealistic, cinematic composition`;
-        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}`;
+        // Add quality boosters and negatives to avoid defects
+        const qualityBoosters = "masterpiece, best quality, ultra realistic, 8k uhd, sharp focus, professional photography, perfect lighting, rule of thirds, cinematic look";
+        const negativePrompt = ""; // Pollinations handles this via prompt engineering mostly, but we can try to be specific in the positive prompt to exclude things.
+
+        const enhancedPrompt = `${qualityBoosters}, ${style} photography of ${cleanTitle}, ${visualContext}, highly detailed, authentic, --no text, --no watermark`;
+        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}&enhance=true`;
         
         if (!supabase) return { url: pollUrl, file: null };
         

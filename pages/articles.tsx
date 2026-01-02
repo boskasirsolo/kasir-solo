@@ -138,6 +138,11 @@ export const ArticlesPage = ({
     selectTag
   } = useArticleLogic(articles);
 
+  // AUTO SCROLL UP EFFECT
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
   const handleArticleClick = (article: Article) => {
     navigate(`/articles/${slugify(article.title)}`);
   };
