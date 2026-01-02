@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Download, FileText, Smartphone, Monitor, Search, 
@@ -118,7 +119,7 @@ export const SupportPage = () => {
             <SectionHeader 
                 title="Download &" 
                 highlight="Support Center" 
-                subtitle="Pusat unduhan driver, manual, dan software pendukung untuk kelancaran bisnis Anda." 
+                subtitle="Pusat unduhan driver, manual, dan software pendukung. Langsung dari teknisi untuk kelancaran bisnis Anda." 
             />
             
             {/* SEARCH BAR */}
@@ -170,7 +171,7 @@ export const SupportPage = () => {
                     <div className="text-center py-20 bg-brand-card/30 rounded-xl border border-white/5 border-dashed">
                         <AlertTriangle className="mx-auto text-gray-600 mb-4" size={40} />
                         <h3 className="text-white font-bold mb-1">File Tidak Ditemukan</h3>
-                        <p className="text-gray-500 text-sm">Coba kata kunci lain atau hubungi admin support.</p>
+                        <p className="text-gray-500 text-sm">Coba kata kunci lain atau hubungi saya langsung.</p>
                     </div>
                 )}
             </div>
@@ -232,17 +233,17 @@ export const SupportPage = () => {
 
                 {/* DIRECT HELP */}
                 <div className="bg-brand-orange/10 border border-brand-orange/30 p-6 rounded-xl text-center">
-                    <p className="text-brand-orange text-xs font-bold uppercase tracking-widest mb-2">Butuh Bantuan Langsung?</p>
+                    <p className="text-brand-orange text-xs font-bold uppercase tracking-widest mb-2">Support Langsung Founder</p>
                     <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-                        Jika kendala tidak teratasi dengan file di atas, tim teknis kami siap membantu via remote (TeamViewer) atau Video Call.
+                        Bingung setting sendiri? Tenang. Saya (Amin) siap memandu Anda langsung via Remote (TeamViewer) atau Video Call sampai alat berfungsi normal. Tanpa admin perantara.
                     </p>
                     <a 
-                        href="https://wa.me/6282325103336?text=Halo%20Teknisi,%20saya%20butuh%20bantuan%20support%20teknis."
+                        href="https://wa.me/6282325103336?text=Halo%20Mas%20Amin,%20saya%20butuh%20bantuan%20setting%20alat."
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-action text-white px-6 py-3 rounded-lg text-sm font-bold shadow-neon transition-transform hover:-translate-y-1"
                     >
-                        <MessageCircle size={18} /> Chat Teknisi
+                        <MessageCircle size={18} /> Chat Mas Amin
                     </a>
                 </div>
 
