@@ -137,7 +137,7 @@ export const AdminSettings = ({
                 </button>
             ))}
 
-            <Button onClick={saveSettings} disabled={isSaving} className="w-full mt-8 shadow-neon">
+            <Button onClick={saveSettings} disabled={isSaving} className="w-full mt-8 shadow-neon py-3 text-sm">
                 {isSaving ? <LoadingSpinner size={16}/> : <><Save size={16} /> SIMPAN SEMUA</>}
             </Button>
         </div>
