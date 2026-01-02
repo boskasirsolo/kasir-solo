@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Zap, Target, Shield, Flame, XCircle, HeartHandshake, Mail, UploadCloud, FileText, CheckCircle2, Loader2, X } from 'lucide-react';
 import { JobOpening } from '../types';
 import { Button, Card, Badge, SectionHeader, Input, TextArea } from '../components/ui';
@@ -109,7 +109,7 @@ const ApplicationModal = ({
             setIsSuccess(true);
         } catch (error: any) {
             console.error("Application Error:", error);
-            alert(`Gagal mengirim lamaran: ${error.message}. Pastikan bucket 'careers' sudah dibuat di Supabase.`);
+            alert(`Gagal mengirim lamaran: ${error.message}. Pastikan bucket 'careers' dan tabel 'applicants' sudah dibuat di Supabase.`);
         } finally {
             setIsSubmitting(false);
         }
@@ -151,7 +151,13 @@ const ApplicationModal = ({
                 <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar max-h-[70vh]">
                     <div>
                         <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Data Diri</label>
-                        <Input value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})} placeholder="Nama Lengkap" className="mb-2 text-sm"/>
+                        <Input 
+                            value={form.full_name} 
+                            onChange={e => setForm({...form, full_name: e.target.value})} 
+                            placeholder="Nama Lengkap" 
+                            className="mb-2 text-sm"
+                            autoFocus={true} // Auto focus on load
+                        />
                         <div className="grid grid-cols-2 gap-2">
                             <Input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="Email Aktif" type="email" className="text-sm"/>
                             <Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="No. WhatsApp" type="tel" className="text-sm"/>
@@ -282,6 +288,8 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
       setApplyPosition(title);
       setSelectedJob(null); // Close detail modal
       setShowAppForm(true); // Open form modal
+      // Automatically scroll to top to ensure modal is centered and user sees it
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (

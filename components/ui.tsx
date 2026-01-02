@@ -47,13 +47,15 @@ export const Input = ({
   onChange,
   placeholder,
   type = "text",
-  className = ""
+  className = "",
+  ...props
 }: {
   value: string | number,
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
   placeholder?: string,
   type?: string,
-  className?: string
+  className?: string,
+  [key: string]: any
 }) => (
   <input 
     type={type}
@@ -61,6 +63,7 @@ export const Input = ({
     onChange={onChange}
     placeholder={placeholder}
     className={`bg-brand-card border border-white/10 rounded-lg px-4 py-3 text-white w-full focus:border-brand-orange outline-none transition-colors focus:shadow-neon-text/20 ${className}`} 
+    {...props}
   />
 );
 
@@ -68,18 +71,21 @@ export const TextArea = ({
   value,
   onChange,
   placeholder,
-  className = ""
+  className = "",
+  ...props
 }: {
   value: string,
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void,
   placeholder?: string,
-  className?: string
+  className?: string,
+  [key: string]: any
 }) => (
   <textarea 
     value={value}
     onChange={onChange}
     placeholder={placeholder}
     className={`bg-brand-card border border-white/10 rounded-lg px-4 py-3 text-white w-full focus:border-brand-orange outline-none transition-colors focus:shadow-neon-text/20 ${className}`} 
+    {...props}
   />
 );
 
