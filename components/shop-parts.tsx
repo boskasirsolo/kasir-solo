@@ -468,10 +468,10 @@ export const ProductDetailView = ({
     <Wrapper>
       {/* 
          LAYOUT UPDATE:
-         1. Fixed height container with overflow-hidden to contain inner scrolls.
-         2. Flex layout for Split View.
+         Left: Fixed (Header + Image + Actions)
+         Right: Scrollable (Description + Specs)
       */}
-      <div className={`relative w-full max-w-5xl ${isModal ? 'h-[90vh]' : 'min-h-[600px]'} bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row overflow-hidden rounded-2xl`}>
+      <div className={`relative w-full max-w-6xl ${isModal ? 'h-[90vh]' : 'min-h-[600px] md:h-[80vh]'} bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row overflow-hidden rounded-2xl`}>
         
         {/* Close Button */}
         <button 
@@ -481,79 +481,97 @@ export const ProductDetailView = ({
           {isModal ? <X size={20} /> : <ArrowLeft size={20} />}
         </button>
 
-        {/* LEFT COLUMN: IMAGE (Fixed/Shrink) */}
-        <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-6 md:p-0 h-[300px] md:h-full border-b md:border-b-0 md:border-r border-white/10 shrink-0">
-            <img 
-              src={product.image} 
-              alt={product.name} 
-              className="w-full h-full max-h-[300px] md:max-h-[80vh] object-contain" 
-            />
+        {/* LEFT COLUMN: HEADER + IMAGE + ACTIONS (Fixed/Sticky Side) */}
+        <div className="w-full md:w-5/12 bg-brand-dark flex flex-col h-full relative border-b md:border-b-0 md:border-r border-white/10 shrink-0">
+            
+            {/* 1. HEADER (Title & Price) */}
+            <div className="p-6 md:p-8 pb-4 shrink-0">
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange border border-brand-orange/30 px-2 py-1 rounded bg-brand-orange/10 mb-3">
+                    <Tag size={12} /> {product.category}
+                </span>
+                <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">{product.name}</h2>
+                <p className="text-3xl font-bold text-brand-orange">{formatRupiah(product.price)}</p>
+            </div>
+
+            {/* 2. IMAGE (Centered & Flexible) */}
+            <div className="flex-grow relative bg-black/20 m-4 md:mx-8 rounded-2xl border border-white/5 overflow-hidden group flex items-center justify-center min-h-[200px]">
+                <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105" 
+                />
+            </div>
+
+            {/* 3. ACTIONS (Bottom Fixed) */}
+            <div className="p-6 md:p-8 pt-2 mt-auto shrink-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button 
+                        onClick={handleAddToCart}
+                        className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${
+                            isAnimating ? 'bg-green-500 text-white' : 'bg-brand-gradient hover:bg-brand-gradient-hover text-white'
+                        }`}
+                    >
+                        {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} 
+                        {isAnimating ? "Berhasil" : "Beli Sekarang"}
+                    </button>
+                    <a 
+                        href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-center w-full py-4 border border-brand-orange hover:bg-brand-orange text-white rounded-xl font-bold transition-all gap-2 hover:shadow-neon"
+                    >
+                        <MessageCircle size={20} /> Tanya Sales
+                    </a>
+                </div>
+            </div>
         </div>
 
-        {/* RIGHT COLUMN: CONTENT (Flex Col) */}
-        <div className="w-full md:w-1/2 flex flex-col bg-brand-dark h-full relative">
-          
-          {/* HEADER (Sticky Top) */}
-          <div className="p-6 md:p-8 border-b border-white/5 shrink-0 z-10 bg-brand-dark">
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange border border-brand-orange/30 px-2 py-1 rounded bg-brand-orange/10 mb-3">
-                <Tag size={12} /> {product.category}
-              </span>
-              <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">{product.name}</h2>
-              <p className="text-2xl font-bold text-brand-orange">{formatRupiah(product.price)}</p>
-          </div>
-
-          {/* SCROLLABLE AREA (The Blue Box Area) */}
-          <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-grow">
-            <div className="prose prose-invert prose-sm text-gray-300 leading-relaxed">
-                <p className="whitespace-pre-line">{product.description}</p>
+        {/* RIGHT COLUMN: DESCRIPTION (Scrollable Content) */}
+        <div className="w-full md:w-7/12 h-full overflow-y-auto custom-scrollbar bg-black/20 p-6 md:p-10">
+            <div className="prose prose-invert prose-sm text-gray-300 leading-relaxed max-w-none">
+                <h4 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Deskripsi Produk</h4>
+                <p className="whitespace-pre-line text-base">{product.description}</p>
                 
                 {/* SPECS TABLE */}
                 {product.specs && (
-                    <div className="mt-6 bg-black/30 rounded-xl p-4 border border-white/5">
-                        <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2"><Scale size={14}/> Spesifikasi Utama</h4>
-                        <ul className="space-y-2">
+                    <div className="mt-8 bg-brand-card border border-white/5 rounded-2xl overflow-hidden shadow-lg">
+                        <div className="p-4 bg-white/5 border-b border-white/5 flex items-center gap-2">
+                            <Scale size={18} className="text-brand-orange"/>
+                            <h4 className="text-sm font-bold text-white uppercase tracking-widest">Spesifikasi Utama</h4>
+                        </div>
+                        <div className="divide-y divide-white/5">
                             {Object.entries(product.specs).map(([key, val]) => (
-                                <li key={key} className="flex justify-between text-xs border-b border-white/5 pb-1 last:border-0 last:pb-0">
-                                    <span className="text-gray-500">{key}</span>
-                                    <span className="text-gray-300 font-bold text-right">{val}</span>
-                                </li>
+                                <div key={key} className="flex justify-between p-4 hover:bg-white/5 transition-colors">
+                                    <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">{key}</span>
+                                    <span className="text-white font-bold text-sm text-right">{val}</span>
+                                </div>
                             ))}
-                        </ul>
+                        </div>
                     </div>
                 )}
 
-                <ul className="list-disc pl-4 space-y-1 text-gray-400 mt-6 text-xs">
-                   <li>Garansi Hardware 1 Tahun</li>
-                   <li>Free Training Staff</li>
-                   <li>Support Teknis Lifetime</li>
-                </ul>
+                <div className="mt-8 p-6 bg-brand-orange/5 border border-brand-orange/20 rounded-2xl">
+                    <h4 className="text-sm font-bold text-brand-orange uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Check size={16}/> Paket Termasuk:
+                    </h4>
+                    <ul className="space-y-3">
+                       <li className="flex items-start gap-3">
+                           <div className="w-5 h-5 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center shrink-0 mt-0.5"><Check size={12}/></div>
+                           <span>Garansi Hardware Resmi 1 Tahun (Tukar Baru jika Cacat Pabrik)</span>
+                       </li>
+                       <li className="flex items-start gap-3">
+                           <div className="w-5 h-5 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center shrink-0 mt-0.5"><Check size={12}/></div>
+                           <span>Free Training Staff & Owner sampai Bisa (Via Zoom/Offline)</span>
+                       </li>
+                       <li className="flex items-start gap-3">
+                           <div className="w-5 h-5 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center shrink-0 mt-0.5"><Check size={12}/></div>
+                           <span>Support Teknis Lifetime (Selama Pemakaian)</span>
+                       </li>
+                    </ul>
+                </div>
             </div>
-          </div>
-
-          {/* FOOTER (Sticky Bottom) */}
-          <div className="p-6 md:p-8 border-t border-white/10 bg-brand-dark shrink-0 z-10 mt-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button 
-                  onClick={handleAddToCart}
-                  className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${
-                      isAnimating ? 'bg-green-500 text-white' : 'bg-brand-gradient hover:bg-brand-gradient-hover text-white'
-                  }`}
-                >
-                  {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} 
-                  {isAnimating ? "Berhasil" : "Beli Sekarang"}
-                </button>
-                <a 
-                  href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center w-full py-4 border border-brand-orange hover:bg-brand-orange text-white rounded-xl font-bold transition-all gap-2 hover:shadow-neon"
-                >
-                  <MessageCircle size={20} /> Tanya Sales
-                </a>
-            </div>
-          </div>
-
         </div>
+
       </div>
     </Wrapper>
   );
