@@ -584,9 +584,13 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         let formattedSchedule = '';
         if (item.scheduled_for) {
             try {
+                // FIXED: Handle incoming UTC ISO string properly for local input
                 const date = new Date(item.scheduled_for);
                 // Adjust for local timezone offset so it appears correct in the input
-                const offsetMs = date.getTimezoneOffset() * 60000;
+                // .toISOString() always returns UTC. We want a string that "looks like" local time when read as ISO.
+                // Example: UTC 00:00 -> Local 07:00. We want "2024-01-01T07:00" string.
+                const offsetMs = date.getTimezoneOffset() * 60000; 
+                // Subtracting the offset (which is negative for zones ahead) adds hours to make it match local visual time
                 formattedSchedule = new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
             } catch (e) {
                 console.warn("Invalid schedule date", e);
@@ -640,9 +644,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
             // UPLOAD LOGIC: If a file exists (Manual or AI Generated with SEO Filename)
             if (form.uploadFile) {
-                // Double check rename if it's a manual upload (not from AI generation flow which already handles it)
-                // AI generated files already have clean names. Manual uploads need renaming.
-                // We'll just rename it again to be safe based on the current Title.
                 const seoName = `${slugify(form.title)}-artikel-cover`;
                 fileToMigrate = renameFile(form.uploadFile, seoName);
 
@@ -658,11 +659,21 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             const finalAuthorAvatar = form.authorAvatar || activePersona.avatar;
             const statusNormalized = (form.status || 'draft').toLowerCase().trim();
 
+            // --- FIX: TIMEZONE HANDLING FOR SCHEDULED_FOR ---
+            // If user picks 07:00 in input, `form.scheduled_for` is "YYYY-MM-DDT07:00".
+            // We must create a Date object which interprets this string as Local Time,
+            // then convert to ISO UTC to store in DB.
+            let finalScheduledFor = null;
+            if (form.status === 'scheduled' && form.scheduled_for) {
+                const localDate = new Date(form.scheduled_for); // Implicitly treats as local time
+                finalScheduledFor = localDate.toISOString(); // Converts local 07:00 to UTC (e.g. 00:00)
+            }
+
             const commonData = {
                 title: form.title, excerpt: form.excerpt || '', content: form.content || '', 
                 category: form.category || 'General', author: form.author, author_avatar: finalAuthorAvatar, 
                 read_time: form.readTime, image_url: finalImageUrl, status: statusNormalized as any,
-                scheduled_for: form.status === 'scheduled' ? form.scheduled_for : null,
+                scheduled_for: finalScheduledFor, // USE THE FIXED TIME
                 type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
                 cluster_ideas: form.cluster_ideas, 
                 date: dateStr, 
@@ -683,8 +694,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 }
             }
 
-            // MIGRATION: Send the file to Cloudinary in background
-            // This ensures the SEO-named file is what ends up in Cloudinary
             if (supabasePath && fileToMigrate && savedId) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'articles', savedId, 'image_url')
                     .then((cloudUrl) => {

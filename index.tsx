@@ -250,8 +250,17 @@ const AppContent = () => {
       );
   }
 
-  // --- FILTER: Only pass Published articles to public routes ---
-  const publishedArticles = articles.filter(a => a.status === 'published');
+  // --- FILTER: AUTO-PUBLISH LOGIC ---
+  // Show if status is 'published' OR (status is 'scheduled' AND time has passed)
+  const publishedArticles = articles.filter(a => {
+      if (a.status === 'published') return true;
+      if (a.status === 'scheduled' && a.scheduled_for) {
+          const scheduleTime = new Date(a.scheduled_for).getTime();
+          const now = new Date().getTime();
+          return now >= scheduleTime; // AUTO PUBLISH
+      }
+      return false;
+  });
 
   return (
     <CartProvider>
