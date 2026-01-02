@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   ShieldCheck, AlertOctagon, CheckCircle2, XCircle, 
   Video, Lock, CreditCard, AlertTriangle, FileSignature, 
-  Gavel, Server, Fingerprint, RefreshCcw, Truck, HelpCircle
+  Gavel, Server, Fingerprint, RefreshCcw, Truck, HelpCircle, BadgeCheck
 } from 'lucide-react';
 
 // --- ATOMS: REUSABLE UI PARTS ---
@@ -65,7 +65,7 @@ export const RefundContent = () => (
   <div className="animate-fade-in text-gray-300 leading-relaxed">
     <PolicyHeader 
       title="Kebijakan Garansi & Retur" 
-      subtitle="Komitmen kami untuk memberikan ketenangan pikiran (Peace of Mind) dalam setiap investasi teknologi Anda. Berikut adalah SOP standar klaim dan perlindungan purna jual." 
+      subtitle="Komitmen kami untuk memberikan ketenangan pikiran (Peace of Mind). Berikut adalah SOP standar klaim dan perlindungan purna jual." 
     />
 
     <WarningBlock 
@@ -73,7 +73,7 @@ export const RefundContent = () => (
       message={
         <p>
           Demi keadilan bersama dan menghindari klaim fiktif, PT Mesin Kasir Solo menerapkan kebijakan <strong>Zero Tolerance</strong>. 
-          Kami <strong>MENOLAK 100%</strong> segala bentuk komplain (barang pecah, kurang, atau tidak sesuai) jika pembeli gagal menunjukkan bukti Video Unboxing yang valid.
+          Kami <strong>MENOLAK 100%</strong> segala bentuk komplain jika pembeli gagal menunjukkan bukti Video Unboxing yang valid.
         </p>
       }
       points={[
@@ -85,7 +85,7 @@ export const RefundContent = () => (
 
     <PolicySection title="Cakupan Garansi Hardware" icon={ShieldCheck}>
         <p className="mb-6 text-sm">
-            Setiap perangkat keras (Hardware) yang kami jual dilindungi oleh garansi terbatas terhadap cacat produksi (Factory Defect). Garansi tidak mencakup kerusakan akibat kelalaian penggunaan (Human Error).
+            Setiap perangkat keras (Hardware) yang kami jual dilindungi oleh garansi terbatas terhadap cacat produksi (Factory Defect).
         </p>
         <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-green-500/5 p-5 rounded-xl border border-green-500/20">
@@ -97,7 +97,6 @@ export const RefundContent = () => (
                     <li>Layar Ghost Touch / Dead Pixel (minimal 5 titik) saat diterima.</li>
                     <li>Printer macet teknis (gear/motor) bukan karena kotoran/serangga.</li>
                     <li>Port koneksi (USB/LAN) tidak berfungsi dari pabrik.</li>
-                    <li>Adaptor mati mendadak dalam masa garansi (selain karena lonjakan listrik).</li>
                 </ul>
             </div>
             <div className="bg-red-500/5 p-5 rounded-xl border border-red-500/20">
@@ -108,33 +107,8 @@ export const RefundContent = () => (
                     <li>Kerusakan fisik: Jatuh, Pecah, Retak, Penyok, Tergores dalam.</li>
                     <li>Terkena cairan (Water Damage) atau korosi akibat kelembaban.</li>
                     <li>Segel garansi rusak, sobek, atau hilang.</li>
-                    <li>Kerusakan akibat arus listrik tidak stabil (Koslet) atau petir.</li>
                     <li>Modifikasi software/hardware yang tidak diizinkan (Root/Jailbreak).</li>
                 </ul>
-            </div>
-        </div>
-    </PolicySection>
-
-    <PolicySection title="Kebijakan Lisensi Software (SaaS)" icon={Server}>
-        <div className="bg-brand-card border border-white/5 p-6 rounded-xl flex flex-col md:flex-row gap-6 items-start">
-            <div className="flex-1">
-                <p className="text-sm text-gray-300 mb-4 leading-relaxed">
-                    Produk perangkat lunak (SIBOS, QALAM, Website Custom) bersifat <strong>FINAL & NON-REFUNDABLE</strong>. 
-                    Biaya yang dibayarkan dialokasikan langsung untuk sewa server (Cloud), biaya setup, dan lisensi pihak ketiga.
-                </p>
-                <div className="bg-brand-orange/10 border-l-4 border-brand-orange p-4 rounded-r-lg">
-                    <h5 className="text-brand-orange font-bold text-xs uppercase mb-1">Penting:</h5>
-                    <p className="text-xs text-gray-400">
-                        Kami menyediakan <strong>Free Trial</strong> atau Demo Account untuk memastikan kecocokan fitur sebelum Anda memutuskan membeli. 
-                        Membeli berarti Anda telah mencoba dan menyetujui fitur yang ada "AS IS" (sebagaimana adanya).
-                    </p>
-                </div>
-            </div>
-            <div className="w-full md:w-1/3 bg-black/40 p-4 rounded-lg border border-white/10 text-xs space-y-2">
-                <strong className="text-white block border-b border-white/10 pb-2 mb-2">Prosedur Refund Dana:</strong>
-                <p>1. Hanya berlaku jika stok hardware kosong pasca transfer.</p>
-                <p>2. Proses refund memakan waktu 3-7 hari kerja.</p>
-                <p>3. Wajib melampirkan foto buku tabungan halaman depan.</p>
             </div>
         </div>
     </PolicySection>
@@ -151,7 +125,6 @@ export const PrivacyContent = () => (
     <div className="bg-gradient-to-r from-brand-card to-brand-dark p-6 rounded-2xl border border-white/5 text-sm leading-relaxed mb-10 shadow-lg">
          <p className="mb-4">
              Di era digital, <strong>Kepercayaan (Trust)</strong> adalah mata uang paling berharga. PT Mesin Kasir Solo berdiri tegak dengan prinsip <strong>Integritas Data</strong>. 
-             Kami mengumpulkan data semata-mata untuk keperluan transaksi, legalitas, dan peningkatan layanan sistem (System Improvement).
          </p>
          <p className="font-bold text-white">
              Kami bukan perusahaan pialang data. Data transaksi, omzet, dan pelanggan Anda adalah MILIK ANDA SEPENUHNYA.
@@ -159,19 +132,16 @@ export const PrivacyContent = () => (
     </div>
 
     <div className="space-y-8">
-      <PolicySection title="Klasifikasi Data yang Disimpan" icon={Fingerprint}>
-        <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-brand-dark p-5 rounded-xl border border-white/5 hover:border-brand-orange/30 transition-colors">
-                <strong className="text-white block mb-2 text-sm flex items-center gap-2"><CreditCard size={14} className="text-brand-orange"/> Data Transaksional</strong>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                    Informasi yang diperlukan untuk memproses pesanan: Nama Lengkap, Alamat Pengiriman, Nomor Telepon (untuk OTP/Kurir), dan Riwayat Pembelian Hardware.
+      <PolicySection title="Data Terbuka, Dokumen Terjaga" icon={BadgeCheck}>
+        <div className="flex flex-col md:flex-row gap-6 items-center">
+            <div className="flex-1 text-sm text-gray-300 space-y-4">
+                <p>
+                    Kami beroperasi di bawah payung hukum yang sah. Demi keamanan data perusahaan dan mencegah penyalahgunaan oleh pihak tidak bertanggung jawab, <strong>scan dokumen asli</strong> hanya kami berikan kepada klien yang sedang dalam proses administrasi/vendor list.
                 </p>
-            </div>
-            <div className="bg-brand-dark p-5 rounded-xl border border-white/5 hover:border-brand-orange/30 transition-colors">
-                <strong className="text-white block mb-2 text-sm flex items-center gap-2"><Server size={14} className="text-brand-orange"/> Data Bisnis (SaaS)</strong>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                    Untuk pengguna SIBOS/QALAM: Database produk, data penjualan, dan laporan keuangan tersimpan di server cloud terenkripsi. Kami tidak mengakses data ini tanpa izin tertulis (untuk keperluan support).
-                </p>
+                <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl">
+                    <p className="text-blue-200 text-xs font-bold mb-1">VALIDASI MANDIRI</p>
+                    <p className="text-xs text-gray-400">Silakan cek validitas NIB kami secara mandiri melalui situs resmi <strong>OSS Kementerian Investasi</strong> (oss.go.id).</p>
+                </div>
             </div>
         </div>
       </PolicySection>
@@ -190,24 +160,6 @@ export const PrivacyContent = () => (
             ))}
         </ul>
       </PolicySection>
-
-      <PolicySection title='Janji "Anti-Jual Data"' icon={XCircle}>
-        <div className="flex flex-col md:flex-row gap-6 items-center">
-            <div className="flex-1 text-sm text-gray-300 space-y-4">
-                <p>
-                    Kami menyadari maraknya praktik jual-beli database nomor HP untuk keperluan telemarketing, pinjol, atau judi online.
-                </p>
-                <p>
-                    PT Mesin Kasir Solo menjamin secara hukum bahwa kami <strong>TIDAK AKAN PERNAH</strong> menjual, menyewakan, atau membagikan database kontak Anda kepada pihak ketiga manapun untuk tujuan komersial.
-                </p>
-            </div>
-            <div className="shrink-0 bg-red-900/20 border border-red-500/30 p-4 rounded-xl max-w-xs text-center">
-                <ShieldCheck size={40} className="text-red-500 mx-auto mb-2"/>
-                <p className="text-xs font-bold text-red-400 uppercase">Strict Confidentiality</p>
-                <p className="text-[10px] text-red-300/70 mt-1">Data Anda aman bersama kami.</p>
-            </div>
-        </div>
-      </PolicySection>
     </div>
   </div>
 );
@@ -220,7 +172,6 @@ export const TermsContent = () => (
     />
 
     <div className="space-y-8">
-      
       <PolicySection title="Mekanisme Pesanan & Harga" icon={FileSignature}>
         <div className="space-y-4">
             <div className="flex gap-4">
@@ -228,16 +179,7 @@ export const TermsContent = () => (
                 <div>
                     <strong className="text-white text-sm block mb-1">Price Lock Policy</strong>
                     <p className="text-sm text-gray-400">
-                        Harga mengikat saat checkout (Invoice Terbit). Perubahan harga naik/turun setelah invoice terbit tidak mempengaruhi tagihan Anda. Kami berhak membatalkan pesanan jika terjadi kesalahan sistem harga (glitch) yang tidak wajar (cth: Rp 0).
-                    </p>
-                </div>
-            </div>
-            <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-brand-dark border border-brand-orange text-brand-orange flex items-center justify-center font-bold text-xs shrink-0">2</div>
-                <div>
-                    <strong className="text-white text-sm block mb-1">Ketersediaan Stok Dinamis</strong>
-                    <p className="text-sm text-gray-400">
-                        Karena perputaran barang yang cepat (Online & Offline), jika stok habis pasca transfer, opsi kami adalah: (a) Indent/Pre-order, (b) Tukar tipe setara, atau (c) Refund dana 100%.
+                        Harga mengikat saat checkout (Invoice Terbit). Perubahan harga naik/turun setelah invoice terbit tidak mempengaruhi tagihan Anda.
                     </p>
                 </div>
             </div>
@@ -257,48 +199,11 @@ export const TermsContent = () => (
                 </div>
                 <div className="text-sm text-gray-400 max-w-md border-l-2 border-red-500 pl-4">
                     <p className="font-bold text-red-400 flex items-center gap-2 mb-1"><AlertTriangle size={14}/> Fraud Warning:</p>
-                    Kami <strong>TIDAK BERTANGGUNG JAWAB</strong> atas transfer ke rekening pribadi (perorangan). Segala transaksi sah hanya melalui rekening perusahaan resmi.
+                    Kami <strong>TIDAK BERTANGGUNG JAWAB</strong> atas transfer ke rekening pribadi.
                 </div>
             </div>
         </div>
       </PolicySection>
-
-      <PolicySection title="Pengiriman, Asuransi & Risiko" icon={Truck}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                <strong className="text-white text-sm block mb-2 flex items-center gap-2"><ShieldCheck size={14} className="text-green-400"/> Wajib Asuransi</strong>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                    Setiap barang bernilai di atas Rp 1.000.000,- <strong>WAJIB</strong> menggunakan asuransi pengiriman. Risiko kehilangan/kerusakan oleh ekspedisi tanpa asuransi ditanggung sepenuhnya oleh pembeli.
-                </p>
-            </div>
-            <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                <strong className="text-white text-sm block mb-2 flex items-center gap-2"><Truck size={14} className="text-blue-400"/> Packing Kayu</strong>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                    Untuk pengiriman PC All-in-One, Monitor Touchscreen, dan Kiosk ke luar pulau Jawa, kami sangat menyarankan penambahan Packing Kayu untuk keamanan ekstra.
-                </p>
-            </div>
-        </div>
-      </PolicySection>
-
-      <PolicySection title="Hak Kekayaan Intelektual (HAKI)" icon={Gavel}>
-        <div className="bg-brand-dark/50 p-6 rounded-xl border border-white/5 text-sm leading-relaxed text-gray-300">
-            <p className="mb-3">
-                Seluruh source code, desain antarmuka, logo, dan aset digital pada software <strong>SIBOS</strong> dan <strong>QALAM</strong> adalah hak cipta milik PT Mesin Kasir Solo.
-            </p>
-            <p className="bg-red-900/10 border border-red-900/30 p-3 rounded text-red-200 text-xs">
-                <strong className="text-red-400">LARANGAN KERAS:</strong> Dilarang melakukan <em>Reverse Engineering</em>, membajak, memodifikasi, atau menjual ulang (Resell) lisensi software tanpa perjanjian kemitraan resmi (White Label Agreement). Pelanggaran akan diproses sesuai UU ITE dan Hak Cipta yang berlaku di Indonesia.
-            </p>
-        </div>
-      </PolicySection>
-
-      <PolicySection title="Batasan Layanan Support" icon={HelpCircle}>
-        <ul className="space-y-2 text-sm text-gray-400 list-disc pl-5">
-            <li>Support Teknis Gratis meliputi: Panduan penggunaan, perbaikan bug sistem, dan kendala koneksi server.</li>
-            <li>Support Teknis Gratis <strong>TIDAK</strong> meliputi: Kendala akibat virus komputer klien, kerusakan jaringan internet lokal (WiFi/LAN) klien, atau permintaan fitur custom di luar paket.</li>
-            <li>Layanan kunjungan teknisi ke lokasi (On-site Visit) di luar area Solo Raya akan dikenakan biaya transportasi dan akomodasi.</li>
-        </ul>
-      </PolicySection>
-
     </div>
   </div>
 );

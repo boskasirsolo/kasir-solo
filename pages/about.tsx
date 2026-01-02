@@ -13,9 +13,9 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
         STORY
       </div>
       <div className="container mx-auto px-4 text-center relative z-10">
-        <h2 className="text-5xl md:text-7xl font-display font-bold text-white mb-6">Tentang <span className="text-brand-orange">Perjalanan</span></h2>
+        <h2 className="text-5xl md:text-7xl font-display font-bold text-white mb-6">Sebuah Catatan <span className="text-brand-orange">Kaki</span></h2>
         <p className="max-w-3xl mx-auto text-xl text-gray-400 leading-relaxed font-light">
-          Sebuah catatan jujur tentang mimpi, kehancuran, dan keberanian untuk memulai lagi dari nol.
+          Kenapa Kami Memulai Lagi? Sebuah cerita jujur tentang kehancuran dan fondasi baru.
         </p>
       </div>
     </div>
@@ -29,31 +29,31 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                 <div className="relative border-l-4 border-brand-orange pl-8 py-4">
                     <Quote className="absolute -top-6 -left-4 text-brand-orange fill-brand-orange w-8 h-8 opacity-20" />
                     <h3 className="text-2xl md:text-4xl font-display font-bold text-white leading-tight mb-4">
-                        "Gue mau jujur-jujuran aja di sini. Tahun 2022, PT Mesin Kasir Solo itu pernah ada di titik nadir."
+                        "Jujur-jujuran aja. Tahun 2022, PT Mesin Kasir Solo pernah 'mati suri'."
                     </h3>
                     <p className="text-gray-400 text-lg leading-relaxed">
-                        Kita "mati suri", aset digital hilang, dan gue ngerasain sendiri gimana rasanya harus ngerintis semuanya dari nol lagi. Pengalaman pahit itu bikin mata gue kebuka lebar: banyak banget UMKM dan bisnis <em>franchise</em> yang punya website cuma buat gaya-gayaan. Asal punya <em>domain</em>, asal ada foto produk cakep, tapi nggak punya "nyawa" buat bantu operasional atau narik investor.
+                        Aset digital hilang, domain diambil orang, sistem berantakan. Saat itu saya belajar satu hal mahal: <strong>Bisnis tanpa sistem yang kuat adalah bom waktu.</strong>
                     </p>
                 </div>
 
                 {/* Narrative Block */}
                 <div className="grid md:grid-cols-2 gap-10 items-center">
                     <div>
-                        <h4 className="text-xl font-bold text-white mb-4">Kenapa Kita Beda?</h4>
+                        <h4 className="text-xl font-bold text-white mb-4">The Turn (Titik Balik)</h4>
                         <p className="text-gray-400 leading-relaxed mb-4">
-                            Di dunia bisnis yang bergerak cepat, lo nggak butuh sekadar vendor yang jual alat kasir terus kabur. Lo butuh partner yang ngerti pedihnya selisih stok, pusingnya laporan keuangan yang nggak balance, dan capeknya ngawasin karyawan nakal.
+                            Dari kehancuran itu, saya (Amin Maghfuri) membangun ulang semuanya. Bukan untuk balas dendam, tapi untuk memastikan <strong>Anda tidak perlu mengalami kegagalan yang sama.</strong>
                         </p>
                         <p className="text-gray-400 leading-relaxed">
-                            PT Mesin Kasir Solo lahir dari pengalaman lapangan nyata. DNA kami adalah <strong>empati</strong>. Kami membangun sistem karena kami pernah merasakan sakitnya tidak punya sistem.
+                            SIBOS dan QALAM lahir dari rasa sakit itu. Ini bukan sekadar software jualan, ini adalah <strong>asuransi kegagalan</strong> Anda. Kami membangun fitur berdasarkan apa yang <em>menyelamatkan uang</em>, bukan cuma apa yang <em>keren</em>.
                         </p>
                     </div>
                     <div className="bg-brand-dark/50 p-8 rounded-2xl border border-white/5">
                         <div className="flex items-center gap-4 mb-4">
                             <Users className="text-brand-orange w-8 h-8" />
-                            <span className="text-white font-bold text-lg">Partner, Bukan Vendor.</span>
+                            <span className="text-white font-bold text-lg">Praktisi, Bukan Teoretisi.</span>
                         </div>
                         <p className="text-sm text-gray-500 italic">
-                            "Kami tidak akan merekomendasikan alat yang tidak Anda butuhkan hanya demi omzet. Kejujuran adalah mata uang kami."
+                            "Developer lain membuat fitur di ruangan ber-AC. Saya membuat fitur di lapangan panas, menghadapi komplain pelanggan, dan selisih stok nyata."
                         </p>
                     </div>
                 </div>
@@ -61,85 +61,6 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
             </div>
         </div>
     </section>
-
-    {/* LEGALITAS & VERIFIKASI (NEW SECTION) */}
-    {(config?.companyLegalName || config?.nibNumber) && (
-      <section className="py-16 bg-brand-dark border-t border-white/5 relative">
-         <div className="container mx-auto px-4 max-w-4xl">
-            <div className="bg-brand-card border border-white/10 rounded-2xl p-8 relative overflow-hidden shadow-2xl">
-               {/* Background Watermark */}
-               <div className="absolute -right-10 -bottom-10 opacity-5 pointer-events-none">
-                  <ShieldCheck size={200} />
-               </div>
-
-               <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                  <div className="flex-1">
-                     <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                        <BadgeCheck className="text-blue-400" />
-                        Legalitas & Izin Usaha
-                     </h3>
-                     <p className="text-gray-400 text-sm mb-6">
-                        Kami beroperasi di bawah payung hukum yang sah dan terdaftar di kementerian terkait. 
-                        Transparansi adalah fondasi kepercayaan B2B kami.
-                     </p>
-                     
-                     <div className="space-y-3 bg-black/40 p-4 rounded-xl border border-white/5">
-                        <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                           <span className="text-gray-500 text-xs uppercase font-bold">Badan Hukum</span>
-                           <span className="text-white font-bold text-sm">{config?.companyLegalName || "PT MESIN KASIR SOLO"}</span>
-                        </div>
-                        {config?.ahuNumber && (
-                           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                              <span className="text-gray-500 text-xs uppercase font-bold">SK Kemenkumham (AHU)</span>
-                              <span className="text-gray-300 font-mono text-xs">{config.ahuNumber}</span>
-                           </div>
-                        )}
-                        {config?.nibNumber && (
-                           <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                              <span className="text-gray-500 text-xs uppercase font-bold">NIB (Nomor Induk Berusaha)</span>
-                              <span className="text-gray-300 font-mono text-xs">{config.nibNumber}</span>
-                           </div>
-                        )}
-                        {config?.npwpNumber && (
-                           <div className="flex justify-between items-center">
-                              <span className="text-gray-500 text-xs uppercase font-bold">NPWP Perusahaan</span>
-                              <span className="text-gray-300 font-mono text-xs">{config.npwpNumber}</span>
-                           </div>
-                        )}
-                     </div>
-                  </div>
-
-                  <div className="w-full md:w-auto flex flex-col gap-4 text-center md:text-right min-w-[250px]">
-                     <div className="bg-blue-500/10 border border-blue-500/30 p-5 rounded-xl">
-                        <Lock className="mx-auto mb-2 text-blue-400" size={28}/>
-                        <p className="text-xs text-blue-200 font-bold mb-1 tracking-widest uppercase">DATA TERVERIFIKASI</p>
-                        <a 
-                           href="https://oss.go.id" 
-                           target="_blank" 
-                           rel="noreferrer" 
-                           className="text-[10px] text-blue-400 underline hover:text-white"
-                        >
-                           Cek di OSS RBA & AHU Online
-                        </a>
-                     </div>
-                     <div className="space-y-3">
-                        <p className="text-[10px] text-gray-500 max-w-[200px] mx-auto leading-tight">
-                           Butuh scan dokumen asli untuk administrasi vendor / tender?
-                        </p>
-                        <Button 
-                           variant="outline"
-                           onClick={() => window.open(`https://wa.me/${config?.whatsappNumber}?text=Halo Admin, saya dari perusahaan [Sebutkan Nama PT], ingin request dokumen legalitas lengkap untuk keperluan verifikasi vendor.`, '_blank')}
-                           className="w-full py-4 text-xs font-bold uppercase tracking-wider border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white shadow-neon hover:shadow-neon-strong transition-all flex items-center justify-center gap-2"
-                        >
-                           <FileText size={16}/> Request Dokumen Asli
-                        </Button>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </div>
-      </section>
-    )}
 
     {/* TIMELINE STORY ARC */}
     <div className="container mx-auto px-4 py-20 relative border-t border-white/5 bg-brand-dark/30">
@@ -152,10 +73,9 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 group">
            <div className="w-full md:w-1/2 md:text-right order-2 md:order-1">
               <span className="text-brand-orange font-bold tracking-widest text-xs uppercase mb-2 block">Chapter 1</span>
-              <h3 className="text-3xl font-display font-bold text-white mb-4">2015: Sang Single Fighter</h3>
+              <h3 className="text-3xl font-display font-bold text-white mb-4">2015: Single Fighter</h3>
               <p className="text-gray-400 leading-relaxed">
-                Diinisiasi oleh <strong className="text-white">Amin Maghfuri</strong>. Tanpa tim, tanpa investor. 
-                Memulai langkah berat sebagai <em>single fighter</em>, berjalan <em>door-to-door</em> menawarkan mesin kasir di Solo Raya. Penolakan adalah sarapan pagi, namun visi digitalisasi UMKM menjadi bahan bakar yang tak pernah padam.
+                Tanpa tim, tanpa investor. Saya berjalan <em>door-to-door</em> menawarkan mesin kasir di Solo Raya. Penolakan adalah sarapan pagi. Di fase ini saya belajar memahami kebutuhan pedagang kecil secara mendalam.
               </p>
            </div>
            <div className="relative order-1 md:order-2 flex justify-center items-center">
@@ -176,10 +96,9 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
            </div>
            <div className="w-full md:w-1/2 order-2 md:order-3">
               <span className="text-blue-500 font-bold tracking-widest text-xs uppercase mb-2 block">Chapter 2</span>
-              <h3 className="text-3xl font-display font-bold text-white mb-4">2019: Ekspansi Nasional</h3>
+              <h3 className="text-3xl font-display font-bold text-white mb-4">2019: Puncak Ekspansi</h3>
               <p className="text-gray-400 leading-relaxed">
-                Kerja keras terbayar. Lewat strategi <strong>Digital Marketing</strong> yang agresif, jangkauan kami meledak hingga ke <strong>seluruh Indonesia</strong>. 
-                Mimpi besar bernama <strong className="text-white">SIBOS</strong> (Smart Integrated Back Office System) mulai dikembangkan. Kami berada di puncak optimisme.
+                Kerja keras terbayar. Kami melayani 500+ outlet di seluruh Indonesia. Optimisme tinggi, namun kami lengah pada fondasi manajemen internal.
               </p>
            </div>
         </div>
@@ -190,11 +109,7 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
               <span className="text-red-500 font-bold tracking-widest text-xs uppercase mb-2 block">Chapter 3</span>
               <h3 className="text-3xl font-display font-bold text-red-500 mb-4">2022: Titik Nadir</h3>
               <p className="text-gray-400 leading-relaxed">
-                Pandemi menghantam fondasi kami. Cashflow terhenti. Kami sampai pada titik di mana kami 
-                <strong> tak sanggup lagi membayar biaya langganan</strong> infrastruktur digital.
-                <br/><br/>
-                Akibatnya fatal. Domain legendaris <span className="text-red-400 line-through">kasirsolo.com</span> dan <span className="text-red-400 line-through">sibos.id</span> 
-                hangus dan langsung <strong>diambil alih orang lain</strong>. Reputasi nasional yang dibangun bertahun-tahun, lenyap dalam sekejap mata.
+                Cashflow macet, infrastruktur digital runtuh. Domain legendaris hangus dan diambil orang. Reputasi nasional lenyap sekejap. Ini adalah pelajaran termahal tentang pentingnya sistem.
               </p>
            </div>
            <div className="relative order-1 md:order-2 flex justify-center items-center">
@@ -217,11 +132,10 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
               <span className="text-brand-orange font-bold tracking-widest text-xs uppercase mb-2 block">Chapter 4</span>
               <h3 className="text-3xl font-display font-bold text-white mb-4">2025: The Rebirth</h3>
               <div className="bg-brand-orange/10 border-l-4 border-brand-orange p-4 rounded-r-lg mb-4">
-                 <p className="text-gray-300 italic">"Kami kehilangan domain, tapi kami tidak kehilangan visi."</p>
+                 <p className="text-gray-300 italic">"Kami kembali untuk merebut apa yang pernah menjadi milik kami."</p>
               </div>
               <p className="text-gray-400 leading-relaxed">
-                Dengan sisa semangat yang ada, PT Mesin Kasir Solo bangkit kembali. Kami meneruskan pengembangan <strong>SIBOS</strong> dan melahirkan inovasi baru: 
-                <strong className="text-white"> QALAM</strong> (Aplikasi Manajemen Pendidikan). Kami kembali untuk merebut apa yang pernah menjadi milik kami, dengan pondasi yang jauh lebih kuat.
+                Dengan pondasi SIBOS & QALAM yang jauh lebih kuat. Kami kembali bukan sebagai vendor, tapi sebagai partner yang melindungi bisnis Anda dari kehancuran.
               </p>
            </div>
         </div>
@@ -245,8 +159,6 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                 </div>
             )}
         </div>
-        
-        {/* Overlay Text */}
         <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-transparent to-transparent flex flex-col justify-end pb-12 px-4 text-center">
             <h3 className="text-2xl md:text-4xl font-display font-bold text-white mb-2">Basecamp Perjuangan</h3>
             <p className="text-gray-400">Tempat dimana ide-ide liar dieksekusi menjadi solusi nyata.</p>

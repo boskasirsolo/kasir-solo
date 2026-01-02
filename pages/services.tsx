@@ -24,7 +24,7 @@ const WEBSITE_DATA = {
     { title: "Siap Integrasi POS", desc: "Dibangun dengan mindset integrasi masa depan dengan Mesin Kasir SIBOS.", icon: RefreshCw },
   ],
   steps: [
-    { step: "1", title: "Bedah Bisnis", desc: "Kami pelajari model bisnis Anda, bukan sekadar tanya warna favorit." },
+    { step: "1", title: "Bedah Bisnis", desc: "Saya pelajari model bisnis Anda, bukan sekadar tanya warna favorit." },
     { step: "2", title: "Strategi Konten", desc: "Merancang struktur halaman yang menjual dan SEO-friendly." },
     { step: "3", title: "Development", desc: "Coding & Desain oleh tim yang mengerti UI/UX Retail." },
     { step: "4", title: "Launch & Training", desc: "Web rilis + Pelatihan cara update konten mandiri." },
@@ -41,7 +41,7 @@ const WEBAPP_DATA = {
     { title: "Asset Ownership", desc: "Aplikasi custom adalah ASET ANDA. Database milik Anda sepenuhnya, bukan sewa.", icon: ShieldCheck },
   ],
   steps: [
-    { step: "1", title: "Audit Alur", desc: "Kami memetakan 'benang kusut' di operasional Anda saat ini." },
+    { step: "1", title: "Audit Alur", desc: "Saya memetakan 'benang kusut' di operasional Anda saat ini." },
     { step: "2", title: "Blueprint", desc: "Merancang arsitektur database dan flow sistem yang efisien." },
     { step: "3", title: "Agile Dev", desc: "Pengerjaan bertahap dengan feedback rutin." },
     { step: "4", title: "UAT & Live", desc: "User Acceptance Test (Uji Coba) sebelum peluncuran." },
@@ -91,9 +91,9 @@ export const WebsiteServicePage = () => {
   return (
     <div className="animate-fade-in">
       <ServiceHero 
-        title="Website Bukan Sekadar Pajangan." 
-        highlight="Ini Cabang Digital Anda." 
-        subtitle="Integrasikan kekuatan Toko Fisik (Mesin Kasir) dengan jangkauan Toko Online. Satu ekosistem, omzet maksimal."
+        title="Saya Gak Cuma Bikin" 
+        highlight="Web Cantik." 
+        subtitle="Saya Bikin Web yang Jualan. Integrasi kekuatan Toko Fisik dengan jangkauan Toko Online. Satu ekosistem, omzet maksimal."
         icon={Globe}
       />
       
@@ -106,11 +106,9 @@ export const WebsiteServicePage = () => {
                   <ArrowRight size={24} className="text-brand-orange animate-pulse" />
                   <Globe size={40} className="text-brand-orange" />
                 </div>
-                <h3 className="text-2xl font-bold text-white">The Omnichannel Strategy</h3>
+                <h3 className="text-2xl font-bold text-white">Limited Slots Only</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  Kami membangun website dengan pola pikir pengusaha Retail: 
-                  Bagaimana data online dan offline bisa sinkron? Bagaimana stok tidak selisih?
-                  Kami paham bisnis, bukan sekadar kode.
+                  "Banyak jasa web murah cuma kasih template, terus ditinggal. Karena saya juga pelaku bisnis, saya racik struktur SEO dan alur penjualannya (Funnel) supaya web ini jadi mesin uang. <strong>Saya kerjakan sendiri, slot terbatas.</strong>"
                 </p>
             </div>
          </div>
@@ -145,9 +143,9 @@ export const WebAppServicePage = () => {
   return (
     <div className="animate-fade-in">
       <ServiceHero 
-        title="Jangan Biarkan Bisnis" 
-        highlight="Diatur Spreadsheet." 
-        subtitle="Saatnya beralih ke Custom Web App. Sistem operasi digital yang dirancang khusus mengikuti alur unik bisnis Anda."
+        title="Software Ini Dibuat Karena" 
+        highlight="Saya Pernah Rugi." 
+        subtitle="Saatnya beralih ke Custom Web App. Sistem operasi digital yang dirancang khusus dari pengalaman lapangan nyata."
         icon={Layers}
       />
 
@@ -157,7 +155,8 @@ export const WebAppServicePage = () => {
                 Keluar dari Jebakan <span className="text-red-500">Manual Admin</span>
             </h2>
             <p className="text-gray-400 leading-relaxed mb-6">
-                Bisnis tumbuh, tapi admin makin pusing? Data stok selisih, orderan tercecer di chat WhatsApp, dan buta profit harian?
+                Developer lain membuat fitur berdasarkan apa yang <em>keren</em>. Saya membuat fitur berdasarkan apa yang <em>menyelamatkan uang</em>. 
+                Bisnis tumbuh tapi admin makin pusing? Itu tanda sistem Anda harus diupgrade.
             </p>
             <p className="text-gray-400 leading-relaxed mb-6">
                 Aplikasi Siap Pakai (SaaS) seringkali <strong>terlalu kaku</strong>. Custom Web App adalah baju yang dijahit khusus untuk badan bisnis Anda.

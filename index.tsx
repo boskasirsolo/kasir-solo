@@ -45,10 +45,10 @@ const AppContent = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [jobs, setJobs] = useState<JobOpening[]>([]);
 
-  // Config State
+  // Config State (UPDATED DEFAULTS)
   const [config, setConfig] = useState<SiteConfig>({
-    heroTitle: "MESIN KASIR DIGITAL",
-    heroSubtitle: "Solusi kasir modern (POS) dan jasa pembuatan website profesional untuk UMKM Indonesia.",
+    heroTitle: "MESIN KASIR SOLO",
+    heroSubtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM. Dibangun oleh praktisi, bukan sekadar penjual.",
     aboutImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200", 
     sibosUrl: "https://sibos.id",
     qalamUrl: "https://qalam.id",
