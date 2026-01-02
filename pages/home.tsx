@@ -410,27 +410,76 @@ export const HomePage = ({
         </section>
       )}
 
-      {/* Services Grid */}
-      <section className="py-20 bg-brand-dark border-t border-white/5 relative overflow-hidden">
+      {/* Services Grid - REVISED NARRATIVE */}
+      <section className="py-24 bg-brand-dark border-t border-white/5 relative overflow-hidden">
+        {/* Background elements for depth */}
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+
         <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">Layanan <span className="text-brand-orange">Digital</span></h2>
-            <p className="text-gray-400">Saya tidak jualan web cantik. Saya jualan web yang menghasilkan uang.</p>
+          <div className="text-center mb-16 max-w-4xl mx-auto">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">
+              Bukan Sekadar Website, <br/> Ini <span className="text-brand-orange">Aset Digital.</span>
+            </h2>
+            <p className="text-gray-400 text-lg leading-relaxed">
+              Kebanyakan vendor IT hanya peduli kodingan selesai. Saya peduli <strong>ROI (Return on Investment)</strong> Anda. 
+              Setiap baris kode yang kami tulis punya satu tujuan: <span className="text-white font-bold">Mengembangkan Bisnis Anda.</span>
+            </p>
           </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Palette, title: "Web Bisnis & Toko", desc: "Website SEO-friendly yang dirancang untuk konversi penjualan.", link: "services/website" },
-              { icon: Code, title: "Custom Web App", desc: "Sistem internal perusahaan (ERP/Gudang) sesuai alur bisnis Anda.", link: "services/webapp" },
-              { icon: Search, title: "SEO & Traffic", desc: "Strategi agar bisnis Anda ditemukan calon pembeli di Google.", link: "services/seo" },
-              { icon: Settings, title: "Maintenance", desc: "Jasa rawat website & keamanan server agar Anda tidur nyenyak.", link: "services/maintenance" }
+              { 
+                icon: Palette, 
+                title: "Web Konversi Tinggi", 
+                subtitle: "Landing Page / Compro",
+                desc: "Website bukan pajangan. Kami racik UI/UX dan Copywriting agar pengunjung tidak cuma lihat-lihat, tapi klik tombol beli.", 
+                link: "services/website",
+                color: "text-brand-orange"
+              },
+              { 
+                icon: Code, 
+                title: "Sistem ERP Custom", 
+                subtitle: "Web App / Internal System",
+                desc: "Lupakan Excel yang berantakan. Satu sistem terpusat untuk stok, kasir, dan laporan keuangan real-time milik Anda sendiri.", 
+                link: "services/webapp",
+                color: "text-blue-400"
+              },
+              { 
+                icon: Search, 
+                title: "Dominasi Google", 
+                subtitle: "SEO & Local Search",
+                desc: "Jangan biarkan kompetitor mencuri pelanggan Anda. Kami optimasi agar toko Anda muncul paling atas saat dicari.", 
+                link: "services/seo",
+                color: "text-green-400"
+              },
+              { 
+                icon: Settings, 
+                title: "Asuransi Digital", 
+                subtitle: "Maintenance & Security",
+                desc: "Tidur nyenyak tanpa takut website di-hack, error, atau lambat. Backup rutin dan monitoring keamanan 24/7.", 
+                link: "services/maintenance",
+                color: "text-purple-400"
+              }
             ].map((service, idx) => (
-              <div key={idx} onClick={() => setPage(service.link)} className="cursor-pointer h-full">
-                <Card className="p-8 flex flex-col items-center text-center h-full hover:bg-brand-card transition-colors">
-                  <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-brand-orange mb-6 group-hover:bg-brand-orange group-hover:text-white transition-all duration-300 shadow-neon">
-                    <service.icon size={32} />
+              <div key={idx} onClick={() => setPage(service.link)} className="cursor-pointer h-full group">
+                <Card className="p-8 flex flex-col h-full hover:bg-brand-card transition-all duration-300 border-white/5 hover:border-brand-orange/30 hover:-translate-y-2 relative overflow-hidden">
+                  <div className={`w-14 h-14 bg-white/5 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-neon-text ${service.color}`}>
+                    <service.icon size={28} />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-3">{service.title}</h3>
-                  <p className="text-gray-400 text-sm leading-relaxed">{service.desc}</p>
+                  
+                  <div className="mb-4">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{service.subtitle}</p>
+                    <h3 className="text-xl font-bold text-white group-hover:text-brand-orange transition-colors">{service.title}</h3>
+                  </div>
+                  
+                  <p className="text-gray-400 text-sm leading-relaxed mb-6 border-t border-white/5 pt-4">
+                    {service.desc}
+                  </p>
+
+                  <div className="mt-auto flex items-center gap-2 text-xs font-bold text-white uppercase tracking-widest group-hover:gap-3 transition-all">
+                    Lihat Detail <ArrowRight size={14} className={service.color} />
+                  </div>
                 </Card>
               </div>
             ))}

@@ -194,6 +194,13 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                       <span className="text-white font-mono text-sm">{config.ahuNumber}</span>
                    </div>
                 )}
+                {/* ADDED: NPWP Perusahaan */}
+                {config?.npwpNumber && (
+                   <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-gray-400 text-sm">NPWP Perusahaan</span>
+                      <span className="text-white font-mono text-sm">{config.npwpNumber}</span>
+                   </div>
+                )}
                 <div className="pt-2">
                    <p className="text-xs text-gray-500 leading-relaxed italic">
                       *Dokumen asli (Scan SK, NIB, NPWP) tersedia untuk kebutuhan administrasi vendor (Vendor List) atau tender perusahaan. Silakan hubungi admin kami.
