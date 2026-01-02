@@ -466,76 +466,93 @@ export const ProductDetailView = ({
 
   return (
     <Wrapper>
-      <div className={`relative w-full max-w-5xl ${isModal ? 'max-h-[90vh]' : 'min-h-[600px]'} overflow-y-auto rounded-2xl bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row custom-scrollbar`}>
+      {/* 
+         LAYOUT UPDATE:
+         1. Fixed height container with overflow-hidden to contain inner scrolls.
+         2. Flex layout for Split View.
+      */}
+      <div className={`relative w-full max-w-5xl ${isModal ? 'h-[90vh]' : 'min-h-[600px]'} bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row overflow-hidden rounded-2xl`}>
         
+        {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-action transition-colors border border-white/10"
+          className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-action transition-colors border border-white/10 shadow-lg"
         >
           {isModal ? <X size={20} /> : <ArrowLeft size={20} />}
         </button>
 
-        <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-6 md:p-0 min-h-[300px] md:min-h-full border-b md:border-b-0 md:border-r border-white/10">
+        {/* LEFT COLUMN: IMAGE (Fixed/Shrink) */}
+        <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-6 md:p-0 h-[300px] md:h-full border-b md:border-b-0 md:border-r border-white/10 shrink-0">
             <img 
               src={product.image} 
               alt={product.name} 
-              className="w-full h-full max-h-[400px] md:max-h-[80vh] object-contain" 
+              className="w-full h-full max-h-[300px] md:max-h-[80vh] object-contain" 
             />
         </div>
 
-        <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col bg-brand-dark">
-          <div className="mb-4">
+        {/* RIGHT COLUMN: CONTENT (Flex Col) */}
+        <div className="w-full md:w-1/2 flex flex-col bg-brand-dark h-full relative">
+          
+          {/* HEADER (Sticky Top) */}
+          <div className="p-6 md:p-8 border-b border-white/5 shrink-0 z-10 bg-brand-dark">
               <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange border border-brand-orange/30 px-2 py-1 rounded bg-brand-orange/10 mb-3">
                 <Tag size={12} /> {product.category}
               </span>
-              <h2 className="text-2xl md:text-4xl font-display font-bold text-white leading-tight mb-3">{product.name}</h2>
-              <p className="text-3xl font-bold text-brand-orange">{formatRupiah(product.price)}</p>
+              <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">{product.name}</h2>
+              <p className="text-2xl font-bold text-brand-orange">{formatRupiah(product.price)}</p>
           </div>
 
-          <div className="prose prose-invert prose-sm text-gray-300 mb-8 leading-relaxed border-t border-white/10 pt-6 flex-grow">
-            <p>{product.description}</p>
-            
-            {/* SPECS IN DETAIL VIEW (New) */}
-            {product.specs && (
-                <div className="mt-6 bg-black/30 rounded-xl p-4 border border-white/5">
-                    <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2"><Scale size={14}/> Spesifikasi Utama</h4>
-                    <ul className="space-y-2">
-                        {Object.entries(product.specs).map(([key, val]) => (
-                            <li key={key} className="flex justify-between text-xs border-b border-white/5 pb-1 last:border-0 last:pb-0">
-                                <span className="text-gray-500">{key}</span>
-                                <span className="text-gray-300 font-bold text-right">{val}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+          {/* SCROLLABLE AREA (The Blue Box Area) */}
+          <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-grow">
+            <div className="prose prose-invert prose-sm text-gray-300 leading-relaxed">
+                <p className="whitespace-pre-line">{product.description}</p>
+                
+                {/* SPECS TABLE */}
+                {product.specs && (
+                    <div className="mt-6 bg-black/30 rounded-xl p-4 border border-white/5">
+                        <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2"><Scale size={14}/> Spesifikasi Utama</h4>
+                        <ul className="space-y-2">
+                            {Object.entries(product.specs).map(([key, val]) => (
+                                <li key={key} className="flex justify-between text-xs border-b border-white/5 pb-1 last:border-0 last:pb-0">
+                                    <span className="text-gray-500">{key}</span>
+                                    <span className="text-gray-300 font-bold text-right">{val}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
-            <ul className="list-disc pl-4 space-y-1 text-gray-400 mt-6">
-               <li>Garansi Hardware 1 Tahun</li>
-               <li>Free Training Staff</li>
-               <li>Support Teknis Lifetime</li>
-            </ul>
+                <ul className="list-disc pl-4 space-y-1 text-gray-400 mt-6 text-xs">
+                   <li>Garansi Hardware 1 Tahun</li>
+                   <li>Free Training Staff</li>
+                   <li>Support Teknis Lifetime</li>
+                </ul>
+            </div>
           </div>
 
-          <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <button 
-              onClick={handleAddToCart}
-              className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${
-                  isAnimating ? 'bg-green-500 text-white' : 'bg-brand-gradient hover:bg-brand-gradient-hover text-white'
-              }`}
-            >
-              {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} 
-              {isAnimating ? "Berhasil" : "Beli Sekarang"}
-            </button>
-            <a 
-              href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center w-full py-4 border border-brand-orange hover:bg-brand-orange text-white rounded-xl font-bold transition-all gap-2 hover:shadow-neon"
-            >
-              <MessageCircle size={20} /> Tanya Sales
-            </a>
+          {/* FOOTER (Sticky Bottom) */}
+          <div className="p-6 md:p-8 border-t border-white/10 bg-brand-dark shrink-0 z-10 mt-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button 
+                  onClick={handleAddToCart}
+                  className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${
+                      isAnimating ? 'bg-green-500 text-white' : 'bg-brand-gradient hover:bg-brand-gradient-hover text-white'
+                  }`}
+                >
+                  {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} 
+                  {isAnimating ? "Berhasil" : "Beli Sekarang"}
+                </button>
+                <a 
+                  href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center w-full py-4 border border-brand-orange hover:bg-brand-orange text-white rounded-xl font-bold transition-all gap-2 hover:shadow-neon"
+                >
+                  <MessageCircle size={20} /> Tanya Sales
+                </a>
+            </div>
           </div>
+
         </div>
       </div>
     </Wrapper>
