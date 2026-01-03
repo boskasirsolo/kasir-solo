@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   Download, FileText, Smartphone, Monitor, Search, 
   HelpCircle, PlayCircle, HardDrive, Package, 
-  ChevronRight, AlertTriangle, MessageCircle, Wrench
+  ChevronRight, ChevronLeft, AlertTriangle, MessageCircle, Wrench
 } from 'lucide-react';
 import { SectionHeader, Button } from '../components/ui';
 import { INITIAL_DOWNLOADS, supabase } from '../utils'; // Import supabase
 import { DownloadItem } from '../types';
+
+const ITEMS_PER_PAGE = 9;
 
 // --- COMPONENTS ---
 
@@ -43,7 +45,7 @@ const DownloadCard = ({ item }: { item: DownloadItem }) => {
         </span>
       </div>
       
-      <h3 className="text-white font-bold text-base mb-2 line-clamp-2 min-h-[3rem] group-hover:text-brand-orange transition-colors">
+      <h3 className="text-white font-bold text-sm mb-2 line-clamp-2 min-h-[2.5rem] group-hover:text-brand-orange transition-colors">
         {item.title}
       </h3>
       
@@ -60,7 +62,7 @@ const DownloadCard = ({ item }: { item: DownloadItem }) => {
           href={item.file_url} 
           target="_blank" 
           rel="noreferrer"
-          className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-brand-orange hover:text-white text-gray-300 py-2.5 rounded-lg text-xs font-bold transition-all"
+          className="w-full flex items-center justify-center gap-2 bg-brand-gradient text-white hover:bg-brand-gradient-hover py-2.5 rounded-lg text-xs font-bold transition-all shadow-action hover:shadow-action-strong transform hover:-translate-y-0.5"
         >
           <Download size={14} /> DOWNLOAD
         </a>
@@ -94,6 +96,9 @@ export const SupportPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'driver' | 'manual' | 'software' | 'tools'>('all');
+  
+  // Pagination State
+  const [page, setPage] = useState(1);
 
   // --- FETCH DATA FROM DB ---
   useEffect(() => {
@@ -130,6 +135,11 @@ export const SupportPage = () => {
     fetchData();
   }, []);
 
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, activeCategory]);
+
   // Filter Logic
   const filteredItems = downloads.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -137,6 +147,13 @@ export const SupportPage = () => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const paginatedItems = filteredItems.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
 
   const categories = [
     { id: 'all', label: 'Semua' },
@@ -176,8 +193,8 @@ export const SupportPage = () => {
       <div className="container mx-auto px-4 py-16">
          <div className="grid lg:grid-cols-12 gap-10">
             
-            {/* LEFT: DOWNLOADS (8 Columns) */}
-            <div className="lg:col-span-8">
+            {/* LEFT: DOWNLOADS (9 Columns - 75% Width) */}
+            <div className="lg:col-span-9">
                 {/* CATEGORY TABS */}
                 <div className="flex flex-wrap gap-2 mb-8">
                     {categories.map(cat => (
@@ -195,17 +212,44 @@ export const SupportPage = () => {
                     ))}
                 </div>
 
-                {/* GRID ITEMS */}
+                {/* GRID ITEMS (3 Columns) */}
                 {loading ? (
                     <div className="text-center py-20 text-gray-500">Loading data...</div>
                 ) : filteredItems.length > 0 ? (
-                    <div className="grid md:grid-cols-2 gap-4">
-                        {filteredItems.map(item => (
-                            <React.Fragment key={item.id}>
-                                <DownloadCard item={item} />
-                            </React.Fragment>
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {paginatedItems.map(item => (
+                                <React.Fragment key={item.id}>
+                                    <DownloadCard item={item} />
+                                </React.Fragment>
+                            ))}
+                        </div>
+
+                        {/* PAGINATION CONTROLS */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-center items-center gap-4 mt-12 pt-8 border-t border-white/5">
+                                <button 
+                                    onClick={() => setPage(Math.max(1, page - 1))}
+                                    disabled={page === 1}
+                                    className="p-2 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                                
+                                <span className="text-brand-orange font-bold text-sm bg-brand-orange/10 px-4 py-2 rounded-lg border border-brand-orange/20">
+                                    Page {page} / {totalPages}
+                                </span>
+
+                                <button 
+                                    onClick={() => setPage(Math.min(totalPages, page + 1))}
+                                    disabled={page === totalPages}
+                                    className="p-2 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
+                                >
+                                    <ChevronRight size={20} />
+                                </button>
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <div className="text-center py-20 bg-brand-card/30 rounded-xl border border-white/5 border-dashed">
                         <AlertTriangle className="mx-auto text-gray-600 mb-4" size={40} />
@@ -215,13 +259,13 @@ export const SupportPage = () => {
                 )}
             </div>
 
-            {/* RIGHT: HELP & FAQ (4 Columns) */}
-            <div className="lg:col-span-4 space-y-8">
+            {/* RIGHT: HELP & FAQ (3 Columns - 25% Width) */}
+            <div className="lg:col-span-3 space-y-8">
                 
                 {/* TUTORIAL BOX */}
-                <div className="bg-brand-card border border-white/10 rounded-xl p-6 shadow-lg">
-                    <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                        <PlayCircle size={20} className="text-red-500" /> Video Tutorial
+                <div className="bg-brand-card border border-white/10 rounded-xl p-5 shadow-lg">
+                    <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-sm">
+                        <PlayCircle size={18} className="text-red-500" /> Video Tutorial
                     </h3>
                     <div className="space-y-3">
                         {[
@@ -235,24 +279,24 @@ export const SupportPage = () => {
                                 href="https://youtube.com/" 
                                 target="_blank" 
                                 rel="noreferrer"
-                                className="flex items-center gap-3 p-3 rounded-lg bg-black/20 hover:bg-white/5 transition-colors group cursor-pointer border border-transparent hover:border-white/5"
+                                className="flex items-center gap-3 p-2.5 rounded-lg bg-black/20 hover:bg-white/5 transition-colors group cursor-pointer border border-transparent hover:border-white/5"
                             >
-                                <div className="w-8 h-8 rounded-full bg-red-900/20 text-red-500 flex items-center justify-center shrink-0 group-hover:bg-red-500 group-hover:text-white transition-colors">
-                                    <PlayCircle size={14} />
+                                <div className="w-6 h-6 rounded-full bg-red-900/20 text-red-500 flex items-center justify-center shrink-0 group-hover:bg-red-500 group-hover:text-white transition-colors">
+                                    <PlayCircle size={12} />
                                 </div>
-                                <span className="text-xs text-gray-300 font-bold group-hover:text-white line-clamp-1">{title}</span>
+                                <span className="text-[11px] text-gray-300 font-bold group-hover:text-white line-clamp-1">{title}</span>
                             </a>
                         ))}
                     </div>
-                    <Button variant="outline" className="w-full mt-4 text-xs h-10 border-white/10 hover:border-red-500 hover:text-red-500">
+                    <Button variant="outline" className="w-full mt-4 text-xs h-9 shadow-neon">
                         Lihat Channel Youtube
                     </Button>
                 </div>
 
                 {/* FAQ BOX */}
                 <div>
-                    <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                        <HelpCircle size={20} className="text-brand-orange" /> Troubleshooting
+                    <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-sm">
+                        <HelpCircle size={18} className="text-brand-orange" /> Troubleshooting
                     </h3>
                     <div className="space-y-1">
                         <FaqAccordion 
@@ -271,18 +315,18 @@ export const SupportPage = () => {
                 </div>
 
                 {/* DIRECT HELP */}
-                <div className="bg-brand-orange/10 border border-brand-orange/30 p-6 rounded-xl text-center">
-                    <p className="text-brand-orange text-xs font-bold uppercase tracking-widest mb-2">Support Langsung Founder</p>
-                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-                        Bingung setting sendiri? Tenang. Saya (Amin) siap memandu Anda langsung via Remote (TeamViewer) atau Video Call sampai alat berfungsi normal. Tanpa admin perantara.
+                <div className="bg-brand-orange/10 border border-brand-orange/30 p-5 rounded-xl text-center">
+                    <p className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-2">Support Langsung Founder</p>
+                    <p className="text-gray-300 text-xs mb-4 leading-relaxed">
+                        Bingung setting sendiri? Tenang. Saya (Amin) siap memandu Anda langsung via Remote (TeamViewer) sampai beres.
                     </p>
                     <a 
                         href="https://wa.me/6282325103336?text=Halo%20Mas%20Amin,%20saya%20butuh%20bantuan%20setting%20alat."
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-action text-white px-6 py-3 rounded-lg text-sm font-bold shadow-neon transition-transform hover:-translate-y-1"
+                        className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-action text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-neon transition-transform hover:-translate-y-1 w-full justify-center"
                     >
-                        <MessageCircle size={18} /> Chat Mas Amin
+                        <MessageCircle size={14} /> Chat Mas Amin
                     </a>
                 </div>
 
