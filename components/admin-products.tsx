@@ -5,7 +5,7 @@ import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, formatRupiah, callGeminiWithRotation, formatNumberInput, cleanNumberInput, slugify, renameFile } from '../utils';
 
-const ITEMS_PER_PAGE = 8; 
+const ITEMS_PER_PAGE = 6; 
 
 // Preset Categories
 const PRODUCT_CATEGORIES = [
@@ -585,9 +585,14 @@ export const AdminProducts = ({
                 DETAIL LENGKAP
             </h3>
             {form.id && (
-                <button onClick={resetForm} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
-                    <XIcon size={12} /> Batal
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => deleteProduct(form.id!)} className="text-[10px] text-red-400 hover:text-white border border-red-500/30 hover:bg-red-500 px-2 py-1 rounded flex items-center gap-1 transition-colors" title="Hapus Produk">
+                        <Trash2 size={12} />
+                    </button>
+                    <button onClick={resetForm} className="text-[10px] text-gray-400 hover:text-white border border-white/10 hover:bg-white/10 px-2 py-1 rounded flex items-center gap-1 transition-colors">
+                        <XIcon size={12} /> Batal
+                    </button>
+                </div>
             )}
          </div>
 
