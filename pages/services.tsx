@@ -46,7 +46,8 @@ const WEBSITE_CALC: CalcData = {
     { id: 'domain', label: 'Domain .COM / .ID Premium', price: 300000 },
     { id: 'copy', label: 'Professional Copywriting', price: 750000 },
     { id: 'seo_basic', label: 'SEO Setup Basic', price: 500000 },
-    { id: 'wa_rotator', label: 'WhatsApp Rotator (CS Banyak)', price: 400000 }
+    { id: 'wa_rotator', label: 'WhatsApp Rotator (CS Banyak)', price: 400000 },
+    { id: 'shipping', label: 'Integrasi Ekspedisi (Biteship)', price: 1500000, desc: 'Cek ongkir, Resi & Tracking Otomatis.' }
   ]
 };
 
@@ -81,7 +82,8 @@ const WEBAPP_CALC: CalcData = {
     { id: 'server', label: 'Setup VPS/Cloud Server', price: 1000000 },
     { id: 'wa_notif', label: 'WhatsApp Notification Bot', price: 1500000 },
     { id: 'payment', label: 'Payment Gateway Integration', price: 2000000 },
-    { id: 'mobile', label: 'Android App Wrapper (.APK)', price: 1500000 }
+    { id: 'mobile', label: 'Android App Wrapper (.APK)', price: 1500000 },
+    { id: 'logistics', label: 'Logistics API (Biteship)', price: 2000000, desc: 'Multi-kurir (JNE/J&T/Gojek), Pickup & Tracking.' }
   ]
 };
 
