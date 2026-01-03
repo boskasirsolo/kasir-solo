@@ -12,6 +12,19 @@ interface ResearchResult {
     competition: 'Low' | 'Medium' | 'High';
 }
 
+// Helper to parse volume string to number for sorting (e.g. "1.2k/mo" -> 1200)
+const parseVolume = (volStr: string): number => {
+    try {
+        const clean = volStr.toLowerCase().replace('/mo', '').trim();
+        if (clean.includes('k')) {
+            return parseFloat(clean.replace('k', '')) * 1000;
+        }
+        return parseInt(clean.replace(/[^0-9]/g, '')) || 0;
+    } catch (e) {
+        return 0;
+    }
+};
+
 // --- LOGIC: Custom Hook for DOWNLOADS ---
 const useDownloadManager = () => {
     const [downloads, setDownloads] = useState<DownloadItem[]>([]);
@@ -32,7 +45,7 @@ const useDownloadManager = () => {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
-    const itemsPerPage = 8; // Increased for 4-column Grid (2 rows x 4 cols)
+    const itemsPerPage = 8; // Increased for 4-column Grid
 
     useEffect(() => { fetchDownloads(); }, []);
 
@@ -87,8 +100,12 @@ const useDownloadManager = () => {
             Output: JUST the JSON Array.
             `;
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
-            const titles = JSON.parse(res.text || '[]');
-            setGeneratedTitles(titles);
+            const rawTitles: ResearchResult[] = JSON.parse(res.text || '[]');
+            
+            // SORT BY VOLUME (Highest First)
+            const sortedTitles = rawTitles.sort((a, b) => parseVolume(b.volume) - parseVolume(a.volume));
+            
+            setGeneratedTitles(sortedTitles);
         } catch (e) { 
             console.error(e);
             alert("Gagal riset judul. Coba lagi."); 
@@ -334,6 +351,24 @@ export const AdminDownloads = () => {
         }
     }
 
+    // Helper for category badge colors
+    const getCategoryColor = (cat: string, isActive: boolean) => {
+        const baseClass = "flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-bold transition-all";
+        
+        // Define distinct colors per category
+        const colors: Record<string, string> = {
+            'driver': isActive ? 'bg-blue-600 text-white border-blue-500' : 'text-blue-400 border-white/10 hover:bg-blue-500/10',
+            'manual': isActive ? 'bg-yellow-600 text-white border-yellow-500' : 'text-yellow-400 border-white/10 hover:bg-yellow-500/10',
+            'software': isActive ? 'bg-green-600 text-white border-green-500' : 'text-green-400 border-white/10 hover:bg-green-500/10',
+            'tools': isActive ? 'bg-purple-600 text-white border-purple-500' : 'text-purple-400 border-white/10 hover:bg-purple-500/10',
+        };
+
+        const activeStyle = colors[cat] || (isActive ? 'bg-brand-orange text-white border-brand-orange' : 'text-gray-400 border-white/10 hover:bg-white/5');
+        const shadow = isActive ? 'shadow-neon-text' : '';
+
+        return `${baseClass} ${activeStyle} ${shadow}`;
+    };
+
     return (
         <div className="h-[600px] flex flex-col">
             {/* TAB NAV */}
@@ -427,11 +462,7 @@ export const AdminDownloads = () => {
                                                 <button
                                                     key={cat.id}
                                                     onClick={() => dlManager.setForm(p => ({...p, category: cat.id as any}))}
-                                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-bold transition-all ${
-                                                        dlManager.form.category === cat.id
-                                                        ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text'
-                                                        : 'bg-black/40 text-gray-400 border-white/10 hover:bg-white/5 hover:text-white'
-                                                    }`}
+                                                    className={getCategoryColor(cat.id, dlManager.form.category === cat.id)}
                                                 >
                                                     <cat.icon size={12} />
                                                     {cat.label}
@@ -468,24 +499,37 @@ export const AdminDownloads = () => {
                                     </div>
                                 </div>
 
-                                {/* Step 2: Magic Titles (Optional) - WITH METRICS */}
+                                {/* Step 2: Magic Titles (Optional) - WITH METRICS & IMPROVED LAYOUT */}
                                 {dlManager.generatedTitles.length > 0 && (
                                     <div className="p-3 bg-brand-orange/5 border border-brand-orange/20 rounded-lg animate-fade-in">
                                         <label className="text-[10px] text-brand-orange font-bold uppercase mb-2 block flex items-center gap-2"><Sparkles size={10}/> Hasil Riset Judul</label>
-                                        <div className="space-y-1">
+                                        <div className="space-y-2">
                                             {dlManager.generatedTitles.map((t, idx) => (
                                                 <button 
                                                     key={idx} 
                                                     onClick={() => dlManager.selectTitle(t.title)}
-                                                    className={`w-full text-left p-2 rounded border transition-all flex flex-col gap-1 group ${dlManager.form.title === t.title ? 'bg-brand-orange text-white border-brand-orange shadow-sm' : 'bg-black/20 text-gray-300 border-transparent hover:bg-white/5'}`}
+                                                    className={`w-full text-left p-3 rounded border transition-all flex items-center justify-between gap-3 group ${
+                                                        dlManager.form.title === t.title 
+                                                        ? 'bg-brand-orange text-white border-brand-orange shadow-md' 
+                                                        : 'bg-black/40 text-gray-300 border-white/5 hover:bg-white/5 hover:border-white/20'
+                                                    }`}
                                                 >
-                                                    <span className="text-[10px] font-medium leading-snug">{t.title}</span>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`text-[8px] px-1.5 py-0.5 rounded border ${t.competition === 'Low' ? 'text-green-400 border-green-500/30 bg-green-500/10' : 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10'}`}>
-                                                            {t.competition} Comp
+                                                    {/* LEFT: Title (Allow 2 lines) */}
+                                                    <span className="text-[11px] font-medium leading-snug line-clamp-2 flex-1">
+                                                        {t.title}
+                                                    </span>
+
+                                                    {/* RIGHT: Metrics (Big & Clear) */}
+                                                    <div className="flex flex-col items-end gap-1 shrink-0 text-right min-w-[70px]">
+                                                        <span className={`text-[10px] font-bold px-1.5 rounded ${
+                                                            t.competition === 'Low' ? 'text-green-400 bg-green-500/10' : 
+                                                            t.competition === 'Medium' ? 'text-yellow-400 bg-yellow-500/10' : 
+                                                            'text-red-400 bg-red-500/10'
+                                                        }`}>
+                                                            {t.competition}
                                                         </span>
-                                                        <span className="text-[8px] text-gray-500 font-mono flex items-center gap-1">
-                                                            <BarChart2 size={8}/> {t.volume}
+                                                        <span className={`text-xs font-mono font-bold ${dlManager.form.title === t.title ? 'text-white' : 'text-gray-500'}`}>
+                                                            {t.volume}
                                                         </span>
                                                     </div>
                                                 </button>
