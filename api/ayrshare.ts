@@ -2,7 +2,7 @@
 export default async function handler(req: any, res: any) {
   // 1. Setup CORS (Biar browser gak rewel)
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all for now to support dynamic preview URLs
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -17,21 +17,6 @@ export default async function handler(req: any, res: any) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // --- SECURITY CHECKPOINT (SATPAM) ---
-  // Pastikan request berasal dari domain sendiri atau localhost (saat dev)
-  const origin = req.headers.origin || req.headers.referer;
-  const allowedOrigins = ['kasirsolo.com', 'localhost', 'vercel.app'];
-  
-  // Jika origin tidak dikenali (misal ditembak via Postman tanpa header), kita blokir.
-  // Note: Ini proteksi basic. Hacker jago bisa memalsukan header, tapi ini cukup untuk mencegah abuse ringan.
-  const isAllowed = origin && allowedOrigins.some(domain => origin.includes(domain));
-  
-  if (!isAllowed) {
-     console.warn(`[Security Block] Request from unknown origin: ${origin}`);
-     // Uncomment baris bawah ini jika sudah live production untuk strict mode
-     // return res.status(403).json({ error: 'Forbidden: Unauthorized Origin' });
   }
 
   try {

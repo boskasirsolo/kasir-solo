@@ -24,30 +24,42 @@ export const useSocialStudio = (
     const [customImage, setCustomImage] = useState<string | null>(null);
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     
-    // NEW: Tone State
-    const [selectedTone, setSelectedTone] = useState<string>('gritty');
+    // NEW: Multi-Tone State (Array)
+    const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']);
 
     // Loading State
     const [isLoading, setIsLoading] = useState({ ai: false, posting: false });
 
-    // --- DATA AGGREGATION ---
+    // --- DATA AGGREGATION (DYNAMIC DOMAIN) ---
     const allItems = useMemo(() => {
+        // Get dynamic origin (browser only)
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://kasirsolo.com';
+
         const mappedProducts: SocialContentItem[] = products.map(p => ({
             id: p.id, type: 'product', title: p.name, description: p.description, 
-            image: p.image, url: `https://kasirsolo.com/shop/${slugify(p.name)}`, originalData: p
+            image: p.image, url: `${origin}/shop/${slugify(p.name)}`, originalData: p
         }));
 
-        const mappedArticles: SocialContentItem[] = articles.map(a => ({
-            id: a.id, type: 'article', title: a.title, description: a.excerpt, 
-            image: a.image, url: `https://kasirsolo.com/articles/${slugify(a.title)}`, originalData: a
-        }));
+        // FILTER: Only show PUBLISHED articles
+        const mappedArticles: SocialContentItem[] = articles
+            .filter(a => a.status === 'published') 
+            .map(a => ({
+                id: a.id, type: 'article', title: a.title, description: a.excerpt, 
+                image: a.image, url: `${origin}/articles/${slugify(a.title)}`, originalData: a
+            }));
 
         const mappedGallery: SocialContentItem[] = gallery.map(g => ({
             id: g.id, type: 'gallery', title: g.title, description: g.description || 'Project Portfolio', 
-            image: g.image_url, url: `https://kasirsolo.com/gallery/${slugify(g.title)}`, originalData: g
+            image: g.image_url, url: `${origin}/gallery/${slugify(g.title)}`, originalData: g
         }));
 
-        return [...SERVICE_CATALOG, ...mappedProducts, ...mappedArticles, ...mappedGallery];
+        // Map static services to dynamic URL if needed, or keep external
+        const mappedServices: SocialContentItem[] = SERVICE_CATALOG.map(s => ({
+            ...s,
+            url: s.url.startsWith('http') ? s.url : `${origin}${s.url}`
+        }));
+
+        return [...mappedServices, ...mappedProducts, ...mappedArticles, ...mappedGallery];
     }, [products, articles, gallery]);
 
     const filteredItems = useMemo(() => {
@@ -75,6 +87,22 @@ export const useSocialStudio = (
         setActiveTab('master');
     };
 
+    const toggleTone = (toneId: string) => {
+        setSelectedTones(prev => {
+            if (prev.includes(toneId)) {
+                // Prevent unselecting if it's the last one (optional, keeping at least 1 is safer)
+                if (prev.length === 1) return prev; 
+                return prev.filter(t => t !== toneId);
+            } else {
+                if (prev.length >= 3) {
+                    alert("Maksimal 3 kombinasi tone.");
+                    return prev;
+                }
+                return [...prev, toneId];
+            }
+        });
+    };
+
     const handleImageUpload = (file: File) => {
         setUploadFile(file);
         setCustomImage(URL.createObjectURL(file));
@@ -85,9 +113,11 @@ export const useSocialStudio = (
         setIsLoading(p => ({...p, ai: true}));
 
         try {
-            // Get Tone Description
-            const toneObj = SOCIAL_TONES.find(t => t.id === selectedTone);
-            const toneDesc = toneObj ? toneObj.desc : "Profesional dan menarik.";
+            // Get Multiple Tone Descriptions
+            const toneDescriptions = selectedTones.map(id => {
+                const t = SOCIAL_TONES.find(x => x.id === id);
+                return t ? `${t.label} (${t.desc})` : '';
+            }).join(' + ');
 
             let platformContext = "";
             if (platform === 'instagram') platformContext = "Platform: Instagram. Use relevant hashtags, emojis, and casual engaging style.";
@@ -107,7 +137,8 @@ export const useSocialStudio = (
             Link: ${selectedItem.url}
 
             [STYLE INSTRUCTION]
-            Tone: ${toneObj?.label} (${toneDesc}).
+            Tone Mix: ${toneDescriptions}.
+            Blend these tones naturally.
             ${platformContext}
             Language: Indonesian.
             
@@ -177,11 +208,11 @@ export const useSocialStudio = (
         state: { 
             selectedSourceType, searchTerm, selectedItem, 
             platforms, captions, activeTab, customImage, isLoading,
-            allItems, filteredItems, selectedTone
+            allItems, filteredItems, selectedTones
         },
         setters: {
             setSelectedSourceType, setSearchTerm, setPlatforms, 
-            setCaptions, setActiveTab, setCustomImage, setSelectedTone
+            setCaptions, setActiveTab, setCustomImage, toggleTone
         },
         actions: {
             selectItem,
