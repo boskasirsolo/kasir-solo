@@ -234,10 +234,31 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: { product:
     <>
       {flyData && createPortal(<FlyingParticle src={product.image} startRect={flyData.start} targetRect={flyData.target} onFinish={() => {}} />, document.body)}
       <div className="grid grid-cols-4 gap-2">
-        <button onClick={(e) => { e.stopPropagation(); onCompare(product); }} className={`col-span-1 rounded-lg border flex items-center justify-center transition-all ${isSelected ? 'bg-brand-orange text-white border-brand-orange shadow-neon' : 'border-white/10 text-gray-400 hover:text-brand-orange hover:border-brand-orange'}`} title="Bandingkan Produk"><Scale size={18} /></button>
-        <button onClick={(e) => { e.stopPropagation(); onDetail(); }} className="col-span-1 rounded-lg border border-brand-orange text-gray-300 hover:text-white hover:bg-brand-orange font-bold text-xs transition-all hover:shadow-neon">Detail</button>
-        <button ref={buttonRef} onClick={handleAddToCart} className={`col-span-2 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all group/btn ${isAdded ? 'bg-green-500 text-white shadow-lg scale-95' : 'bg-brand-gradient text-white hover:bg-brand-gradient-hover hover:shadow-action'}`}>
-          {isAdded ? <Check size={16} /> : <><Plus size={16} className={isAnimating ? "animate-spin" : "group-hover/btn:scale-125 transition-transform"}/> Beli</>}
+        {/* Compare Button: Icon + Text (col-span-2) */}
+        <button 
+            onClick={(e) => { e.stopPropagation(); onCompare(product); }} 
+            className={`col-span-2 py-2 rounded-lg border flex items-center justify-center gap-1.5 transition-all text-[10px] font-bold uppercase ${isSelected ? 'bg-brand-orange text-white border-brand-orange shadow-neon' : 'border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5'}`} 
+            title="Bandingkan Produk"
+        >
+            <Scale size={14} /> Bandingkan
+        </button>
+
+        {/* Detail Button: Text Only (col-span-1) */}
+        <button 
+            onClick={(e) => { e.stopPropagation(); onDetail(); }} 
+            className="col-span-1 py-2 rounded-lg border border-brand-orange/50 text-brand-orange hover:text-white hover:bg-brand-orange font-bold text-[10px] transition-all hover:shadow-neon flex items-center justify-center"
+        >
+            Detail
+        </button>
+
+        {/* Buy Button: Icon Only (col-span-1) */}
+        <button 
+            ref={buttonRef} 
+            onClick={handleAddToCart} 
+            className={`col-span-1 py-2 rounded-lg font-bold flex items-center justify-center transition-all group/btn ${isAdded ? 'bg-green-500 text-white shadow-lg scale-95' : 'bg-brand-gradient text-white hover:bg-brand-gradient-hover hover:shadow-action'}`}
+            title="Tambah ke Keranjang"
+        >
+            {isAdded ? <Check size={16} /> : <Plus size={18} className={isAnimating ? "animate-spin" : "group-hover/btn:scale-125 transition-transform"}/>}
         </button>
       </div>
     </>
