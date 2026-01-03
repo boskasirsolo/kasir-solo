@@ -83,17 +83,31 @@ export interface JobOpening {
   created_at?: string;
 }
 
-// --- NEW: SUPPORT CENTER TYPES ---
+// --- SUPPORT CENTER TYPES ---
 export interface DownloadItem {
   id: string;
   title: string;
   category: 'driver' | 'manual' | 'software' | 'tools';
   description: string;
-  file_url: string; // Link ke file (Google Drive / Direct)
+  file_url: string; 
   file_size?: string;
   version?: string;
   os_support?: 'Windows' | 'Android' | 'iOS' | 'All';
   updated_at: string;
+}
+
+export interface Tutorial {
+  id: number;
+  title: string;
+  video_url: string;
+  created_at?: string;
+}
+
+export interface FAQ {
+  id: number;
+  question: string;
+  answer: string;
+  created_at?: string;
 }
 
 export interface SiteConfig {

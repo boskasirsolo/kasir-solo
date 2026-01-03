@@ -1,5 +1,5 @@
 
-import { Product, Article, GalleryItem, Testimonial, JobOpening, DownloadItem } from './types';
+import { Product, Article, GalleryItem, Testimonial, JobOpening, DownloadItem, Tutorial, FAQ } from './types';
 
 // --- RE-EXPORTS FROM MODULAR ARCHITECTURE ---
 export { getEnv, CONFIG } from './config/env';
@@ -140,7 +140,7 @@ export const INITIAL_JOBS: JobOpening[] = [
   { id: 1, title: "Marketing", division: "Sales", type: "Full-time", location: "Solo", description: "Jualan.", requirements: "Semangat.", is_active: true }
 ];
 
-// --- NEW: DOWNLOADS MOCK DATA ---
+// --- DOWNLOADS MOCK DATA ---
 export const INITIAL_DOWNLOADS: DownloadItem[] = [
   {
     id: "drv-001",
@@ -174,27 +174,16 @@ export const INITIAL_DOWNLOADS: DownloadItem[] = [
     version: "PDF",
     os_support: "All",
     updated_at: "2023-11-20"
-  },
-  {
-    id: "soft-001",
-    title: "Aplikasi Kasir Android (Trial APK)",
-    category: "software",
-    description: "Installer APK untuk tablet/HP Android. Free trial 14 hari.",
-    file_url: "#",
-    file_size: "45 MB",
-    version: "v5.2.1",
-    os_support: "Android",
-    updated_at: "2024-03-01"
-  },
-  {
-    id: "tool-001",
-    title: "TeamViewer QuickSupport",
-    category: "tools",
-    description: "Aplikasi remote desktop untuk bantuan teknis jarak jauh oleh tim support kami.",
-    file_url: "https://download.teamviewer.com/download/TeamViewerQS.exe",
-    file_size: "30 MB",
-    version: "Latest",
-    os_support: "Windows",
-    updated_at: "2024-01-01"
   }
+];
+
+export const INITIAL_TUTORIALS: Tutorial[] = [
+    { id: 1, title: "Cara Install Driver Printer 58mm", video_url: "https://youtube.com/" },
+    { id: 2, title: "Setting Laci Kasir Otomatis", video_url: "https://youtube.com/" },
+    { id: 3, title: "Tutorial Input Stok Awal SIBOS", video_url: "https://youtube.com/" }
+];
+
+export const INITIAL_FAQS: FAQ[] = [
+    { id: 1, question: "Printer tidak terdeteksi?", answer: "Pastikan kabel USB terpasang rapat dan driver sudah diinstall sesuai versi Windows." },
+    { id: 2, question: "Laci kasir tidak terbuka?", answer: "Cek kabel RJ11 ke printer. Pastikan settingan printer di Device Settings sudah enable Cash Drawer." }
 ];

@@ -6,162 +6,164 @@ import {
   ChevronRight, ChevronLeft, AlertTriangle, MessageCircle, Wrench
 } from 'lucide-react';
 import { SectionHeader, Button } from '../components/ui';
-import { INITIAL_DOWNLOADS, supabase } from '../utils'; // Import supabase
-import { DownloadItem } from '../types';
+import { INITIAL_DOWNLOADS, INITIAL_TUTORIALS, INITIAL_FAQS, supabase } from '../utils';
+import { DownloadItem, Tutorial, FAQ } from '../types';
 
-const ITEMS_PER_PAGE = 9;
+// Pagination Constants
+const PAGE_SIZE_FILES = 9;
+const PAGE_SIZE_VIDEOS = 5;
+const PAGE_SIZE_FAQS = 5;
 
 // --- COMPONENTS ---
 
-const DownloadCard = ({ item }: { item: DownloadItem }) => {
+const DownloadCard: React.FC<{ item: DownloadItem }> = ({ item }) => {
   const getIcon = () => {
     switch (item.category) {
-      case 'driver': return <HardDrive size={24} className="text-blue-400" />;
-      case 'manual': return <FileText size={24} className="text-yellow-400" />;
-      case 'software': return <Smartphone size={24} className="text-green-400" />;
-      case 'tools': return <Wrench size={24} className="text-red-400" />;
-      default: return <Package size={24} className="text-gray-400" />;
-    }
-  };
-
-  const getBadgeColor = () => {
-    switch (item.category) {
-      case 'driver': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'manual': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-      case 'software': return 'bg-green-500/10 text-green-400 border-green-500/20';
-      case 'tools': return 'bg-red-500/10 text-red-400 border-red-500/20';
-      default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+      case 'driver': return <HardDrive size={20} className="text-blue-400" />;
+      case 'manual': return <FileText size={20} className="text-yellow-400" />;
+      case 'software': return <Smartphone size={20} className="text-green-400" />;
+      case 'tools': return <Wrench size={20} className="text-red-400" />;
+      default: return <Package size={20} className="text-gray-400" />;
     }
   };
 
   return (
-    <div className="bg-brand-card border border-white/5 rounded-xl p-5 hover:border-brand-orange/50 transition-all group flex flex-col h-full shadow-lg hover:shadow-neon/20">
-      <div className="flex justify-between items-start mb-4">
-        <div className={`w-12 h-12 rounded-lg flex items-center justify-center border border-white/10 bg-black/40 ${getBadgeColor()}`}>
+    <div className="bg-brand-card border border-white/5 rounded-xl p-4 hover:border-brand-orange/50 transition-all group flex flex-col h-full shadow-lg">
+      <div className="flex justify-between items-start mb-3">
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-white/10 bg-black/40">
           {getIcon()}
         </div>
-        <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded border ${getBadgeColor()}`}>
+        <span className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-white/10 bg-white/5 text-gray-400">
           {item.category}
         </span>
       </div>
       
-      <h3 className="text-white font-bold text-sm mb-2 line-clamp-2 min-h-[2.5rem] group-hover:text-brand-orange transition-colors">
+      <h3 className="text-white font-bold text-xs mb-2 line-clamp-2 min-h-[2rem] group-hover:text-brand-orange transition-colors">
         {item.title}
       </h3>
       
-      <p className="text-gray-400 text-xs leading-relaxed mb-4 line-clamp-3 flex-grow">
-        {item.description}
-      </p>
-      
-      <div className="mt-auto pt-4 border-t border-white/5">
-        <div className="flex justify-between items-center text-[10px] text-gray-500 mb-3">
-           <span className="flex items-center gap-1"><Monitor size={10}/> {item.os_support}</span>
-           <span>{item.file_size} • {item.version}</span>
+      <div className="mt-auto pt-3 border-t border-white/5">
+        <div className="flex justify-between items-center text-[9px] text-gray-500 mb-2">
+           <span className="flex items-center gap-1"><Monitor size={8}/> {item.os_support}</span>
+           <span>{item.file_size}</span>
         </div>
         <a 
           href={item.file_url} 
           target="_blank" 
           rel="noreferrer"
-          className="w-full flex items-center justify-center gap-2 bg-brand-gradient text-white hover:bg-brand-gradient-hover py-2.5 rounded-lg text-xs font-bold transition-all shadow-action hover:shadow-action-strong transform hover:-translate-y-0.5"
+          className="w-full flex items-center justify-center gap-1 bg-white/5 hover:bg-brand-orange text-gray-300 hover:text-white py-2 rounded text-[10px] font-bold transition-all border border-white/10 hover:border-brand-orange"
         >
-          <Download size={14} /> DOWNLOAD
+          <Download size={12} /> DOWNLOAD
         </a>
       </div>
     </div>
   );
 };
 
-const FaqAccordion = ({ q, a }: { q: string, a: string }) => {
+const VideoCard: React.FC<{ item: Tutorial }> = ({ item }) => (
+    <a 
+        href={item.video_url} 
+        target="_blank" 
+        rel="noreferrer"
+        className="flex items-center gap-3 p-3 rounded-lg bg-black/20 hover:bg-white/5 transition-colors group cursor-pointer border border-transparent hover:border-white/5"
+    >
+        <div className="w-8 h-8 rounded-full bg-red-900/20 text-red-500 flex items-center justify-center shrink-0 group-hover:bg-red-500 group-hover:text-white transition-colors">
+            <PlayCircle size={14} />
+        </div>
+        <span className="text-[11px] text-gray-300 font-bold group-hover:text-white line-clamp-2">{item.title}</span>
+    </a>
+);
+
+const FaqItem: React.FC<{ item: FAQ }> = ({ item }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="border border-white/5 rounded-lg bg-brand-card/30 overflow-hidden mb-3">
+    <div className="border border-white/5 rounded-lg bg-brand-card/30 overflow-hidden mb-2">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left p-4 flex justify-between items-center text-sm font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-all"
+        className="w-full text-left p-3 flex justify-between items-center text-xs font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-all"
       >
-        {q}
-        <ChevronRight size={16} className={`transition-transform duration-300 ${isOpen ? 'rotate-90 text-brand-orange' : 'text-gray-600'}`} />
+        <span className="line-clamp-2 flex-1 pr-2">{item.question}</span>
+        <ChevronRight size={14} className={`transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-90 text-brand-orange' : 'text-gray-600'}`} />
       </button>
-      <div className={`bg-black/20 px-4 text-xs text-gray-400 leading-relaxed border-t border-white/5 transition-all duration-300 ${isOpen ? 'max-h-40 py-4 opacity-100' : 'max-h-0 py-0 opacity-0'}`}>
-        {a}
+      <div className={`bg-black/20 px-3 text-[10px] text-gray-400 leading-relaxed border-t border-white/5 transition-all duration-300 ${isOpen ? 'max-h-40 py-3 opacity-100' : 'max-h-0 py-0 opacity-0'}`}>
+        {item.answer}
       </div>
     </div>
   );
+};
+
+const SimplePagination = ({ page, totalPages, setPage }: { page: number, totalPages: number, setPage: (p: number) => void }) => {
+    if (totalPages <= 1) return null;
+    return (
+        <div className="flex justify-center gap-2 mt-4">
+            <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="p-1 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30"><ChevronLeft size={14} className="text-white"/></button>
+            <span className="text-[10px] text-gray-400 py-1">{page}/{totalPages}</span>
+            <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="p-1 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30"><ChevronRight size={14} className="text-white"/></button>
+        </div>
+    );
 };
 
 // --- MAIN PAGE ---
 
 export const SupportPage = () => {
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
+  const [tutorials, setTutorials] = useState<Tutorial[]>([]);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState<'all' | 'driver' | 'manual' | 'software' | 'tools'>('all');
   
-  // Pagination State
-  const [page, setPage] = useState(1);
+  // Pagination States
+  const [pageFiles, setPageFiles] = useState(1);
+  const [pageVideos, setPageVideos] = useState(1);
+  const [pageFaqs, setPageFaqs] = useState(1);
 
-  // --- FETCH DATA FROM DB ---
+  // --- FETCH DATA ---
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAllData = async () => {
         if (!supabase) {
-            // Fallback to static if no DB
             setDownloads(INITIAL_DOWNLOADS);
+            setTutorials(INITIAL_TUTORIALS);
+            setFaqs(INITIAL_FAQS);
             setLoading(false);
             return;
         }
 
         try {
-            const { data, error } = await supabase
-                .from('downloads')
-                .select('*')
-                .order('created_at', { ascending: false });
-            
-            if (error) throw error;
-            
-            if (data && data.length > 0) {
-                setDownloads(data);
-            } else {
-                // Keep static if DB empty to avoid blank page
-                setDownloads(INITIAL_DOWNLOADS);
-            }
+            const [dlRes, vidRes, faqRes] = await Promise.all([
+                supabase.from('downloads').select('*').order('created_at', { ascending: false }),
+                supabase.from('tutorials').select('*').order('created_at', { ascending: false }),
+                supabase.from('faqs').select('*').order('created_at', { ascending: false })
+            ]);
+
+            setDownloads(dlRes.data && dlRes.data.length > 0 ? dlRes.data : INITIAL_DOWNLOADS);
+            setTutorials(vidRes.data && vidRes.data.length > 0 ? vidRes.data : INITIAL_TUTORIALS);
+            setFaqs(faqRes.data && faqRes.data.length > 0 ? faqRes.data : INITIAL_FAQS);
         } catch (e) {
-            console.error("Error fetching downloads:", e);
-            setDownloads(INITIAL_DOWNLOADS); // Safe fallback
+            console.error("Fetch Error:", e);
         } finally {
             setLoading(false);
         }
     };
-
-    fetchData();
+    fetchAllData();
   }, []);
 
-  // Reset pagination when filter changes
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm, activeCategory]);
+  // --- FILTER & PAGINATION LOGIC ---
+  const filterData = <T,>(data: T[], key: keyof T): T[] => {
+      return data.filter((item: any) => 
+          item[key] && typeof item[key] === 'string' && item[key].toLowerCase().includes(searchTerm.toLowerCase())
+      );
+  };
 
-  // Filter Logic
-  const filteredItems = downloads.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          item.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredDownloads = filterData(downloads, 'title');
+  const filteredTutorials = filterData(tutorials, 'title');
+  const filteredFaqs = filterData(faqs, 'question');
 
-  // Pagination Logic
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  const paginatedItems = filteredItems.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
-  );
+  const paginate = <T,>(data: T[], page: number, size: number): T[] => {
+      const start = (page - 1) * size;
+      return data.slice(start, start + size);
+  };
 
-  const categories = [
-    { id: 'all', label: 'Semua' },
-    { id: 'driver', label: 'Drivers' },
-    { id: 'manual', label: 'Manual Book' },
-    { id: 'software', label: 'Software' },
-    { id: 'tools', label: 'Tools' },
-  ];
+  useEffect(() => { setPageFiles(1); setPageVideos(1); setPageFaqs(1); }, [searchTerm]);
 
   return (
     <div className="animate-fade-in pt-10">
@@ -171,18 +173,18 @@ export const SupportPage = () => {
          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-orange/5 rounded-full blur-[120px] pointer-events-none"></div>
          <div className="container mx-auto px-4 relative z-10 text-center">
             <SectionHeader 
-                title="Download &" 
-                highlight="Support Center" 
-                subtitle="Pusat unduhan driver, manual, dan software pendukung. Langsung dari teknisi untuk kelancaran bisnis Anda." 
+                title="Support" 
+                highlight="Center" 
+                subtitle="Satu tempat untuk semua kebutuhan teknis Anda. Driver, Manual, Video, dan Solusi." 
             />
             
-            {/* SEARCH BAR */}
+            {/* SEARCH BAR GLOBAL */}
             <div className="max-w-xl mx-auto mt-8 relative group">
                 <input 
                     type="text" 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Cari driver printer, manual book, atau software..."
+                    placeholder="Cari driver, video tutorial, atau masalah..."
                     className="w-full bg-brand-card border border-white/10 rounded-full py-4 pl-12 pr-6 text-white shadow-2xl focus:border-brand-orange outline-none transition-all placeholder-gray-500"
                 />
                 <Search className="absolute left-4 top-4 text-gray-500 group-focus-within:text-brand-orange transition-colors" size={20} />
@@ -191,142 +193,79 @@ export const SupportPage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-16">
-         <div className="grid lg:grid-cols-12 gap-10">
+         <div className="grid lg:grid-cols-12 gap-8 items-start">
             
-            {/* LEFT: DOWNLOADS (9 Columns - 75% Width) */}
-            <div className="lg:col-span-9">
-                {/* CATEGORY TABS */}
-                <div className="flex flex-wrap gap-2 mb-8">
-                    {categories.map(cat => (
-                        <button
-                            key={cat.id}
-                            onClick={() => setActiveCategory(cat.id as any)}
-                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-                                activeCategory === cat.id 
-                                ? 'bg-brand-orange text-white border-brand-orange shadow-neon' 
-                                : 'bg-brand-card text-gray-400 border-white/10 hover:border-white/30 hover:text-white'
-                            }`}
-                        >
-                            {cat.label}
-                        </button>
-                    ))}
-                </div>
-
-                {/* GRID ITEMS (3 Columns) */}
-                {loading ? (
-                    <div className="text-center py-20 text-gray-500">Loading data...</div>
-                ) : filteredItems.length > 0 ? (
+            {/* COL 1: FILES (50% = 6 cols) */}
+            <div className="lg:col-span-6 bg-brand-dark/30 border border-white/5 rounded-2xl p-6">
+                <h3 className="text-white font-bold mb-6 flex items-center gap-2 text-base border-b border-white/10 pb-3">
+                    <HardDrive size={18} className="text-blue-400" /> Download Center
+                </h3>
+                
+                {loading ? <div className="text-center py-10 text-gray-500">Loading...</div> : (
                     <>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {paginatedItems.map(item => (
-                                <React.Fragment key={item.id}>
-                                    <DownloadCard item={item} />
-                                </React.Fragment>
-                            ))}
-                        </div>
-
-                        {/* PAGINATION CONTROLS */}
-                        {totalPages > 1 && (
-                            <div className="flex justify-center items-center gap-4 mt-12 pt-8 border-t border-white/5">
-                                <button 
-                                    onClick={() => setPage(Math.max(1, page - 1))}
-                                    disabled={page === 1}
-                                    className="p-2 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
-                                >
-                                    <ChevronLeft size={20} />
-                                </button>
-                                
-                                <span className="text-brand-orange font-bold text-sm bg-brand-orange/10 px-4 py-2 rounded-lg border border-brand-orange/20">
-                                    Page {page} / {totalPages}
-                                </span>
-
-                                <button 
-                                    onClick={() => setPage(Math.min(totalPages, page + 1))}
-                                    disabled={page === totalPages}
-                                    className="p-2 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
-                                >
-                                    <ChevronRight size={20} />
-                                </button>
+                        {filteredDownloads.length > 0 ? (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {paginate(filteredDownloads, pageFiles, PAGE_SIZE_FILES).map(item => (
+                                    <DownloadCard key={item.id} item={item} />
+                                ))}
                             </div>
+                        ) : (
+                            <div className="text-center py-10 text-gray-500 text-xs">File tidak ditemukan.</div>
                         )}
+                        <SimplePagination page={pageFiles} totalPages={Math.ceil(filteredDownloads.length/PAGE_SIZE_FILES)} setPage={setPageFiles} />
                     </>
-                ) : (
-                    <div className="text-center py-20 bg-brand-card/30 rounded-xl border border-white/5 border-dashed">
-                        <AlertTriangle className="mx-auto text-gray-600 mb-4" size={40} />
-                        <h3 className="text-white font-bold mb-1">File Tidak Ditemukan</h3>
-                        <p className="text-gray-500 text-sm">Coba kata kunci lain atau hubungi saya langsung.</p>
-                    </div>
                 )}
             </div>
 
-            {/* RIGHT: HELP & FAQ (3 Columns - 25% Width) */}
-            <div className="lg:col-span-3 space-y-8">
+            {/* COL 2: VIDEOS (25% = 3 cols) */}
+            <div className="lg:col-span-3 bg-brand-dark/30 border border-white/5 rounded-2xl p-5">
+                <h3 className="text-white font-bold mb-6 flex items-center gap-2 text-base border-b border-white/10 pb-3">
+                    <PlayCircle size={18} className="text-red-500" /> Video Tutorial
+                </h3>
                 
-                {/* TUTORIAL BOX */}
-                <div className="bg-brand-card border border-white/10 rounded-xl p-5 shadow-lg">
-                    <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-sm">
-                        <PlayCircle size={18} className="text-red-500" /> Video Tutorial
-                    </h3>
-                    <div className="space-y-3">
-                        {[
-                            "Cara Install Driver Printer 58mm",
-                            "Setting Laci Kasir Otomatis",
-                            "Tutorial Input Stok Awal SIBOS",
-                            "Cara Koneksi Scanner Barcode"
-                        ].map((title, i) => (
-                            <a 
-                                key={i} 
-                                href="https://youtube.com/" 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="flex items-center gap-3 p-2.5 rounded-lg bg-black/20 hover:bg-white/5 transition-colors group cursor-pointer border border-transparent hover:border-white/5"
-                            >
-                                <div className="w-6 h-6 rounded-full bg-red-900/20 text-red-500 flex items-center justify-center shrink-0 group-hover:bg-red-500 group-hover:text-white transition-colors">
-                                    <PlayCircle size={12} />
-                                </div>
-                                <span className="text-[11px] text-gray-300 font-bold group-hover:text-white line-clamp-1">{title}</span>
-                            </a>
-                        ))}
-                    </div>
-                    <Button variant="outline" className="w-full mt-4 text-xs h-9 shadow-neon">
-                        Lihat Channel Youtube
-                    </Button>
+                <div className="space-y-2">
+                    {paginate(filteredTutorials, pageVideos, PAGE_SIZE_VIDEOS).map(item => (
+                        <VideoCard key={item.id} item={item} />
+                    ))}
+                    {filteredTutorials.length === 0 && <div className="text-center py-8 text-gray-500 text-xs">Video tidak ditemukan.</div>}
                 </div>
+                <SimplePagination page={pageVideos} totalPages={Math.ceil(filteredTutorials.length/PAGE_SIZE_VIDEOS)} setPage={setPageVideos} />
+                
+                <Button variant="outline" className="w-full mt-6 text-xs h-9" onClick={() => window.open('https://youtube.com', '_blank')}>
+                    Lihat Channel Youtube
+                </Button>
+            </div>
 
+            {/* COL 3: FAQ & CONTACT (25% = 3 cols) */}
+            <div className="lg:col-span-3 space-y-6">
+                
                 {/* FAQ BOX */}
-                <div>
-                    <h3 className="text-white font-bold mb-4 flex items-center gap-2 text-sm">
-                        <HelpCircle size={18} className="text-brand-orange" /> Troubleshooting
+                <div className="bg-brand-dark/30 border border-white/5 rounded-2xl p-5">
+                    <h3 className="text-white font-bold mb-6 flex items-center gap-2 text-base border-b border-white/10 pb-3">
+                        <HelpCircle size={18} className="text-brand-orange" /> FAQ
                     </h3>
                     <div className="space-y-1">
-                        <FaqAccordion 
-                            q="Printer tidak terdeteksi di Windows?" 
-                            a="Pastikan kabel USB terpasang rapat. Coba pindah port USB lain. Restart printer. Jika masih gagal, reinstall driver dari menu di kiri." 
-                        />
-                        <FaqAccordion 
-                            q="Laci kasir tidak terbuka otomatis?" 
-                            a="Cek kabel RJ11 (seperti kabel telepon) dari laci ke printer. Pastikan settingan printer di 'Device Settings' sudah enable Cash Drawer #1." 
-                        />
-                        <FaqAccordion 
-                            q="Scanner barcode tidak bunyi?" 
-                            a="Scan barcode 'Reset Factory' yang ada di buku manual scanner. Pastikan kabel tidak putus dalam." 
-                        />
+                        {paginate(filteredFaqs, pageFaqs, PAGE_SIZE_FAQS).map(item => (
+                            <FaqItem key={item.id} item={item} />
+                        ))}
+                        {filteredFaqs.length === 0 && <div className="text-center py-8 text-gray-500 text-xs">FAQ tidak ditemukan.</div>}
                     </div>
+                    <SimplePagination page={pageFaqs} totalPages={Math.ceil(filteredFaqs.length/PAGE_SIZE_FAQS)} setPage={setPageFaqs} />
                 </div>
 
-                {/* DIRECT HELP */}
+                {/* CONTACT BOX */}
                 <div className="bg-brand-orange/10 border border-brand-orange/30 p-5 rounded-xl text-center">
-                    <p className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-2">Support Langsung Founder</p>
+                    <p className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-2">Butuh Bantuan Lebih?</p>
                     <p className="text-gray-300 text-xs mb-4 leading-relaxed">
-                        Bingung setting sendiri? Tenang. Saya (Amin) siap memandu Anda langsung via Remote (TeamViewer) sampai beres.
+                        Jika panduan di samping belum menjawab, silakan hubungi tim support langsung.
                     </p>
                     <a 
-                        href="https://wa.me/6282325103336?text=Halo%20Mas%20Amin,%20saya%20butuh%20bantuan%20setting%20alat."
+                        href="https://wa.me/6282325103336"
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-action text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-neon transition-transform hover:-translate-y-1 w-full justify-center"
+                        className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-action text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-neon w-full justify-center"
                     >
-                        <MessageCircle size={14} /> Chat Mas Amin
+                        <MessageCircle size={14} /> Chat Support
                     </a>
                 </div>
 

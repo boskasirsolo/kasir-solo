@@ -1,101 +1,49 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, Save, X as XIcon, Search, UploadCloud, FileText, Link as LinkIcon, HardDrive } from 'lucide-react';
-import { DownloadItem } from '../types';
+import { Plus, Trash2, Edit, Save, X as XIcon, Search, UploadCloud, FileText, Link as LinkIcon, HardDrive, PlayCircle, HelpCircle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { DownloadItem, Tutorial, FAQ } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, uploadToSupabase, renameFile, slugify } from '../utils';
 
-const ITEMS_PER_PAGE = 6;
-
-// --- LOGIC: Custom Hook ---
+// --- LOGIC: Custom Hook for DOWNLOADS ---
 const useDownloadManager = () => {
     const [downloads, setDownloads] = useState<DownloadItem[]>([]);
     const [form, setForm] = useState<Partial<DownloadItem>>({
-        id: '',
-        title: '',
-        category: 'driver',
-        description: '',
-        file_url: '',
-        version: '',
-        file_size: '',
-        os_support: 'Windows'
+        id: '', title: '', category: 'driver', description: '', file_url: '', version: '', file_size: '', os_support: 'Windows'
     });
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
+    const itemsPerPage = 5;
 
-    useEffect(() => {
-        fetchDownloads();
-    }, []);
+    useEffect(() => { fetchDownloads(); }, []);
 
     const fetchDownloads = async () => {
         if (!supabase) return;
-        const { data, error } = await supabase
-            .from('downloads')
-            .select('*')
-            .order('created_at', { ascending: false });
-        
+        const { data } = await supabase.from('downloads').select('*').order('created_at', { ascending: false });
         if (data) setDownloads(data);
     };
 
     const resetForm = () => {
-        setForm({
-            id: '',
-            title: '',
-            category: 'driver',
-            description: '',
-            file_url: '',
-            version: '',
-            file_size: '',
-            os_support: 'Windows'
-        });
+        setForm({ id: '', title: '', category: 'driver', description: '', file_url: '', version: '', file_size: '', os_support: 'Windows' });
         setUploadFile(null);
     };
 
-    const handleEditClick = (item: DownloadItem) => {
-        setForm(item);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    const handleEditClick = (item: DownloadItem) => { setForm(item); };
 
     const handleSubmit = async () => {
         if (!form.title || !form.category) return alert("Judul dan Kategori wajib diisi.");
-        
         setLoading(true);
         try {
             let finalFileUrl = form.file_url;
-
-            // Handle File Upload if exists
-            if (uploadFile) {
-                // Determine bucket based on file type roughly, or just use a generic 'downloads' or 'public' folder
-                const seoName = `${slugify(form.title || 'download')}-${slugify(form.version || 'v1')}`;
-                const fileToUpload = renameFile(uploadFile, seoName);
-                
-                // Upload to 'files' folder in 'downloads' bucket (Specific Bucket created by User)
-                if (supabase) {
-                    // Param 1: File, Param 2: Folder, Param 3: Bucket Name
-                    const { url } = await uploadToSupabase(fileToUpload, 'files', 'downloads');
-                    finalFileUrl = url;
-                    
-                    // Auto-set size if empty
-                    if (!form.file_size) {
-                        const sizeInMB = (uploadFile.size / (1024 * 1024)).toFixed(1);
-                        form.file_size = `${sizeInMB} MB`;
-                    }
-                }
+            if (uploadFile && supabase) {
+                const seoName = `${slugify(form.title || 'dl')}-${slugify(form.version || 'v1')}`;
+                const { url } = await uploadToSupabase(renameFile(uploadFile, seoName), 'files', 'downloads');
+                finalFileUrl = url;
+                if (!form.file_size) form.file_size = `${(uploadFile.size / (1024 * 1024)).toFixed(1)} MB`;
             }
-
-            const dbData = {
-                title: form.title,
-                category: form.category,
-                description: form.description,
-                file_url: finalFileUrl,
-                version: form.version,
-                file_size: form.file_size,
-                os_support: form.os_support,
-                updated_at: new Date().toISOString()
-            };
-
+            const dbData = { ...form, file_url: finalFileUrl, updated_at: new Date().toISOString() };
             if (form.id) {
                 if (supabase) await supabase.from('downloads').update(dbData).eq('id', form.id);
                 setDownloads(prev => prev.map(item => item.id === form.id ? { ...item, ...dbData } as DownloadItem : item));
@@ -103,204 +51,245 @@ const useDownloadManager = () => {
                 if (supabase) {
                     const { data } = await supabase.from('downloads').insert([dbData]).select().single();
                     if (data) setDownloads(prev => [data, ...prev]);
-                } else {
-                    // Demo mode fallback
-                    const newId = Date.now().toString();
-                    setDownloads(prev => [{ ...dbData, id: newId } as DownloadItem, ...prev]);
                 }
             }
             resetForm();
-            alert("Data berhasil disimpan!");
-        } catch (e: any) {
-            console.error(e);
-            alert(`Gagal menyimpan: ${e.message}`);
-        } finally {
-            setLoading(false);
-        }
+        } catch (e: any) { alert(`Error: ${e.message}`); } finally { setLoading(false); }
     };
 
     const deleteItem = async (id: string) => {
-        if(!confirm("Hapus file ini?")) return;
+        if(!confirm("Hapus file?")) return;
         if (supabase) await supabase.from('downloads').delete().eq('id', id);
         setDownloads(prev => prev.filter(item => item.id !== id));
         if (form.id === id) resetForm();
     };
 
-    const filtered = downloads.filter(item => 
-        item.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-    const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+    const filtered = downloads.filter(item => item.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-    return {
-        form, setForm, uploadFile, setUploadFile,
-        loading, handleSubmit, handleEditClick, resetForm, deleteItem,
-        listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm, totalItems: filtered.length }
-    };
+    return { form, setForm, uploadFile, setUploadFile, loading, handleSubmit, handleEditClick, resetForm, deleteItem, listData: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm, totalItems: filtered.length } };
 };
 
+// --- LOGIC: Custom Hook for TUTORIALS ---
+const useTutorialManager = () => {
+    const [tutorials, setTutorials] = useState<Tutorial[]>([]);
+    const [form, setForm] = useState<Partial<Tutorial>>({ id: 0, title: '', video_url: '' });
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => { fetchTutorials(); }, []);
+
+    const fetchTutorials = async () => {
+        if (!supabase) return;
+        const { data } = await supabase.from('tutorials').select('*').order('created_at', { ascending: false });
+        if (data) setTutorials(data);
+    };
+
+    const handleSubmit = async () => {
+        if (!form.title || !form.video_url) return alert("Isi Judul dan Link Video.");
+        setLoading(true);
+        try {
+            if (form.id) {
+                if (supabase) await supabase.from('tutorials').update(form).eq('id', form.id);
+                setTutorials(prev => prev.map(t => t.id === form.id ? { ...t, ...form } as Tutorial : t));
+            } else {
+                if (supabase) {
+                    const { data } = await supabase.from('tutorials').insert([{ title: form.title, video_url: form.video_url }]).select().single();
+                    if (data) setTutorials(prev => [data, ...prev]);
+                }
+            }
+            setForm({ id: 0, title: '', video_url: '' });
+        } catch (e: any) { alert(`Error: ${e.message}`); } finally { setLoading(false); }
+    };
+
+    const deleteItem = async (id: number) => {
+        if(!confirm("Hapus video?")) return;
+        if (supabase) await supabase.from('tutorials').delete().eq('id', id);
+        setTutorials(prev => prev.filter(t => t.id !== id));
+    };
+
+    return { tutorials, form, setForm, loading, handleSubmit, deleteItem };
+};
+
+// --- LOGIC: Custom Hook for FAQS ---
+const useFaqManager = () => {
+    const [faqs, setFaqs] = useState<FAQ[]>([]);
+    const [form, setForm] = useState<Partial<FAQ>>({ id: 0, question: '', answer: '' });
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => { fetchFaqs(); }, []);
+
+    const fetchFaqs = async () => {
+        if (!supabase) return;
+        const { data } = await supabase.from('faqs').select('*').order('created_at', { ascending: false });
+        if (data) setFaqs(data);
+    };
+
+    const handleSubmit = async () => {
+        if (!form.question || !form.answer) return alert("Isi Pertanyaan dan Jawaban.");
+        setLoading(true);
+        try {
+            if (form.id) {
+                if (supabase) await supabase.from('faqs').update(form).eq('id', form.id);
+                setFaqs(prev => prev.map(f => f.id === form.id ? { ...f, ...form } as FAQ : f));
+            } else {
+                if (supabase) {
+                    const { data } = await supabase.from('faqs').insert([{ question: form.question, answer: form.answer }]).select().single();
+                    if (data) setFaqs(prev => [data, ...prev]);
+                }
+            }
+            setForm({ id: 0, question: '', answer: '' });
+        } catch (e: any) { alert(`Error: ${e.message}`); } finally { setLoading(false); }
+    };
+
+    const deleteItem = async (id: number) => {
+        if(!confirm("Hapus FAQ?")) return;
+        if (supabase) await supabase.from('faqs').delete().eq('id', id);
+        setFaqs(prev => prev.filter(f => f.id !== id));
+    };
+
+    return { faqs, form, setForm, loading, handleSubmit, deleteItem };
+};
+
+// --- MAIN COMPONENT ---
 export const AdminDownloads = () => {
-    const { form, setForm, uploadFile, setUploadFile, loading, handleSubmit, handleEditClick, resetForm, deleteItem, listData } = useDownloadManager();
+    const [activeTab, setActiveTab] = useState<'files' | 'tutorials' | 'faq'>('files');
+    const dlManager = useDownloadManager();
+    const tutManager = useTutorialManager();
+    const faqManager = useFaqManager();
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            {/* LEFT: LIST VIEW (7 Col) */}
-            <div className="lg:col-span-7 bg-brand-dark rounded-xl border border-white/5 flex flex-col overflow-hidden h-[600px]">
-                <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
-                    <div className="relative flex-grow">
-                        <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
-                        <input 
-                            type="text" 
-                            value={listData.searchTerm}
-                            onChange={(e) => listData.setSearchTerm(e.target.value)}
-                            placeholder="Cari file..." 
-                            className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange"
-                        />
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-500 uppercase">Total: {listData.totalItems}</span>
-                </div>
+        <div className="h-[600px] flex flex-col">
+            {/* TAB NAV */}
+            <div className="flex gap-2 mb-6 border-b border-white/10 pb-1">
+                {[
+                    { id: 'files', label: 'File Download', icon: HardDrive },
+                    { id: 'tutorials', label: 'Video Tutorial', icon: PlayCircle },
+                    { id: 'faq', label: 'FAQ Manager', icon: HelpCircle }
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-t-lg transition-colors ${activeTab === tab.id ? 'bg-brand-orange text-white' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+                    >
+                        <tab.icon size={14} /> {tab.label}
+                    </button>
+                ))}
+            </div>
 
-                <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-3">
-                    {listData.paginated.length === 0 ? (
-                        <div className="text-center py-10 text-gray-500 text-xs">Belum ada file download.</div>
-                    ) : (
-                        listData.paginated.map((item) => (
-                            <div key={item.id} className="bg-brand-card border border-white/5 rounded-lg p-3 flex gap-3 hover:border-brand-orange/50 transition-all group">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-white/10 ${
-                                    item.category === 'driver' ? 'bg-blue-500/10 text-blue-400' : 
-                                    item.category === 'manual' ? 'bg-yellow-500/10 text-yellow-400' : 
-                                    'bg-green-500/10 text-green-400'
-                                }`}>
-                                    <HardDrive size={18} />
+            {/* TAB CONTENT */}
+            <div className="flex-grow overflow-hidden">
+                
+                {/* 1. FILE MANAGER */}
+                {activeTab === 'files' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+                        <div className="lg:col-span-7 bg-brand-dark rounded-xl border border-white/5 flex flex-col overflow-hidden">
+                            <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
+                                <div className="relative flex-grow">
+                                    <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
+                                    <input type="text" value={dlManager.listData.searchTerm} onChange={(e) => dlManager.listData.setSearchTerm(e.target.value)} placeholder="Cari file..." className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange" />
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <h5 className="text-xs font-bold text-white truncate">{item.title}</h5>
-                                    <div className="flex gap-2 text-[10px] text-gray-500 mt-1">
-                                        <span className="bg-white/5 px-1.5 rounded">{item.category}</span>
-                                        <span>v{item.version}</span>
-                                        <span>{item.file_size}</span>
+                            </div>
+                            <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-2">
+                                {dlManager.listData.paginated.map((item) => (
+                                    <div key={item.id} className="bg-brand-card border border-white/5 rounded-lg p-3 flex gap-3 items-center group hover:border-brand-orange/30">
+                                        <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center shrink-0"><HardDrive size={16} className="text-gray-400"/></div>
+                                        <div className="flex-1 min-w-0">
+                                            <h5 className="text-xs font-bold text-white truncate">{item.title}</h5>
+                                            <p className="text-[10px] text-gray-500">{item.category} • {item.file_size}</p>
+                                        </div>
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => dlManager.handleEditClick(item)} className="p-1 hover:bg-blue-500/20 text-blue-400 rounded"><Edit size={14}/></button>
+                                            <button onClick={() => dlManager.deleteItem(item.id)} className="p-1 hover:bg-red-500/20 text-red-400 rounded"><Trash2 size={14}/></button>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => handleEditClick(item)} className="p-1 hover:bg-white/10 rounded text-blue-400"><Edit size={14}/></button>
-                                    <button onClick={() => deleteItem(item.id)} className="p-1 hover:bg-white/10 rounded text-red-400"><Trash2 size={14}/></button>
-                                </div>
+                                ))}
                             </div>
-                        ))
-                    )}
-                </div>
-            </div>
-
-            {/* RIGHT: EDITOR FORM (5 Col) */}
-            <div className="lg:col-span-5 bg-brand-dark p-6 rounded-xl border border-white/5 sticky top-6">
-                <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        {form.id ? <Edit size={18} className="text-brand-orange"/> : <Plus size={18} className="text-brand-orange"/>}
-                        {form.id ? "Edit File" : "Upload File Baru"}
-                    </h3>
-                    {form.id && (
-                        <button onClick={resetForm} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
-                            <XIcon size={12} /> Batal
-                        </button>
-                    )}
-                </div>
-
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Judul File</label>
-                        <Input value={form.title || ''} onChange={e => setForm(p => ({...p, title: e.target.value}))} placeholder="Contoh: Driver Printer XPrinter XP-58" className="py-2 text-sm"/>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Kategori</label>
-                            <select 
-                                value={form.category} 
-                                onChange={e => setForm(p => ({...p, category: e.target.value as any}))}
-                                className="w-full bg-brand-card border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-orange outline-none"
-                            >
-                                <option value="driver">Driver</option>
-                                <option value="manual">Manual Book</option>
-                                <option value="software">Software / App</option>
-                                <option value="tools">Tools</option>
-                            </select>
+                            {dlManager.listData.totalPages > 1 && <div className="p-2 border-t border-white/10 flex justify-center gap-2"><button onClick={() => dlManager.listData.setPage(p => Math.max(1, p-1))}><ChevronLeft size={16}/></button><span className="text-xs">{dlManager.listData.page}</span><button onClick={() => dlManager.listData.setPage(p => Math.min(dlManager.listData.totalPages, p+1))}><ChevronRight size={16}/></button></div>}
                         </div>
-                        <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">OS Support</label>
-                            <select 
-                                value={form.os_support} 
-                                onChange={e => setForm(p => ({...p, os_support: e.target.value as any}))}
-                                className="w-full bg-brand-card border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-orange outline-none"
-                            >
-                                <option value="Windows">Windows</option>
-                                <option value="Android">Android</option>
-                                <option value="iOS">iOS</option>
-                                <option value="All">All OS</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* FILE SOURCE SELECTION */}
-                    <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-2 block">Source File</label>
-                        
-                        {/* Tab-like Toggle */}
-                        <div className="flex gap-2 mb-2">
-                            <label className={`flex-1 cursor-pointer p-3 rounded-lg border text-center transition-all ${uploadFile ? 'bg-brand-orange/10 border-brand-orange text-brand-orange' : 'bg-black/20 border-white/10 text-gray-400 hover:bg-white/5'}`}>
-                                <input type="file" className="hidden" onChange={e => {
-                                    if(e.target.files?.[0]) {
-                                        setUploadFile(e.target.files[0]);
-                                        setForm(p => ({...p, file_url: ''})); // Clear external URL if upload selected
-                                    }
-                                }} />
-                                <div className="flex flex-col items-center gap-1">
-                                    <UploadCloud size={16} />
-                                    <span className="text-[10px] font-bold">{uploadFile ? uploadFile.name : "Upload File"}</span>
-                                </div>
-                            </label>
-                            
-                            <div className="flex items-center justify-center text-gray-600 font-bold text-xs">OR</div>
-
-                            <div className={`flex-1 p-2 rounded-lg border transition-all ${form.file_url && !uploadFile ? 'bg-blue-500/10 border-blue-500' : 'bg-black/20 border-white/10'}`}>
-                                <div className="flex items-center gap-2 mb-1 text-gray-400 px-1">
-                                    <LinkIcon size={12} /> <span className="text-[10px] font-bold">Link Eksternal</span>
-                                </div>
-                                <input 
-                                    value={form.file_url || ''} 
-                                    onChange={e => {
-                                        setForm(p => ({...p, file_url: e.target.value}));
-                                        setUploadFile(null); // Clear upload if URL typed
-                                    }}
-                                    placeholder="https://drive.google.com/..." 
-                                    className="w-full bg-transparent text-xs text-white outline-none placeholder-gray-600"
-                                />
+                        <div className="lg:col-span-5 bg-brand-dark p-6 rounded-xl border border-white/5 overflow-y-auto custom-scrollbar">
+                            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">{dlManager.form.id ? <Edit size={16}/> : <Plus size={16}/>} {dlManager.form.id ? 'Edit File' : 'Upload File'}</h3>
+                            <div className="space-y-3">
+                                <Input value={dlManager.form.title || ''} onChange={e => dlManager.setForm(p => ({...p, title: e.target.value}))} placeholder="Judul File" className="text-xs"/>
+                                <select value={dlManager.form.category} onChange={e => dlManager.setForm(p => ({...p, category: e.target.value as any}))} className="w-full bg-brand-card border border-white/10 rounded px-3 py-2 text-xs text-white"><option value="driver">Driver</option><option value="manual">Manual</option><option value="software">Software</option></select>
+                                <div className="border border-dashed border-white/20 p-3 rounded text-center"><input type="file" onChange={e => e.target.files?.[0] && dlManager.setUploadFile(e.target.files[0])} className="text-[10px] text-gray-400"/></div>
+                                <Input value={dlManager.form.file_url || ''} onChange={e => dlManager.setForm(p => ({...p, file_url: e.target.value}))} placeholder="URL Eksternal (Opsional)" className="text-xs"/>
+                                <TextArea value={dlManager.form.description || ''} onChange={e => dlManager.setForm(p => ({...p, description: e.target.value}))} placeholder="Deskripsi..." className="h-16 text-xs"/>
+                                <Button onClick={dlManager.handleSubmit} disabled={dlManager.loading} className="w-full text-xs py-2">{dlManager.loading ? <LoadingSpinner/> : 'Simpan'}</Button>
+                                {dlManager.form.id && <button onClick={dlManager.resetForm} className="w-full text-xs text-gray-500 mt-2">Batal</button>}
                             </div>
                         </div>
                     </div>
+                )}
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Versi</label>
-                            <Input value={form.version || ''} onChange={e => setForm(p => ({...p, version: e.target.value}))} placeholder="v1.0" className="py-2 text-sm"/>
+                {/* 2. TUTORIAL MANAGER */}
+                {activeTab === 'tutorials' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                        <div className="bg-brand-dark rounded-xl border border-white/5 p-4 overflow-y-auto custom-scrollbar">
+                            <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">Daftar Video</h4>
+                            <div className="space-y-2">
+                                {tutManager.tutorials.map(t => (
+                                    <div key={t.id} className="p-3 bg-brand-card rounded border border-white/5 flex justify-between items-center group">
+                                        <div className="flex items-center gap-3">
+                                            <PlayCircle size={16} className="text-red-500"/>
+                                            <div>
+                                                <p className="text-xs font-bold text-white">{t.title}</p>
+                                                <a href={t.video_url} target="_blank" className="text-[10px] text-blue-400 hover:underline">{t.video_url}</a>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => tutManager.setForm(t)} className="text-blue-400"><Edit size={14}/></button>
+                                            <button onClick={() => tutManager.deleteItem(t.id)} className="text-red-400"><Trash2 size={14}/></button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Ukuran (Optional)</label>
-                            <Input value={form.file_size || ''} onChange={e => setForm(p => ({...p, file_size: e.target.value}))} placeholder="15 MB" className="py-2 text-sm"/>
+                        <div className="bg-brand-dark rounded-xl border border-white/5 p-6 h-fit">
+                            <h3 className="text-sm font-bold text-white mb-4">{tutManager.form.id ? 'Edit Video' : 'Tambah Video'}</h3>
+                            <div className="space-y-3">
+                                <Input value={tutManager.form.title || ''} onChange={e => tutManager.setForm(p => ({...p, title: e.target.value}))} placeholder="Judul Video" className="text-xs"/>
+                                <Input value={tutManager.form.video_url || ''} onChange={e => tutManager.setForm(p => ({...p, video_url: e.target.value}))} placeholder="https://youtube.com/..." className="text-xs"/>
+                                <Button onClick={tutManager.handleSubmit} disabled={tutManager.loading} className="w-full text-xs py-2">{tutManager.loading ? <LoadingSpinner/> : 'Simpan Video'}</Button>
+                                {tutManager.form.id ? <button onClick={() => tutManager.setForm({id:0, title:'', video_url:''})} className="w-full text-xs text-gray-500">Batal</button> : null}
+                            </div>
                         </div>
                     </div>
+                )}
 
-                    <div>
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Deskripsi Singkat</label>
-                        <TextArea value={form.description || ''} onChange={e => setForm(p => ({...p, description: e.target.value}))} placeholder="Keterangan file..." className="h-20 text-sm"/>
+                {/* 3. FAQ MANAGER */}
+                {activeTab === 'faq' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                        <div className="bg-brand-dark rounded-xl border border-white/5 p-4 overflow-y-auto custom-scrollbar">
+                            <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">Daftar FAQ</h4>
+                            <div className="space-y-2">
+                                {faqManager.faqs.map(f => (
+                                    <div key={f.id} className="p-3 bg-brand-card rounded border border-white/5 group">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <p className="text-xs font-bold text-white w-full">{f.question}</p>
+                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                                <button onClick={() => faqManager.setForm(f)} className="text-blue-400"><Edit size={14}/></button>
+                                                <button onClick={() => faqManager.deleteItem(f.id)} className="text-red-400"><Trash2 size={14}/></button>
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 line-clamp-2">{f.answer}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="bg-brand-dark rounded-xl border border-white/5 p-6 h-fit">
+                            <h3 className="text-sm font-bold text-white mb-4">{faqManager.form.id ? 'Edit FAQ' : 'Tambah FAQ'}</h3>
+                            <div className="space-y-3">
+                                <Input value={faqManager.form.question || ''} onChange={e => faqManager.setForm(p => ({...p, question: e.target.value}))} placeholder="Pertanyaan (Q)" className="text-xs"/>
+                                <TextArea value={faqManager.form.answer || ''} onChange={e => faqManager.setForm(p => ({...p, answer: e.target.value}))} placeholder="Jawaban (A)" className="h-24 text-xs"/>
+                                <Button onClick={faqManager.handleSubmit} disabled={faqManager.loading} className="w-full text-xs py-2">{faqManager.loading ? <LoadingSpinner/> : 'Simpan FAQ'}</Button>
+                                {faqManager.form.id ? <button onClick={() => faqManager.setForm({id:0, question:'', answer:''})} className="w-full text-xs text-gray-500">Batal</button> : null}
+                            </div>
+                        </div>
                     </div>
+                )}
 
-                    <Button onClick={handleSubmit} disabled={loading} className="w-full py-3 text-sm shadow-neon">
-                        {loading ? <LoadingSpinner /> : (form.id ? <><Save size={16}/> Simpan Perubahan</> : <><Plus size={16}/> Upload File</>)}
-                    </Button>
-                </div>
             </div>
-
         </div>
     );
 };
