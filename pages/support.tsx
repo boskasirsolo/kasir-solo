@@ -39,14 +39,11 @@ const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onClose: (
                 {/* Content */}
                 <div className="p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
                     <div className="flex justify-between items-center mb-6 bg-black/20 p-3 rounded-lg border border-white/5">
-                        <div className="flex items-center gap-2 text-xs text-gray-300">
+                        <div className="flex items-center gap-2 text-xs text-gray-300 w-full">
                             <Monitor size={14} className="text-blue-400" /> 
                             <span>Support: <strong>{item.os_support}</strong></span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-300">
-                            <HardDrive size={14} className="text-green-400" />
-                            <span>Size: <strong>{item.file_size}</strong></span>
-                        </div>
+                        {/* File Size Information Removed */}
                     </div>
 
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Deskripsi File</h4>
@@ -223,6 +220,11 @@ export const SupportPage = () => {
 
   useEffect(() => { setPageFiles(1); setPageVideos(1); setPageFaqs(1); }, [searchTerm]);
 
+  const handleFileClick = (item: DownloadItem) => {
+      setSelectedDownload(item);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="animate-fade-in pt-10">
       
@@ -267,7 +269,7 @@ export const SupportPage = () => {
                                     <DownloadCard 
                                         key={item.id} 
                                         item={item} 
-                                        onClick={() => setSelectedDownload(item)}
+                                        onClick={() => handleFileClick(item)}
                                     />
                                 ))}
                             </div>

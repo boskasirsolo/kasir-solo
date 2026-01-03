@@ -32,7 +32,7 @@ const useDownloadManager = () => {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
-    const itemsPerPage = 6; // Increased for Grid
+    const itemsPerPage = 8; // Increased for 4-column Grid (2 rows x 4 cols)
 
     useEffect(() => { fetchDownloads(); }, []);
 
@@ -370,7 +370,8 @@ export const AdminDownloads = () => {
                             </div>
                             
                             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar">
-                                <div className="grid grid-cols-2 gap-3">
+                                {/* CHANGED: grid-cols-2 to md:grid-cols-4 for tighter grid */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     {dlManager.listData.paginated.map((item) => {
                                         const Icon = getFileIcon(item.category);
                                         return (
@@ -388,6 +389,7 @@ export const AdminDownloads = () => {
                                                 <h5 className="text-[11px] font-bold text-white leading-snug line-clamp-2 mb-1 group-hover:text-brand-orange transition-colors">{item.title}</h5>
                                                 <div className="mt-auto pt-2 border-t border-white/5 flex justify-between items-center text-[9px] text-gray-500">
                                                     <span className="flex items-center gap-1"><Monitor size={8}/> {item.os_support}</span>
+                                                    {/* File Size displayed in admin for reference, user asked to remove from public modal */}
                                                     <span>{item.file_size}</span>
                                                 </div>
                                                 
