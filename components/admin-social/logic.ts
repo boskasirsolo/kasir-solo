@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase, callGeminiWithRotation, slugify, uploadToCloudinary } from '../../utils';
 import { Product, Article, GalleryItem } from '../../types';
-import { SocialContentItem, PlatformState, CaptionState, ActiveTab } from './types';
+import { SocialContentItem, PlatformState, CaptionState, ActiveTab, SOCIAL_TONES } from './types';
 import { SERVICE_CATALOG } from './data';
 
 export const useSocialStudio = (
@@ -23,6 +23,9 @@ export const useSocialStudio = (
     const [activeTab, setActiveTab] = useState<ActiveTab>('master');
     const [customImage, setCustomImage] = useState<string | null>(null);
     const [uploadFile, setUploadFile] = useState<File | null>(null);
+    
+    // NEW: Tone State
+    const [selectedTone, setSelectedTone] = useState<string>('gritty');
 
     // Loading State
     const [isLoading, setIsLoading] = useState({ ai: false, posting: false });
@@ -82,26 +85,33 @@ export const useSocialStudio = (
         setIsLoading(p => ({...p, ai: true}));
 
         try {
-            let styleInstruction = "";
-            if (platform === 'instagram') styleInstruction = "Style: Casual, Fun, Emoji-rich, many Hashtags. Focus on Visuals.";
-            if (platform === 'facebook') styleInstruction = "Style: Community engaging, Clear Call to Action, Moderate Emojis. Focus on Benefits.";
-            if (platform === 'linkedin') styleInstruction = "Style: Professional, Insightful, Business-oriented, No crazy emojis. Focus on Value/ROI.";
-            if (platform === 'master') styleInstruction = "Style: Neutral, Balanced, Informative. Good for all platforms.";
+            // Get Tone Description
+            const toneObj = SOCIAL_TONES.find(t => t.id === selectedTone);
+            const toneDesc = toneObj ? toneObj.desc : "Profesional dan menarik.";
+
+            let platformContext = "";
+            if (platform === 'instagram') platformContext = "Platform: Instagram. Use relevant hashtags, emojis, and casual engaging style.";
+            if (platform === 'facebook') platformContext = "Platform: Facebook. Community engaging, clear CTA, moderate emojis.";
+            if (platform === 'linkedin') platformContext = "Platform: LinkedIn. Professional, insightful, business value focused.";
+            if (platform === 'master') platformContext = "Platform: General Social Media. Balanced style.";
 
             const prompt = `
             Role: Social Media Expert for "PT Mesin Kasir Solo".
+            
             Task: Write a caption for ${platform === 'master' ? 'general use' : platform}.
             
-            Product/Context:
+            [CONTEXT DATA]
             Title: ${selectedItem.title}
             Type: ${selectedItem.type}
             Desc: ${selectedItem.description}
             Link: ${selectedItem.url}
 
-            ${styleInstruction}
+            [STYLE INSTRUCTION]
+            Tone: ${toneObj?.label} (${toneDesc}).
+            ${platformContext}
             Language: Indonesian.
             
-            Output: JUST the caption text.
+            Output: JUST the caption text. No intro/outro.
             `;
 
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
@@ -131,11 +141,7 @@ export const useSocialStudio = (
                 finalImageUrl = await uploadToCloudinary(uploadFile);
             }
 
-            // 2. Prepare Payloads (Loop per platform if content differs, or single shot if API supports)
-            // Ayrshare supports array of platforms, but we want different captions per platform.
-            // So we loop and fire individually or handle logic. For simplicity, we assume Ayrshare single call 
-            // OR we iterate. Let's iterate to be safe with custom captions.
-            
+            // 2. Prepare Payloads
             const activePlatforms = Object.entries(platforms).filter(([k, v]) => v).map(([k]) => k);
             
             if (activePlatforms.length === 0) throw new Error("Pilih minimal 1 platform.");
@@ -171,11 +177,11 @@ export const useSocialStudio = (
         state: { 
             selectedSourceType, searchTerm, selectedItem, 
             platforms, captions, activeTab, customImage, isLoading,
-            allItems, filteredItems
+            allItems, filteredItems, selectedTone
         },
         setters: {
             setSelectedSourceType, setSearchTerm, setPlatforms, 
-            setCaptions, setActiveTab, setCustomImage
+            setCaptions, setActiveTab, setCustomImage, setSelectedTone
         },
         actions: {
             selectItem,

@@ -3,8 +3,8 @@ import React, { useRef } from 'react';
 import { useSocialStudio } from './logic';
 import { SourceCard, CaptionEditor, PhoneMockup, PlatformIcon } from './ui-parts';
 import { Product, Article, GalleryItem } from '../../types';
-import { Search, UploadCloud, Rocket, Loader2, Image as ImageIcon } from 'lucide-react';
-import { ActiveTab } from './types';
+import { Search, UploadCloud, Rocket, Loader2, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { ActiveTab, SOCIAL_TONES } from './types';
 
 export const AdminSocialStudio = ({
     products, articles, gallery
@@ -125,6 +125,29 @@ export const AdminSocialStudio = ({
                             >
                                 <ImageIcon size={12}/> Ganti Gambar
                             </button>
+                        </div>
+                    </div>
+
+                    {/* NEW: TONE SELECTOR */}
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-3 flex items-center gap-2">
+                            <Sparkles size={12} className="text-brand-orange"/> Tone (Gaya Bahasa AI)
+                        </label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {SOCIAL_TONES.map(tone => (
+                                <button
+                                    key={tone.id}
+                                    onClick={() => setters.setSelectedTone(tone.id)}
+                                    className={`px-2 py-2 rounded text-[10px] font-bold text-center transition-all border ${
+                                        state.selectedTone === tone.id 
+                                        ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text' 
+                                        : 'bg-black/20 text-gray-400 border-white/10 hover:border-white/30 hover:text-white'
+                                    }`}
+                                    title={tone.desc}
+                                >
+                                    {tone.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
