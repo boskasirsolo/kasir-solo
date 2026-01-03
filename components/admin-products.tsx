@@ -479,8 +479,8 @@ export const AdminProducts = ({
   const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, generateAITitle, generateAIDesc, generateAIImage, generateAISpecs, generateAIIncludes, generateAIWhyBuy, listData } = useProductManager(products, setProducts);
 
   return (
-    // UPDATED HEIGHT CALCULATION: 100vh - 320px
-    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start h-[calc(100vh-320px)]">
+    // UPDATED HEIGHT CALCULATION: Fixed 850px to match other admin sections, ensuring scrollability
+    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start h-[850px]">
       
       {/* COLUMN 1: LIST (40%) */}
       <div className="lg:col-span-4 h-full">
