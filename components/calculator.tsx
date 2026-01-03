@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Check, Plus, Calculator, ArrowRight, RefreshCw } from 'lucide-react';
+import { Check, Plus, Calculator, ArrowRight, RefreshCw, Calendar, Clock } from 'lucide-react';
 import { formatRupiah } from '../utils';
 import { Button } from './ui';
 
@@ -38,21 +38,47 @@ export const InvestmentSimulator = ({
     }
   };
 
+  // Helper to detect frequency from label text
+  const getFrequency = (label: string): 'onetime' | 'monthly' | 'yearly' => {
+    const l = label.toLowerCase();
+    if (l.includes('per bulan') || l.includes('/ bulan') || l.includes('monthly')) return 'monthly';
+    if (l.includes('per tahun') || l.includes('/ tahun') || l.includes('yearly')) return 'yearly';
+    return 'onetime';
+  };
+
   const calculation = useMemo(() => {
     const base = data.baseOptions.find(o => o.id === selectedBase);
-    const basePrice = base ? base.price : 0;
     
-    const addonsPrice = data.addons
-      .filter(a => selectedAddons.includes(a.id))
-      .reduce((acc, curr) => acc + curr.price, 0);
+    let oneTimeTotal = 0;
+    let monthlyTotal = 0;
+    let yearlyTotal = 0;
 
-    const total = basePrice + addonsPrice;
-    
-    // Logic Range: Estimasi Total s/d Total + 20% (Buffer aman)
-    const min = total;
-    const max = total * 1.2;
+    // Process Base Option
+    if (base) {
+        const freq = getFrequency(base.label);
+        if (freq === 'monthly') monthlyTotal += base.price;
+        else if (freq === 'yearly') yearlyTotal += base.price;
+        else oneTimeTotal += base.price;
+    }
 
-    return { min, max, baseLabel: base?.label || '' };
+    // Process Addons
+    data.addons.filter(a => selectedAddons.includes(a.id)).forEach(addon => {
+        const freq = getFrequency(addon.label);
+        if (freq === 'monthly') monthlyTotal += addon.price;
+        else if (freq === 'yearly') yearlyTotal += addon.price;
+        else oneTimeTotal += addon.price;
+    });
+
+    // Helper to calculate range (Price to Price + 20%)
+    const getRange = (val: number) => ({ min: val, max: val * 1.2 });
+
+    return {
+        oneTime: getRange(oneTimeTotal),
+        monthly: getRange(monthlyTotal),
+        yearly: getRange(yearlyTotal),
+        baseLabel: base?.label || '',
+        hasSelection: !!base
+    };
   }, [selectedBase, selectedAddons, data]);
 
   const handleConsultation = () => {
@@ -63,10 +89,15 @@ export const InvestmentSimulator = ({
         .map(a => `- ${a.label}`)
         .join('\n');
 
+    let estimateText = "";
+    if (calculation.oneTime.min > 0) estimateText += `💰 Awal: ${formatRupiah(calculation.oneTime.min)} - ${formatRupiah(calculation.oneTime.max)} (Sekali Bayar)%0A`;
+    if (calculation.monthly.min > 0) estimateText += `📅 Rutin: ${formatRupiah(calculation.monthly.min)} (Per Bulan)%0A`;
+    if (calculation.yearly.min > 0) estimateText += `🗓 Rutin: ${formatRupiah(calculation.yearly.min)} (Per Tahun)%0A`;
+
     const message = `Halo Mas Amin, saya sudah simulasi investasi untuk *${serviceName}*:%0A%0A` +
                     `📦 *Base:* ${calculation.baseLabel}%0A` +
                     `🚀 *Add-ons:*%0A${addonsLabels || '(Tidak ada)'}%0A%0A` +
-                    `💰 *Estimasi Budget:* ${formatRupiah(calculation.min)} - ${formatRupiah(calculation.max)}%0A%0A` +
+                    `*Estimasi Budget:*%0A${estimateText}%0A` +
                     `Bisa diskusi detailnya?`;
     
     window.open(`https://wa.me/6282325103336?text=${message}`, '_blank');
@@ -164,23 +195,57 @@ export const InvestmentSimulator = ({
                   <Calculator size={120} />
                </div>
                
-               <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Estimasi Investasi</p>
+               <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4">Estimasi Investasi</p>
                
-               {selectedBase ? (
-                  <div className="space-y-1 animate-fade-in">
-                     <p className="text-4xl font-display font-bold text-white tracking-tight">
-                        {formatRupiah(calculation.min)}
-                     </p>
-                     <p className="text-sm text-gray-500">
-                        s/d {formatRupiah(calculation.max)}
-                     </p>
-                     <div className="my-4 h-px bg-white/10"></div>
+               {calculation.hasSelection ? (
+                  <div className="space-y-6 animate-fade-in">
+                     
+                     {/* ONE TIME TOTAL */}
+                     {calculation.oneTime.min > 0 && (
+                        <div>
+                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 flex items-center gap-1">
+                                <Clock size={10} className="text-brand-orange"/> Biaya Awal (Sekali Bayar)
+                            </p>
+                            <p className="text-3xl font-display font-bold text-white tracking-tight">
+                                {formatRupiah(calculation.oneTime.min)}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">
+                                s/d {formatRupiah(calculation.oneTime.max)}
+                            </p>
+                        </div>
+                     )}
+
+                     {/* MONTHLY TOTAL */}
+                     {calculation.monthly.min > 0 && (
+                        <div className="pt-4 border-t border-white/5">
+                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 flex items-center gap-1">
+                                <Calendar size={10} className="text-blue-400"/> Biaya Rutin Bulanan
+                            </p>
+                            <p className="text-2xl font-display font-bold text-blue-400 tracking-tight">
+                                {formatRupiah(calculation.monthly.min)}
+                            </p>
+                        </div>
+                     )}
+
+                     {/* YEARLY TOTAL */}
+                     {calculation.yearly.min > 0 && (
+                        <div className="pt-4 border-t border-white/5">
+                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 flex items-center gap-1">
+                                <RefreshCw size={10} className="text-green-400"/> Biaya Rutin Tahunan
+                            </p>
+                            <p className="text-2xl font-display font-bold text-green-400 tracking-tight">
+                                {formatRupiah(calculation.yearly.min)}
+                            </p>
+                        </div>
+                     )}
+
+                     <div className="mt-4 h-px bg-white/10"></div>
                      <p className="text-[10px] text-gray-400 italic leading-relaxed">
                         *Angka ini adalah estimasi kasar berdasarkan pilihan Anda. Harga final ditentukan setelah sesi konsultasi teknis.
                      </p>
                   </div>
                ) : (
-                  <div className="py-8 text-center opacity-50">
+                  <div className="py-12 text-center opacity-50">
                      <p className="text-xl font-bold text-gray-600">-- IDR --</p>
                      <p className="text-xs text-gray-500 mt-2">Pilih paket di kiri dulu</p>
                   </div>
