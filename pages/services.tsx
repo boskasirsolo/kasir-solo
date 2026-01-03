@@ -47,7 +47,8 @@ const WEBSITE_CALC: CalcData = {
     { id: 'copy', label: 'Professional Copywriting', price: 750000 },
     { id: 'seo_basic', label: 'SEO Setup Basic', price: 500000 },
     { id: 'wa_rotator', label: 'WhatsApp Rotator (CS Banyak)', price: 400000 },
-    { id: 'shipping', label: 'Integrasi Ekspedisi (Biteship)', price: 1500000, desc: 'Cek ongkir, Resi & Tracking Otomatis.' }
+    { id: 'shipping', label: 'Integrasi Ekspedisi (Ongkir/Resi)', price: 2000000, desc: 'Cek ongkir, Resi & Tracking Otomatis.' },
+    { id: 'ai_chat', label: 'Integrasi AI (Smart Chatbot)', price: 3000000, desc: 'Asisten virtual cerdas untuk jawab customer 24/7.' }
   ]
 };
 
@@ -83,7 +84,8 @@ const WEBAPP_CALC: CalcData = {
     { id: 'wa_notif', label: 'WhatsApp Notification Bot', price: 1500000 },
     { id: 'payment', label: 'Payment Gateway Integration', price: 2000000 },
     { id: 'mobile', label: 'Android App Wrapper (.APK)', price: 1500000 },
-    { id: 'logistics', label: 'Logistics API (Biteship)', price: 2000000, desc: 'Multi-kurir (JNE/J&T/Gojek), Pickup & Tracking.' }
+    { id: 'logistics', label: 'Integrasi Ekspedisi (Logistik)', price: 2000000, desc: 'Multi-kurir (JNE/J&T/Gojek), Pickup & Tracking.' },
+    { id: 'ai_insight', label: 'Integrasi AI (Smart Insight)', price: 3000000, desc: 'Analisa tren penjualan & prediksi stok otomatis.' }
   ]
 };
 
@@ -118,7 +120,8 @@ const SEO_CALC: CalcData = {
     { id: 'audit', label: 'Deep Technical Audit', price: 1000000 },
     { id: 'content', label: '10x SEO Articles / Month', price: 1500000 },
     { id: 'backlink', label: 'Authority Backlink Pack', price: 2000000 },
-    { id: 'speed', label: 'Speed Optimization (Core Web Vitals)', price: 1000000 }
+    { id: 'speed', label: 'Speed Optimization (Core Web Vitals)', price: 1000000 },
+    { id: 'ai_writer', label: 'Integrasi AI (Auto Content)', price: 3000000, desc: 'Generator artikel & deskripsi produk otomatis.' }
   ]
 };
 
@@ -152,7 +155,8 @@ const MAINTENANCE_CALC: CalcData = {
   addons: [
     { id: 'clean', label: 'Malware Removal (Sekali bayar)', price: 1000000 },
     { id: 'content', label: 'Jasa Update Konten / Artikel', price: 500000 },
-    { id: 'migrasi', label: 'Migrasi Server / Hosting', price: 750000 }
+    { id: 'migrasi', label: 'Migrasi Server / Hosting', price: 750000 },
+    { id: 'ai_guard', label: 'Integrasi AI (Smart Guard)', price: 3000000, desc: 'Deteksi anomali traffic & serangan siber otomatis.' }
   ]
 };
 
