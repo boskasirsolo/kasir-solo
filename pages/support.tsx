@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Download, FileText, Smartphone, Monitor, Search, 
@@ -51,7 +50,7 @@ const DownloadCard: React.FC<{ item: DownloadItem }> = ({ item }) => {
           href={item.file_url} 
           target="_blank" 
           rel="noreferrer"
-          className="w-full flex items-center justify-center gap-1 bg-white/5 hover:bg-brand-orange text-gray-300 hover:text-white py-2 rounded text-[10px] font-bold transition-all border border-white/10 hover:border-brand-orange"
+          className="w-full flex items-center justify-center gap-2 border border-brand-orange text-white hover:bg-brand-orange hover:text-white py-2.5 rounded text-[10px] font-bold transition-all shadow-[0_0_10px_rgba(255,95,31,0.1)] hover:shadow-action"
         >
           <Download size={12} /> DOWNLOAD
         </a>
@@ -154,9 +153,9 @@ export const SupportPage = () => {
       );
   };
 
-  const filteredDownloads = filterData(downloads, 'title');
-  const filteredTutorials = filterData(tutorials, 'title');
-  const filteredFaqs = filterData(faqs, 'question');
+  const filteredDownloads = filterData<DownloadItem>(downloads, 'title');
+  const filteredTutorials = filterData<Tutorial>(tutorials, 'title');
+  const filteredFaqs = filterData<FAQ>(faqs, 'question');
 
   const paginate = <T,>(data: T[], page: number, size: number): T[] => {
       const start = (page - 1) * size;
