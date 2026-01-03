@@ -479,7 +479,7 @@ export const AdminProducts = ({
   const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, generateAITitle, generateAIDesc, generateAIImage, generateAISpecs, generateAIIncludes, generateAIWhyBuy, listData } = useProductManager(products, setProducts);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start h-[85vh]">
+    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start h-[calc(100vh-150px)]">
       
       {/* COLUMN 1: LIST (40%) */}
       <div className="lg:col-span-4 h-full">
@@ -575,6 +575,22 @@ export const AdminProducts = ({
                     </div>
                 </div>
             </div>
+
+            {/* SPECS (Moved from Right Panel) */}
+            <div className="mt-2">
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1"><Scale size={10}/> Spesifikasi Utama</label>
+                    <button onClick={generateAISpecs} disabled={loadingState.generatingSpecs} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
+                        {loadingState.generatingSpecs ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Spec</>}
+                    </button>
+                </div>
+                <TextArea 
+                    value={form.specsStr} 
+                    onChange={e => setForm((prev:any) => ({...prev, specsStr: e.target.value}))} 
+                    placeholder="Contoh:&#10;RAM: 4GB&#10;OS: Windows 10" 
+                    className="h-24 text-[10px] leading-relaxed custom-scrollbar whitespace-pre-line font-mono" 
+                />
+            </div>
          </div>
       </div>
 
@@ -607,22 +623,6 @@ export const AdminProducts = ({
                     </button>
                 </div>
                 <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-24 text-[10px] leading-relaxed custom-scrollbar whitespace-pre-line" />
-            </div>
-
-            {/* SPECS */}
-            <div>
-                <div className="flex justify-between items-center mb-1">
-                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1"><Scale size={10}/> Spesifikasi Utama</label>
-                    <button onClick={generateAISpecs} disabled={loadingState.generatingSpecs} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
-                        {loadingState.generatingSpecs ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Spec</>}
-                    </button>
-                </div>
-                <TextArea 
-                    value={form.specsStr} 
-                    onChange={e => setForm((prev:any) => ({...prev, specsStr: e.target.value}))} 
-                    placeholder="Contoh:&#10;RAM: 4GB&#10;OS: Windows 10" 
-                    className="h-20 text-[10px] leading-relaxed custom-scrollbar whitespace-pre-line font-mono" 
-                />
             </div>
 
             {/* INCLUDES */}
