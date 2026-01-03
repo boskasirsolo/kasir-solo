@@ -15,6 +15,13 @@ export interface PlatformState {
     instagram: boolean;
     facebook: boolean;
     linkedin: boolean;
+    tiktok: boolean;
+    twitter: boolean;
+    gmb: boolean; // Google Business Profile
+    pinterest: boolean;
+    telegram: boolean;
+    youtube: boolean;
+    threads: boolean;
 }
 
 export interface CaptionState {
@@ -22,9 +29,16 @@ export interface CaptionState {
     instagram: string;
     facebook: string;
     linkedin: string;
+    tiktok: string;
+    twitter: string;
+    gmb: string;
+    pinterest: string;
+    telegram: string;
+    youtube: string;
+    threads: string;
 }
 
-export type ActiveTab = 'master' | 'instagram' | 'facebook' | 'linkedin';
+export type ActiveTab = 'master' | keyof PlatformState;
 
 export interface SocialTone {
     id: string;

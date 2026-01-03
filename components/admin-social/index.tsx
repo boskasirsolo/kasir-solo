@@ -4,7 +4,14 @@ import { useSocialStudio } from './logic';
 import { SourceCard, CaptionEditor, PhoneMockup, PlatformIcon } from './ui-parts';
 import { Product, Article, GalleryItem } from '../../types';
 import { Search, UploadCloud, Rocket, Loader2, Image as ImageIcon, Sparkles, Check, ChevronLeft, ChevronRight } from 'lucide-react';
-import { ActiveTab, SOCIAL_TONES } from './types';
+import { ActiveTab, SOCIAL_TONES, PlatformState } from './types';
+
+// List of all supported platforms for UI loops
+const ALL_PLATFORMS: (keyof PlatformState)[] = [
+    'instagram', 'facebook', 'linkedin', 'tiktok', 
+    'twitter', 'gmb', 'pinterest', 'telegram', 
+    'youtube', 'threads'
+];
 
 export const AdminSocialStudio = ({
     products, articles, gallery
@@ -100,15 +107,15 @@ export const AdminSocialStudio = ({
                 )}
 
                 {/* Platform Toggles */}
-                <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">2. The Composer</h3>
-                    <div className="flex gap-2">
-                        {['instagram', 'facebook', 'linkedin'].map(plat => (
+                <div className="p-4 border-b border-white/5 flex flex-col gap-2 bg-black/20">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">2. Target Platform</h3>
+                    <div className="flex gap-2 flex-wrap">
+                        {ALL_PLATFORMS.map(plat => (
                             <button
                                 key={plat}
-                                onClick={() => setters.setPlatforms(p => ({...p, [plat]: !p[plat as keyof typeof p]}))}
+                                onClick={() => setters.setPlatforms(p => ({...p, [plat]: !p[plat]}))}
                                 className={`p-2 rounded-lg border transition-all ${
-                                    state.platforms[plat as keyof typeof state.platforms] 
+                                    state.platforms[plat] 
                                     ? 'bg-blue-500/20 border-blue-500 text-blue-400' 
                                     : 'bg-white/5 border-white/10 text-gray-600'
                                 }`}
@@ -192,20 +199,30 @@ export const AdminSocialStudio = ({
                         </div>
                     </div>
 
-                    {/* Caption Tabs */}
+                    {/* Caption Tabs - SCROLLABLE HEADER */}
                     <div className="flex flex-col h-[400px]">
-                        <div className="flex gap-1 border-b border-white/10">
-                            {['master', 'instagram', 'facebook', 'linkedin'].map(tab => (
+                        <div className="flex gap-1 border-b border-white/10 overflow-x-auto custom-scrollbar pb-1">
+                            <button
+                                onClick={() => setters.setActiveTab('master')}
+                                className={`px-4 py-2 text-[10px] font-bold uppercase rounded-t-lg transition-all flex items-center gap-2 whitespace-nowrap ${
+                                    state.activeTab === 'master' 
+                                    ? 'bg-brand-orange text-white' 
+                                    : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                                }`}
+                            >
+                                MASTER
+                            </button>
+                            {ALL_PLATFORMS.filter(p => state.platforms[p]).map(tab => (
                                 <button
                                     key={tab}
                                     onClick={() => setters.setActiveTab(tab as ActiveTab)}
-                                    className={`px-4 py-2 text-[10px] font-bold uppercase rounded-t-lg transition-all flex items-center gap-2 ${
+                                    className={`px-4 py-2 text-[10px] font-bold uppercase rounded-t-lg transition-all flex items-center gap-2 whitespace-nowrap ${
                                         state.activeTab === tab 
                                         ? 'bg-brand-orange text-white' 
                                         : 'bg-white/5 text-gray-500 hover:bg-white/10'
                                     }`}
                                 >
-                                    {tab === 'master' ? 'MASTER' : <PlatformIcon id={tab} size={12}/>}
+                                    <PlatformIcon id={tab} size={12}/>
                                 </button>
                             ))}
                         </div>

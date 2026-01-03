@@ -3,16 +3,26 @@ import React from 'react';
 import { 
     Instagram, Facebook, Linkedin, Image as ImageIcon, 
     Monitor, ShoppingBag, FileText, Briefcase, 
-    Sparkles, UploadCloud, Rocket, RefreshCw, Smartphone
+    Sparkles, UploadCloud, Rocket, RefreshCw, Smartphone,
+    Twitter, MapPin, Music2, Pin, Send, Youtube, AtSign
 } from 'lucide-react';
 import { SocialContentItem } from './types';
 
 // --- ICONS ---
 export const PlatformIcon = ({ id, size=16 }: { id: string, size?: number }) => {
-    if (id === 'instagram') return <Instagram size={size} className="text-pink-500" />;
-    if (id === 'facebook') return <Facebook size={size} className="text-blue-500" />;
-    if (id === 'linkedin') return <Linkedin size={size} className="text-blue-700" />;
-    return <Monitor size={size} />;
+    switch (id) {
+        case 'instagram': return <Instagram size={size} className="text-pink-500" />;
+        case 'facebook': return <Facebook size={size} className="text-blue-600" />;
+        case 'linkedin': return <Linkedin size={size} className="text-blue-700" />;
+        case 'twitter': return <Twitter size={size} className="text-sky-500" />; // X / Twitter
+        case 'tiktok': return <Music2 size={size} className="text-black dark:text-white" />;
+        case 'gmb': return <MapPin size={size} className="text-blue-500" />; // Google Business
+        case 'pinterest': return <Pin size={size} className="text-red-600" />;
+        case 'telegram': return <Send size={size} className="text-blue-400" />;
+        case 'youtube': return <Youtube size={size} className="text-red-600" />;
+        case 'threads': return <AtSign size={size} className="text-black dark:text-white" />;
+        default: return <Monitor size={size} />;
+    }
 };
 
 export const TypeIcon = ({ type }: { type: string }) => {

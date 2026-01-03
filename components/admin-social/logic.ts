@@ -21,8 +21,17 @@ export const useSocialStudio = (
     const [selectedItem, setSelectedItem] = useState<SocialContentItem | null>(null);
     
     // Composer State
-    const [platforms, setPlatforms] = useState<PlatformState>({ instagram: true, facebook: true, linkedin: false });
-    const [captions, setCaptions] = useState<CaptionState>({ master: '', instagram: '', facebook: '', linkedin: '' });
+    const [platforms, setPlatforms] = useState<PlatformState>({ 
+        instagram: true, facebook: true, linkedin: false,
+        tiktok: false, twitter: false, gmb: false,
+        pinterest: false, telegram: false, youtube: false, threads: false
+    });
+    
+    const [captions, setCaptions] = useState<CaptionState>({ 
+        master: '', instagram: '', facebook: '', linkedin: '',
+        tiktok: '', twitter: '', gmb: '', pinterest: '', telegram: '', youtube: '', threads: ''
+    });
+
     const [activeTab, setActiveTab] = useState<ActiveTab>('master');
     const [customImage, setCustomImage] = useState<string | null>(null);
     const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -97,7 +106,14 @@ export const useSocialStudio = (
             master: baseCaption,
             instagram: baseCaption,
             facebook: baseCaption,
-            linkedin: baseCaption
+            linkedin: baseCaption,
+            tiktok: baseCaption,
+            twitter: baseCaption,
+            gmb: baseCaption,
+            pinterest: baseCaption,
+            telegram: baseCaption,
+            youtube: baseCaption,
+            threads: baseCaption
         });
         setActiveTab('master');
     };
@@ -123,7 +139,7 @@ export const useSocialStudio = (
         setCustomImage(URL.createObjectURL(file));
     };
 
-    const generateAICaption = async (platform: 'master' | 'instagram' | 'facebook' | 'linkedin') => {
+    const generateAICaption = async (platform: ActiveTab) => {
         if (!selectedItem) return alert("Pilih konten dulu.");
         setIsLoading(p => ({...p, ai: true}));
 
@@ -134,31 +150,73 @@ export const useSocialStudio = (
                 return t ? `${t.label} (${t.desc})` : '';
             }).join(' + ');
 
+            // --- PLATFORM SPECIFIC CONTEXT RULES ---
             let platformContext = "";
-            if (platform === 'instagram') {
-                platformContext = `
-                PLATFORM: INSTAGRAM
-                - Strategy: Visual-first, Engaging, Save-able content.
-                - Hashtag Rules: Research 20-25 high-traffic & niche hashtags. Place them in a block at the bottom.
-                - Formatting: Clean line breaks. Use relevant emojis.
-                `;
-            } else if (platform === 'facebook') {
-                platformContext = `
-                PLATFORM: FACEBOOK
-                - Strategy: Community building, Share-able, Conversational.
-                - Keyword Rules: Weave 3-5 keywords naturally into sentences (e.g. "Solusi #KasirOnline terbaik...").
-                - Hashtags: Max 3-5 tags at the bottom. Focus on groups/community tags.
-                `;
-            } else if (platform === 'linkedin') {
-                platformContext = `
-                PLATFORM: LINKEDIN
-                - Strategy: Professional Insight, B2B Value, Thought Leadership.
-                - Keyword Rules: Use industry standard terms (ERP, ROI, Efficiency).
-                - Hashtags: Strictly 3-5 professional tags (e.g., #RetailTech #BusinessGrowth).
-                - Tone Adjustment: Make it slightly more formal/smart but keep the 'Gritty' edge.
-                `;
-            } else {
-                platformContext = "PLATFORM: GENERAL SOCIAL MEDIA. Balanced approach.";
+            switch (platform) {
+                case 'instagram':
+                    platformContext = `PLATFORM: INSTAGRAM
+                    - Strategy: Visual-first, Save-able content.
+                    - Hashtags: 20-25 high-traffic & niche tags at the bottom.
+                    - Formatting: Clean line breaks. Use relevant emojis.`;
+                    break;
+                case 'facebook':
+                    platformContext = `PLATFORM: FACEBOOK
+                    - Strategy: Community building, Share-able.
+                    - Keyword Rules: Weave 3-5 keywords naturally.
+                    - Hashtags: Max 3-5 community tags.`;
+                    break;
+                case 'linkedin':
+                    platformContext = `PLATFORM: LINKEDIN
+                    - Strategy: Professional, B2B Value, Thought Leadership.
+                    - Keyword Rules: Use industry standard terms (ROI, Efficiency).
+                    - Hashtags: 3-5 professional tags.
+                    - Tone Adjustment: Slightly more formal but keep the 'Gritty' edge.`;
+                    break;
+                case 'tiktok':
+                    platformContext = `PLATFORM: TIKTOK (Video Description)
+                    - Strategy: Hooks viewers in 1st second. Viral potential.
+                    - Content: Write a "Script Teaser" or "Hook Text" for the video caption.
+                    - Hashtags: #FYP #BisnisViral #KasirSolo (Mix broad & niche).`;
+                    break;
+                case 'twitter':
+                    platformContext = `PLATFORM: TWITTER / X
+                    - Strategy: Concise, Punchy, Thread-starter style.
+                    - Constraint: MAX 280 characters for the main hook.
+                    - Format: "Hook statement" -> "Link" -> "Tags".`;
+                    break;
+                case 'gmb':
+                    platformContext = `PLATFORM: GOOGLE BUSINESS PROFILE (Update)
+                    - Strategy: Local SEO, Driving physical visits/calls.
+                    - Content: Focus on "News", "Offer", or "Stock Update".
+                    - Keywords: Mention "Solo", "Terdekat", "Toko Kasir".
+                    - Call to Action: "Kunjungi toko kami" or "Telepon sekarang".`;
+                    break;
+                case 'pinterest':
+                    platformContext = `PLATFORM: PINTEREST
+                    - Strategy: Visual Discovery, Evergreen.
+                    - Content: Description should be keyword-rich for search (SEO).
+                    - Focus: "Inspirasi", "Ide Usaha", "Setup Kasir".`;
+                    break;
+                case 'telegram':
+                    platformContext = `PLATFORM: TELEGRAM CHANNEL
+                    - Strategy: Exclusive Broadcast, "Inner Circle" vibes.
+                    - Tone: "Bro, gue ada info penting..." (Direct & Personal).
+                    - Content: Short update with direct link.`;
+                    break;
+                case 'youtube':
+                    platformContext = `PLATFORM: YOUTUBE (Description)
+                    - Strategy: Searchable, Informative.
+                    - Structure: Hook (2 lines) -> Link -> Detailed benefits -> Timestamps (optional).
+                    - Keywords: High volume keywords for YouTube Search.`;
+                    break;
+                case 'threads':
+                    platformContext = `PLATFORM: THREADS
+                    - Strategy: Conversational, Provocative questions.
+                    - Tone: Casual, "Twitter-like" but friendlier.
+                    - Length: Short & sweet.`;
+                    break;
+                default:
+                    platformContext = "PLATFORM: GENERAL SOCIAL MEDIA. Balanced approach.";
             }
 
             const prompt = `
