@@ -46,10 +46,10 @@ const WEBSITE_CALC: CalcData = {
     { id: 'domain', label: 'Domain .COM / .ID', price: 300000 },
     { id: 'copy', label: 'Copywriting', price: 750000 },
     { id: 'seo_basic', label: 'SEO Setup Basic', price: 500000 },
-    { id: 'wa_rotator', label: 'WhatsApp Rotator', price: 1200000, desc: 'Lisensi tool rotasi CS.' },
-    { id: 'payment', label: 'Payment Gateway', price: 2000000, desc: 'Setup Integrasi QRIS/VA.' },
+    { id: 'wa_rotator', label: 'Integrasi WhatsApp', price: 1200000, desc: 'Rotator CS & Notifikasi.' },
+    { id: 'payment', label: 'Integrasi Payment Gateway', price: 2000000, desc: 'QRIS & Virtual Account.' },
     { id: 'shipping', label: 'Integrasi Ekspedisi', price: 2000000, desc: 'Cek ongkir otomatis.' },
-    { id: 'ai_chat', label: 'Integrasi AI Chatbot', price: 3000000, desc: 'Setup awal agen cerdas.' }
+    { id: 'ai_chat', label: 'Integrasi AI', price: 3000000, desc: 'Chatbot & Otomasi Cerdas.' }
   ]
 };
 
@@ -82,11 +82,11 @@ const WEBAPP_CALC: CalcData = {
   addonLabel: "Modul Tambahan",
   addons: [
     { id: 'server', label: 'Cloud Server / VPS', price: 1500000, desc: 'Setup environment server.' },
-    { id: 'wa_notif', label: 'WA Bot Notification', price: 1200000, desc: 'Notifikasi otomatis ke WA.' },
-    { id: 'payment', label: 'Payment Gateway', price: 2000000 },
+    { id: 'wa_notif', label: 'Integrasi WhatsApp', price: 1200000, desc: 'Notifikasi & Laporan WA.' },
+    { id: 'payment', label: 'Integrasi Payment Gateway', price: 2000000 },
     { id: 'mobile', label: 'Android APK Wrapper', price: 1500000 },
-    { id: 'logistics', label: 'Integrasi Kurir API', price: 2000000, desc: 'Multi-kurir (JNE/J&T/Gojek).' },
-    { id: 'ai_insight', label: 'AI Prediction Module', price: 3000000, desc: 'Analisa forecasting otomatis.' }
+    { id: 'logistics', label: 'Integrasi Ekspedisi', price: 2000000, desc: 'Tracking & Ongkir.' },
+    { id: 'ai_insight', label: 'Integrasi AI', price: 3000000, desc: 'Analisa & Prediksi Data.' }
   ]
 };
 
