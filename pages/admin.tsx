@@ -259,7 +259,7 @@ export const AdminDashboard = ({
              </div>
 
              {storeSubTab === 'orders' ? (
-                <AdminOrders />
+                <AdminOrders config={config} /> 
              ) : (
                 <AdminProducts products={products} setProducts={setProducts} />
              )}
