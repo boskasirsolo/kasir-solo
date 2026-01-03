@@ -37,19 +37,19 @@ const WEBSITE_CALC: CalcData = {
   subtitle: "Cek estimasi biaya pembuatan aset digital Anda.",
   baseLabel: "Pilih Skala Website",
   baseOptions: [
-    { id: 'lp', label: 'Landing Page (Sekali Bayar)', price: 1500000, desc: 'Fokus konversi satu produk/jasa.' },
-    { id: 'compro', label: 'Company Profile (Sekali Bayar)', price: 3500000, desc: 'Branding perusahaan lengkap + Blog.' },
-    { id: 'toko', label: 'Toko Online (Sekali Bayar)', price: 6500000, desc: 'Fitur keranjang belanja & katalog produk.' }
+    { id: 'lp', label: 'Landing Page', price: 1500000, desc: 'Fokus konversi satu produk/jasa.' },
+    { id: 'compro', label: 'Company Profile', price: 3500000, desc: 'Branding perusahaan lengkap + Blog.' },
+    { id: 'toko', label: 'Toko Online', price: 6500000, desc: 'Fitur keranjang belanja & katalog produk.' }
   ],
   addonLabel: "Fitur Tambahan (Power-Ups)",
   addons: [
-    { id: 'domain', label: 'Domain .COM / .ID (Per Tahun)', price: 300000 },
-    { id: 'copy', label: 'Copywriting (Sekali Bayar)', price: 750000 },
-    { id: 'seo_basic', label: 'SEO Setup Basic (Sekali Bayar)', price: 500000 },
-    { id: 'wa_rotator', label: 'WhatsApp Rotator (Per Tahun)', price: 400000, desc: 'Lisensi tool rotasi CS.' },
-    { id: 'payment', label: 'Payment Gateway (Per Tahun)', price: 2000000, desc: 'Maintenance Plugin & Renew License.' },
-    { id: 'shipping', label: 'Integrasi Ekspedisi (Per Tahun)', price: 2000000, desc: 'Lisensi API Cek Ongkir Real-time.' },
-    { id: 'ai_chat', label: 'Integrasi AI Chatbot (Per Bulan)', price: 3000000, desc: 'Biaya server & token AI response.' }
+    { id: 'domain', label: 'Domain .COM / .ID', price: 300000 },
+    { id: 'copy', label: 'Copywriting', price: 750000 },
+    { id: 'seo_basic', label: 'SEO Setup Basic', price: 500000 },
+    { id: 'wa_rotator', label: 'WhatsApp Rotator', price: 400000, desc: 'Lisensi tool rotasi CS.' },
+    { id: 'payment', label: 'Payment Gateway', price: 2000000, desc: 'Setup Integrasi QRIS/VA.' },
+    { id: 'shipping', label: 'Integrasi Ekspedisi', price: 2000000, desc: 'Cek ongkir otomatis.' },
+    { id: 'ai_chat', label: 'Integrasi AI Chatbot', price: 3000000, desc: 'Setup awal agen cerdas.' }
   ]
 };
 
@@ -75,18 +75,18 @@ const WEBAPP_CALC: CalcData = {
   subtitle: "Rancang sistem sesuai alur bisnis unik Anda.",
   baseLabel: "Kompleksitas Sistem",
   baseOptions: [
-    { id: 'simple', label: 'Simple CRUD (Sekali Bayar)', price: 5000000, desc: 'Pencatatan data sederhana & Laporan.' },
-    { id: 'mid', label: 'Business Op (Sekali Bayar)', price: 12000000, desc: 'Stok, Keuangan, Kasir, Multi-User.' },
-    { id: 'high', label: 'Enterprise ERP (Sekali Bayar)', price: 25000000, desc: 'Manufaktur, HR, API, Custom Logic.' }
+    { id: 'simple', label: 'Simple CRUD', price: 5000000, desc: 'Pencatatan data sederhana & Laporan.' },
+    { id: 'mid', label: 'Business Op', price: 12000000, desc: 'Stok, Keuangan, Kasir, Multi-User.' },
+    { id: 'high', label: 'Enterprise ERP', price: 25000000, desc: 'Manufaktur, HR, API, Custom Logic.' }
   ],
   addonLabel: "Modul Tambahan",
   addons: [
-    { id: 'server', label: 'Cloud Server / VPS (Per Tahun)', price: 1500000, desc: 'Sewa server dedicated.' },
-    { id: 'wa_notif', label: 'WA Bot Notification (Per Bulan)', price: 500000, desc: 'Biaya langganan API WhatsApp.' },
-    { id: 'payment', label: 'Payment Gateway (Per Tahun)', price: 2000000 },
-    { id: 'mobile', label: 'Android APK Wrapper (Sekali Bayar)', price: 1500000 },
-    { id: 'logistics', label: 'Integrasi Kurir API (Per Tahun)', price: 2000000, desc: 'Multi-kurir (JNE/J&T/Gojek).' },
-    { id: 'ai_insight', label: 'AI Prediction Module (Per Bulan)', price: 3000000, desc: 'Analisa forecasting otomatis.' }
+    { id: 'server', label: 'Cloud Server / VPS', price: 1500000, desc: 'Setup environment server.' },
+    { id: 'wa_notif', label: 'WA Bot Notification', price: 500000, desc: 'Notifikasi otomatis ke WA.' },
+    { id: 'payment', label: 'Payment Gateway', price: 2000000 },
+    { id: 'mobile', label: 'Android APK Wrapper', price: 1500000 },
+    { id: 'logistics', label: 'Integrasi Kurir API', price: 2000000, desc: 'Multi-kurir (JNE/J&T/Gojek).' },
+    { id: 'ai_insight', label: 'AI Prediction Module', price: 3000000, desc: 'Analisa forecasting otomatis.' }
   ]
 };
 
@@ -112,17 +112,17 @@ const SEO_CALC: CalcData = {
   subtitle: "Bukan biaya, tapi investasi traffic jangka panjang.",
   baseLabel: "Target Kompetisi",
   baseOptions: [
-    { id: 'local', label: 'Local SEO (Per Bulan)', price: 2500000, desc: 'Dominasi pencarian nama kota.' },
-    { id: 'niche', label: 'Niche Market (Per Bulan)', price: 5000000, desc: 'Target kata kunci spesifik produk.' },
-    { id: 'high', label: 'High Competition (Per Bulan)', price: 10000000, desc: 'Industri padat (Properti, Kesehatan).' }
+    { id: 'local', label: 'Local SEO', price: 2500000, desc: 'Dominasi pencarian nama kota.' },
+    { id: 'niche', label: 'Niche Market', price: 5000000, desc: 'Target kata kunci spesifik produk.' },
+    { id: 'high', label: 'High Competition', price: 10000000, desc: 'Industri padat (Properti, Kesehatan).' }
   ],
   addonLabel: "Booster Pack",
   addons: [
-    { id: 'audit', label: 'Deep Technical Audit (Sekali Bayar)', price: 1000000 },
-    { id: 'content', label: '10x Artikel SEO (Per Paket)', price: 1500000 },
-    { id: 'backlink', label: 'Backlink Pack (Per Paket)', price: 2000000 },
-    { id: 'speed', label: 'Speed Optimization (Sekali Bayar)', price: 1000000 },
-    { id: 'ai_writer', label: 'Setup AI Content (Sekali Bayar)', price: 3000000, desc: 'Generator artikel otomatis.' }
+    { id: 'audit', label: 'Deep Technical Audit', price: 1000000 },
+    { id: 'content', label: '10x Artikel SEO', price: 1500000 },
+    { id: 'backlink', label: 'Backlink Pack', price: 2000000 },
+    { id: 'speed', label: 'Speed Optimization', price: 1000000 },
+    { id: 'ai_writer', label: 'Setup AI Content', price: 3000000, desc: 'Generator artikel otomatis.' }
   ]
 };
 
@@ -148,16 +148,16 @@ const MAINTENANCE_CALC: CalcData = {
   subtitle: "Asuransi kesehatan untuk website bisnis Anda.",
   baseLabel: "Paket Bulanan",
   baseOptions: [
-    { id: 'basic', label: 'Basic Guard (Per Bulan)', price: 500000, desc: 'Backup mingguan & Update plugin.' },
-    { id: 'pro', label: 'Business Pro (Per Bulan)', price: 1500000, desc: 'Backup harian, Security Scan, Uptime.' },
-    { id: 'vip', label: 'Enterprise VIP (Per Bulan)', price: 3000000, desc: 'Priority Support, Custom Dev Hours.' }
+    { id: 'basic', label: 'Basic Guard', price: 500000, desc: 'Backup mingguan & Update plugin.' },
+    { id: 'pro', label: 'Business Pro', price: 1500000, desc: 'Backup harian, Security Scan, Uptime.' },
+    { id: 'vip', label: 'Enterprise VIP', price: 3000000, desc: 'Priority Support, Custom Dev Hours.' }
   ],
   addonLabel: "Add-on Services",
   addons: [
-    { id: 'clean', label: 'Malware Removal (Sekali Bayar)', price: 1000000 },
-    { id: 'content', label: 'Update Konten (Per Paket)', price: 500000 },
-    { id: 'migrasi', label: 'Migrasi Server (Sekali Bayar)', price: 750000 },
-    { id: 'ai_guard', label: 'AI Security Monitor (Per Bulan)', price: 3000000, desc: 'Deteksi anomali traffic.' }
+    { id: 'clean', label: 'Malware Removal', price: 1000000 },
+    { id: 'content', label: 'Update Konten', price: 500000 },
+    { id: 'migrasi', label: 'Migrasi Server', price: 750000 },
+    { id: 'ai_guard', label: 'AI Security Monitor', price: 3000000, desc: 'Deteksi anomali traffic.' }
   ]
 };
 
