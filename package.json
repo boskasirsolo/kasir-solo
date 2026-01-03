@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:sosmed": "npx supabase functions deploy ayrshare-post --no-verify-jwt"
   },
   "dependencies": {
     "@google/genai": "*",
@@ -25,7 +26,8 @@
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.6"
+    "vite": "^5.1.6",
+    "supabase": "^1.145.4"
   },
   "overrides": {
     "react": "18.2.0",

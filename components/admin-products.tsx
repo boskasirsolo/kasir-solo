@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw, Filter, List, Scale, ThumbsUp } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw, Filter, List, Scale, ThumbsUp, Share2, MapPin, Facebook, Instagram, Rocket, AlertCircle } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, formatRupiah, callGeminiWithRotation, formatNumberInput, cleanNumberInput, slugify, renameFile } from '../utils';
@@ -36,6 +36,18 @@ const useProductManager = (
         uploadFile: null as File | null
     });
 
+    // --- SOCIAL MEDIA STATE ---
+    const [socialCaption, setSocialCaption] = useState('');
+    const [selectedPlatforms, setSelectedPlatforms] = useState({
+        instagram: true,
+        facebook: true,
+        gmb: false
+    });
+    const [socialLoading, setSocialLoading] = useState({
+        generating: false,
+        posting: false
+    });
+
     const [loadingState, setLoadingState] = useState({
         generatingTitle: false,
         generatingDesc: false,
@@ -69,6 +81,7 @@ const useProductManager = (
             imagePreview: '',
             uploadFile: null
         });
+        setSocialCaption('');
     };
 
     const handleEditClick = (p: Product) => {
@@ -100,6 +113,7 @@ const useProductManager = (
             imagePreview: p.image,
             uploadFile: null
         });
+        setSocialCaption('');
     };
 
     // --- AI GENERATORS ---
@@ -221,6 +235,80 @@ const useProductManager = (
         finally { setLoadingState(prev => ({ ...prev, generatingWhyBuy: false })); }
     };
 
+    // --- SOCIAL BROADCAST LOGIC (UPDATED FOR VERCEL) ---
+    const generateSocialCaptionAI = async () => {
+        if (!form.name) return alert("Nama produk wajib diisi.");
+        setSocialLoading(p => ({ ...p, generating: true }));
+        
+        try {
+            const prompt = `
+            Role: Social Media Manager for "PT Mesin Kasir Solo".
+            Task: Write a viral Instagram/Facebook caption for product: "${form.name}".
+            Price: ${form.price || "Terjangkau"}.
+            Features Context: ${form.shortDesc || form.desc.substring(0, 100)}.
+            
+            Style:
+            - Fun, Engaging, Emoji-rich.
+            - Focus on "Solusi Anti Ribet" & "Omzet Naik".
+            - Include Call to Action (DM / WA).
+            - Include 5-10 relevant hashtags for Indonesian SMEs (#MesinKasir #UMKM #KasirSolo etc).
+            - Format: Clean spacing.
+            
+            Output: JUST the caption text.
+            `;
+            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+            setSocialCaption(res.text?.trim() || '');
+        } catch(e) { alert("Gagal generate caption sosmed."); }
+        finally { setSocialLoading(p => ({ ...p, generating: false })); }
+    };
+
+    const handleSocialBroadcast = async () => {
+        if (!form.id) return alert("Simpan produk terlebih dahulu sebelum broadcast.");
+        if (!socialCaption) return alert("Caption tidak boleh kosong.");
+        
+        // Safety Check for Local Blob URL
+        if (form.imagePreview.startsWith('blob:')) {
+            return alert("Gambar masih bersifat lokal. Mohon klik 'UPDATE PRODUK' dulu untuk upload gambar ke server, baru lakukan broadcast.");
+        }
+
+        const activePlatforms = Object.entries(selectedPlatforms)
+            .filter(([_, isActive]) => isActive)
+            .map(([key]) => key);
+
+        if (activePlatforms.length === 0) return alert("Pilih minimal 1 platform tujuan.");
+
+        setSocialLoading(p => ({ ...p, posting: true }));
+
+        try {
+            // UPDATED: Call Vercel API Route instead of Supabase Function
+            const response = await fetch('/api/ayrshare', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    caption: socialCaption,
+                    image_url: form.imagePreview,
+                    platforms: activePlatforms,
+                    title: form.name
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Gagal broadcast (Server Error)");
+            }
+
+            alert(`Sukses! Broadcast terkirim ke: ${activePlatforms.join(', ')}.`);
+        } catch(e: any) {
+            console.error("Broadcast Error:", e);
+            alert(`Gagal broadcast: ${e.message}. \n\nPastikan 'AYRSHARE_API_KEY' sudah diset di Vercel Settings.`);
+        } finally {
+            setSocialLoading(p => ({ ...p, posting: false }));
+        }
+    };
+
     const generateAIImage = async () => {
         if (!form.name) return alert("Isi Nama Produk untuk referensi gambar.");
         setLoadingState(p => ({...p, generatingImage: true}));
@@ -304,7 +392,9 @@ const useProductManager = (
                 setProducts([{ ...dbData, id: newId, image: finalImageUrl }, ...products]);
                 if (supabase) await supabase.from('products').insert([dbData]);
             }
-            resetForm();
+            // IF NEWLY CREATED, SET ID TO FORM SO WE CAN BROADCAST IMMEDIATELY WITHOUT RESET
+            // IF EDITING, KEEP IT.
+            // resetForm(); // CHANGED: Don't reset immediately to allow broadcast flow
             alert("Berhasil disimpan!");
         } catch (e) { console.error(e); alert("Gagal menyimpan."); }
         finally { setLoadingState(prev => ({ ...prev, uploading: false })); }
@@ -339,6 +429,13 @@ const useProductManager = (
         generateAIIncludes,
         generateAIWhyBuy,
         generateAIImage,
+        // Social Props
+        socialCaption, setSocialCaption,
+        selectedPlatforms, setSelectedPlatforms,
+        socialLoading,
+        generateSocialCaptionAI,
+        handleSocialBroadcast,
+        // List Props
         listData: { 
             paginated, 
             totalPages, 
@@ -476,7 +573,13 @@ export const AdminProducts = ({
   products: Product[], 
   setProducts: (p: Product[]) => void 
 }) => {
-  const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, generateAITitle, generateAIDesc, generateAIImage, generateAISpecs, generateAIIncludes, generateAIWhyBuy, listData } = useProductManager(products, setProducts);
+  const { 
+      form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, 
+      generateAITitle, generateAIDesc, generateAIImage, generateAISpecs, generateAIIncludes, generateAIWhyBuy, 
+      // Social props
+      socialCaption, setSocialCaption, selectedPlatforms, setSelectedPlatforms, socialLoading, generateSocialCaptionAI, handleSocialBroadcast,
+      listData 
+  } = useProductManager(products, setProducts);
 
   return (
     // UPDATED HEIGHT CALCULATION: Fixed 850px to match other admin sections, ensuring scrollability
@@ -615,6 +718,70 @@ export const AdminProducts = ({
          </div>
 
          <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-4">
+            
+            {/* --- SOCIAL MEDIA BROADCAST PANEL (NEW) --- */}
+            <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 p-4 rounded-xl border border-purple-500/30 shadow-lg">
+                <div className="flex justify-between items-center mb-3">
+                    <h4 className="text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <Share2 size={12} className="text-purple-400"/> Social Broadcast
+                    </h4>
+                    <div className="flex gap-1">
+                        <button 
+                            onClick={() => setSelectedPlatforms(p => ({...p, instagram: !p.instagram}))}
+                            className={`p-1.5 rounded transition-all ${selectedPlatforms.instagram ? 'bg-pink-600 text-white' : 'bg-white/10 text-gray-500'}`}
+                            title="Instagram"
+                        >
+                            <Instagram size={12} />
+                        </button>
+                        <button 
+                            onClick={() => setSelectedPlatforms(p => ({...p, facebook: !p.facebook}))}
+                            className={`p-1.5 rounded transition-all ${selectedPlatforms.facebook ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-500'}`}
+                            title="Facebook"
+                        >
+                            <Facebook size={12} />
+                        </button>
+                        <button 
+                            onClick={() => setSelectedPlatforms(p => ({...p, gmb: !p.gmb}))}
+                            className={`p-1.5 rounded transition-all ${selectedPlatforms.gmb ? 'bg-green-600 text-white' : 'bg-white/10 text-gray-500'}`}
+                            title="Google Maps"
+                        >
+                            <MapPin size={12} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="relative mb-2">
+                    <textarea 
+                        value={socialCaption}
+                        onChange={(e) => setSocialCaption(e.target.value)}
+                        placeholder="Caption sosmed..."
+                        className="w-full h-20 bg-black/40 text-[10px] text-white p-2 rounded border border-purple-500/20 focus:border-purple-500 outline-none resize-none custom-scrollbar"
+                    />
+                    <button 
+                        onClick={generateSocialCaptionAI}
+                        disabled={socialLoading.generating}
+                        className="absolute bottom-2 right-2 text-[9px] bg-purple-500 hover:bg-purple-400 text-white px-2 py-1 rounded flex items-center gap-1 shadow-lg transition-all"
+                    >
+                        {socialLoading.generating ? <LoadingSpinner size={10}/> : <><Sparkles size={10}/> AI Caption</>}
+                    </button>
+                </div>
+
+                <button 
+                    onClick={handleSocialBroadcast}
+                    disabled={socialLoading.posting}
+                    className="w-full py-2 bg-white/5 hover:bg-purple-600 border border-purple-500/30 text-purple-200 hover:text-white rounded-lg text-[10px] font-bold flex items-center justify-center gap-2 transition-all"
+                >
+                    {socialLoading.posting ? <LoadingSpinner size={12}/> : <><Rocket size={12}/> POST SEKARANG</>}
+                </button>
+                
+                {(!form.imagePreview || form.imagePreview.startsWith('blob:')) && (
+                    <div className="flex items-center gap-1 mt-2 text-[9px] text-yellow-500 bg-yellow-500/10 p-1.5 rounded">
+                        <AlertCircle size={10}/>
+                        <span>Simpan produk dulu sebelum post.</span>
+                    </div>
+                )}
+            </div>
+
             {/* DESCRIPTION */}
             <div>
                 <div className="flex justify-between items-center mb-1">
