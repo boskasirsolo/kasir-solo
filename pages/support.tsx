@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Download, FileText, Smartphone, Monitor, Search, 
   HelpCircle, PlayCircle, HardDrive, Package, 
-  ChevronRight, ChevronLeft, AlertTriangle, MessageCircle, Wrench
+  ChevronRight, ChevronLeft, AlertTriangle, MessageCircle, Wrench, X
 } from 'lucide-react';
 import { SectionHeader, Button } from '../components/ui';
 import { INITIAL_DOWNLOADS, INITIAL_TUTORIALS, INITIAL_FAQS, supabase } from '../utils';
@@ -13,9 +14,71 @@ const PAGE_SIZE_FILES = 9;
 const PAGE_SIZE_VIDEOS = 5;
 const PAGE_SIZE_FAQS = 5;
 
+// --- MODAL COMPONENT ---
+const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onClose: () => void }) => {
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+            <div className="relative w-full max-w-lg bg-brand-dark border border-white/10 rounded-2xl shadow-2xl flex flex-col animate-fade-in overflow-hidden">
+                {/* Header */}
+                <div className="p-6 border-b border-white/10 bg-brand-card flex justify-between items-start">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[10px] font-bold uppercase px-2 py-1 rounded bg-brand-orange/10 text-brand-orange border border-brand-orange/20">
+                                {item.category}
+                            </span>
+                            <span className="text-[10px] font-bold text-gray-500">{item.version}</span>
+                        </div>
+                        <h3 className="text-xl font-bold text-white leading-tight">{item.title}</h3>
+                    </div>
+                    <button onClick={onClose} className="p-1 text-gray-500 hover:text-white transition-colors">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+                    <div className="flex justify-between items-center mb-6 bg-black/20 p-3 rounded-lg border border-white/5">
+                        <div className="flex items-center gap-2 text-xs text-gray-300">
+                            <Monitor size={14} className="text-blue-400" /> 
+                            <span>Support: <strong>{item.os_support}</strong></span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-300">
+                            <HardDrive size={14} className="text-green-400" />
+                            <span>Size: <strong>{item.file_size}</strong></span>
+                        </div>
+                    </div>
+
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Deskripsi File</h4>
+                    <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line mb-6">
+                        {item.description || "Tidak ada deskripsi detail."}
+                    </p>
+
+                    <div className="p-4 bg-yellow-500/5 border-l-4 border-yellow-500 rounded-r-lg text-xs text-gray-400 leading-relaxed">
+                        <strong className="text-yellow-500 block mb-1 flex items-center gap-1"><AlertTriangle size={12}/> Disclaimer:</strong>
+                        Pastikan versi OS Anda sesuai. Kami tidak bertanggung jawab atas kerusakan akibat kesalahan instalasi driver yang tidak kompatibel.
+                    </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="p-6 border-t border-white/10 bg-brand-card">
+                    <a 
+                        href={item.file_url} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="w-full flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-action text-white py-3 rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong"
+                    >
+                        <Download size={18} /> DOWNLOAD SEKARANG
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- COMPONENTS ---
 
-const DownloadCard: React.FC<{ item: DownloadItem }> = ({ item }) => {
+const DownloadCard: React.FC<{ item: DownloadItem, onClick: () => void }> = ({ item, onClick }) => {
   const getIcon = () => {
     switch (item.category) {
       case 'driver': return <HardDrive size={20} className="text-blue-400" />;
@@ -27,9 +90,9 @@ const DownloadCard: React.FC<{ item: DownloadItem }> = ({ item }) => {
   };
 
   return (
-    <div className="bg-brand-card border border-white/5 rounded-xl p-4 hover:border-brand-orange/50 transition-all group flex flex-col h-full shadow-lg">
+    <div onClick={onClick} className="bg-brand-card border border-white/5 rounded-xl p-4 hover:border-brand-orange/50 transition-all group flex flex-col h-full shadow-lg cursor-pointer hover:-translate-y-1">
       <div className="flex justify-between items-start mb-3">
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-white/10 bg-black/40">
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-white/10 bg-black/40 group-hover:bg-white/5 transition-colors">
           {getIcon()}
         </div>
         <span className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-white/10 bg-white/5 text-gray-400">
@@ -42,18 +105,13 @@ const DownloadCard: React.FC<{ item: DownloadItem }> = ({ item }) => {
       </h3>
       
       <div className="mt-auto pt-3 border-t border-white/5">
-        <div className="flex justify-between items-center text-[9px] text-gray-500 mb-2">
+        <div className="flex justify-between items-center text-[9px] text-gray-500 mb-3">
            <span className="flex items-center gap-1"><Monitor size={8}/> {item.os_support}</span>
            <span>{item.file_size}</span>
         </div>
-        <a 
-          href={item.file_url} 
-          target="_blank" 
-          rel="noreferrer"
-          className="w-full flex items-center justify-center gap-2 border border-brand-orange text-white hover:bg-brand-orange hover:text-white py-2.5 rounded text-[10px] font-bold transition-all shadow-[0_0_10px_rgba(255,95,31,0.1)] hover:shadow-action"
-        >
-          <Download size={12} /> DOWNLOAD
-        </a>
+        <button className="w-full flex items-center justify-center gap-2 border border-white/10 text-gray-400 group-hover:border-brand-orange group-hover:text-white group-hover:bg-brand-orange py-2 rounded text-[10px] font-bold transition-all">
+          Lihat Detail
+        </button>
       </div>
     </div>
   );
@@ -110,6 +168,7 @@ export const SupportPage = () => {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDownload, setSelectedDownload] = useState<DownloadItem | null>(null);
   
   // Pagination States
   const [pageFiles, setPageFiles] = useState(1);
@@ -205,7 +264,11 @@ export const SupportPage = () => {
                         {filteredDownloads.length > 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 {paginate(filteredDownloads, pageFiles, PAGE_SIZE_FILES).map(item => (
-                                    <DownloadCard key={item.id} item={item} />
+                                    <DownloadCard 
+                                        key={item.id} 
+                                        item={item} 
+                                        onClick={() => setSelectedDownload(item)}
+                                    />
                                 ))}
                             </div>
                         ) : (
@@ -272,6 +335,14 @@ export const SupportPage = () => {
 
          </div>
       </div>
+
+      {/* DETAIL MODAL */}
+      {selectedDownload && (
+          <DownloadDetailModal 
+            item={selectedDownload} 
+            onClose={() => setSelectedDownload(null)} 
+          />
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, Save, Search, UploadCloud, FileText, HardDrive, PlayCircle, HelpCircle, ChevronRight, ChevronLeft, Sparkles, Loader2, Wand2, Smartphone, Wrench, BarChart2 } from 'lucide-react';
+import { Plus, Trash2, Edit, Save, Search, UploadCloud, FileText, HardDrive, PlayCircle, HelpCircle, ChevronRight, ChevronLeft, Sparkles, Loader2, Wand2, Smartphone, Wrench, BarChart2, Monitor } from 'lucide-react';
 import { DownloadItem, Tutorial, FAQ } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, uploadToSupabase, renameFile, slugify, callGeminiWithRotation } from '../utils';
@@ -32,7 +32,7 @@ const useDownloadManager = () => {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
-    const itemsPerPage = 5;
+    const itemsPerPage = 6; // Increased for Grid
 
     useEffect(() => { fetchDownloads(); }, []);
 
@@ -53,7 +53,10 @@ const useDownloadManager = () => {
         setForm(item); 
         setContextInput(item.title); // Pre-fill context with title
         setGeneratedTitles([]);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Scroll to editor on mobile only
+        if (window.innerWidth < 1024) {
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     // --- MAGIC ACTION 1: RESEARCH TITLES (WITH METRICS) ---
@@ -98,7 +101,7 @@ const useDownloadManager = () => {
         setForm(p => ({ ...p, title }));
     };
 
-    // --- MAGIC ACTION 2: MODERN SEO DESCRIPTION ---
+    // --- MAGIC ACTION 2: MODERN SEO DESCRIPTION (CLEAN OUTPUT) ---
     const generateDescription = async () => {
         const trigger = form.title || contextInput;
         if (!trigger) return alert("Pilih Judul atau isi Konteks dulu.");
@@ -116,16 +119,21 @@ const useDownloadManager = () => {
             3. Natural Language: Do NOT keyword stuff. Write for humans.
             4. Length: 2-3 concise sentences. Indonesian Language.
             
-            Example Output:
-            "Driver resmi untuk printer thermal RPP02 yang kompatibel dengan Windows 10 dan 11. Mengatasi masalah hasil cetak putus-putus dan error pada laci kasir (RJ11)."
+            STRICT OUTPUT RULE: Return ONLY the description text. Do NOT add intro like "Berikut adalah deskripsi..." or "Here is...".
             `;
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            setForm(prev => ({ ...prev, description: res.text?.trim() || '' }));
+            
+            // Post-processing to clean any accidental AI chat intro
+            let cleanText = res.text?.trim() || '';
+            cleanText = cleanText.replace(/^(Berikut|Here|Ini|Deskripsi|Meta).*?:/i, '').trim(); // Remove "Berikut adalah:"
+            cleanText = cleanText.replace(/^"|"$/g, ''); // Remove surrounding quotes
+            
+            setForm(prev => ({ ...prev, description: cleanText }));
         } catch (e) { alert("Gagal generate deskripsi."); } 
         finally { setAiLoading(p => ({...p, desc: false})); }
     };
 
-    // --- SUBMIT LOGIC (BUG FIX) ---
+    // --- SUBMIT LOGIC ---
     const handleSubmit = async () => {
         if (!form.title || !form.category) return alert("Judul dan Kategori wajib diisi.");
         
@@ -136,7 +144,7 @@ const useDownloadManager = () => {
 
             // Handle File Upload
             if (uploadFile && supabase) {
-                // Generate safe filename based on Title to avoid collisions and improve SEO
+                // Generate safe filename based on Title
                 const safeName = slugify(form.title || 'download-file').substring(0, 50);
                 const fileToUpload = renameFile(uploadFile, safeName);
                 
@@ -171,7 +179,6 @@ const useDownloadManager = () => {
             } else {
                 // INSERT
                 if (supabase) {
-                    // Do NOT pass 'id' here, let Supabase auto-generate it
                     const { data, error } = await supabase.from('downloads').insert([dbData]).select().single();
                     if (error) throw error;
                     if (data) setDownloads(prev => [data, ...prev]);
@@ -214,7 +221,7 @@ const useDownloadManager = () => {
     };
 };
 
-// ... (Other Hooks: useTutorialManager, useFaqManager remain largely same, omitted for brevity but included in final export) ...
+// ... (Tutorial and FAQ hooks remain unchanged)
 const useTutorialManager = () => {
     const [tutorials, setTutorials] = useState<Tutorial[]>([]);
     const [form, setForm] = useState<Partial<Tutorial>>({ id: 0, title: '', video_url: '' });
@@ -316,6 +323,17 @@ export const AdminDownloads = () => {
     const tutManager = useTutorialManager();
     const faqManager = useFaqManager();
 
+    // Helper to get icon for category
+    const getFileIcon = (cat: string) => {
+        switch(cat) {
+            case 'driver': return HardDrive;
+            case 'manual': return FileText;
+            case 'software': return Smartphone;
+            case 'tools': return Wrench;
+            default: return FileText;
+        }
+    }
+
     return (
         <div className="h-[600px] flex flex-col">
             {/* TAB NAV */}
@@ -341,28 +359,48 @@ export const AdminDownloads = () => {
                 {/* 1. FILE MANAGER */}
                 {activeTab === 'files' && (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
-                        {/* LEFT: LIST */}
+                        {/* LEFT: LIST (Cards Grid) */}
                         <div className="lg:col-span-7 bg-brand-dark rounded-xl border border-white/5 flex flex-col overflow-hidden">
                             <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
                                 <div className="relative flex-grow">
                                     <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
                                     <input type="text" value={dlManager.listData.searchTerm} onChange={(e) => dlManager.listData.setSearchTerm(e.target.value)} placeholder="Cari file..." className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange" />
                                 </div>
+                                <button onClick={dlManager.resetForm} className="bg-brand-orange text-white p-2 rounded-lg hover:bg-brand-action"><Plus size={16}/></button>
                             </div>
-                            <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-2">
-                                {dlManager.listData.paginated.map((item) => (
-                                    <div key={item.id} className="bg-brand-card border border-white/5 rounded-lg p-3 flex gap-3 items-center group hover:border-brand-orange/30">
-                                        <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center shrink-0"><HardDrive size={16} className="text-gray-400"/></div>
-                                        <div className="flex-1 min-w-0">
-                                            <h5 className="text-xs font-bold text-white truncate">{item.title}</h5>
-                                            <p className="text-[10px] text-gray-500">{item.category} • {item.file_size}</p>
-                                        </div>
-                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => dlManager.handleEditClick(item)} className="p-1 hover:bg-blue-500/20 text-blue-400 rounded"><Edit size={14}/></button>
-                                            <button onClick={() => dlManager.deleteItem(item.id)} className="p-1 hover:bg-red-500/20 text-red-400 rounded"><Trash2 size={14}/></button>
-                                        </div>
-                                    </div>
-                                ))}
+                            
+                            <div className="flex-grow overflow-y-auto p-4 custom-scrollbar">
+                                <div className="grid grid-cols-2 gap-3">
+                                    {dlManager.listData.paginated.map((item) => {
+                                        const Icon = getFileIcon(item.category);
+                                        return (
+                                            <div 
+                                                key={item.id} 
+                                                onClick={() => dlManager.handleEditClick(item)}
+                                                className={`bg-brand-card border rounded-lg p-3 cursor-pointer group transition-all flex flex-col h-full relative ${dlManager.form.id === item.id ? 'border-brand-orange shadow-neon-text' : 'border-white/5 hover:border-brand-orange/50'}`}
+                                            >
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center shrink-0 text-gray-400 group-hover:text-brand-orange group-hover:bg-brand-orange/10 transition-colors">
+                                                        <Icon size={16}/>
+                                                    </div>
+                                                    <span className="text-[9px] font-bold uppercase bg-black/40 border border-white/10 px-1.5 py-0.5 rounded text-gray-500">{item.category}</span>
+                                                </div>
+                                                <h5 className="text-[11px] font-bold text-white leading-snug line-clamp-2 mb-1 group-hover:text-brand-orange transition-colors">{item.title}</h5>
+                                                <div className="mt-auto pt-2 border-t border-white/5 flex justify-between items-center text-[9px] text-gray-500">
+                                                    <span className="flex items-center gap-1"><Monitor size={8}/> {item.os_support}</span>
+                                                    <span>{item.file_size}</span>
+                                                </div>
+                                                
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); dlManager.deleteItem(item.id); }} 
+                                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 p-1 rounded transition-all"
+                                                >
+                                                    <Trash2 size={12}/>
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                             {dlManager.listData.totalPages > 1 && <div className="p-2 border-t border-white/10 flex justify-center gap-2"><button onClick={() => dlManager.listData.setPage(p => Math.max(1, p-1))}><ChevronLeft size={16}/></button><span className="text-xs">{dlManager.listData.page}</span><button onClick={() => dlManager.listData.setPage(p => Math.min(dlManager.listData.totalPages, p+1))}><ChevronRight size={16}/></button></div>}
                         </div>
@@ -372,7 +410,7 @@ export const AdminDownloads = () => {
                             <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">{dlManager.form.id ? <Edit size={16}/> : <Plus size={16}/>} {dlManager.form.id ? 'Edit File' : 'Upload File'}</h3>
                             
                             <div className="space-y-4">
-                                {/* Step 1: Type & Context (UPDATED UI) */}
+                                {/* Step 1: Type & Context */}
                                 <div className="p-3 bg-white/5 rounded-lg border border-white/5">
                                     {/* FLAT CATEGORY SELECTOR */}
                                     <div className="mb-4">
