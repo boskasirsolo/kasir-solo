@@ -272,15 +272,15 @@ const handlePrintInvoice = (order: Order, items: OrderItem[], config: SiteConfig
         </div>
 
         <!-- FOOTER (SIGNATURE) -->
-        <div class="grid grid-cols-2 gap-8 pt-4 relative z-10">
-            <div class="text-center pt-8">
+        <div class="grid grid-cols-2 gap-8 pt-2 relative z-10 mb-10">
+            <div class="text-center pt-2">
                 <p class="text-xs text-gray-400">Penerima / Klien</p>
-                <div class="h-16 border-b border-gray-300 w-2/3 mx-auto"></div>
+                <div class="h-20 border-b border-gray-300 w-2/3 mx-auto"></div>
                 <p class="text-xs text-gray-800 font-bold mt-2 uppercase">${order.customer_name}</p>
             </div>
-            <div class="text-center pt-8">
+            <div class="text-center pt-2">
                 <p class="text-xs text-gray-400">Hormat Kami,</p>
-                <div class="h-16 border-b border-gray-300 w-2/3 mx-auto relative">
+                <div class="h-20 border-b border-gray-300 w-2/3 mx-auto relative">
                     <!-- OPTIONAL: SIGNATURE IMAGE HERE -->
                 </div>
                 <p class="text-xs text-gray-800 font-bold mt-2">Finance Dept.</p>
