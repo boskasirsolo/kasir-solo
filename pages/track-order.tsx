@@ -91,36 +91,56 @@ export const TrackOrderPage = () => {
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!orderId.trim()) return;
+        // Clean input: remove spaces, remove '#' if user typed it
+        const cleanId = orderId.trim().replace('#', '');
+        
+        if (!cleanId) return;
         
         setLoading(true);
         setError('');
         setResult(null);
 
+        console.log("Searching for Order ID:", cleanId);
+
         try {
             if (!supabase) throw new Error("Database not connected");
 
-            // Search by Order ID (Exact match)
+            // 1. Fetch Order Head
+            // Using .maybeSingle() instead of .single() to avoid JSON errors on 404
             const { data: order, error: orderErr } = await supabase
                 .from('orders')
                 .select('*')
-                .eq('id', orderId.trim())
-                .single();
+                .eq('id', cleanId)
+                .maybeSingle();
 
-            if (orderErr || !order) {
-                setError("Pesanan tidak ditemukan. Periksa kembali Order ID Anda.");
+            if (orderErr) {
+                console.error("Supabase Error:", orderErr);
+                throw orderErr;
+            }
+
+            if (!order) {
+                setError("Pesanan tidak ditemukan. Pastikan ID benar dan cek koneksi internet.");
             } else {
-                // Fetch Items
-                const { data: items } = await supabase
+                console.log("Order Found:", order);
+                
+                // 2. Fetch Order Items
+                const { data: items, error: itemsErr } = await supabase
                     .from('order_items')
                     .select('*')
                     .eq('order_id', order.id);
                 
+                if (itemsErr) console.error("Items Error:", itemsErr);
+
                 setResult({ order, items: items || [] });
             }
         } catch (err: any) {
-            console.error(err);
-            setError("Terjadi kesalahan koneksi. Coba lagi nanti.");
+            console.error("Catch Error:", err);
+            // Handle specific Supabase Policy error or Type error
+            if (err.message && err.message.includes('invalid input syntax')) {
+                setError("Format ID salah. ID harus berupa angka.");
+            } else {
+                setError("Gagal memuat data. Kemungkinan masalah jaringan atau ID salah.");
+            }
         } finally {
             setLoading(false);
         }
@@ -147,14 +167,15 @@ export const TrackOrderPage = () => {
                     <div className="bg-brand-card border border-white/10 rounded-2xl p-6 md:p-8 shadow-neon mb-8">
                         <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
                             <div className="flex-1">
-                                <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Order ID</label>
+                                <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Order ID (12 Digit)</label>
                                 <div className="relative">
                                     <Search className="absolute left-4 top-3.5 text-gray-500" size={18} />
                                     <Input 
                                         value={orderId} 
                                         onChange={e => setOrderId(e.target.value)} 
-                                        placeholder="Contoh: 171..." 
+                                        placeholder="Contoh: 123456789012" 
                                         className="pl-12 py-3 text-lg font-mono tracking-widest"
+                                        type="number" // Enforce number input for mobile keyboards
                                     />
                                 </div>
                             </div>

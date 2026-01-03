@@ -18,22 +18,55 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
 
   // --- VALIDATION HELPERS ---
   const validatePhone = (phone: string) => {
-    // Regex: 08xx atau 62xx, panjang 9-14 digit
     const regex = /^(\+62|62|0)8[1-9][0-9]{6,11}$/;
     return regex.test(phone);
+  };
+
+  // --- GENERATOR: 12-Digit Random ID ---
+  // Range: 100,000,000,000 to 999,999,999,999
+  // Fits in Javascript Number (Safe limit is 9 quadrillion / 16 digits)
+  // Probability collision: 1 in 900 Billion (System effectively works once)
+  // Logic: Min value starts with 1, ensuring NO leading zeros (0000...).
+  const generateOrderId = () => {
+    const min = 100000000000;
+    const max = 999999999999;
+    return Math.floor(min + Math.random() * (max - min + 1));
+  };
+
+  // --- SMART INSERT: Auto-Retry if ID exists ---
+  const createOrderSafe = async (payload: any, maxRetries = 5) => {
+    for (let i = 0; i < maxRetries; i++) {
+      const newId = generateOrderId();
+      
+      // Try insert
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([{ ...payload, id: newId }])
+        .select()
+        .single();
+
+      if (!error) return data; // Success! Return the order data
+
+      // If error is NOT a duplicate key error (Postgres code 23505), throw it immediately
+      if (error.code !== '23505') {
+        throw error;
+      }
+      
+      // If it IS a duplicate key (extremely rare with 12 digits), retry silently
+      console.warn(`Order ID Collision ${newId}. Retrying... (${i + 1}/${maxRetries})`);
+    }
+    throw new Error("Gagal membuat Order ID unik. Silakan coba lagi.");
   };
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) return;
     
-    // 1. Basic Empty Validation
     if (!formData.name || !formData.phone || !formData.address) {
       alert("Mohon lengkapi Nama, No. HP, dan Alamat.");
       return;
     }
 
-    // 2. Strict Phone Validation
     if (!validatePhone(formData.phone)) {
       alert("Format Nomor WhatsApp tidak valid. Gunakan format 08xx atau 628xx.");
       return;
@@ -42,30 +75,28 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
     setIsSubmitting(true);
 
     try {
+      // DEMO MODE CHECK
       if (!supabase) {
         console.warn("Database connection missing. Running in demo mode.");
         await new Promise(resolve => setTimeout(resolve, 1500));
-        setOrderSuccess({ id: Date.now(), total: totalPrice });
+        setOrderSuccess({ id: generateOrderId(), total: totalPrice });
         clearCart();
         return;
       }
 
-      // 1. Create Order Head
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert([{
-          customer_name: formData.name,
-          customer_phone: formData.phone,
-          customer_address: formData.address,
-          customer_note: formData.note,
-          total_amount: totalPrice,
-          status: 'pending',
-          payment_method: 'transfer_bnc'
-        }])
-        .select()
-        .single();
+      // 1. Create Order Head (With Smart Retry)
+      const orderPayload = {
+        customer_name: formData.name,
+        customer_phone: formData.phone,
+        customer_address: formData.address,
+        customer_note: formData.note,
+        total_amount: totalPrice,
+        status: 'pending',
+        payment_method: 'transfer_bnc'
+      };
 
-      if (orderError) throw orderError;
+      // This function handles the looping automatically
+      const orderData = await createOrderSafe(orderPayload);
 
       // 2. Create Order Items
       const orderItems = cart.map(item => ({
@@ -81,7 +112,7 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
         .insert(orderItems);
 
       if (itemsError) {
-        // If items fail, delete the order head to prevent orphan records
+        // Rollback: Delete order if items fail
         await supabase.from('orders').delete().eq('id', orderData.id);
         throw itemsError;
       }
@@ -92,15 +123,12 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
 
     } catch (error: any) {
       console.error(error);
-      
-      // Handle Specific Foreign Key Error (Product ID mismatch) or other integrity errors
       if (error.message?.includes('foreign key constraint') || error.code === '23503') {
-        alert("Sistem mendeteksi perubahan data produk. Keranjang Anda akan diperbarui otomatis untuk menyesuaikan dengan database terbaru. Silakan coba checkout ulang.");
+        alert("Sistem mendeteksi perubahan data produk. Keranjang Anda akan diperbarui otomatis.");
         clearCart();
         setPage('shop');
       } else {
-        // Fallback error message (simpler for user)
-        alert(`Gagal membuat pesanan (${error.message}). Silakan hubungi admin via WA jika masalah berlanjut.`);
+        alert(`Gagal membuat pesanan: ${error.message}`);
       }
     } finally {
       setIsSubmitting(false);
@@ -121,7 +149,7 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
             <CheckCircle2 size={40} className="text-green-500" />
           </div>
           <h2 className="text-3xl font-display font-bold text-white mb-2">Pesanan Diterima!</h2>
-          <p className="text-gray-400 mb-8">Order ID: <span className="text-brand-orange font-mono">#{orderSuccess.id}</span></p>
+          <p className="text-gray-400 mb-8">Order ID: <span className="text-brand-orange font-mono text-xl md:text-2xl font-bold tracking-wider">#{orderSuccess.id}</span></p>
 
           <div className="bg-brand-dark p-6 rounded-xl border border-white/10 mb-8 text-left">
             <p className="text-sm text-gray-400 mb-2">Silakan transfer total pembayaran:</p>
@@ -130,7 +158,7 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
             <p className="text-sm text-gray-400 mb-2">Ke Rekening Bank Neo Commerce (BNC):</p>
             <div className="flex items-center justify-between bg-black/40 p-4 rounded-lg border border-white/5">
               <div>
-                <p className="font-mono text-xl text-brand-orange font-bold tracking-wider">5859459406740414</p>
+                <p className="font-mono text-xl text-brand-orange font-bold tracking-wider">5859 4594 0674 0414</p>
                 <p className="text-sm text-gray-300">a.n PT MESIN KASIR SOLO</p>
               </div>
               <button onClick={() => copyToClipboard('5859459406740414')} className="p-2 hover:text-brand-orange text-gray-400 transition-colors">
