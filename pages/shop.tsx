@@ -16,7 +16,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { slugify } from '../utils';
 import { NotFoundPage } from './not-found';
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 8;
 
 // --- LOGIC HOOK ---
 const useShopLogic = (products: Product[]) => {
