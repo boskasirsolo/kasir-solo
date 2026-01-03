@@ -39,30 +39,33 @@ Produk: SIBOS (App Kasir), QALAM (App Sekolah), Hardware POS.
 - Variasikan panjang kalimat. Kadang satu kata. Kadang satu paragraf.
 `;
 
-// --- NEW: INTERNAL LINKING STRATEGY (SPIDER WEB) ---
+// --- NEW: GOVERNMENT CRITIQUE RULE (TIPIS-TIPIS) ---
+const GOV_CRITIQUE_RULE = `
+[ATURAN KHUSUS: SENTILAN KEBIJAKAN (KRITIK TIPIS)]
+JIKA topik artikel berkaitan dengan Kebijakan Pemerintah, Aturan Baru, Pajak (PPN), Sertifikasi Halal, Izin Usaha (OSS), Pembatasan Impor, atau Birokrasi:
+1.  **WAJIB** selipkan kritik "tipis-tipis" (sindiran halus) di dalam narasi.
+2.  **Sudut Pandang:** Suarakan keluhan "Wong Cilik" / UMKM yang merasa terbebani birokrasi yang ribet, aturan yang berubah-ubah, atau pajak yang mencekik.
+3.  **Nada:** Bukan pemberontak anarkis, tapi "Pedagang yang capek di-prank aturan". Realistis dan membumi.
+4.  **Contoh Vibe:** 
+    - "Kita disuruh taat pajak, giliran butuh bantuan prosedurnya minta ampun."
+    - "Niatnya mau legal urus izin, eh malah dilempar sana-sini kayak bola bekel."
+    - "Peraturan ganti menteri ganti kebijakan, kita pedagang kecil yang bengek ngikutinnya."
+5.  **Closing:** Tetap arahkan bahwa karena "Negara kadang gak bisa diandelin", maka kita (pebisnis) harus mandiri pakai Sistem/Teknologi sendiri untuk survive.
+`;
+
+// --- INTERNAL LINKING STRATEGY (SPIDER WEB) ---
 const INTERNAL_LINKING_RULES = `
 [STRATEGI INTERNAL LINK - WAJIB DIIMPLEMENTASIKAN]
-Kamu harus secara cerdas menyisipkan link ke halaman lain di website KasirSolo.com agar struktur SEO menjadi kuat (Spider Web Structure).
 Gunakan format Markdown: [Anchor Text](/path).
 
 ATURAN LINKING (Gunakan jika konteks kalimat relevan):
-1. Jika membahas **Hardware, Alat Kasir, Printer, Scanner**:
-   -> Link ke: [Katalog Hardware](/shop) atau [Paket Kasir](/shop)
-2. Jika membahas **Pembuatan Website, SEO, Toko Online**:
-   -> Link ke: [Jasa Pembuatan Website](/services/website)
-3. Jika membahas **Aplikasi Custom, Software Gudang, ERP Custom**:
-   -> Link ke: [Layanan Web App](/services/webapp)
-4. Jika membahas **SIBOS, Sistem Kasir Pintar, Manajemen Stok, Franchise**:
-   -> Link ke: [Inovasi SIBOS](/innovation)
-5. Jika membahas **QALAM, Aplikasi Sekolah, Pesantren**:
-   -> Link ke: [Aplikasi Pendidikan QALAM](/innovation)
-6. Jika membahas **Bukti, Klien, Portfolio, Hasil Kerja**:
-   -> Link ke: [Lihat Portfolio Kami](/gallery)
-7. Jika kalimat bersifat **Call to Action (CTA), Konsultasi, Tanya Harga**:
-   -> Link ke: [Hubungi Tim Kami](/contact)
-
-CONTOH INTEGRASI NATURAL:
-"Banyak pengusaha gagal karena meremehkan pembukuan. Padahal dengan [Sistem SIBOS](/innovation), semua bisa otomatis. Kalau kamu butuh alat tempurnya juga, cek [Katalog Hardware](/shop) yang kami sediakan."
+1. Jika membahas **Hardware, Alat Kasir, Printer, Scanner**: -> Link ke: [Katalog Hardware](/shop)
+2. Jika membahas **Pembuatan Website, SEO, Toko Online**: -> Link ke: [Jasa Pembuatan Website](/services/website)
+3. Jika membahas **Aplikasi Custom, Software Gudang, ERP Custom**: -> Link ke: [Layanan Web App](/services/webapp)
+4. Jika membahas **SIBOS, Sistem Kasir Pintar, Manajemen Stok**: -> Link ke: [Inovasi SIBOS](/innovation)
+5. Jika membahas **QALAM, Aplikasi Sekolah, Pesantren**: -> Link ke: [Aplikasi Pendidikan QALAM](/innovation)
+6. Jika membahas **Bukti, Klien, Portfolio**: -> Link ke: [Lihat Portfolio Kami](/gallery)
+7. Jika membahas **Call to Action (CTA), Konsultasi**: -> Link ke: [Hubungi Tim Kami](/contact)
 `;
 
 export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
@@ -110,17 +113,11 @@ const parseVolume = (volStr: string): number => {
     if (!volStr) return 0;
     try {
         let clean = volStr.toLowerCase().replace(/\/mo/g, '').replace(/vol/g, '').trim();
-        
-        // Handle 'k' (thousands) e.g., 5.4k, 5,4k
         if (clean.includes('k')) {
-            clean = clean.replace('k', '').trim();
-            clean = clean.replace(',', '.'); // Ensure decimal format
+            clean = clean.replace('k', '').trim().replace(',', '.');
             const numPart = parseFloat(clean);
             return isNaN(numPart) ? 0 : Math.round(numPart * 1000);
         }
-
-        // Handle standard numbers (remove dots and commas as thousands separators)
-        // Assumption: If no 'k', it's an integer. 1.200 = 1200.
         clean = clean.replace(/[\.,]/g, '');
         const num = parseInt(clean);
         return isNaN(num) ? 0 : num;
@@ -227,17 +224,15 @@ export const useAIGenerator = () => {
         wordCount: number, 
         pillarContext?: { title: string, slug: string },
         relatedPillarsData?: { title: string, slug: string }[],
-        galleryContextString?: string // NEW: Receive Gallery Projects Data
+        galleryContextString?: string
     ) => {
         setLoading(p => ({ ...p, generatingText: true }));
         
         try {
-            // IF WORD COUNT > 2000, USE MULTI-STEP GENERATION
             if (wordCount >= 2000) {
                 return await generateLongFormContent(title, tones, type, authorName, wordCount, pillarContext, relatedPillarsData, galleryContextString);
             }
 
-            // --- STANDARD GENERATION (< 2000 words) ---
             setLoading(p => ({ ...p, progressMessage: 'Writing Standard Article...' }));
             const isAmin = authorName === 'Amin Maghfuri';
             const selectedAnecdote = FOUNDER_ANECDOTES[Math.floor(Math.random() * FOUNDER_ANECDOTES.length)];
@@ -268,25 +263,14 @@ export const useAIGenerator = () => {
                 relatedPillarInstruction = `[SEO]: Weave links to these related pillars naturally:\n${linksList}`;
             }
 
-            // NEW: PROJECT SHOWCASE INSTRUCTION WITH ROBUST SHORTCODE
             let galleryInstruction = "";
             if (galleryContextString) {
                 galleryInstruction = `
-                [PORTFOLIO SHOWCASE STRATEGY - IMPORTANT]
-                You have access to our Gallery/Portfolio database.
+                [PORTFOLIO SHOWCASE STRATEGY]
                 Available Projects:
                 ${galleryContextString}
-
-                **INSTRUCTION:** 
-                Check if the article topic matches any of the projects above.
                 IF MATCH FOUND: Insert a "Project Card" in the middle of the article using THIS EXACT SHORTCODE FORMAT:
-                
                 [PROJECT: Project Name | /gallery/slug-title | INSERT_EXACT_IMAGE_URL_FROM_DATA | A short 1-sentence description of the implementation]
-                
-                Example:
-                [PROJECT: Kopi Senja | /gallery/kopi-senja | https://image.com/1.jpg | Implementasi 5 tablet POS untuk mempercepat pesanan di jam sibuk.]
-
-                DO NOT use Markdown Images or Blockquotes for this. Use the [PROJECT: ...] shortcode on its own line.
                 `;
             }
 
@@ -302,6 +286,7 @@ export const useAIGenerator = () => {
             ${relatedPillarInstruction}
             ${galleryInstruction}
             Brand Context: ${BRAND_CONTEXT}
+            ${GOV_CRITIQUE_RULE}
             ${INTERNAL_LINKING_RULES}
             `;
             
@@ -318,7 +303,7 @@ export const useAIGenerator = () => {
         }
     };
 
-    // --- NEW: LONG FORM GENERATOR (MULTI-STEP) ---
+    // --- LONG FORM GENERATOR (MULTI-STEP) ---
     const generateLongFormContent = async (
         title: string, 
         tones: string[], 
@@ -327,93 +312,57 @@ export const useAIGenerator = () => {
         wordCount: number, 
         pillarContext?: { title: string, slug: string },
         relatedPillarsData?: { title: string, slug: string }[],
-        galleryContextString?: string // NEW
+        galleryContextString?: string
     ) => {
-        // 1. SETUP PHASE
         const isAmin = authorName === 'Amin Maghfuri';
         const pov = isAmin ? "First Person 'Gue' (Amin Maghfuri)" : "Professional 'Kami'";
-        const sectionsCount = Math.ceil(wordCount / 1000); // 1000 words per section
+        const sectionsCount = Math.ceil(wordCount / 1000); 
         
-        // 2. BLUEPRINT PHASE (Generate Outline)
         setLoading(p => ({ ...p, progressMessage: `Designing Outline for ${wordCount} words...` }));
         
         const outlinePrompt = `
         Act as a Content Architect.
         Task: Create a detailed Table of Contents (Outline) for a **${wordCount}-word Ultimate Guide** titled "${title}".
         Target: Break this into exactly **${sectionsCount} Distinct Major Sections** (Chapters).
-        
-        Structure Requirements:
-        - Section 1: Introduction (Hook + Problem Agitation + Thesis).
-        - Middle Sections: Deep dive into technical details, strategies, comparisons, or case studies.
-        - Last Section: Conclusion & Call to Action.
-        
         Output Format: JSON Array of Strings (Section Titles Only).
-        Example: ["Introduction: Why X Matters", "Chapter 1: The Basics", "Chapter 2: Advanced Strategy", ...]
         `;
 
         let sections: string[] = [];
         try {
-            const outlineRes = await callGeminiWithRotation({ 
-                model: 'gemini-3-flash-preview', 
-                contents: outlinePrompt, 
-                config: { responseMimeType: "application/json" } 
-            });
+            const outlineRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: outlinePrompt, config: { responseMimeType: "application/json" } });
             sections = JSON.parse(outlineRes.text || '[]');
         } catch (error) {
-            console.warn("Outline Gen failed, retrying once...", error);
             await new Promise(r => setTimeout(r, 1000));
-            const outlineResRetry = await callGeminiWithRotation({ 
-                model: 'gemini-3-flash-preview', 
-                contents: outlinePrompt, 
-                config: { responseMimeType: "application/json" } 
-            });
+            const outlineResRetry = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: outlinePrompt, config: { responseMimeType: "application/json" } });
             sections = JSON.parse(outlineResRetry.text || '[]');
         }
         
         let fullContent = "";
         let previousContext = "";
 
-        // 3. ASSEMBLY PHASE (Looping)
         for (let i = 0; i < sections.length; i++) {
             const sectionTitle = sections[i];
             const isFirst = i === 0;
             
             setLoading(p => ({ ...p, progressMessage: `Writing Section ${i + 1}/${sections.length}: ${sectionTitle}...` }));
 
-            // Smart Context for Continuity
-            let connectionInstruction = "";
-            if (!isFirst) {
-                connectionInstruction = `
-                [CRITICAL CONTINUITY INSTRUCTION]
-                This is Part ${i + 1} of the article.
-                The PREVIOUS PART ended with these sentences: "...${previousContext.slice(-300)}..."
-                
-                **YOUR TASK:**
-                1. Do NOT write a new introduction like "Welcome back" or "In this section".
-                2. Start IMMEDIATELY by connecting to the previous thought.
-                3. Maintain the flow as if it is one continuous text.
-                `;
-            } else {
-                connectionInstruction = `Start with a strong Hook.`;
-            }
+            let connectionInstruction = isFirst ? `Start with a strong Hook.` : `
+                [CRITICAL CONTINUITY] This is Part ${i + 1}. PREVIOUS ENDING: "...${previousContext.slice(-300)}...".
+                Start IMMEDIATELY by connecting to the previous thought. No new intros.
+            `;
 
-            // SEO Linking Logic (Distribute links across sections)
             let linkInstruction = "";
             if (relatedPillarsData && relatedPillarsData.length > 0) {
                 const linkTarget = relatedPillarsData[i % relatedPillarsData.length]; 
                 linkInstruction = `Try to naturally mention and link to: [${linkTarget.title}](/articles/${linkTarget.slug}) in this section.`;
             }
 
-            // NEW: PROJECT SHOWCASE INSTRUCTION (Inject randomly in middle sections)
             let galleryInstruction = "";
             if (galleryContextString && i === Math.floor(sections.length / 2)) {
                  galleryInstruction = `
                 [PORTFOLIO SHOWCASE]
-                Projects:
-                ${galleryContextString}
-                INSTRUCTION: If applicable, insert a "Project Card" shortcode here.
-                Format: 
-                [PROJECT: Title | /gallery/slug | ImageURL | Short Description]
+                Projects: ${galleryContextString}
+                INSTRUCTION: If applicable, insert a "Project Card" shortcode here: [PROJECT: Title | /gallery/slug | ImageURL | Short Description]
                 `;
             }
 
@@ -422,14 +371,13 @@ export const useAIGenerator = () => {
             Task: Write **Section ${i + 1}: ${sectionTitle}** for the article "${title}".
             Target Length for THIS section: **1000 words**.
             POV: ${pov}.
-            Style: Detailed, Deep, Actionable. Use Subheaders (##, ###), Lists, and Bold text.
+            Style: Detailed, Deep, Actionable.
             Brand Context: ${BRAND_CONTEXT}
+            ${GOV_CRITIQUE_RULE}
             ${INTERNAL_LINKING_RULES}
-            
             ${connectionInstruction}
             ${linkInstruction}
             ${galleryInstruction}
-            
             OUTPUT: Markdown content for this section only.
             `;
 
@@ -444,12 +392,10 @@ export const useAIGenerator = () => {
         return { content: fullContent, meta };
     };
 
-    // --- ENHANCED METADATA GENERATOR (SEO CATEGORY EXPANSION) ---
     const generateMeta = async (title: string, content: string) => {
         const generatedWordCount = content.split(/\s+/).length;
         const readTimeMin = Math.ceil(generatedWordCount / 200);
         
-        // List existing base categories for context, but allow expansion
         const existingCategories = [
             "Bisnis Tips", "Manajemen", "Keuangan", "HR", "Franchise", 
             "Hardware Review", "Android POS", "Windows POS", "Teknologi", "Tutorial",
@@ -461,18 +407,10 @@ export const useAIGenerator = () => {
         Task: Generate metadata for the article "${title}".
         Context Snippet: "${content.substring(0, 1000)}..."
 
-        1. EXCERPT: Write a persuasive meta description (max 150 chars) containing the focus keyword.
-        
-        2. CATEGORY STRATEGY (CRITICAL):
-           - Don't just use generic categories if a specific one is better for SEO.
-           - Analyze the content for **Niche Keywords** with high traffic potential in Indonesia.
-           - You can select from our standard list: [${existingCategories}].
-           - **BETTER OPTION:** If a specific long-tail keyword represents the category better, USE IT. 
-           - Examples of Expanded Categories: "Manajemen Stok", "Pajak UMKM", "Strategi Diskon", "Kasir Coffee Shop", "Pembukuan Digital".
-           - The category must be short (2-3 words), Title Case, and sound like a professional blog section.
+        1. EXCERPT: Write a persuasive meta description (max 150 chars).
+        2. CATEGORY STRATEGY: Analyze content for Niche Keywords. Select from [${existingCategories}] OR create a better specific one (2-3 words, Title Case).
 
-        Output JSON:
-        { "excerpt": "...", "category": "..." }
+        Output JSON: { "excerpt": "...", "category": "..." }
         `;
         
         const metaRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: metaPrompt, config: { responseMimeType: "application/json" } });
@@ -481,12 +419,10 @@ export const useAIGenerator = () => {
         return { ...metaData, readTime: `${readTimeMin} min read` };
     };
 
-    // --- REVISED AI IMAGE GENERATOR WITH SEO OPTIMIZATION ---
     const getAIImageUrl = async (title: string, category: string, style: string) => {
         const seed = Math.floor(Math.random() * 9999999);
-        const cleanTitle = title.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 50); // Remove special chars for image prompt
+        const cleanTitle = title.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 50);
         
-        // 1. TIGHT CONTEXTUAL PROMPT ENGINEERING
         let visualContext = "professional business environment";
         const lowerCat = (category || "").toLowerCase();
         
@@ -502,10 +438,7 @@ export const useAIGenerator = () => {
             visualContext = "creative modern workspace, team brainstorming on whiteboard, bright natural light, energetic atmosphere, startups";
         }
 
-        // Add quality boosters and negatives to avoid defects
         const qualityBoosters = "masterpiece, best quality, ultra realistic, 8k uhd, sharp focus, professional photography, perfect lighting, rule of thirds, cinematic look";
-        const negativePrompt = ""; // Pollinations handles this via prompt engineering mostly, but we can try to be specific in the positive prompt to exclude things.
-
         const enhancedPrompt = `${qualityBoosters}, ${style} photography of ${cleanTitle}, ${visualContext}, highly detailed, authentic, --no text, --no watermark`;
         const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1280&height=720&model=flux&nologo=true&seed=${seed}&enhance=true`;
         
@@ -514,13 +447,8 @@ export const useAIGenerator = () => {
         try {
             const res = await fetch(pollUrl);
             const blob = await res.blob();
-            
-            // 2. SEO FILENAME OPTIMIZATION (Before Cloudinary)
-            // Create a file object with a slugified, keyword-rich filename
             const cleanFileName = `${slugify(title)}-${slugify(category)}-2025.jpg`;
             const file = new File([blob], cleanFileName, { type: "image/jpeg" });
-            
-            // Return Local Object URL for instant preview + The File for uploading
             const localUrl = URL.createObjectURL(blob);
             
             return { url: localUrl, file: file };
@@ -533,7 +461,7 @@ export const useAIGenerator = () => {
     return { loading, setLoading, trendingTopics, keywords, genConfig, setGenConfig, analyzeMarket, generateContent, getAIImageUrl, generateClusterIdeas };
 };
 
-// UPDATED: useArticleManager to accept GALLERY data and CONFIG
+// ... (Rest of file unchanged, useArticleManager exports)
 export const useArticleManager = (articles: Article[], setArticles: any, gallery: GalleryItem[] = [], config?: SiteConfig) => {
     const filterLogic = useArticleFilter(articles, 7);
     const aiLogic = useAIGenerator();
@@ -545,14 +473,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
     const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']); 
 
-    // --- SOCIAL BROADCAST STATE (NEW) ---
-    // Added LinkedIn to default options
     const [socialCaption, setSocialCaption] = useState('');
-    const [selectedPlatforms, setSelectedPlatforms] = useState({ 
-        instagram: true, 
-        facebook: true, 
-        linkedin: false 
-    });
+    const [selectedPlatforms, setSelectedPlatforms] = useState({ instagram: true, facebook: true, linkedin: false });
     const [socialLoading, setSocialLoading] = useState({ generating: false, posting: false });
 
     useEffect(() => { try { localStorage.setItem('mks_personas', JSON.stringify(personas)); } catch (e) {} }, [personas]);
@@ -585,7 +507,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             targetWordCount: 1000,
             related_pillars: []
         });
-        setSocialCaption(''); // Reset caption
+        setSocialCaption(''); 
         setAiStep(0); setSelectedPresets([]); setSelectedTones(['gritty']);
     };
 
@@ -594,13 +516,10 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         if (matchedPersona) setActivePersonaId(matchedPersona.id);
         const estimatedCount = item.content ? item.content.split(/\s+/).length : 1000;
 
-        // FIXED: Handle incoming UTC ISO string properly using configured Timezone
         let formattedSchedule = '';
         if (item.scheduled_for && config?.timezone) {
-            // Convert UTC DB time to Admin's configured Local Time for Input
             formattedSchedule = convertUTCToLocal(item.scheduled_for, config.timezone);
         } else if (item.scheduled_for) {
-            // Fallback if no timezone configured (should not happen with default)
             formattedSchedule = item.scheduled_for.slice(0, 16); 
         }
 
@@ -615,7 +534,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             targetWordCount: estimatedCount,
             related_pillars: item.related_pillars || []
         });
-        setSocialCaption(''); // Clear previous caption
+        setSocialCaption(''); 
         setAiStep(2);
     };
 
@@ -623,8 +542,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         aiLogic.setLoading(p => ({ ...p, uploading: true, progressMessage: 'Uploading Avatar...' }));
         try {
             let avatarUrl = URL.createObjectURL(file);
-            
-            // SEO OPTIMIZATION: Rename avatar file
             const seoName = `${slugify(activePersona.name)}-author-avatar`;
             const fileToUpload = renameFile(file, seoName);
 
@@ -650,7 +567,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             let supabasePath = '';
             let fileToMigrate: File | null = form.uploadFile;
 
-            // UPLOAD LOGIC: If a file exists (Manual or AI Generated with SEO Filename)
             if (form.uploadFile) {
                 const seoName = `${slugify(form.title)}-artikel-cover`;
                 fileToMigrate = renameFile(form.uploadFile, seoName);
@@ -667,15 +583,11 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             const finalAuthorAvatar = form.authorAvatar || activePersona.avatar;
             const statusNormalized = (form.status || 'draft').toLowerCase().trim();
 
-            // --- FIXED: TIMEZONE HANDLING FOR SCHEDULED_FOR ---
-            // We convert the Local Input Time (e.g. 07:00 WIB) to UTC ISO String
-            // using the Admin's configured Timezone.
             let finalScheduledFor = null;
             if (form.status === 'scheduled' && form.scheduled_for) {
                 if (config?.timezone) {
                     finalScheduledFor = convertLocalToUTC(form.scheduled_for, config.timezone);
                 } else {
-                    // Fallback to previous logic if no timezone set
                     const localDate = new Date(form.scheduled_for); 
                     finalScheduledFor = localDate.toISOString(); 
                 }
@@ -685,7 +597,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 title: form.title, excerpt: form.excerpt || '', content: form.content || '', 
                 category: form.category || 'General', author: form.author, author_avatar: finalAuthorAvatar, 
                 read_time: form.readTime, image_url: finalImageUrl, status: statusNormalized as any,
-                scheduled_for: finalScheduledFor, // USE THE FIXED TIME
+                scheduled_for: finalScheduledFor, 
                 type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
                 cluster_ideas: form.cluster_ideas, 
                 date: dateStr, 
@@ -731,55 +643,34 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         } catch(e: any) { alert(e.message); } 
     };
 
-    // NEW: GENERATE CATEGORY FROM CONTEXT
     const runGenerateCategory = async () => {
         if (!form.title && !form.content) return alert("Mohon isi Judul atau Konten terlebih dahulu sebagai konteks.");
-        
         aiLogic.setLoading(p => ({ ...p, researching: true, progressMessage: 'Brainstorming 5 Categories...' }));
-        
         try {
             const contextText = form.content.length > 50 ? form.content.substring(0, 500) : form.title;
             const prompt = `
             Role: SEO Specialist for "Kasir Solo".
             Task: Analyze the context below and generate Article Categories/Tags.
             Context: "${contextText}"
-            
-            Constraint:
-            - Generate EXACTLY 5 categories.
-            - Strategy: Mix broad topics (e.g., "Bisnis Tips") with specific niche tags (e.g., "Manajemen Stok Gudang").
-            - You CAN create NEW categories not in the list if they are relevant.
-            - Format: Comma-separated string (e.g., "Bisnis, Keuangan, Tips, Kasir, UMKM").
-            - Language: Indonesian.
-            - Short (1-3 words per category).
-            - Use Title Case.
-            
+            Constraint: Generate EXACTLY 5 categories. Mix broad topics with specific niche tags. Format: Comma-separated string.
             Output: JUST the comma-separated text.
             `;
-            
             const result = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
             const newCatsString = result.text?.trim().replace(/['"]/g, '') || "";
-            
             if (newCatsString) {
                 setForm((prev: any) => {
                     const currentCats = prev.category ? prev.category.split(',').map((s: any) => s.trim()).filter(Boolean) : [];
                     const newCats = newCatsString.split(',').map(s => s.trim());
-                    
-                    // Merge and unique (Case insensitive check, preserve original casing)
                     const uniqueCats = [...currentCats];
                     newCats.forEach(newC => {
                         const exists = uniqueCats.some(existing => existing.toLowerCase() === newC.toLowerCase());
                         if (!exists) uniqueCats.push(newC);
                     });
-                    
                     return { ...prev, category: uniqueCats.join(', ') };
                 });
             }
-        } catch (e: any) {
-            console.error(e);
-            alert("Gagal generate kategori.");
-        } finally {
-            aiLogic.setLoading(p => ({ ...p, researching: false, progressMessage: '' }));
-        }
+        } catch (e: any) { console.error(e); alert("Gagal generate kategori."); } 
+        finally { aiLogic.setLoading(p => ({ ...p, researching: false, progressMessage: '' })); }
     };
     
     const runClusterResearch = async (pillar: Article) => { 
@@ -821,17 +712,13 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                     .filter(Boolean) as {title: string, slug: string}[];
             }
 
-            // NEW: Prepare Gallery Context with IMAGE FILTER
             let galleryContextString = "";
             if (gallery && gallery.length > 0) {
-                // Filter: Only include projects that have a valid image URL
-                // We exclude items with no image or default placeholders to ensure visual quality
                 const validProjects = gallery.filter(g => 
                     g.image_url && 
                     g.image_url.length > 10 &&
                     !g.image_url.includes('placeholder')
                 );
-
                 galleryContextString = validProjects.map(g => 
                     `- ${g.title} | ${g.category_type} | ImageURL: ${g.image_url} | /gallery/${slugify(g.title)}`
                 ).join('\n');
@@ -839,7 +726,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
             const { content, meta } = await aiLogic.generateContent(
                 form.title, selectedTones, form.type, form.author, form.targetWordCount, 
-                pillarContext, relatedPillarsData, galleryContextString // PASS CONTEXT
+                pillarContext, relatedPillarsData, galleryContextString
             ); 
             
             setForm(p => ({ 
@@ -851,43 +738,22 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         } catch(e: any) { alert(e.message); } 
     };
     
-    // UPDATED RUN IMAGE HANDLER TO ACCEPT FILE
     const runImage = async () => { 
         aiLogic.setLoading(p => ({ ...p, generatingImage: true, progressMessage: 'Generating AI Image...' })); 
         try { 
             const style = activePersona.mode === 'personal' ? 'cinematic' : 'corporate'; 
-            // Pass Category for better context
             const { url, file } = await aiLogic.getAIImageUrl(form.title, form.category, style); 
-            
-            // Set both Preview URL and Upload File (for SEO filename upload later)
             setForm(p => ({ ...p, imagePreview: url, uploadFile: file })); 
-        } catch(e) {
-            console.error(e);
-        } finally { 
-            aiLogic.setLoading(p => ({ ...p, generatingImage: false, progressMessage: '' })); 
-        } 
+        } catch(e) { console.error(e); } 
+        finally { aiLogic.setLoading(p => ({ ...p, generatingImage: false, progressMessage: '' })); } 
     };
 
-    // --- NEW: SOCIAL BROADCAST ACTIONS ---
     const generateSocialCaption = async () => {
         if (!form.title) return alert("Judul artikel wajib diisi.");
         setSocialLoading(p => ({ ...p, generating: true }));
         try {
             const context = form.excerpt || form.content.substring(0, 300) || form.title;
-            const prompt = `
-            Role: Social Media Manager for "PT Mesin Kasir Solo".
-            Task: Write a viral Instagram/Facebook/LinkedIn caption to promote this article: "${form.title}".
-            Context: ${context}.
-            
-            Style:
-            - Professional but engaging (Edutainment).
-            - Hook at the beginning.
-            - Summarize key value.
-            - Call to Action: "Baca selengkapnya di link bio" or similar.
-            - Hashtags: #Bisnis #UMKM #KasirSolo #EdukasiBisnis.
-            
-            Output: JUST the caption text.
-            `;
+            const prompt = `Role: Social Media Manager. Task: Write a viral caption to promote this article: "${form.title}". Context: ${context}. Style: Professional but engaging. Call to Action: "Baca selengkapnya". Hashtags: #Bisnis #UMKM #KasirSolo. Output: JUST the caption.`;
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
             setSocialCaption(res.text?.trim() || '');
         } catch(e) { alert("Gagal generate caption."); }
@@ -897,42 +763,24 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const broadcastArticle = async () => {
         if (!form.title) return alert("Simpan artikel terlebih dahulu untuk broadcast.");
         if (!socialCaption) return alert("Caption tidak boleh kosong.");
-        
-        // Safety Check for Local Blob URL
-        if (form.imagePreview.startsWith('blob:')) {
-            return alert("Gambar cover masih bersifat lokal. Mohon SIMPAN ARTIKEL dulu untuk upload gambar ke server, baru lakukan broadcast.");
-        }
-        if (!form.imagePreview) return alert("Artikel harus punya cover image untuk broadcast.");
+        if (form.imagePreview.startsWith('blob:')) return alert("Gambar cover masih lokal. Simpan artikel dulu.");
+        if (!form.imagePreview) return alert("Artikel harus punya cover image.");
 
-        const activePlatforms = Object.entries(selectedPlatforms)
-            .filter(([_, isActive]) => isActive)
-            .map(([key]) => key);
-
-        if (activePlatforms.length === 0) return alert("Pilih minimal 1 platform tujuan.");
+        const activePlatforms = Object.entries(selectedPlatforms).filter(([_, isActive]) => isActive).map(([key]) => key);
+        if (activePlatforms.length === 0) return alert("Pilih minimal 1 platform.");
 
         setSocialLoading(p => ({ ...p, posting: true }));
-
         try {
             const response = await fetch('/api/ayrshare', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    caption: socialCaption,
-                    image_url: form.imagePreview,
-                    platforms: activePlatforms
-                })
+                body: JSON.stringify({ caption: socialCaption, image_url: form.imagePreview, platforms: activePlatforms })
             });
-
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || "Gagal broadcast");
-
-            alert(`Sukses! Broadcast artikel terkirim ke: ${activePlatforms.join(', ')}.`);
-        } catch(e: any) {
-            console.error("Broadcast Error:", e);
-            alert(`Gagal broadcast: ${e.message}`);
-        } finally {
-            setSocialLoading(p => ({ ...p, posting: false }));
-        }
+            alert(`Sukses! Broadcast terkirim ke: ${activePlatforms.join(', ')}.`);
+        } catch(e: any) { console.error("Broadcast Error:", e); alert(`Gagal broadcast: ${e.message}`); } 
+        finally { setSocialLoading(p => ({ ...p, posting: false })); }
     };
 
     return {
