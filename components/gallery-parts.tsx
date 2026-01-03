@@ -99,6 +99,8 @@ export const DigitalProjectCard = ({ item, onClick }: { item: GalleryItem, onCli
             <div 
                 className="w-full h-full bg-cover bg-top transition-all duration-[4000ms] ease-linear group-hover:bg-bottom"
                 style={{ backgroundImage: `url(${item.image_url})` }}
+                role="img"
+                aria-label={item.title}
             >
                 <div className="absolute inset-0 bg-black/20 group-hover:opacity-0 transition-opacity duration-500"></div>
             </div>
@@ -141,6 +143,8 @@ export const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onCl
               src={item.image_url} 
               alt={item.title} 
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              loading="lazy"
+              decoding="async"
             />
             
             {item.type === 'video' && (

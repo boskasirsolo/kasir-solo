@@ -1,30 +1,47 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS, INITIAL_JOBS, injectGoogleTags } from './utils';
 import { Product, Article, GalleryItem, SiteConfig, Testimonial, JobOpening } from './types';
 import { CartProvider } from './context/cart-context';
-import { LoadingSpinner } from './components/ui'; // Import Loader
+import { LoadingSpinner } from './components/ui';
 
-// Component Imports
+// Component Imports (Eager Load Core Layout)
 import { Layout } from './components/layout';
-import { HomePage } from './pages/home';
-import { ShopPage, ProductDetailPage } from './pages/shop';
-import { GalleryPage, ProjectDetailPage } from './pages/gallery';
-import { ArticlesPage, ArticleDetailPage } from './pages/articles';
-import { AboutPage } from './pages/about';
-import { VisionPage } from './pages/vision'; 
-import { CareerPage } from './pages/career';
-import { ContactPage } from './pages/contact';
-import { AdminDashboard, AdminLogin } from './pages/admin';
-import { CheckoutPage } from './pages/checkout';
-import { InnovationPage } from './pages/innovation';
-import { WebsiteServicePage, WebAppServicePage, SeoServicePage, MaintenanceServicePage } from './pages/services';
-import { LegalPage } from './pages/legal'; 
-import { SupportPage } from './pages/support'; 
-import { TrackOrderPage } from './pages/track-order'; // NEW IMPORT
-import { NotFoundPage } from './pages/not-found';
+
+// Lazy Load Pages to optimize initial bundle size
+// Note: Adapting named exports for React.lazy
+const HomePage = lazy(() => import('./pages/home').then(module => ({ default: module.HomePage })));
+const ShopPage = lazy(() => import('./pages/shop').then(module => ({ default: module.ShopPage })));
+const ProductDetailPage = lazy(() => import('./pages/shop').then(module => ({ default: module.ProductDetailPage })));
+const GalleryPage = lazy(() => import('./pages/gallery').then(module => ({ default: module.GalleryPage })));
+const ProjectDetailPage = lazy(() => import('./pages/gallery').then(module => ({ default: module.ProjectDetailPage })));
+const ArticlesPage = lazy(() => import('./pages/articles').then(module => ({ default: module.ArticlesPage })));
+const ArticleDetailPage = lazy(() => import('./pages/articles').then(module => ({ default: module.ArticleDetailPage })));
+const AboutPage = lazy(() => import('./pages/about').then(module => ({ default: module.AboutPage })));
+const VisionPage = lazy(() => import('./pages/vision').then(module => ({ default: module.VisionPage })));
+const CareerPage = lazy(() => import('./pages/career').then(module => ({ default: module.CareerPage })));
+const ContactPage = lazy(() => import('./pages/contact').then(module => ({ default: module.ContactPage })));
+const AdminDashboard = lazy(() => import('./pages/admin').then(module => ({ default: module.AdminDashboard })));
+const AdminLogin = lazy(() => import('./pages/admin').then(module => ({ default: module.AdminLogin })));
+const CheckoutPage = lazy(() => import('./pages/checkout').then(module => ({ default: module.CheckoutPage })));
+const InnovationPage = lazy(() => import('./pages/innovation').then(module => ({ default: module.InnovationPage })));
+const WebsiteServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.WebsiteServicePage })));
+const WebAppServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.WebAppServicePage })));
+const SeoServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.SeoServicePage })));
+const MaintenanceServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.MaintenanceServicePage })));
+const LegalPage = lazy(() => import('./pages/legal').then(module => ({ default: module.LegalPage })));
+const SupportPage = lazy(() => import('./pages/support').then(module => ({ default: module.SupportPage })));
+const TrackOrderPage = lazy(() => import('./pages/track-order').then(module => ({ default: module.TrackOrderPage })));
+const NotFoundPage = lazy(() => import('./pages/not-found').then(module => ({ default: module.NotFoundPage })));
+
+// Loading Fallback Component
+const PageLoader = () => (
+  <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+      <LoadingSpinner size={32} className="text-brand-orange" />
+  </div>
+);
 
 const AppContent = () => {
   const navigate = useNavigate();
@@ -154,33 +171,9 @@ const AppContent = () => {
         }
 
         // 2. FETCH REAL DATA (If connected)
+        // Optimize: Use Promise.all where possible, but handle Settings separately first to unblock UI if needed
         try {
-            // Fetch Products
-            const { data: prodData } = await supabase.from('products').select('*').order('id', { ascending: true });
-            if (prodData) {
-                const mappedProducts = prodData.map((item: any) => ({
-                ...item,
-                image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800'
-                }));
-                setProducts(mappedProducts);
-            }
-
-            // Fetch Gallery
-            const { data: galData } = await supabase.from('gallery').select('*').order('id', { ascending: false });
-            if (galData) setGallery(galData);
-
-            // Fetch Articles (Using Helper)
-            await fetchArticles();
-
-            // Fetch Testimonials
-            const { data: testiData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
-            if (testiData) setTestimonials(testiData);
-
-            // Fetch Jobs
-            const { data: jobsData } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
-            if (jobsData) setJobs(jobsData);
-
-            // Fetch Site Settings
+            // Fetch Site Settings FIRST (Crucial for UI Config)
             const { data: settingsData } = await supabase.from('site_settings').select('*').single();
             if (settingsData) {
                 const newConfig = {
@@ -216,10 +209,32 @@ const AppContent = () => {
                     timezone: settingsData.timezone || config.timezone
                 };
                 setConfig(newConfig);
-                
                 // INJECT GOOGLE TAGS DYNAMICALLY
                 injectGoogleTags(newConfig.googleAnalyticsId, newConfig.googleSearchConsoleCode);
             }
+
+            // Fetch other content in parallel
+            const [prodRes, galRes, testiRes, jobsRes] = await Promise.all([
+                supabase.from('products').select('*').order('id', { ascending: true }),
+                supabase.from('gallery').select('*').order('id', { ascending: false }),
+                supabase.from('testimonials').select('*').order('created_at', { ascending: false }),
+                supabase.from('jobs').select('*').order('created_at', { ascending: false })
+            ]);
+
+            if (prodRes.data) {
+                const mappedProducts = prodRes.data.map((item: any) => ({
+                ...item,
+                image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800'
+                }));
+                setProducts(mappedProducts);
+            }
+            if (galRes.data) setGallery(galRes.data);
+            if (testiRes.data) setTestimonials(testiRes.data);
+            if (jobsRes.data) setJobs(jobsRes.data);
+
+            // Fetch Articles separately via helper
+            await fetchArticles();
+
         } catch (e) {
             console.error("Data Fetch Error:", e);
         } finally {
@@ -257,17 +272,17 @@ const AppContent = () => {
   }, []);
 
   // --- RENDER LOADING SCREEN ---
+  // Only show full screen loader during initial config load
   if (isInitializing) {
       return (
           <div className="min-h-screen bg-brand-black flex flex-col items-center justify-center gap-4">
               <LoadingSpinner size={48} className="text-brand-orange" />
-              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest animate-pulse">Memuat Data...</p>
+              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest animate-pulse">Memuat Sistem...</p>
           </div>
       );
   }
 
   // --- FILTER: AUTO-PUBLISH LOGIC ---
-  // Show if status is 'published' OR (status is 'scheduled' AND time has passed)
   const publishedArticles = articles.filter(a => {
       if (a.status === 'published') return true;
       if (a.status === 'scheduled' && a.scheduled_for) {
@@ -287,68 +302,70 @@ const AppContent = () => {
         setConfig={setConfig}
         session={session} 
       >
-        <Routes>
-          <Route path="/" element={
-            <HomePage 
-              setPage={handleNavigation} 
-              config={config} 
-              gallery={gallery} 
-              testimonials={testimonials} 
-            />
-          } />
-          <Route path="/home" element={
-            <HomePage 
-              setPage={handleNavigation} 
-              config={config} 
-              gallery={gallery} 
-              testimonials={testimonials} 
-            />
-          } />
-          
-          <Route path="/shop" element={<ShopPage products={products} />} />
-          <Route path="/shop/:slug" element={<ProductDetailPage products={products} />} />
-          
-          <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
-          <Route path="/gallery/:slug" element={<ProjectDetailPage gallery={gallery} testimonials={testimonials} />} />
-          
-          <Route path="/articles" element={<ArticlesPage articles={publishedArticles} products={products} />} />
-          <Route path="/articles/:slug" element={<ArticleDetailPage articles={publishedArticles} products={products} />} />
-          
-          <Route path="/services/website" element={<WebsiteServicePage />} />
-          <Route path="/services/webapp" element={<WebAppServicePage />} />
-          <Route path="/services/seo" element={<SeoServicePage />} />
-          <Route path="/services/maintenance" element={<MaintenanceServicePage />} />
-
-          <Route path="/legal/:type" element={<LegalPage />} />
-          <Route path="/support" element={<SupportPage />} />
-          <Route path="/track-order" element={<TrackOrderPage />} /> 
-
-          <Route path="/about" element={<AboutPage config={config} />} />
-          <Route path="/about/vision" element={<VisionPage />} /> 
-          <Route path="/career" element={<CareerPage jobs={jobs} />} />
-          <Route path="/contact" element={<ContactPage config={config} />} /> 
-          
-          <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
-          <Route path="/innovation" element={<InnovationPage config={config} />} />
-          
-          <Route path="/admin" element={
-            session ? (
-              <AdminDashboard 
-                products={products} setProducts={setProducts}
-                gallery={gallery} setGallery={setGallery}
-                testimonials={testimonials} setTestimonials={setTestimonials}
-                articles={articles} setArticles={setArticles}
-                jobs={jobs} setJobs={setJobs}
-                config={config} setConfig={setConfig}
-                onLogout={() => supabase?.auth.signOut()}
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={
+              <HomePage 
+                setPage={handleNavigation} 
+                config={config} 
+                gallery={gallery} 
+                testimonials={testimonials} 
               />
-            ) : (
-              <AdminLogin />
-            )
-          } />
+            } />
+            <Route path="/home" element={
+              <HomePage 
+                setPage={handleNavigation} 
+                config={config} 
+                gallery={gallery} 
+                testimonials={testimonials} 
+              />
+            } />
+            
+            <Route path="/shop" element={<ShopPage products={products} />} />
+            <Route path="/shop/:slug" element={<ProductDetailPage products={products} />} />
+            
+            <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
+            <Route path="/gallery/:slug" element={<ProjectDetailPage gallery={gallery} testimonials={testimonials} />} />
+            
+            <Route path="/articles" element={<ArticlesPage articles={publishedArticles} products={products} />} />
+            <Route path="/articles/:slug" element={<ArticleDetailPage articles={publishedArticles} products={products} />} />
+            
+            <Route path="/services/website" element={<WebsiteServicePage />} />
+            <Route path="/services/webapp" element={<WebAppServicePage />} />
+            <Route path="/services/seo" element={<SeoServicePage />} />
+            <Route path="/services/maintenance" element={<MaintenanceServicePage />} />
 
-          <Route path="*" element={<NotFoundPage setPage={handleNavigation} />} />
-        </Routes>
+            <Route path="/legal/:type" element={<LegalPage />} />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/track-order" element={<TrackOrderPage />} /> 
+
+            <Route path="/about" element={<AboutPage config={config} />} />
+            <Route path="/about/vision" element={<VisionPage />} /> 
+            <Route path="/career" element={<CareerPage jobs={jobs} />} />
+            <Route path="/contact" element={<ContactPage config={config} />} /> 
+            
+            <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
+            <Route path="/innovation" element={<InnovationPage config={config} />} />
+            
+            <Route path="/admin" element={
+              session ? (
+                <AdminDashboard 
+                  products={products} setProducts={setProducts}
+                  gallery={gallery} setGallery={setGallery}
+                  testimonials={testimonials} setTestimonials={setTestimonials}
+                  articles={articles} setArticles={setArticles}
+                  jobs={jobs} setJobs={setJobs}
+                  config={config} setConfig={setConfig}
+                  onLogout={() => supabase?.auth.signOut()}
+                />
+              ) : (
+                <AdminLogin />
+              )
+            } />
+
+            <Route path="*" element={<NotFoundPage setPage={handleNavigation} />} />
+          </Routes>
+        </Suspense>
       </Layout>
     </CartProvider>
   );

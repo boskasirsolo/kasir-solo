@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw, Filter } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw, Filter, List, Scale } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, formatRupiah, callGeminiWithRotation, formatNumberInput, cleanNumberInput, slugify, renameFile } from '../utils';
@@ -29,6 +29,8 @@ const useProductManager = (
         price: '',
         desc: '',
         shortDesc: '', 
+        specsStr: '', // NEW: String representation of specs object
+        includesStr: '', // NEW: String representation of includes array
         imagePreview: '',
         uploadFile: null as File | null
     });
@@ -36,6 +38,8 @@ const useProductManager = (
     const [loadingState, setLoadingState] = useState({
         generatingTitle: false,
         generatingDesc: false,
+        generatingSpecs: false, // NEW
+        generatingIncludes: false, // NEW
         generatingImage: false,
         uploading: false
     });
@@ -57,12 +61,24 @@ const useProductManager = (
             price: '',
             desc: '',
             shortDesc: '',
+            specsStr: '',
+            includesStr: '',
             imagePreview: '',
             uploadFile: null
         });
     };
 
     const handleEditClick = (p: Product) => {
+        // Convert Specs Object to String
+        const specsString = p.specs 
+            ? Object.entries(p.specs).map(([k, v]) => `${k}: ${v}`).join('\n')
+            : '';
+        
+        // Convert Includes Array to String
+        const includesString = p.package_includes 
+            ? p.package_includes.join('\n')
+            : '';
+
         setForm({
             id: p.id,
             name: p.name,
@@ -70,6 +86,8 @@ const useProductManager = (
             price: formatNumberInput(p.price), 
             desc: p.description,
             shortDesc: '',
+            specsStr: specsString,
+            includesStr: includesString,
             imagePreview: p.image,
             uploadFile: null
         });
@@ -119,6 +137,57 @@ const useProductManager = (
         finally { setLoadingState(prev => ({ ...prev, generatingDesc: false })); }
     };
 
+    const generateAISpecs = async () => {
+        if (!form.name) return alert("Isi Nama Produk dulu.");
+        setLoadingState(prev => ({ ...prev, generatingSpecs: true }));
+        try {
+            const prompt = `
+            Role: Tech Specialist.
+            Task: Generate realistic technical specifications for POS Product: "${form.name}" (${form.category}).
+            Context: ${form.shortDesc}.
+            Format: Key: Value (one per line).
+            Language: Indonesian/English (Mixed standard terms).
+            Example:
+            OS: Windows 10 IoT
+            RAM: 4GB
+            Storage: 128GB SSD
+            Layar: 15.6 Inch Touchscreen
+            Printer: 80mm Auto-Cutter
+            
+            Output: JUST the list. Max 6-8 items.
+            `;
+            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+            setForm(prev => ({ ...prev, specsStr: res.text?.trim() || '' }));
+        } catch (e) { alert("Gagal generate spek."); }
+        finally { setLoadingState(prev => ({ ...prev, generatingSpecs: false })); }
+    };
+
+    const generateAIIncludes = async () => {
+        if (!form.name) return alert("Isi Nama Produk dulu.");
+        setLoadingState(prev => ({ ...prev, generatingIncludes: true }));
+        try {
+            const prompt = `
+            Role: Sales Manager.
+            Task: Generate a list of "Package Includes" (Apa saja yang didapat) for selling: "${form.name}".
+            Context: Include standard bonuses like Training, Warranty, Support.
+            Format: One item per line.
+            Language: Indonesian.
+            Example:
+            PC All-in-One Touchscreen
+            Printer Kasir Thermal
+            Laci Uang (Cash Drawer)
+            Software Kasir (Lifetime)
+            Garansi Hardware 1 Tahun
+            Free Training & Support
+            
+            Output: JUST the list. Max 5-7 items.
+            `;
+            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+            setForm(prev => ({ ...prev, includesStr: res.text?.trim() || '' }));
+        } catch (e) { alert("Gagal generate paket."); }
+        finally { setLoadingState(prev => ({ ...prev, generatingIncludes: false })); }
+    };
+
     const generateAIImage = async () => {
         if (!form.name) return alert("Isi Nama Produk untuk referensi gambar.");
         setLoadingState(p => ({...p, generatingImage: true}));
@@ -128,7 +197,6 @@ const useProductManager = (
             const prompt = `${cleanName} ${form.category} modern point of sale hardware machine, sleek, white background, high quality, 8k, realistic product photography`;
             const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=800&model=flux&nologo=true&seed=${seed}`;
             
-            // Create a SEO friendly file from AI Blob
             const res = await fetch(url);
             const blob = await res.blob();
             const fileName = `${slugify(form.name)}-${slugify(form.category)}-pos.jpg`;
@@ -152,7 +220,6 @@ const useProductManager = (
             let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/400';
 
             if (form.uploadFile) {
-                // SEO OPTIMIZATION: Rename file based on Product Name before upload
                 const seoName = `${slugify(form.name)}-mesin-kasir`;
                 const fileToUpload = renameFile(form.uploadFile, seoName);
 
@@ -164,12 +231,30 @@ const useProductManager = (
                 if (data.secure_url) finalImageUrl = data.secure_url;
             }
 
+            // Parse Specs String to Object
+            const specsObj: Record<string, string> = {};
+            if (form.specsStr) {
+                form.specsStr.split('\n').forEach(line => {
+                    const [key, ...rest] = line.split(':');
+                    if (key && rest.length > 0) {
+                        specsObj[key.trim()] = rest.join(':').trim();
+                    }
+                });
+            }
+
+            // Parse Includes String to Array
+            const includesArr = form.includesStr 
+                ? form.includesStr.split('\n').map(s => s.trim()).filter(Boolean)
+                : [];
+
             const dbData = {
                 name: form.name,
                 price: cleanNumberInput(form.price),
                 category: form.category,
                 description: form.desc,
-                image_url: finalImageUrl
+                image_url: finalImageUrl,
+                specs: specsObj, // SAVE SPECS
+                package_includes: includesArr // SAVE INCLUDES
             };
 
             if (form.id) {
@@ -193,7 +278,6 @@ const useProductManager = (
         if (form.id === id) resetForm();
     };
 
-    // Filter Logic
     const filtered = products.filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
@@ -212,6 +296,8 @@ const useProductManager = (
         deleteProduct,
         generateAITitle,
         generateAIDesc,
+        generateAISpecs,
+        generateAIIncludes,
         generateAIImage,
         listData: { 
             paginated, 
@@ -219,8 +305,8 @@ const useProductManager = (
             page, 
             setPage, 
             searchTerm, 
-            setSearchTerm,
-            selectedCategory,
+            setSearchTerm, 
+            selectedCategory, 
             setSelectedCategory,
             totalItems: filtered.length
         }
@@ -228,9 +314,9 @@ const useProductManager = (
 };
 
 const ProductForm = ({ 
-    form, setForm, loading, onSubmit, onReset, onGenTitle, onGenDesc, onGenImage 
+    form, setForm, loading, onSubmit, onReset, onGenTitle, onGenDesc, onGenImage, onGenSpecs, onGenIncludes
 }: {
-    form: any, setForm: any, loading: any, onSubmit: any, onReset: any, onGenTitle: any, onGenDesc: any, onGenImage: any
+    form: any, setForm: any, loading: any, onSubmit: any, onReset: any, onGenTitle: any, onGenDesc: any, onGenImage: any, onGenSpecs: any, onGenIncludes: any
 }) => (
     <div className="bg-brand-dark rounded-xl border border-white/5 shadow-2xl relative overflow-hidden flex flex-col h-[85vh] sticky top-6">
         
@@ -301,7 +387,7 @@ const ProductForm = ({
                 <Input value={form.name} onChange={e => setForm((prev:any) => ({...prev, name: e.target.value}))} placeholder="Nama Produk..." className="py-2 text-xs" />
             </div>
 
-            {/* CATEGORY (NEW) */}
+            {/* CATEGORY */}
             <div>
                 <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Kategori</label>
                 <div className="relative">
@@ -333,10 +419,42 @@ const ProductForm = ({
                 </div>
             </div>
 
+            {/* SPECS (NEW) */}
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1"><Scale size={10}/> Spesifikasi Utama</label>
+                    <button onClick={onGenSpecs} disabled={loading.generatingSpecs} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
+                        {loading.generatingSpecs ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Spec</>}
+                    </button>
+                </div>
+                <TextArea 
+                    value={form.specsStr} 
+                    onChange={e => setForm((prev:any) => ({...prev, specsStr: e.target.value}))} 
+                    placeholder="Contoh:&#10;RAM: 4GB&#10;OS: Windows 10" 
+                    className="h-24 text-xs leading-relaxed custom-scrollbar whitespace-pre-line font-mono" 
+                />
+            </div>
+
+            {/* INCLUDES (NEW) */}
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1"><List size={10}/> Paket Termasuk</label>
+                    <button onClick={onGenIncludes} disabled={loading.generatingIncludes} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
+                        {loading.generatingIncludes ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-List</>}
+                    </button>
+                </div>
+                <TextArea 
+                    value={form.includesStr} 
+                    onChange={e => setForm((prev:any) => ({...prev, includesStr: e.target.value}))} 
+                    placeholder="Contoh:&#10;Printer Thermal&#10;Garansi 1 Tahun" 
+                    className="h-24 text-xs leading-relaxed custom-scrollbar whitespace-pre-line" 
+                />
+            </div>
+
             {/* DESCRIPTION */}
             <div>
                 <div className="flex justify-between items-center mb-1">
-                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Deskripsi</label>
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Deskripsi (Sales Copy)</label>
                     <button onClick={onGenDesc} disabled={loading.generatingDesc} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
                         {loading.generatingDesc ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Desc</>}
                     </button>
@@ -474,7 +592,7 @@ export const AdminProducts = ({
   products: Product[], 
   setProducts: (p: Product[]) => void 
 }) => {
-  const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, generateAITitle, generateAIDesc, generateAIImage, listData } = useProductManager(products, setProducts);
+  const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, generateAITitle, generateAIDesc, generateAIImage, generateAISpecs, generateAIIncludes, listData } = useProductManager(products, setProducts);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
@@ -494,6 +612,8 @@ export const AdminProducts = ({
             onGenTitle={generateAITitle}
             onGenDesc={generateAIDesc}
             onGenImage={generateAIImage}
+            onGenSpecs={generateAISpecs}
+            onGenIncludes={generateAIIncludes}
          />
       </div>
     </div>

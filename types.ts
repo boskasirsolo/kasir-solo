@@ -10,6 +10,8 @@ export interface Product {
   specs?: {
     [key: string]: string; // Flexible key-value pairs (e.g., "RAM": "4GB")
   };
+  // NEW: Package Includes list
+  package_includes?: string[];
 }
 
 export interface Article {
