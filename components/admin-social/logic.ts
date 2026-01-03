@@ -5,6 +5,8 @@ import { Product, Article, GalleryItem } from '../../types';
 import { SocialContentItem, PlatformState, CaptionState, ActiveTab, SOCIAL_TONES } from './types';
 import { SERVICE_CATALOG } from './data';
 
+const ITEMS_PER_PAGE = 7;
+
 export const useSocialStudio = (
     products: Product[],
     articles: Article[],
@@ -13,6 +15,7 @@ export const useSocialStudio = (
     // --- STATE ---
     const [selectedSourceType, setSelectedSourceType] = useState<'all' | 'product' | 'service' | 'article' | 'gallery'>('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [sourcePage, setSourcePage] = useState(1); // Pagination State
     
     // Selection State
     const [selectedItem, setSelectedItem] = useState<SocialContentItem | null>(null);
@@ -62,6 +65,7 @@ export const useSocialStudio = (
         return [...mappedServices, ...mappedProducts, ...mappedArticles, ...mappedGallery];
     }, [products, articles, gallery]);
 
+    // --- FILTERING & PAGINATION ---
     const filteredItems = useMemo(() => {
         return allItems.filter(item => {
             const matchesType = selectedSourceType === 'all' || item.type === selectedSourceType;
@@ -69,6 +73,17 @@ export const useSocialStudio = (
             return matchesType && matchesSearch;
         });
     }, [allItems, selectedSourceType, searchTerm]);
+
+    // Reset page on filter change
+    useEffect(() => {
+        setSourcePage(1);
+    }, [selectedSourceType, searchTerm]);
+
+    const totalSourcePages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+    const paginatedItems = useMemo(() => {
+        const start = (sourcePage - 1) * ITEMS_PER_PAGE;
+        return filteredItems.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredItems, sourcePage]);
 
     // --- ACTIONS ---
 
@@ -120,29 +135,69 @@ export const useSocialStudio = (
             }).join(' + ');
 
             let platformContext = "";
-            if (platform === 'instagram') platformContext = "Platform: Instagram. Use relevant hashtags, emojis, and casual engaging style.";
-            if (platform === 'facebook') platformContext = "Platform: Facebook. Community engaging, clear CTA, moderate emojis.";
-            if (platform === 'linkedin') platformContext = "Platform: LinkedIn. Professional, insightful, business value focused.";
-            if (platform === 'master') platformContext = "Platform: General Social Media. Balanced style.";
+            if (platform === 'instagram') {
+                platformContext = `
+                PLATFORM: INSTAGRAM
+                - Strategy: Visual-first, Engaging, Save-able content.
+                - Hashtag Rules: Research 20-25 high-traffic & niche hashtags. Place them in a block at the bottom.
+                - Formatting: Clean line breaks. Use relevant emojis.
+                `;
+            } else if (platform === 'facebook') {
+                platformContext = `
+                PLATFORM: FACEBOOK
+                - Strategy: Community building, Share-able, Conversational.
+                - Keyword Rules: Weave 3-5 keywords naturally into sentences (e.g. "Solusi #KasirOnline terbaik...").
+                - Hashtags: Max 3-5 tags at the bottom. Focus on groups/community tags.
+                `;
+            } else if (platform === 'linkedin') {
+                platformContext = `
+                PLATFORM: LINKEDIN
+                - Strategy: Professional Insight, B2B Value, Thought Leadership.
+                - Keyword Rules: Use industry standard terms (ERP, ROI, Efficiency).
+                - Hashtags: Strictly 3-5 professional tags (e.g., #RetailTech #BusinessGrowth).
+                - Tone Adjustment: Make it slightly more formal/smart but keep the 'Gritty' edge.
+                `;
+            } else {
+                platformContext = "PLATFORM: GENERAL SOCIAL MEDIA. Balanced approach.";
+            }
 
             const prompt = `
-            Role: Social Media Expert for "PT Mesin Kasir Solo".
+            Role: Social Media Strategist & Trend Analyst for "PT Mesin Kasir Solo".
+            Target Audience: Indonesian SME Owners (UMKM), Retail Managers, F&B Owners.
             
-            Task: Write a caption for ${platform === 'master' ? 'general use' : platform}.
-            
-            [CONTEXT DATA]
+            [CONTENT SOURCE]
             Title: ${selectedItem.title}
             Type: ${selectedItem.type}
-            Desc: ${selectedItem.description}
+            Key Info: ${selectedItem.description}
             Link: ${selectedItem.url}
 
-            [STYLE INSTRUCTION]
-            Tone Mix: ${toneDescriptions}.
-            Blend these tones naturally.
-            ${platformContext}
-            Language: Indonesian.
-            
-            Output: JUST the caption text. No intro/outro.
+            [USER SELECTED TONE MIX]
+            ${toneDescriptions}
+
+            [STRICT PERSONA RULE: USE "GUE"]
+            - You are the Founder/Owner speaking directly to fellow business owners.
+            - **FORBIDDEN WORDS:** "Saya", "Kami", "Kita", "Anda".
+            - **MANDATORY WORDS:** Use **"Gue"** (for I/Me/We) and **"Lo"** or "Kalian" (for You/Audience).
+            - **VIBE:** Street-smart, experienced, "teman nongkrong", honest, no corporate bullshit.
+            - Exception: Only use formal language if the selected tone is STRICTLY 'Formal Professional'. Otherwise, default to "Gue/Lo".
+
+            [INSTRUCTION: RESEARCH & WRITE]
+            1. **RESEARCH PHASE (Internal):** 
+               - Analyze the topic "${selectedItem.title}".
+               - Identify High-Volume Keywords & Trending Hashtags relevant to ${platform} in Indonesia.
+               - Identify "Pain Points" of the audience related to this item.
+
+            2. **DRAFTING PHASE:**
+               - Write a caption that hooks the reader immediately (No "Halo Kak" intro).
+               - **WEAVING TECHNIQUE:** Do NOT just list keywords. Weave the researched keywords naturally into the narrative sentences.
+                 (Example: Instead of "Beli mesin kasir.", write "Gue kasih tau ya, investasi #MesinKasir itu kunci biar duit lo gak bocor.")
+               - Inject the selected Tones naturally.
+               - Include a clear Call to Action (CTA) pointing to the Link/Bio/DM.
+
+            3. **PLATFORM SPECIFIC RULES:**
+               ${platformContext}
+
+            Output: JUST the final caption text ready to post. No "Here is the caption" prologues.
             `;
 
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
@@ -208,11 +263,14 @@ export const useSocialStudio = (
         state: { 
             selectedSourceType, searchTerm, selectedItem, 
             platforms, captions, activeTab, customImage, isLoading,
-            allItems, filteredItems, selectedTones
+            allItems, filteredItems, selectedTones,
+            // Pagination exports
+            paginatedItems, totalSourcePages, sourcePage
         },
         setters: {
             setSelectedSourceType, setSearchTerm, setPlatforms, 
-            setCaptions, setActiveTab, setCustomImage, toggleTone
+            setCaptions, setActiveTab, setCustomImage, toggleTone,
+            setSourcePage // Export setter
         },
         actions: {
             selectItem,

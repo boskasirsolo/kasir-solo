@@ -3,7 +3,7 @@ import React, { useRef } from 'react';
 import { useSocialStudio } from './logic';
 import { SourceCard, CaptionEditor, PhoneMockup, PlatformIcon } from './ui-parts';
 import { Product, Article, GalleryItem } from '../../types';
-import { Search, UploadCloud, Rocket, Loader2, Image as ImageIcon, Sparkles, Check } from 'lucide-react';
+import { Search, UploadCloud, Rocket, Loader2, Image as ImageIcon, Sparkles, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ActiveTab, SOCIAL_TONES } from './types';
 
 export const AdminSocialStudio = ({
@@ -49,9 +49,9 @@ export const AdminSocialStudio = ({
                     </div>
                 </div>
 
-                {/* List Items */}
+                {/* List Items (PAGINATED) */}
                 <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
-                    {state.filteredItems.map(item => (
+                    {state.paginatedItems.map(item => (
                         <SourceCard 
                             key={`${item.type}-${item.id}`} 
                             item={item} 
@@ -59,7 +59,35 @@ export const AdminSocialStudio = ({
                             active={state.selectedItem?.id === item.id}
                         />
                     ))}
+                    {state.paginatedItems.length === 0 && (
+                        <div className="text-center py-10 text-gray-500 text-xs">
+                            Konten tidak ditemukan.
+                        </div>
+                    )}
                 </div>
+
+                {/* Pagination Controls */}
+                {state.totalSourcePages > 1 && (
+                    <div className="p-3 border-t border-white/5 flex justify-between items-center bg-black/20">
+                        <button 
+                            onClick={() => setters.setSourcePage(Math.max(1, state.sourcePage - 1))}
+                            disabled={state.sourcePage === 1}
+                            className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft size={16}/>
+                        </button>
+                        <span className="text-[10px] font-bold text-gray-400">
+                            Hal {state.sourcePage} / {state.totalSourcePages}
+                        </span>
+                        <button 
+                            onClick={() => setters.setSourcePage(Math.min(state.totalSourcePages, state.sourcePage + 1))}
+                            disabled={state.sourcePage === state.totalSourcePages}
+                            className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            <ChevronRight size={16}/>
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* PANE 2: COMPOSER (45%) */}
