@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useCart } from '../context/cart-context';
-import { formatRupiah, supabase } from '../utils';
+import { formatRupiah, supabase, normalizePhone } from '../utils';
 import { Button, Input, TextArea, Card, SectionHeader, LoadingSpinner } from '../components/ui';
 import { Trash2, Plus, Minus, ArrowLeft, CheckCircle2, Copy, ShoppingBag } from 'lucide-react';
 
@@ -15,12 +15,6 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<{ id: number, total: number } | null>(null);
-
-  // --- VALIDATION HELPERS ---
-  const validatePhone = (phone: string) => {
-    const regex = /^(\+62|62|0)8[1-9][0-9]{6,11}$/;
-    return regex.test(phone);
-  };
 
   // --- GENERATOR: 12-Digit Random ID ---
   // Range: 100,000,000,000 to 999,999,999,999
@@ -67,8 +61,10 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
       return;
     }
 
-    if (!validatePhone(formData.phone)) {
-      alert("Format Nomor WhatsApp tidak valid. Gunakan format 08xx atau 628xx.");
+    // STRICT PHONE VALIDATION
+    const cleanPhone = normalizePhone(formData.phone);
+    if (!cleanPhone) {
+      alert("Format Nomor WhatsApp tidak valid.\n\nContoh yang benar:\n- 081234567890\n- 6281234567890\n\n(Minimal 10 digit, Maksimal 15 digit)");
       return;
     }
 
@@ -87,7 +83,7 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
       // 1. Create Order Head (With Smart Retry)
       const orderPayload = {
         customer_name: formData.name,
-        customer_phone: formData.phone,
+        customer_phone: cleanPhone, // Use validated phone
         customer_address: formData.address,
         customer_note: formData.note,
         total_amount: totalPrice,
@@ -252,7 +248,7 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp (Wajib)</label>
                   <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="Contoh: 081234567890" type="tel" />
-                  <p className="text-[10px] text-gray-500 mt-1">Gunakan format 08xx atau 62xx</p>
+                  <p className="text-[10px] text-gray-500 mt-1">Format: 08xx atau 628xx (Min 10 digit)</p>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alamat Lengkap</label>

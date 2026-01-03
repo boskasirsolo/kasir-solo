@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Zap, Target, Shield, Flame, XCircle, HeartHandshake, Mail, UploadCloud, FileText, CheckCircle2, Loader2, X } from 'lucide-react';
 import { JobOpening } from '../types';
 import { Button, Card, Badge, SectionHeader, Input, TextArea } from '../components/ui';
-import { uploadToSupabase, supabase, renameFile, slugify } from '../utils';
+import { uploadToSupabase, supabase, renameFile, slugify, normalizePhone } from '../utils';
 
 const JobCard: React.FC<{ job: JobOpening, onClick: () => void }> = ({ job, onClick }) => (
   <div onClick={onClick} className="h-full">
@@ -76,6 +76,12 @@ const ApplicationModal = ({
             return alert("Mohon lengkapi Nama, Email, No. HP, dan Upload CV.");
         }
 
+        // STRICT VALIDATION
+        const cleanPhone = normalizePhone(form.phone);
+        if (!cleanPhone) {
+            return alert("Format nomor HP salah. Gunakan 08xx atau 628xx.");
+        }
+
         if (!supabase) {
             alert("Mode Demo: Form ini membutuhkan koneksi database Supabase.");
             return;
@@ -89,16 +95,15 @@ const ApplicationModal = ({
             const fileToUpload = renameFile(cvFile, seoName);
             
             // NOTE: Uploading to 'careers' bucket, folder 'resumes'
-            // We use 'path' here because for PRIVATE buckets, the URL is useless without signing.
             const { path: cvPath } = await uploadToSupabase(fileToUpload, 'resumes', 'careers');
 
             // 2. Insert into 'applicants' table
             const { error } = await supabase.from('applicants').insert([{
                 full_name: form.full_name,
                 email: form.email,
-                phone: form.phone,
+                phone: cleanPhone, // Use validated phone
                 portfolio_url: form.portfolio_url,
-                cv_url: cvPath, // STORE THE PATH (e.g., resumes/andi-cv.pdf)
+                cv_url: cvPath,
                 cover_letter: form.cover_letter,
                 position: positionTitle,
                 status: 'pending'
@@ -160,7 +165,7 @@ const ApplicationModal = ({
                         />
                         <div className="grid grid-cols-2 gap-2">
                             <Input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="Email Aktif" type="email" className="text-sm"/>
-                            <Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="No. WhatsApp" type="tel" className="text-sm"/>
+                            <Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="No. WhatsApp (08xx)" type="tel" className="text-sm"/>
                         </div>
                     </div>
 

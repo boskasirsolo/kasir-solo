@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
-import { supabase, callGeminiWithRotation, CONFIG, renameFile, INDONESIA_TIMEZONES } from '../utils';
+import { supabase, callGeminiWithRotation, CONFIG, renameFile, INDONESIA_TIMEZONES, normalizePhone } from '../utils';
 
 // --- MENU TABS ---
 const TABS = [
@@ -37,6 +37,17 @@ export const AdminSettings = ({
   const saveSettings = async () => {
       if (!supabase) return alert("Koneksi Database bermasalah.");
       
+      // STRICT PHONE VALIDATION FOR ADMIN
+      if (config.whatsappNumber) {
+          const cleanPhone = normalizePhone(config.whatsappNumber);
+          if (!cleanPhone) {
+              return alert("Format WhatsApp Error. Gunakan format internasional '628xxx' atau lokal '08xxx' (Min 10 digit).");
+          }
+          // Auto update config state with cleaned number if valid, but let's just proceed with save for now if clean works
+          // Ideally we update the object before sending
+          config.whatsappNumber = cleanPhone; 
+      }
+
       setIsSaving(true);
       try {
           let finalAboutImage = aboutImagePreview;
@@ -261,6 +272,7 @@ export const AdminSettings = ({
                         <div>
                             <label className="text-xs text-gray-500 font-bold uppercase mb-1 block flex items-center gap-1"><Smartphone size={12}/> WhatsApp (Tanpa +62)</label>
                             <Input value={config.whatsappNumber || ''} onChange={(e) => setConfig({...config, whatsappNumber: e.target.value})} placeholder="812xxxx" />
+                            <p className="text-[10px] text-gray-500 mt-1">Gunakan format 08xx atau 628xx (Min 10 digit).</p>
                         </div>
                         <div>
                             <label className="text-xs text-gray-500 font-bold uppercase mb-1 block flex items-center gap-1"><Mail size={12}/> Email Resmi</label>

@@ -41,3 +41,31 @@ export const renameFile = (originalFile: File, newName: string): File => {
     lastModified: originalFile.lastModified,
   });
 };
+
+// NEW: Strict Phone Normalizer
+export const normalizePhone = (phone: string): string | null => {
+  // 1. Remove all non-numeric chars
+  let cleaned = phone.replace(/\D/g, '');
+
+  // 2. Handle specific prefixes
+  // If starts with '0', replace with '62'
+  if (cleaned.startsWith('0')) {
+    cleaned = '62' + cleaned.substring(1);
+  } 
+  // If starts with '8...', assume '628...'
+  else if (cleaned.startsWith('8')) {
+    cleaned = '62' + cleaned;
+  }
+
+  // 3. Strict Validation
+  // Must start with '62'
+  if (!cleaned.startsWith('62')) return null;
+  
+  // Length check (Standard mobile/WA is usually 10-14 digits including country code)
+  // e.g. 628123456789 (12)
+  if (cleaned.length < 10 || cleaned.length > 15) {
+    return null;
+  }
+
+  return cleaned;
+};

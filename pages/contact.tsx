@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, MessageCircle, Send, HelpCircle, Building, CheckCircle2, ArrowRight, LifeBuoy, Users } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Button, Input, TextArea, SectionHeader, Card } from '../components/ui';
+import { normalizePhone } from '../utils';
 
 const ContactItem = ({ icon: Icon, title, value, sub, action }: { icon: any, title: string, value: string, sub?: string, action?: () => void }) => (
   <div onClick={action} className={`flex items-start gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all ${action ? 'cursor-pointer group hover:border-brand-orange/30' : ''}`}>
@@ -67,7 +68,13 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
     e.preventDefault();
     if(!form.name || !form.message) return alert("Mohon lengkapi pesan Anda");
     
-    const text = `*FORM KONTAK WEBSITE*%0A%0ANama: ${form.name}%0ANo HP: ${form.phone}%0AKategori: ${form.category}%0A%0APesan:%0A${form.message}`;
+    // Validate Phone
+    const cleanPhone = normalizePhone(form.phone);
+    if (!cleanPhone && form.phone) { // Only strict check if phone is entered
+       return alert("Format nomor HP tidak valid. Gunakan 08xx atau 628xx.");
+    }
+
+    const text = `*FORM KONTAK WEBSITE*%0A%0ANama: ${form.name}%0ANo HP: ${cleanPhone || form.phone}%0AKategori: ${form.category}%0A%0APesan:%0A${form.message}`;
     const url = `https://wa.me/${config.whatsappNumber}?text=${text}`;
     window.open(url, '_blank');
   };
