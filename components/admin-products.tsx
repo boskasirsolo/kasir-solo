@@ -386,10 +386,9 @@ const ProductList = ({
              <span className="text-[10px] font-bold text-gray-500 uppercase bg-white/5 px-2 py-1 rounded">Total: {data.totalItems}</span>
         </div>
         
-        {/* TOOLBAR: Categories & Pagination */}
-        <div className="p-2 border-b border-white/5 flex justify-between items-center bg-black/10 overflow-x-auto gap-4 custom-scrollbar">
-            {/* Category Pills - Left */}
-            <div className="flex gap-2 shrink-0">
+        {/* TOOLBAR 1: Categories (Full Width) */}
+        <div className="p-2 border-b border-white/5 bg-black/10 overflow-x-auto custom-scrollbar">
+            <div className="flex gap-2">
                 <button 
                     onClick={() => data.setSelectedCategory('All')}
                     className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all border ${
@@ -414,9 +413,11 @@ const ProductList = ({
                     </button>
                 ))}
             </div>
+        </div>
 
-            {/* Pagination - Right */}
-            <Pagination page={data.page} totalPages={data.totalPages} setPage={data.setPage} className="shrink-0 justify-end" />
+        {/* TOOLBAR 2: Top Pagination (Separate Row) */}
+        <div className="p-2 border-b border-white/5 bg-black/5 flex justify-end">
+            <Pagination page={data.page} totalPages={data.totalPages} setPage={data.setPage} />
         </div>
 
         {/* GRID */}
