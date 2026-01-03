@@ -146,11 +146,9 @@ export const TrackOrderPage = () => {
         }
     };
 
-    const copyResi = () => {
-        if (result?.order.tracking_number) {
-            navigator.clipboard.writeText(result.order.tracking_number);
-            alert("Nomor resi disalin!");
-        }
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        alert("Disalin ke clipboard!");
     };
 
     return (
@@ -205,7 +203,14 @@ export const TrackOrderPage = () => {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-gray-500 text-xs">Order ID</p>
-                                    <p className="text-brand-orange font-mono font-bold text-lg">#{result.order.id}</p>
+                                    <button 
+                                        onClick={() => copyToClipboard(result.order.id.toString())}
+                                        className="flex items-center justify-end gap-2 text-brand-orange font-mono font-bold text-lg hover:text-white transition-colors group"
+                                        title="Klik untuk menyalin"
+                                    >
+                                        #{result.order.id} 
+                                        <Copy size={14} className="opacity-50 group-hover:opacity-100 transition-opacity"/>
+                                    </button>
                                 </div>
                             </div>
 
@@ -227,7 +232,7 @@ export const TrackOrderPage = () => {
                                         </div>
                                     </div>
                                     <button 
-                                        onClick={copyResi}
+                                        onClick={() => copyToClipboard(result.order.tracking_number!)}
                                         className="px-4 py-2 bg-black/40 hover:bg-brand-orange text-white rounded-lg text-xs font-bold flex items-center gap-2 transition-all border border-white/10"
                                     >
                                         <Copy size={14} /> Salin Resi

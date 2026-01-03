@@ -123,6 +123,17 @@
       ::-webkit-scrollbar-track { background: #0f0f0f; }
       ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
       ::-webkit-scrollbar-thumb:hover { background: #FF5F1F; }
+
+      /* HIDE NUMBER INPUT SPINNERS (CHROME/SAFARI/EDGE) */
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      /* HIDE NUMBER INPUT SPINNERS (FIREFOX) */
+      input[type=number] {
+        -moz-appearance: textfield;
+      }
     </style>
   <script type="importmap">
 {
