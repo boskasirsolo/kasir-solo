@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus, Check, ArrowLeft, PackageOpen, Scale, XCircle } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus, Check, ArrowLeft, PackageOpen, Scale, XCircle, ThumbsUp } from 'lucide-react';
 import { Product } from '../types';
 import { Badge, Card, Input, Button } from './ui';
 import { formatRupiah } from '../utils';
@@ -374,6 +374,24 @@ export const ProductDetailView = ({ product, onClose, isModal = false }: { produ
         </div>
         <div className="w-full md:w-[40%] h-full overflow-y-auto custom-scrollbar bg-black/20 p-6 md:p-10">
             <div className="prose prose-invert prose-sm text-gray-300 leading-relaxed max-w-none">
+                
+                {/* NEW: WHY BUY SECTION (Top Priority) */}
+                {(product.why_buy && product.why_buy.length > 0) && (
+                    <div className="mb-8 p-6 bg-brand-dark border border-brand-orange/30 rounded-2xl shadow-neon-text/20">
+                        <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <ThumbsUp size={16} className="text-brand-orange"/> Kenapa Harus Beli Paket Ini?
+                        </h4>
+                        <ul className="space-y-3">
+                           {product.why_buy.map((item, i) => (
+                               <li key={i} className="flex items-start gap-3">
+                                   <div className="w-5 h-5 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center shrink-0 mt-0.5"><Check size={12}/></div>
+                                   <span className="text-gray-200 font-medium">{item}</span>
+                               </li>
+                           ))}
+                        </ul>
+                    </div>
+                )}
+
                 <h4 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Deskripsi Produk</h4>
                 
                 {/* USE FORMATTED DESCRIPTION HERE */}

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw, Filter, List, Scale } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Tag, DollarSign, Search, Wand2, Image as ImageIcon, RefreshCw, Filter, List, Scale, ThumbsUp } from 'lucide-react';
 import { Product } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
 import { supabase, CONFIG, formatRupiah, callGeminiWithRotation, formatNumberInput, cleanNumberInput, slugify, renameFile } from '../utils';
@@ -29,8 +29,9 @@ const useProductManager = (
         price: '',
         desc: '',
         shortDesc: '', 
-        specsStr: '', // NEW: String representation of specs object
-        includesStr: '', // NEW: String representation of includes array
+        specsStr: '', // String representation of specs object
+        includesStr: '', // String representation of includes array
+        whyBuyStr: '', // NEW: String representation of why_buy array
         imagePreview: '',
         uploadFile: null as File | null
     });
@@ -38,8 +39,9 @@ const useProductManager = (
     const [loadingState, setLoadingState] = useState({
         generatingTitle: false,
         generatingDesc: false,
-        generatingSpecs: false, // NEW
-        generatingIncludes: false, // NEW
+        generatingSpecs: false,
+        generatingIncludes: false,
+        generatingWhyBuy: false, // NEW
         generatingImage: false,
         uploading: false
     });
@@ -63,6 +65,7 @@ const useProductManager = (
             shortDesc: '',
             specsStr: '',
             includesStr: '',
+            whyBuyStr: '',
             imagePreview: '',
             uploadFile: null
         });
@@ -79,6 +82,11 @@ const useProductManager = (
             ? p.package_includes.join('\n')
             : '';
 
+        // Convert WhyBuy Array to String
+        const whyBuyString = p.why_buy
+            ? p.why_buy.join('\n')
+            : '';
+
         setForm({
             id: p.id,
             name: p.name,
@@ -88,6 +96,7 @@ const useProductManager = (
             shortDesc: '',
             specsStr: specsString,
             includesStr: includesString,
+            whyBuyStr: whyBuyString,
             imagePreview: p.image,
             uploadFile: null
         });
@@ -188,6 +197,30 @@ const useProductManager = (
         finally { setLoadingState(prev => ({ ...prev, generatingIncludes: false })); }
     };
 
+    // NEW: Generate Reasons to Buy
+    const generateAIWhyBuy = async () => {
+        if (!form.name) return alert("Isi Nama Produk dulu.");
+        setLoadingState(prev => ({ ...prev, generatingWhyBuy: true }));
+        try {
+            const prompt = `
+            Role: Senior Sales Consultant.
+            Task: Provide 3-5 punchy reasons "Why Buy This Package?" for: "${form.name}" (${form.category}).
+            Focus: Return on Investment (ROI), Efficiency, Durability, or Ease of Use.
+            Format: One short sentence per line.
+            Language: Indonesian.
+            Example:
+            Investasi sekali untuk pemakaian jangka panjang (Heavy Duty).
+            Sistem anti-maling untuk mencegah kebocoran omzet.
+            Layanan purna jual prioritas 24/7.
+            
+            Output: JUST the list.
+            `;
+            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+            setForm(prev => ({ ...prev, whyBuyStr: res.text?.trim() || '' }));
+        } catch (e) { alert("Gagal generate alasan."); }
+        finally { setLoadingState(prev => ({ ...prev, generatingWhyBuy: false })); }
+    };
+
     const generateAIImage = async () => {
         if (!form.name) return alert("Isi Nama Produk untuk referensi gambar.");
         setLoadingState(p => ({...p, generatingImage: true}));
@@ -247,14 +280,20 @@ const useProductManager = (
                 ? form.includesStr.split('\n').map(s => s.trim()).filter(Boolean)
                 : [];
 
+            // Parse WhyBuy String to Array
+            const whyBuyArr = form.whyBuyStr
+                ? form.whyBuyStr.split('\n').map(s => s.trim()).filter(Boolean)
+                : [];
+
             const dbData = {
                 name: form.name,
                 price: cleanNumberInput(form.price),
                 category: form.category,
                 description: form.desc,
                 image_url: finalImageUrl,
-                specs: specsObj, // SAVE SPECS
-                package_includes: includesArr // SAVE INCLUDES
+                specs: specsObj, 
+                package_includes: includesArr,
+                why_buy: whyBuyArr // SAVE NEW FIELD
             };
 
             if (form.id) {
@@ -298,6 +337,7 @@ const useProductManager = (
         generateAIDesc,
         generateAISpecs,
         generateAIIncludes,
+        generateAIWhyBuy,
         generateAIImage,
         listData: { 
             paginated, 
@@ -312,165 +352,6 @@ const useProductManager = (
         }
     };
 };
-
-const ProductForm = ({ 
-    form, setForm, loading, onSubmit, onReset, onGenTitle, onGenDesc, onGenImage, onGenSpecs, onGenIncludes
-}: {
-    form: any, setForm: any, loading: any, onSubmit: any, onReset: any, onGenTitle: any, onGenDesc: any, onGenImage: any, onGenSpecs: any, onGenIncludes: any
-}) => (
-    <div className="bg-brand-dark rounded-xl border border-white/5 shadow-2xl relative overflow-hidden flex flex-col h-[85vh] sticky top-6">
-        
-        {/* 1. STICKY HEADER */}
-        <div className="p-5 border-b border-white/5 shrink-0 bg-brand-dark z-20">
-            <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    {form.id ? <Edit size={16} className="text-brand-orange"/> : <Tag size={16} className="text-brand-orange"/>}
-                    {form.id ? "EDIT PRODUK" : "PRODUK BARU"}
-                </h3>
-                {form.id && (
-                    <button onClick={onReset} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
-                        <XIcon size={12} /> Batal
-                    </button>
-                )}
-            </div>
-        </div>
-
-        {/* 2. STICKY IMAGE SECTION (Compact) */}
-        <div className="p-4 border-b border-white/5 shrink-0 bg-brand-dark/50 z-10">
-            <div className="relative w-full h-32 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
-                {form.imagePreview ? (
-                    <img src={form.imagePreview} alt="Preview" className="w-full h-full object-contain p-2" />
-                ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-1">
-                        <ImageIcon size={20} />
-                        <span className="text-[9px]">Preview Gambar</span>
-                    </div>
-                )}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
-                     <button onClick={onGenImage} disabled={loading.generatingImage} className="w-full py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-500">
-                        {loading.generatingImage ? <LoadingSpinner size={12}/> : <><Wand2 size={12}/> AI Generate</>}
-                     </button>
-                     <label className="w-full py-1.5 bg-white/10 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-white/20 cursor-pointer border border-white/20">
-                        <UploadCloud size={12}/> Upload
-                        <input type="file" accept="image/*" onChange={(e) => {
-                            const file = e.target.files ? e.target.files[0] : null;
-                            if (file) setForm((prev: any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
-                        }} className="hidden" />
-                     </label>
-                </div>
-            </div>
-        </div>
-
-        {/* 3. SCROLLABLE CONTENT */}
-        <div className="flex-grow overflow-y-auto p-5 custom-scrollbar space-y-4">
-            {/* KEYWORDS */}
-            <div className="bg-brand-orange/5 p-3 rounded-lg border border-brand-orange/20">
-                <label className="text-[9px] text-brand-orange uppercase font-bold tracking-wider mb-1 block flex items-center gap-1">
-                    <Sparkles size={10} /> Keywords (AI Trigger)
-                </label>
-                <input 
-                    value={form.shortDesc} 
-                    onChange={e => setForm((prev:any) => ({...prev, shortDesc: e.target.value}))} 
-                    placeholder="Fitur, spek, keunggulan..." 
-                    className="w-full bg-black/40 border border-brand-orange/30 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange placeholder-gray-600"
-                />
-            </div>
-
-            {/* NAME */}
-            <div>
-                <div className="flex justify-between items-center mb-1">
-                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Nama Produk</label>
-                    <button onClick={onGenTitle} disabled={loading.generatingTitle} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
-                        {loading.generatingTitle ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Name</>}
-                    </button>
-                </div>
-                <Input value={form.name} onChange={e => setForm((prev:any) => ({...prev, name: e.target.value}))} placeholder="Nama Produk..." className="py-2 text-xs" />
-            </div>
-
-            {/* CATEGORY */}
-            <div>
-                <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Kategori</label>
-                <div className="relative">
-                    <Filter size={12} className="absolute left-3 top-3 text-gray-500"/>
-                    <select 
-                        value={form.category} 
-                        onChange={e => setForm((prev:any) => ({...prev, category: e.target.value}))}
-                        className="w-full bg-brand-card border border-white/10 rounded-lg pl-8 pr-3 py-2 text-xs text-white focus:border-brand-orange outline-none appearance-none"
-                    >
-                        {PRODUCT_CATEGORIES.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                    </select>
-                </div>
-            </div>
-
-            {/* PRICE */}
-            <div>
-                <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Harga (IDR)</label>
-                <div className="relative">
-                    <DollarSign size={12} className="absolute left-3 top-3 text-gray-500"/>
-                    <Input 
-                        value={form.price} 
-                        onChange={e => setForm((prev:any) => ({...prev, price: formatNumberInput(e.target.value)}))} 
-                        placeholder="0" 
-                        type="text" 
-                        className="pl-8 py-2 text-xs" 
-                    />
-                </div>
-            </div>
-
-            {/* SPECS (NEW) */}
-            <div>
-                <div className="flex justify-between items-center mb-1">
-                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1"><Scale size={10}/> Spesifikasi Utama</label>
-                    <button onClick={onGenSpecs} disabled={loading.generatingSpecs} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
-                        {loading.generatingSpecs ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Spec</>}
-                    </button>
-                </div>
-                <TextArea 
-                    value={form.specsStr} 
-                    onChange={e => setForm((prev:any) => ({...prev, specsStr: e.target.value}))} 
-                    placeholder="Contoh:&#10;RAM: 4GB&#10;OS: Windows 10" 
-                    className="h-24 text-xs leading-relaxed custom-scrollbar whitespace-pre-line font-mono" 
-                />
-            </div>
-
-            {/* INCLUDES (NEW) */}
-            <div>
-                <div className="flex justify-between items-center mb-1">
-                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1"><List size={10}/> Paket Termasuk</label>
-                    <button onClick={onGenIncludes} disabled={loading.generatingIncludes} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
-                        {loading.generatingIncludes ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-List</>}
-                    </button>
-                </div>
-                <TextArea 
-                    value={form.includesStr} 
-                    onChange={e => setForm((prev:any) => ({...prev, includesStr: e.target.value}))} 
-                    placeholder="Contoh:&#10;Printer Thermal&#10;Garansi 1 Tahun" 
-                    className="h-24 text-xs leading-relaxed custom-scrollbar whitespace-pre-line" 
-                />
-            </div>
-
-            {/* DESCRIPTION */}
-            <div>
-                <div className="flex justify-between items-center mb-1">
-                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Deskripsi (Sales Copy)</label>
-                    <button onClick={onGenDesc} disabled={loading.generatingDesc} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
-                        {loading.generatingDesc ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Desc</>}
-                    </button>
-                </div>
-                <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-32 text-xs leading-relaxed custom-scrollbar whitespace-pre-line" />
-            </div>
-        </div>
-
-        {/* 4. STICKY FOOTER */}
-        <div className="p-5 border-t border-white/5 shrink-0 bg-brand-dark">
-            <Button onClick={onSubmit} disabled={loading.uploading} className="w-full py-3 text-xs font-bold shadow-neon">
-                {loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={14}/> UPDATE</> : <><Plus size={14}/> SIMPAN</>)}
-            </Button>
-        </div>
-    </div>
-);
 
 // --- REUSABLE PAGINATION COMPONENT ---
 const Pagination = ({ page, totalPages, setPage, className = "" }: { page: number, totalPages: number, setPage: (p: any) => void, className?: string }) => {
@@ -546,7 +427,7 @@ const ProductList = ({
                     Produk tidak ditemukan.
                 </div>
             ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {data.paginated.map((p: Product) => (
                         <div key={p.id} className="group relative bg-brand-card border border-white/5 rounded-lg overflow-hidden hover:border-brand-orange transition-all hover:shadow-neon-text/20 flex flex-col h-full">
                             <div className="relative aspect-square bg-black overflow-hidden border-b border-white/5">
@@ -585,6 +466,7 @@ const ProductList = ({
     </div>
 );
 
+// --- MAIN PRODUCT EDITOR WITH 3-COLUMN LAYOUT ---
 export const AdminProducts = ({ 
   products, 
   setProducts 
@@ -592,30 +474,191 @@ export const AdminProducts = ({
   products: Product[], 
   setProducts: (p: Product[]) => void 
 }) => {
-  const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, generateAITitle, generateAIDesc, generateAIImage, generateAISpecs, generateAIIncludes, listData } = useProductManager(products, setProducts);
+  const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, generateAITitle, generateAIDesc, generateAIImage, generateAISpecs, generateAIIncludes, generateAIWhyBuy, listData } = useProductManager(products, setProducts);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-      {/* List Column (75%) */}
-      <div className="lg:col-span-3 order-2 lg:order-1">
+    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start h-[85vh]">
+      
+      {/* COLUMN 1: LIST (40%) */}
+      <div className="lg:col-span-4 h-full">
          <ProductList data={listData} onEdit={handleEditClick} onDelete={deleteProduct} />
       </div>
       
-      {/* Editor Column (25%) */}
-      <div className="lg:col-span-1 order-1 lg:order-2">
-         <ProductForm 
-            form={form} 
-            setForm={setForm} 
-            loading={loadingState} 
-            onSubmit={handleSubmit} 
-            onReset={resetForm} 
-            onGenTitle={generateAITitle}
-            onGenDesc={generateAIDesc}
-            onGenImage={generateAIImage}
-            onGenSpecs={generateAISpecs}
-            onGenIncludes={generateAIIncludes}
-         />
+      {/* COLUMN 2: BASIC EDITOR (30%) */}
+      <div className="lg:col-span-3 h-full flex flex-col bg-brand-dark rounded-xl border border-white/5 shadow-2xl overflow-hidden">
+         <div className="p-4 border-b border-white/5 bg-brand-dark shrink-0">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                {form.id ? <Edit size={16} className="text-brand-orange"/> : <Tag size={16} className="text-brand-orange"/>}
+                INFO DASAR
+            </h3>
+         </div>
+         
+         <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-4">
+            {/* IMAGE UPLOAD */}
+            <div className="relative w-full h-40 bg-black/40 rounded-lg overflow-hidden border border-white/10 group">
+                {form.imagePreview ? (
+                    <img src={form.imagePreview} alt="Preview" className="w-full h-full object-contain p-2" />
+                ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-1">
+                        <ImageIcon size={24} />
+                        <span className="text-[10px]">Preview Gambar</span>
+                    </div>
+                )}
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
+                     <button onClick={generateAIImage} disabled={loadingState.generatingImage} className="w-full py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-500">
+                        {loadingState.generatingImage ? <LoadingSpinner size={12}/> : <><Wand2 size={12}/> AI Generate</>}
+                     </button>
+                     <label className="w-full py-1.5 bg-white/10 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-white/20 cursor-pointer border border-white/20">
+                        <UploadCloud size={12}/> Upload
+                        <input type="file" accept="image/*" onChange={(e) => {
+                            const file = e.target.files ? e.target.files[0] : null;
+                            if (file) setForm((prev: any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
+                        }} className="hidden" />
+                     </label>
+                </div>
+            </div>
+
+            {/* KEYWORDS */}
+            <div className="bg-brand-orange/5 p-3 rounded-lg border border-brand-orange/20">
+                <label className="text-[9px] text-brand-orange uppercase font-bold tracking-wider mb-1 block flex items-center gap-1">
+                    <Sparkles size={10} /> Keywords (AI Trigger)
+                </label>
+                <input 
+                    value={form.shortDesc} 
+                    onChange={e => setForm((prev:any) => ({...prev, shortDesc: e.target.value}))} 
+                    placeholder="Fitur, spek, keunggulan..." 
+                    className="w-full bg-black/40 border border-brand-orange/30 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange placeholder-gray-600"
+                />
+            </div>
+
+            {/* NAME */}
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Nama Produk</label>
+                    <button onClick={generateAITitle} disabled={loadingState.generatingTitle} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
+                        {loadingState.generatingTitle ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Name</>}
+                    </button>
+                </div>
+                <Input value={form.name} onChange={e => setForm((prev:any) => ({...prev, name: e.target.value}))} placeholder="Nama Produk..." className="py-2 text-xs" />
+            </div>
+
+            {/* CATEGORY & PRICE */}
+            <div className="grid grid-cols-2 gap-3">
+                <div>
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Kategori</label>
+                    <div className="relative">
+                        <Filter size={12} className="absolute left-2.5 top-2.5 text-gray-500"/>
+                        <select 
+                            value={form.category} 
+                            onChange={e => setForm((prev:any) => ({...prev, category: e.target.value}))}
+                            className="w-full bg-brand-card border border-white/10 rounded-lg pl-7 pr-2 py-2 text-[10px] text-white focus:border-brand-orange outline-none appearance-none"
+                        >
+                            {PRODUCT_CATEGORIES.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1 block">Harga</label>
+                    <div className="relative">
+                        <DollarSign size={12} className="absolute left-2.5 top-2.5 text-gray-500"/>
+                        <Input 
+                            value={form.price} 
+                            onChange={e => setForm((prev:any) => ({...prev, price: formatNumberInput(e.target.value)}))} 
+                            placeholder="0" 
+                            type="text" 
+                            className="pl-7 py-2 text-[10px]" 
+                        />
+                    </div>
+                </div>
+            </div>
+         </div>
       </div>
+
+      {/* COLUMN 3: DETAIL EDITOR (30%) */}
+      <div className="lg:col-span-3 h-full flex flex-col bg-brand-dark rounded-xl border border-white/5 shadow-2xl overflow-hidden relative">
+         <div className="p-4 border-b border-white/5 bg-brand-dark shrink-0 flex justify-between items-center">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <List size={16} className="text-brand-orange"/>
+                DETAIL LENGKAP
+            </h3>
+            {form.id && (
+                <button onClick={resetForm} className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
+                    <XIcon size={12} /> Batal
+                </button>
+            )}
+         </div>
+
+         <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-4">
+            {/* DESCRIPTION */}
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Deskripsi (Sales Copy)</label>
+                    <button onClick={generateAIDesc} disabled={loadingState.generatingDesc} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
+                        {loadingState.generatingDesc ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Desc</>}
+                    </button>
+                </div>
+                <TextArea value={form.desc} onChange={e => setForm((prev:any) => ({...prev, desc: e.target.value}))} placeholder="Deskripsi..." className="h-24 text-[10px] leading-relaxed custom-scrollbar whitespace-pre-line" />
+            </div>
+
+            {/* SPECS */}
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1"><Scale size={10}/> Spesifikasi Utama</label>
+                    <button onClick={generateAISpecs} disabled={loadingState.generatingSpecs} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
+                        {loadingState.generatingSpecs ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Spec</>}
+                    </button>
+                </div>
+                <TextArea 
+                    value={form.specsStr} 
+                    onChange={e => setForm((prev:any) => ({...prev, specsStr: e.target.value}))} 
+                    placeholder="Contoh:&#10;RAM: 4GB&#10;OS: Windows 10" 
+                    className="h-20 text-[10px] leading-relaxed custom-scrollbar whitespace-pre-line font-mono" 
+                />
+            </div>
+
+            {/* INCLUDES */}
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1"><List size={10}/> Paket Termasuk</label>
+                    <button onClick={generateAIIncludes} disabled={loadingState.generatingIncludes} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
+                        {loadingState.generatingIncludes ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-List</>}
+                    </button>
+                </div>
+                <TextArea 
+                    value={form.includesStr} 
+                    onChange={e => setForm((prev:any) => ({...prev, includesStr: e.target.value}))} 
+                    placeholder="Contoh:&#10;Printer Thermal&#10;Garansi 1 Tahun" 
+                    className="h-20 text-[10px] leading-relaxed custom-scrollbar whitespace-pre-line" 
+                />
+            </div>
+
+            {/* NEW: WHY BUY */}
+            <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] text-gray-500 uppercase font-bold tracking-wider flex items-center gap-1"><ThumbsUp size={10}/> Alasan Membeli (Selling Points)</label>
+                    <button onClick={generateAIWhyBuy} disabled={loadingState.generatingWhyBuy} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1 disabled:opacity-50">
+                        {loadingState.generatingWhyBuy ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Reason</>}
+                    </button>
+                </div>
+                <TextArea 
+                    value={form.whyBuyStr} 
+                    onChange={e => setForm((prev:any) => ({...prev, whyBuyStr: e.target.value}))} 
+                    placeholder="Contoh:&#10;Investasi Jangka Panjang&#10;Anti Maling" 
+                    className="h-20 text-[10px] leading-relaxed custom-scrollbar whitespace-pre-line" 
+                />
+            </div>
+         </div>
+
+         {/* SAVE BUTTON (Sticky Footer in Col 3) */}
+         <div className="p-4 border-t border-white/5 bg-brand-dark shrink-0">
+            <Button onClick={handleSubmit} disabled={loadingState.uploading} className="w-full py-3 text-xs font-bold shadow-neon">
+                {loadingState.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={14}/> UPDATE PRODUK</> : <><Plus size={14}/> SIMPAN PRODUK</>)}
+            </Button>
+         </div>
+      </div>
+
     </div>
   );
 };

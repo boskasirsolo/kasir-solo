@@ -12,6 +12,8 @@ export interface Product {
   };
   // NEW: Package Includes list
   package_includes?: string[];
+  // NEW: Reasons to Buy (Selling Points)
+  why_buy?: string[];
 }
 
 export interface Article {
