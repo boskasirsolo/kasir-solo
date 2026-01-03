@@ -177,6 +177,7 @@ export const SupportPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDownload, setSelectedDownload] = useState<DownloadItem | null>(null);
+  const [activeDownloadTab, setActiveDownloadTab] = useState('all');
   
   // Pagination States
   const [pageFiles, setPageFiles] = useState(1);
@@ -220,7 +221,12 @@ export const SupportPage = () => {
       );
   };
 
-  const filteredDownloads = filterData<DownloadItem>(downloads, 'title');
+  const filteredDownloads = downloads.filter(item => {
+      const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesTab = activeDownloadTab === 'all' || item.category === activeDownloadTab;
+      return matchesSearch && matchesTab;
+  });
+
   const filteredTutorials = filterData<Tutorial>(tutorials, 'title');
   const filteredFaqs = filterData<FAQ>(faqs, 'question');
 
@@ -229,7 +235,7 @@ export const SupportPage = () => {
       return data.slice(start, start + size);
   };
 
-  useEffect(() => { setPageFiles(1); setPageVideos(1); setPageFaqs(1); }, [searchTerm]);
+  useEffect(() => { setPageFiles(1); setPageVideos(1); setPageFaqs(1); }, [searchTerm, activeDownloadTab]);
 
   const handleFileClick = (item: DownloadItem) => {
       setSelectedDownload(item);
@@ -268,15 +274,34 @@ export const SupportPage = () => {
             
             {/* COL 1: FILES (50% = 6 cols) */}
             <div className="lg:col-span-6 bg-brand-dark/30 border border-white/5 rounded-2xl p-6">
-                <h3 className="text-white font-bold mb-6 flex items-center gap-2 text-base border-b border-white/10 pb-3">
-                    <HardDrive size={18} className="text-blue-400" /> Download Center
-                </h3>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-white/10 pb-3">
+                    <h3 className="text-white font-bold flex items-center gap-2 text-base">
+                        <HardDrive size={18} className="text-blue-400" /> Download Center
+                    </h3>
+                    
+                    {/* TABS */}
+                    <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1 sm:pb-0">
+                        {['all', 'driver', 'software', 'manual', 'tools'].map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveDownloadTab(tab)}
+                                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all whitespace-nowrap border ${
+                                    activeDownloadTab === tab
+                                    ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text'
+                                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+                                }`}
+                            >
+                                {tab === 'all' ? 'Semua' : tab}
+                            </button>
+                        ))}
+                    </div>
+                </div>
                 
                 {loading ? <div className="text-center py-10 text-gray-500">Loading...</div> : (
                     <>
                         {filteredDownloads.length > 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                {paginate(filteredDownloads, pageFiles, PAGE_SIZE_FILES).map(item => (
+                                {paginate(filteredDownloads, pageFiles, PAGE_SIZE_FILES).map((item: DownloadItem) => (
                                     <DownloadCard 
                                         key={item.id} 
                                         item={item} 
