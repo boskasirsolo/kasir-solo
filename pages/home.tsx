@@ -482,9 +482,10 @@ export const HomePage = ({
                         Detail <ArrowRight size={14} className={service.color} />
                     </span>
                     
+                    {/* UPDATED: Simulasi Button (Solid Orange) */}
                     <button 
                         onClick={(e) => { e.stopPropagation(); setPage(service.link); }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-orange/10 border border-brand-orange/20 text-brand-orange hover:bg-brand-orange hover:text-white text-[10px] font-bold transition-all hover:shadow-neon"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-orange text-white hover:bg-brand-action hover:shadow-neon text-[10px] font-bold transition-all"
                     >
                         <Calculator size={12} /> Simulasi
                     </button>
@@ -517,11 +518,12 @@ export const HomePage = ({
             </p>
             
             <div className="flex justify-center">
+               {/* UPDATED: WhatsApp Button (Brand Gradient) */}
                <a 
                   href={`https://wa.me/${config.whatsappNumber}?text=Halo Mas Amin, saya ingin konsultasi sistem untuk bisnis saya.`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-3 px-10 py-5 bg-brand-orange hover:bg-brand-glow text-white rounded-full font-bold text-lg shadow-[0_0_20px_rgba(255,95,31,0.4)] hover:shadow-[0_0_30px_rgba(255,95,31,0.6)] transition-all transform hover:-translate-y-1"
+                  className="inline-flex items-center gap-3 px-10 py-5 bg-brand-gradient hover:bg-brand-gradient-hover text-white rounded-full font-bold text-lg shadow-[0_0_20px_rgba(255,95,31,0.4)] hover:shadow-[0_0_30px_rgba(255,95,31,0.6)] transition-all transform hover:-translate-y-1"
                >
                   <MessageCircle size={24} /> WhatsApp Mas Amin (Founder)
                </a>
