@@ -19,24 +19,38 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // --- SECURITY CHECKPOINT (SATPAM) ---
+  // Pastikan request berasal dari domain sendiri atau localhost (saat dev)
+  const origin = req.headers.origin || req.headers.referer;
+  const allowedOrigins = ['kasirsolo.com', 'localhost', 'vercel.app'];
+  
+  // Jika origin tidak dikenali (misal ditembak via Postman tanpa header), kita blokir.
+  // Note: Ini proteksi basic. Hacker jago bisa memalsukan header, tapi ini cukup untuk mencegah abuse ringan.
+  const isAllowed = origin && allowedOrigins.some(domain => origin.includes(domain));
+  
+  if (!isAllowed) {
+     console.warn(`[Security Block] Request from unknown origin: ${origin}`);
+     // Uncomment baris bawah ini jika sudah live production untuk strict mode
+     // return res.status(403).json({ error: 'Forbidden: Unauthorized Origin' });
+  }
+
   try {
     const { caption, image_url, platforms } = req.body;
 
-    // 2. Validasi
+    // 2. Validasi Input
     if (!caption) throw new Error('Caption wajib diisi');
     if (!image_url) throw new Error('Image URL wajib ada');
     if (!platforms || platforms.length === 0) throw new Error('Pilih minimal satu platform');
 
-    // 3. Ambil API Key dari Vercel Environment Variables
-    // PENTING: Masukkan 'AYRSHARE_API_KEY' di Dashboard Vercel > Settings > Environment Variables
+    // 3. Ambil API Key dari Vercel Environment Variables (Server Side Only)
     const AYRSHARE_API_KEY = process.env.AYRSHARE_API_KEY;
 
     if (!AYRSHARE_API_KEY) {
-      console.error("API Key Missing");
-      throw new Error('Server Config Error: AYRSHARE_API_KEY belum disetting di Vercel.');
+      console.error("Critical: AYRSHARE_API_KEY is missing in Vercel Env Vars.");
+      throw new Error('Server Config Error: Kunci API belum disetting.');
     }
 
-    console.log(`[Vercel API] Posting to ${platforms.join(', ')}`);
+    console.log(`[Vercel API] Posting to ${platforms.join(', ')}...`);
 
     // 4. Kirim ke Ayrshare
     const response = await fetch('https://app.ayrshare.com/api/post', {
