@@ -479,7 +479,7 @@ export const AdminProducts = ({
   const { form, setForm, loadingState, handleSubmit, handleEditClick, resetForm, deleteProduct, generateAITitle, generateAIDesc, generateAIImage, generateAISpecs, generateAIIncludes, generateAIWhyBuy, listData } = useProductManager(products, setProducts);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start h-[calc(100vh-150px)]">
+    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start h-[calc(100vh-190px)]">
       
       {/* COLUMN 1: LIST (40%) */}
       <div className="lg:col-span-4 h-full">

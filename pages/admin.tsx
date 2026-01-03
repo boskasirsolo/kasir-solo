@@ -142,13 +142,13 @@ export const AdminDashboard = ({
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
     <button 
       onClick={() => setActiveTab(id)} 
-      className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all border ${
+      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wide transition-all border ${
         activeTab === id 
           ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text translate-y-[-1px]' 
           : 'bg-brand-card text-gray-400 border-white/5 hover:text-white hover:bg-white/5'
       }`}
     >
-      <Icon size={16} />
+      <Icon size={14} />
       {label}
     </button>
   );
@@ -163,57 +163,62 @@ export const AdminDashboard = ({
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 animate-fade-in">
-      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between mb-6 pb-6 border-b border-white/10 gap-6">
-        <div>
-          <h2 className="text-2xl font-bold text-white font-display">Dashboard Admin</h2>
-          <p className="text-gray-400 text-xs mt-1">Kelola konten dan operasional bisnis.</p>
+    <div className="container mx-auto px-4 py-6 animate-fade-in">
+      <div className="flex flex-col xl:flex-row items-center justify-between mb-4 pb-4 border-b border-white/10 gap-4">
+        <div className="flex items-center gap-4 w-full xl:w-auto justify-between xl:justify-start">
+          <div>
+            <h2 className="text-xl font-bold text-white font-display">Dashboard Admin</h2>
+            <p className="text-gray-400 text-[10px] mt-0.5">Kelola konten dan operasional bisnis.</p>
+          </div>
+          <div className="xl:hidden">
+             <button onClick={onLogout} className="p-2 bg-red-500/10 text-red-500 rounded-lg"><LogOut size={16}/></button>
+          </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto justify-center xl:justify-end">
+          <div className="flex flex-wrap justify-center gap-1.5">
             <TabButton id="analytics" label="TRAFFIC" icon={BarChart} />
-            <TabButton id="store" label="TOKO & ORDER" icon={ShoppingBag} />
+            <TabButton id="store" label="TOKO" icon={ShoppingBag} />
             <TabButton id="gallery" label="GALERI" icon={Image} />
             <TabButton id="articles" label="ARTIKEL" icon={FileText} />
             <TabButton id="career" label="KARIR" icon={Briefcase} /> 
-            <TabButton id="downloads" label="DOWNLOADS" icon={Download} /> {/* NEW TAB */}
-            <TabButton id="settings" label="PENGATURAN" icon={Settings} />
+            <TabButton id="downloads" label="FILE" icon={Download} />
+            <TabButton id="settings" label="SETTING" icon={Settings} />
           </div>
           
-          <div className="w-px h-8 bg-white/10 hidden md:block"></div>
+          <div className="w-px h-6 bg-white/10 hidden xl:block mx-2"></div>
           
-          <button 
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 transition-colors"
-            title="Lihat Website"
-          >
-            <Home size={16} />
-            <span className="hidden md:inline">Lihat Web</span>
-          </button>
-
-          {showConnectAI && (
+          <div className="flex items-center gap-2 hidden xl:flex">
             <button 
-               onClick={connectAI}
-               className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500 hover:text-white transition-colors"
-               title="Hubungkan ulang API Key Gemini (IDX Only)"
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 transition-colors"
+                title="Lihat Website"
             >
-               <Zap size={16} /> <span className="hidden md:inline">Connect AI</span>
+                <Home size={14} />
             </button>
-          )}
 
-          <button 
-            onClick={onLogout}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-colors"
-            title="Keluar Dashboard"
-          >
-            <LogOut size={16} />
-            <span className="hidden md:inline">Keluar</span>
-          </button>
+            {showConnectAI && (
+                <button 
+                onClick={connectAI}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500 hover:text-white transition-colors"
+                title="Hubungkan ulang API Key Gemini (IDX Only)"
+                >
+                <Zap size={14} />
+                </button>
+            )}
+
+            <button 
+                onClick={onLogout}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-colors"
+                title="Keluar Dashboard"
+            >
+                <LogOut size={14} />
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="bg-brand-card border border-white/10 rounded-2xl min-h-[600px] shadow-2xl relative overflow-hidden">
+      <div className="bg-brand-card border border-white/10 rounded-xl min-h-[600px] shadow-2xl relative overflow-hidden">
         
         {activeTab === 'analytics' && (
           <div className="animate-fade-in relative z-10 p-4 md:p-6">
