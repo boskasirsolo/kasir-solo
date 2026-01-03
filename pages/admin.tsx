@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home, ArrowLeft, Briefcase, BarChart, Download } from 'lucide-react';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home, ArrowLeft, Briefcase, BarChart, Download, Share2 } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig, Testimonial, Article, JobOpening } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
@@ -9,7 +9,8 @@ import { AdminSettings } from '../components/admin-settings';
 import { AdminOrders } from '../components/admin-orders';
 import { AdminArticles } from '../components/admin-articles';
 import { AdminCareer } from '../components/admin-career'; 
-import { AdminDownloads } from '../components/admin-downloads'; // NEW IMPORT
+import { AdminDownloads } from '../components/admin-downloads';
+import { AdminSocialStudio } from '../components/admin-social'; // NEW IMPORT
 import { AnalyticsDashboard } from '../components/admin-analytics'; 
 import { activateGhostMode } from '../hooks/use-analytics'; 
 import { supabase } from '../utils';
@@ -126,8 +127,8 @@ export const AdminDashboard = ({
   onLogout: () => void
 }) => {
   const navigate = useNavigate();
-  // UPDATED: Added 'downloads' to activeTab type
-  const [activeTab, setActiveTab] = useState<'analytics' | 'store' | 'gallery' | 'articles' | 'career' | 'downloads' | 'settings'>('analytics');
+  // UPDATED: Added 'social' to activeTab type
+  const [activeTab, setActiveTab] = useState<'analytics' | 'store' | 'gallery' | 'articles' | 'career' | 'downloads' | 'social' | 'settings'>('analytics');
   const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog'>('orders');
   const [showConnectAI, setShowConnectAI] = useState(false);
 
@@ -183,6 +184,7 @@ export const AdminDashboard = ({
             <TabButton id="articles" label="ARTIKEL" icon={FileText} />
             <TabButton id="career" label="KARIR" icon={Briefcase} /> 
             <TabButton id="downloads" label="FILE" icon={Download} />
+            <TabButton id="social" label="STUDIO" icon={Share2} /> {/* NEW TAB */}
             <TabButton id="settings" label="SETTING" icon={Settings} />
           </div>
           
@@ -287,10 +289,17 @@ export const AdminDashboard = ({
           </div>
         )}
 
-        {/* NEW: Downloads Section */}
+        {/* Downloads Section */}
         {activeTab === 'downloads' && (
           <div className="animate-fade-in relative z-10 p-4 md:p-6">
              <AdminDownloads />
+          </div>
+        )}
+
+        {/* NEW: Social Studio Section */}
+        {activeTab === 'social' && (
+          <div className="animate-fade-in relative z-10 p-4 md:p-6">
+             <AdminSocialStudio products={products} articles={articles} gallery={gallery} />
           </div>
         )}
 
