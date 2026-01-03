@@ -468,8 +468,8 @@ export const ProductDetailView = ({
     <Wrapper>
       {/* 
          LAYOUT UPDATE:
-         Left: Fixed (Header + Image + Actions)
-         Right: Scrollable (Description + Specs)
+         Left: Fixed (Header + Image + Actions) -> 60%
+         Right: Scrollable (Description + Specs) -> 40%
       */}
       <div className={`relative w-full max-w-6xl ${isModal ? 'h-[90vh]' : 'min-h-[600px] md:h-[80vh]'} bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row overflow-hidden rounded-2xl`}>
         
@@ -481,8 +481,8 @@ export const ProductDetailView = ({
           {isModal ? <X size={20} /> : <ArrowLeft size={20} />}
         </button>
 
-        {/* LEFT COLUMN: HEADER + IMAGE + ACTIONS (Fixed/Sticky Side) */}
-        <div className="w-full md:w-5/12 bg-brand-dark flex flex-col h-full relative border-b md:border-b-0 md:border-r border-white/10 shrink-0">
+        {/* LEFT COLUMN: HEADER + IMAGE + ACTIONS (Fixed/Sticky Side) - 60% */}
+        <div className="w-full md:w-[60%] bg-brand-dark flex flex-col h-full relative border-b md:border-b-0 md:border-r border-white/10 shrink-0">
             
             {/* 1. HEADER (Title & Price) */}
             <div className="p-6 md:p-8 pb-4 shrink-0">
@@ -526,8 +526,8 @@ export const ProductDetailView = ({
             </div>
         </div>
 
-        {/* RIGHT COLUMN: DESCRIPTION (Scrollable Content) */}
-        <div className="w-full md:w-7/12 h-full overflow-y-auto custom-scrollbar bg-black/20 p-6 md:p-10">
+        {/* RIGHT COLUMN: DESCRIPTION (Scrollable Content) - 40% */}
+        <div className="w-full md:w-[40%] h-full overflow-y-auto custom-scrollbar bg-black/20 p-6 md:p-10">
             <div className="prose prose-invert prose-sm text-gray-300 leading-relaxed max-w-none">
                 <h4 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Deskripsi Produk</h4>
                 <p className="whitespace-pre-line text-base">{product.description}</p>
