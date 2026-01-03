@@ -430,13 +430,14 @@ const ProductList = ({
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {data.paginated.map((p: Product) => (
-                        <div key={p.id} className="group relative bg-brand-card border border-white/5 rounded-lg overflow-hidden hover:border-brand-orange transition-all hover:shadow-neon-text/20 flex flex-col h-full">
+                        <div 
+                            key={p.id} 
+                            onClick={() => onEdit(p)}
+                            className="group relative bg-brand-card border border-white/5 rounded-lg overflow-hidden hover:border-brand-orange transition-all hover:shadow-neon-text/20 flex flex-col h-full cursor-pointer"
+                        >
                             <div className="relative aspect-square bg-black overflow-hidden border-b border-white/5">
                                 <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                    <button onClick={() => onEdit(p)} className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-500 shadow-lg"><Edit size={14} /></button>
-                                    <button onClick={() => onDelete(p.id)} className="p-2 bg-red-600 text-white rounded-full hover:bg-red-500 shadow-lg"><Trash2 size={14} /></button>
-                                </div>
+                                
                                 <div className="absolute top-2 right-2">
                                      <span className="bg-black/70 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-brand-orange font-bold border border-brand-orange/30 shadow-black shadow-lg">
                                         {formatRupiah(p.price)}
