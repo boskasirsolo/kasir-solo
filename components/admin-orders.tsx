@@ -45,7 +45,12 @@ const useAdminOrders = () => {
 
     if (!supabase) return;
     try {
-        const { data, error } = await supabase.from('order_items').select('*').eq('order_id', orderId);
+        // UPDATED: Fetch products(specs) to display in Invoice
+        const { data, error } = await supabase
+            .from('order_items')
+            .select('*, products(specs)')
+            .eq('order_id', orderId);
+
         if (error) throw error;
         setOrderItems(prev => ({ ...prev, [orderId]: data || [] }));
         setExpandedOrderId(orderId);
@@ -219,14 +224,25 @@ const handlePrintInvoice = (order: Order, items: OrderItem[], config: SiteConfig
                         </tr>
                     </thead>
                     <tbody>
-                        ${items.map(item => `
-                        <tr>
-                            <td class="pl-2 font-medium">${item.product_name}</td>
-                            <td class="text-center text-gray-500">${item.quantity}</td>
-                            <td class="text-right text-gray-500">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</td>
-                            <td class="text-right font-bold pr-2">Rp ${new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</td>
-                        </tr>
-                        `).join('')}
+                        ${items.map((item: any) => {
+                            // FORMAT SPECS STRING
+                            const specs = item.products?.specs;
+                            const specsText = specs 
+                                ? Object.entries(specs).map(([k, v]) => `${k}: ${v}`).join('; ') 
+                                : '';
+
+                            return `
+                            <tr>
+                                <td class="pl-2 py-2 align-top">
+                                    <p class="font-medium text-gray-900">${item.product_name}</p>
+                                    ${specsText ? `<p class="text-[8pt] text-gray-500 leading-tight mt-0.5 italic">${specsText}</p>` : ''}
+                                </td>
+                                <td class="text-center text-gray-500 py-2 align-top">${item.quantity}</td>
+                                <td class="text-right text-gray-500 py-2 align-top">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</td>
+                                <td class="text-right font-bold pr-2 py-2 align-top">Rp ${new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</td>
+                            </tr>
+                            `
+                        }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -435,7 +451,7 @@ const OrderDetail = ({
                                 : 'bg-transparent border-white/10 text-gray-500 hover:text-white hover:border-white/30'
                             }`}
                             >
-                            {status}
+                                {status}
                             </button>
                         ))}
                     </div>
@@ -476,7 +492,20 @@ const OrderCard = ({
                 </div>
                 <div>
                     <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white text-sm">Order #{order.id}</h4>
+                        <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                            Order #{order.id}
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(order.id.toString());
+                                    alert("ID Pesanan disalin!");
+                                }}
+                                className="text-gray-500 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
+                                title="Salin ID"
+                            >
+                                <Copy size={12} />
+                            </button>
+                        </h4>
                         {order.tracking_number && (
                             <span className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/30 flex items-center gap-1">
                                 <Truck size={8}/> Dikirim
