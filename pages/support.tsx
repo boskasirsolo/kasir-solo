@@ -14,6 +14,17 @@ const PAGE_SIZE_FILES = 9;
 const PAGE_SIZE_VIDEOS = 5;
 const PAGE_SIZE_FAQS = 5;
 
+// Helper for category colors
+const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'driver': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'manual': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+      case 'software': return 'bg-green-500/10 text-green-400 border-green-500/20';
+      case 'tools': return 'bg-red-500/10 text-red-400 border-red-500/20';
+      default: return 'bg-white/5 text-gray-400 border-white/10';
+    }
+};
+
 // --- MODAL COMPONENT ---
 const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onClose: () => void }) => {
     return (
@@ -24,7 +35,7 @@ const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onClose: (
                 <div className="p-6 border-b border-white/10 bg-brand-card flex justify-between items-start">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
-                            <span className="text-[10px] font-bold uppercase px-2 py-1 rounded bg-brand-orange/10 text-brand-orange border border-brand-orange/20">
+                            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded border ${getCategoryColor(item.category)}`}>
                                 {item.category}
                             </span>
                             <span className="text-[10px] font-bold text-gray-500">{item.version}</span>
@@ -92,7 +103,7 @@ const DownloadCard: React.FC<{ item: DownloadItem, onClick: () => void }> = ({ i
         <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-white/10 bg-black/40 group-hover:bg-white/5 transition-colors">
           {getIcon()}
         </div>
-        <span className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-white/10 bg-white/5 text-gray-400">
+        <span className={`text-[9px] font-bold uppercase px-2 py-1 rounded border ${getCategoryColor(item.category)}`}>
           {item.category}
         </span>
       </div>
