@@ -38,23 +38,52 @@ const useAdminOrders = () => {
   };
 
   const fetchOrderItems = async (orderId: number) => {
+    // 1. Toggle if already open or loaded
     if (orderItems[orderId]) {
         setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
         return;
     }
 
     if (!supabase) return;
+
     try {
-        // UPDATED: Fetch products(specs) to display in Invoice
-        const { data, error } = await supabase
+        // 2. Fetch Order Items (Safe Basic Fetch)
+        const { data: items, error: itemsError } = await supabase
             .from('order_items')
-            .select('*, products(specs)')
+            .select('*')
             .eq('order_id', orderId);
 
-        if (error) throw error;
-        setOrderItems(prev => ({ ...prev, [orderId]: data || [] }));
+        if (itemsError) throw itemsError;
+
+        // 3. Manual Join for Product Specs (To avoid Foreign Key issues in Supabase)
+        if (items && items.length > 0) {
+            const productIds = items.map((i: any) => i.product_id).filter(Boolean);
+            if (productIds.length > 0) {
+                const { data: products, error: prodError } = await supabase
+                    .from('products')
+                    .select('id, specs')
+                    .in('id', productIds);
+                
+                if (!prodError && products) {
+                    // Enrich items with product specs
+                    items.forEach((item: any) => {
+                        const p = products.find((prod: any) => prod.id === item.product_id);
+                        if (p) {
+                            // Mimic the structure expected by Invoice Generator
+                            item.products = { specs: p.specs }; 
+                        }
+                    });
+                }
+            }
+        }
+
+        setOrderItems(prev => ({ ...prev, [orderId]: items || [] }));
         setExpandedOrderId(orderId);
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error("Error fetching details:", e);
+        // Fallback: If detail fetch fails, at least toggle (though empty) or show alert
+        // Here we just don't open to avoid confusion of empty state
+    }
   };
 
   const updateStatus = async (orderId: number, newStatus: string) => {
