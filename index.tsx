@@ -11,7 +11,6 @@ import { LoadingSpinner } from './components/ui';
 import { Layout } from './components/layout';
 
 // Lazy Load Pages to optimize initial bundle size
-// Note: Adapting named exports for React.lazy
 const HomePage = lazy(() => import('./pages/home').then(module => ({ default: module.HomePage })));
 const ShopPage = lazy(() => import('./pages/shop').then(module => ({ default: module.ShopPage })));
 const ProductDetailPage = lazy(() => import('./pages/shop').then(module => ({ default: module.ProductDetailPage })));
@@ -57,21 +56,23 @@ const AppContent = () => {
   // GLOBAL LOADING STATE
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // Data State - Initialize with EMPTY ARRAYS to prevent flash of mock data
+  // Data State
   const [products, setProducts] = useState<Product[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [articles, setArticles] = useState<Article[]>([]); 
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [jobs, setJobs] = useState<JobOpening[]>([]);
+  
+  // LIVE CLOCK for Scheduled Posts
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Config State (UPDATED DEFAULTS)
+  // Config State
   const [config, setConfig] = useState<SiteConfig>({
     heroTitle: "MESIN KASIR SOLO",
     heroSubtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM. Dibangun oleh praktisi, bukan sekadar penjual.",
     aboutImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200", 
     sibosUrl: "https://sibos.id",
     qalamUrl: "https://qalam.id",
-    // Legal Defaults
     companyLegalName: "PT MESIN KASIR SOLO",
     nibNumber: "",
     ahuNumber: "",
@@ -82,8 +83,8 @@ const AppContent = () => {
     addressBlora: "Gumiring 04/04, Banjarejo",
     mapSoloLink: "https://maps.google.com/?q=Perum+Graha+Tiara+2+B1+Kartasura",
     mapBloraLink: "https://maps.google.com/?q=Gumiring+Banjarejo+Blora",
-    mapSoloEmbed: "", // Default empty
-    mapBloraEmbed: "", // Default empty
+    mapSoloEmbed: "",
+    mapBloraEmbed: "",
     instagramUrl: "https://instagram.com/",
     facebookUrl: "https://facebook.com/",
     youtubeUrl: "https://youtube.com/",
@@ -91,7 +92,7 @@ const AppContent = () => {
     linkedinUrl: "https://linkedin.com/",
     googleAnalyticsId: "",
     googleSearchConsoleCode: "",
-    timezone: "Asia/Jakarta" // DEFAULT TIMEZONE
+    timezone: "Asia/Jakarta"
   });
 
   // --- Router Bridge ---
@@ -110,7 +111,8 @@ const AppContent = () => {
     if (!dateStr) return new Date(0);
     const stdDate = new Date(dateStr);
     if (!isNaN(stdDate.getTime())) return stdDate;
-
+    
+    // Fallback for manual date strings
     const months: {[key: string]: number} = {
       'Januari': 0, 'Jan': 0, 'Februari': 1, 'Feb': 1, 'Maret': 2, 'Mar': 2,
       'April': 3, 'Apr': 3, 'Mei': 4, 'May': 4, 'Juni': 5, 'Jun': 5,
@@ -131,21 +133,26 @@ const AppContent = () => {
     return new Date(0);
   };
 
+  // --- EFFECT: Live Clock Ticker (Check every 10s) ---
+  useEffect(() => {
+    const timer = setInterval(() => {
+        setCurrentTime(Date.now());
+    }, 10000); 
+    return () => clearInterval(timer);
+  }, []);
+
   // --- Data Fetching & Realtime ---
   useEffect(() => {
-    // Defined separately to be callable by Realtime Subscription
     const fetchArticles = async () => {
         if (!supabase) return;
         const { data: artData } = await supabase.from('articles').select('*');
         if (artData) {
             const mappedArticles = artData.map((item: any) => ({
                 ...item,
-                // Ensure image is mapped correctly
                 image: item.image_url || item.image || 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=1200',
                 readTime: item.read_time || item.readTime || '5 min read',
-                author_avatar: item.author_avatar, // EXPLICIT MAPPING FOR AVATAR
+                author_avatar: item.author_avatar,
                 date: item.date || new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-                // CRITICAL FIX: Normalize status to lowercase and trimmed to prevent filter issues
                 status: (item.status || 'draft').toLowerCase().trim()
             })).sort((a: any, b: any) => {
                 const dateA = a.created_at ? new Date(a.created_at) : parseDate(a.date);
@@ -157,9 +164,7 @@ const AppContent = () => {
     };
 
     const initializeData = async () => {
-        // 1. CHECK CONNECTION
         if (!supabase) {
-            // Fallback for Demo Mode (No DB Connection)
             console.warn("Supabase not connected. Loading mock data.");
             setProducts(INITIAL_PRODUCTS);
             setGallery(INITIAL_GALLERY);
@@ -170,25 +175,20 @@ const AppContent = () => {
             return;
         }
 
-        // 2. FETCH REAL DATA (If connected)
-        // Optimize: Use Promise.all where possible, but handle Settings separately first to unblock UI if needed
         try {
-            // Fetch Site Settings FIRST (Crucial for UI Config)
             const { data: settingsData } = await supabase.from('site_settings').select('*').single();
             if (settingsData) {
                 const newConfig = {
-                    ...config, // Keep defaults
+                    ...config,
                     heroTitle: settingsData.hero_title || config.heroTitle,
                     heroSubtitle: settingsData.hero_subtitle || config.heroSubtitle,
                     aboutImage: settingsData.about_image || config.aboutImage,
                     sibosUrl: settingsData.sibos_url || config.sibosUrl,
                     qalamUrl: settingsData.qalam_url || config.qalamUrl,
-                    // Legal Info
                     companyLegalName: settingsData.company_legal_name || config.companyLegalName,
                     nibNumber: settingsData.nib_number || config.nibNumber,
                     ahuNumber: settingsData.ahu_number || config.ahuNumber,
                     npwpNumber: settingsData.npwp_number || config.npwpNumber,
-                    
                     whatsappNumber: settingsData.whatsapp_number || config.whatsappNumber,
                     emailAddress: settingsData.email_address || config.emailAddress,
                     addressSolo: settingsData.address_solo || config.addressSolo,
@@ -202,18 +202,14 @@ const AppContent = () => {
                     youtubeUrl: settingsData.youtube_url || config.youtubeUrl,
                     tiktokUrl: settingsData.tiktok_url || config.tiktokUrl,
                     linkedinUrl: settingsData.linkedin_url || config.linkedinUrl,
-                    // Load Google IDs
                     googleAnalyticsId: settingsData.google_analytics_id || '',
                     googleSearchConsoleCode: settingsData.google_search_console_code || '',
-                    // Timezone
                     timezone: settingsData.timezone || config.timezone
                 };
                 setConfig(newConfig);
-                // INJECT GOOGLE TAGS DYNAMICALLY
                 injectGoogleTags(newConfig.googleAnalyticsId, newConfig.googleSearchConsoleCode);
             }
 
-            // Fetch other content in parallel
             const [prodRes, galRes, testiRes, jobsRes] = await Promise.all([
                 supabase.from('products').select('*').order('id', { ascending: true }),
                 supabase.from('gallery').select('*').order('id', { ascending: false }),
@@ -232,27 +228,24 @@ const AppContent = () => {
             if (testiRes.data) setTestimonials(testiRes.data);
             if (jobsRes.data) setJobs(jobsRes.data);
 
-            // Fetch Articles separately via helper
             await fetchArticles();
 
         } catch (e) {
             console.error("Data Fetch Error:", e);
         } finally {
-            setIsInitializing(false); // STOP LOADING
+            setIsInitializing(false);
         }
     };
 
     initializeData();
 
-    // --- REALTIME SUBSCRIPTIONS ---
     let articlesChannel: any;
     if (supabase) {
-        // SUBSCRIBE TO ARTICLES TABLE CHANGES
         articlesChannel = supabase
             .channel('public:articles')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
                 console.log("Realtime: Article update detected!");
-                fetchArticles(); // Refetch when SIBOS creates an article
+                fetchArticles();
             })
             .subscribe();
             
@@ -271,8 +264,6 @@ const AppContent = () => {
     }
   }, []);
 
-  // --- RENDER LOADING SCREEN ---
-  // Only show full screen loader during initial config load
   if (isInitializing) {
       return (
           <div className="min-h-screen bg-brand-black flex flex-col items-center justify-center gap-4">
@@ -282,13 +273,16 @@ const AppContent = () => {
       );
   }
 
-  // --- FILTER: AUTO-PUBLISH LOGIC ---
+  // --- FILTER: AUTO-PUBLISH LOGIC (Uses Live `currentTime`) ---
   const publishedArticles = articles.filter(a => {
       if (a.status === 'published') return true;
       if (a.status === 'scheduled' && a.scheduled_for) {
           const scheduleTime = new Date(a.scheduled_for).getTime();
-          const now = new Date().getTime();
-          return now >= scheduleTime; // AUTO PUBLISH
+          // Safety: If date parsing failed (NaN), don't show
+          if (isNaN(scheduleTime)) return false;
+          
+          // Use live currentTime state instead of static `new Date()`
+          return currentTime >= scheduleTime;
       }
       return false;
   });
@@ -327,6 +321,7 @@ const AppContent = () => {
             <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
             <Route path="/gallery/:slug" element={<ProjectDetailPage gallery={gallery} testimonials={testimonials} />} />
             
+            {/* ARTICLES: Pass the time-filtered list */}
             <Route path="/articles" element={<ArticlesPage articles={publishedArticles} products={products} />} />
             <Route path="/articles/:slug" element={<ArticleDetailPage articles={publishedArticles} products={products} />} />
             
