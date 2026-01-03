@@ -98,7 +98,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-// --- INVOICE GENERATOR ---
+// --- INVOICE GENERATOR (A4 SINGLE PAGE OPTIMIZED) ---
 const handlePrintInvoice = (order: Order, items: OrderItem[], config: SiteConfig) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return alert("Pop-up diblokir. Izinkan pop-up untuk mencetak invoice.");
@@ -108,126 +108,187 @@ const handlePrintInvoice = (order: Order, items: OrderItem[], config: SiteConfig
     const companyName = config.companyLegalName || "PT MESIN KASIR SOLO";
     const companyAddress = config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura, Sukoharjo, Jawa Tengah";
     const companyPhone = config.whatsappNumber ? (config.whatsappNumber.startsWith('62') ? '+' + config.whatsappNumber : config.whatsappNumber) : "+62 823 2510 3336";
-    const statusLabel = order.status === 'completed' || order.status === 'paid' || order.status === 'processed' ? 'LUNAS (PAID)' : 'UNPAID';
     const stampColor = order.status === 'cancelled' ? 'text-red-500 border-red-500' : 'text-green-600 border-green-600';
+    
+    // Status text logic
+    const isPaid = order.status === 'completed' || order.status === 'paid' || order.status === 'processed';
+    const stampText = isPaid ? 'LUNAS (PAID)' : (order.status === 'cancelled' ? 'DIBATALKAN' : 'UNPAID');
 
     const html = `
+    <!DOCTYPE html>
     <html>
     <head>
-        <title>Invoice #${order.id} - ${companyName}</title>
+        <title>Invoice #${order.id}</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-            body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; }
-            .watermark { 
-                position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg);
-                font-size: 8rem; font-weight: 900; opacity: 0.1; border: 8px solid; padding: 20px; z-index: 0;
+            
+            /* A4 CONFIGURATION */
+            @page { 
+                size: A4; 
+                margin: 0; 
             }
+            body { 
+                font-family: 'Inter', sans-serif; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+                width: 210mm;
+                height: 297mm;
+                background: white;
+                margin: 0 auto;
+                padding: 10mm 15mm; /* Top/Bottom 10mm, Left/Right 15mm */
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                position: relative;
+            }
+            .watermark { 
+                position: absolute; 
+                top: 45%; 
+                left: 50%; 
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 6rem; 
+                font-weight: 900; 
+                opacity: 0.1; 
+                border: 6px solid; 
+                padding: 1rem 3rem; 
+                z-index: 0;
+                white-space: nowrap;
+                pointer-events: none;
+            }
+            /* Table Styling to fit content */
+            table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+            th { text-transform: uppercase; font-size: 8pt; letter-spacing: 0.05em; color: #6b7280; padding: 8px 4px; border-bottom: 2px solid #e5e7eb; border-top: 1px solid #e5e7eb; background: #f9fafb; }
+            td { padding: 8px 4px; border-bottom: 1px solid #f3f4f6; color: #1f2937; }
+            .totals-row td { border-bottom: none; padding-top: 4px; padding-bottom: 4px; }
         </style>
     </head>
-    <body class="bg-white text-gray-900 p-8 max-w-4xl mx-auto border border-gray-200 min-h-screen relative overflow-hidden">
-        
+    <body>
         <!-- WATERMARK -->
         <div class="watermark ${stampColor}">
-            ${order.status.toUpperCase()}
+            ${stampText}
         </div>
 
-        <!-- HEADER -->
-        <div class="flex justify-between items-start mb-12 border-b border-gray-200 pb-8 relative z-10">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-1 tracking-tight">${companyName}</h1>
-                <p class="text-sm text-gray-500 max-w-xs leading-relaxed">${companyAddress}</p>
-                <p class="text-sm text-gray-500 mt-1">Tel: ${companyPhone}</p>
+        <!-- CONTENT WRAPPER -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+            
+            <!-- HEADER -->
+            <div class="flex justify-between items-start mb-8 relative z-10 border-b border-gray-200 pb-6">
+                <div class="w-1/2 pr-4">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-1 tracking-tight">${companyName}</h1>
+                    <p class="text-xs text-gray-500 leading-relaxed max-w-xs">${companyAddress}</p>
+                    <p class="text-xs text-gray-500 mt-1 font-mono">Tel: ${companyPhone}</p>
+                    ${config.npwpNumber ? `<p class="text-xs text-gray-500 mt-0.5 font-mono">NPWP: ${config.npwpNumber}</p>` : ''}
+                </div>
+                <div class="text-right w-1/2">
+                    <h2 class="text-3xl font-bold text-gray-800 uppercase tracking-widest mb-1">Invoice</h2>
+                    <p class="text-sm font-bold text-gray-600">#INV-${order.id}</p>
+                    <div class="mt-2 text-xs text-gray-500">
+                        <p>Tanggal: <span class="text-gray-900 font-medium">${invoiceDate}</span></p>
+                        <p>Jatuh Tempo: <span class="text-gray-900 font-medium">${dueDate}</span></p>
+                    </div>
+                </div>
             </div>
-            <div class="text-right">
-                <h2 class="text-4xl font-bold text-gray-200 uppercase tracking-widest mb-2">Invoice</h2>
-                <p class="text-sm font-bold text-gray-700">#INV-${order.id}</p>
-                <p class="text-xs text-gray-500 mt-1">Date: ${invoiceDate}</p>
-                <p class="text-xs text-gray-500">Due Date: ${dueDate}</p>
+
+            <!-- INFO PELANGGAN -->
+            <div class="flex justify-between mb-8 relative z-10 bg-gray-50/50 p-4 rounded-lg border border-gray-100">
+                <div class="w-1/2">
+                    <h3 class="text-[8pt] font-bold text-gray-400 uppercase tracking-wider mb-2">Ditagihkan Kepada:</h3>
+                    <p class="text-sm font-bold text-gray-900 uppercase">${order.customer_name}</p>
+                    <p class="text-xs text-gray-600 max-w-xs leading-snug mt-1">${order.customer_address}</p>
+                    <p class="text-xs text-gray-600 mt-1 font-mono">${order.customer_phone}</p>
+                </div>
+                ${order.tracking_number ? `
+                <div class="text-right w-1/2">
+                    <h3 class="text-[8pt] font-bold text-gray-400 uppercase tracking-wider mb-2">Info Pengiriman:</h3>
+                    <p class="text-sm font-bold text-gray-800">${order.courier}</p>
+                    <p class="text-xs font-mono text-gray-600 bg-white border border-gray-200 px-2 py-1 rounded inline-block mt-1">Resi: ${order.tracking_number}</p>
+                </div>` : ''}
             </div>
+
+            <!-- TABLE ITEMS -->
+            <div class="relative z-10 flex-grow">
+                <table class="w-full mb-6">
+                    <thead>
+                        <tr>
+                            <th class="text-left pl-2">Deskripsi Produk</th>
+                            <th class="text-center w-16">Qty</th>
+                            <th class="text-right w-32">Harga Satuan</th>
+                            <th class="text-right w-32 pr-2">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(item => `
+                        <tr>
+                            <td class="pl-2 font-medium">${item.product_name}</td>
+                            <td class="text-center text-gray-500">${item.quantity}</td>
+                            <td class="text-right text-gray-500">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</td>
+                            <td class="text-right font-bold pr-2">Rp ${new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</td>
+                        </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- SUMMARY & PAYMENT -->
+            <div class="flex flex-row justify-between items-start mb-8 relative z-10 mt-4 border-t border-gray-200 pt-6">
+                <div class="w-1/2 pr-8">
+                    <h4 class="text-[8pt] font-bold text-gray-400 uppercase mb-2">Pembayaran Transfer:</h4>
+                    <div class="text-xs text-gray-700 bg-gray-50 p-3 rounded border border-gray-100">
+                        <p class="font-bold">Bank Neo Commerce (BNC)</p>
+                        <p class="font-mono text-sm my-1">5859 4594 0674 0414</p>
+                        <p class="text-[10px] text-gray-500 uppercase">a.n PT MESIN KASIR SOLO</p>
+                    </div>
+                    <div class="mt-3">
+                        <p class="text-[8pt] text-gray-400 italic leading-tight">
+                            *Barang yang sudah dibeli tidak dapat ditukar/dikembalikan kecuali ada perjanjian garansi tertulis.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="w-1/2 pl-8">
+                    <table class="w-full">
+                        <tr class="totals-row">
+                            <td class="text-right text-xs text-gray-500">Subtotal</td>
+                            <td class="text-right text-xs font-bold text-gray-800 w-32">${formatRupiah(order.total_amount)}</td>
+                        </tr>
+                        <tr class="totals-row">
+                            <td class="text-right text-xs text-gray-500">Pajak (PPN 0%)</td>
+                            <td class="text-right text-xs font-bold text-gray-800">Rp 0</td>
+                        </tr>
+                        <tr class="totals-row">
+                            <td class="text-right text-xs text-gray-500 border-b border-gray-200 pb-2">Diskon</td>
+                            <td class="text-right text-xs font-bold text-gray-800 border-b border-gray-200 pb-2">Rp 0</td>
+                        </tr>
+                        <tr>
+                            <td class="text-right text-lg font-bold text-gray-900 pt-2">TOTAL</td>
+                            <td class="text-right text-lg font-bold text-gray-900 pt-2">${formatRupiah(order.total_amount)}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
-        <!-- BILL TO -->
-        <div class="flex justify-between mb-12 relative z-10">
-            <div>
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tagihan Kepada:</h3>
-                <p class="text-lg font-bold text-gray-800">${order.customer_name}</p>
-                <p class="text-sm text-gray-600 max-w-xs leading-relaxed">${order.customer_address}</p>
-                <p class="text-sm text-gray-600 mt-1">${order.customer_phone}</p>
+        <!-- FOOTER (SIGNATURE) -->
+        <div class="grid grid-cols-2 gap-8 pt-4 relative z-10">
+            <div class="text-center pt-8">
+                <p class="text-xs text-gray-400">Penerima / Klien</p>
+                <div class="h-16 border-b border-gray-300 w-2/3 mx-auto"></div>
+                <p class="text-xs text-gray-800 font-bold mt-2 uppercase">${order.customer_name}</p>
             </div>
-            ${order.tracking_number ? `
-            <div class="text-right">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pengiriman:</h3>
-                <p class="text-sm font-bold text-gray-800">${order.courier}</p>
-                <p class="text-sm font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded inline-block mt-1">${order.tracking_number}</p>
-            </div>` : ''}
-        </div>
-
-        <!-- TABLE -->
-        <table class="w-full mb-12 relative z-10">
-            <thead>
-                <tr class="bg-gray-50 border-y border-gray-200">
-                    <th class="py-3 px-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Deskripsi Item</th>
-                    <th class="py-3 px-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Qty</th>
-                    <th class="py-3 px-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Harga Satuan</th>
-                    <th class="py-3 px-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Total</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-                ${items.map(item => `
-                <tr>
-                    <td class="py-4 px-4 text-sm font-bold text-gray-800">${item.product_name}</td>
-                    <td class="py-4 px-4 text-center text-sm text-gray-600">${item.quantity}</td>
-                    <td class="py-4 px-4 text-right text-sm text-gray-600">Rp ${new Intl.NumberFormat('id-ID').format(item.price)}</td>
-                    <td class="py-4 px-4 text-right text-sm font-bold text-gray-800">Rp ${new Intl.NumberFormat('id-ID').format(item.price * item.quantity)}</td>
-                </tr>
-                `).join('')}
-            </tbody>
-        </table>
-
-        <!-- TOTALS & PAYMENT -->
-        <div class="flex flex-col md:flex-row justify-between items-start mb-16 relative z-10">
-            <div class="bg-gray-50 p-6 rounded-lg w-full md:w-1/2 mb-6 md:mb-0">
-                <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Metode Pembayaran</h4>
-                <div class="text-sm text-gray-700">
-                    <p class="font-bold">Bank Neo Commerce (BNC)</p>
-                    <p class="font-mono mt-1">5859 4594 0674 0414</p>
-                    <p class="text-xs mt-1 text-gray-500">a.n PT MESIN KASIR SOLO</p>
+            <div class="text-center pt-8">
+                <p class="text-xs text-gray-400">Hormat Kami,</p>
+                <div class="h-16 border-b border-gray-300 w-2/3 mx-auto relative">
+                    <!-- OPTIONAL: SIGNATURE IMAGE HERE -->
                 </div>
-            </div>
-            <div class="w-full md:w-1/3 space-y-3">
-                <div class="flex justify-between text-sm text-gray-600">
-                    <span>Subtotal</span>
-                    <span>${formatRupiah(order.total_amount)}</span>
-                </div>
-                <div class="flex justify-between text-sm text-gray-600 border-b border-gray-200 pb-3">
-                    <span>Pajak (0%)</span>
-                    <span>Rp 0</span>
-                </div>
-                <div class="flex justify-between text-xl font-bold text-gray-900 pt-1">
-                    <span>Total</span>
-                    <span>${formatRupiah(order.total_amount)}</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- FOOTER & SIGNATURE -->
-        <div class="grid grid-cols-2 gap-8 mt-auto pt-12 border-t border-gray-200 relative z-10">
-            <div>
-                <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Catatan:</h4>
-                <p class="text-xs text-gray-500 leading-relaxed italic">
-                    Barang yang sudah dibeli tidak dapat ditukar/dikembalikan kecuali ada perjanjian garansi tertulis. 
-                    Invoice ini sah dan diproses oleh komputer.
-                </p>
-            </div>
-            <div class="text-center pl-12">
-                <p class="text-sm font-bold text-gray-800 mb-16">Hormat Kami,</p>
-                <div class="border-t border-gray-300 w-2/3 mx-auto"></div>
-                <p class="text-xs text-gray-500 mt-2">Finance Dept.</p>
+                <p class="text-xs text-gray-800 font-bold mt-2">Finance Dept.</p>
             </div>
         </div>
 
         <script>
+            // Auto Print after load
             window.onload = () => { setTimeout(() => window.print(), 500); }
         </script>
     </body>
