@@ -482,12 +482,12 @@ export const HomePage = ({
                         Detail <ArrowRight size={14} className={service.color} />
                     </span>
                     
-                    {/* UPDATED: Simulasi Button (Solid Orange) */}
+                    {/* UPDATED: Simulasi Button (Larger & Proportional) */}
                     <button 
                         onClick={(e) => { e.stopPropagation(); setPage(service.link); }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-orange text-white hover:bg-brand-action hover:shadow-neon text-[10px] font-bold transition-all"
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-brand-orange text-white hover:bg-brand-action hover:shadow-neon text-xs md:text-sm font-bold transition-all transform hover:-translate-y-0.5"
                     >
-                        <Calculator size={12} /> Simulasi
+                        <Calculator size={16} /> Simulasi
                     </button>
                   </div>
                 </Card>
