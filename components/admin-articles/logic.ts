@@ -545,6 +545,11 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
     const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']); 
 
+    // --- SOCIAL BROADCAST STATE (NEW) ---
+    const [socialCaption, setSocialCaption] = useState('');
+    const [selectedPlatforms, setSelectedPlatforms] = useState({ instagram: true, facebook: true, gmb: false });
+    const [socialLoading, setSocialLoading] = useState({ generating: false, posting: false });
+
     useEffect(() => { try { localStorage.setItem('mks_personas', JSON.stringify(personas)); } catch (e) {} }, [personas]);
 
     const [form, setForm] = useState<ArticleFormState>({
@@ -575,6 +580,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             targetWordCount: 1000,
             related_pillars: []
         });
+        setSocialCaption(''); // Reset caption
         setAiStep(0); setSelectedPresets([]); setSelectedTones(['gritty']);
     };
 
@@ -604,6 +610,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             targetWordCount: estimatedCount,
             related_pillars: item.related_pillars || []
         });
+        setSocialCaption(''); // Clear previous caption
         setAiStep(2);
     };
 
@@ -856,9 +863,80 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         } 
     };
 
+    // --- NEW: SOCIAL BROADCAST ACTIONS ---
+    const generateSocialCaption = async () => {
+        if (!form.title) return alert("Judul artikel wajib diisi.");
+        setSocialLoading(p => ({ ...p, generating: true }));
+        try {
+            const context = form.excerpt || form.content.substring(0, 300) || form.title;
+            const prompt = `
+            Role: Social Media Manager for "PT Mesin Kasir Solo".
+            Task: Write a viral Instagram/Facebook caption to promote this article: "${form.title}".
+            Context: ${context}.
+            
+            Style:
+            - Professional but engaging (Edutainment).
+            - Hook at the beginning.
+            - Summarize key value.
+            - Call to Action: "Baca selengkapnya di link bio" or similar.
+            - Hashtags: #Bisnis #UMKM #KasirSolo #EdukasiBisnis.
+            
+            Output: JUST the caption text.
+            `;
+            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+            setSocialCaption(res.text?.trim() || '');
+        } catch(e) { alert("Gagal generate caption."); }
+        finally { setSocialLoading(p => ({ ...p, generating: false })); }
+    };
+
+    const broadcastArticle = async () => {
+        if (!form.title) return alert("Simpan artikel terlebih dahulu untuk broadcast.");
+        if (!socialCaption) return alert("Caption tidak boleh kosong.");
+        
+        // Safety Check for Local Blob URL
+        if (form.imagePreview.startsWith('blob:')) {
+            return alert("Gambar cover masih bersifat lokal. Mohon SIMPAN ARTIKEL dulu untuk upload gambar ke server, baru lakukan broadcast.");
+        }
+        if (!form.imagePreview) return alert("Artikel harus punya cover image untuk broadcast.");
+
+        const activePlatforms = Object.entries(selectedPlatforms)
+            .filter(([_, isActive]) => isActive)
+            .map(([key]) => key);
+
+        if (activePlatforms.length === 0) return alert("Pilih minimal 1 platform tujuan.");
+
+        setSocialLoading(p => ({ ...p, posting: true }));
+
+        try {
+            const response = await fetch('/api/ayrshare', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    caption: socialCaption,
+                    image_url: form.imagePreview,
+                    platforms: activePlatforms
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Gagal broadcast");
+
+            alert(`Sukses! Broadcast artikel terkirim ke: ${activePlatforms.join(', ')}.`);
+        } catch(e: any) {
+            console.error("Broadcast Error:", e);
+            alert(`Gagal broadcast: ${e.message}`);
+        } finally {
+            setSocialLoading(p => ({ ...p, posting: false }));
+        }
+    };
+
     return {
         form, setForm, filterLogic, aiLogic, personas, activePersonaId, setActivePersonaId, updatePersonaAvatar,
+        socialState: { socialCaption, setSocialCaption, selectedPlatforms, setSelectedPlatforms, socialLoading },
         aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, trendingTopics: aiLogic.trendingTopics, keywords: aiLogic.keywords, selectedTones, setSelectedTones },
-        actions: { resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage, runClusterResearch, runGenerateCategory }
+        actions: { 
+            resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage, runClusterResearch, runGenerateCategory,
+            generateSocialCaption, broadcastArticle 
+        }
     };
 };

@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, MapPin, Rocket, AlertCircle } from 'lucide-react';
 import { Article } from '../../types';
-import { Button } from '../ui';
+import { Button, LoadingSpinner } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
 
 // --- ATOM: Strategy Switcher ---
@@ -35,6 +35,7 @@ export const EditorPanel = ({
     loading,
     aiState,
     actions,
+    socialState,
     availablePillars
 }: {
     form: any,
@@ -42,6 +43,7 @@ export const EditorPanel = ({
     loading: any,
     aiState: any,
     actions: any,
+    socialState: any,
     availablePillars: Article[]
 }) => {
     
@@ -293,7 +295,7 @@ export const EditorPanel = ({
                     </datalist>
                 </div>
 
-                {/* 4. WORD COUNT SELECTOR (NEW) */}
+                {/* 4. WORD COUNT SELECTOR */}
                 <div className="bg-white/5 p-3 rounded-lg border border-white/10">
                     <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center justify-between">
                         <span className="flex items-center gap-2"><FileText size={10} /> Target Panjang Artikel</span>
@@ -351,6 +353,64 @@ export const EditorPanel = ({
                             );
                         })}
                     </div>
+                </div>
+
+                {/* 6. SOCIAL BROADCAST (NEW) */}
+                <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 p-3 rounded-lg border border-purple-500/30 space-y-3">
+                    <div className="flex justify-between items-center">
+                        <h4 className="text-[9px] font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                            <Share2 size={12} className="text-purple-400"/> Social Broadcast
+                        </h4>
+                        <div className="flex gap-1">
+                            {['instagram', 'facebook', 'gmb'].map((p) => (
+                                <button 
+                                    key={p}
+                                    onClick={() => actions.setSelectedPlatforms((prev: any) => ({...prev, [p]: !prev[p]}))}
+                                    className={`p-1.5 rounded transition-all ${
+                                        socialState.selectedPlatforms[p] 
+                                        ? (p === 'instagram' ? 'bg-pink-600 text-white' : p === 'facebook' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white') 
+                                        : 'bg-white/10 text-gray-500'
+                                    }`}
+                                    title={p.toUpperCase()}
+                                >
+                                    {p === 'instagram' && <Instagram size={10} />}
+                                    {p === 'facebook' && <Facebook size={10} />}
+                                    {p === 'gmb' && <MapPin size={10} />}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="relative">
+                        <textarea 
+                            value={socialState.socialCaption}
+                            onChange={(e) => actions.setSocialCaption(e.target.value)}
+                            placeholder="Caption sosmed..."
+                            className="w-full h-16 bg-black/40 text-[9px] text-white p-2 rounded border border-purple-500/20 focus:border-purple-500 outline-none resize-none custom-scrollbar"
+                        />
+                        <button 
+                            onClick={actions.generateSocialCaption}
+                            disabled={socialState.socialLoading.generating}
+                            className="absolute bottom-1 right-1 text-[8px] bg-purple-500 hover:bg-purple-400 text-white px-2 py-0.5 rounded flex items-center gap-1 shadow-lg transition-all disabled:opacity-50"
+                        >
+                            {socialState.socialLoading.generating ? <Loader2 size={8} className="animate-spin"/> : <><Sparkles size={8}/> AI Caption</>}
+                        </button>
+                    </div>
+
+                    <button 
+                        onClick={actions.broadcastArticle}
+                        disabled={socialState.socialLoading.posting}
+                        className="w-full py-1.5 bg-white/5 hover:bg-purple-600 border border-purple-500/30 text-purple-200 hover:text-white rounded text-[9px] font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    >
+                        {socialState.socialLoading.posting ? <LoadingSpinner size={10}/> : <><Rocket size={10}/> POST TO SOCIAL</>}
+                    </button>
+                    
+                    {(!form.imagePreview || form.imagePreview.startsWith('blob:')) && (
+                        <div className="flex items-center gap-1 mt-1 text-[8px] text-yellow-500 bg-yellow-500/10 p-1 rounded">
+                            <AlertCircle size={8}/>
+                            <span>Simpan dulu untuk broadcast.</span>
+                        </div>
+                    )}
                 </div>
 
             </div>

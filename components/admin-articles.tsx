@@ -63,6 +63,7 @@ export const AdminArticles = ({
                 runWrite: manager.actions.runWrite,
                 runImage: manager.actions.runImage
             }}
+            socialState={manager.socialState}
             availablePillars={availablePillars}
          />
       </div>
