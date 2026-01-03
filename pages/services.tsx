@@ -46,10 +46,10 @@ const WEBSITE_CALC: CalcData = {
     { id: 'domain', label: 'Domain .COM / .ID (Per Tahun)', price: 300000 },
     { id: 'copy', label: 'Copywriting (Sekali Bayar)', price: 750000 },
     { id: 'seo_basic', label: 'SEO Setup Basic (Sekali Bayar)', price: 500000 },
-    { id: 'wa_rotator', label: 'WhatsApp Rotator (Sekali Bayar)', price: 400000 },
-    { id: 'payment', label: 'Payment Gateway (Sekali Bayar)', price: 2000000, desc: 'Integrasi QRIS/VA (Biaya Setup).' },
-    { id: 'shipping', label: 'Integrasi Ekspedisi (Sekali Bayar)', price: 2000000, desc: 'Cek ongkir, Resi & Tracking Otomatis.' },
-    { id: 'ai_chat', label: 'Integrasi AI Chatbot (Sekali Bayar)', price: 3000000, desc: 'Setup asisten virtual cerdas.' }
+    { id: 'wa_rotator', label: 'WhatsApp Rotator (Per Tahun)', price: 400000, desc: 'Lisensi tool rotasi CS.' },
+    { id: 'payment', label: 'Payment Gateway (Per Tahun)', price: 2000000, desc: 'Maintenance Plugin & Renew License.' },
+    { id: 'shipping', label: 'Integrasi Ekspedisi (Per Tahun)', price: 2000000, desc: 'Lisensi API Cek Ongkir Real-time.' },
+    { id: 'ai_chat', label: 'Integrasi AI Chatbot (Per Bulan)', price: 3000000, desc: 'Biaya server & token AI response.' }
   ]
 };
 
@@ -81,12 +81,12 @@ const WEBAPP_CALC: CalcData = {
   ],
   addonLabel: "Modul Tambahan",
   addons: [
-    { id: 'server', label: 'Setup Server/VPS (Sekali Bayar)', price: 1000000 },
-    { id: 'wa_notif', label: 'WA Bot Setup (Sekali Bayar)', price: 1500000 },
-    { id: 'payment', label: 'Payment Gateway (Sekali Bayar)', price: 2000000 },
-    { id: 'mobile', label: 'Android APK (Sekali Bayar)', price: 1500000 },
-    { id: 'logistics', label: 'Integrasi Kurir (Sekali Bayar)', price: 2000000, desc: 'Multi-kurir (JNE/J&T/Gojek).' },
-    { id: 'ai_insight', label: 'AI Prediction (Sekali Bayar)', price: 3000000, desc: 'Setup modul prediksi stok.' }
+    { id: 'server', label: 'Cloud Server / VPS (Per Tahun)', price: 1500000, desc: 'Sewa server dedicated.' },
+    { id: 'wa_notif', label: 'WA Bot Notification (Per Bulan)', price: 500000, desc: 'Biaya langganan API WhatsApp.' },
+    { id: 'payment', label: 'Payment Gateway (Per Tahun)', price: 2000000 },
+    { id: 'mobile', label: 'Android APK Wrapper (Sekali Bayar)', price: 1500000 },
+    { id: 'logistics', label: 'Integrasi Kurir API (Per Tahun)', price: 2000000, desc: 'Multi-kurir (JNE/J&T/Gojek).' },
+    { id: 'ai_insight', label: 'AI Prediction Module (Per Bulan)', price: 3000000, desc: 'Analisa forecasting otomatis.' }
   ]
 };
 
@@ -157,7 +157,7 @@ const MAINTENANCE_CALC: CalcData = {
     { id: 'clean', label: 'Malware Removal (Sekali Bayar)', price: 1000000 },
     { id: 'content', label: 'Update Konten (Per Paket)', price: 500000 },
     { id: 'migrasi', label: 'Migrasi Server (Sekali Bayar)', price: 750000 },
-    { id: 'ai_guard', label: 'Setup AI Security (Sekali Bayar)', price: 3000000, desc: 'Deteksi anomali traffic.' }
+    { id: 'ai_guard', label: 'AI Security Monitor (Per Bulan)', price: 3000000, desc: 'Deteksi anomali traffic.' }
   ]
 };
 
