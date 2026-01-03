@@ -6,7 +6,7 @@ import {
   ArrowRight, CheckCircle2, Store, Clock, ShoppingBag, Award,
   FileSpreadsheet, Cpu, GitMerge, Users, PieChart, Layers, 
   Megaphone, Target, DollarSign, MapPin, Anchor, LineChart,
-  ShieldAlert, Activity, LifeBuoy, PenTool
+  ShieldAlert, Activity, LifeBuoy, PenTool, Star
 } from 'lucide-react';
 import { ServiceHero, FeatureGrid, WorkflowSection, NarrativeSection } from '../components/service-parts';
 import { InvestmentSimulator, CalcData } from '../components/calculator';
@@ -18,7 +18,7 @@ import { InvestmentSimulator, CalcData } from '../components/calculator';
 const WEBSITE_DATA = {
   features: [
     { title: "SEO Domination", desc: "Struktur website dirancang agar mudah ditemukan di Google (Mesin Pencari Pelanggan).", icon: Search },
-    { title: "Toko Buka 24 Jam", desc: "Website Anda tetap jualan jam 2 pagi. Tangkap order saat Anda tidur.", icon: Clock },
+    { title: "Google Maps Ready", desc: "Gratis setup dasar agar toko fisik Anda muncul di pencarian lokal.", icon: MapPin },
     { title: "Kecepatan Kilat", desc: "Optimasi kode & server agar loading website < 3 detik. Anti lemot.", icon: Zap },
     { title: "Brand Authority", desc: "Meningkatkan kepercayaan supplier & customer dengan kehadiran digital yang bonafit.", icon: Award },
     { title: "Katalog Online", desc: "Showcase ribuan produk tanpa sewa ruko mahal. Katalog di genggaman pelanggan.", icon: ShoppingBag },
@@ -44,6 +44,7 @@ const WEBSITE_CALC: CalcData = {
   addonLabel: "Fitur Tambahan (Power-Ups)",
   addons: [
     { id: 'domain', label: 'Domain .COM / .ID', price: 300000 },
+    { id: 'gbp_web', label: 'Integrasi Google Bisnis', price: 750000, desc: 'Verifikasi lokasi & optimasi profil.' },
     { id: 'copy', label: 'Copywriting', price: 750000 },
     { id: 'seo_basic', label: 'SEO Setup Basic', price: 500000 },
     { id: 'wa_rotator', label: 'Integrasi WhatsApp', price: 1200000, desc: 'Rotator CS & Notifikasi.' },
@@ -56,7 +57,7 @@ const WEBSITE_CALC: CalcData = {
 const WEBAPP_DATA = {
   features: [
     { title: "Business Automation", desc: "Ubah proses manual (tulis nota, rekap Excel) menjadi sistem otomatis.", icon: Cpu },
-    { title: "Centralized Data", desc: "Satu database pusat untuk semua cabang. Tidak ada lagi drama 'file Excel berbeda'.", icon: Database },
+    { title: "Reputation Dashboard", desc: "Pantau ulasan Google Maps langsung dari dashboard admin Anda.", icon: Star },
     { title: "Real-time Dashboard", desc: "Pantau omzet, stok, dan kinerja karyawan detik ini juga dari HP Anda.", icon: PieChart },
     { title: "Role Management", desc: "Batasi akses karyawan. Kasir hanya input penjualan, tidak bisa lihat laba bersih.", icon: Users },
     { title: "API Integration", desc: "Hubungkan sistem dengan Payment Gateway, WhatsApp Notif, atau Supplier.", icon: GitMerge },
@@ -82,6 +83,7 @@ const WEBAPP_CALC: CalcData = {
   addonLabel: "Modul Tambahan",
   addons: [
     { id: 'server', label: 'Cloud Server / VPS', price: 1500000, desc: 'Setup environment server.' },
+    { id: 'gbp_app', label: 'Integrasi Google Bisnis', price: 1500000, desc: 'Sinkronisasi review & data lokasi via API.' },
     { id: 'wa_notif', label: 'Integrasi WhatsApp', price: 1200000, desc: 'Notifikasi & Laporan WA.' },
     { id: 'payment', label: 'Integrasi Payment Gateway', price: 2000000 },
     { id: 'mobile', label: 'Android APK Wrapper', price: 1500000 },
@@ -93,8 +95,8 @@ const WEBAPP_CALC: CalcData = {
 const SEO_DATA = {
   features: [
     { title: "Buying Intent Keywords", desc: "Target kata kunci 'siap beli', bukan sekadar traffic sampah.", icon: Target },
-    { title: "Stop 'Bakar Uang' Iklan", desc: "Iklan itu sewa, SEO itu investasi properti. Aset milik Anda selamanya.", icon: DollarSign },
-    { title: "Dominasi Lokal (GMB)", desc: "Muncul di Google Maps saat orang mencari produk Anda di kota Anda.", icon: MapPin },
+    { title: "Map Pack Domination", desc: "Optimasi agar toko Anda muncul di '3 Besar' peta lokal (Local SEO).", icon: MapPin },
+    { title: "Dominasi Lokal", desc: "Muncul di Google saat orang mencari produk Anda di kota Anda.", icon: Anchor },
     { title: "Technical Audit", desc: "Perbaiki 'jeroan' website agar mudah dibaca robot Google.", icon: Layers },
     { title: "Authority Content", desc: "Artikel yang mengedukasi dan membangun kepercayaan calon pembeli.", icon: PenTool },
     { title: "Safe Backlink Strategy", desc: "Reputasi digital dengan cara aman (White Hat), anti-banned.", icon: ShieldCheck },
@@ -118,6 +120,7 @@ const SEO_CALC: CalcData = {
   ],
   addonLabel: "Booster Pack",
   addons: [
+    { id: 'gbp_seo', label: 'Optimasi Google Bisnis', price: 1500000, desc: 'Audit total, posting rutin, & manajemen reputasi.' },
     { id: 'audit', label: 'Deep Technical Audit', price: 1000000 },
     { id: 'content', label: '10x Artikel SEO', price: 1500000 },
     { id: 'backlink', label: 'Backlink Pack', price: 2000000 },
