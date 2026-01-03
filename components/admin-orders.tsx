@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase, formatRupiah } from '../utils';
 import { Order, OrderItem, SiteConfig } from '../types';
 import { LoadingSpinner } from './ui';
-import { ChevronDown, ChevronUp, Package, Phone, User, MapPin, Clock, Truck, Save, Copy, Printer, FileText } from 'lucide-react';
+import { ChevronDown, ChevronUp, Package, Phone, User, MapPin, Clock, Truck, Save, Copy, Printer, FileText, Share2 } from 'lucide-react';
 
 // --- LOGIC: Custom Hook ---
 const useAdminOrders = () => {
@@ -371,15 +371,33 @@ const OrderDetail = ({
                     <div className="flex justify-between items-center">
                         <h5 className="font-bold text-brand-orange uppercase text-[10px] tracking-widest flex items-center gap-2"><User size={12}/> Info Pelanggan</h5>
                         
-                        {/* INVOICE BUTTON */}
-                        <button 
-                            onClick={() => handlePrintInvoice(order, items, config)}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-[10px] font-bold text-white transition-all group"
-                            title="Download PDF / Print Invoice"
-                        >
-                            <Printer size={12} className="text-brand-orange group-hover:scale-110 transition-transform" /> 
-                            Cetak Invoice
-                        </button>
+                        <div className="flex gap-2">
+                            {/* SHARE BUTTON */}
+                            <button
+                                onClick={() => {
+                                    const text = `*Halo Kak ${order.customer_name},*\n\nBerikut rincian pesanan Anda di PT Mesin Kasir Solo:\n\n*No. Order:* #${order.id}\n*Total:* ${formatRupiah(order.total_amount)}\n*Status:* ${order.status.toUpperCase()}\n\nTerima kasih telah berbelanja!`;
+                                    // Handle number format: remove 0 prefix, remove + prefix if exists, add 62
+                                    let phone = order.customer_phone.replace(/\D/g, ''); // remove non-digits
+                                    if (phone.startsWith('0')) phone = '62' + phone.substring(1);
+                                    
+                                    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+                                }}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 rounded text-[10px] font-bold text-green-400 transition-all group"
+                                title="Kirim ke WhatsApp Pelanggan"
+                            >
+                                <Share2 size={12} /> Share
+                            </button>
+
+                            {/* INVOICE BUTTON */}
+                            <button 
+                                onClick={() => handlePrintInvoice(order, items, config)}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-[10px] font-bold text-white transition-all group"
+                                title="Download PDF / Print Invoice"
+                            >
+                                <Printer size={12} className="text-brand-orange group-hover:scale-110 transition-transform" /> 
+                                Cetak Invoice
+                            </button>
+                        </div>
                     </div>
 
                     <div className="bg-brand-card/50 p-4 rounded-lg border border-white/5 space-y-2">
