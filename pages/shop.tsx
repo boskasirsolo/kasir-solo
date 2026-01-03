@@ -126,6 +126,11 @@ export const ShopPage = ({ products }: { products: Product[] }) => {
     compareIds, toggleCompare, removeCompare, clearCompare, comparedProducts, showCompareModal, setShowCompareModal
   } = useShopLogic(products);
 
+  // Auto-scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page]);
+
   const handleProductClick = (product: Product) => {
     navigate(`/shop/${slugify(product.name)}`);
   };
