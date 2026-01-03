@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, MapPin, Rocket, AlertCircle } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, LoadingSpinner } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
@@ -362,20 +362,20 @@ export const EditorPanel = ({
                             <Share2 size={12} className="text-purple-400"/> Social Broadcast
                         </h4>
                         <div className="flex gap-1">
-                            {['instagram', 'facebook', 'gmb'].map((p) => (
+                            {['instagram', 'facebook', 'linkedin'].map((p) => (
                                 <button 
                                     key={p}
                                     onClick={() => actions.setSelectedPlatforms((prev: any) => ({...prev, [p]: !prev[p]}))}
                                     className={`p-1.5 rounded transition-all ${
                                         socialState.selectedPlatforms[p] 
-                                        ? (p === 'instagram' ? 'bg-pink-600 text-white' : p === 'facebook' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white') 
+                                        ? (p === 'instagram' ? 'bg-pink-600 text-white' : p === 'facebook' ? 'bg-blue-600 text-white' : 'bg-blue-800 text-white') 
                                         : 'bg-white/10 text-gray-500'
                                     }`}
                                     title={p.toUpperCase()}
                                 >
                                     {p === 'instagram' && <Instagram size={10} />}
                                     {p === 'facebook' && <Facebook size={10} />}
-                                    {p === 'gmb' && <MapPin size={10} />}
+                                    {p === 'linkedin' && <Linkedin size={10} />}
                                 </button>
                             ))}
                         </div>

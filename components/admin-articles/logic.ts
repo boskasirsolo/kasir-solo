@@ -546,8 +546,13 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']); 
 
     // --- SOCIAL BROADCAST STATE (NEW) ---
+    // Added LinkedIn to default options
     const [socialCaption, setSocialCaption] = useState('');
-    const [selectedPlatforms, setSelectedPlatforms] = useState({ instagram: true, facebook: true, gmb: false });
+    const [selectedPlatforms, setSelectedPlatforms] = useState({ 
+        instagram: true, 
+        facebook: true, 
+        linkedin: false 
+    });
     const [socialLoading, setSocialLoading] = useState({ generating: false, posting: false });
 
     useEffect(() => { try { localStorage.setItem('mks_personas', JSON.stringify(personas)); } catch (e) {} }, [personas]);
@@ -871,7 +876,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             const context = form.excerpt || form.content.substring(0, 300) || form.title;
             const prompt = `
             Role: Social Media Manager for "PT Mesin Kasir Solo".
-            Task: Write a viral Instagram/Facebook caption to promote this article: "${form.title}".
+            Task: Write a viral Instagram/Facebook/LinkedIn caption to promote this article: "${form.title}".
             Context: ${context}.
             
             Style:
