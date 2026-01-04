@@ -63,8 +63,8 @@ const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onClose: (
                     </p>
 
                     <div className="p-4 bg-yellow-500/5 border-l-4 border-yellow-500 rounded-r-lg text-xs text-gray-400 leading-relaxed">
-                        <strong className="text-yellow-500 block mb-1 flex items-center gap-1"><AlertTriangle size={12}/> Disclaimer:</strong>
-                        Pastikan versi OS Anda sesuai. Kami tidak bertanggung jawab atas kerusakan akibat kesalahan instalasi driver yang tidak kompatibel.
+                        <strong className="text-yellow-500 block mb-1 flex items-center gap-1"><AlertTriangle size={12}/> Warning:</strong>
+                        Jangan asal install kalau ragu. Salah driver bisa bikin printer lo mogok. Kalau bingung, mending chat admin dulu.
                     </div>
                 </div>
 
@@ -76,7 +76,7 @@ const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onClose: (
                         rel="noreferrer"
                         className="w-full flex items-center justify-center gap-2 bg-brand-orange hover:bg-brand-action text-white py-3 rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong"
                     >
-                        <Download size={18} /> DOWNLOAD SEKARANG
+                        <Download size={18} /> SEDOT FILE
                     </a>
                 </div>
             </div>
@@ -250,9 +250,9 @@ export const SupportPage = () => {
          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-orange/5 rounded-full blur-[120px] pointer-events-none"></div>
          <div className="container mx-auto px-4 relative z-10 text-center">
             <SectionHeader 
-                title="Support" 
-                highlight="Center" 
-                subtitle="Satu tempat untuk semua kebutuhan teknis Anda. Driver, Manual, Video, dan Solusi." 
+                title="Bengkel" 
+                highlight="Digital." 
+                subtitle="Mesin kasir lo macet? Printer ngadat? Tenang, jangan panik. Ambil 'kunci inggris' digital lo di sini atau panggil mekanik gue." 
             />
             
             {/* SEARCH BAR GLOBAL */}
@@ -261,7 +261,7 @@ export const SupportPage = () => {
                     type="text" 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Cari driver, video tutorial, atau masalah..."
+                    placeholder="Ketik masalah lo... (misal: printer error)"
                     className="w-full bg-brand-card border border-white/10 rounded-full py-4 pl-12 pr-6 text-white shadow-2xl focus:border-brand-orange outline-none transition-all placeholder-gray-500"
                 />
                 <Search className="absolute left-4 top-4 text-gray-500 group-focus-within:text-brand-orange transition-colors" size={20} />
@@ -276,7 +276,7 @@ export const SupportPage = () => {
             <div className="lg:col-span-6 bg-brand-dark/30 border border-white/5 rounded-2xl p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-white/10 pb-3">
                     <h3 className="text-white font-bold flex items-center gap-2 text-base">
-                        <HardDrive size={18} className="text-blue-400" /> Download Center
+                        <HardDrive size={18} className="text-blue-400" /> Gudang Senjata (Files)
                     </h3>
                     
                     {/* TABS */}
@@ -320,7 +320,7 @@ export const SupportPage = () => {
             {/* COL 2: VIDEOS (25% = 3 cols) */}
             <div className="lg:col-span-3 bg-brand-dark/30 border border-white/5 rounded-2xl p-5">
                 <h3 className="text-white font-bold mb-6 flex items-center gap-2 text-base border-b border-white/10 pb-3">
-                    <PlayCircle size={18} className="text-red-500" /> Video Tutorial
+                    <PlayCircle size={18} className="text-red-500" /> Tutorial Anti-Gaptek
                 </h3>
                 
                 <div className="space-y-2">
@@ -342,7 +342,7 @@ export const SupportPage = () => {
                 {/* FAQ BOX */}
                 <div className="bg-brand-dark/30 border border-white/5 rounded-2xl p-5">
                     <h3 className="text-white font-bold mb-6 flex items-center gap-2 text-base border-b border-white/10 pb-3">
-                        <HelpCircle size={18} className="text-brand-orange" /> FAQ
+                        <HelpCircle size={18} className="text-brand-orange" /> Pertanyaan Langganan
                     </h3>
                     <div className="space-y-1">
                         {paginate(filteredFaqs, pageFaqs, PAGE_SIZE_FAQS).map(item => (
@@ -355,17 +355,17 @@ export const SupportPage = () => {
 
                 {/* CONTACT BOX */}
                 <div className="bg-brand-orange/10 border border-brand-orange/30 p-5 rounded-xl text-center">
-                    <p className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-2">Butuh Bantuan Lebih?</p>
+                    <p className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-2">Mentok & Nyerah?</p>
                     <p className="text-gray-300 text-xs mb-4 leading-relaxed">
-                        Jika panduan di samping belum menjawab, silakan hubungi tim support langsung.
+                        Gak usah dipaksa kalau emang gak ngerti. Daripada makin rusak, chat tim teknis gue sekarang.
                     </p>
                     <a 
-                        href="https://wa.me/6282325103336"
+                        href="https://wa.me/6282325103336?text=Halo Tim Teknis, saya butuh bantuan urgent."
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-action text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-neon w-full justify-center"
                     >
-                        <MessageCircle size={14} /> Chat Support
+                        <MessageCircle size={14} /> Panggil Mekanik
                     </a>
                 </div>
 
