@@ -57,7 +57,7 @@ const useShopLogic = (products: Product[]) => {
               return prev.filter(id => id !== product.id);
           } else {
               if (prev.length >= 3) {
-                  alert("Maksimal 3 produk untuk dibandingkan.");
+                  alert("Woi, santai! Maksimal 3 barang aja yang diadu biar gak pusing.");
                   return prev;
               }
               return [...prev, product.id];

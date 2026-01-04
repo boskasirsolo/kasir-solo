@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus, Check, ArrowLeft, PackageOpen, Scale, XCircle, ThumbsUp } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus, Check, ArrowLeft, PackageOpen, Scale, XCircle, ThumbsUp, Zap, ShieldCheck } from 'lucide-react';
 import { Product } from '../types';
 import { Badge, Card, Input, Button } from './ui';
 import { formatRupiah } from '../utils';
@@ -11,31 +11,41 @@ import { createPortal } from 'react-dom';
 
 export const ShopHero = () => (
   <div className="text-left mb-8 md:mb-0">
+    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-orange/30 bg-brand-orange/10 mb-4">
+        <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span>
+        <span className="text-[10px] font-bold text-brand-orange uppercase tracking-widest">Ready Stock</span>
+    </div>
     <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
-      Katalog <span className="text-brand-orange">Mesin Kasir</span>
+      Pilih <span className="text-brand-orange">Senjata Lo.</span>
     </h2>
-    <p className="text-gray-400 text-lg">Pilihan paket POS terbaik untuk Retail, F&B, dan Jasa</p>
+    <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
+      Jangan asal beli murah. Ini investasi jangka panjang. <br className="hidden md:block"/>
+      Pilih mesin yang tahan banting buat ngadepin ribuan transaksi.
+    </p>
   </div>
 );
 
-// ... (Rest of imports like SearchWidget, EmptyState, PaginationControl, ComparisonModal, ComparisonBar are unchanged, keeping them brief for XML context) ...
 export const SearchWidget = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => (
   <div className="relative group w-full md:w-80">
     <Input 
       value={value} 
       onChange={(e) => onChange(e.target.value)} 
-      placeholder="Cari hardware..." 
-      className="pl-12 py-3 rounded-full bg-brand-card/50 border-white/10 focus:border-brand-orange transition-all"
+      placeholder="Cari alat tempur..." 
+      className="pl-12 py-3 rounded-full bg-brand-card/50 border-white/10 focus:border-brand-orange transition-all text-sm font-bold placeholder-gray-600"
     />
     <Search className="absolute left-4 top-3.5 text-gray-500 w-5 h-5 group-hover:text-brand-orange transition-colors" />
   </div>
 );
 
 export const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-white/5 rounded-2xl bg-white/5">
-    <PackageOpen size={48} className="text-gray-600 mb-4" />
-    <h3 className="text-xl font-bold text-white mb-2">Produk Tidak Ditemukan</h3>
-    <p className="text-gray-500 text-sm">Coba gunakan kata kunci lain atau ubah pencarian.</p>
+  <div className="flex flex-col items-center justify-center py-24 text-center border border-white/5 rounded-3xl bg-brand-dark/30">
+    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/5">
+        <PackageOpen size={40} className="text-gray-600" />
+    </div>
+    <h3 className="text-2xl font-bold text-white mb-2">Barang Ghaib?</h3>
+    <p className="text-gray-400 text-sm max-w-sm mx-auto leading-relaxed">
+      Gue gak nemu barang yang lo cari. Coba ketik kata kunci lain atau chat admin kalau lo butuh spek khusus.
+    </p>
   </div>
 );
 
@@ -51,7 +61,7 @@ export const PaginationControl = ({ page, totalPages, setPage }: { page: number,
         <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
       </button>
       <span className="text-brand-orange font-display font-bold px-4 py-2 bg-brand-orange/10 rounded-lg border border-brand-orange/20">
-        Page {page} / {totalPages}
+        Halaman {page} / {totalPages}
       </span>
       <button 
         onClick={() => setPage(Math.min(totalPages, page + 1))}
@@ -73,9 +83,9 @@ export const ComparisonModal = ({ products, onClose, onRemove }: { products: Pro
                 <div className="p-6 border-b border-white/10 flex justify-between items-center bg-brand-card shrink-0">
                     <div>
                         <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                            <Scale className="text-brand-orange"/> Perbandingan Produk
+                            <Scale className="text-brand-orange"/> Arena Adu Mekanik
                         </h3>
-                        <p className="text-xs text-gray-400 mt-1">Bandingkan spesifikasi teknis untuk keputusan terbaik.</p>
+                        <p className="text-xs text-gray-400 mt-1">Jangan beli kucing dalam karung. Bandingin dulu spek-nya head-to-head.</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"><X size={24} /></button>
                 </div>
@@ -83,7 +93,7 @@ export const ComparisonModal = ({ products, onClose, onRemove }: { products: Pro
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr>
-                                <th className="p-4 bg-black/40 text-gray-500 text-xs font-bold uppercase tracking-wider sticky top-0 left-0 z-20 min-w-[150px] border-b border-r border-white/10 backdrop-blur-sm">Fitur</th>
+                                <th className="p-4 bg-black/40 text-gray-500 text-xs font-bold uppercase tracking-wider sticky top-0 left-0 z-20 min-w-[150px] border-b border-r border-white/10 backdrop-blur-sm">Fitur / Spek</th>
                                 {products.map(p => (
                                     <th key={p.id} className="p-4 bg-brand-card/90 text-white min-w-[250px] border-b border-r border-white/10 sticky top-0 z-10 backdrop-blur-sm">
                                         <div className="flex justify-between items-start mb-2">
@@ -99,7 +109,7 @@ export const ComparisonModal = ({ products, onClose, onRemove }: { products: Pro
                             </tr>
                         </thead>
                         <tbody className="text-sm text-gray-300 divide-y divide-white/5">
-                            {allSpecKeys.length === 0 && <tr><td colSpan={products.length + 1} className="p-8 text-center text-gray-500 italic">Belum ada data spesifikasi detail.</td></tr>}
+                            {allSpecKeys.length === 0 && <tr><td colSpan={products.length + 1} className="p-8 text-center text-gray-500 italic">Belum ada data spek detail di database.</td></tr>}
                             {allSpecKeys.map(key => (
                                 <tr key={key} className="hover:bg-white/5 transition-colors">
                                     <td className="p-4 border-r border-white/10 font-bold text-gray-400 bg-black/20">{key}</td>
@@ -129,7 +139,7 @@ export const ComparisonBar = ({ selectedProducts, onRemove, onClear, onCompare }
             <div className="bg-brand-dark/95 backdrop-blur-xl border border-brand-orange/30 rounded-2xl shadow-neon-strong p-4 flex flex-col md:flex-row items-center gap-6 max-w-4xl w-full mx-4">
                 <div className="flex items-center gap-3 md:border-r md:border-white/10 md:pr-6 w-full md:w-auto">
                     <div className="w-10 h-10 rounded-full bg-brand-orange flex items-center justify-center text-white shadow-neon shrink-0"><Scale size={20} /></div>
-                    <div><h4 className="text-white font-bold text-sm">Komparasi ({selectedProducts.length}/3)</h4><button onClick={onClear} className="text-[10px] text-red-400 hover:underline">Hapus Semua</button></div>
+                    <div><h4 className="text-white font-bold text-sm uppercase tracking-widest">Versus Mode ({selectedProducts.length}/3)</h4><button onClick={onClear} className="text-[10px] text-red-400 hover:underline">Reset Semua</button></div>
                 </div>
                 <div className="flex gap-3 overflow-x-auto max-w-full md:flex-1 py-1 custom-scrollbar">
                     {selectedProducts.map(p => (
@@ -142,7 +152,7 @@ export const ComparisonBar = ({ selectedProducts, onRemove, onClear, onCompare }
                         <div key={i} className="w-12 h-12 rounded-lg border border-dashed border-white/10 flex items-center justify-center text-gray-600 shrink-0"><span className="text-[10px]">{i + 1 + selectedProducts.length}</span></div>
                     ))}
                 </div>
-                <Button onClick={onCompare} className="w-full md:w-auto px-6 py-3 whitespace-nowrap shadow-neon" disabled={selectedProducts.length < 2}>{selectedProducts.length < 2 ? 'Pilih min. 2' : 'BANDINGKAN'}</Button>
+                <Button onClick={onCompare} className="w-full md:w-auto px-6 py-3 whitespace-nowrap shadow-neon" disabled={selectedProducts.length < 2}>{selectedProducts.length < 2 ? 'Pilih min. 2' : 'ADU SEKARANG'}</Button>
             </div>
         </div>, document.body
     );
@@ -240,7 +250,7 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: { product:
             className={`col-span-2 py-2 rounded-lg border flex items-center justify-center gap-1.5 transition-all text-[10px] font-bold uppercase ${isSelected ? 'bg-brand-orange text-white border-brand-orange shadow-neon' : 'border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5'}`} 
             title="Bandingkan Produk"
         >
-            <Scale size={14} /> Bandingkan
+            <Scale size={14} /> ADU SPEK
         </button>
 
         {/* Detail Button: Text Only (col-span-1) */}
@@ -248,7 +258,7 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: { product:
             onClick={(e) => { e.stopPropagation(); onDetail(); }} 
             className="col-span-1 py-2 rounded-lg border border-brand-orange/50 text-brand-orange hover:text-white hover:bg-brand-orange font-bold text-[10px] transition-all hover:shadow-neon flex items-center justify-center"
         >
-            Detail
+            BEDAH
         </button>
 
         {/* Buy Button: Icon Only (col-span-1) */}
@@ -256,9 +266,9 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: { product:
             ref={buttonRef} 
             onClick={handleAddToCart} 
             className={`col-span-1 py-2 rounded-lg font-bold flex items-center justify-center transition-all group/btn ${isAdded ? 'bg-green-500 text-white shadow-lg scale-95' : 'bg-brand-gradient text-white hover:bg-brand-gradient-hover hover:shadow-action'}`}
-            title="Tambah ke Keranjang"
+            title="Angkut Barang Ini"
         >
-            {isAdded ? <Check size={16} /> : <Plus size={18} className={isAnimating ? "animate-spin" : "group-hover/btn:scale-125 transition-transform"}/>}
+            {isAdded ? <Check size={16} /> : <ShoppingCart size={18} className={isAnimating ? "animate-spin" : "group-hover/btn:scale-125 transition-transform"}/>}
         </button>
       </div>
     </>
@@ -385,10 +395,10 @@ export const ProductDetailView = ({ product, onClose, isModal = false }: { produ
             <div className="p-6 md:p-8 pt-2 mt-auto shrink-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button onClick={handleAddToCart} className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${isAnimating ? 'bg-green-500 text-white' : 'bg-brand-gradient hover:bg-brand-gradient-hover text-white'}`}>
-                        {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} {isAnimating ? "Berhasil" : "Beli Sekarang"}
+                        {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} {isAnimating ? "Berhasil" : "ANGKUT SEKARANG"}
                     </button>
-                    <a href={`https://wa.me/6282325103336?text=Halo admin, saya tertarik dengan detail produk: ${product.name}.`} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full py-4 border border-brand-orange hover:bg-brand-orange text-white rounded-xl font-bold transition-all gap-2 hover:shadow-neon">
-                        <MessageCircle size={20} /> Tanya Sales
+                    <a href={`https://wa.me/6282325103336?text=Halo Mas Amin, saya mau nego/tanya detail produk: ${product.name}.`} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full py-4 border border-brand-orange hover:bg-brand-orange text-white rounded-xl font-bold transition-all gap-2 hover:shadow-neon">
+                        <MessageCircle size={20} /> NEGO HARGA
                     </a>
                 </div>
             </div>
@@ -400,7 +410,7 @@ export const ProductDetailView = ({ product, onClose, isModal = false }: { produ
                 {(product.why_buy && product.why_buy.length > 0) && (
                     <div className="mb-8 p-6 bg-brand-dark border border-brand-orange/30 rounded-2xl shadow-neon-text/20">
                         <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <ThumbsUp size={16} className="text-brand-orange"/> Kenapa Harus Beli Paket Ini?
+                            <ThumbsUp size={16} className="text-brand-orange"/> Kenapa Ini Worth It?
                         </h4>
                         <ul className="space-y-3">
                            {product.why_buy.map((item, i) => (
@@ -413,14 +423,14 @@ export const ProductDetailView = ({ product, onClose, isModal = false }: { produ
                     </div>
                 )}
 
-                <h4 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Deskripsi Produk</h4>
+                <h4 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2 flex items-center gap-2"><ShieldCheck size={18} className="text-brand-orange"/> Review Jujur (No B.S.)</h4>
                 
                 {/* USE FORMATTED DESCRIPTION HERE */}
                 <FormattedDescription text={product.description} />
 
                 {product.specs && (
                     <div className="mt-8 bg-brand-card border border-white/5 rounded-2xl overflow-hidden shadow-lg">
-                        <div className="p-4 bg-white/5 border-b border-white/5 flex items-center gap-2"><Scale size={18} className="text-brand-orange"/><h4 className="text-sm font-bold text-white uppercase tracking-widest">Spesifikasi Utama</h4></div>
+                        <div className="p-4 bg-white/5 border-b border-white/5 flex items-center gap-2"><Zap size={18} className="text-brand-orange"/><h4 className="text-sm font-bold text-white uppercase tracking-widest">Jeroan Mesin (Specs)</h4></div>
                         <div className="divide-y divide-white/5">
                             {Object.entries(product.specs).map(([key, val]) => (
                                 <div key={key} className="flex justify-between p-4 hover:bg-white/5 transition-colors"><span className="text-gray-500 text-xs font-bold uppercase tracking-wider">{key}</span><span className="text-white font-bold text-sm text-right">{val}</span></div>
@@ -432,7 +442,7 @@ export const ProductDetailView = ({ product, onClose, isModal = false }: { produ
                 {/* NEW: DYNAMIC PACKAGE INCLUDES */}
                 {(product.package_includes && product.package_includes.length > 0) && (
                     <div className="mt-8 p-6 bg-brand-orange/5 border border-brand-orange/20 rounded-2xl">
-                        <h4 className="text-sm font-bold text-brand-orange uppercase tracking-widest mb-4 flex items-center gap-2"><Check size={16}/> Paket Termasuk:</h4>
+                        <h4 className="text-sm font-bold text-brand-orange uppercase tracking-widest mb-4 flex items-center gap-2"><PackageOpen size={16}/> Isi Kotak (Fullset):</h4>
                         <ul className="space-y-3">
                            {product.package_includes.map((item, i) => (
                                <li key={i} className="flex items-start gap-3">
