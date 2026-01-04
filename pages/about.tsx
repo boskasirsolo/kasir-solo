@@ -93,14 +93,9 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                             <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-orange/40 rounded-full blur-[60px]"></div>
                             
                             <div className="relative z-10">
-                                <div className="flex items-center gap-4 mb-6 border-b border-brand-orange/20 pb-6">
-                                    <div className="w-12 h-12 rounded-full bg-brand-orange text-white flex items-center justify-center font-display font-bold text-lg shadow-lg border-2 border-white/10">
-                                        AM
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-bold text-lg">Amin Maghfuri</p>
-                                        <p className="text-brand-orange/80 text-[10px] uppercase tracking-widest font-bold">Founder & Survivor</p>
-                                    </div>
+                                <div className="mb-6 border-b border-brand-orange/20 pb-6">
+                                    <p className="text-white font-display font-bold text-2xl">Amin Maghfuri</p>
+                                    <p className="text-brand-orange/80 text-xs uppercase tracking-widest font-bold mt-1">Founder & Survivor</p>
                                 </div>
                                 <p className="text-white/90 italic font-medium text-base leading-relaxed">
                                     "Developer lain bikin fitur di ruangan ber-AC. Gue bikin fitur di lapangan panas, sambil ngadepin komplain pelanggan dan selisih stok nyata. Gue tau rasanya boncos."
