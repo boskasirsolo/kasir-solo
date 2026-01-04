@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon, Wand2, Layers } from 'lucide-react';
+import { Plus, Trash2, Sparkles, UploadCloud, Edit, ChevronLeft, ChevronRight, Save, X as XIcon, Search, Image as ImageIcon, Monitor, Hammer, Quote, Star, User, Smartphone, Globe, Link as LinkIcon, Wand2, Layers, ShieldCheck } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../types';
 import { Button, Input, TextArea, LoadingSpinner } from './ui';
-import { supabase, CONFIG, callGeminiWithRotation, slugify, renameFile } from '../utils';
+import { supabase, CONFIG, callGeminiWithRotation, slugify, renameFile, addWatermarkToFile } from '../utils';
 
 const ITEMS_PER_PAGE = 8; 
 
@@ -45,10 +45,13 @@ const useIntegratedGalleryManager = (
         hasTestimonial: false
     });
 
+    const [useWatermark, setUseWatermark] = useState(true);
+
     const [loadingState, setLoadingState] = useState({
         generatingAI: false,
         uploading: false,
-        generatingSpecific: null as 'challenge' | 'solution' | 'result' | null 
+        generatingSpecific: null as 'challenge' | 'solution' | 'result' | null,
+        processingImage: false
     });
 
     const [page, setPage] = useState(1);
@@ -81,6 +84,7 @@ const useIntegratedGalleryManager = (
             uploadFile: null,
             hasTestimonial: false
         });
+        setUseWatermark(true);
     };
 
     const handleEditClick = (item: GalleryItem) => {
@@ -172,8 +176,6 @@ const useIntegratedGalleryManager = (
         }));
     };
 
-    // ... (Keep generateSpecificPoint & generateAINarrative logic same as previous) ...
-    // [OMITTED FOR BREVITY - Assume logic from previous step is here]
     const generateSpecificPoint = async (target: 'challenge' | 'solution' | 'result') => {
         if (!form.title) return alert("Isi Judul Proyek dulu sebagai konteks.");
         setLoadingState(prev => ({ ...prev, generatingSpecific: target }));
@@ -229,9 +231,18 @@ const useIntegratedGalleryManager = (
             // 1. Upload Cover Image (If Changed)
             let finalCoverUrl = form.imagePreview;
             if (form.uploadFile) {
+                let fileToProcess = form.uploadFile;
+                
+                // WATERMARK PROCESSING
+                if (useWatermark) {
+                    setLoadingState(prev => ({ ...prev, processingImage: true }));
+                    fileToProcess = await addWatermarkToFile(fileToProcess);
+                    setLoadingState(prev => ({ ...prev, processingImage: false }));
+                }
+
                 // SEO OPTIMIZATION: Cover
                 const seoName = `${slugify(form.title)}-cover-project`;
-                const fileToUpload = renameFile(form.uploadFile, seoName);
+                const fileToUpload = renameFile(fileToProcess, seoName);
 
                 const formData = new FormData();
                 formData.append('file', fileToUpload);
@@ -245,9 +256,14 @@ const useIntegratedGalleryManager = (
             const newUploadedUrls: string[] = [];
             if (form.newGalleryFiles.length > 0) {
                 const uploadPromises = form.newGalleryFiles.map(async (file, idx) => {
+                    let fileToProcess = file;
+                    if (useWatermark) {
+                        fileToProcess = await addWatermarkToFile(fileToProcess);
+                    }
+
                     // SEO OPTIMIZATION: Extra Images
                     const seoName = `${slugify(form.title)}-gallery-${idx+1}`;
-                    const fileToUpload = renameFile(file, seoName);
+                    const fileToUpload = renameFile(fileToProcess, seoName);
 
                     const formData = new FormData();
                     formData.append('file', fileToUpload);
@@ -256,7 +272,11 @@ const useIntegratedGalleryManager = (
                     const data = await res.json();
                     return data.secure_url;
                 });
+                
+                if (useWatermark) setLoadingState(prev => ({ ...prev, processingImage: true }));
                 const results = await Promise.all(uploadPromises);
+                if (useWatermark) setLoadingState(prev => ({ ...prev, processingImage: false }));
+                
                 results.forEach(url => { if(url) newUploadedUrls.push(url); });
             }
 
@@ -297,7 +317,7 @@ const useIntegratedGalleryManager = (
             if (testiForm.hasTestimonial) {
                 let finalTestiImage = testiForm.imagePreview;
                 if (testiForm.uploadFile) {
-                    // SEO OPTIMIZATION: Testimonial Avatar
+                    // SEO OPTIMIZATION: Testimonial Avatar (No Watermark usually for avatars)
                     const clientSlug = slugify(testiForm.client_name || 'klien');
                     const seoName = `${clientSlug}-testimoni-avatar`;
                     const fileToUpload = renameFile(testiForm.uploadFile, seoName);
@@ -349,6 +369,7 @@ const useIntegratedGalleryManager = (
     return {
         form, setForm,
         testiForm, setTestiForm,
+        useWatermark, setUseWatermark,
         loadingState,
         handleSubmit,
         handleEditClick,
@@ -374,6 +395,7 @@ export const AdminGallery = ({
   const { 
     form, setForm, 
     testiForm, setTestiForm,
+    useWatermark, setUseWatermark,
     loadingState, handleSubmit, handleEditClick, resetForm, deleteItem, generateAINarrative, generateSpecificPoint, handleTypeChange, getCurrentType, 
     handleGalleryFilesSelect, removeExistingGalleryImage, removeNewGalleryFile,
     listData 
@@ -458,6 +480,18 @@ export const AdminGallery = ({
                         )}
                         <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => e.target.files?.[0] && setForm(p => ({...p, uploadFile: e.target.files![0], imagePreview: URL.createObjectURL(e.target.files![0])}))} />
                     </div>
+                 </div>
+
+                 {/* WATERMARK TOGGLE */}
+                 <div className="flex items-center justify-between bg-black/20 p-2 rounded-lg border border-white/5">
+                    <span className="text-[10px] font-bold text-gray-400 flex items-center gap-2">
+                        <ShieldCheck size={12} className={useWatermark ? "text-green-500" : "text-gray-600"}/> 
+                        Benteng Besi (Watermark)
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked={useWatermark} onChange={e => setUseWatermark(e.target.checked)} className="sr-only peer" />
+                        <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
+                    </label>
                  </div>
 
                  {/* 2. Extra Gallery Images (NEW) */}
@@ -615,8 +649,8 @@ export const AdminGallery = ({
                      </div>
                  )}
 
-                 <Button onClick={handleSubmit} disabled={loadingState.uploading} className="w-full py-3 mt-2 text-xs">
-                    {loadingState.uploading ? <LoadingSpinner /> : <><Save size={14} /> SIMPAN DATA</>}
+                 <Button onClick={handleSubmit} disabled={loadingState.uploading || loadingState.processingImage} className="w-full py-3 mt-2 text-xs">
+                    {loadingState.processingImage ? <><LoadingSpinner/> Memasang Watermark...</> : loadingState.uploading ? <LoadingSpinner /> : <><Save size={14} /> SIMPAN DATA</>}
                  </Button>
              </div>
          </div>
