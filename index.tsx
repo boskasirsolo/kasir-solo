@@ -337,8 +337,9 @@ const AppContent = () => {
             <Route path="/support" element={<SupportPage />} />
             <Route path="/track-order" element={<TrackOrderPage />} /> 
             
-            {/* NEW: PROGRAMMATIC SEO ROUTE */}
-            <Route path="/jual-mesin-kasir-di-:citySlug" element={<CityLandingPage />} />
+            {/* NEW: PROGRAMMATIC SEO ROUTE (FIXED URL STRUCTURE) */}
+            <Route path="/jual-mesin-kasir-di/:citySlug" element={<CityLandingPage />} />
+            <Route path="/jual-mesin-kasir-di" element={<CityLandingPage />} />
             <Route path="/area-layanan" element={<CityLandingPage />} />
 
             <Route path="/about" element={<AboutPage config={config} />} />

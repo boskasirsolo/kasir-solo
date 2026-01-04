@@ -27,7 +27,7 @@ export const CityLandingPage = () => {
 
         // 2. Cek di Database (Kalau di hardcoded ga ada)
         if (supabase && citySlug) {
-            const { data } = await supabase.from('target_cities').select('*').eq('slug', citySlug).single();
+            const { data } = await supabase.from('target_cities').select('*').eq('slug', citySlug).maybeSingle(); // Changed to maybeSingle to avoid errors
             if (data) {
                 setCityData(data);
                 setLoading(false);
@@ -60,7 +60,7 @@ export const CityLandingPage = () => {
       );
   }
 
-  // If city not found (or user goes to /jual-mesin-kasir-di-), show list
+  // If city not found (or user goes to /jual-mesin-kasir-di/...), show list
   if (!cityData) {
       return (
           <div className="container mx-auto px-4 py-24 animate-fade-in">
@@ -69,7 +69,7 @@ export const CityLandingPage = () => {
                   {citiesList.map(c => (
                       <Link 
                         key={c.slug} 
-                        to={`/jual-mesin-kasir-di-${c.slug}`}
+                        to={`/jual-mesin-kasir-di/${c.slug}`} // UPDATED LINK WITH SLASH
                         className="p-4 bg-brand-card border border-white/10 rounded-xl hover:border-brand-orange transition-all text-center group"
                       >
                           <MapPin className="mx-auto mb-2 text-gray-500 group-hover:text-brand-orange" size={24} />

@@ -110,13 +110,13 @@ export const AdminSEO = () => {
                           {city.type.toUpperCase()}
                        </span>
                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <a href={`/jual-mesin-kasir-di-${city.slug}`} target="_blank" className="p-1.5 bg-white/10 rounded hover:text-brand-orange"><ExternalLink size={12}/></a>
+                          <a href={`/jual-mesin-kasir-di/${city.slug}`} target="_blank" className="p-1.5 bg-white/10 rounded hover:text-brand-orange"><ExternalLink size={12}/></a>
                           <button onClick={() => setForm({ id: city.id, name: city.name, type: city.type })} className="p-1.5 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500 hover:text-white"><Plus size={12} className="rotate-45" /></button> {/* Edit Icon Hack */}
                           <button onClick={() => handleDelete(city.id)} className="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500 hover:text-white"><Trash2 size={12}/></button>
                        </div>
                     </div>
                     <h4 className="text-white font-bold text-sm truncate">{city.name}</h4>
-                    <p className="text-gray-500 text-[10px] mt-1 truncate">/jual-mesin-kasir-di-{city.slug}</p>
+                    <p className="text-gray-500 text-[10px] mt-1 truncate">/jual-mesin-kasir-di/{city.slug}</p>
                  </div>
                ))}
              </div>
