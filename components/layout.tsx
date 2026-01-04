@@ -33,13 +33,13 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'home', label: 'Beranda' },
   { 
     id: 'company', 
-    label: 'Tentang Kami',
+    label: 'Tentang',
     children: [
       { id: 'about', label: 'Profil Perusahaan' },
       { id: 'about/vision', label: 'Visi & Misi' }, 
       { id: 'career', label: 'Karir' },
       { id: 'gallery', label: 'Klien & Portfolio' },
-      { id: 'contact', label: 'Hubungi Kami' },
+      { id: 'contact', label: 'Hubungi' },
     ]
   },
   { 
@@ -143,7 +143,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
     { label: 'Download Center', action: () => setPage('support') },
     { label: 'Klien & Portfolio', action: () => setPage('gallery') },
     { label: 'Tentang Kami', action: () => setPage('about') },
-    { label: 'Hubungi Kami', action: () => setPage('contact') },
+    { label: 'Hubungi', action: () => setPage('contact') },
   ];
 
   const socialLinks = [
