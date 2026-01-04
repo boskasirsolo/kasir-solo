@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Layout, MapPin, Share2, Settings as SettingsIcon, 
     Save, UploadCloud, Image as ImageIcon, Sparkles, 
@@ -37,6 +37,13 @@ export const AdminSettings = ({
   // Founder Portrait State
   const [founderImageFile, setFounderImageFile] = useState<File | null>(null);
   const [founderImagePreview, setFounderImagePreview] = useState(config.founderPortrait || '');
+
+  // --- SYNC STATE ON MOUNT/UPDATE ---
+  // Fixes issue where inputs are blank on refresh because parent data loads async
+  useEffect(() => {
+      if (config.aboutImage) setAboutImagePreview(config.aboutImage);
+      if (config.founderPortrait) setFounderImagePreview(config.founderPortrait);
+  }, [config.aboutImage, config.founderPortrait]);
 
   const saveSettings = async () => {
       if (!supabase) return alert("Koneksi Database bermasalah.");

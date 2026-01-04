@@ -71,6 +71,7 @@ const AppContent = () => {
     heroTitle: "MESIN KASIR SOLO",
     heroSubtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM. Dibangun oleh praktisi, bukan sekadar penjual.",
     aboutImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200", 
+    founderPortrait: "", // Initialize empty
     sibosUrl: "https://sibos.id",
     qalamUrl: "https://qalam.id",
     companyLegalName: "PT MESIN KASIR SOLO",
@@ -183,6 +184,7 @@ const AppContent = () => {
                     heroTitle: settingsData.hero_title || config.heroTitle,
                     heroSubtitle: settingsData.hero_subtitle || config.heroSubtitle,
                     aboutImage: settingsData.about_image || config.aboutImage,
+                    founderPortrait: settingsData.founder_portrait || config.founderPortrait, // ADDED: MAPPING HERE
                     sibosUrl: settingsData.sibos_url || config.sibosUrl,
                     qalamUrl: settingsData.qalam_url || config.qalamUrl,
                     companyLegalName: settingsData.company_legal_name || config.companyLegalName,
