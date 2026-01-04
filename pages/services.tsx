@@ -7,7 +7,7 @@ import {
   FileSpreadsheet, Cpu, GitMerge, Users, PieChart, Layers, 
   Megaphone, Target, DollarSign, MapPin, Anchor, LineChart,
   ShieldAlert, Activity, LifeBuoy, PenTool, Star, MousePointer,
-  Server, Key, Eye, TrendingDown, Skull
+  Server, Key, Eye, TrendingDown, Skull, Wrench, HardDrive
 } from 'lucide-react';
 import { ServiceHero, FeatureGrid, WorkflowSection, NarrativeSection } from '../components/service-parts';
 import { InvestmentSimulator, CalcData } from '../components/calculator';
@@ -128,36 +128,36 @@ const SEO_CALC: CalcData = {
 
 const MAINTENANCE_DATA = {
   features: [
-    { title: "Digital Insurance", desc: "Backup rutin 'Time Machine' untuk memulihkan website jika terjadi error.", icon: ShieldCheck },
-    { title: "Performance Guard", desc: "Membersihkan 'sampah' database dan cache agar loading tetap ngebut.", icon: Zap },
-    { title: "Proactive Security", desc: "Memasang firewall dan scanning rutin untuk menangkis serangan.", icon: Lock },
-    { title: "Uptime Monitor", desc: "Pemantauan 24/7. Kami tahu website down sebelum Anda tahu.", icon: Activity },
-    { title: "Content Update", desc: "Kirim materi, kami yang update. Anda terima beres.", icon: PenTool },
-    { title: "Tech Advisory", desc: "Konsultasi fitur baru. CTO (Chief Technology Officer) sewaan Anda.", icon: LifeBuoy },
+    { title: "Asuransi Nyawa (Backup)", desc: "Database lo gue backup rutin. Kalau server meledak atau di-hack, gue bisa balikin nyawa bisnis lo dalam hitungan menit.", icon: HardDrive },
+    { title: "Satpam Galak (Firewall)", desc: "Gue pasang tembok api. Bot spam, hacker iseng, atau serangan DDoS bakal mental sebelum nyentuh pintu toko lo.", icon: ShieldCheck },
+    { title: "Obat Kuat (Performance)", desc: "Website lemot itu penyakit. Gue bersihin sampah database dan cache biar loading tetep ngebut kayak baru.", icon: Zap },
+    { title: "CCTV 24 Jam (Uptime)", desc: "Gue tau duluan kalau website lo down sebelum customer lo komplain. Gue pantau detak jantung server 24/7.", icon: Activity },
+    { title: "Tukang Renov (Update)", desc: "Plugin dan tema usang itu celah keamanan. Gue update rutin biar dapur pacu lo tetep modern dan aman.", icon: RefreshCw },
+    { title: "Konsultan Pribadi", desc: "Bingung mau nambah fitur? Tanya gue dulu. Gue kasih saran teknis biar lo gak salah langkah atau dibohongi vendor lain.", icon: LifeBuoy },
   ],
   steps: [
-    { step: "1", title: "Akses & Audit", desc: "Pengecekan celah keamanan awal." },
-    { step: "2", title: "Hardening", desc: "Penguatan sistem pertahanan website." },
-    { step: "3", title: "Monitoring", desc: "Pemantauan real-time 24/7." },
-    { step: "4", title: "Monthly Report", desc: "Laporan kesehatan website rutin." },
+    { step: "1", title: "Audit Lubang Tikus", desc: "Gue cek semua celah keamanan yang mungkin dimasuki maling digital." },
+    { step: "2", title: "Pasang Gembok", desc: "Update patch keamanan, pasang firewall, dan ganti password lemah." },
+    { step: "3", title: "Ronda Tiap Malam", desc: "Monitoring otomatis. Ada anomali dikit, alarm gue bunyi." },
+    { step: "4", title: "Laporan Bulanan", desc: "Gue kasih rekap: berapa serangan ditangkis, performa server, dan status backup." },
   ]
 };
 
 const MAINTENANCE_CALC: CalcData = {
-  title: "Simulasi Maintenance",
-  subtitle: "Asuransi kesehatan untuk website bisnis Anda.",
-  baseLabel: "Paket Bulanan",
+  title: "Biaya Jasa Satpam Digital",
+  subtitle: "Lebih murah bayar gue daripada bayar tebusan ke hacker (Ransomware). Pilih level penjagaan lo.",
+  baseLabel: "Level Penjagaan",
   baseOptions: [
-    { id: 'basic', label: 'Basic Guard', price: 500000, desc: 'Backup mingguan & Update plugin.' },
-    { id: 'pro', label: 'Business Pro', price: 1500000, desc: 'Backup harian, Security Scan, Uptime.' },
-    { id: 'vip', label: 'Enterprise VIP', price: 3000000, desc: 'Priority Support, Custom Dev Hours.' }
+    { id: 'basic', label: 'Pos Kamling (Basic)', price: 500000, desc: 'Backup Mingguan & Update Plugin standar.' },
+    { id: 'pro', label: 'Bodyguard (Business)', price: 1500000, desc: 'Backup Harian, Security Scan, Uptime Monitor, Laporan.' },
+    { id: 'vip', label: 'Kopassus (VIP)', price: 3000000, desc: 'Prioritas Support, Audit Manual, Perbaikan Error Code.' }
   ],
-  addonLabel: "Add-on Services",
+  addonLabel: "Layanan Insidental",
   addons: [
-    { id: 'clean', label: 'Malware Removal', price: 1000000 },
-    { id: 'content', label: 'Update Konten', price: 500000 },
-    { id: 'migrasi', label: 'Migrasi Server', price: 750000 },
-    { id: 'ai_guard', label: 'AI Security Monitor', price: 3000000, desc: 'Deteksi anomali traffic.' }
+    { id: 'clean', label: 'Bersih Virus (Hack Fix)', price: 1500000, desc: 'P3K kalau web lo udah kena hack.' },
+    { id: 'migrasi', label: 'Pindahan Server', price: 750000, desc: 'Pindah hosting tanpa downtime.' },
+    { id: 'content', label: 'Update Konten/Produk', price: 500000, desc: 'Per batch update.' },
+    { id: 'speed', label: 'Speed Booster', price: 1000000, desc: 'Optimasi loading speed via Cloudflare & Cache.' }
   ]
 };
 
@@ -383,26 +383,26 @@ export const MaintenanceServicePage = () => {
   return (
     <div className="animate-fade-in">
       <ServiceHero 
-        title="Jaga Aset Digital" 
-        highlight="Tetap Bernilai." 
-        subtitle="Business Continuity & Digital Asset Insurance. Tidur nyenyak sementara kami menjaga 'Toko Online' Anda 24 jam."
+        title="Punya Toko," 
+        highlight="Gak Ada Satpam?" 
+        subtitle="Di dunia nyata lo pasang CCTV dan gembok. Di internet? Jangan biarkan pintu toko lo terbuka lebar buat maling. Gue jagain aset lo 24 jam."
         icon={ShieldCheck}
       />
 
       <NarrativeSection>
          <div>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6 leading-tight">
-                Website Tanpa Maintenance = <span className="text-red-500">Bom Waktu</span>
+                Jangan Nunggu <span className="text-red-500">Kemalingan</span> Baru Teriak.
             </h2>
             <p className="text-gray-400 leading-relaxed mb-6">
-                Anda menggembok toko fisik dan membayar satpam. Mengapa toko online Anda dibiarkan <strong>tak terkunci</strong>?
+                Website itu kayak mesin mobil. Kalau gak pernah di-service, oli gak diganti, jangan kaget kalau tiba-tiba mogok di jalan pas lagi ngebut (baca: pas traffic lagi tinggi).
             </p>
             <p className="text-gray-400 leading-relaxed mb-6">
-                Serangan cyber tidak pandang bulu. Sekali data pelanggan bocor atau website hilang, reputasi hancur selamanya.
+                Hacker gak peduli bisnis lo kecil atau gede. Mereka cuma cari celah. Sekali data pelanggan bocor atau website kena ransomware, reputasi yang lo bangun tahunan hancur dalam semalam.
             </p>
             <div className="bg-brand-dark border-l-4 border-red-500 p-4 rounded-r-lg">
                 <p className="text-white italic text-sm">
-                  "Biaya maintenance jauh lebih murah daripada biaya memulihkan reputasi yang hancur."
+                  "Maintenance itu bukan biaya, tapi <strong>Asuransi Ketenangan</strong>. Lo fokus jualan, teknis biar gue yang jagain."
                 </p>
             </div>
          </div>
@@ -418,16 +418,16 @@ export const MaintenanceServicePage = () => {
                 <h3 className="text-xl font-bold text-white">Risiko vs Solusi</h3>
                 <ul className="space-y-4">
                   <li className="flex items-center justify-between border-b border-white/5 pb-2">
-                      <span className="text-gray-400 text-sm">Website Down</span>
+                      <span className="text-gray-400 text-sm">Server Down</span>
                       <span className="text-red-400 text-xs font-bold">Hilang Omzet</span>
                   </li>
                   <li className="flex items-center justify-between border-b border-white/5 pb-2">
-                      <span className="text-gray-400 text-sm">Data Hilang</span>
-                      <span className="text-red-400 text-xs font-bold">Hilang Kepercayaan</span>
+                      <span className="text-gray-400 text-sm">Kena Hack</span>
+                      <span className="text-red-400 text-xs font-bold">Hilang Data & Reputasi</span>
                   </li>
                   <li className="flex items-center justify-between">
-                      <span className="text-white font-bold text-sm">Paket Maintenance</span>
-                      <span className="text-green-400 text-xs font-bold flex items-center gap-1"><CheckCircle2 size={12}/> Peace of Mind</span>
+                      <span className="text-white font-bold text-sm">Jasa Satpam Digital</span>
+                      <span className="text-green-400 text-xs font-bold flex items-center gap-1"><CheckCircle2 size={12}/> Tidur Nyenyak</span>
                   </li>
                 </ul>
             </div>
@@ -439,7 +439,7 @@ export const MaintenanceServicePage = () => {
       {/* CALCULATOR SECTION */}
       <section className="py-16 bg-brand-dark border-t border-white/5">
          <div className="container mx-auto px-4">
-            <InvestmentSimulator data={MAINTENANCE_CALC} serviceName="Jasa Maintenance Website" />
+            <InvestmentSimulator data={MAINTENANCE_CALC} serviceName="Jasa Maintenance & Keamanan" />
          </div>
       </section>
 
