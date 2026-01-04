@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Zap, Target, Shield, Flame, XCircle, HeartHandshake, Mail, UploadCloud, FileText, CheckCircle2, Loader2, X } from 'lucide-react';
+import { Briefcase, MapPin, Clock, ArrowRight, UserPlus, Zap, Target, Shield, Flame, XCircle, HeartHandshake, Mail, UploadCloud, FileText, CheckCircle2, Loader2, X, AlertTriangle } from 'lucide-react';
 import { JobOpening } from '../types';
 import { Button, Card, Badge, SectionHeader, Input, TextArea } from '../components/ui';
 import { uploadToSupabase, supabase, renameFile, slugify, normalizePhone } from '../utils';
@@ -29,7 +29,7 @@ const JobCard: React.FC<{ job: JobOpening, onClick: () => void }> = ({ job, onCl
       </p>
 
       <div className="flex items-center text-brand-orange text-xs font-bold uppercase tracking-widest gap-2 mt-auto">
-        Lihat Detail <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/>
+        Buka Misi <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/>
       </div>
     </Card>
   </div>
@@ -59,11 +59,11 @@ const ApplicationModal = ({
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             if (file.size > 2 * 1024 * 1024) { // 2MB Limit
-                alert("Ukuran file maksimal 2MB.");
+                alert("Woi, file kegedean! Maksimal 2MB aja. Kompres dulu.");
                 return;
             }
             if (file.type !== 'application/pdf') {
-                alert("Hanya format PDF yang diperbolehkan.");
+                alert("Format wajib PDF. Jangan kirim Word atau JPG.");
                 return;
             }
             setCvFile(file);
@@ -73,17 +73,17 @@ const ApplicationModal = ({
     const handleSubmit = async (e?: React.SyntheticEvent) => {
         if (e) e.preventDefault();
         if (!form.full_name || !form.email || !form.phone || !cvFile) {
-            return alert("Mohon lengkapi Nama, Email, No. HP, dan Upload CV.");
+            return alert("Data belum lengkap bos. Cek lagi Nama, Email, WA, sama CV.");
         }
 
         // STRICT VALIDATION
         const cleanPhone = normalizePhone(form.phone);
         if (!cleanPhone) {
-            return alert("Format nomor HP salah. Gunakan 08xx atau 628xx.");
+            return alert("Nomor WA salah format. Pake 08xx atau 628xx.");
         }
 
         if (!supabase) {
-            alert("Mode Demo: Form ini membutuhkan koneksi database Supabase.");
+            alert("Mode Demo: Form ini butuh koneksi Supabase beneran.");
             return;
         }
 
@@ -114,7 +114,7 @@ const ApplicationModal = ({
             setIsSuccess(true);
         } catch (error: any) {
             console.error("Application Error:", error);
-            alert(`Gagal mengirim lamaran: ${error.message}. Pastikan bucket 'careers' dan tabel 'applicants' sudah dibuat di Supabase.`);
+            alert(`Gagal kirim: ${error.message}. Coba lagi nanti atau WA admin.`);
         } finally {
             setIsSubmitting(false);
         }
@@ -128,11 +128,11 @@ const ApplicationModal = ({
                     <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
                         <CheckCircle2 size={32} />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Lamaran Terkirim!</h3>
+                    <h3 className="text-xl font-bold text-white mb-2">Berkas Masuk!</h3>
                     <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-                        Terima kasih, <span className="text-white font-bold">{form.full_name}</span>. Data Anda sudah masuk ke sistem kami. Tim HRD akan menghubungi Anda jika profil cocok.
+                        Sip, <span className="text-white font-bold">{form.full_name}</span>. Data lo udah di meja gue. Kalau profil lo "ngeri" dan cocok, tim HR bakal langsung WA lo.
                     </p>
-                    <Button onClick={onClose} className="px-8 py-3 mx-auto shadow-neon">Kembali</Button>
+                    <Button onClick={onClose} className="px-8 py-3 mx-auto shadow-neon">Siap, Ditunggu</Button>
                 </div>
             </div>
         );
@@ -146,8 +146,8 @@ const ApplicationModal = ({
                 {/* Header */}
                 <div className="p-5 border-b border-white/10 bg-brand-card rounded-t-2xl flex justify-between items-center">
                     <div>
-                        <h3 className="text-lg font-bold text-white">Apply Position</h3>
-                        <p className="text-xs text-brand-orange font-bold uppercase tracking-wider">{positionTitle}</p>
+                        <h3 className="text-lg font-bold text-white">Gabung Pasukan</h3>
+                        <p className="text-xs text-brand-orange font-bold uppercase tracking-wider">Misi: {positionTitle}</p>
                     </div>
                     <button onClick={onClose} className="text-gray-500 hover:text-white"><X size={20}/></button>
                 </div>
@@ -155,27 +155,28 @@ const ApplicationModal = ({
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar max-h-[70vh]">
                     <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Data Diri</label>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Identitas Diri</label>
                         <Input 
                             value={form.full_name} 
                             onChange={e => setForm({...form, full_name: e.target.value})} 
-                            placeholder="Nama Lengkap" 
+                            placeholder="Nama Lengkap (Sesuai KTP)" 
                             className="mb-2 text-sm"
-                            autoFocus={true} // Auto focus on load
+                            autoFocus={true} 
                         />
                         <div className="grid grid-cols-2 gap-2">
-                            <Input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="Email Aktif" type="email" className="text-sm"/>
-                            <Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="No. WhatsApp (08xx)" type="tel" className="text-sm"/>
+                            <Input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="Email Utama" type="email" className="text-sm"/>
+                            <Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="WhatsApp (Wajib Aktif)" type="tel" className="text-sm"/>
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Portfolio / LinkedIn (Opsional)</label>
-                        <Input value={form.portfolio_url} onChange={e => setForm({...form, portfolio_url: e.target.value})} placeholder="https://..." className="text-sm"/>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Jejak Digital (Portfolio/LinkedIn)</label>
+                        <Input value={form.portfolio_url} onChange={e => setForm({...form, portfolio_url: e.target.value})} placeholder="https://linkedin.com/in/..." className="text-sm"/>
+                        <p className="text-[10px] text-gray-500 mt-1 italic">*Biar gue bisa kepo skill lo sedalam apa.</p>
                     </div>
 
                     <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Upload CV (Wajib)</label>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Upload CV (Senjata Utama)</label>
                         <div 
                             onClick={() => fileInputRef.current?.click()}
                             className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
@@ -193,23 +194,23 @@ const ApplicationModal = ({
                             {cvFile ? (
                                 <div>
                                     <p className="text-brand-orange text-sm font-bold truncate px-4">{cvFile.name}</p>
-                                    <p className="text-gray-500 text-[10px]">Klik untuk ganti</p>
+                                    <p className="text-gray-500 text-[10px]">Klik buat ganti file</p>
                                 </div>
                             ) : (
                                 <div>
-                                    <p className="text-gray-300 text-sm font-bold">Upload CV (PDF)</p>
-                                    <p className="text-gray-500 text-[10px] mt-1">Maks. 2MB. Pastikan data terupdate.</p>
+                                    <p className="text-gray-300 text-sm font-bold">Drop PDF CV Disini</p>
+                                    <p className="text-gray-500 text-[10px] mt-1">Maks. 2MB. Pastikan update terakhir.</p>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Why You? (Cover Letter)</label>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Kenapa Gue Harus Pilih Lo? (Pitching)</label>
                         <TextArea 
                             value={form.cover_letter} 
                             onChange={e => setForm({...form, cover_letter: e.target.value})} 
-                            placeholder="Ceritakan singkat kenapa Anda cocok..." 
+                            placeholder="Gak usah formal kayak surat lamaran CPNS. Ceritain skill lo yang bisa bikin bisnis ini makin kenceng..." 
                             className="h-24 text-sm"
                         />
                     </div>
@@ -218,10 +219,10 @@ const ApplicationModal = ({
                 {/* Footer */}
                 <div className="p-5 border-t border-white/10 bg-brand-card rounded-b-2xl">
                     <Button onClick={() => handleSubmit()} disabled={isSubmitting} className="w-full py-3 shadow-neon">
-                        {isSubmitting ? <Loader2 className="animate-spin" /> : <><Mail size={16}/> KIRIM LAMARAN</>}
+                        {isSubmitting ? <Loader2 className="animate-spin" /> : <><Mail size={16}/> KIRIM LAMARAN & BERJUANG</>}
                     </Button>
                     <p className="text-[10px] text-gray-500 text-center mt-3">
-                        Dengan mengirim lamaran, Anda setuju data Anda disimpan untuk proses rekrutmen.
+                        *Data lo aman di server gue. Gak bakal gue jual ke pihak ketiga.
                     </p>
                 </div>
             </div>
@@ -255,12 +256,12 @@ const JobDetailModal = ({ job, onClose, onApply }: { job: JobOpening, onClose: (
         {/* Scrollable Content */}
         <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
            <div>
-              <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-2 border-b border-white/5 pb-2">Deskripsi Pekerjaan</h4>
+              <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-2 border-b border-white/5 pb-2">Misi Harian (Scope)</h4>
               <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{job.description}</p>
            </div>
            
            <div>
-              <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-2 border-b border-white/5 pb-2">Kualifikasi</h4>
+              <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-2 border-b border-white/5 pb-2">Syarat Masuk (Specs)</h4>
               <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-line bg-black/20 p-4 rounded-lg border border-white/5">
                  {job.requirements}
               </div>
@@ -274,7 +275,7 @@ const JobDetailModal = ({ job, onClose, onApply }: { job: JobOpening, onClose: (
              onClick={onApply}
              className="px-6 py-2 bg-brand-orange hover:bg-brand-action text-white rounded-lg font-bold shadow-neon hover:shadow-neon-strong transition-all flex items-center gap-2"
            >
-             <Briefcase size={18}/> Lamar Sekarang
+             <Briefcase size={18}/> AMBIL TANTANGAN INI
            </button>
         </div>
       </div>
@@ -312,8 +313,8 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
             Kami Mencari <span className="text-brand-orange">Partner Perjuangan.</span>
           </h1>
           <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
-            PT Mesin Kasir Solo bukan tempat untuk orang yang mencari kenyamanan 9-to-5. <br/>
-            Ini adalah tempat bagi mereka yang ingin membangun sistem yang menyelamatkan ribuan UMKM dari kebangkrutan.
+            PT Mesin Kasir Solo bukan tempat buat orang yang cuma cari "zona nyaman" 9-to-5. <br/>
+            Ini markas buat mereka yang mau ngebangun sistem buat nyelametin ribuan UMKM.
           </p>
         </div>
       </section>
@@ -323,7 +324,7 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
          <div className="container mx-auto px-4">
             <div className="text-center mb-16">
                <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">DNA <span className="text-brand-orange">KAMI</span></h2>
-               <p className="text-gray-400 text-sm max-w-2xl mx-auto">Kami pernah jatuh di tahun 2022. Kehilangan domain, kehilangan aset. Kami bangkit kembali dengan mental baja. Jika Anda tidak memiliki mental ini, Anda tidak akan bertahan di sini.</p>
+               <p className="text-gray-400 text-sm max-w-2xl mx-auto">Kami pernah jatuh di tahun 2022. Kehilangan domain, kehilangan aset. Kami bangkit kembali dengan mental baja. Jika lo gak punya mental survivor, lo gak akan bertahan di sini.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
@@ -332,9 +333,9 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                   <div className="w-14 h-14 bg-brand-dark border border-brand-orange/20 rounded-xl flex items-center justify-center text-brand-orange mb-6 group-hover:scale-110 transition-transform shadow-neon-text">
                      <Flame size={28} />
                   </div>
-                  <h4 className="text-xl font-bold text-white mb-3">Resilience (Tahan Banting)</h4>
+                  <h4 className="text-xl font-bold text-white mb-3">Tahan Banting (Resilience)</h4>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                     Masalah teknis, komplain klien, dan deadline adalah makanan sehari-hari. Kami tidak butuh orang yang mudah mengeluh. Kami butuh <em>Problem Solver</em> yang tenang di tengah badai.
+                     Masalah teknis, komplain klien, dan deadline adalah makanan sehari-hari. Kami gak butuh orang yang dikit-dikit ngeluh (sambat). Kami butuh <em>Problem Solver</em> yang tenang pas badai dateng.
                   </p>
                </div>
 
@@ -345,7 +346,7 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                   </div>
                   <h4 className="text-xl font-bold text-white mb-3">Impact Over Output</h4>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                     Jangan bangga hanya karena sudah "bekerja keras". Kami menilai hasil. Apakah kode yang Anda tulis mempercepat transaksi UMKM? Apakah desain Anda memudahkan kasir lansia?
+                     Jangan bangga cuma karena udah "kelihatan sibuk". Kami menilai hasil akhir. Apakah kode lo bikin transaksi UMKM makin cepet? Apakah desain lo bikin kasir lansia paham? Itu yang diitung.
                   </p>
                </div>
 
@@ -354,9 +355,9 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                   <div className="w-14 h-14 bg-brand-dark border border-brand-orange/20 rounded-xl flex items-center justify-center text-brand-orange mb-6 group-hover:scale-110 transition-transform shadow-neon-text">
                      <HeartHandshake size={28} />
                   </div>
-                  <h4 className="text-xl font-bold text-white mb-3">Empathy for Users</h4>
+                  <h4 className="text-xl font-bold text-white mb-3">Empati ke User</h4>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                     Klien kami bukan perusahaan Fortune 500. Klien kami adalah pemilik toko kelontong, ustadz TPA, dan pengusaha kafe rintisan. Sistem Anda harus bisa dipakai oleh mereka tanpa manual tebal.
+                     Klien kami bukan perusahaan raksasa. Klien kami itu pemilik toko kelontong, ustadz TPA, dan pengusaha kafe rintisan. Sistem lo harus bisa dipake mereka tanpa perlu gelar Sarjana Komputer.
                   </p>
                </div>
             </div>
@@ -364,13 +365,13 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
       </section>
 
       {/* FILTER SECTION - The Filter */}
-      <section className="py-16 bg-red-900/10 border-y border-red-500/10">
+      <section className="py-16 bg-red-950/20 border-y border-red-500/10">
          <div className="container mx-auto px-4 text-center">
             <h3 className="text-xl md:text-2xl font-bold text-white mb-8 flex items-center justify-center gap-2">
-               <XCircle className="text-red-500" /> JANGAN MELAMAR JIKA:
+               <AlertTriangle className="text-red-500" /> JANGAN COBA-COBA MASUK KALAU:
             </h3>
             <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-               {["Hanya mencari gaji aman akhir bulan", "Anti terhadap kritik & revisi", "Tidak mau belajar hal baru di luar jobdesk", "Bekerja seperti robot tanpa inisiatif"].map((item, i) => (
+               {["Mental PNS (Cari Aman Doang)", "Baperan (Anti Kritik)", "Males Belajar Hal Baru", "Kerja Kayak Robot (Gak Ada Inisiatif)"].map((item, i) => (
                   <div key={i} className="bg-brand-black px-6 py-3 rounded-full border border-red-500/30 text-gray-300 text-sm flex items-center gap-2">
                      <span className="w-2 h-2 bg-red-500 rounded-full"></span> {item}
                   </div>
@@ -382,7 +383,7 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
       {/* OPEN POSITIONS - The Opportunity */}
       <section className="py-24 bg-brand-black" id="openings">
         <div className="container mx-auto px-4">
-          <SectionHeader title="Posisi" highlight="Terbuka" subtitle="Jika Anda merasa cocok dengan DNA kami, silakan ambil tantangan ini." />
+          <SectionHeader title="Posisi" highlight="Tempur" subtitle="Kalau lo merasa punya DNA yang sama, ambil senjata lo dan gabung barisan." />
           
           {activeJobs.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -395,12 +396,12 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                <div className="w-20 h-20 bg-brand-orange/10 rounded-full flex items-center justify-center mb-6 text-brand-orange shadow-neon">
                   <Shield size={32} />
                </div>
-               <h3 className="text-2xl font-bold text-white mb-2">Skuad Sedang Lengkap</h3>
+               <h3 className="text-2xl font-bold text-white mb-2">Benteng Pertahanan Penuh</h3>
                <p className="text-gray-400 max-w-md text-center mb-8 leading-relaxed">
-                 Saat ini semua pos tempur sudah terisi. Namun, jika Anda yakin skill Anda di atas rata-rata dan bisa memberikan impact, kirimkan CV spontan Anda.
+                 Saat ini semua pos tempur udah keisi. Tapi, kalau lo yakin skill lo di atas rata-rata (Top 1%) dan bisa kasih impact gila, paksa masuk lewat jalur ini.
                </p>
                <Button 
-                  onClick={() => handleApplyClick("Spontaneous Application (General)")} 
+                  onClick={() => handleApplyClick("Spontaneous Application (Jalur Nekat)")} 
                   className="px-8 py-4 text-base font-bold shadow-neon hover:shadow-neon-strong transition-transform hover:-translate-y-1 bg-gradient-to-r from-brand-orange to-red-600 text-white border-0"
                >
                   <FileText size={18} className="mr-2" /> Upload CV Spontan
