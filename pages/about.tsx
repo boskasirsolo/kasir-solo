@@ -15,7 +15,7 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
       <div className="container mx-auto px-4 text-center relative z-10">
         <h2 className="text-5xl md:text-7xl font-display font-bold text-white mb-6">Gue Bukan <span className="text-brand-orange">Vendor.</span></h2>
         <p className="max-w-3xl mx-auto text-xl text-gray-400 leading-relaxed font-light">
-          Gue Partner Perang lo.
+          Vendor biasa cuma peduli barang laku terus kabur. Gue peduli bisnis lo bertahan hidup. Di medan perang ritel yang kejam ini, lo butuh lebih dari sekadar penjual alat. <br/><span className="text-white font-bold">Gue Partner Perang lo.</span>
         </p>
       </div>
     </div>
@@ -42,11 +42,8 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                                     <span className="text-xs mt-2">No Portrait</span>
                                 </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
-                            <div className="absolute bottom-4 left-4">
-                                 <p className="text-white font-bold text-lg leading-none">Amin Maghfuri</p>
-                                 <p className="text-brand-orange text-[10px] uppercase tracking-widest font-bold mt-1">The Founder</p>
-                            </div>
+                            {/* Text overlay removed as requested */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                         </div>
                     </div>
 
