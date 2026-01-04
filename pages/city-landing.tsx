@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getCityData, TARGET_CITIES, supabase } from '../utils';
 import { SectionHeader, Button, Card, LoadingSpinner } from '../components/ui';
-import { MapPin, ShieldCheck, Truck, Users, ArrowRight, MessageCircle, Star, AlertTriangle, TrendingUp, PackageCheck, CheckCircle2 } from 'lucide-react';
+import { MapPin, ShieldCheck, Truck, Users, ArrowRight, MessageCircle, Star, AlertTriangle, TrendingUp, PackageCheck, CheckCircle2, UserCog } from 'lucide-react';
 import { LocalBusinessSchema } from '../components/seo';
 
 export const CityLandingPage = () => {
@@ -103,8 +103,10 @@ export const CityLandingPage = () => {
             </h1>
             
             <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
-               Jujur aja, catet manual itu "kuno". Duit lo ilang dikit-dikit karena salah itung atau "oknum" nakal, lama-lama bisa buat beli mobil tuh. 
-               Gue hadir di <strong>{cityData.name}</strong> bawa <strong>Mesin Kasir</strong> & Sistem yang bakal jadi "Satpam Digital" buat bisnis lo.
+               {isKandang 
+                 ? `Gue bukan sekadar vendor, gue tetangga lo. Khusus area ini, **Gue Sendiri (Founder)** yang bakal anter & setting mesinnya. Gak pake teknisi, gak pake perantara. Biar lo puas nanya-nanya langsung sama ahlinya.`
+                 : `Buat lo di ${cityData.name}, jarak bukan penghalang. Gue kirim paket aman (Kayu + Asuransi). Pas barang sampe, **Gue Sendiri** yang bakal pandu lo setting via Video Call privat. Gak ada oper-operan ke admin.`
+               }
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -112,7 +114,7 @@ export const CityLandingPage = () => {
                   LIHAT SENJATA (KATALOG)
                </Button>
                <a 
-                  href={`https://wa.me/6282325103336?text=Halo Mas Amin, saya Juragan dari ${cityData.name}. Mau konsul mesin kasir biar gak boncos.`}
+                  href={`https://wa.me/6282325103336?text=Halo Mas Amin, saya Juragan dari ${cityData.name}. Mau konsul mesin kasir, katanya langsung sama Founder ya?`}
                   target="_blank"
                   rel="noreferrer"
                   className="px-8 py-4 rounded-lg font-bold border border-white/10 hover:bg-white/5 text-white transition-all flex items-center gap-2 justify-center text-sm"
@@ -127,8 +129,8 @@ export const CityLandingPage = () => {
       <section className="py-20 bg-brand-dark">
          <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-               <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-4">Kenapa Pebisnis {cityData.name} Pindah ke Gue?</h2>
-               <p className="text-gray-400 text-sm max-w-2xl mx-auto">Karena gue praktisi, bukan cuma sales. Gue ngerti sakitnya ilang duit di toko.</p>
+               <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-4">Kenapa Pebisnis {cityData.name} Cari Gue?</h2>
+               <p className="text-gray-400 text-sm max-w-2xl mx-auto">Karena gue Single Fighter yang turun lapangan. Lo dapet akses langsung ke otak di balik sistemnya, bukan cuma sales yang ngejar target.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
@@ -136,14 +138,14 @@ export const CityLandingPage = () => {
                <Card className="p-8 bg-brand-card/50 border border-white/5 hover:border-brand-orange/30 group">
                   <div className="flex items-center gap-4 mb-4">
                       <div className="p-3 bg-blue-500/10 rounded-lg text-blue-400 group-hover:scale-110 transition-transform">
-                          <Truck size={24} />
+                          <UserCog size={24} />
                       </div>
-                      <h3 className="text-lg font-bold text-white">Logistik Tanpa Drama</h3>
+                      <h3 className="text-lg font-bold text-white">Founder Turun Tangan</h3>
                   </div>
                   <p className="text-gray-400 text-sm leading-relaxed">
                      {isKandang 
-                        ? `Khusus ${cityData.name}, ini kandang gue. Tim gue bakal langsung merapat ke lokasi lo. Install, training, sampe lo bisa. Gratis ongkir, gak pake ribet.`
-                        : `Buat lo di ${cityData.name}, jarak bukan masalah. Gue kirim pake packing kayu "badak" & asuransi. Sampe sana, gue pandu Video Call sampe kasir lo bunyi "ting"!`
+                        ? `Gue sendiri yang setir mobil, gue yang angkat barang, gue yang colok kabel. 100% Hands-on. Lo terima beres, terima training langsung dari gue.`
+                        : `Gue gak percaya sama teknisi magang buat handle bisnis lo. Makanya, sesi setup & training via Video Call bakal gue handle langsung. Privasi & kualitas terjamin.`
                      }
                   </p>
                </Card>
@@ -157,7 +159,7 @@ export const CityLandingPage = () => {
                       <h3 className="text-lg font-bold text-white">Anti Tuyul Digital</h3>
                   </div>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                     Sistem gue dirancang buat persempit ruang gerak karyawan nakal. Hapus nota butuh password lo. Laporan keuangan real-time masuk HP lo. Tidur nyenyak, Bos.
+                     Sistem gue dirancang dari pengalaman pait gue sendiri. Celah fraud karyawan, selisih stok, nota fiktif—semua udah gue tutup. Gue kasih lo sistem yang gue pake sendiri.
                   </p>
                </Card>
 
@@ -167,10 +169,10 @@ export const CityLandingPage = () => {
                       <div className="p-3 bg-brand-orange/10 rounded-lg text-brand-orange group-hover:scale-110 transition-transform">
                           <Users size={24} />
                       </div>
-                      <h3 className="text-lg font-bold text-white">Support Rasa Teman</h3>
+                      <h3 className="text-lg font-bold text-white">Support Jalur Khusus</h3>
                   </div>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                     Beli di gue berarti lo masuk "Circle" gue. Ada masalah teknis jam 9 malem? Chat aja. Gue bukan CS robot yang bales pake template. Kita selesaikan bareng.
+                     Lo gak bakal ngomong sama Bot atau CS yang jawabnya template "Maaf atas ketidaknyamanannya". Lo ngomong sama gue. Masalah lo, prioritas gue. Ini personal.
                   </p>
                </Card>
             </div>
