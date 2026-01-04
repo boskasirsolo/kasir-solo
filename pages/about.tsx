@@ -20,98 +20,101 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
       </div>
     </div>
 
-    {/* ASYMMETRICAL STORY GRID */}
+    {/* ASYMMETRICAL STORY GRID (CENTERED & NARROWER) */}
     <section className="py-20 bg-brand-black relative">
         <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-12 gap-8 items-start">
-                
-                {/* 1. PHOTO FOUNDER (Top Left - Portrait) */}
-                <div className="md:col-span-4 lg:col-span-3 relative group sticky top-24">
-                    <div className="aspect-[3/4] w-full rounded-2xl overflow-hidden border border-white/10 bg-brand-dark relative grayscale group-hover:grayscale-0 transition-all duration-700">
-                        {config?.founderPortrait ? (
-                            <img 
-                                src={config.founderPortrait} 
-                                alt="Amin Maghfuri" 
-                                className="w-full h-full object-cover"
-                            />
-                        ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-600">
-                                <Users size={48} strokeWidth={1} />
-                                <span className="text-xs mt-2">No Portrait</span>
-                            </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
-                        <div className="absolute bottom-4 left-4">
-                             <p className="text-white font-bold text-lg leading-none">Amin Maghfuri</p>
-                             <p className="text-brand-orange text-[10px] uppercase tracking-widest font-bold mt-1">The Founder</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 2. THE HOOK "Jujur-jujuran" (Top Right - Wide) */}
-                <div className="md:col-span-8 lg:col-span-9 flex flex-col justify-center h-full">
-                    <div className="p-8 md:p-12 bg-brand-card border border-white/5 rounded-3xl relative overflow-hidden group hover:border-brand-orange/20 transition-all">
-                        <Quote className="absolute top-8 right-8 text-white/5 w-24 h-24 rotate-180" />
-                        <h3 className="text-3xl md:text-5xl font-display font-bold text-white mb-8 relative z-10 leading-tight">
-                            "Jujur-jujuran aja..."
-                        </h3>
-                        <div className="prose prose-invert prose-lg text-gray-400 leading-relaxed relative z-10 max-w-2xl">
-                            <p>
-                                Tahun 2022, gue pernah 'mati suri'. Aset digital ilang, domain diambil orang, profil google bisnis disuspend.
-                            </p>
-                            <p>
-                                Sistem berantakan gara-gara gue terlalu percaya sama 'manusia' tanpa sistem kontrol. Saat itu gue belajar satu hal mahal: <strong className="text-white">Bisnis tanpa sistem yang kuat cuma nunggu waktu buat meledak.</strong>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 3. TITIK BALIK (Middle Left - Text Block) */}
-                {/* Spacer on desktop to push this to new row/column flow */}
-                <div className="hidden md:block md:col-span-12 h-8"></div> 
-
-                <div className="md:col-span-7 pt-4">
-                    <h4 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 border-l-4 border-red-500 pl-4">
-                        Titik Balik (The Turn)
-                    </h4>
-                    <div className="space-y-6 text-gray-400 text-lg leading-relaxed pr-0 md:pr-10">
-                        <p>
-                            Dari kehancuran itu, gue bangun ulang semuanya sendirian. Bukan buat bales dendam, tapi buat mastiin <strong>lo gak perlu ngerasain sakit yang gue rasain.</strong>
-                        </p>
-                        <p>
-                            <strong>SIBOS</strong> dan <strong>Mesin Kasir</strong> yang gue rakit sekarang lahir dari trauma itu. Ini bukan sekadar alat jualan, ini adalah <strong>asuransi</strong> buat bisnis lo. Gue desain fitur-fiturnya berdasarkan apa yang <em>nyelametin duit</em>, bukan cuma apa yang <em>keliatan canggih</em>.
-                        </p>
-                    </div>
-                </div>
-
-                {/* 4. FOUNDER SIGNATURE CARD (Middle Right - Orange Transparent) */}
-                <div className="md:col-span-5 flex items-center h-full">
-                    <div className="w-full bg-brand-orange/10 backdrop-blur-xl border border-brand-orange/30 p-8 rounded-3xl relative overflow-hidden group hover:bg-brand-orange/20 transition-all shadow-[0_0_30px_rgba(255,95,31,0.1)]">
-                        {/* Decorative glow inside card */}
-                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-orange/40 rounded-full blur-[60px]"></div>
-                        
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-4 mb-6 border-b border-brand-orange/20 pb-6">
-                                <div className="w-14 h-14 rounded-full bg-brand-orange text-white flex items-center justify-center font-display font-bold text-xl shadow-lg border-2 border-white/10">
-                                    AM
+            {/* WRAPPER: Max width restricted to create 'indented' look vs Timeline */}
+            <div className="max-w-5xl mx-auto">
+                <div className="grid md:grid-cols-12 gap-8 items-start">
+                    
+                    {/* 1. PHOTO FOUNDER (Top Left - Portrait) */}
+                    <div className="md:col-span-4 relative group">
+                        <div className="aspect-[3/4] w-full rounded-2xl overflow-hidden border border-white/10 bg-brand-dark relative grayscale group-hover:grayscale-0 transition-all duration-700">
+                            {config?.founderPortrait ? (
+                                <img 
+                                    src={config.founderPortrait} 
+                                    alt="Amin Maghfuri" 
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-gray-600">
+                                    <Users size={48} strokeWidth={1} />
+                                    <span className="text-xs mt-2">No Portrait</span>
                                 </div>
-                                <div>
-                                    <p className="text-white font-bold text-xl">Amin Maghfuri</p>
-                                    <p className="text-brand-orange/80 text-xs uppercase tracking-widest font-bold">Founder & Survivor</p>
-                                </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
+                            <div className="absolute bottom-4 left-4">
+                                 <p className="text-white font-bold text-lg leading-none">Amin Maghfuri</p>
+                                 <p className="text-brand-orange text-[10px] uppercase tracking-widest font-bold mt-1">The Founder</p>
                             </div>
-                            <p className="text-white/90 italic font-medium text-lg leading-relaxed">
-                                "Developer lain bikin fitur di ruangan ber-AC. Gue bikin fitur di lapangan panas, sambil ngadepin komplain pelanggan dan selisih stok nyata. Gue tau rasanya boncos."
+                        </div>
+                    </div>
+
+                    {/* 2. THE HOOK "Jujur-jujuran" (Top Right - Wide) */}
+                    <div className="md:col-span-8 flex flex-col justify-center h-full">
+                        <div className="p-8 md:p-10 bg-brand-card border border-white/5 rounded-3xl relative overflow-hidden group hover:border-brand-orange/20 transition-all">
+                            <Quote className="absolute top-8 right-8 text-white/5 w-24 h-24 rotate-180" />
+                            <h3 className="text-3xl md:text-4xl font-display font-bold text-white mb-6 relative z-10 leading-tight">
+                                "Jujur-jujuran aja..."
+                            </h3>
+                            <div className="prose prose-invert prose-lg text-gray-400 leading-relaxed relative z-10">
+                                <p className="mb-4">
+                                    Tahun 2022, gue pernah 'mati suri'. Aset digital ilang, domain diambil orang, profil google bisnis disuspend.
+                                </p>
+                                <p>
+                                    Sistem berantakan gara-gara gue terlalu percaya sama 'manusia' tanpa sistem kontrol. Saat itu gue belajar satu hal mahal: <strong className="text-white">Bisnis tanpa sistem yang kuat cuma nunggu waktu buat meledak.</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 3. TITIK BALIK (Middle Left - Text Block) */}
+                    {/* Spacer to push logic to next visual row */}
+                    <div className="hidden md:block md:col-span-12 h-4"></div> 
+
+                    <div className="md:col-span-7 pt-4">
+                        <h4 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 border-l-4 border-red-500 pl-4">
+                            Titik Balik (The Turn)
+                        </h4>
+                        <div className="space-y-6 text-gray-400 text-lg leading-relaxed pr-0 md:pr-6">
+                            <p>
+                                Dari kehancuran itu, gue bangun ulang semuanya sendirian. Bukan buat bales dendam, tapi buat mastiin <strong>lo gak perlu ngerasain sakit yang gue rasain.</strong>
+                            </p>
+                            <p>
+                                <strong>SIBOS</strong> dan <strong>Mesin Kasir</strong> yang gue rakit sekarang lahir dari trauma itu. Ini bukan sekadar alat jualan, ini adalah <strong>asuransi</strong> buat bisnis lo. Gue desain fitur-fiturnya berdasarkan apa yang <em>nyelametin duit</em>, bukan cuma apa yang <em>keliatan canggih</em>.
                             </p>
                         </div>
                     </div>
-                </div>
 
+                    {/* 4. FOUNDER SIGNATURE CARD (Middle Right - Orange Transparent) */}
+                    <div className="md:col-span-5 flex items-center h-full">
+                        <div className="w-full bg-brand-orange/10 backdrop-blur-xl border border-brand-orange/30 p-8 rounded-3xl relative overflow-hidden group hover:bg-brand-orange/20 transition-all shadow-[0_0_30px_rgba(255,95,31,0.1)]">
+                            {/* Decorative glow inside card */}
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-orange/40 rounded-full blur-[60px]"></div>
+                            
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-4 mb-6 border-b border-brand-orange/20 pb-6">
+                                    <div className="w-12 h-12 rounded-full bg-brand-orange text-white flex items-center justify-center font-display font-bold text-lg shadow-lg border-2 border-white/10">
+                                        AM
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-bold text-lg">Amin Maghfuri</p>
+                                        <p className="text-brand-orange/80 text-[10px] uppercase tracking-widest font-bold">Founder & Survivor</p>
+                                    </div>
+                                </div>
+                                <p className="text-white/90 italic font-medium text-base leading-relaxed">
+                                    "Developer lain bikin fitur di ruangan ber-AC. Gue bikin fitur di lapangan panas, sambil ngadepin komplain pelanggan dan selisih stok nyata. Gue tau rasanya boncos."
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </section>
 
-    {/* 5. TIMELINE (Bottom - Full Width) */}
+    {/* 5. TIMELINE (Bottom - Full Width / Wider Foundation) */}
     <div className="container mx-auto px-4 py-20 relative border-t border-white/5 bg-brand-dark/30 mt-10">
       {/* Central Line */}
       <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-brand-orange/50 to-transparent hidden md:block"></div>
