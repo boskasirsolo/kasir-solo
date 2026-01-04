@@ -142,6 +142,12 @@ export interface SiteConfig {
   googleSearchConsoleCode?: string; // Verification meta content
   // Global Settings
   timezone?: string; // 'Asia/Jakarta' | 'Asia/Makassar' | 'Asia/Jayapura'
+  
+  // NEW: QUOTA MANAGEMENT
+  quotaOnsiteMax?: number;
+  quotaOnsiteUsed?: number;
+  quotaDigitalMax?: number;
+  quotaDigitalUsed?: number;
 }
 
 // --- E-Commerce Types ---

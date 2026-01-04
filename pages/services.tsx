@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { ServiceHero, FeatureGrid, WorkflowSection, NarrativeSection } from '../components/service-parts';
 import { InvestmentSimulator, CalcData } from '../components/calculator';
+import { SiteConfig } from '../types';
 
 // ==========================================
 // 1. DATA CONSTANTS & CALCULATOR DATA
@@ -161,7 +162,11 @@ const MAINTENANCE_CALC: CalcData = {
 // ==========================================
 
 // --- WEBSITE PAGE ---
-export const WebsiteServicePage = () => {
+export const WebsiteServicePage = ({ config }: { config?: SiteConfig }) => {
+  const max = config?.quotaDigitalMax || 2;
+  const used = config?.quotaDigitalUsed || 0;
+  const remaining = Math.max(0, max - used);
+
   return (
     <div className="animate-fade-in">
       <ServiceHero 
@@ -180,17 +185,16 @@ export const WebsiteServicePage = () => {
                   <ArrowRight size={24} className="text-brand-orange animate-pulse" />
                   <Globe size={40} className="text-brand-orange" />
                 </div>
-                {/* UPDATE: Kuota Message */}
-                <h3 className="text-2xl font-bold text-white">Warning: Kuota Sangat Terbatas</h3>
+                {/* UPDATE: Kuota Message Dynamic */}
                 <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
                     <p className="text-red-400 text-sm font-bold flex items-center gap-2 mb-2">
-                        <AlertTriangle size={16} /> KUOTA BULANAN: 2 PROYEK
+                        <AlertTriangle size={16} /> INFO KUOTA: MAX {max} SLOT/BULAN
                     </p>
                     <p className="text-gray-300 text-sm leading-relaxed">
-                        Gue <strong>Single Fighter</strong>. Gue ngoding sendiri, desain sendiri. Gue gak mau oper ke anak magang terus hasilnya ampas.
+                        Gue <strong>Single Fighter</strong> untuk urusan coding & strategi. Gue gak mau oper ke anak magang terus hasilnya ampas.
                     </p>
                     <p className="text-gray-300 text-sm leading-relaxed mt-2">
-                        Jadi sorry banget, gue cuma terima maksimal <strong>2 Klien Digital</strong> per bulan biar kualitasnya terjaga. Siapa cepat, dia dapat slot.
+                        Jadi sorry banget, gue cuma terima maksimal <strong>{max} Klien Digital</strong> per bulan biar kualitasnya terjaga. Sisa slot saat ini: <strong className="text-white">{remaining}</strong>.
                     </p>
                 </div>
             </div>
@@ -233,7 +237,11 @@ export const WebsiteServicePage = () => {
 };
 
 // --- WEB APP PAGE ---
-export const WebAppServicePage = () => {
+export const WebAppServicePage = ({ config }: { config?: SiteConfig }) => {
+  const max = config?.quotaDigitalMax || 2;
+  const used = config?.quotaDigitalUsed || 0;
+  const remaining = Math.max(0, max - used);
+
   return (
     <div className="animate-fade-in">
       <ServiceHero 
@@ -255,13 +263,13 @@ export const WebAppServicePage = () => {
                 Gue tawarkan <strong>Custom Web App (ERP)</strong>. Ini bukan aplikasi pasaran yang lo sewa (SaaS). Ini aplikasi yang lo <strong>Miliki Sepenuhnya</strong>. Database di tangan lo, source code di tangan lo.
             </p>
             
-            {/* UPDATE: Kuota Alert */}
+            {/* UPDATE: Kuota Alert Dynamic */}
             <div className="bg-brand-dark border-l-4 border-brand-orange p-4 rounded-r-lg mt-6">
-                <p className="text-brand-orange font-bold text-xs uppercase tracking-widest mb-1">
-                    SLOT TERBATAS (MAX 2/BULAN)
+                <p className="text-brand-orange font-bold text-xs uppercase tracking-widest mb-1 flex items-center gap-2">
+                    <AlertTriangle size={12}/> SLOT TERBATAS (MAX {max}/BULAN)
                 </p>
                 <p className="text-white italic text-sm">
-                  "Pembuatan Software Custom butuh fokus tinggi. Gue gak bisa handle banyak sekaligus. Pastikan lo booking slot jauh-jauh hari."
+                  "Pembuatan Software Custom butuh fokus tinggi. Gue gak bisa handle banyak sekaligus. Saat ini tersisa <strong>{remaining} slot</strong>. Pastikan lo booking slot jauh-jauh hari."
                 </p>
             </div>
          </div>

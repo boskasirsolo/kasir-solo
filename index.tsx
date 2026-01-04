@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
@@ -94,7 +93,12 @@ const AppContent = () => {
     linkedinUrl: "https://linkedin.com/",
     googleAnalyticsId: "",
     googleSearchConsoleCode: "",
-    timezone: "Asia/Jakarta"
+    timezone: "Asia/Jakarta",
+    // Quota Defaults
+    quotaOnsiteMax: 4,
+    quotaOnsiteUsed: 3,
+    quotaDigitalMax: 2,
+    quotaDigitalUsed: 0
   });
 
   // --- Router Bridge ---
@@ -185,7 +189,7 @@ const AppContent = () => {
                     heroTitle: settingsData.hero_title || config.heroTitle,
                     heroSubtitle: settingsData.hero_subtitle || config.heroSubtitle,
                     aboutImage: settingsData.about_image || config.aboutImage,
-                    founderPortrait: settingsData.founder_portrait || config.founderPortrait, // ADDED: MAPPING HERE
+                    founderPortrait: settingsData.founder_portrait || config.founderPortrait,
                     sibosUrl: settingsData.sibos_url || config.sibosUrl,
                     qalamUrl: settingsData.qalam_url || config.qalamUrl,
                     companyLegalName: settingsData.company_legal_name || config.companyLegalName,
@@ -207,7 +211,12 @@ const AppContent = () => {
                     linkedinUrl: settingsData.linkedin_url || config.linkedinUrl,
                     googleAnalyticsId: settingsData.google_analytics_id || '',
                     googleSearchConsoleCode: settingsData.google_search_console_code || '',
-                    timezone: settingsData.timezone || config.timezone
+                    timezone: settingsData.timezone || config.timezone,
+                    // Quota Mapping
+                    quotaOnsiteMax: settingsData.quota_onsite_max || 4,
+                    quotaOnsiteUsed: settingsData.quota_onsite_used || 0,
+                    quotaDigitalMax: settingsData.quota_digital_max || 2,
+                    quotaDigitalUsed: settingsData.quota_digital_used || 0
                 };
                 setConfig(newConfig);
                 injectGoogleTags(newConfig.googleAnalyticsId, newConfig.googleSearchConsoleCode);
@@ -328,8 +337,8 @@ const AppContent = () => {
             <Route path="/articles" element={<ArticlesPage articles={publishedArticles} products={products} />} />
             <Route path="/articles/:slug" element={<ArticleDetailPage articles={publishedArticles} products={products} />} />
             
-            <Route path="/services/website" element={<WebsiteServicePage />} />
-            <Route path="/services/webapp" element={<WebAppServicePage />} />
+            <Route path="/services/website" element={<WebsiteServicePage config={config} />} />
+            <Route path="/services/webapp" element={<WebAppServicePage config={config} />} />
             <Route path="/services/seo" element={<SeoServicePage />} />
             <Route path="/services/maintenance" element={<MaintenanceServicePage />} />
 
@@ -338,9 +347,9 @@ const AppContent = () => {
             <Route path="/track-order" element={<TrackOrderPage />} /> 
             
             {/* NEW: PROGRAMMATIC SEO ROUTE (FIXED URL STRUCTURE) */}
-            <Route path="/jual-mesin-kasir-di/:citySlug" element={<CityLandingPage />} />
-            <Route path="/jual-mesin-kasir-di" element={<CityLandingPage />} />
-            <Route path="/area-layanan" element={<CityLandingPage />} />
+            <Route path="/jual-mesin-kasir-di/:citySlug" element={<CityLandingPage config={config} />} />
+            <Route path="/jual-mesin-kasir-di" element={<CityLandingPage config={config} />} />
+            <Route path="/area-layanan" element={<CityLandingPage config={config} />} />
 
             <Route path="/about" element={<AboutPage config={config} />} />
             <Route path="/about/vision" element={<VisionPage />} /> 

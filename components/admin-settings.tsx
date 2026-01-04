@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
     Layout, MapPin, Share2, Settings as SettingsIcon, 
     Save, UploadCloud, Image as ImageIcon, Sparkles, 
     TrendingUp, Monitor, Globe, BarChart, Clock, 
-    Smartphone, Mail, Compass, ShieldCheck, User 
+    Smartphone, Mail, Compass, ShieldCheck, User,
+    PieChart, AlertTriangle 
 } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
@@ -15,6 +15,7 @@ const TABS = [
     { id: 'general', label: 'Umum & Hero', icon: Layout },
     { id: 'contact', label: 'Kontak & Lokasi', icon: MapPin },
     { id: 'social', label: 'Sosial & Link', icon: Share2 },
+    { id: 'quota', label: 'Kuota & Slot', icon: PieChart }, // NEW TAB
     { id: 'system', label: 'Sistem & Timezone', icon: SettingsIcon },
 ];
 
@@ -124,7 +125,12 @@ export const AdminSettings = ({
               linkedin_url: config.linkedinUrl,
               google_analytics_id: config.googleAnalyticsId,
               google_search_console_code: config.googleSearchConsoleCode,
-              timezone: config.timezone
+              timezone: config.timezone,
+              // QUOTA DATA
+              quota_onsite_max: config.quotaOnsiteMax,
+              quota_onsite_used: config.quotaOnsiteUsed,
+              quota_digital_max: config.quotaDigitalMax,
+              quota_digital_used: config.quotaDigitalUsed
           };
           
           const { error } = await supabase.from('site_settings').upsert(dbData);
@@ -133,8 +139,8 @@ export const AdminSettings = ({
           setAboutImageFile(null); 
           setFounderImageFile(null);
       } catch(e: any) {
-          if (e.message && (e.message.includes('column') || e.message.includes('founder_portrait'))) {
-             alert("Gagal menyimpan: Kolom 'founder_portrait' belum ada di database. Jalankan script SQL: ALTER TABLE site_settings ADD COLUMN founder_portrait text;");
+          if (e.message && (e.message.includes('column') || e.message.includes('quota'))) {
+             alert("Gagal menyimpan: Kolom Database belum lengkap. Pastikan SQL 'ALTER TABLE' sudah dijalankan.");
           } else {
              alert("Gagal menyimpan: " + e.message);
           }
@@ -319,6 +325,87 @@ export const AdminSettings = ({
                                 <Input value={config.npwpNumber || ''} onChange={(e) => setConfig({...config, npwpNumber: e.target.value})} placeholder="XX.XXX.XXX.X-XXX.XXX" />
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* TAB: QUOTA & SLOT */}
+            {activeTab === 'quota' && (
+                <div className="space-y-8 animate-fade-in">
+                    <div>
+                        <h3 className="text-xl font-bold text-white mb-1">Manajemen Kuota Proyek</h3>
+                        <p className="text-gray-400 text-xs">Atur kelangkaan (scarcity) untuk memancing psikologi calon klien.</p>
+                    </div>
+
+                    {/* On-Site Quota */}
+                    <div className="bg-brand-dark/50 p-6 rounded-xl border border-white/10">
+                        <div className="flex items-center gap-3 mb-4 border-b border-white/5 pb-4">
+                            <div className="p-2 bg-red-500/10 rounded-lg text-red-500"><MapPin size={24}/></div>
+                            <div>
+                                <h4 className="text-white font-bold text-sm">Slot Setup On-Site (Fisik)</h4>
+                                <p className="text-[10px] text-gray-500">Muncul di Halaman SEO Kota (Landing Page).</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Max Slot / Bulan</label>
+                                <Input 
+                                    type="number" 
+                                    value={config.quotaOnsiteMax || 0} 
+                                    onChange={(e) => setConfig({...config, quotaOnsiteMax: parseInt(e.target.value)})} 
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Terpakai (Used)</label>
+                                <Input 
+                                    type="number" 
+                                    value={config.quotaOnsiteUsed || 0} 
+                                    onChange={(e) => setConfig({...config, quotaOnsiteUsed: parseInt(e.target.value)})} 
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-4 p-3 bg-white/5 rounded border border-white/10 text-xs text-gray-300">
+                            <strong>Preview:</strong> "Kuota Setup On-Site: Sisa <span className="text-red-400 font-bold">{(config.quotaOnsiteMax || 0) - (config.quotaOnsiteUsed || 0)}</span> dari {config.quotaOnsiteMax} Slot Bulan Ini"
+                        </div>
+                    </div>
+
+                    {/* Digital Service Quota */}
+                    <div className="bg-brand-dark/50 p-6 rounded-xl border border-white/10">
+                        <div className="flex items-center gap-3 mb-4 border-b border-white/5 pb-4">
+                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><Monitor size={24}/></div>
+                            <div>
+                                <h4 className="text-white font-bold text-sm">Slot Proyek Digital (Web/App)</h4>
+                                <p className="text-[10px] text-gray-500">Muncul di Halaman Services & Home.</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Max Slot / Bulan</label>
+                                <Input 
+                                    type="number" 
+                                    value={config.quotaDigitalMax || 0} 
+                                    onChange={(e) => setConfig({...config, quotaDigitalMax: parseInt(e.target.value)})} 
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">Terpakai (Used)</label>
+                                <Input 
+                                    type="number" 
+                                    value={config.quotaDigitalUsed || 0} 
+                                    onChange={(e) => setConfig({...config, quotaDigitalUsed: parseInt(e.target.value)})} 
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-4 p-3 bg-white/5 rounded border border-white/10 text-xs text-gray-300">
+                            <strong>Preview:</strong> "INFO KUOTA: MAX {config.quotaDigitalMax} SLOT/BULAN (Sisa: <span className="text-red-400 font-bold">{(config.quotaDigitalMax || 0) - (config.quotaDigitalUsed || 0)}</span>)"
+                        </div>
+                    </div>
+
+                    <div className="p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl flex gap-3 items-start">
+                        <AlertTriangle size={20} className="text-yellow-500 shrink-0 mt-0.5"/>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            <strong>Tips Scarcity:</strong> Usahakan sisa slot selalu terlihat sedikit (misal: sisa 1 atau 2) untuk mendorong calon klien segera deal. Jangan biarkan "Sisa 0" kecuali Anda benar-benar full booked (tolak order).
+                        </p>
                     </div>
                 </div>
             )}

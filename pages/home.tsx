@@ -107,6 +107,10 @@ export const HomePage = ({
   const featuredGallery = gallery.slice(0, 6);
   const [selectedProject, setSelectedProject] = useState<GalleryItem | null>(null);
   
+  // Quota Calc
+  const onsiteRemaining = (config.quotaOnsiteMax || 4) - (config.quotaOnsiteUsed || 0);
+  const digitalRemaining = (config.quotaDigitalMax || 2) - (config.quotaDigitalUsed || 0);
+
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
@@ -526,7 +530,7 @@ export const HomePage = ({
                     INFO KUOTA BULAN INI:
                 </span>
                 <span className="text-white text-sm font-bold">
-                    4 Slot On-Site & 2 Slot Proyek Digital
+                    {onsiteRemaining} Slot On-Site & {digitalRemaining} Slot Proyek Digital
                 </span>
             </div>
             

@@ -4,14 +4,20 @@ import { getCityData, TARGET_CITIES, supabase } from '../utils';
 import { SectionHeader, Button, Card, LoadingSpinner } from '../components/ui';
 import { MapPin, ShieldCheck, Truck, Users, ArrowRight, MessageCircle, Star, AlertTriangle, TrendingUp, PackageCheck, CheckCircle2, UserCog } from 'lucide-react';
 import { LocalBusinessSchema } from '../components/seo';
+import { SiteConfig } from '../types';
 
-export const CityLandingPage = () => {
+export const CityLandingPage = ({ config }: { config?: SiteConfig }) => {
   const { citySlug } = useParams();
   const navigate = useNavigate();
   
   const [cityData, setCityData] = useState<{name: string, slug: string, type: 'Kandang' | 'Ekspansi'} | null>(null);
   const [loading, setLoading] = useState(true);
   const [citiesList, setCitiesList] = useState(TARGET_CITIES);
+
+  // Quota Calc
+  const onsiteMax = config?.quotaOnsiteMax || 4;
+  const onsiteUsed = config?.quotaOnsiteUsed || 0;
+  const onsiteRemaining = Math.max(0, onsiteMax - onsiteUsed);
 
   // FETCH DYNAMIC CITY
   useEffect(() => {
@@ -114,11 +120,13 @@ export const CityLandingPage = () => {
                )}
             </div>
 
-            {/* LIMITED SLOT BADGE */}
+            {/* LIMITED SLOT BADGE DYNAMIC */}
             <div className="mb-8 flex justify-center">
                 <div className="bg-red-500/10 border border-red-500/30 px-6 py-2 rounded-full flex items-center gap-2 text-red-400 font-bold text-xs uppercase tracking-wider animate-pulse">
                     <AlertTriangle size={14} /> 
-                    {isKandang ? "Kuota Setup On-Site: Sisa 1 dari 4 Slot Bulan Ini" : "Kuota Video Call Setup: Terbatas Bulan Ini"}
+                    {isKandang 
+                        ? `KUOTA SETUP ON-SITE: SISA ${onsiteRemaining} DARI ${onsiteMax} SLOT BULAN INI` 
+                        : "KUOTA VIDEO CALL SETUP: TERBATAS BULAN INI"}
                 </div>
             </div>
 
