@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   ShieldCheck, AlertOctagon, CheckCircle2, XCircle, 
   Video, Lock, CreditCard, AlertTriangle, FileSignature, 
-  Gavel, Server, Fingerprint, RefreshCcw, Truck, HelpCircle, BadgeCheck
+  Gavel, Server, Fingerprint, RefreshCcw, Truck, HelpCircle, BadgeCheck, EyeOff, Database
 } from 'lucide-react';
 
 // --- ATOMS: REUSABLE UI PARTS ---
@@ -64,50 +64,50 @@ export const WarningBlock = ({
 export const RefundContent = () => (
   <div className="animate-fade-in text-gray-300 leading-relaxed">
     <PolicyHeader 
-      title="Kebijakan Garansi & Retur" 
-      subtitle="Komitmen kami untuk memberikan ketenangan pikiran (Peace of Mind). Berikut adalah SOP standar klaim dan perlindungan purna jual." 
+      title="Garansi & Retur: Jangan Ada Dusta." 
+      subtitle="Gue pedagang, lo pedagang. Kita main fair. Kalau barang gue jelek, gue ganti. Tapi kalau lo yang teledor, jangan salahin gue." 
     />
 
     <WarningBlock 
-      title="PROTOKOL WAJIB: VIDEO UNBOXING"
+      title="VIDEO UNBOXING: HARGA MATI"
       message={
         <p>
-          Demi keadilan bersama dan menghindari klaim fiktif, PT Mesin Kasir Solo menerapkan kebijakan <strong>Zero Tolerance</strong>. 
-          Kami <strong>MENOLAK 100%</strong> segala bentuk komplain jika pembeli gagal menunjukkan bukti Video Unboxing yang valid.
+          Banyak "oknum" ngaku barang kurang atau rusak padahal dia yang ngerusakin. Sorry Bos, gue udah kenyang ginian. 
+          <strong>GAK ADA VIDEO UNBOXING = KOMPLAIN DITOLAK AUTO.</strong> Gak pake debat.
         </p>
       }
       points={[
-        { title: "Rekam Sebelum Buka", desc: "Video wajib dimulai dari paket utuh tersegel (perlihatkan label resi jelas) sebelum dibuka." },
-        { title: "No Cut / Edit", desc: "Video harus satu take (bersambung) tanpa pause, edit, atau pemotongan durasi hingga unit dinyalakan." },
-        { title: "Batas Waktu 1x24 Jam", desc: "Komplain kerusakan fisik maksimal diajukan 1x24 jam setelah status resi 'Diterima' oleh kurir." }
+        { title: "Rekam Dari Awal", desc: "Mulai rekam pas paket masih utuh tersegel lakban gue. Tunjukin resi ke kamera." },
+        { title: "Gak Boleh Putus", desc: "Video harus nyambung (No Cut/Edit). Jangan curang pause video terus ngakalin barang." },
+        { title: "Maksimal 1x24 Jam", desc: "Barang sampe, langsung cek. Lewat sehari gue anggap barang aman dan transaksi selesai." }
       ]}
     />
 
-    <PolicySection title="Cakupan Garansi Hardware" icon={ShieldCheck}>
+    <PolicySection title="Mana Yang Gue Ganti?" icon={ShieldCheck}>
         <p className="mb-6 text-sm">
-            Setiap perangkat keras (Hardware) yang kami jual dilindungi oleh garansi terbatas terhadap cacat produksi (Factory Defect).
+            Gue jamin barang gue nyala. Kalau pas sampe ternyata zonk karena cacat pabrik, gue tanggung jawab penuh.
         </p>
         <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-green-500/5 p-5 rounded-xl border border-green-500/20">
                 <h4 className="text-green-400 font-bold text-sm mb-4 flex items-center gap-2 border-b border-green-500/20 pb-2">
-                    <CheckCircle2 size={18}/> DICOVER (Garansi Berlaku)
+                    <CheckCircle2 size={18}/> DICOVER (Aman, Gue Ganti)
                 </h4>
                 <ul className="space-y-3 text-sm text-gray-400 list-disc pl-4 marker:text-green-500">
-                    <li>Kegagalan fungsi komponen internal tanpa sebab eksternal.</li>
-                    <li>Layar Ghost Touch / Dead Pixel (minimal 5 titik) saat diterima.</li>
-                    <li>Printer macet teknis (gear/motor) bukan karena kotoran/serangga.</li>
-                    <li>Port koneksi (USB/LAN) tidak berfungsi dari pabrik.</li>
+                    <li>Pas dibuka, layar mati atau ada garis (Dead Pixel parah).</li>
+                    <li>Printer macet total pas tes print pertama.</li>
+                    <li>Adaptor/Kabel gak nyala (Mati total).</li>
+                    <li>Salah kirim barang (Pesen Scanner dikirim Mouse).</li>
                 </ul>
             </div>
             <div className="bg-red-500/5 p-5 rounded-xl border border-red-500/20">
                 <h4 className="text-red-400 font-bold text-sm mb-4 flex items-center gap-2 border-b border-red-500/20 pb-2">
-                    <XCircle size={18}/> VOID (Garansi Hangus)
+                    <XCircle size={18}/> VOID (Resiko Lo Sendiri)
                 </h4>
                 <ul className="space-y-3 text-sm text-gray-400 list-disc pl-4 marker:text-red-500">
-                    <li>Kerusakan fisik: Jatuh, Pecah, Retak, Penyok, Tergores dalam.</li>
-                    <li>Terkena cairan (Water Damage) atau korosi akibat kelembaban.</li>
-                    <li>Segel garansi rusak, sobek, atau hilang.</li>
-                    <li>Modifikasi software/hardware yang tidak diizinkan (Root/Jailbreak).</li>
+                    <li>Jatuh, keinjek, kebanting, atau dilempar staf lo.</li>
+                    <li>Kesiram kopi, teh, atau air banjir (Water Damage).</li>
+                    <li>Segel gue lo sobek/bongkar sendiri (Sok tau ngoprek).</li>
+                    <li>Salah colok listrik (Tegangan naik bikin korslet).</li>
                 </ul>
             </div>
         </div>
@@ -118,42 +118,43 @@ export const RefundContent = () => (
 export const PrivacyContent = () => (
   <div className="animate-fade-in text-gray-300 leading-relaxed">
     <PolicyHeader 
-      title="Kebijakan Privasi & Data" 
-      subtitle='Komitmen "Data Fortress" untuk kedaulatan informasi bisnis Anda. Kami mengelola data bukan sebagai komoditas, tapi sebagai amanah.' 
+      title="Data Lo, Hak Lo." 
+      subtitle='Gue pernah ngerasain sakitnya pas data gue dimaling orang tahun 2022. Gue gak bakal biarin itu kejadian di lo. Data lo aman di "brankas" gue.' 
     />
 
-    <div className="bg-gradient-to-r from-brand-card to-brand-dark p-6 rounded-2xl border border-white/5 text-sm leading-relaxed mb-10 shadow-lg">
-         <p className="mb-4">
-             Di era digital, <strong>Kepercayaan (Trust)</strong> adalah mata uang paling berharga. PT Mesin Kasir Solo berdiri tegak dengan prinsip <strong>Integritas Data</strong>. 
+    <div className="bg-gradient-to-r from-brand-card to-brand-dark p-6 rounded-2xl border border-white/5 text-sm leading-relaxed mb-10 shadow-lg relative overflow-hidden">
+         <div className="absolute top-0 right-0 p-4 opacity-5"><Database size={100} /></div>
+         <p className="mb-4 relative z-10">
+             Denger baik-baik: <strong>Gue gak jualan data.</strong> Omzet lo, daftar pelanggan lo, itu rahasia dapur lo. 
          </p>
-         <p className="font-bold text-white">
-             Kami bukan perusahaan pialang data. Data transaksi, omzet, dan pelanggan Anda adalah MILIK ANDA SEPENUHNYA.
+         <p className="font-bold text-white relative z-10">
+             Gue cuma penyedia "gembok" dan "brankas"-nya. Kuncinya ada di tangan lo. Gue pun gak bisa intip isinya kalau lo gak kasih akses.
          </p>
     </div>
 
     <div className="space-y-8">
-      <PolicySection title="Data Terbuka, Dokumen Terjaga" icon={BadgeCheck}>
+      <PolicySection title="Transparansi Total" icon={EyeOff}>
         <div className="flex flex-col md:flex-row gap-6 items-center">
             <div className="flex-1 text-sm text-gray-300 space-y-4">
                 <p>
-                    Kami beroperasi di bawah payung hukum yang sah. Demi keamanan data perusahaan dan mencegah penyalahgunaan oleh pihak tidak bertanggung jawab, <strong>scan dokumen asli</strong> hanya kami berikan kepada klien yang sedang dalam proses administrasi/vendor list.
+                    Gue berdiri di atas PT resmi. Legalitas gue jelas. Kalau gue macem-macem sama data lo, lo bisa laporin gue.
                 </p>
                 <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl">
-                    <p className="text-blue-200 text-xs font-bold mb-1">VALIDASI MANDIRI</p>
-                    <p className="text-xs text-gray-400">Silakan cek validitas NIB kami secara mandiri melalui situs resmi <strong>OSS Kementerian Investasi</strong> (oss.go.id).</p>
+                    <p className="text-blue-200 text-xs font-bold mb-1 uppercase tracking-widest">Cek Sendiri Kalau Gak Percaya</p>
+                    <p className="text-xs text-gray-400">Silakan cek NIB PT Mesin Kasir Solo di <strong>OSS Kementerian Investasi</strong> (oss.go.id). Gue gak main sembunyi-sembunyi.</p>
                 </div>
             </div>
         </div>
       </PolicySection>
 
-      <PolicySection title="Standar Keamanan (Security Measures)" icon={Lock}>
+      <PolicySection title="Benteng Pertahanan (Tech Specs)" icon={Lock}>
         <ul className="grid gap-4 md:grid-cols-3">
             {[
-                { t: "Supabase RLS", d: "Row Level Security memastikan data Anda hanya bisa diakses oleh akun Anda sendiri, terisolasi dari pengguna lain." },
-                { t: "Enkripsi SSL/TLS", d: "Seluruh jalur komunikasi data dari perangkat Anda ke server kami terenkripsi standar perbankan (HTTPS)." },
-                { t: "Password Hashing", d: "Password Anda di-hash satu arah (Bcrypt). Bahkan tim IT kami tidak bisa melihat password asli Anda." }
+                { t: "Database Terisolasi", d: "Data lo dipisah pake teknologi RLS (Row Level Security). User lain gak bakal bisa 'nyasar' ke data lo." },
+                { t: "Enkripsi Bank-Grade", d: "Jalur data dari HP lo ke server gue dienkripsi SSL/TLS. Hacker cuma bakal liat kode acak." },
+                { t: "Password Lo, Rahasia Lo", d: "Password lo di-hash (diacak). Bahkan tim IT gue pun gak tau password lo apa." }
             ].map((item, i) => (
-                <li key={i} className="bg-white/5 p-4 rounded-lg border border-white/5">
+                <li key={i} className="bg-white/5 p-4 rounded-lg border border-white/5 hover:border-brand-orange/30 transition-colors">
                     <strong className="text-brand-orange text-xs block mb-2 uppercase tracking-wider">{item.t}</strong>
                     <p className="text-xs text-gray-400">{item.d}</p>
                 </li>
@@ -167,39 +168,48 @@ export const PrivacyContent = () => (
 export const TermsContent = () => (
   <div className="animate-fade-in text-gray-300 leading-relaxed">
     <PolicyHeader 
-      title="Syarat & Ketentuan Layanan" 
-      subtitle="Harap membaca aturan main (Terms of Service) ini dengan seksama. Bertransaksi dengan PT Mesin Kasir Solo berarti Anda menyetujui poin-poin berikut." 
+      title="Aturan Main Biar Sama-Sama Enak" 
+      subtitle="Bisnis itu soal kesepakatan. Baca aturan main gue sebelum transfer, biar gak ada drama di belakang." 
     />
 
     <div className="space-y-8">
-      <PolicySection title="Mekanisme Pesanan & Harga" icon={FileSignature}>
+      <PolicySection title="Soal Duit & Pesanan" icon={FileSignature}>
         <div className="space-y-4">
             <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-brand-dark border border-brand-orange text-brand-orange flex items-center justify-center font-bold text-xs shrink-0">1</div>
                 <div>
-                    <strong className="text-white text-sm block mb-1">Price Lock Policy</strong>
+                    <strong className="text-white text-sm block mb-1">Harga Mengikat (Price Lock)</strong>
                     <p className="text-sm text-gray-400">
-                        Harga mengikat saat checkout (Invoice Terbit). Perubahan harga naik/turun setelah invoice terbit tidak mempengaruhi tagihan Anda.
+                        Begitu Invoice keluar, harga itu yang lo bayar. Kalau besok harga naik, lo untung. Kalau harga turun, jangan minta cashback. Deal is Deal.
+                    </p>
+                </div>
+            </div>
+            <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-brand-dark border border-brand-orange text-brand-orange flex items-center justify-center font-bold text-xs shrink-0">2</div>
+                <div>
+                    <strong className="text-white text-sm block mb-1">Gak Ada 'Keep' Barang</strong>
+                    <p className="text-sm text-gray-400">
+                        Siapa cepat dia dapat. Stok gue rebutan. Jangan marah kalau lo baru transfer lusa, barangnya udah disamber orang lain.
                     </p>
                 </div>
             </div>
         </div>
       </PolicySection>
 
-      <PolicySection title="Pembayaran & Keamanan Transaksi" icon={CreditCard}>
+      <PolicySection title="Awas Penipuan (Fraud)" icon={AlertTriangle}>
         <div className="bg-brand-card p-6 rounded-xl border border-white/5 relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-4 bg-black/40 p-4 rounded-xl border border-brand-orange/30 w-full md:w-auto">
                     <CreditCard className="text-brand-orange shrink-0" size={32} />
                     <div>
-                        <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Bank Official (BNC)</p>
+                        <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Rekening Sah (BNC)</p>
                         <p className="text-white font-bold font-mono text-lg md:text-xl tracking-widest">5859 4594 0674 0414</p>
                         <p className="text-xs text-brand-orange font-bold mt-1">a.n PT MESIN KASIR SOLO</p>
                     </div>
                 </div>
                 <div className="text-sm text-gray-400 max-w-md border-l-2 border-red-500 pl-4">
-                    <p className="font-bold text-red-400 flex items-center gap-2 mb-1"><AlertTriangle size={14}/> Fraud Warning:</p>
-                    Kami <strong>TIDAK BERTANGGUNG JAWAB</strong> atas transfer ke rekening pribadi.
+                    <p className="font-bold text-red-400 flex items-center gap-2 mb-1"><XCircle size={14}/> JANGAN TRANSFER KE PERORANGAN!</p>
+                    Kalau ada sales gue atau orang ngaku-ngaku minta transfer ke rekening pribadi (BCA/BRI/dll atas nama orang), <strong>ITU MALING</strong>. Gue gak tanggung jawab kalau duit lo ilang.
                 </div>
             </div>
         </div>
