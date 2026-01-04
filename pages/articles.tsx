@@ -129,7 +129,7 @@ export const ArticlesPage = ({
 }) => {
   const navigate = useNavigate();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false); // NEW STATE for Solution 3
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false); 
   
   const { 
     searchTerm, setSearchTerm, 
@@ -176,6 +176,20 @@ export const ArticlesPage = ({
         {/* LEFT COLUMN: ARTICLES LIST (75%) */}
         {/* UPDATED: Full width on mobile/tablet because Sidebar is hidden */}
         <div className="lg:col-span-9 order-2 lg:order-1">
+          
+          {/* SOLUTION 3: STICKY FILTER BUTTON (Mobile Only) */}
+          <div className="lg:hidden sticky top-[74px] z-30 mb-6 -mx-4 px-4 py-3 bg-brand-black/95 backdrop-blur-md border-y border-white/10 flex justify-center transition-all">
+             <button 
+                onClick={() => setIsMobileFilterOpen(true)}
+                className="flex items-center gap-2 bg-brand-orange text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-neon hover:shadow-neon-strong transition-all hover:scale-105"
+             >
+                <Filter size={16} /> Filter & Topik 
+                {(searchTerm || selectedFilter.value) && (
+                    <span className="flex h-2 w-2 rounded-full bg-white ml-1 animate-pulse"></span>
+                )}
+             </button>
+          </div>
+
           {!hasResults ? (
             <EmptyArticleState onReset={resetFilters} />
           ) : (
@@ -244,19 +258,11 @@ export const ArticlesPage = ({
 
       </div>
 
-      {/* SOLUTION 3 PART B: FLOATING FILTER BUTTON (Mobile Only) */}
-      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 lg:hidden pointer-events-none">
-         <button 
-            onClick={() => setIsMobileFilterOpen(true)}
-            className="pointer-events-auto flex items-center gap-2 bg-brand-orange text-white px-6 py-3 rounded-full font-bold shadow-neon-strong hover:scale-105 transition-transform border border-white/20 backdrop-blur-md"
-         >
-            <Filter size={18} /> Filter & Topik
-         </button>
-      </div>
+      {/* OLD FIXED BUTTON REMOVED - REPLACED WITH STICKY HEADER ABOVE */}
 
       {/* SOLUTION 3 PART C: MOBILE FILTER MODAL */}
       {isMobileFilterOpen && (
-         <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm lg:hidden flex flex-col animate-fade-in">
+         <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-sm lg:hidden flex flex-col animate-fade-in">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10 bg-brand-dark">
                <h3 className="text-lg font-bold text-white flex items-center gap-2">
