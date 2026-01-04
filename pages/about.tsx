@@ -20,50 +20,78 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
       </div>
     </div>
 
-    {/* NARRATIVE SECTION 1: THE HOOK */}
+    {/* NARRATIVE SECTION 1: THE HOOK (REVISED LAYOUT) */}
     <section className="py-20 bg-brand-black relative">
         <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto space-y-12">
+            <div className="grid md:grid-cols-12 gap-10 items-start">
                 
-                {/* Quote Block 1 */}
-                <div className="relative border-l-4 border-brand-orange pl-8 py-4 bg-gradient-to-r from-brand-orange/5 to-transparent rounded-r-xl">
-                    <Quote className="absolute -top-6 -left-4 text-brand-orange fill-brand-orange w-8 h-8 opacity-20" />
-                    <h3 className="text-2xl md:text-4xl font-display font-bold text-white leading-tight mb-4">
-                        "Jujur-jujuran aja. Tahun 2022, gue pernah 'mati suri'."
-                    </h3>
-                    <p className="text-gray-400 text-lg leading-relaxed">
-                        Aset digital ilang, domain diambil orang, profil google bisnis disuspend, sistem berantakan gara-gara gue terlalu percaya sama 'manusia' tanpa sistem kontrol. Saat itu gue belajar satu hal mahal: <strong>Bisnis tanpa sistem yang kuat cuma nunggu waktu buat meledak.</strong>
-                    </p>
+                {/* LEFT: FOUNDER PORTRAIT (COL-4) */}
+                <div className="md:col-span-4 sticky top-28">
+                    {config?.founderPortrait ? (
+                        <div className="relative rounded-2xl overflow-hidden border-2 border-brand-orange/20 shadow-neon-strong group aspect-[3/4]">
+                            <img 
+                                src={config.founderPortrait} 
+                                alt="Amin Maghfuri - Founder" 
+                                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-transparent to-transparent opacity-80"></div>
+                            <div className="absolute bottom-4 left-4">
+                                <p className="text-white font-bold text-lg">Amin Maghfuri</p>
+                                <p className="text-brand-orange text-xs uppercase tracking-widest font-bold">The Founder</p>
+                            </div>
+                        </div>
+                    ) : (
+                        // Fallback Placeholder if not set
+                        <div className="bg-brand-dark rounded-2xl border border-white/10 aspect-[3/4] flex flex-col items-center justify-center p-6 text-center text-gray-500">
+                            <Users size={48} className="mb-4 opacity-50"/>
+                            <p className="text-sm">Foto Founder belum diupload di Admin Dashboard.</p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Narrative Block */}
-                <div className="grid md:grid-cols-2 gap-10 items-center">
-                    <div>
-                        <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Target className="text-red-500"/> Titik Balik (The Turn)</h4>
-                        <p className="text-gray-400 leading-relaxed mb-4">
-                            Dari kehancuran itu, gue (Amin Maghfuri) bangun ulang semuanya sendirian. Bukan buat bales dendam, tapi buat mastiin <strong>lo gak perlu ngerasain sakit yang gue rasain.</strong>
-                        </p>
-                        <p className="text-gray-400 leading-relaxed">
-                            <strong>SIBOS</strong> dan <strong>Mesin Kasir</strong> yang gue rakit sekarang lahir dari trauma itu. Ini bukan sekadar alat jualan, ini adalah <strong>asuransi</strong> buat bisnis lo. Gue desain fitur-fiturnya berdasarkan apa yang <em>nyelametin duit</em>, bukan cuma apa yang <em>keliatan canggih</em>.
+                {/* RIGHT: TEXT CONTENT (COL-8) */}
+                <div className="md:col-span-8 space-y-12">
+                    
+                    {/* Quote Block 1 */}
+                    <div className="relative border-l-4 border-brand-orange pl-8 py-4 bg-gradient-to-r from-brand-orange/5 to-transparent rounded-r-xl">
+                        <Quote className="absolute -top-6 -left-4 text-brand-orange fill-brand-orange w-8 h-8 opacity-20" />
+                        <h3 className="text-2xl md:text-4xl font-display font-bold text-white leading-tight mb-4">
+                            "Jujur-jujuran aja. Tahun 2022, gue pernah 'mati suri'."
+                        </h3>
+                        <p className="text-gray-400 text-lg leading-relaxed">
+                            Aset digital ilang, domain diambil orang, profil google bisnis disuspend, sistem berantakan gara-gara gue terlalu percaya sama 'manusia' tanpa sistem kontrol. Saat itu gue belajar satu hal mahal: <strong>Bisnis tanpa sistem yang kuat cuma nunggu waktu buat meledak.</strong>
                         </p>
                     </div>
-                    <div className="bg-brand-dark/50 p-8 rounded-2xl border border-white/5 relative overflow-hidden group hover:border-brand-orange/30 transition-all">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                           <Users size={80} className="text-white"/>
+
+                    {/* Narrative Block */}
+                    <div className="grid gap-8">
+                        <div>
+                            <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Target className="text-red-500"/> Titik Balik (The Turn)</h4>
+                            <p className="text-gray-400 leading-relaxed mb-4">
+                                Dari kehancuran itu, gue (Amin Maghfuri) bangun ulang semuanya sendirian. Bukan buat bales dendam, tapi buat mastiin <strong>lo gak perlu ngerasain sakit yang gue rasain.</strong>
+                            </p>
+                            <p className="text-gray-400 leading-relaxed">
+                                <strong>SIBOS</strong> dan <strong>Mesin Kasir</strong> yang gue rakit sekarang lahir dari trauma itu. Ini bukan sekadar alat jualan, ini adalah <strong>asuransi</strong> buat bisnis lo. Gue desain fitur-fiturnya berdasarkan apa yang <em>nyelametin duit</em>, bukan cuma apa yang <em>keliatan canggih</em>.
+                            </p>
                         </div>
-                        <div className="flex items-center gap-4 mb-4 relative z-10">
-                            <div className="w-12 h-12 bg-brand-orange rounded-full flex items-center justify-center text-white font-bold shadow-neon">AM</div>
-                            <div>
+                        
+                        {/* QUOTE CARD (WITHOUT AVATAR AS REQUESTED) */}
+                        <div className="bg-brand-dark/50 p-8 rounded-2xl border border-white/5 relative overflow-hidden group hover:border-brand-orange/30 transition-all">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                               <Users size={80} className="text-white"/>
+                            </div>
+                            
+                            <div className="mb-4 relative z-10">
                                 <span className="text-white font-bold text-lg block">Amin Maghfuri</span>
                                 <span className="text-gray-500 text-xs uppercase tracking-widest">Founder & Survivor</span>
                             </div>
+                            <p className="text-sm text-gray-400 italic relative z-10">
+                                "Developer lain bikin fitur di ruangan ber-AC sambil ngopi santai. Gue bikin fitur di lapangan panas, sambil ngadepin komplain pelanggan dan selisih stok nyata. Gue tau rasanya boncos."
+                            </p>
                         </div>
-                        <p className="text-sm text-gray-400 italic relative z-10">
-                            "Developer lain bikin fitur di ruangan ber-AC sambil ngopi santai. Gue bikin fitur di lapangan panas, sambil ngadepin komplain pelanggan dan selisih stok nyata. Gue tau rasanya boncos."
-                        </p>
                     </div>
-                </div>
 
+                </div>
             </div>
         </div>
     </section>

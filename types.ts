@@ -1,4 +1,5 @@
 
+
 export interface Product {
   id: number;
   name: string;
@@ -37,6 +38,7 @@ export interface Article {
   cluster_ideas?: string[]; 
   // NEW: Manual links to other Pillar Pages (Inter-linking)
   related_pillars?: number[];
+  created_at?: string; // Added to fix admin logic sorting
 }
 
 export interface GalleryItem {
@@ -114,6 +116,7 @@ export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
   aboutImage?: string; 
+  founderPortrait?: string; // NEW: Founder Portrait Image
   sibosUrl?: string; 
   qalamUrl?: string; 
   // Legalitas

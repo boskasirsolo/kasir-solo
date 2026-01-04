@@ -169,14 +169,14 @@ export const useSibosChat = (
     setInputValue('');
 
     // ... Auth Logic ...
-    if (text === '/admin') { setAuthState('AWAITING_EMAIL'); setMessages(p=>[...p, {id:Date.now().toString(), role:'user', text}, {id:(Date.now()+1).toString(), role:'assistant', text:'Email Admin:', time:'System'}]); return; }
-    if (authState === 'AWAITING_EMAIL') { setTempCreds(p=>({...p, email:text})); setAuthState('AWAITING_PASSWORD'); setMessages(p=>[...p, {id:Date.now().toString(), role:'user', text}, {id:(Date.now()+1).toString(), role:'assistant', text:'Password:', time:'System'}]); return; }
+    if (text === '/admin') { setAuthState('AWAITING_EMAIL'); setMessages(p=>[...p, {id:Date.now().toString(), role:'user', text, time: 'Now'}, {id:(Date.now()+1).toString(), role:'assistant', text:'Email Admin:', time:'System'}]); return; }
+    if (authState === 'AWAITING_EMAIL') { setTempCreds(p=>({...p, email:text})); setAuthState('AWAITING_PASSWORD'); setMessages(p=>[...p, {id:Date.now().toString(), role:'user', text, time: 'Now'}, {id:(Date.now()+1).toString(), role:'assistant', text:'Password:', time:'System'}]); return; }
     if (authState === 'AWAITING_PASSWORD') { 
         setIsTyping(true);
         try {
             const { error } = await supabase!.auth.signInWithPassword({ email: tempCreds.email, password: text });
             if (error) throw error;
-            setIsModeAdmin(true); setAuthState('IDLE'); setMessages(p=>[...p, {id:Date.now().toString(), role:'user', text:'******'}, {id:(Date.now()+1).toString(), role:'assistant', text:'Login Success.', time:'System'}]);
+            setIsModeAdmin(true); setAuthState('IDLE'); setMessages(p=>[...p, {id:Date.now().toString(), role:'user', text:'******', time: 'Now'}, {id:(Date.now()+1).toString(), role:'assistant', text:'Login Success.', time:'System'}]);
         } catch(e) { setMessages(p=>[...p, {id:Date.now().toString(), role:'assistant', text:'Login Failed.', time:'System'}]); }
         setIsTyping(false); return; 
     }

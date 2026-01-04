@@ -12,7 +12,7 @@ const useJobManager = (jobs: JobOpening[], setJobs: any) => {
         id: null as number | null,
         title: '',
         division: '',
-        type: 'Full-time' as 'Full-time' | 'Internship' | 'Freelance',
+        type: 'Full-time' as 'Full-time' | 'Part-time' | 'Internship' | 'Freelance',
         location: 'Solo (On-site)',
         description: '',
         requirements: '',

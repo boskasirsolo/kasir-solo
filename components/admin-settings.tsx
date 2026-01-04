@@ -4,7 +4,7 @@ import {
     Layout, MapPin, Share2, Settings as SettingsIcon, 
     Save, UploadCloud, Image as ImageIcon, Sparkles, 
     TrendingUp, Monitor, Globe, BarChart, Clock, 
-    Smartphone, Mail, Compass, ShieldCheck 
+    Smartphone, Mail, Compass, ShieldCheck, User 
 } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Input, TextArea, Button, LoadingSpinner } from './ui';
@@ -34,6 +34,10 @@ export const AdminSettings = ({
   const [aboutImageFile, setAboutImageFile] = useState<File | null>(null);
   const [aboutImagePreview, setAboutImagePreview] = useState(config.aboutImage || '');
 
+  // Founder Portrait State
+  const [founderImageFile, setFounderImageFile] = useState<File | null>(null);
+  const [founderImagePreview, setFounderImagePreview] = useState(config.founderPortrait || '');
+
   const saveSettings = async () => {
       if (!supabase) return alert("Koneksi Database bermasalah.");
       
@@ -43,16 +47,15 @@ export const AdminSettings = ({
           if (!cleanPhone) {
               return alert("Format WhatsApp Error. Gunakan format internasional '628xxx' atau lokal '08xxx' (Min 10 digit).");
           }
-          // Auto update config state with cleaned number if valid, but let's just proceed with save for now if clean works
-          // Ideally we update the object before sending
           config.whatsappNumber = cleanPhone; 
       }
 
       setIsSaving(true);
       try {
           let finalAboutImage = aboutImagePreview;
+          let finalFounderImage = founderImagePreview;
 
-          // 1. Handle Upload if file selected
+          // 1. Handle About Office Upload
           if (aboutImageFile && CONFIG.CLOUDINARY_CLOUD_NAME) {
               const seoName = 'kantor-mesin-kasir-solo-hq-about';
               const fileToUpload = renameFile(aboutImageFile, seoName);
@@ -64,15 +67,33 @@ export const AdminSettings = ({
               const data = await res.json();
               if (data.secure_url) {
                   finalAboutImage = data.secure_url;
-                  setConfig({ ...config, aboutImage: finalAboutImage });
               }
           }
+
+          // 2. Handle Founder Portrait Upload
+          if (founderImageFile && CONFIG.CLOUDINARY_CLOUD_NAME) {
+              const seoName = 'amin-maghfuri-founder-mesin-kasir-solo';
+              const fileToUpload = renameFile(founderImageFile, seoName);
+
+              const formData = new FormData();
+              formData.append('file', fileToUpload);
+              formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
+              const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+              const data = await res.json();
+              if (data.secure_url) {
+                  finalFounderImage = data.secure_url;
+              }
+          }
+
+          // Update local state
+          setConfig({ ...config, aboutImage: finalAboutImage, founderPortrait: finalFounderImage });
 
           const dbData = {
               id: 1, // Singleton row
               hero_title: config.heroTitle,
               hero_subtitle: config.heroSubtitle,
               about_image: finalAboutImage,
+              founder_portrait: finalFounderImage, // SAVE NEW FIELD
               sibos_url: config.sibosUrl,
               qalam_url: config.qalamUrl,
               // LEGAL DATA
@@ -103,10 +124,10 @@ export const AdminSettings = ({
           if(error) throw error;
           alert("Pengaturan berhasil disimpan.");
           setAboutImageFile(null); 
+          setFounderImageFile(null);
       } catch(e: any) {
-          // Robust Error Handling for Schema Mismatch
-          if (e.message && (e.message.includes('column') || e.message.includes('timezone'))) {
-             alert("Gagal menyimpan: Struktur Database belum update. Harap jalankan script SQL 'ADD COLUMN timezone' di Supabase.");
+          if (e.message && (e.message.includes('column') || e.message.includes('founder_portrait'))) {
+             alert("Gagal menyimpan: Kolom 'founder_portrait' belum ada di database. Jalankan script SQL: ALTER TABLE site_settings ADD COLUMN founder_portrait text;");
           } else {
              alert("Gagal menyimpan: " + e.message);
           }
@@ -206,7 +227,71 @@ export const AdminSettings = ({
                         </div>
                     </div>
 
-                    {/* LEGALITAS SECTION (NEW) */}
+                    {/* PHOTO SECTION */}
+                    <div className="pt-6 border-t border-white/5 space-y-6">
+                        {/* 1. Kantor */}
+                        <div>
+                            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2"><ImageIcon size={16}/> Foto Kantor (About Page)</h3>
+                            <div className="flex gap-6 items-start">
+                                <div className="w-40 h-24 bg-black rounded-lg overflow-hidden border border-white/10 shrink-0">
+                                    <img src={aboutImagePreview || "https://via.placeholder.com/150"} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-brand-orange/50 transition-colors cursor-pointer relative bg-white/5">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={(e) => {
+                                                const file = e.target.files ? e.target.files[0] : null;
+                                                if(file) {
+                                                    setAboutImageFile(file);
+                                                    setAboutImagePreview(URL.createObjectURL(file));
+                                                }
+                                            }} 
+                                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
+                                        />
+                                        <div className="flex flex-col items-center gap-1 pointer-events-none">
+                                            <UploadCloud size={20} className="text-gray-400" />
+                                            <span className="text-gray-300 font-bold text-xs">{aboutImageFile ? aboutImageFile.name : "Upload Foto Kantor"}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 2. Founder */}
+                        <div>
+                            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2"><User size={16}/> Foto Founder (Portrait - About Page)</h3>
+                            <div className="flex gap-6 items-start">
+                                <div className="w-24 h-32 bg-black rounded-lg overflow-hidden border border-white/10 shrink-0">
+                                    <img src={founderImagePreview || "https://via.placeholder.com/150x200"} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-brand-orange/50 transition-colors cursor-pointer relative bg-white/5 h-full flex flex-col justify-center">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={(e) => {
+                                                const file = e.target.files ? e.target.files[0] : null;
+                                                if(file) {
+                                                    setFounderImageFile(file);
+                                                    setFounderImagePreview(URL.createObjectURL(file));
+                                                }
+                                            }} 
+                                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
+                                        />
+                                        <div className="flex flex-col items-center gap-1 pointer-events-none">
+                                            <UploadCloud size={20} className="text-gray-400" />
+                                            <span className="text-gray-300 font-bold text-xs">{founderImageFile ? founderImageFile.name : "Upload Foto Founder (Portrait)"}</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 mt-2">Disarankan rasio 3:4 atau Portrait. Akan muncul di sebelah teks 'Jujur-jujuran aja...'.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* LEGALITAS SECTION */}
                     <div className="pt-6 border-t border-white/5">
                         <h3 className="text-sm font-bold text-brand-orange mb-4 flex items-center gap-2"><ShieldCheck size={16}/> Legalitas Perusahaan (Footer & About)</h3>
                         <div className="grid md:grid-cols-2 gap-4">
@@ -225,35 +310,6 @@ export const AdminSettings = ({
                             <div>
                                 <label className="text-xs text-gray-500 font-bold uppercase mb-1 block">NPWP Perusahaan</label>
                                 <Input value={config.npwpNumber || ''} onChange={(e) => setConfig({...config, npwpNumber: e.target.value})} placeholder="XX.XXX.XXX.X-XXX.XXX" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-white/5">
-                        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2"><ImageIcon size={16}/> Foto Kantor (About Page)</h3>
-                        <div className="flex gap-6 items-start">
-                            <div className="w-40 h-24 bg-black rounded-lg overflow-hidden border border-white/10 shrink-0">
-                                <img src={aboutImagePreview || "https://via.placeholder.com/150"} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1">
-                                <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-brand-orange/50 transition-colors cursor-pointer relative bg-white/5">
-                                    <input 
-                                        type="file" 
-                                        accept="image/*" 
-                                        onChange={(e) => {
-                                            const file = e.target.files ? e.target.files[0] : null;
-                                            if(file) {
-                                                setAboutImageFile(file);
-                                                setAboutImagePreview(URL.createObjectURL(file));
-                                            }
-                                        }} 
-                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
-                                    />
-                                    <div className="flex flex-col items-center gap-1 pointer-events-none">
-                                        <UploadCloud size={20} className="text-gray-400" />
-                                        <span className="text-gray-300 font-bold text-xs">{aboutImageFile ? aboutImageFile.name : "Upload Foto Baru"}</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
