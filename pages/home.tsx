@@ -49,13 +49,13 @@ const CombinedCard = ({
           {/* Content Overlay */}
           <div className="absolute bottom-5 left-5 right-5">
               <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-3 border ${item.category_type === 'physical' ? 'bg-brand-orange text-white border-brand-orange' : 'bg-blue-600 text-white border-blue-500'}`}>
-                {item.category_type === 'physical' ? 'Hardware' : 'Software'}
+                {item.category_type === 'physical' ? 'Mesin Kasir' : 'Software'}
               </span>
               <h3 className="text-xl font-bold text-white leading-tight mb-1 truncate drop-shadow-md">
                 {item.title}
               </h3>
               <p className="text-gray-300 text-xs truncate opacity-80">
-                {item.client_url || "Project Installation"}
+                {item.client_url || "Instalasi Mesin Kasir Solo"}
               </p>
           </div>
       </div>
@@ -111,7 +111,7 @@ export const HomePage = ({
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-orange/20 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2 animate-pulse-slow"></div>
           <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-orange/15 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2"></div>
@@ -120,23 +120,26 @@ export const HomePage = ({
         <div className="container mx-auto px-4 z-10 text-center relative">
           <div className="inline-flex items-center gap-2 px-6 py-2 border border-brand-orange/50 rounded-full bg-brand-orange/10 mb-8 backdrop-blur-md shadow-neon hover:bg-brand-orange/20 transition-colors cursor-default">
             <ShieldCheck size={16} className="text-brand-orange" />
-            <span className="text-brand-orange text-xs md:text-sm font-bold tracking-widest uppercase">
-              Stop Kebocoran Duit • Stop Maling Internal
-            </span>
+            <h2 className="text-brand-orange text-xs md:text-sm font-bold tracking-widest uppercase">
+              Pusat Mesin Kasir Solo Raya & Jawa Tengah
+            </h2>
           </div>
+          
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-8 leading-tight drop-shadow-lg">
-            Stop Jadi Kuli<br/>
-            <span className="text-brand-orange">Di Toko Sendiri.</span>
+            Revolusi <span className="text-brand-orange">Mesin Kasir.</span><br/>
+            Bisnis Jalan, Lo Jalan-Jalan.
           </h1>
+          
           <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Tanpa sistem, lo bukan "Businessman", lo cuma karyawan dengan gaji tertunda. Gue kasih senjata (Hardware & Software) biar lo bisa tidur nyenyak sambil duit ngalir.
+            Gue bukan sales bacot. Gue praktisi yang ngerti kalau <strong>Mesin Kasir</strong> itu jantungnya toko. Tanpa sistem yang bener, lo cuma "jaga warung", bukan "punya bisnis".
           </p>
+          
           <div className="flex flex-col md:flex-row gap-6 justify-center">
-            <Button onClick={() => setPage('shop')} className="px-10 py-4 text-base">
-              LIHAT SENJATA PERANG <ArrowRight size={22} />
+            <Button onClick={() => setPage('shop')} className="px-10 py-4 text-base shadow-neon hover:shadow-neon-strong">
+              LIHAT KATALOG MESIN KASIR <ArrowRight size={22} />
             </Button>
             <Button variant="outline" onClick={() => setPage('about')} className="px-10 py-4 text-base">
-              SIAPA GUE?
+              KENAPA HARUS GUE?
             </Button>
           </div>
         </div>
@@ -153,7 +156,7 @@ export const HomePage = ({
                 </div>
                 <div>
                    <h4 className="text-2xl md:text-3xl font-display font-bold text-white">500+</h4>
-                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Partner Perang</p>
+                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Mitra Mesin Kasir</p>
                 </div>
              </div>
              <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
@@ -162,7 +165,7 @@ export const HomePage = ({
                 </div>
                 <div>
                    <h4 className="text-2xl md:text-3xl font-display font-bold text-white">34</h4>
-                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Provinsi</p>
+                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Kirim se-Indonesia</p>
                 </div>
              </div>
              <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
@@ -180,7 +183,7 @@ export const HomePage = ({
                 </div>
                 <div>
                    <h4 className="text-2xl md:text-3xl font-display font-bold text-white">24/7</h4>
-                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Backup Teknis</p>
+                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Support Teknis</p>
                 </div>
              </div>
           </div>
@@ -195,10 +198,10 @@ export const HomePage = ({
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6">
-                Bisnis Tanpa Sistem = <span className="text-red-500">Bom Waktu</span>
+                Hari Gini Masih Catat Manual? <br/> <span className="text-red-500">Kelar Hidup Lo.</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-                Sadar gak lo? Selama ini lo gak lagi berbisnis. Lo cuma lagi diperbudak sama rutinitas toko yang gak ada abisnya.
+                Sadar gak lo? Selama ini lo gak lagi berbisnis. Lo cuma lagi diperbudak sama rutinitas toko yang gak ada abisnya karena gak pake <strong>Mesin Kasir</strong> yang bener.
               </p>
           </div>
 
@@ -218,14 +221,14 @@ export const HomePage = ({
                          <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 shrink-0 font-bold">1</div>
                          <div>
                             <h4 className="text-white font-bold mb-1">Duit Bocor Alus</h4>
-                            <p className="text-gray-400 text-sm">Kembalian salah, nota ilang, atau 'mark-up' harga sama karyawan nakal. Dikit sih, tapi tiap hari.</p>
+                            <p className="text-gray-400 text-sm">Kembalian salah, nota ilang, atau 'mark-up' harga sama karyawan nakal. Dikit sih, tapi tiap hari. Boncos, Bos!</p>
                          </div>
                       </li>
                       <li className="flex gap-4">
                          <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 shrink-0 font-bold">2</div>
                          <div>
                             <h4 className="text-white font-bold mb-1">Stok Barang Ghaib</h4>
-                            <p className="text-gray-400 text-sm">Di catetan ada, di rak kosong. Lo bingung duitnya lari kemana, padahal barang abis.</p>
+                            <p className="text-gray-400 text-sm">Di catetan ada, di rak kosong. Lo bingung duitnya lari kemana, padahal barang abis. Capek hati.</p>
                          </div>
                       </li>
                       <li className="flex gap-4">
@@ -246,14 +249,14 @@ export const HomePage = ({
                 </div>
                 <div className="relative z-10">
                    <h3 className="text-xl font-bold text-brand-orange mb-6 flex items-center gap-2">
-                      <CheckCircle2 size={24}/> CARA GUE (SISTEM)
+                      <CheckCircle2 size={24}/> CARA GUE (MESIN KASIR)
                    </h3>
                    <ul className="space-y-6">
                       <li className="flex gap-4">
                          <div className="w-8 h-8 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange shrink-0 font-bold">1</div>
                          <div>
                             <h4 className="text-white font-bold mb-1">Sistem Anti-Tuyul (Fraud)</h4>
-                            <p className="text-gray-400 text-sm">Setiap sen kecatet. Void/Batal transaksi butuh password lo. Karyawan gak bisa macem-macem.</p>
+                            <p className="text-gray-400 text-sm">Setiap sen kecatet di <strong>Mesin Kasir</strong>. Void/Batal transaksi butuh password lo. Karyawan gak bisa macem-macem.</p>
                          </div>
                       </li>
                       <li className="flex gap-4">
@@ -267,7 +270,7 @@ export const HomePage = ({
                          <div className="w-8 h-8 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange shrink-0 font-bold">3</div>
                          <div>
                             <h4 className="text-white font-bold mb-1">Asisten Digital 24 Jam</h4>
-                            <p className="text-gray-400 text-sm">Sistem ini gak pernah sakit, gak pernah cuti, dan gak bakal resign. Hemat gaji admin.</p>
+                            <p className="text-gray-400 text-sm">Mesin ini gak pernah sakit, gak pernah cuti, dan gak bakal resign. Hemat gaji admin, profit naik.</p>
                          </div>
                       </li>
                    </ul>
@@ -294,7 +297,7 @@ export const HomePage = ({
                      <span className="text-xs font-bold text-blue-200 tracking-[0.2em] uppercase">R&D Division 2025</span>
                   </div>
                   <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight">
-                     Gue Gak Cuma Jual <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">Barang Besi.</span>
+                     Gue Gak Cuma Jual <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">Mesin Kasir Besi.</span>
                   </h2>
                   <p className="text-gray-400 text-lg leading-relaxed mb-8">
                      Gue jual <strong>Masa Depan</strong> bisnis lo. Perkenalkan <strong>SIBOS</strong> (ERP System) dan <strong>QALAM</strong> (Education App). 
@@ -374,9 +377,9 @@ export const HomePage = ({
            <div className="container mx-auto px-4 relative z-10 mb-12 text-center">
               <div className="max-w-3xl mx-auto">
                 <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
-                  Jejak Perang <span className="text-brand-orange">Kita</span>
+                  Bukti Instalasi <span className="text-brand-orange">Mesin Kasir Solo</span>
                 </h2>
-                <p className="text-gray-400 text-base">Bukti lapangan instalasi di tempat klien. Bukan foto colongan dari Google.</p>
+                <p className="text-gray-400 text-base">Ini bukti lapangan instalasi di tempat klien. Bukan foto colongan dari Google.</p>
               </div>
            </div>
 
@@ -419,11 +422,11 @@ export const HomePage = ({
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16 max-w-4xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">
-              Bukan Sekadar Website, <br/> Ini <span className="text-brand-orange">Mesin Uang.</span>
+              Bukan Sekadar <span className="text-brand-orange">Mesin Kasir.</span>
             </h2>
             <p className="text-gray-400 text-lg leading-relaxed">
-              Banyak vendor IT cuma bisa koding tapi gak ngerti jualan. Gue peduli <strong>ROI (Balik Modal)</strong> lo. 
-              Setiap baris kode yang gue tulis punya satu tujuan: <span className="text-white font-bold">Bikin Bisnis Lo Gede.</span>
+              Banyak vendor IT cuma bisa jual alat tapi gak ngerti bisnis. Gue peduli <strong>ROI (Balik Modal)</strong> lo. 
+              Setiap <strong>mesin kasir</strong> dan sistem yang gue rakit punya satu tujuan: <span className="text-white font-bold">Bikin Bisnis Lo Gede.</span>
             </p>
           </div>
 
@@ -514,13 +517,13 @@ export const HomePage = ({
             </h2>
             <p className="max-w-2xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
                Lo gak bakal dilayani sama Chatbot atau Admin magang yang jawab pake template robot. 
-               Gue, <strong>Amin Maghfuri</strong>, bakal langsung bedah kebutuhan bisnis lo dan kasih solusi teknis yang paling efisien.
+               Gue, <strong>Amin Maghfuri</strong>, bakal langsung bedah kebutuhan bisnis lo dan kasih solusi <strong>mesin kasir</strong> yang paling efisien.
             </p>
             
             <div className="flex justify-center">
                {/* UPDATED: WhatsApp Button (Brand Gradient) */}
                <a 
-                  href={`https://wa.me/${config.whatsappNumber}?text=Halo Mas Amin, saya mau curhat masalah sistem bisnis saya.`}
+                  href={`https://wa.me/${config.whatsappNumber}?text=Halo Mas Amin, saya mau curhat masalah sistem mesin kasir saya.`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-3 px-10 py-5 bg-brand-gradient hover:bg-brand-gradient-hover text-white rounded-full font-bold text-lg shadow-[0_0_20px_rgba(255,95,31,0.4)] hover:shadow-[0_0_30px_rgba(255,95,31,0.6)] transition-all transform hover:-translate-y-1"
