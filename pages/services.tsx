@@ -6,7 +6,8 @@ import {
   ArrowRight, CheckCircle2, Store, Clock, ShoppingBag, Award,
   FileSpreadsheet, Cpu, GitMerge, Users, PieChart, Layers, 
   Megaphone, Target, DollarSign, MapPin, Anchor, LineChart,
-  ShieldAlert, Activity, LifeBuoy, PenTool, Star, MousePointer
+  ShieldAlert, Activity, LifeBuoy, PenTool, Star, MousePointer,
+  Server, Key, Eye, TrendingDown, Skull
 } from 'lucide-react';
 import { ServiceHero, FeatureGrid, WorkflowSection, NarrativeSection } from '../components/service-parts';
 import { InvestmentSimulator, CalcData } from '../components/calculator';
@@ -54,76 +55,74 @@ const WEBSITE_CALC: CalcData = {
 
 const WEBAPP_DATA = {
   features: [
-    { title: "Business Automation", desc: "Ubah proses manual (tulis nota, rekap Excel) menjadi sistem otomatis.", icon: Cpu },
-    { title: "Reputation Dashboard", desc: "Pantau ulasan Google Maps langsung dari dashboard admin Anda.", icon: Star },
-    { title: "Real-time Dashboard", desc: "Pantau omzet, stok, dan kinerja karyawan detik ini juga dari HP Anda.", icon: PieChart },
-    { title: "Role Management", desc: "Batasi akses karyawan. Kasir hanya input penjualan, tidak bisa lihat laba bersih.", icon: Users },
-    { title: "API Integration", desc: "Hubungkan sistem dengan Payment Gateway, WhatsApp Notif, atau Supplier.", icon: GitMerge },
-    { title: "Asset Ownership", desc: "Aplikasi custom adalah ASET ANDA. Database milik Anda sepenuhnya, bukan sewa.", icon: ShieldCheck },
+    { title: "Mata Tuhan (Dashboard)", desc: "Pantau omzet, stok, dan kinerja karyawan detik ini juga dari HP lo. Gak perlu nunggu laporan sore.", icon: Eye },
+    { title: "Tembok Api (Role)", desc: "Lo Bos, lo lihat semua. Kasir cuma bisa input, gak bisa lihat modal/laba. Privasi dapur aman.", icon: Lock },
+    { title: "Anti-Tuyul (Audit Log)", desc: "Setiap klik, edit, dan hapus data tercatat. Karyawan mau main curang? Ketahuan jam berapa dan siapa pelakunya.", icon: ShieldAlert },
+    { title: "Kerja Rodi Otomatis", desc: "Hitung gaji, komisi, stok opname, laba rugi biarin sistem yang ngerjain. Lo fokus cari duit.", icon: Cpu },
+    { title: "Jembatan Penghubung", desc: "Bisa disambungin ke Payment Gateway (QRIS), WhatsApp Notif, atau sistem Supplier.", icon: GitMerge },
+    { title: "Sertifikat Hak Milik", desc: "Source code & Database gue serahin ke lo. Gak ada biaya langganan bulanan yang nyekik.", icon: Server },
   ],
   steps: [
-    { step: "1", title: "Audit Alur", desc: "Saya memetakan 'benang kusut' di operasional Anda saat ini." },
-    { step: "2", title: "Blueprint", desc: "Merancang arsitektur database dan flow sistem yang efisien." },
-    { step: "3", title: "Agile Dev", desc: "Pengerjaan bertahap dengan feedback rutin." },
-    { step: "4", title: "UAT & Live", desc: "User Acceptance Test (Uji Coba) sebelum peluncuran." },
+    { step: "1", title: "Bedah Masalah", desc: "Kita duduk bareng. Lo curhat semua proses manual yang bikin pusing." },
+    { step: "2", title: "Blueprint Arsitek", desc: "Gue gambar alur sistemnya. Database-nya kayak apa, flow-nya gimana." },
+    { step: "3", title: "Ngoding (Proses)", desc: "Gue bangun sistemnya. Lo bisa cek progress berkala." },
+    { step: "4", title: "Serah Terima", desc: "Deployment ke server lo. Training staff sampai bisa. Source code diserahin." },
   ]
 };
 
 const WEBAPP_CALC: CalcData = {
-  title: "Simulasi Sistem Custom (ERP)",
-  subtitle: "Rancang sistem sesuai alur bisnis unik Anda.",
+  title: "Rakitan Sistem Sultan (ERP)",
+  subtitle: "Sistem custom itu investasi sekali seumur hidup. Mahal di depan, tapi lo BEBAS biaya langganan selamanya.",
   baseLabel: "Kompleksitas Sistem",
   baseOptions: [
-    { id: 'simple', label: 'Simple CRUD', price: 5000000, desc: 'Pencatatan data sederhana & Laporan.' },
-    { id: 'mid', label: 'Business Op', price: 12000000, desc: 'Stok, Keuangan, Kasir, Multi-User.' },
-    { id: 'high', label: 'Enterprise ERP', price: 25000000, desc: 'Manufaktur, HR, API, Custom Logic.' }
+    { id: 'simple', label: 'MVP (Rintisan)', price: 5000000, desc: 'Pencatatan sederhana. Input -> Output -> Laporan PDF.' },
+    { id: 'mid', label: 'Scale Up (Cabang)', price: 15000000, desc: 'Multi-user, Stok Gudang, Kasir, Laporan Keuangan.' },
+    { id: 'high', label: 'Empire (Pabrik)', price: 35000000, desc: 'Manufaktur, HR Payroll, API Bank, Custom Logic Rumit.' }
   ],
-  addonLabel: "Modul Tambahan",
+  addonLabel: "Modul Canggih",
   addons: [
-    { id: 'server', label: 'Cloud Server / VPS', price: 1500000, desc: 'Setup environment server.' },
-    { id: 'gbp_app', label: 'Integrasi Google Bisnis', price: 1500000, desc: 'Sinkronisasi review & data lokasi via API.' },
-    { id: 'wa_notif', label: 'Integrasi WhatsApp', price: 1200000, desc: 'Notifikasi & Laporan WA.' },
-    { id: 'payment', label: 'Integrasi Payment Gateway', price: 2000000 },
-    { id: 'mobile', label: 'Android APK Wrapper', price: 1500000 },
-    { id: 'logistics', label: 'Integrasi Ekspedisi', price: 2000000, desc: 'Tracking & Ongkir.' },
-    { id: 'ai_insight', label: 'Integrasi AI', price: 3000000, desc: 'Analisa & Prediksi Data.' }
+    { id: 'server', label: 'Cloud Server Setup (VPS)', price: 1500000, desc: 'Rumah buat sistem lo.' },
+    { id: 'wa_notif', label: 'Bot WhatsApp Notif', price: 1500000, desc: 'Laporan omzet masuk ke WA lo tiap tutup toko.' },
+    { id: 'payment', label: 'Payment Gateway', price: 2000000, desc: 'Terima QRIS/Virtual Account otomatis lunas.' },
+    { id: 'mobile', label: 'Android App Wrapper', price: 2500000, desc: 'Biar staff bisa install di HP kayak aplikasi biasa.' },
+    { id: 'ai_insight', label: 'AI Analisa Data', price: 5000000, desc: 'Prediksi stok habis & tren penjualan.' }
   ]
 };
 
 const SEO_DATA = {
   features: [
-    { title: "Buying Intent Keywords", desc: "Target kata kunci 'siap beli', bukan sekadar traffic sampah.", icon: Target },
-    { title: "Map Pack Domination", desc: "Optimasi agar toko Anda muncul di '3 Besar' peta lokal (Local SEO).", icon: MapPin },
-    { title: "Dominasi Lokal", desc: "Muncul di Google saat orang mencari produk Anda di kota Anda.", icon: Anchor },
-    { title: "Technical Audit", desc: "Perbaiki 'jeroan' website agar mudah dibaca robot Google.", icon: Layers },
-    { title: "Authority Content", desc: "Artikel yang mengedukasi dan membangun kepercayaan calon pembeli.", icon: PenTool },
-    { title: "Safe Backlink Strategy", desc: "Reputasi digital dengan cara aman (White Hat), anti-banned.", icon: ShieldCheck },
+    { title: "Kata Kunci 'Uang'", desc: "Gue target kata kunci yang dipake orang pas udah siap transfer (Buying Intent). Bukan cuma yang tanya-tanya doang.", icon: Target },
+    { title: "Google Maps Hantu", desc: "Kita bikin toko fisik lo gentayangan di hasil pencarian lokal. Kompetitor lo bakal ngerasa dihantui.", icon: MapPin },
+    { title: "Raja Kandang", desc: "Dominasi pencarian satu kota. Orang satu kota wajib tau toko lo kalau cari barang.", icon: Anchor },
+    { title: "Beresin Jeroan", desc: "Teknis website lo gue oprek biar disayang robot Google. Loading ngebut, struktur rapi, mobile friendly.", icon: Layers },
+    { title: "Konten Menghasut", desc: "Artikel bukan buat menuhin halaman doang, tapi buat edukasi pasar biar mereka ngebet beli produk lo.", icon: PenTool },
+    { title: "Backlink Putih (Aman)", desc: "Reputasi digital dibangun pelan tapi pasti. Anti-banned, aman jangka panjang. Bukan spam.", icon: ShieldCheck },
   ],
   steps: [
-    { step: "1", title: "Audit & Riset", desc: "Mencari celah kompetitor dan kata kunci 'uang'." },
-    { step: "2", title: "On-Page Fix", desc: "Memperbaiki struktur website (Speed, Mobile, Meta)." },
-    { step: "3", title: "Content Asset", desc: "Memproduksi konten pilar yang menjawab masalah customer." },
-    { step: "4", title: "Off-Page Authority", desc: "Meningkatkan kepercayaan domain secara bertahap." },
+    { step: "1", title: "Mata-Mata", desc: "Gue intip dapur kompetitor lo. Mereka pake kata kunci apa, backlink dari mana." },
+    { step: "2", title: "Oprek Mesin", desc: "Perbaiki struktur website (On-Page) biar Google gampang bacanya." },
+    { step: "3", title: "Sebar Jaring", desc: "Bikin konten pilar dan cluster buat nangkep traffic dari berbagai sudut." },
+    { step: "4", title: "Suntik Power", desc: "Kasih backlink berkualitas biar domain lo makin dipercaya Google." },
   ]
 };
 
 const SEO_CALC: CalcData = {
-  title: "Simulasi Investasi SEO",
-  subtitle: "Bukan biaya, tapi investasi traffic jangka panjang.",
-  baseLabel: "Target Kompetisi",
+  title: "Mahar Kuasai Google",
+  subtitle: "Iklan itu bakar duit (Cost). SEO itu nanam pohon duit (Investasi). Pilih bibit lo sekarang.",
+  baseLabel: "Target Kekuasaan",
   baseOptions: [
-    { id: 'local', label: 'Local SEO', price: 2500000, desc: 'Dominasi pencarian nama kota.' },
-    { id: 'niche', label: 'Niche Market', price: 5000000, desc: 'Target kata kunci spesifik produk.' },
-    { id: 'high', label: 'High Competition', price: 10000000, desc: 'Industri padat (Properti, Kesehatan).' }
+    { id: 'local', label: 'Juragan Lokal (Kota)', price: 2500000, desc: 'Dominasi nama kota & Google Maps. Cocok buat toko fisik/jasa servis.' },
+    { id: 'niche', label: 'Pemain Niche (Produk)', price: 5000000, desc: 'Target kata kunci spesifik produk. Cocok buat distributor/produsen.' },
+    { id: 'high', label: 'Raja Nasional (Industri)', price: 10000000, desc: 'Hajar kompetitor raksasa. Target seluruh Indonesia.' }
   ],
-  addonLabel: "Booster Pack",
+  addonLabel: "Amunisi Tambahan",
   addons: [
-    { id: 'gbp_seo', label: 'Optimasi Google Bisnis', price: 1500000, desc: 'Audit total, posting rutin, & manajemen reputasi.' },
-    { id: 'audit', label: 'Deep Technical Audit', price: 1000000 },
-    { id: 'content', label: '10x Artikel SEO', price: 1500000 },
-    { id: 'backlink', label: 'Backlink Pack', price: 2000000 },
-    { id: 'speed', label: 'Speed Optimization', price: 1000000 },
-    { id: 'ai_writer', label: 'Setup AI Content', price: 3000000, desc: 'Generator artikel otomatis.' }
+    { id: 'gbp_seo', label: 'Poles Google Maps', price: 1500000, desc: 'Audit total, posting rutin, & manajemen reputasi review.' },
+    { id: 'audit', label: 'Bedah Website Total', price: 1000000, desc: 'Cari penyakit kenapa web lo sepi.' },
+    { id: 'content', label: '10x Artikel Pancingan', price: 1500000, desc: 'Konten pilar SEO 1000+ kata.' },
+    { id: 'backlink', label: 'Suntik Power (Backlink)', price: 2000000, desc: 'Media nasional & PBN High DA/PA.' },
+    { id: 'speed', label: 'Oprek Speed', price: 1000000, desc: 'Biar loading di bawah 2 detik.' },
+    { id: 'ai_writer', label: 'Setup AI Content', price: 3000000, desc: 'Generator artikel otomatis via API.' }
   ]
 };
 
@@ -234,47 +233,51 @@ export const WebAppServicePage = () => {
   return (
     <div className="animate-fade-in">
       <ServiceHero 
-        title="Software Ini Dibuat Karena" 
-        highlight="Saya Pernah Rugi." 
-        subtitle="Saatnya beralih ke Custom Web App. Sistem operasi digital yang dirancang khusus dari pengalaman lapangan nyata."
+        title="Stop Jadi" 
+        highlight="Budak Excel." 
+        subtitle="Lupain aplikasi langganan yang fiturnya 'nanggung'. Bangun sistem operasi bisnis yang ngikutin cara kerja lo, bukan lo yang dipaksa ngikutin cara kerja aplikasi."
         icon={Layers}
       />
 
       <NarrativeSection>
          <div>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6 leading-tight">
-                Keluar dari Jebakan <span className="text-red-500">Manual Admin</span>
+                Lo Owner, Bukan <span className="text-red-500">Admin.</span>
             </h2>
             <p className="text-gray-400 leading-relaxed mb-6">
-                Developer lain membuat fitur berdasarkan apa yang <em>keren</em>. Saya membuat fitur berdasarkan apa yang <em>menyelamatkan uang</em>. 
-                Bisnis tumbuh tapi admin makin pusing? Itu tanda sistem Anda harus diupgrade.
+                Masih jaman rekap nota manual tiap malem? Masih jaman stok opname pake kertas terus selisih mulu? Itu tanda <strong>sistem lo purba</strong>.
             </p>
             <p className="text-gray-400 leading-relaxed mb-6">
-                Aplikasi Siap Pakai (SaaS) seringkali <strong>terlalu kaku</strong>. Custom Web App adalah baju yang dijahit khusus untuk badan bisnis Anda.
+                Gue tawarkan <strong>Custom Web App (ERP)</strong>. Ini bukan aplikasi pasaran yang lo sewa (SaaS). Ini aplikasi yang lo <strong>Miliki Sepenuhnya</strong>. Database di tangan lo, source code di tangan lo. Gak ada cerita data disandera vendor kalau telat bayar langganan.
             </p>
+            <div className="bg-brand-dark border-l-4 border-brand-orange p-4 rounded-r-lg">
+                <p className="text-white italic text-sm">
+                  "Software sewa (SaaS) itu kayak ngontrak rumah. Murah di awal, tapi lo gak bisa renovasi dan bisa diusir kapan aja. Custom App itu kayak bangun rumah sendiri."
+                </p>
+            </div>
          </div>
          
          <div className="relative">
-            <div className="absolute inset-0 bg-red-500/10 blur-[80px] rounded-full"></div>
+            <div className="absolute inset-0 bg-brand-orange/10 blur-[80px] rounded-full"></div>
             <div className="relative bg-brand-dark border border-white/10 rounded-2xl p-8 space-y-6">
                 <div className="flex items-center justify-between text-gray-500 mb-2">
                   <FileSpreadsheet size={32} />
                   <ArrowRight size={24} className="text-brand-orange animate-pulse" />
-                  <Cpu size={32} className="text-brand-orange" />
+                  <Database size={32} className="text-brand-orange" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Transformasi Digital</h3>
+                <h3 className="text-xl font-bold text-white">Revolusi Cara Kerja</h3>
                 <ul className="space-y-3">
                   <li className="flex gap-3 text-sm text-gray-400">
                       <span className="text-red-500">❌</span> 
-                      <span>Rekap manual 3 jam/hari</span>
+                      <span>Lupa catat pengeluaran kecil</span>
                   </li>
                   <li className="flex gap-3 text-sm text-gray-400">
                       <span className="text-red-500">❌</span> 
-                      <span>Data tersebar di 5 file Excel</span>
+                      <span>Karyawan hapus transaksi (Fraud)</span>
                   </li>
                   <li className="flex gap-3 text-sm text-white font-bold bg-brand-orange/10 p-2 rounded">
                       <CheckCircle2 className="text-brand-orange shrink-0" size={16} />
-                      <span>Laporan Otomatis Real-time</span>
+                      <span>Semua tercatat & terlacak (Audit Trail)</span>
                   </li>
                 </ul>
             </div>
@@ -302,7 +305,7 @@ export const SeoServicePage = () => {
       <ServiceHero 
         title="Berhenti Membakar" 
         highlight="Uang Iklan." 
-        subtitle="Ubah Website Anda menjadi Aset Digital yang bekerja 24 jam. Datangkan pelanggan potensial secara organik."
+        subtitle="Iklan itu kayak sewa ruko, telat bayar langsung diusir. SEO itu kayak beli tanah, makin lama makin mahal harganya. Gue bantu lo bangun aset digital yang gak perlu setoran harian ke Google."
         icon={LineChart}
       />
 
@@ -314,33 +317,48 @@ export const SeoServicePage = () => {
                   <div className="text-center">
                       <Megaphone size={32} className="text-red-500 mx-auto mb-2" />
                       <p className="text-xs font-bold text-red-500">PAID ADS</p>
-                      <p className="text-[10px]">Sewa Traffic</p>
+                      <p className="text-[10px]">Sewa Traffic (Ngontrak)</p>
                   </div>
                   <div className="h-px w-20 bg-gray-700"></div>
                   <div className="text-center">
                       <Anchor size={32} className="text-brand-orange mx-auto mb-2" />
                       <p className="text-xs font-bold text-brand-orange">SEO ORGANIC</p>
-                      <p className="text-[10px]">Miliki Traffic</p>
+                      <p className="text-[10px]">Aset Sendiri (SHM)</p>
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-white">Investasi vs Pengeluaran</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  Saat berhenti beriklan, traffic NOL. Dengan SEO, traffic terus mengalir bahkan saat Anda tidur. Bangun aset, jangan cuma menyewa.
-                </p>
+                
+                <h3 className="text-xl font-bold text-white">Sewa vs Beli</h3>
+                <ul className="space-y-3">
+                  <li className="flex gap-3 text-sm text-gray-400">
+                      <span className="text-red-500"><TrendingDown size={16}/></span> 
+                      <span>Ads: Budget abis = Traffic NOL.</span>
+                  </li>
+                  <li className="flex gap-3 text-sm text-gray-400">
+                      <span className="text-red-500"><Skull size={16}/></span> 
+                      <span>Ads: Harga klik makin mahal tiap tahun.</span>
+                  </li>
+                  <li className="flex gap-3 text-sm text-white font-bold bg-brand-orange/10 p-2 rounded">
+                      <CheckCircle2 className="text-brand-orange shrink-0" size={16} />
+                      <span>SEO: Investasi sekali, panen berkali-kali.</span>
+                  </li>
+                </ul>
             </div>
          </div>
          
          <div className="order-1 md:order-2">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6 leading-tight">
-                Dominasi <span className="text-brand-orange">Halaman 1</span> Google
+                Sewa Lapak vs <span className="text-brand-orange">Beli Tanah.</span>
             </h2>
             <p className="text-gray-400 leading-relaxed mb-6">
-                Pelanggan tidak mencari Anda di halaman 2. Kami bantu bisnis Anda muncul di tempat yang tepat saat orang mengetik kata kunci "Beli".
+                Logikanya simpel. <strong>Paid Ads (Iklan)</strong> itu lo nyewa traffic. Begitu lo stop bayar, lo 'diusir' dari halaman depan Google.
+            </p>
+            <p className="text-gray-400 leading-relaxed mb-6">
+                <strong>SEO</strong> itu lo ngebangun jalan raya sendiri menuju toko lo. Lama di awal, berdarah-darah di awal, tapi begitu jadi... traffic ngalir terus gratisan 24 jam. Lo pilih mana? Jadi juragan tanah atau penyewa abadi?
             </p>
             <div className="flex gap-4">
                 <div className="flex items-center gap-2 text-white font-bold bg-brand-orange/10 px-4 py-2 rounded-lg border border-brand-orange/20">
                     <TrendingUp size={18} className="text-brand-orange"/>
-                    <span>Sustainable Growth</span>
+                    <span>Jatah Preman Digital</span>
                 </div>
             </div>
          </div>
