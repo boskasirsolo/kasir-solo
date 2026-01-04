@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   BarChart3, Users, MousePointer, Smartphone, Monitor, Eye, 
   ArrowUp, ArrowDown, Calendar, ShieldCheck, Link as LinkIcon, 
-  Copy, Check, Globe, Clock, Activity, TrendingUp, Filter 
+  Copy, Check, Globe, Clock, Activity, TrendingUp, Filter, Tablet
 } from 'lucide-react';
 import { supabase } from '../utils';
 import { AnalyticsLog } from '../types';
@@ -51,19 +51,22 @@ const useAnalyticsData = () => {
     const trafficByDate: Record<string, number> = {};
     const today = new Date();
     
-    // Pre-fill dates with 0 to ensure chart scale is correct
+    // Pre-fill dates with 0 to ensure chart scale is correct and continuous
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(today.getDate() - i);
+        // Format: "1 Jan"
         const key = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
         trafficByDate[key] = 0;
     }
 
-    // Fill actual data
+    // Fill actual data from logs
     logs.forEach(log => {
-      const dateKey = new Date(log.created_at!).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-      if (trafficByDate.hasOwnProperty(dateKey) && log.event_type === 'page_view') {
-        trafficByDate[dateKey]++;
+      const d = new Date(log.created_at!);
+      const key = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+      // Only count if the date is within our generated range (handles edge cases)
+      if (trafficByDate.hasOwnProperty(key) && log.event_type === 'page_view') {
+        trafficByDate[key]++;
       }
     });
 
@@ -73,31 +76,38 @@ const useAnalyticsData = () => {
     const devices: Record<string, number> = { mobile: 0, desktop: 0, tablet: 0 };
     // 4. Referrer Stats
     const referrers: Record<string, number> = {};
-    // 5. Peak Hours
+    // 5. Peak Hours (0-23)
     const hours: number[] = new Array(24).fill(0);
 
     logs.forEach(log => {
       if (log.event_type === 'page_view') {
-        // Page
-        pageViews[log.page_path] = (pageViews[log.page_path] || 0) + 1;
+        // Page Ranking
+        const path = log.page_path.split('?')[0]; // Remove query params
+        pageViews[path] = (pageViews[path] || 0) + 1;
         
         // Device
         if (log.device_type === 'mobile') devices.mobile++;
         else if (log.device_type === 'desktop') devices.desktop++;
         else devices.tablet++;
 
-        // Referrer
+        // Referrer Logic
         let ref = log.referrer || 'Direct';
-        if (ref.includes('google')) ref = 'Google Search';
-        else if (ref.includes('facebook') || ref.includes('fb')) ref = 'Facebook';
-        else if (ref.includes('instagram')) ref = 'Instagram';
-        else if (ref.includes('t.co')) ref = 'Twitter/X';
-        else if (ref === 'direct' || ref === '') ref = 'Direct / WA';
-        else ref = new URL(ref).hostname;
-        
+        const lowerRef = ref.toLowerCase();
+        if (lowerRef.includes('google')) ref = 'Google Search';
+        else if (lowerRef.includes('facebook') || lowerRef.includes('fb')) ref = 'Facebook';
+        else if (lowerRef.includes('instagram')) ref = 'Instagram';
+        else if (lowerRef.includes('t.co') || lowerRef.includes('twitter')) ref = 'Twitter/X';
+        else if (lowerRef.includes('tiktok')) ref = 'TikTok';
+        else if (lowerRef === 'direct' || lowerRef === '') ref = 'Direct / WA';
+        else {
+            try {
+                const url = new URL(ref);
+                ref = url.hostname.replace('www.', '');
+            } catch(e) { /* keep original if not url */ }
+        }
         referrers[ref] = (referrers[ref] || 0) + 1;
 
-        // Hour
+        // Peak Hour
         const hour = new Date(log.created_at!).getHours();
         hours[hour]++;
       }
@@ -140,12 +150,13 @@ const StatCard = ({ label, value, sub, icon: Icon, color }: { label: string, val
 // --- MOLECULE: Improved Bar Chart ---
 const EnhancedTrafficChart = ({ data }: { data: Record<string, number> }) => {
   const values = Object.values(data);
-  const maxValue = Math.max(...values, 5); // Minimum scale of 5 to avoid flat charts on low data
+  // Ensure minimum scale of 5 so small data (1, 2) doesn't look like 100% height
+  const maxValue = Math.max(...values, 5); 
 
   return (
-    <div className="h-64 flex items-end justify-between gap-2 pt-8 pb-2 relative">
+    <div className="h-64 flex items-end justify-between gap-2 pt-10 pb-2 relative w-full">
       {/* Grid Lines (Visual Guide) */}
-      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20 z-0">
          <div className="border-t border-dashed border-gray-500 w-full h-px"></div>
          <div className="border-t border-dashed border-gray-500 w-full h-px"></div>
          <div className="border-t border-dashed border-gray-500 w-full h-px"></div>
@@ -159,21 +170,22 @@ const EnhancedTrafficChart = ({ data }: { data: Record<string, number> }) => {
         
         return (
           <div key={idx} className="flex-1 flex flex-col items-center group relative z-10 h-full justify-end">
-            {/* Tooltip */}
-            <div className="absolute -top-8 bg-brand-dark border border-brand-orange/50 text-brand-orange text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-neon whitespace-nowrap z-20">
+            {/* Tooltip on Hover */}
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-brand-dark border border-brand-orange/50 text-brand-orange text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-neon whitespace-nowrap z-20 pointer-events-none">
                {count} View
             </div>
             
             {/* Bar */}
-            <div className="w-full px-1 h-full flex items-end">
+            <div className="w-full px-1 h-full flex items-end relative">
                 <div 
-                    className={`w-full rounded-t-sm transition-all duration-500 ${
+                    className={`w-full rounded-t-sm transition-all duration-500 relative ${
                         isZero 
-                        ? 'bg-white/5 h-[2px]' 
-                        : 'bg-gradient-to-t from-brand-orange/20 to-brand-orange border-t border-brand-orange hover:bg-brand-orange/40 shadow-[0_0_10px_rgba(255,95,31,0.2)]'
+                        ? 'bg-white/5 h-[4px]' 
+                        : 'bg-gradient-to-t from-brand-orange/20 to-brand-orange border-t border-brand-orange group-hover:bg-brand-orange/40 shadow-[0_0_10px_rgba(255,95,31,0.2)]'
                     }`}
                     style={{ height: isZero ? '4px' : `${heightPercent}%` }}
-                ></div>
+                >
+                </div>
             </div>
             
             {/* Label */}
@@ -192,28 +204,40 @@ const PeakHoursChart = ({ hours }: { hours: number[] }) => {
     const maxVal = Math.max(...hours, 1);
     
     return (
-        <div className="flex items-end gap-1 h-24 mt-4">
-            {hours.map((count, h) => {
-                const intensity = count / maxVal;
-                let bgClass = 'bg-white/5';
-                if (intensity > 0.75) bgClass = 'bg-red-500';
-                else if (intensity > 0.5) bgClass = 'bg-brand-orange';
-                else if (intensity > 0.25) bgClass = 'bg-yellow-500';
-                else if (intensity > 0) bgClass = 'bg-blue-500';
+        <div className="relative">
+            <div className="flex items-end gap-[2px] h-24 mt-4 w-full">
+                {hours.map((count, h) => {
+                    const intensity = count / maxVal;
+                    // Determine color based on intensity
+                    let bgClass = 'bg-white/5';
+                    if (count > 0) {
+                        if (intensity > 0.75) bgClass = 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]';
+                        else if (intensity > 0.5) bgClass = 'bg-brand-orange shadow-[0_0_5px_rgba(255,95,31,0.5)]';
+                        else if (intensity > 0.25) bgClass = 'bg-yellow-500';
+                        else bgClass = 'bg-blue-500';
+                    }
 
-                return (
-                    <div key={h} className="flex-1 flex flex-col items-center group relative">
-                        <div 
-                            className={`w-full rounded-sm ${bgClass} transition-all hover:opacity-80`} 
-                            style={{ height: `${Math.max(intensity * 100, 10)}%` }}
-                        ></div>
-                        {/* Hover Tooltip */}
-                        <div className="absolute bottom-full mb-1 hidden group-hover:block bg-black text-white text-[9px] p-1 rounded z-20 border border-white/10 whitespace-nowrap">
-                            {h}:00 - {count} hits
+                    return (
+                        <div key={h} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                            <div 
+                                className={`w-full rounded-sm ${bgClass} transition-all hover:opacity-80 min-h-[4px]`} 
+                                style={{ height: `${Math.max(intensity * 100, 5)}%` }}
+                            ></div>
+                            {/* Hover Tooltip */}
+                            <div className="absolute bottom-full mb-1 hidden group-hover:block bg-black/90 text-white text-[9px] px-2 py-1 rounded z-20 border border-white/10 whitespace-nowrap -translate-x-1/2 left-1/2">
+                                <span className="font-bold text-brand-orange">{h}:00</span> • {count} view
+                            </div>
                         </div>
-                    </div>
-                )
-            })}
+                    )
+                })}
+            </div>
+            <div className="flex justify-between text-[8px] text-gray-500 mt-1 font-mono uppercase">
+                <span>00:00</span>
+                <span>06:00</span>
+                <span>12:00</span>
+                <span>18:00</span>
+                <span>23:00</span>
+            </div>
         </div>
     );
 };
@@ -227,8 +251,11 @@ const DeviceBar = ({ label, count, total, icon: Icon }: { label: string, count: 
         <span className="flex items-center gap-2 text-gray-300"><Icon size={14}/> {label}</span>
         <span className="font-bold text-white">{percent}% <span className="text-gray-500 font-normal">({count})</span></span>
       </div>
-      <div className="w-full h-1.5 bg-black rounded-full overflow-hidden">
-        <div className="h-full bg-brand-orange rounded-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
+      <div className="w-full h-1.5 bg-black rounded-full overflow-hidden border border-white/5">
+        <div 
+            className="h-full bg-gradient-to-r from-brand-orange to-red-500 rounded-full transition-all duration-1000 shadow-[0_0_5px_rgba(255,95,31,0.5)]" 
+            style={{ width: `${percent}%` }}
+        ></div>
       </div>
     </div>
   );
@@ -359,9 +386,9 @@ export const AnalyticsDashboard = () => {
             {/* Peak Hours Section */}
             <div className="mt-6 pt-6 border-t border-white/5">
                 <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
-                    <Clock size={14} className="text-yellow-500"/> Jam Sibuk (00:00 - 23:00)
+                    <Clock size={14} className="text-yellow-500"/> Jam Sibuk (Waktu Server)
                 </h4>
-                <p className="text-[10px] text-gray-500 mb-2">Warna lebih panas (Merah/Oranye) menandakan trafik tinggi di jam tersebut.</p>
+                <p className="text-[10px] text-gray-500 mb-2">Semakin tinggi bar (merah/oranye), semakin banyak pengunjung di jam tersebut.</p>
                 <PeakHoursChart hours={stats.hours} />
             </div>
          </div>
@@ -375,7 +402,7 @@ export const AnalyticsDashboard = () => {
                 <div className="flex-grow">
                     <DeviceBar label="Mobile (HP)" count={stats.devices.mobile} total={stats.totalViews} icon={Smartphone} />
                     <DeviceBar label="Desktop (PC)" count={stats.devices.desktop} total={stats.totalViews} icon={Monitor} />
-                    <DeviceBar label="Tablet" count={stats.devices.tablet} total={stats.totalViews} icon={Monitor} />
+                    <DeviceBar label="Tablet" count={stats.devices.tablet} total={stats.totalViews} icon={Tablet} />
                 </div>
              </div>
 
@@ -409,7 +436,7 @@ export const AnalyticsDashboard = () => {
                     const isProduct = page.includes('/shop/');
                     const isArticle = page.includes('/articles/');
                     const typeLabel = isProduct ? 'PRODUK' : isArticle ? 'ARTIKEL' : 'HALAMAN';
-                    const typeColor = isProduct ? 'text-green-400 bg-green-500/10' : isArticle ? 'text-yellow-400 bg-yellow-500/10' : 'text-gray-400 bg-gray-500/10';
+                    const typeColor = isProduct ? 'text-green-400 bg-green-500/10 border-green-500/20' : isArticle ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' : 'text-gray-400 bg-gray-500/10 border-gray-500/20';
 
                     return (
                         <div key={idx} className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5 hover:border-brand-orange/30 transition-all group">
@@ -417,10 +444,10 @@ export const AnalyticsDashboard = () => {
                                 <span className="w-6 h-6 rounded bg-black/50 text-gray-500 flex items-center justify-center text-[10px] font-bold shrink-0">{idx+1}</span>
                                 <div className="flex flex-col min-w-0">
                                     <span className="text-xs text-white font-medium truncate max-w-[200px] md:max-w-sm group-hover:text-brand-orange transition-colors">{page}</span>
-                                    <span className={`text-[9px] px-1.5 py-0.5 rounded w-fit mt-0.5 font-bold ${typeColor}`}>{typeLabel}</span>
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded w-fit mt-0.5 font-bold border ${typeColor}`}>{typeLabel}</span>
                                 </div>
                             </div>
-                            <span className="text-sm font-bold text-white shrink-0 bg-black/40 px-3 py-1 rounded border border-white/10">{count} Hits</span>
+                            <span className="text-sm font-bold text-white shrink-0 bg-black/40 px-3 py-1 rounded border border-white/10 shadow-sm">{count} Hits</span>
                         </div>
                     )
                 })}
