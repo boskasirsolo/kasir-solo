@@ -25,10 +25,10 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
         <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-12 gap-10 items-start">
                 
-                {/* LEFT: FOUNDER PORTRAIT (COL-4) */}
-                <div className="md:col-span-4 sticky top-28">
+                {/* LEFT: FOUNDER PORTRAIT (COL-3 - Smaller) */}
+                <div className="md:col-span-3 sticky top-28">
                     {config?.founderPortrait ? (
-                        <div className="relative rounded-2xl overflow-hidden border-2 border-brand-orange/20 shadow-neon-strong group aspect-[3/4]">
+                        <div className="relative rounded-2xl overflow-hidden border border-white/10 group aspect-[3/4] max-w-[260px]">
                             <img 
                                 src={config.founderPortrait} 
                                 alt="Amin Maghfuri - Founder" 
@@ -36,29 +36,29 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-transparent to-transparent opacity-80"></div>
                             <div className="absolute bottom-4 left-4">
-                                <p className="text-white font-bold text-lg">Amin Maghfuri</p>
-                                <p className="text-brand-orange text-xs uppercase tracking-widest font-bold">The Founder</p>
+                                <p className="text-white font-bold text-base">Amin Maghfuri</p>
+                                <p className="text-brand-orange text-[10px] uppercase tracking-widest font-bold">The Founder</p>
                             </div>
                         </div>
                     ) : (
                         // Fallback Placeholder if not set
-                        <div className="bg-brand-dark rounded-2xl border border-white/10 aspect-[3/4] flex flex-col items-center justify-center p-6 text-center text-gray-500">
+                        <div className="bg-brand-dark rounded-2xl border border-white/10 aspect-[3/4] max-w-[260px] flex flex-col items-center justify-center p-6 text-center text-gray-500">
                             <Users size={48} className="mb-4 opacity-50"/>
                             <p className="text-sm">Foto Founder belum diupload di Admin Dashboard.</p>
                         </div>
                     )}
                 </div>
 
-                {/* RIGHT: TEXT CONTENT (COL-8) */}
-                <div className="md:col-span-8 space-y-12">
+                {/* RIGHT: TEXT CONTENT (COL-9) */}
+                <div className="md:col-span-9 space-y-12">
                     
-                    {/* Quote Block 1 */}
-                    <div className="relative border-l-4 border-brand-orange pl-8 py-4 bg-gradient-to-r from-brand-orange/5 to-transparent rounded-r-xl">
-                        <Quote className="absolute -top-6 -left-4 text-brand-orange fill-brand-orange w-8 h-8 opacity-20" />
-                        <h3 className="text-2xl md:text-4xl font-display font-bold text-white leading-tight mb-4">
+                    {/* Quote Block 1 (Reduced Width & Orange BG) */}
+                    <div className="relative p-8 bg-brand-orange rounded-3xl w-full md:w-1/2 shadow-lg">
+                        <Quote className="absolute top-6 right-6 text-white/20 w-12 h-12 rotate-180" />
+                        <h3 className="text-2xl font-display font-bold text-white leading-tight mb-4 relative z-10">
                             "Jujur-jujuran aja. Tahun 2022, gue pernah 'mati suri'."
                         </h3>
-                        <p className="text-gray-400 text-lg leading-relaxed">
+                        <p className="text-white/90 text-sm leading-relaxed relative z-10 font-medium">
                             Aset digital ilang, domain diambil orang, profil google bisnis disuspend, sistem berantakan gara-gara gue terlalu percaya sama 'manusia' tanpa sistem kontrol. Saat itu gue belajar satu hal mahal: <strong>Bisnis tanpa sistem yang kuat cuma nunggu waktu buat meledak.</strong>
                         </p>
                     </div>
