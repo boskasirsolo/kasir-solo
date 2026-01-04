@@ -198,18 +198,25 @@ export const TermsContent = () => (
 
       <PolicySection title="Awas Penipuan (Fraud)" icon={AlertTriangle}>
         <div className="bg-brand-card p-6 rounded-xl border border-white/5 relative overflow-hidden">
-            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div className="flex items-center gap-4 bg-black/40 p-4 rounded-xl border border-brand-orange/30 w-full md:w-auto">
-                    <CreditCard className="text-brand-orange shrink-0" size={32} />
-                    <div>
+            <div className="relative z-10 flex flex-col gap-6">
+                {/* Bank Details Card */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 bg-black/40 p-6 rounded-xl border border-brand-orange/30 w-full shadow-lg">
+                    <div className="p-4 bg-brand-orange/10 rounded-full text-brand-orange border border-brand-orange/20">
+                        <CreditCard size={32} />
+                    </div>
+                    <div className="text-center sm:text-left">
                         <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Rekening Sah (BNC)</p>
-                        <p className="text-white font-bold font-mono text-lg md:text-xl tracking-widest">5859 4594 0674 0414</p>
-                        <p className="text-xs text-brand-orange font-bold mt-1">a.n PT MESIN KASIR SOLO</p>
+                        <p className="text-white font-bold font-mono text-2xl md:text-3xl tracking-widest text-brand-orange drop-shadow-sm">5859 4594 0674 0414</p>
+                        <p className="text-xs text-gray-300 font-bold mt-1 bg-white/10 inline-block px-2 py-0.5 rounded">a.n PT MESIN KASIR SOLO</p>
                     </div>
                 </div>
-                <div className="text-sm text-gray-400 max-w-md border-l-2 border-red-500 pl-4">
-                    <p className="font-bold text-red-400 flex items-center gap-2 mb-1"><XCircle size={14}/> JANGAN TRANSFER KE PERORANGAN!</p>
-                    Kalau ada sales gue atau orang ngaku-ngaku minta transfer ke rekening pribadi (BCA/BRI/dll atas nama orang), <strong>ITU MALING</strong>. Gue gak tanggung jawab kalau duit lo ilang.
+                
+                {/* Warning Text */}
+                <div className="text-sm text-gray-400 w-full border-l-4 border-red-500 pl-4 bg-red-500/5 py-2 pr-2 rounded-r-lg">
+                    <p className="font-bold text-red-400 flex items-center gap-2 mb-2 uppercase tracking-wide"><XCircle size={18}/> JANGAN TRANSFER KE PERORANGAN!</p>
+                    <p className="leading-relaxed">
+                        Kalau ada sales gue atau orang ngaku-ngaku minta transfer ke rekening pribadi (BCA/BRI/dll atas nama orang), <strong>ITU MALING</strong>. Gue gak tanggung jawab kalau duit lo ilang.
+                    </p>
                 </div>
             </div>
         </div>
