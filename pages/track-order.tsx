@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Package, Truck, CheckCircle2, Clock, MapPin, Copy, AlertCircle, ArrowRight } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle2, Clock, MapPin, Copy, AlertCircle, ArrowRight, ShieldAlert } from 'lucide-react';
 import { supabase, formatRupiah } from '../utils';
 import { SectionHeader, Input, Button, Card, LoadingSpinner } from '../components/ui';
 import { Order, OrderItem } from '../types';
@@ -57,26 +57,26 @@ const Timeline = ({ status, created_at }: { status: string, created_at: string }
                     active={status === 'pending'} 
                     completed={currentIndex > 0} 
                     icon={Clock} 
-                    label="Menunggu" 
+                    label="Nunggu Duit" 
                     date={new Date(created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'})}
                 />
                 <StatusStep 
                     active={status === 'paid'} 
                     completed={currentIndex > 1} 
                     icon={CheckCircle2} 
-                    label="Dibayar" 
+                    label="Udah Lunas" 
                 />
                 <StatusStep 
                     active={status === 'processed'} 
                     completed={currentIndex > 2} 
                     icon={Package} 
-                    label="Diproses" 
+                    label="Lagi Dirakit" 
                 />
                 <StatusStep 
                     active={status === 'completed'} 
                     completed={status === 'completed'} 
                     icon={Truck} 
-                    label="Dikirim" 
+                    label="Meluncur" 
                 />
             </div>
         </div>
@@ -119,7 +119,7 @@ export const TrackOrderPage = () => {
             }
 
             if (!order) {
-                setError("Pesanan tidak ditemukan. Pastikan ID benar dan cek koneksi internet.");
+                setError("Pesanan ga ketemu, Bos. Coba cek lagi Order ID di WhatsApp lo.");
             } else {
                 console.log("Order Found:", order);
                 
@@ -137,9 +137,9 @@ export const TrackOrderPage = () => {
             console.error("Catch Error:", err);
             // Handle specific Supabase Policy error or Type error
             if (err.message && err.message.includes('invalid input syntax')) {
-                setError("Format ID salah. ID harus berupa angka.");
+                setError("Format ID salah. ID harusnya angka doang.");
             } else {
-                setError("Gagal memuat data. Kemungkinan masalah jaringan atau ID salah.");
+                setError("Gagal loading data. Sinyal lo jelek atau server gue yang lagi bengong.");
             }
         } finally {
             setLoading(false);
@@ -148,16 +148,27 @@ export const TrackOrderPage = () => {
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        alert("Disalin ke clipboard!");
+        alert("Nomor resi udah disalin. Cek di web kurir ya!");
+    };
+
+    const getStatusLabel = (status: string) => {
+        switch(status) {
+            case 'pending': return 'Nunggu Transfer';
+            case 'paid': return 'Pembayaran Diterima (Verified)';
+            case 'processed': return 'Sedang Dirakit / Packing';
+            case 'completed': return 'Dalam Perjalanan (OTW)';
+            case 'cancelled': return 'Dibatalkan';
+            default: return status;
+        }
     };
 
     return (
         <div className="animate-fade-in pt-24 pb-20">
             <div className="container mx-auto px-4">
                 <SectionHeader 
-                    title="Lacak" 
-                    highlight="Pesanan" 
-                    subtitle="Pantau status pesanan dan pengiriman barang Anda secara real-time."
+                    title="Paket Gue" 
+                    highlight="Sampe Mana?" 
+                    subtitle="Gak usah was-was barang lo dicolong kurir atau nyasar. Cek status real-time di sini. Gue pantau terus sampe depan pintu lo."
                 />
 
                 <div className="max-w-2xl mx-auto">
@@ -165,7 +176,7 @@ export const TrackOrderPage = () => {
                     <div className="bg-brand-card border border-white/10 rounded-2xl p-6 md:p-8 shadow-neon mb-8">
                         <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
                             <div className="flex-1">
-                                <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Order ID (12 Digit)</label>
+                                <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Order ID (Cek WhatsApp)</label>
                                 <div className="relative">
                                     <Search className="absolute left-4 top-3.5 text-gray-500" size={18} />
                                     <Input 
@@ -179,7 +190,7 @@ export const TrackOrderPage = () => {
                             </div>
                             <div className="flex items-end">
                                 <Button type="submit" disabled={loading} className="w-full md:w-auto h-[50px] px-8 shadow-neon">
-                                    {loading ? <LoadingSpinner /> : "CEK RESI"}
+                                    {loading ? <LoadingSpinner /> : "LACAK SEKARANG"}
                                 </Button>
                             </div>
                         </form>
@@ -188,7 +199,7 @@ export const TrackOrderPage = () => {
                     {/* ERROR STATE */}
                     {error && (
                         <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl text-center text-red-400 mb-8 animate-fade-in flex items-center justify-center gap-2">
-                            <AlertCircle size={20} /> {error}
+                            <ShieldAlert size={20} /> {error}
                         </div>
                     )}
 
@@ -198,13 +209,18 @@ export const TrackOrderPage = () => {
                             {/* Header Status */}
                             <div className="bg-white/5 p-6 border-b border-white/5 flex justify-between items-center">
                                 <div>
-                                    <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Status Pesanan</p>
-                                    <h3 className="text-2xl font-display font-bold text-white capitalize">{result.order.status === 'completed' ? 'Dalam Pengiriman' : result.order.status}</h3>
+                                    <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Status Misi</p>
+                                    <h3 className="text-2xl font-display font-bold text-white capitalize">
+                                        {getStatusLabel(result.order.status)}
+                                    </h3>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-gray-500 text-xs">Order ID</p>
                                     <button 
-                                        onClick={() => copyToClipboard(result.order.id.toString())}
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(result.order.id.toString());
+                                            alert("Order ID disalin!");
+                                        }}
                                         className="flex items-center justify-end gap-2 text-brand-orange font-mono font-bold text-lg hover:text-white transition-colors group"
                                         title="Klik untuk menyalin"
                                     >
@@ -242,7 +258,7 @@ export const TrackOrderPage = () => {
 
                             {/* Item Summary */}
                             <div className="p-6">
-                                <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4">Rincian Barang</h4>
+                                <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4">Senjata Yang Dipesan</h4>
                                 <div className="space-y-3">
                                     {result.items.map((item, idx) => (
                                         <div key={idx} className="flex justify-between items-center bg-black/20 p-3 rounded-lg border border-white/5">
@@ -257,7 +273,7 @@ export const TrackOrderPage = () => {
                                     ))}
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                                    <span className="text-gray-500 text-sm">Total Pembayaran</span>
+                                    <span className="text-gray-500 text-sm">Total Mahar</span>
                                     <span className="text-xl font-bold text-brand-orange">{formatRupiah(result.order.total_amount)}</span>
                                 </div>
                             </div>
@@ -265,7 +281,7 @@ export const TrackOrderPage = () => {
                             {/* Footer Help */}
                             <div className="p-4 bg-white/5 text-center">
                                 <p className="text-xs text-gray-500">
-                                    Ada masalah dengan pesanan? <a href="https://wa.me/6282325103336" target="_blank" className="text-brand-orange hover:underline font-bold">Hubungi Admin</a>
+                                    Paket mandeg atau nyasar? <a href="https://wa.me/6282325103336" target="_blank" className="text-brand-orange hover:underline font-bold">Lapor Komandan (Admin)</a>
                                 </p>
                             </div>
                         </div>
