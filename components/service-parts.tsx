@@ -63,7 +63,11 @@ export const FeatureGrid = ({ features }: { features: { title: string, desc: str
 export const WorkflowSection = ({ steps }: { steps: { step: string, title: string, desc: string }[] }) => (
   <section className="py-16">
     <div className="container mx-auto px-4">
-      <SectionHeader title="Bagaimana" highlight="Kami Bekerja" subtitle="Proses transparan dan terstruktur untuk hasil terbaik." />
+      <SectionHeader 
+        title="Cara Main" 
+        highlight="Gue" 
+        subtitle="Lupain birokrasi ribet ala korporat. Kita kerja sat-set: Analisa, Eksekusi, Serah Terima. Transparan dari awal, gak ada biaya siluman." 
+      />
       <div className="grid md:grid-cols-4 gap-6 relative">
         {/* Connector Line (Desktop) */}
         <div className="hidden md:block absolute top-12 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-orange/0 via-brand-orange/30 to-brand-orange/0"></div>
