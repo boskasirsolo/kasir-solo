@@ -12,8 +12,8 @@ const getTestimonialForProject = (projectTitle: string, testimonials: Testimonia
     t.business_name.toLowerCase().includes(projectTitle.toLowerCase())
   ) || {
     // UPDATED PLACEHOLDER: Narasi Personal Touch
-    client_name: "Owner Business",
-    content: "Awalnya ragu karena saya gaptek, tapi Mas Amin sabar banget ngajarin staf saya sampai bisa. Tanya jam 11 malam pun masih dibalas.",
+    client_name: "Smart Owner",
+    content: "Awalnya ragu karena gue gaptek, tapi Mas Amin sabar banget ngajarin staf gue sampe bisa. Support-nya gila sih, jam 11 malem masih dibales.",
     rating: 5,
     image_url: "" 
   };
@@ -121,22 +121,22 @@ export const HomePage = ({
           <div className="inline-flex items-center gap-2 px-6 py-2 border border-brand-orange/50 rounded-full bg-brand-orange/10 mb-8 backdrop-blur-md shadow-neon hover:bg-brand-orange/20 transition-colors cursor-default">
             <ShieldCheck size={16} className="text-brand-orange" />
             <span className="text-brand-orange text-xs md:text-sm font-bold tracking-widest uppercase">
-              Stop Kebocoran Omzet • Stop Maling Internal
+              Stop Kebocoran Duit • Stop Maling Internal
             </span>
           </div>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-8 leading-tight drop-shadow-lg">
-            Jangan Cuma Dagang.<br/>
-            <span className="text-brand-orange">Bangun Sistem.</span>
+            Stop Jadi Kuli<br/>
+            <span className="text-brand-orange">Di Toko Sendiri.</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Tanpa sistem, Anda bukan Pengusaha, tapi Karyawan di toko sendiri. Kami menyediakan alat perang (Hardware & Software) agar Anda bisa punya kendali penuh, walau sedang tidur.
+            Tanpa sistem, lo bukan "Businessman", lo cuma karyawan dengan gaji tertunda. Gue kasih senjata (Hardware & Software) biar lo bisa tidur nyenyak sambil duit ngalir.
           </p>
           <div className="flex flex-col md:flex-row gap-6 justify-center">
             <Button onClick={() => setPage('shop')} className="px-10 py-4 text-base">
-              LIHAT ALAT PERANG <ArrowRight size={22} />
+              LIHAT SENJATA PERANG <ArrowRight size={22} />
             </Button>
             <Button variant="outline" onClick={() => setPage('about')} className="px-10 py-4 text-base">
-              SIAPA KAMI?
+              SIAPA GUE?
             </Button>
           </div>
         </div>
@@ -153,7 +153,7 @@ export const HomePage = ({
                 </div>
                 <div>
                    <h4 className="text-2xl md:text-3xl font-display font-bold text-white">500+</h4>
-                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Mitra UMKM</p>
+                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Partner Perang</p>
                 </div>
              </div>
              <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
@@ -180,7 +180,7 @@ export const HomePage = ({
                 </div>
                 <div>
                    <h4 className="text-2xl md:text-3xl font-display font-bold text-white">24/7</h4>
-                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Support Teknis</p>
+                   <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Backup Teknis</p>
                 </div>
              </div>
           </div>
@@ -198,7 +198,7 @@ export const HomePage = ({
                 Bisnis Tanpa Sistem = <span className="text-red-500">Bom Waktu</span>
               </h2>
               <p className="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-                Sadarkah Anda? Tanpa sistem yang benar, Anda tidak sedang berbisnis. Anda sedang "diperbudak" oleh toko Anda sendiri.
+                Sadar gak lo? Selama ini lo gak lagi berbisnis. Lo cuma lagi diperbudak sama rutinitas toko yang gak ada abisnya.
               </p>
           </div>
 
@@ -217,22 +217,22 @@ export const HomePage = ({
                       <li className="flex gap-4">
                          <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 shrink-0 font-bold">1</div>
                          <div>
-                            <h4 className="text-white font-bold mb-1">Uang Bocor Halus</h4>
-                            <p className="text-gray-400 text-sm">Kembalian salah, nota hilang, atau mark-up harga oleh karyawan. Sedikit tapi tiap hari.</p>
+                            <h4 className="text-white font-bold mb-1">Duit Bocor Alus</h4>
+                            <p className="text-gray-400 text-sm">Kembalian salah, nota ilang, atau 'mark-up' harga sama karyawan nakal. Dikit sih, tapi tiap hari.</p>
                          </div>
                       </li>
                       <li className="flex gap-4">
                          <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 shrink-0 font-bold">2</div>
                          <div>
-                            <h4 className="text-white font-bold mb-1">Stok Selisih Terus</h4>
-                            <p className="text-gray-400 text-sm">Barang di rak habis, tapi di catatan masih ada. Akhirnya mengecewakan pelanggan.</p>
+                            <h4 className="text-white font-bold mb-1">Stok Barang Ghaib</h4>
+                            <p className="text-gray-400 text-sm">Di catetan ada, di rak kosong. Lo bingung duitnya lari kemana, padahal barang abis.</p>
                          </div>
                       </li>
                       <li className="flex gap-4">
                          <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 shrink-0 font-bold">3</div>
                          <div>
-                            <h4 className="text-white font-bold mb-1">Owner Jadi Tahanan Kota</h4>
-                            <p className="text-gray-400 text-sm">Gak berani ninggalin toko karena takut dikadalin. Bisnis jalan, tapi hidup tidak tenang.</p>
+                            <h4 className="text-white font-bold mb-1">Lo Jadi Tahanan Toko</h4>
+                            <p className="text-gray-400 text-sm">Gak berani ninggalin toko karena takut dikadalin. Bisnis jalan, tapi hidup lo gak tenang.</p>
                          </div>
                       </li>
                    </ul>
@@ -246,28 +246,28 @@ export const HomePage = ({
                 </div>
                 <div className="relative z-10">
                    <h3 className="text-xl font-bold text-brand-orange mb-6 flex items-center gap-2">
-                      <CheckCircle2 size={24}/> SOLUSI MESIN KASIR SOLO
+                      <CheckCircle2 size={24}/> CARA GUE (SISTEM)
                    </h3>
                    <ul className="space-y-6">
                       <li className="flex gap-4">
                          <div className="w-8 h-8 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange shrink-0 font-bold">1</div>
                          <div>
-                            <h4 className="text-white font-bold mb-1">Anti-Fraud System</h4>
-                            <p className="text-gray-400 text-sm">Setiap sen tercatat. Void/Pembatalan transaksi butuh password owner. Karyawan kerja jujur.</p>
+                            <h4 className="text-white font-bold mb-1">Sistem Anti-Tuyul (Fraud)</h4>
+                            <p className="text-gray-400 text-sm">Setiap sen kecatet. Void/Batal transaksi butuh password lo. Karyawan gak bisa macem-macem.</p>
                          </div>
                       </li>
                       <li className="flex gap-4">
                          <div className="w-8 h-8 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange shrink-0 font-bold">2</div>
                          <div>
                             <h4 className="text-white font-bold mb-1">Stok Opname Otomatis</h4>
-                            <p className="text-gray-400 text-sm">Peringatan otomatis saat stok menipis. Belanja barang jadi terukur dan efisien.</p>
+                            <p className="text-gray-400 text-sm">Sistem bakal teriak kalau stok tipis. Belanja barang jadi terukur, gak pake feeling doang.</p>
                          </div>
                       </li>
                       <li className="flex gap-4">
                          <div className="w-8 h-8 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange shrink-0 font-bold">3</div>
                          <div>
-                            <h4 className="text-white font-bold mb-1">Karyawan Digital 24 Jam</h4>
-                            <p className="text-gray-400 text-sm">Sistem kami bekerja seperti manajer yang tidak pernah sakit, cuti, atau resign. Hemat gaji admin.</p>
+                            <h4 className="text-white font-bold mb-1">Asisten Digital 24 Jam</h4>
+                            <p className="text-gray-400 text-sm">Sistem ini gak pernah sakit, gak pernah cuti, dan gak bakal resign. Hemat gaji admin.</p>
                          </div>
                       </li>
                    </ul>
@@ -294,12 +294,11 @@ export const HomePage = ({
                      <span className="text-xs font-bold text-blue-200 tracking-[0.2em] uppercase">R&D Division 2025</span>
                   </div>
                   <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight">
-                     Lebih Dari Sekadar <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">Mesin Kasir.</span>
+                     Gue Gak Cuma Jual <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">Barang Besi.</span>
                   </h2>
                   <p className="text-gray-400 text-lg leading-relaxed mb-8">
-                     Kami bukan cuma toko elektronik. Kami adalah <strong>Perusahaan Teknologi</strong>. 
-                     Memperkenalkan <strong>SIBOS</strong> (ERP System) dan <strong>QALAM</strong> (Education App). 
-                     Ekosistem digital yang dirancang untuk skala Enterprise, kini tersedia untuk UMKM.
+                     Gue jual <strong>Masa Depan</strong> bisnis lo. Perkenalkan <strong>SIBOS</strong> (ERP System) dan <strong>QALAM</strong> (Education App). 
+                     Ekosistem digital yang dirancang buat lo yang mau bisnisnya <em>Auto-Pilot</em>, bukan <em>Auto-Pusing</em>.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                      <Button onClick={() => setPage('innovation')} className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] border-none">
@@ -375,9 +374,9 @@ export const HomePage = ({
            <div className="container mx-auto px-4 relative z-10 mb-12 text-center">
               <div className="max-w-3xl mx-auto">
                 <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
-                  Jejak Langkah <span className="text-brand-orange">Kami</span>
+                  Jejak Perang <span className="text-brand-orange">Kita</span>
                 </h2>
-                <p className="text-gray-400 text-base">Bukti nyata instalasi dan inovasi digital di lapangan sejak 2015.</p>
+                <p className="text-gray-400 text-base">Bukti lapangan instalasi di tempat klien. Bukan foto colongan dari Google.</p>
               </div>
            </div>
 
@@ -405,7 +404,7 @@ export const HomePage = ({
 
            <div className="relative z-10 text-center">
              <Button onClick={() => setPage('gallery')} className="px-8 py-4 text-base font-bold shadow-action hover:shadow-action-strong transition-transform hover:-translate-y-1 mx-auto">
-                LIHAT SEMUA PORTFOLIO <ArrowRight size={20} />
+                LIHAT SEMUA PORTOFOLIO <ArrowRight size={20} />
              </Button>
            </div>
         </section>
@@ -420,11 +419,11 @@ export const HomePage = ({
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16 max-w-4xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">
-              Bukan Sekadar Website, <br/> Ini <span className="text-brand-orange">Aset Digital.</span>
+              Bukan Sekadar Website, <br/> Ini <span className="text-brand-orange">Mesin Uang.</span>
             </h2>
             <p className="text-gray-400 text-lg leading-relaxed">
-              Kebanyakan vendor IT hanya peduli kodingan selesai. Saya peduli <strong>ROI (Return on Investment)</strong> Anda. 
-              Setiap baris kode yang kami tulis punya satu tujuan: <span className="text-white font-bold">Mengembangkan Bisnis Anda.</span>
+              Banyak vendor IT cuma bisa koding tapi gak ngerti jualan. Gue peduli <strong>ROI (Balik Modal)</strong> lo. 
+              Setiap baris kode yang gue tulis punya satu tujuan: <span className="text-white font-bold">Bikin Bisnis Lo Gede.</span>
             </p>
           </div>
 
@@ -434,7 +433,7 @@ export const HomePage = ({
                 icon: Palette, 
                 title: "Web Konversi Tinggi", 
                 subtitle: "Landing Page / Compro",
-                desc: "Website bukan pajangan. Kami racik UI/UX dan Copywriting agar pengunjung tidak cuma lihat-lihat, tapi klik tombol beli.", 
+                desc: "Website bukan pajangan. Gue racik UI/UX dan Copywriting biar pengunjung gak cuma liat-liat, tapi klik tombol beli.", 
                 link: "services/website",
                 color: "text-brand-orange"
               },
@@ -442,23 +441,23 @@ export const HomePage = ({
                 icon: Code, 
                 title: "Sistem ERP Custom", 
                 subtitle: "Web App / Internal System",
-                desc: "Lupakan Excel yang berantakan. Satu sistem terpusat untuk stok, kasir, dan laporan keuangan real-time milik Anda sendiri.", 
+                desc: "Lupain Excel yang berantakan. Satu sistem terpusat buat stok, kasir, dan laporan keuangan real-time milik lo sendiri.", 
                 link: "services/webapp",
                 color: "text-blue-400"
               },
               { 
                 icon: Search, 
-                title: "Dominasi Google", 
+                title: "Jajah Google (SEO)", 
                 subtitle: "SEO & Local Search",
-                desc: "Jangan biarkan kompetitor mencuri pelanggan Anda. Kami optimasi agar toko Anda muncul paling atas saat dicari.", 
+                desc: "Jangan biarkan kompetitor nyuri pelanggan lo. Gue optimasi biar toko lo muncul paling atas pas orang nyari di Google.", 
                 link: "services/seo",
                 color: "text-green-400"
               },
               { 
                 icon: Settings, 
-                title: "Asuransi Digital", 
+                title: "Satpam Digital", 
                 subtitle: "Maintenance & Security",
-                desc: "Tidur nyenyak tanpa takut website di-hack, error, atau lambat. Backup rutin dan monitoring keamanan 24/7.", 
+                desc: "Tidur nyenyak tanpa takut website di-hack, error, atau lemot. Backup rutin dan gue pantau keamanannya 24/7.", 
                 link: "services/maintenance",
                 color: "text-purple-400"
               }
@@ -511,17 +510,17 @@ export const HomePage = ({
             </div>
             
             <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4 leading-tight">
-               Bicara Langsung dengan <br/><span className="text-brand-orange">Arsitek Sistemnya</span>
+               Ngobrol Langsung sama <br/><span className="text-brand-orange">Arsitek Sistemnya</span>
             </h2>
             <p className="max-w-2xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
-               Anda tidak akan dilayani oleh Chatbot atau Admin magang yang menjawab pakai template. 
-               Saya, <strong>Amin Maghfuri</strong>, akan langsung membedah kebutuhan bisnis Anda dan memberikan solusi teknis yang paling efisien.
+               Lo gak bakal dilayani sama Chatbot atau Admin magang yang jawab pake template robot. 
+               Gue, <strong>Amin Maghfuri</strong>, bakal langsung bedah kebutuhan bisnis lo dan kasih solusi teknis yang paling efisien.
             </p>
             
             <div className="flex justify-center">
                {/* UPDATED: WhatsApp Button (Brand Gradient) */}
                <a 
-                  href={`https://wa.me/${config.whatsappNumber}?text=Halo Mas Amin, saya ingin konsultasi sistem untuk bisnis saya.`}
+                  href={`https://wa.me/${config.whatsappNumber}?text=Halo Mas Amin, saya mau curhat masalah sistem bisnis saya.`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-3 px-10 py-5 bg-brand-gradient hover:bg-brand-gradient-hover text-white rounded-full font-bold text-lg shadow-[0_0_20px_rgba(255,95,31,0.4)] hover:shadow-[0_0_30px_rgba(255,95,31,0.6)] transition-all transform hover:-translate-y-1"
