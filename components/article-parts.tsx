@@ -7,7 +7,8 @@ import {
   X, ChevronRight, Share2, MessageCircle, Link as LinkIcon, 
   Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
   ChevronLeft, Send, Plus, Check, Briefcase, HeartHandshake, Quote,
-  Search, Filter, FolderOpen, ChevronDown, Network, FileText, Download, HardDrive, Layers
+  Search, Filter, FolderOpen, ChevronDown, Network, FileText, Download, HardDrive, Layers,
+  Skull, Flame, Target
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
@@ -15,21 +16,21 @@ import { formatRupiah, slugify } from '../utils';
 import { useCart } from '../context/cart-context';
 import { ProductDetailModal, FlyingParticle } from './shop-parts'; 
 
-// --- DATA CONSTANTS ---
+// --- DATA CONSTANTS (REBRANDED) ---
 export const CATEGORY_TREE = [
   {
     id: 'business',
-    label: 'Wawasan Bisnis',
+    label: 'Strategi Cuan (Biz)',
     subCategories: ['Bisnis Tips', 'Manajemen', 'Keuangan', 'HR', 'Franchise']
   },
   {
     id: 'tech',
-    label: 'Teknologi & Hardware',
+    label: 'Bedah Alat (Tech)',
     subCategories: ['Hardware Review', 'Android POS', 'Windows POS', 'Teknologi', 'Tutorial']
   },
   {
     id: 'marketing',
-    label: 'Marketing & Sales',
+    label: 'Marketing Jalanan',
     subCategories: ['Digital Marketing', 'Branding', 'Loyalty Program', 'Promosi']
   }
 ];
@@ -39,14 +40,14 @@ export const CATEGORY_TREE = [
 export const ArticleSearchWidget = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => (
   <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
      <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-        <Search size={14} className="text-brand-orange"/> Pencarian
+        <Search size={14} className="text-brand-orange"/> Cari Jawaban
      </h4>
      <div className="relative group">
         <Input 
           value={value} 
           onChange={(e) => onChange(e.target.value)} 
-          placeholder="Cari topik..." 
-          className="pl-10 py-2 text-sm bg-black/40 border-white/5 focus:border-brand-orange/50"
+          placeholder="Ketik masalah lo..." 
+          className="pl-10 py-2 text-sm bg-black/40 border-white/5 focus:border-brand-orange/50 placeholder-gray-600"
         />
         <Search className="absolute left-3 top-2.5 text-gray-500 w-4 h-4" />
      </div>
@@ -63,7 +64,7 @@ export const CategorySidebar = ({ selectedFilter, onSelect }: { selectedFilter: 
     <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
        <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/5">
           <h4 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-              <Filter size={14} className="text-brand-orange"/> Kategori
+              <Filter size={14} className="text-brand-orange"/> Arsip Taktis
           </h4>
           <button onClick={() => onSelect('all', '')} className={`text-[10px] px-2 py-1 rounded transition-colors ${selectedFilter.type === 'all' ? 'bg-brand-orange text-white' : 'text-gray-500 hover:text-white'}`}>RESET</button>
        </div>
@@ -101,10 +102,10 @@ export const CategorySidebar = ({ selectedFilter, onSelect }: { selectedFilter: 
 export const TagCloudWidget = ({ onSelectTag }: { onSelectTag: (tag: string) => void }) => (
   <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
      <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-        <Hash size={14} className="text-brand-orange"/> Trending
+        <Flame size={14} className="text-red-500"/> Lagi Panas
      </h4>
      <div className="flex flex-wrap gap-2">
-        {['Android POS', 'Bisnis F&B', 'Tips Hemat', 'Promo', 'Tutorial'].map((tag, i) => (
+        {['Anti Fraud', 'Stok Opname', 'Tips Hemat', 'Promo', 'Tutorial'].map((tag, i) => (
            <button key={i} onClick={() => onSelectTag(tag)} className="text-[10px] bg-black/40 border border-white/10 hover:border-brand-orange/50 hover:text-brand-orange text-gray-400 px-2 py-1 rounded-md transition-all">#{tag}</button>
         ))}
      </div>
@@ -114,8 +115,8 @@ export const TagCloudWidget = ({ onSelectTag }: { onSelectTag: (tag: string) => 
 export const ProductSidebarWidget = ({ products, onDetail }: { products: Product[], onDetail: (p: Product) => void }) => (
   <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
      <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
-        <TrendingUp size={16} className="text-brand-orange" />
-        <h4 className="text-sm font-bold text-white uppercase tracking-widest">Produk Terlaris</h4>
+        <TrendingUp size={16} className="text-green-500" />
+        <h4 className="text-sm font-bold text-white uppercase tracking-widest">Senjata Terlaris</h4>
      </div>
      <div className="space-y-4">
         {products.slice(0, 2).map((product) => (
@@ -129,10 +130,10 @@ export const ProductSidebarWidget = ({ products, onDetail }: { products: Product
 
 export const EmptyArticleState = ({ onReset }: { onReset: () => void }) => (
   <div className="text-center py-20 bg-brand-card rounded-3xl border border-white/5 border-dashed">
-    <Search size={48} className="mx-auto text-gray-600 mb-4" />
-    <h3 className="text-xl font-bold text-white mb-2">Artikel tidak ditemukan</h3>
-    <p className="text-gray-400">Coba kata kunci lain atau ganti kategori di sidebar.</p>
-    <button onClick={onReset} className="mt-4 text-brand-orange hover:underline text-sm font-bold">Reset Filter</button>
+    <Skull size={48} className="mx-auto text-gray-600 mb-4 opacity-50" />
+    <h3 className="text-xl font-bold text-white mb-2">Zonk. Gak Ada Data.</h3>
+    <p className="text-gray-400 text-sm max-w-sm mx-auto">Topik ini belum gue tulis. Coba cari kata kunci lain atau DM gue buat request pembahasan.</p>
+    <button onClick={onReset} className="mt-6 text-brand-orange hover:text-white border border-brand-orange hover:bg-brand-orange px-6 py-2 rounded-full transition-all text-xs font-bold uppercase tracking-wider">Reset Filter</button>
   </div>
 );
 
@@ -141,7 +142,7 @@ export const ArticlePaginationControl = ({ currentPage, totalPages, setPage }: {
   return (
     <div className="flex justify-center items-center gap-4 py-6">
       <button onClick={() => setPage((p: number) => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"><ChevronLeft size={20} /></button>
-      <span className="text-brand-orange font-bold text-sm">Hal {currentPage} dari {totalPages}</span>
+      <span className="text-brand-orange font-bold text-sm bg-brand-orange/10 px-3 py-1 rounded border border-brand-orange/20">Hal {currentPage} / {totalPages}</span>
       <button onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"><ChevronRight size={20} /></button>
     </div>
   );
@@ -308,7 +309,7 @@ export const ArticleGridCard = ({ article, onClick }: { article: Article, onClic
       <div className="flex items-center gap-3 text-xs text-gray-500 mb-3"><span className="flex items-center gap-1"><Calendar size={12}/> {article.date}</span><span>•</span><span className="text-brand-orange font-bold">{article.readTime || '3 min'}</span></div>
       <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-brand-orange transition-colors">{article.title}</h3>
       <p className="text-gray-400 text-sm line-clamp-3 mb-6 flex-grow">{article.excerpt}</p>
-      <div className="flex items-center gap-2 text-sm font-bold text-white mt-auto pt-4 border-t border-white/5">Baca <ChevronRight size={16} className="text-brand-orange group-hover:translate-x-1 transition-transform" /></div>
+      <div className="flex items-center gap-2 text-sm font-bold text-white mt-auto pt-4 border-t border-white/5 uppercase tracking-widest text-brand-orange">Sikat Habis <ChevronRight size={16} className="text-brand-orange group-hover:translate-x-1 transition-transform" /></div>
     </div>
   </div>
 );
@@ -317,11 +318,16 @@ export const FeaturedArticleHero = ({ article, onClick }: { article: Article, on
   <div onClick={onClick} className="group relative w-full h-[500px] rounded-3xl overflow-hidden cursor-pointer border border-white/5 hover:border-brand-orange/50 transition-all shadow-2xl mb-16">
     <img src={article.image} alt={article.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" loading="eager" />
     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+    
+    <div className="absolute top-8 right-8">
+        <div className="bg-red-600 text-white font-bold px-4 py-2 rounded-lg shadow-neon animate-pulse text-xs uppercase tracking-widest border border-red-400">Wajib Baca Bos</div>
+    </div>
+
     <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full md:w-2/3">
       <div className="flex items-center gap-3 mb-4"><span className="px-3 py-1 bg-brand-orange text-white text-xs font-bold rounded-full uppercase tracking-wider">{article.category || "Featured"}</span><span className="flex items-center gap-1 text-gray-300 text-xs font-bold"><Clock size={12} /> {article.readTime || "3 min read"}</span></div>
       <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4 leading-tight group-hover:text-brand-orange transition-colors">{article.title}</h2>
       <p className="text-gray-300 text-lg line-clamp-2 mb-6 opacity-90">{article.excerpt}</p>
-      <div className="flex items-center gap-2 text-white font-bold uppercase tracking-widest text-sm group-hover:gap-4 transition-all">Baca Selengkapnya <ArrowRight size={16} className="text-brand-orange" /></div>
+      <div className="flex items-center gap-2 text-white font-bold uppercase tracking-widest text-sm group-hover:gap-4 transition-all bg-brand-orange/20 w-fit px-4 py-2 rounded-lg border border-brand-orange/30 group-hover:bg-brand-orange group-hover:text-white">Bongkar Isinya <ArrowRight size={16} /></div>
     </div>
   </div>
 );
@@ -375,8 +381,8 @@ export const SidebarProductCard = ({ product, onDetail }: { product: Product, on
 
 export const ArticleSidebarRight = ({ article, products, allArticles, onProductClick }: { article: Article, products: Product[], allArticles: Article[], onProductClick: (p: Product) => void }) => {
   let recommendedProducts = products.filter((p: Product) => article.category && p.category.toLowerCase().includes(article.category.split(' ')[0].toLowerCase()));
-  let recTitle = "Produk Relevan"; let RecIcon = Tag;
-  if (recommendedProducts.length === 0) { recommendedProducts = products.slice(0, 3); recTitle = "Produk Paling Laris"; RecIcon = TrendingUp; } else { recommendedProducts = recommendedProducts.slice(0, 3); }
+  let recTitle = "Alat Tempur Relevan"; let RecIcon = Target;
+  if (recommendedProducts.length === 0) { recommendedProducts = products.slice(0, 3); recTitle = "Senjata Andalan"; RecIcon = TrendingUp; } else { recommendedProducts = recommendedProducts.slice(0, 3); }
   let relatedArticles: Article[] = []; let relatedTitle = "Baca Juga";
   if (article.type === 'pillar' && article.related_pillars && article.related_pillars.length > 0) { relatedArticles = allArticles.filter(a => article.related_pillars?.includes(a.id)); relatedTitle = "Topik Utama Terkait"; } else { relatedArticles = allArticles.filter(a => a.id !== article.id).slice(0, 4); }
 
@@ -392,7 +398,7 @@ export const ArticleSidebarRight = ({ article, products, allArticles, onProductC
                  <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4"><RecIcon size={16} className="text-brand-orange" /><h5 className="text-xs font-bold text-white uppercase tracking-widest">{recTitle}</h5></div>
                  <div className="space-y-4">{recommendedProducts.map((p: Product) => (<React.Fragment key={p.id}><SidebarProductCard product={p} onDetail={() => onProductClick(p)} /></React.Fragment>))}</div>
             </div>
-            <div className="bg-gradient-to-br from-brand-orange/10 to-brand-dark border border-brand-orange/20 p-4 rounded-xl text-center mt-6"><p className="text-xs text-gray-300 mb-3 font-bold">Butuh konsultasi lebih lanjut?</p><a href="https://wa.me/6282325103336" target="_blank" rel="noreferrer" className="block w-full py-2 bg-brand-orange text-white text-xs font-bold rounded hover:bg-brand-glow transition-all">Chat Tim Ahli</a></div>
+            <div className="bg-gradient-to-br from-brand-orange/10 to-brand-dark border border-brand-orange/20 p-4 rounded-xl text-center mt-6"><p className="text-xs text-gray-300 mb-3 font-bold">Masih bingung sistem yang pas?</p><a href="https://wa.me/6282325103336" target="_blank" rel="noreferrer" className="block w-full py-2 bg-brand-orange text-white text-xs font-bold rounded hover:bg-brand-glow transition-all">Chat Founder</a></div>
       </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Article, Product } from '../types';
 import { SectionHeader } from '../components/ui';
@@ -84,6 +83,8 @@ const useArticleLogic = (articles: Article[], itemsPerPage: number = 9) => {
     setSelectedFilter({ type, value });
   };
 
+  const hasResults = filteredArticles.length > 0;
+
   return {
     searchTerm, setSearchTerm,
     selectedFilter, handleFilterSelect,
@@ -91,7 +92,7 @@ const useArticleLogic = (articles: Article[], itemsPerPage: number = 9) => {
     featuredArticle,
     paginatedArticles,
     totalPages,
-    hasResults: filteredArticles.length > 0,
+    hasResults,
     resetFilters,
     selectTag
   };
@@ -150,9 +151,9 @@ export const ArticlesPage = ({
   return (
     <div className="container mx-auto px-4 py-10 animate-fade-in relative">
       <SectionHeader 
-        title="Wawasan &" 
-        highlight="Edukasi" 
-        subtitle="Panduan bisnis, review teknologi, dan strategi manajemen kasir." 
+        title="Pusat" 
+        highlight="Intelijen." 
+        subtitle="Gue gak nulis teori kuliah. Ini strategi lapangan, trik kasir, dan cara bertahan hidup di kerasnya persaingan ritel." 
       />
 
       {/* FEATURED HERO */}
