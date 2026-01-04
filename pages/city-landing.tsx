@@ -102,12 +102,17 @@ export const CityLandingPage = () => {
                Masih Mau Boncos Tiap Hari?
             </h1>
             
-            <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
-               {isKandang 
-                 ? `Gue bukan sekadar vendor, gue tetangga lo. Khusus area ini, **Gue Sendiri (Founder)** yang bakal anter & setting mesinnya. Gak pake teknisi, gak pake perantara. Biar lo puas nanya-nanya langsung sama ahlinya.`
-                 : `Buat lo di ${cityData.name}, jarak bukan penghalang. Gue kirim paket aman (Kayu + Asuransi). Pas barang sampe, **Gue Sendiri** yang bakal pandu lo setting via Video Call privat. Gak ada oper-operan ke admin.`
-               }
-            </p>
+            <div className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
+               {isKandang ? (
+                 <>
+                   Gue bukan sekadar vendor, gue tetangga lo. Khusus area ini, <strong className="text-white">Gue Sendiri (Founder)</strong> yang bakal anter & setting mesinnya. Gak pake teknisi, gak pake perantara. Biar lo puas nanya-nanya langsung sama ahlinya.
+                 </>
+               ) : (
+                 <>
+                   Buat lo di {cityData.name}, jarak bukan penghalang. Gue kirim paket aman (Kayu + Asuransi). Pas barang sampe, <strong className="text-white">Gue Sendiri</strong> yang bakal pandu lo setting via Video Call privat. Gak ada oper-operan ke admin.
+                 </>
+               )}
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                <Button onClick={() => navigate('/shop')} className="px-8 py-4 shadow-neon hover:shadow-neon-strong text-sm font-bold">
@@ -260,7 +265,7 @@ export const CityLandingPage = () => {
             <p className="text-gray-400 max-w-2xl mx-auto mb-10 text-lg">
                Kompetitor lo di {cityData.name} mungkin udah pake sistem gue diem-diem. Jangan sampe lo ketinggalan kereta. Upgrade toko lo sekarang.
             </p>
-            <Button onClick={() => navigate('/contact')} className="px-10 py-4 text-lg shadow-action hover:shadow-action-strong uppercase font-bold">
+            <Button onClick={() => navigate('/contact')} className="px-10 py-4 text-lg shadow-action hover:shadow-action-strong uppercase font-bold mx-auto">
                Amankan Stok Sekarang <ArrowRight size={20} />
             </Button>
          </div>
