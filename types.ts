@@ -1,5 +1,4 @@
 
-
 export interface Product {
   id: number;
   name: string;
@@ -184,4 +183,16 @@ export interface AnalyticsLog {
   device_type: 'mobile' | 'desktop' | 'tablet';
   referrer: string;
   created_at?: string;
+}
+
+// --- SHADOW LEAD TYPES ---
+export interface Lead {
+  id: number;
+  created_at: string;
+  name: string;
+  phone: string;
+  source: string; // 'checkout', 'contact'
+  interest: string;
+  status: 'new' | 'followup' | 'converted' | 'junk';
+  notes?: string;
 }

@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { MapPin, Phone, Mail, Clock, MessageCircle, Send, HelpCircle, Building, CheckCircle2, ArrowRight, LifeBuoy, Users, Coffee } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Button, Input, TextArea, SectionHeader, Card } from '../components/ui';
-import { normalizePhone } from '../utils';
+import { normalizePhone, supabase } from '../utils';
 
 const ContactItem = ({ icon: Icon, title, value, sub, action }: { icon: any, title: string, value: string, sub?: string, action?: () => void }) => (
   <div onClick={action} className={`flex items-start gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all ${action ? 'cursor-pointer group hover:border-brand-orange/30' : ''}`}>
@@ -63,6 +63,32 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
     category: 'Konsultasi Sistem',
     message: ''
   });
+
+  // SHADOW LEAD CAPTURE
+  const lastCapturedPhone = useRef<string>('');
+
+  const handleShadowCapture = async () => {
+    if (!form.name || !form.phone || form.phone.length < 9) return;
+    
+    const cleanPhone = normalizePhone(form.phone);
+    if (!cleanPhone || cleanPhone === lastCapturedPhone.current) return;
+
+    if (!supabase) return;
+
+    try {
+        await supabase.from('leads').insert([{
+            name: form.name,
+            phone: cleanPhone,
+            source: 'contact_form',
+            interest: form.category,
+            notes: form.message.substring(0, 100) + '...',
+            status: 'new'
+        }]);
+        lastCapturedPhone.current = cleanPhone;
+    } catch (e) {
+        console.error("Shadow capture failed", e);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,6 +228,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                            <Input 
                               value={form.name} 
                               onChange={e => setForm({...form, name: e.target.value})} 
+                              onBlur={handleShadowCapture}
                               placeholder="Mas / Mba ..."
                            />
                         </div>
@@ -210,6 +237,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                            <Input 
                               value={form.phone} 
                               onChange={e => setForm({...form, phone: e.target.value})} 
+                              onBlur={handleShadowCapture}
                               placeholder="0812xxxx"
                               type="tel"
                            />

@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCart } from '../context/cart-context';
 import { formatRupiah, supabase, normalizePhone } from '../utils';
-import { Button, Input, TextArea, Card, SectionHeader, LoadingSpinner } from '../components/ui';
-import { Trash2, Plus, Minus, ArrowLeft, CheckCircle2, Copy, ShoppingBag, Check, ShieldCheck } from 'lucide-react';
+import { Button, Input, TextArea, SectionHeader, LoadingSpinner } from '../components/ui';
+import { Trash2, Plus, Minus, ArrowLeft, CheckCircle2, Copy, ShoppingBag, Check, ShieldCheck, Zap } from 'lucide-react';
 
 export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
   const { cart, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
@@ -13,9 +13,41 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
     address: '',
     note: ''
   });
-  const [agreedToTerms, setAgreedToTerms] = useState(false); // NEW STATE
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<{ id: number, total: number } | null>(null);
+
+  // --- SHADOW LEAD LOGIC ---
+  const lastCapturedPhone = useRef<string>('');
+
+  const handleShadowCapture = async () => {
+    // 1. Validasi minimal: Ada Nama & No HP (min 9 digit)
+    if (!formData.name || !formData.phone || formData.phone.length < 9) return;
+    
+    // 2. Prevent spam: Jangan kirim kalau nomor sama dengan yg terakhir dicapture
+    const cleanPhone = normalizePhone(formData.phone);
+    if (!cleanPhone || cleanPhone === lastCapturedPhone.current) return;
+
+    if (!supabase) return;
+
+    try {
+        const interestStr = cart.map(c => `${c.quantity}x ${c.name}`).join(', ');
+        
+        await supabase.from('leads').insert([{
+            name: formData.name,
+            phone: cleanPhone,
+            source: 'checkout_page',
+            interest: interestStr || 'Browsing Cart',
+            status: 'new'
+        }]);
+        
+        lastCapturedPhone.current = cleanPhone;
+        console.log("Shadow Lead Captured 🥷");
+    } catch (e) {
+        // Silent fail is okay for shadow logic
+        console.error("Shadow capture failed", e);
+    }
+  };
 
   // --- GENERATOR: 12-Digit Random ID ---
   const generateOrderId = () => {
@@ -236,11 +268,25 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
               <form onSubmit={handleCheckout} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Lengkap</label>
-                  <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Nama Penerima" />
+                  <Input 
+                    value={formData.name} 
+                    onChange={e => setFormData({...formData, name: e.target.value})} 
+                    onBlur={handleShadowCapture} // CAPTURE ON BLUR
+                    placeholder="Nama Penerima" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp (Wajib)</label>
-                  <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="Contoh: 081234567890" type="tel" />
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex justify-between">
+                      <span>WhatsApp (Wajib)</span>
+                      <span className="text-[9px] text-brand-orange flex items-center gap-1 bg-brand-orange/10 px-1.5 rounded"><Zap size={8}/> Auto-Save</span>
+                  </label>
+                  <Input 
+                    value={formData.phone} 
+                    onChange={e => setFormData({...formData, phone: e.target.value})} 
+                    onBlur={handleShadowCapture} // CAPTURE ON BLUR
+                    placeholder="Contoh: 081234567890" 
+                    type="tel" 
+                  />
                   <p className="text-[10px] text-gray-500 mt-1">Format: 08xx atau 628xx (Min 10 digit)</p>
                 </div>
                 <div>
