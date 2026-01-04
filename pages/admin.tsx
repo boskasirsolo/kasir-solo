@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home, ArrowLeft, Briefcase, BarChart, Download, Share2 } from 'lucide-react';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home, ArrowLeft, Briefcase, BarChart, Download, Share2, Globe } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig, Testimonial, Article, JobOpening } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
 import { AdminProducts } from '../components/admin-products';
@@ -10,7 +10,8 @@ import { AdminOrders } from '../components/admin-orders';
 import { AdminArticles } from '../components/admin-articles';
 import { AdminCareer } from '../components/admin-career'; 
 import { AdminDownloads } from '../components/admin-downloads';
-import { AdminSocialStudio } from '../components/admin-social'; // NEW IMPORT
+import { AdminSocialStudio } from '../components/admin-social'; 
+import { AdminSEO } from '../components/admin-seo'; // NEW IMPORT
 import { AnalyticsDashboard } from '../components/admin-analytics'; 
 import { activateGhostMode } from '../hooks/use-analytics'; 
 import { supabase } from '../utils';
@@ -127,8 +128,7 @@ export const AdminDashboard = ({
   onLogout: () => void
 }) => {
   const navigate = useNavigate();
-  // UPDATED: Added 'social' to activeTab type
-  const [activeTab, setActiveTab] = useState<'analytics' | 'store' | 'gallery' | 'articles' | 'career' | 'downloads' | 'social' | 'settings'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'store' | 'gallery' | 'articles' | 'seo' | 'career' | 'downloads' | 'social' | 'settings'>('analytics');
   const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog'>('orders');
   const [showConnectAI, setShowConnectAI] = useState(false);
 
@@ -180,11 +180,12 @@ export const AdminDashboard = ({
           <div className="flex flex-wrap justify-center gap-1.5">
             <TabButton id="analytics" label="TRAFFIC" icon={BarChart} />
             <TabButton id="store" label="TOKO" icon={ShoppingBag} />
+            <TabButton id="seo" label="SEO KOTA" icon={Globe} /> {/* NEW TAB */}
             <TabButton id="gallery" label="GALERI" icon={Image} />
             <TabButton id="articles" label="ARTIKEL" icon={FileText} />
             <TabButton id="career" label="KARIR" icon={Briefcase} /> 
             <TabButton id="downloads" label="FILE" icon={Download} />
-            <TabButton id="social" label="STUDIO" icon={Share2} /> {/* NEW TAB */}
+            <TabButton id="social" label="STUDIO" icon={Share2} />
             <TabButton id="settings" label="SETTING" icon={Settings} />
           </div>
           
@@ -268,6 +269,12 @@ export const AdminDashboard = ({
           </div>
         )}
 
+        {activeTab === 'seo' && (
+          <div className="animate-fade-in relative z-10 p-4 md:p-6">
+             <AdminSEO />
+          </div>
+        )}
+
         {activeTab === 'gallery' && (
           <div className="animate-fade-in relative z-10 h-full">
              <AdminGallery 
@@ -289,14 +296,12 @@ export const AdminDashboard = ({
           </div>
         )}
 
-        {/* Downloads Section */}
         {activeTab === 'downloads' && (
           <div className="animate-fade-in relative z-10 p-4 md:p-6">
              <AdminDownloads />
           </div>
         )}
 
-        {/* NEW: Social Studio Section */}
         {activeTab === 'social' && (
           <div className="animate-fade-in relative z-10 p-4 md:p-6">
              <AdminSocialStudio products={products} articles={articles} gallery={gallery} />
