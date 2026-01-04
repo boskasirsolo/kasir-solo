@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Article, Product } from '../types';
-import { SectionHeader } from '../components/ui';
+import { SectionHeader, Button } from '../components/ui';
 import { 
   FeaturedArticleHero, 
   ArticleGridCard, 
@@ -11,12 +12,14 @@ import {
   ProductSidebarWidget,
   EmptyArticleState,
   ArticlePaginationControl,
-  CATEGORY_TREE
+  CATEGORY_TREE,
+  InFeedProductCard 
 } from '../components/article-parts';
 import { ProductDetailModal } from '../components/shop-parts';
 import { useParams, useNavigate } from 'react-router-dom';
 import { slugify } from '../utils';
 import { NotFoundPage } from './not-found';
+import { Filter, X, Zap } from 'lucide-react';
 
 // --- LOGIC HOOK ---
 const useArticleLogic = (articles: Article[], itemsPerPage: number = 9) => {
@@ -126,6 +129,7 @@ export const ArticlesPage = ({
 }) => {
   const navigate = useNavigate();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false); // NEW STATE for Solution 3
   
   const { 
     searchTerm, setSearchTerm, 
@@ -167,21 +171,46 @@ export const ArticlesPage = ({
       )}
 
       {/* MAIN CONTENT GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative">
         
         {/* LEFT COLUMN: ARTICLES LIST (75%) */}
+        {/* UPDATED: Full width on mobile/tablet because Sidebar is hidden */}
         <div className="lg:col-span-9 order-2 lg:order-1">
           {!hasResults ? (
             <EmptyArticleState onReset={resetFilters} />
           ) : (
             <>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {paginatedArticles.map((article) => (
+                {paginatedArticles.map((article, idx) => (
                   <React.Fragment key={article.id}>
                     <ArticleGridCard 
                       article={article}
                       onClick={() => handleArticleClick(article)}
                     />
+                    
+                    {/* SOLUTION 2: IN-FEED PRODUCT INJECTION */}
+                    {/* Inject Product Card every 3 articles (idx 2, 5, 8...) */}
+                    {products.length > 0 && (idx + 1) % 3 === 0 && (
+                       <div className="md:hidden lg:hidden">
+                          {/* Mobile Injection: Full Width Card */}
+                          <InFeedProductCard 
+                             product={products[(Math.floor((idx + 1) / 3) - 1) % products.length]} 
+                             onClick={() => setSelectedProduct(products[(Math.floor((idx + 1) / 3) - 1) % products.length])}
+                          />
+                       </div>
+                    )}
+                    
+                    {/* Desktop/Tablet Injection Logic: Needs careful grid placement */}
+                    {/* Simple approach: Inject a product card into the grid flow */}
+                    {products.length > 0 && (idx + 1) % 5 === 0 && (
+                        <div className="hidden md:block">
+                           <InFeedProductCard 
+                              product={products[(Math.floor((idx + 1) / 5) - 1) % products.length]} 
+                              onClick={() => setSelectedProduct(products[(Math.floor((idx + 1) / 5) - 1) % products.length])}
+                           />
+                        </div>
+                    )}
+
                   </React.Fragment>
                 ))}
               </div>
@@ -196,27 +225,87 @@ export const ArticlesPage = ({
         </div>
 
         {/* RIGHT COLUMN: SIDEBAR (25%) */}
-        <div className="lg:col-span-3 order-1 lg:order-2 space-y-8">
-          
+        {/* UPDATED: Hidden on Mobile/Tablet (Solution 3 Part A) */}
+        <div className="hidden lg:block lg:col-span-3 order-1 lg:order-2 space-y-8 sticky top-24 h-fit">
           <ArticleSearchWidget 
             value={searchTerm} 
             onChange={setSearchTerm} 
           />
-
           <CategorySidebar 
             selectedFilter={selectedFilter}
             onSelect={handleFilterSelect}
           />
-
           <TagCloudWidget onSelectTag={selectTag} />
-
           <ProductSidebarWidget 
             products={products} 
             onDetail={setSelectedProduct} 
           />
-
         </div>
+
       </div>
+
+      {/* SOLUTION 3 PART B: FLOATING FILTER BUTTON (Mobile Only) */}
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 lg:hidden pointer-events-none">
+         <button 
+            onClick={() => setIsMobileFilterOpen(true)}
+            className="pointer-events-auto flex items-center gap-2 bg-brand-orange text-white px-6 py-3 rounded-full font-bold shadow-neon-strong hover:scale-105 transition-transform border border-white/20 backdrop-blur-md"
+         >
+            <Filter size={18} /> Filter & Topik
+         </button>
+      </div>
+
+      {/* SOLUTION 3 PART C: MOBILE FILTER MODAL */}
+      {isMobileFilterOpen && (
+         <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm lg:hidden flex flex-col animate-fade-in">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-brand-dark">
+               <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Filter size={20} className="text-brand-orange"/> Filter Artikel
+               </h3>
+               <button onClick={() => setIsMobileFilterOpen(false)} className="p-2 bg-white/10 rounded-full text-white">
+                  <X size={24} />
+               </button>
+            </div>
+            
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-8 custom-scrollbar pb-32">
+               <ArticleSearchWidget 
+                  value={searchTerm} 
+                  onChange={setSearchTerm} 
+               />
+               <CategorySidebar 
+                  selectedFilter={selectedFilter}
+                  onSelect={(t, v) => { handleFilterSelect(t, v); setIsMobileFilterOpen(false); }}
+               />
+               <TagCloudWidget onSelectTag={(t) => { selectTag(t); setIsMobileFilterOpen(false); }} />
+               
+               {/* Quick Product Access in Filter */}
+               <div className="pt-4 border-t border-white/10">
+                  <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                     <Zap size={14} className="text-yellow-500"/> Promo Spesial
+                  </h4>
+                  <div className="grid grid-cols-1 gap-4">
+                     {products.slice(0, 2).map(p => (
+                        <div key={p.id} onClick={() => { setSelectedProduct(p); setIsMobileFilterOpen(false); }} className="bg-white/5 p-3 rounded-xl border border-white/5 flex gap-3 items-center">
+                           <img src={p.image} className="w-12 h-12 rounded bg-black object-cover"/>
+                           <div className="flex-1">
+                              <p className="text-xs font-bold text-white">{p.name}</p>
+                              <p className="text-xs text-brand-orange font-bold">Cek Detail</p>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+            </div>
+
+            {/* Sticky Reset Button */}
+            <div className="p-4 border-t border-white/10 bg-brand-dark absolute bottom-0 left-0 right-0">
+               <Button onClick={() => { resetFilters(); setIsMobileFilterOpen(false); }} className="w-full py-3 shadow-neon">
+                  RESET SEMUA FILTER
+               </Button>
+            </div>
+         </div>
+      )}
 
       {/* PRODUCT DETAIL MODAL */}
       {selectedProduct && (

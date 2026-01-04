@@ -8,7 +8,7 @@ import {
   Facebook, Twitter, Linkedin, Hash, ShoppingCart, TrendingUp,
   ChevronLeft, Send, Plus, Check, Briefcase, HeartHandshake, Quote,
   Search, Filter, FolderOpen, ChevronDown, Network, FileText, Download, HardDrive, Layers,
-  Skull, Flame, Target
+  Skull, Flame, Target, Star
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
@@ -147,6 +147,13 @@ export const ArticlePaginationControl = ({ currentPage, totalPages, setPage }: {
     </div>
   );
 };
+
+// ... (Other Reader Components remain same, removed for brevity, will auto-include in final file if full replace is needed, but assuming smart update based on context) ...
+// Assuming user wants full file content for safety as previous logic implies:
+
+// ... RE-EXPORT READER HOOKS & COMPONENTS (Keeping them intact) ...
+// [OMITTED LONG SECTIONS FOR READER VIEW TO FOCUS ON THE REQUESTED CHANGES]
+// I will include the full file content below to ensure no breakage.
 
 export const useReadingProgress = () => {
   const [progress, setProgress] = useState(0);
@@ -314,15 +321,55 @@ export const ArticleGridCard = ({ article, onClick }: { article: Article, onClic
   </div>
 );
 
+// --- NEW COMPONENT: In-Feed Product Card (Native Ad Style) ---
+export const InFeedProductCard = ({ product, onClick }: { product: Product, onClick: () => void }) => {
+  return (
+    <div 
+        onClick={onClick}
+        className="bg-brand-dark/50 border border-brand-orange/30 rounded-2xl overflow-hidden hover:border-brand-orange transition-all duration-300 shadow-neon-text cursor-pointer flex flex-col h-full group relative"
+    >
+        <div className="absolute top-3 left-3 z-10">
+            <span className="bg-brand-orange text-white text-[9px] font-bold px-2 py-1 rounded shadow-md uppercase tracking-widest animate-pulse">
+                Rekomendasi
+            </span>
+        </div>
+        <div className="relative h-56 overflow-hidden bg-black p-4">
+            <img 
+                src={product.image} 
+                alt={product.name} 
+                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110" 
+                loading="lazy" 
+            />
+        </div>
+        <div className="p-6 flex flex-col flex-grow bg-gradient-to-b from-brand-card to-black">
+            <div className="flex justify-between items-start mb-2">
+                <h3 className="text-lg font-bold text-white line-clamp-2 leading-tight group-hover:text-brand-orange transition-colors">{product.name}</h3>
+            </div>
+            <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={10} className="text-yellow-500 fill-yellow-500" />
+                ))}
+                <span className="text-[10px] text-gray-500 ml-1">(Best Seller)</span>
+            </div>
+            
+            <p className="text-2xl font-display font-bold text-brand-orange mb-4">{formatRupiah(product.price)}</p>
+            
+            <button className="w-full mt-auto py-3 bg-white/5 hover:bg-brand-orange hover:text-white text-gray-300 font-bold rounded-xl border border-white/10 hover:border-brand-orange transition-all flex items-center justify-center gap-2 text-sm shadow-lg">
+                <ShoppingCart size={16} /> Cek Spesifikasi
+            </button>
+        </div>
+    </div>
+  );
+};
+
+// ... (Rest of FeaturedArticleHero, SidebarProductCard, ArticleSidebarRight, ArticleReaderView unchanged) ...
 export const FeaturedArticleHero = ({ article, onClick }: { article: Article, onClick: () => void }) => (
   <div onClick={onClick} className="group relative w-full h-[500px] rounded-3xl overflow-hidden cursor-pointer border border-white/5 hover:border-brand-orange/50 transition-all shadow-2xl mb-16">
     <img src={article.image} alt={article.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" loading="eager" />
     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-    
     <div className="absolute top-8 right-8">
         <div className="bg-red-600 text-white font-bold px-4 py-2 rounded-lg shadow-neon animate-pulse text-xs uppercase tracking-widest border border-red-400">Wajib Baca Bos</div>
     </div>
-
     <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full md:w-2/3">
       <div className="flex items-center gap-3 mb-4"><span className="px-3 py-1 bg-brand-orange text-white text-xs font-bold rounded-full uppercase tracking-wider">{article.category || "Featured"}</span><span className="flex items-center gap-1 text-gray-300 text-xs font-bold"><Clock size={12} /> {article.readTime || "3 min read"}</span></div>
       <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4 leading-tight group-hover:text-brand-orange transition-colors">{article.title}</h2>
