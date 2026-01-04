@@ -56,7 +56,7 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                             </h3>
                             <div className="prose prose-invert prose-lg text-gray-400 leading-relaxed relative z-10">
                                 <p className="mb-4">
-                                    Tahun 2022, gue pernah 'mati suri'. Aset digital ilang, domain diambil orang, profil google bisnis disuspend.
+                                    Tahun 2022, gue pernah 'mati suri'. Aset digital ilang, domain diambil orang, profil google bisnis disuspend. Pernah juga dikadalin sama karyawan.
                                 </p>
                                 <p>
                                     Sistem berantakan gara-gara gue terlalu percaya sama 'manusia' tanpa sistem kontrol. Saat itu gue belajar satu hal mahal: <strong className="text-white">Bisnis tanpa sistem yang kuat cuma nunggu waktu buat meledak.</strong>
