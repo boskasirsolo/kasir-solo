@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useCart } from '../context/cart-context';
 import { formatRupiah, supabase, normalizePhone } from '../utils';
 import { Button, Input, TextArea, Card, SectionHeader, LoadingSpinner } from '../components/ui';
-import { Trash2, Plus, Minus, ArrowLeft, CheckCircle2, Copy, ShoppingBag } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowLeft, CheckCircle2, Copy, ShoppingBag, Check, ShieldCheck } from 'lucide-react';
 
 export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
   const { cart, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
@@ -13,14 +13,11 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
     address: '',
     note: ''
   });
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // NEW STATE
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<{ id: number, total: number } | null>(null);
 
   // --- GENERATOR: 12-Digit Random ID ---
-  // Range: 100,000,000,000 to 999,999,999,999
-  // Fits in Javascript Number (Safe limit is 9 quadrillion / 16 digits)
-  // Probability collision: 1 in 900 Billion (System effectively works once)
-  // Logic: Min value starts with 1, ensuring NO leading zeros (0000...).
   const generateOrderId = () => {
     const min = 100000000000;
     const max = 999999999999;
@@ -32,21 +29,17 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
     for (let i = 0; i < maxRetries; i++) {
       const newId = generateOrderId();
       
-      // Try insert
       const { data, error } = await supabase
         .from('orders')
         .insert([{ ...payload, id: newId }])
         .select()
         .single();
 
-      if (!error) return data; // Success! Return the order data
+      if (!error) return data; 
 
-      // If error is NOT a duplicate key error (Postgres code 23505), throw it immediately
       if (error.code !== '23505') {
         throw error;
       }
-      
-      // If it IS a duplicate key (extremely rare with 12 digits), retry silently
       console.warn(`Order ID Collision ${newId}. Retrying... (${i + 1}/${maxRetries})`);
     }
     throw new Error("Gagal membuat Order ID unik. Silakan coba lagi.");
@@ -61,6 +54,12 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
       return;
     }
 
+    // TERMS VALIDATION
+    if (!agreedToTerms) {
+      alert("Mohon setujui Syarat & Ketentuan untuk melanjutkan pesanan.");
+      return;
+    }
+
     // STRICT PHONE VALIDATION
     const cleanPhone = normalizePhone(formData.phone);
     if (!cleanPhone) {
@@ -71,7 +70,6 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
     setIsSubmitting(true);
 
     try {
-      // DEMO MODE CHECK
       if (!supabase) {
         console.warn("Database connection missing. Running in demo mode.");
         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -80,10 +78,9 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
         return;
       }
 
-      // 1. Create Order Head (With Smart Retry)
       const orderPayload = {
         customer_name: formData.name,
-        customer_phone: cleanPhone, // Use validated phone
+        customer_phone: cleanPhone, 
         customer_address: formData.address,
         customer_note: formData.note,
         total_amount: totalPrice,
@@ -91,10 +88,8 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
         payment_method: 'transfer_bnc'
       };
 
-      // This function handles the looping automatically
       const orderData = await createOrderSafe(orderPayload);
 
-      // 2. Create Order Items
       const orderItems = cart.map(item => ({
         order_id: orderData.id,
         product_id: item.id,
@@ -108,12 +103,10 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
         .insert(orderItems);
 
       if (itemsError) {
-        // Rollback: Delete order if items fail
         await supabase.from('orders').delete().eq('id', orderData.id);
         throw itemsError;
       }
 
-      // Success!
       setOrderSuccess({ id: orderData.id, total: totalPrice });
       clearCart();
 
@@ -259,6 +252,26 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
                   <Input value={formData.note} onChange={e => setFormData({...formData, note: e.target.value})} placeholder="Patokan lokasi, warna, dll" />
                 </div>
 
+                {/* TERMS AND CONDITIONS CHECKBOX */}
+                <div className="mt-6 p-4 bg-brand-orange/5 border border-brand-orange/20 rounded-xl">
+                    <label className="flex items-start gap-3 cursor-pointer select-none">
+                        <div className="relative flex items-center mt-0.5 shrink-0">
+                            <input 
+                                type="checkbox" 
+                                className="peer sr-only"
+                                checked={agreedToTerms} 
+                                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                            />
+                            <div className={`w-5 h-5 border-2 rounded transition-all flex items-center justify-center ${agreedToTerms ? 'bg-brand-orange border-brand-orange' : 'border-gray-500 bg-transparent hover:border-gray-300'}`}>
+                                {agreedToTerms && <Check size={14} className="text-white" />}
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            Saya telah membaca dan menyetujui <button type="button" onClick={() => window.open('/legal/terms', '_blank')} className="text-brand-orange font-bold hover:underline">Syarat & Ketentuan</button> serta <button type="button" onClick={() => window.open('/legal/privacy', '_blank')} className="text-brand-orange font-bold hover:underline">Kebijakan Privasi</button>. Saya memastikan data pengiriman sudah benar.
+                        </p>
+                    </label>
+                </div>
+
                 <div className="pt-6 border-t border-white/10 mt-6">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-400">Subtotal Produk</span>
@@ -276,8 +289,8 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
                   <Button type="submit" className="w-full py-4 text-lg" disabled={isSubmitting}>
                     {isSubmitting ? <LoadingSpinner /> : "BUAT PESANAN SEKARANG"}
                   </Button>
-                  <p className="text-center text-xs text-gray-600 mt-4">
-                    Dengan membuat pesanan, Anda setuju untuk melakukan transfer pembayaran ke rekening perusahaan.
+                  <p className="text-center text-xs text-gray-600 mt-4 flex items-center justify-center gap-1">
+                    <ShieldCheck size={12} /> Transaksi aman & terdata di sistem kami.
                   </p>
                 </div>
               </form>
