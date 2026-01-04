@@ -117,7 +117,8 @@ const DownloadCard: React.FC<{ item: DownloadItem, onClick: () => void }> = ({ i
            <span className="flex items-center gap-1"><Monitor size={8}/> {item.os_support}</span>
            <span>{item.file_size}</span>
         </div>
-        <button className="w-full flex items-center justify-center gap-2 border border-white/10 text-gray-400 group-hover:border-brand-orange group-hover:text-white group-hover:bg-brand-orange py-2 rounded text-[10px] font-bold transition-all">
+        {/* MODIFIED BUTTON STYLE: Orange Border & Text */}
+        <button className="w-full flex items-center justify-center gap-2 border border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white py-2 rounded text-[10px] font-bold transition-all shadow-[0_0_10px_rgba(255,95,31,0.15)]">
           Lihat Detail
         </button>
       </div>
@@ -353,17 +354,17 @@ export const SupportPage = () => {
                     <SimplePagination page={pageFaqs} totalPages={Math.ceil(filteredFaqs.length/PAGE_SIZE_FAQS)} setPage={setPageFaqs} />
                 </div>
 
-                {/* CONTACT BOX */}
+                {/* CONTACT BOX - REVISED */}
                 <div className="bg-brand-orange/10 border border-brand-orange/30 p-5 rounded-xl text-center">
                     <p className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-2">Mentok & Nyerah?</p>
                     <p className="text-gray-300 text-xs mb-4 leading-relaxed">
-                        Gak usah dipaksa kalau emang gak ngerti. Daripada makin rusak, chat tim teknis gue sekarang.
+                        Udah mentok? Jangan dipaksa, Bos. Daripada makin ambyar, mending serahin ke teknisi gue. Tinggal duduk manis, biar tim gue yang beresin kekacauan ini.
                     </p>
                     <a 
                         href="https://wa.me/6282325103336?text=Halo Tim Teknis, saya butuh bantuan urgent."
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-action text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-neon w-full justify-center"
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-orange to-red-600 hover:from-brand-orange hover:to-red-500 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-neon w-full justify-center transform hover:-translate-y-0.5 transition-all"
                     >
                         <MessageCircle size={14} /> Panggil Mekanik
                     </a>
