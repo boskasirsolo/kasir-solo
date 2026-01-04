@@ -262,7 +262,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                   <div className="bg-brand-card rounded-xl border border-white/5 px-6">
                      <FaqItem 
                         q="Mas, ada toko fisiknya gak buat liat barang?" 
-                        a="Jelas ada dong. Gue bukan dropshipper ghaib. Main ke kantor Solo atau Blora, kita demo alat sambil ngopi gratis." 
+                        a="Sekarang gue fokus main *Online & Gudang* aja. Kenapa? Biar gue gak perlu bebanin biaya sewa ruko mahal ke harga barang lo (jadi lebih murah). Gantinya? Kita *Video Call* sepuasnya buat demo unit, atau transaksi via Marketplace (Tokped/Shopee) biar lo aman." 
                      />
                      <FaqItem 
                         q="Bisa kirim ke luar pulau? Aman gak?" 
