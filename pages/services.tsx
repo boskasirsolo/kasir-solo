@@ -6,7 +6,7 @@ import {
   ArrowRight, CheckCircle2, Store, Clock, ShoppingBag, Award,
   FileSpreadsheet, Cpu, GitMerge, Users, PieChart, Layers, 
   Megaphone, Target, DollarSign, MapPin, Anchor, LineChart,
-  ShieldAlert, Activity, LifeBuoy, PenTool, Star
+  ShieldAlert, Activity, LifeBuoy, PenTool, Star, MousePointer
 } from 'lucide-react';
 import { ServiceHero, FeatureGrid, WorkflowSection, NarrativeSection } from '../components/service-parts';
 import { InvestmentSimulator, CalcData } from '../components/calculator';
@@ -17,40 +17,38 @@ import { InvestmentSimulator, CalcData } from '../components/calculator';
 
 const WEBSITE_DATA = {
   features: [
-    { title: "SEO Domination", desc: "Struktur website dirancang agar mudah ditemukan di Google (Mesin Pencari Pelanggan).", icon: Search },
-    { title: "Google Maps Ready", desc: "Gratis setup dasar agar toko fisik Anda muncul di pencarian lokal.", icon: MapPin },
-    { title: "Kecepatan Kilat", desc: "Optimasi kode & server agar loading website < 3 detik. Anti lemot.", icon: Zap },
-    { title: "Brand Authority", desc: "Meningkatkan kepercayaan supplier & customer dengan kehadiran digital yang bonafit.", icon: Award },
-    { title: "Katalog Online", desc: "Showcase ribuan produk tanpa sewa ruko mahal. Katalog di genggaman pelanggan.", icon: ShoppingBag },
-    { title: "Siap Integrasi POS", desc: "Dibangun dengan mindset integrasi masa depan dengan Mesin Kasir SIBOS.", icon: RefreshCw },
+    { title: "Jatah Preman (SEO)", desc: "Web lo gue setting biar 'akrab' sama Google. Pas orang cari produk lo, web lo nongol duluan.", icon: Target },
+    { title: "Tancap Bendera (G-Maps)", desc: "Gratis setup titik Google Maps biar toko fisik lo valid dan gampang dicari kurir.", icon: MapPin },
+    { title: "Anti Lemot", desc: "Loading web < 3 detik. Karena pembeli sekarang itu nggak sabaran. Lemot dikit, kabur ke kompetitor.", icon: Zap },
+    { title: "Biar Gak Dikira Tipu-Tipu", desc: "Web resmi pake domain .com/.id bikin level trust naik 1000%. Supplier & Customer lebih segan.", icon: Award },
+    { title: "Katalog 24 Jam", desc: "Showcase ribuan produk tanpa sewa ruko mahal. Toko lo buka terus pas lo lagi tidur.", icon: ShoppingBag },
+    { title: "Siap Integrasi SIBOS", desc: "Dibangun dengan pondasi yang siap dikawinkan sama sistem kasir SIBOS gue nanti.", icon: GitMerge },
   ],
   steps: [
-    { step: "1", title: "Bedah Bisnis", desc: "Saya pelajari model bisnis Anda, bukan sekadar tanya warna favorit." },
-    { step: "2", title: "Strategi Konten", desc: "Merancang struktur halaman yang menjual dan SEO-friendly." },
-    { step: "3", title: "Development", desc: "Coding & Desain oleh tim yang mengerti UI/UX Retail." },
-    { step: "4", title: "Launch & Training", desc: "Web rilis + Pelatihan cara update konten mandiri." },
+    { step: "1", title: "Interogasi Bisnis", desc: "Gue gak cuma tanya warna favorit. Gue tanya: Siapa pembeli lo? Apa produk unggulan lo?" },
+    { step: "2", title: "Racik Strategi", desc: "Gue susun struktur menu dan copywriting yang memancing orang buat klik tombol beli." },
+    { step: "3", title: "Bangun Pondasi", desc: "Coding & Desain oleh tim gue. Bukan pake template pasaran yang berat." },
+    { step: "4", title: "Serah Terima Kunci", desc: "Web rilis. Gue ajarin cara ganti foto & harga sendiri. Lo pegang kendali penuh." },
   ]
 };
 
 const WEBSITE_CALC: CalcData = {
-  title: "Simulasi Biaya Website",
-  subtitle: "Cek estimasi biaya pembuatan aset digital Anda.",
-  baseLabel: "Pilih Skala Website",
+  title: "Cek Mahar Ruko Digital",
+  subtitle: "Jangan kaget kalau harga gue beda sama jasa 500 ribuan. Gue jual ASET, bukan sampah digital.",
+  baseLabel: "Pilih Ukuran Ruko",
   baseOptions: [
-    { id: 'lp', label: 'Landing Page', price: 1500000, desc: 'Fokus konversi satu produk/jasa.' },
-    { id: 'compro', label: 'Company Profile', price: 3500000, desc: 'Branding perusahaan lengkap + Blog.' },
-    { id: 'toko', label: 'Toko Online', price: 6500000, desc: 'Fitur keranjang belanja & katalog produk.' }
+    { id: 'lp', label: 'Landing Page (Kios)', price: 1500000, desc: 'Satu halaman panjang. Fokus hajar 1 produk biar closing.' },
+    { id: 'compro', label: 'Company Profile (Kantor)', price: 3500000, desc: 'Branding perusahaan lengkap. Buat yang mau main tender/B2B.' },
+    { id: 'toko', label: 'Toko Online (Minimarket)', price: 6500000, desc: 'Ada keranjang belanja, katalog banyak, itung ongkir otomatis.' }
   ],
-  addonLabel: "Fitur Tambahan (Power-Ups)",
+  addonLabel: "Senjata Tambahan (Opsional)",
   addons: [
-    { id: 'domain', label: 'Domain .COM / .ID', price: 300000 },
-    { id: 'gbp_web', label: 'Integrasi Google Bisnis', price: 750000, desc: 'Verifikasi lokasi & optimasi profil.' },
-    { id: 'copy', label: 'Copywriting', price: 750000 },
+    { id: 'domain', label: 'Domain .COM / .ID (Sertifikat)', price: 300000 },
+    { id: 'gbp_web', label: 'Verifikasi Google Bisnis', price: 750000, desc: 'Biar muncul di Peta.' },
+    { id: 'copy', label: 'Copywriting (Sales Letter)', price: 750000, desc: 'Kata-kata yang nge-hipnotis pembeli.' },
     { id: 'seo_basic', label: 'SEO Setup Basic', price: 500000 },
-    { id: 'wa_rotator', label: 'Integrasi WhatsApp', price: 1200000, desc: 'Rotator CS & Notifikasi.' },
-    { id: 'payment', label: 'Integrasi Payment Gateway', price: 2000000, desc: 'QRIS & Virtual Account.' },
-    { id: 'shipping', label: 'Integrasi Ekspedisi', price: 2000000, desc: 'Cek ongkir otomatis.' },
-    { id: 'ai_chat', label: 'Integrasi AI', price: 3000000, desc: 'Chatbot & Otomasi Cerdas.' }
+    { id: 'wa_rotator', label: 'Rotator WhatsApp', price: 1200000, desc: 'Kalau CS lo banyak, chat dibagi rata.' },
+    { id: 'ai_chat', label: 'Chatbot AI Sederhana', price: 3000000, desc: 'Jawab pertanyaan umum otomatis.' }
   ]
 };
 
@@ -173,9 +171,9 @@ export const WebsiteServicePage = () => {
   return (
     <div className="animate-fade-in">
       <ServiceHero 
-        title="Saya Gak Cuma Bikin" 
-        highlight="Web Cantik." 
-        subtitle="Saya Bikin Web yang Jualan. Integrasi kekuatan Toko Fisik dengan jangkauan Toko Online. Satu ekosistem, omzet maksimal."
+        title="Web Itu" 
+        highlight="Ruko Digital." 
+        subtitle="Jangan cuma sewa lapak (Sosmed) doang. Bangun 'Sertifikat Hak Milik' (SHM) lo sendiri di internet. Gue bantu lo punya aset digital yang gak bisa diban."
         icon={Globe}
       />
       
@@ -188,22 +186,25 @@ export const WebsiteServicePage = () => {
                   <ArrowRight size={24} className="text-brand-orange animate-pulse" />
                   <Globe size={40} className="text-brand-orange" />
                 </div>
-                <h3 className="text-2xl font-bold text-white">Limited Slots Only</h3>
+                <h3 className="text-2xl font-bold text-white">Warning: Slot Terbatas</h3>
                 <p className="text-gray-400 leading-relaxed">
-                  "Banyak jasa web murah cuma kasih template, terus ditinggal. Karena saya juga pelaku bisnis, saya racik struktur SEO dan alur penjualannya (Funnel) supaya web ini jadi mesin uang. <strong>Saya kerjakan sendiri, slot terbatas.</strong>"
+                  "Jujur aja, banyak jasa web 500 ribuan di luar sana. Hasilnya? **Sampah Digital.** Gak ada traffic, cuma pajangan. Gue kerjain ini pake strategi dagang, bukan cuma template gratisan. <strong>Gue pegang sendiri, makanya slotnya dikit.</strong>"
                 </p>
             </div>
          </div>
          <div>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6 leading-tight">
-                Mengapa Anda Butuh Website dari <span className="text-brand-orange">Ahli Kasir?</span>
+                Kenapa Harus Sama <span className="text-brand-orange">Tukang Kasir?</span>
             </h2>
+            <p className="text-gray-400 mb-6">
+                Karena gue ngerti <strong>duit masuk</strong>. Gue gak peduli web lo warna-warni kalau gak ada yang beli. Gue desain web lo layaknya toko fisik yang siap transaksi.
+            </p>
             <ul className="space-y-4">
                 {[
-                  "Struktur kategori produk rapi sesuai standar gudang.",
-                  "Optimasi flow checkout ringkas (seperti kasir).",
-                  "Persiapan teknis untuk integrasi SIBOS ERP.",
-                  "Dukungan teknis yang paham bahasa bisnis (Margin, Varian)."
+                  "Struktur Kategori Produk rapi (Standar Gudang).",
+                  "Tombol 'Beli' yang nampol dan jelas.",
+                  "Loading cepet biar pembeli gak kabur.",
+                  "Siap integrasi sama sistem kasir/ERP nanti."
                 ].map((item, i) => (
                   <li key={i} className="flex gap-3 text-gray-300">
                       <CheckCircle2 className="text-brand-orange shrink-0" size={20} />
@@ -219,7 +220,7 @@ export const WebsiteServicePage = () => {
       {/* CALCULATOR SECTION */}
       <section className="py-16 bg-brand-dark border-t border-white/5">
          <div className="container mx-auto px-4">
-            <InvestmentSimulator data={WEBSITE_CALC} serviceName="Jasa Pembuatan Website" />
+            <InvestmentSimulator data={WEBSITE_CALC} serviceName="Jasa Pembuatan Website (Ruko Digital)" />
          </div>
       </section>
 
