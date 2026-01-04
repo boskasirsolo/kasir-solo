@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink, User, MessageCircle, ShieldCheck, MapPin, Clock, Activity, XCircle, CheckCircle2, TrendingUp, Layers, Heart, Calculator } from 'lucide-react';
+import { ArrowRight, Zap, Monitor, BarChart3, Palette, Code, Search, Settings, Star, Quote, ExternalLink, User, MessageCircle, ShieldCheck, MapPin, Clock, Activity, XCircle, CheckCircle2, TrendingUp, Layers, Heart, Calculator, AlertTriangle } from 'lucide-react';
 import { SiteConfig, GalleryItem, Testimonial } from '../types';
 import { Button, Card, Badge } from '../components/ui';
 import { ProjectDetailModal } from '../components/gallery-modal'; // Import Modal
@@ -515,10 +514,21 @@ export const HomePage = ({
             <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4 leading-tight">
                Ngobrol Langsung sama <br/><span className="text-brand-orange">Arsitek Sistemnya</span>
             </h2>
-            <p className="max-w-2xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
+            <p className="max-w-2xl mx-auto text-lg text-gray-400 leading-relaxed mb-6">
                Lo gak bakal dilayani sama Chatbot atau Admin magang yang jawab pake template robot. 
                Gue, <strong>Amin Maghfuri</strong>, bakal langsung bedah kebutuhan bisnis lo dan kasih solusi <strong>mesin kasir</strong> yang paling efisien. Gue cuman tanem chatbot SIBOS AI di website ini.
             </p>
+
+            {/* LIMITED SLOT BADGE - FOUNDER */}
+            <div className="mb-10 inline-flex flex-col sm:flex-row items-center gap-2 bg-red-500/5 border border-red-500/20 px-6 py-3 rounded-xl">
+                <AlertTriangle size={18} className="text-red-500" />
+                <span className="text-red-400 text-sm font-bold uppercase tracking-wide">
+                    INFO KUOTA BULAN INI:
+                </span>
+                <span className="text-white text-sm font-bold">
+                    4 Slot On-Site & 2 Slot Proyek Digital
+                </span>
+            </div>
             
             <div className="flex justify-center">
                {/* UPDATED: WhatsApp Button (Brand Gradient) */}

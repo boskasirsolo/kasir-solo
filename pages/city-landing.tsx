@@ -114,6 +114,14 @@ export const CityLandingPage = () => {
                )}
             </div>
 
+            {/* LIMITED SLOT BADGE */}
+            <div className="mb-8 flex justify-center">
+                <div className="bg-red-500/10 border border-red-500/30 px-6 py-2 rounded-full flex items-center gap-2 text-red-400 font-bold text-xs uppercase tracking-wider animate-pulse">
+                    <AlertTriangle size={14} /> 
+                    {isKandang ? "Kuota Setup On-Site: Sisa 1 dari 4 Slot Bulan Ini" : "Kuota Video Call Setup: Terbatas Bulan Ini"}
+                </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                <Button onClick={() => navigate('/shop')} className="px-8 py-4 shadow-neon hover:shadow-neon-strong text-sm font-bold">
                   LIHAT SENJATA (KATALOG)

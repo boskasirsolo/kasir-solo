@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Globe, Zap, Database, Lock, Search, 
@@ -7,7 +6,7 @@ import {
   FileSpreadsheet, Cpu, GitMerge, Users, PieChart, Layers, 
   Megaphone, Target, DollarSign, MapPin, Anchor, LineChart,
   ShieldAlert, Activity, LifeBuoy, PenTool, Star, MousePointer,
-  Server, Key, Eye, TrendingDown, Skull, Wrench, HardDrive
+  Server, Key, Eye, TrendingDown, Skull, Wrench, HardDrive, AlertTriangle
 } from 'lucide-react';
 import { ServiceHero, FeatureGrid, WorkflowSection, NarrativeSection } from '../components/service-parts';
 import { InvestmentSimulator, CalcData } from '../components/calculator';
@@ -107,22 +106,19 @@ const SEO_DATA = {
 };
 
 const SEO_CALC: CalcData = {
-  title: "Mahar Kuasai Google",
-  subtitle: "Iklan itu bakar duit (Cost). SEO itu nanam pohon duit (Investasi). Pilih bibit lo sekarang.",
-  baseLabel: "Target Kekuasaan",
+  title: "Simulasi Budget Dominasi Google",
+  subtitle: "SEO itu maraton, bukan lari sprint. Pilih paket yang sesuai napas budget lo.",
+  baseLabel: "Paket Optimasi",
   baseOptions: [
-    { id: 'local', label: 'Juragan Lokal (Kota)', price: 2500000, desc: 'Dominasi nama kota & Google Maps. Cocok buat toko fisik/jasa servis.' },
-    { id: 'niche', label: 'Pemain Niche (Produk)', price: 5000000, desc: 'Target kata kunci spesifik produk. Cocok buat distributor/produsen.' },
-    { id: 'high', label: 'Raja Nasional (Industri)', price: 10000000, desc: 'Hajar kompetitor raksasa. Target seluruh Indonesia.' }
+    { id: 'basic', label: 'Starter (Lokal)', price: 2500000, desc: 'Fokus kuasai kata kunci lokal (nama kota).' },
+    { id: 'pro', label: 'Pro (Nasional)', price: 5500000, desc: 'Target kata kunci persaingan menengah se-Indonesia.' },
+    { id: 'corp', label: 'Enterprise (Dominasi)', price: 12000000, desc: 'Hajar kata kunci "uang" persaingan tinggi.' }
   ],
-  addonLabel: "Amunisi Tambahan",
+  addonLabel: "Booster Power",
   addons: [
-    { id: 'gbp_seo', label: 'Poles Google Maps', price: 1500000, desc: 'Audit total, posting rutin, & manajemen reputasi review.' },
-    { id: 'audit', label: 'Bedah Website Total', price: 1000000, desc: 'Cari penyakit kenapa web lo sepi.' },
-    { id: 'content', label: '10x Artikel Pancingan', price: 1500000, desc: 'Konten pilar SEO 1000+ kata.' },
-    { id: 'backlink', label: 'Suntik Power (Backlink)', price: 2000000, desc: 'Media nasional & PBN High DA/PA.' },
-    { id: 'speed', label: 'Oprek Speed', price: 1000000, desc: 'Biar loading di bawah 2 detik.' },
-    { id: 'ai_writer', label: 'Setup AI Content', price: 3000000, desc: 'Generator artikel otomatis via API.' }
+    { id: 'backlink', label: 'Backlink Media Nasional', price: 1500000, desc: 'Suntik power dari portal berita besar.' },
+    { id: 'content', label: 'Paket Artikel Bulanan (10x)', price: 750000, desc: 'Konten pilar & cluster rutin.' },
+    { id: 'gmb', label: 'Optimasi Google Maps Ekstrem', price: 1000000, desc: 'Review & sitasi lokal masif.' }
   ]
 };
 
@@ -144,20 +140,19 @@ const MAINTENANCE_DATA = {
 };
 
 const MAINTENANCE_CALC: CalcData = {
-  title: "Biaya Jasa Satpam Digital",
-  subtitle: "Lebih murah bayar gue daripada bayar tebusan ke hacker (Ransomware). Pilih level penjagaan lo.",
-  baseLabel: "Level Penjagaan",
+  title: "Biaya Jaga Lilin (Maintenance)",
+  subtitle: "Lebih murah bayar satpam daripada bayar tebusan ke hacker ransomware.",
+  baseLabel: "Paket Penjagaan",
   baseOptions: [
-    { id: 'basic', label: 'Pos Kamling (Basic)', price: 500000, desc: 'Backup Mingguan & Update Plugin standar.' },
-    { id: 'pro', label: 'Bodyguard (Business)', price: 1500000, desc: 'Backup Harian, Security Scan, Uptime Monitor, Laporan.' },
-    { id: 'vip', label: 'Kopassus (VIP)', price: 3000000, desc: 'Prioritas Support, Audit Manual, Perbaikan Error Code.' }
+    { id: 'basic', label: 'Pos Ronda (Basic)', price: 500000, desc: 'Update plugin & backup bulanan.' },
+    { id: 'pro', label: 'Satpam Komplek (Pro)', price: 1500000, desc: 'Uptime monitor 24/7, daily backup, firewall.' },
+    { id: 'vip', label: 'Bodyguard (VIP)', price: 3500000, desc: 'Prioritas support, perbaikan error coding, speed optimization.' }
   ],
-  addonLabel: "Layanan Insidental",
+  addonLabel: "Extra Shield",
   addons: [
-    { id: 'clean', label: 'Bersih Virus (Hack Fix)', price: 1500000, desc: 'P3K kalau web lo udah kena hack.' },
-    { id: 'migrasi', label: 'Pindahan Server', price: 750000, desc: 'Pindah hosting tanpa downtime.' },
-    { id: 'content', label: 'Update Konten/Produk', price: 500000, desc: 'Per batch update.' },
-    { id: 'speed', label: 'Speed Booster', price: 1000000, desc: 'Optimasi loading speed via Cloudflare & Cache.' }
+    { id: 'cdn', label: 'CDN Enterprise', price: 500000, desc: 'Biar web ngebut diakses dari luar negeri.' },
+    { id: 'audit', label: 'Audit Keamanan Tahunan', price: 2500000, desc: 'Penetration testing simulasi hack.' },
+    { id: 'content_upload', label: 'Jasa Upload Konten', price: 500000, desc: 'Lo kirim materi, kita yang posting.' }
   ]
 };
 
@@ -185,10 +180,19 @@ export const WebsiteServicePage = () => {
                   <ArrowRight size={24} className="text-brand-orange animate-pulse" />
                   <Globe size={40} className="text-brand-orange" />
                 </div>
-                <h3 className="text-2xl font-bold text-white">Warning: Slot Terbatas</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  "Jujur aja, banyak jasa web 500 ribuan di luar sana. Hasilnya? **Sampah Digital.** Gak ada traffic, cuma pajangan. Gue kerjain ini pake strategi dagang, bukan cuma template gratisan. <strong>Gue pegang sendiri, makanya slotnya dikit.</strong>"
-                </p>
+                {/* UPDATE: Kuota Message */}
+                <h3 className="text-2xl font-bold text-white">Warning: Kuota Sangat Terbatas</h3>
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                    <p className="text-red-400 text-sm font-bold flex items-center gap-2 mb-2">
+                        <AlertTriangle size={16} /> KUOTA BULANAN: 2 PROYEK
+                    </p>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                        Gue <strong>Single Fighter</strong>. Gue ngoding sendiri, desain sendiri. Gue gak mau oper ke anak magang terus hasilnya ampas.
+                    </p>
+                    <p className="text-gray-300 text-sm leading-relaxed mt-2">
+                        Jadi sorry banget, gue cuma terima maksimal <strong>2 Klien Digital</strong> per bulan biar kualitasnya terjaga. Siapa cepat, dia dapat slot.
+                    </p>
+                </div>
             </div>
          </div>
          <div>
@@ -248,11 +252,16 @@ export const WebAppServicePage = () => {
                 Masih jaman rekap nota manual tiap malem? Masih jaman stok opname pake kertas terus selisih mulu? Itu tanda <strong>sistem lo purba</strong>.
             </p>
             <p className="text-gray-400 leading-relaxed mb-6">
-                Gue tawarkan <strong>Custom Web App (ERP)</strong>. Ini bukan aplikasi pasaran yang lo sewa (SaaS). Ini aplikasi yang lo <strong>Miliki Sepenuhnya</strong>. Database di tangan lo, source code di tangan lo. Gak ada cerita data disandera vendor kalau telat bayar langganan.
+                Gue tawarkan <strong>Custom Web App (ERP)</strong>. Ini bukan aplikasi pasaran yang lo sewa (SaaS). Ini aplikasi yang lo <strong>Miliki Sepenuhnya</strong>. Database di tangan lo, source code di tangan lo.
             </p>
-            <div className="bg-brand-dark border-l-4 border-brand-orange p-4 rounded-r-lg">
+            
+            {/* UPDATE: Kuota Alert */}
+            <div className="bg-brand-dark border-l-4 border-brand-orange p-4 rounded-r-lg mt-6">
+                <p className="text-brand-orange font-bold text-xs uppercase tracking-widest mb-1">
+                    SLOT TERBATAS (MAX 2/BULAN)
+                </p>
                 <p className="text-white italic text-sm">
-                  "Software sewa (SaaS) itu kayak ngontrak rumah. Murah di awal, tapi lo gak bisa renovasi dan bisa diusir kapan aja. Custom App itu kayak bangun rumah sendiri."
+                  "Pembuatan Software Custom butuh fokus tinggi. Gue gak bisa handle banyak sekaligus. Pastikan lo booking slot jauh-jauh hari."
                 </p>
             </div>
          </div>
