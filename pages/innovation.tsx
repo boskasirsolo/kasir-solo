@@ -34,15 +34,15 @@ const LossCalculator = () => {
       </div>
       
       <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-        <AlertTriangle className="text-red-500" /> Kalkulator Kebocoran
+        <AlertTriangle className="text-red-500" /> Cek Duit "Ghaib" Lo
       </h3>
       <p className="text-gray-400 text-sm mb-6">
-        Tanpa sistem ERP yang terintegrasi, bisnis rata-rata kehilangan <strong>5% omzet harian</strong> karena <em>selisih stok</em>, <em>mark-up harga</em>, atau <em>human error</em>. Cek potensi kerugian Anda:
+        Tanpa sistem, rata-rata <strong>5% omzet lo ilang</strong> tiap hari (kembalian salah, stok dicomot, nota ilang). Coba itung berapa duit lo yang kebakar percuma:
       </p>
 
       <div className="space-y-4 relative z-10">
         <div>
-          <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Rata-rata Omzet Harian (IDR)</label>
+          <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Omzet Harian Rata-rata (IDR)</label>
           <Input 
             value={omzet} 
             onChange={handleOmzetChange} 
@@ -50,16 +50,19 @@ const LossCalculator = () => {
             placeholder="Contoh: 5.000.000" 
           />
         </div>
-        <Button onClick={calculate} className="w-full py-4 text-lg shadow-action hover:shadow-action-strong">HITUNG POTENSI RUGI</Button>
+        <Button onClick={calculate} className="w-full py-4 text-lg shadow-action hover:shadow-action-strong">
+            HITUNG BONCOS GUE
+        </Button>
       </div>
 
       {loss !== null && (
         <div className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl animate-fade-in text-center">
-          <p className="text-gray-300 text-xs mb-1">Setiap hari Anda berpotensi kehilangan:</p>
+          <p className="text-gray-300 text-xs mb-1">Setiap hari lo "sedekah paksa" sebesar:</p>
           <p className="text-3xl font-display font-bold text-red-500">{formatRupiah(loss)}</p>
           <p className="text-gray-400 text-xs mt-2">
             Sebulan: <span className="text-white font-bold">{formatRupiah(loss * 30)}</span> lenyap tanpa jejak.
           </p>
+          <p className="text-[10px] text-gray-500 italic mt-1">Sayang banget, padahal bisa buat beli stok baru.</p>
         </div>
       )}
     </div>
@@ -69,7 +72,7 @@ const LossCalculator = () => {
 // --- COMPONENT: SMART LINK BUTTON ---
 const SmartLinkButton = ({ url, defaultLabel, waLabel }: { url?: string, defaultLabel: string, waLabel: string }) => {
   const isLinkActive = url && url.length > 5;
-  const targetUrl = isLinkActive ? url : "https://wa.me/6282325103336?text=Halo, saya ingin bergabung Waiting List SIBOS/QALAM.";
+  const targetUrl = isLinkActive ? url : "https://wa.me/6282325103336?text=Halo Mas Amin, gue mau masuk Waiting List SIBOS/QALAM.";
 
   return (
     <a 
@@ -103,10 +106,11 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
             <span className="text-xs font-bold text-gray-300 tracking-[0.2em] uppercase">R&D Division • Reborn 2025</span>
           </div>
           <h1 className="text-4xl md:text-7xl font-display font-bold text-white mb-6 leading-tight">
-            The Brain <span className="text-brand-orange">&</span> The Heart
+            Otak <span className="text-brand-orange">&</span> Hati.
           </h1>
           <p className="max-w-3xl mx-auto text-base md:text-xl text-gray-400 leading-relaxed mb-10">
-            Lahir kembali dari puing kegagalan masa lalu. Kami membangun ekosistem digital <strong>SIBOS</strong> & <strong>QALAM</strong> bukan sekadar untuk profit, tapi sebagai solusi peradaban untuk Bisnis dan Pendidikan.
+            Lahir dari puing-puing kegagalan gue tahun 2022. <strong>SIBOS</strong> (Otak Bisnis) & <strong>QALAM</strong> (Hati Umat). 
+            Gue bangun ulang sistem ini biar lo gak perlu ngerasain bangkrut kayak gue dulu.
           </p>
         </div>
       </section>
@@ -116,16 +120,16 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
          <div className="container mx-auto px-4 max-w-4xl text-center relative z-10">
             <Quote className="mx-auto text-brand-orange mb-6 opacity-50" size={40} />
             <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-6 leading-relaxed">
-               "Kami pernah berada di titik terendah: <span className="text-red-500">Kebangkrutan</span> karena data yang berantakan."
+               "Tahun 2022 gue ancur lebur. Aset digital ilang, domain disikat orang."
             </h3>
             <div className="prose prose-invert prose-lg mx-auto text-gray-400 leading-relaxed">
                <p>
-                  Tahun 2022 mengajarkan kami satu hal fatal: <strong>Tanpa sistem yang kuat, kerja keras saja tidak cukup.</strong> 
-                  Kami kehilangan aset, kehilangan domain, tapi kami tidak kehilangan visi.
+                  Sakit banget, Bro. Kerja keras tahunan lenyap semalam cuma gara-gara manajemen data gue berantakan. 
+                  Saat itu gue sadar: <strong>Kerja keras doang gak cukup kalau sistem lo rapuh.</strong>
                </p>
                <p>
-                  SIBOS dan QALAM bukan sekadar produk jualan. Ini adalah <em>blueprint</em> kebangkitan yang kami bagikan kepada Anda. 
-                  Kami membangun sistem yang kami harap kami miliki saat kami jatuh dulu. Agar Anda tidak perlu mengalami kegagalan yang sama.
+                  Makanya gue balik lagi. Gue rakit <strong>SIBOS</strong> dan <strong>QALAM</strong> bukan cuma buat jualan, tapi sebagai <em>blueprint</em> pertahanan. 
+                  Ini sistem yang gue harap gue punya pas gue jatuh dulu. Gue kasih ke lo biar lo aman.
                </p>
             </div>
          </div>
@@ -146,19 +150,19 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
               
               <div className="prose prose-invert prose-sm md:prose-lg text-gray-400 mb-8 leading-relaxed">
                 <p>
-                  <strong>Bukan Sekadar Kasir.</strong> Ini adalah ekosistem ERP yang dirancang oleh praktisi yang pernah merasakan pahitnya kebangkrutan karena manajemen data yang buruk.
+                  <strong>Bukan Sekadar Kasir.</strong> Ini "Satpam Digital" buat bisnis lo. Gue desain khusus buat nangkep tuyul-tuyul (fraud) internal yang sering bikin owner pusing.
                 </p>
                 <p>
-                  SIBOS hadir dengan filosofi <em>"Dari Komunitas, Untuk Komunitas"</em>. Kami mendobrak batasan dengan fitur <strong>Multi-Business</strong>: Satu akun untuk mengelola Restoran, Minimarket, dan Jasa sekaligus.
+                  Filosofinya simpel: <em>"Trust but Verify"</em>. Lo boleh percaya karyawan, tapi sistem harus tetep jalan buat verifikasi. Satu akun SIBOS bisa handle Resto, Toko Kelontong, dan Jasa sekaligus. Gak usah langganan banyak software.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-10">
                 {[
-                  { icon: Layers, title: "Multi-Business Core", desc: "Kelola F&B, Ritel, dan Jasa dalam 1 Akun terpusat." },
-                  { icon: WifiOff, title: "Hybrid Mode", desc: "Internet mati? Transaksi tetap jalan (Offline First)." },
-                  { icon: Printer, title: "Hardware Ready", desc: "Support Timbangan Digital, Printer Barcode & KDS." },
-                  { icon: Scale, title: "Manufacturing", desc: "Hitung HPP bahan baku (resep) & bundling otomatis." },
+                  { icon: Layers, title: "Satu Akun, Banyak Cuan", desc: "Kelola F&B, Ritel, dan Jasa dalam 1 Dashboard." },
+                  { icon: WifiOff, title: "Internet Mati? Gas Terus", desc: "Mode Hybrid. Transaksi tetep jalan walau offline." },
+                  { icon: Printer, title: "Hardware Ready", desc: "Colok Timbangan, Scanner, Printer Dapur langsung connect." },
+                  { icon: Scale, title: "Resep Anti-Boncos", desc: "Hitung HPP bahan baku (resep) otomatis. Stok akurat." },
                 ].map((item, idx) => (
                   <div key={idx} className="flex gap-4 p-3 md:p-0 rounded-lg md:rounded-none bg-white/5 md:bg-transparent border md:border-none border-white/5">
                     <div className="w-10 h-10 rounded bg-brand-orange/10 flex items-center justify-center text-brand-orange shrink-0">
@@ -173,14 +177,14 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
               </div>
 
               <div className="bg-brand-orange/10 border border-brand-orange/30 p-4 rounded-xl mb-8">
-                 <p className="text-brand-orange text-xs font-bold uppercase tracking-widest mb-1">Status: Waiting List Open</p>
-                 <p className="text-gray-300 text-sm">Bergabunglah dalam antrian prioritas untuk mendapatkan akses Freemium saat rilis resmi.</p>
+                 <p className="text-brand-orange text-xs font-bold uppercase tracking-widest mb-1">Status: Waiting List Dibuka</p>
+                 <p className="text-gray-300 text-sm">Amankan posisi lo sekarang buat dapet akses Freemium pas rilis.</p>
               </div>
 
               <SmartLinkButton 
                 url={config.sibosUrl} 
-                defaultLabel="Akses Website SIBOS" 
-                waLabel="Gabung Waiting List SIBOS" 
+                defaultLabel="Akses SIBOS" 
+                waLabel="Antri SIBOS Sekarang" 
               />
             </div>
 
@@ -224,7 +228,7 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
                         </div>
                         <div className="space-y-2">
                            <div className="w-full h-10 md:h-12 bg-gray-800/50 rounded-lg flex items-center px-3">
-                              <span className="text-[9px] text-gray-500">SPP & Infaq Transparency</span>
+                              <span className="text-[9px] text-gray-500">SPP & Infaq Transparan</span>
                            </div>
                            <div className="w-full h-10 md:h-12 bg-gray-800/50 rounded-lg"></div>
                         </div>
@@ -243,18 +247,18 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
               
               <div className="prose prose-invert prose-sm md:prose-lg text-gray-400 mb-8 leading-relaxed">
                 <p>
-                  <strong>Teknologi sebagai Jalan Dakwah.</strong> QALAM lahir dari keprihatinan kami terhadap manajemen TPA/TPQ yang masih manual.
+                  <strong>Teknologi Jalur Langit.</strong> QALAM lahir karena gue prihatin liat manajemen TPA/TPQ yang masih manual banget. Ustadz jadi sibuk ngurus admin, bukan ngurus santri.
                 </p>
                 <p>
-                  Kami menerapkan model <strong>Subsidi Silang</strong>. Versi Enterprise (Lembaga Besar) membiayai versi Gratis untuk TPA/TPQ kecil (di bawah 200 santri). Agar Ustadz bisa fokus mendidik, biar QALAM yang urus administrasi.
+                  Gue pake sistem <strong>Subsidi Silang</strong>. Sekolah Gede (Enterprise) bayar buat subsidi TPA/TPQ kecil (di bawah 200 santri) biar mereka bisa pake <strong>GRATIS</strong>. Biar berkah bareng-bareng.
                 </p>
               </div>
 
               <div className="space-y-4 md:space-y-6 mb-10">
                  {[
-                    {icon: BookOpen, title: "AI Reporting", desc: "Laporan perkembangan hafalan santri otomatis & personal."},
-                    {icon: Users, title: "Integrasi Wali & Donatur", desc: "Transparansi keuangan SPP/Infaq real-time ke orang tua."},
-                    {icon: Award, title: "Gratis Selamanya", desc: "Untuk lembaga pendidikan dengan < 200 santri."}
+                    {icon: BookOpen, title: "Laporan Hafalan AI", desc: "Gak perlu nulis manual di buku penghubung. Sekali klik, laporan jadi."},
+                    {icon: Users, title: "Transparansi SPP", desc: "Wali santri bisa cek tagihan & riwayat infaq real-time. Bebas prasangka."},
+                    {icon: Award, title: "Gratis Selamanya", desc: "Khusus lembaga kecil (< 200 santri). Komitmen gue buat umat."}
                  ].map((item, idx) => (
                     <div key={idx} className="flex gap-4 p-3 md:p-0 rounded-lg md:rounded-none bg-white/5 md:bg-transparent border md:border-none border-white/5">
                         <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500 shrink-0">
@@ -269,15 +273,15 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
               </div>
 
               <div className="bg-teal-500/10 border border-teal-500/30 p-4 rounded-xl mb-8">
-                 <p className="text-teal-500 text-xs font-bold uppercase tracking-widest mb-1">Status: Waiting List Open</p>
-                 <p className="text-gray-300 text-sm">Daftarkan lembaga Anda sekarang untuk mendapatkan kuota akses awal.</p>
+                 <p className="text-teal-500 text-xs font-bold uppercase tracking-widest mb-1">Status: Waiting List Dibuka</p>
+                 <p className="text-gray-300 text-sm">Daftarin lembaga lo sekarang. Slot terbatas biar server gak meledak.</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <SmartLinkButton 
                   url={config.qalamUrl} 
-                  defaultLabel="Akses Website QALAM" 
-                  waLabel="Daftar Waiting List QALAM" 
+                  defaultLabel="Akses QALAM" 
+                  waLabel="Daftar Antrian QALAM" 
                 />
               </div>
             </div>
@@ -297,24 +301,24 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
                     <Zap className="text-brand-orange" size={24} />
                 </div>
                 <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6 leading-tight">
-                    Masa Depan Tidak Menunggu.
+                    Masa Depan Gak Nunggu Lo.
                 </h2>
                 <p className="text-lg text-gray-300 mb-8 leading-relaxed">
-                    Kami sedang membangun ekosistem ini dengan sangat hati-hati. Akses awal (Waiting List) dibuka terbatas untuk menjaga kualitas server dan support.
+                    Sistem ini gue bangun pelan-pelan tapi pasti. Waiting List gue buka terbatas buat jaga kualitas.
                     <br/><br/>
-                    Jadilah bagian dari <strong className="text-brand-orange">Generasi Pertama</strong> yang merasakan revolusi manajemen bisnis dan pendidikan ini.
+                    Lo mau jadi penonton doang atau jadi <strong className="text-brand-orange">Generasi Pertama</strong> yang ngerasain revolusi ini?
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <SmartLinkButton 
                         url={config.sibosUrl} 
                         defaultLabel="Amankan Slot SIBOS" 
-                        waLabel="Daftar Antrian SIBOS" 
+                        waLabel="Antri SIBOS" 
                     />
                     <SmartLinkButton 
                         url={config.qalamUrl} 
                         defaultLabel="Amankan Slot QALAM" 
-                        waLabel="Daftar Antrian QALAM" 
+                        waLabel="Antri QALAM" 
                     />
                 </div>
                 <p className="mt-8 text-xs text-gray-500 uppercase tracking-widest">
