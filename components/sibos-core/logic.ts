@@ -32,6 +32,34 @@ const OPENING_HOOKS = [
     "Gue kasih tau pahitnya di depan biar lo siap."
 ];
 
+const PRE_SALES_KNOWLEDGE = `
+[DATA PENTING PRE-SALES - WAJIB HAFAL]
+
+1. SHIPPING & LOGISTIK
+- Papua/Luar Pulau: "Bisa banget. Kita pake packing kayu + asuransi 100%. Ekspedisi langganan gue biasanya JNE Trucking atau Indah Cargo biar murah. Estimasi Papua 7-14 hari."
+- Ongkir: "Ongkir ditanggung pembeli, tapi gue cariin kargo termurah. Chat admin buat cek tarif real-time."
+- Keamanan: "Kalau barang sampe pecah, gue ganti baru. Syarat mutlak: VIDEO UNBOXING NO CUT."
+
+2. PEMBAYARAN & CICILAN
+- Transfer: "Direct transfer cuma ke BNC a.n PT Mesin Kasir Solo. Jangan ke rek pribadi sales manapun."
+- Cicilan: "Bisa banget. Kita transaksi via Tokopedia/Shopee buat fasilitas cicilan 0% kartu kredit atau Paylater (Kredivo/Akulaku). Chat gue buat minta link marketplace."
+- COD: "Sorry Bos, hardware mahal risiko tinggi kalau COD. Kita main aman aja via Marketplace atau Transfer."
+
+3. ANDROID VS WINDOWS (JANGAN SALAH PILIH)
+- Android POS (Rp 2-3 Juta):
+  * Cocok buat: Cafe kecil, Booth container, Toko kelontong, Salon.
+  * Plus: Murah, ringkes, hemat listrik, touch screen enak.
+  * Minus: Gak bisa multitasking berat, gak bisa install software akuntansi PC (Accurate/Myob).
+- Windows POS (Rp 5-8 Juta):
+  * Cocok buat: Minimarket grosir, Resto besar (banyak printer dapur), Gudang.
+  * Plus: Badak (Heavy Duty), bisa connect banyak hardware (Timbangan, Barcode duduk), bisa multitasking (Excel + Spotify + Kasir).
+  * Minus: Mahal, makan listrik lebih gede.
+
+4. SOFTWARE (SIBOS)
+- Biaya: "SIBOS itu sistem langganan (SaaS), bukan beli putus. Kenapa? Karena gue maintenance server tiap hari, update fitur, dan backup data lo."
+- Internet: "Bisa mode Hybrid. Kalau internet mati, jualan tetep jalan. Pas nyala, data auto-sync ke cloud."
+`;
+
 const BRAND_CONTEXT = `
 [IDENTITAS BARU - THE SURVIVOR]
 Nama: PT Mesin Kasir Solo (Reborn).
@@ -73,7 +101,7 @@ Your Persona: **The Survivor & Single Fighter**. You are tough, experienced, and
 4. **You are NOT a Coder.** You are a Business Operator. You understand the *business outcome* of tech.
 
 [INTERACTION STRATEGY]
-- **Answer First:** Direct answer to the question.
+- **Answer First:** Direct answer to the question using the PRE_SALES_KNOWLEDGE base.
 - **Inject Personality:** Use the "Anecdotes" to relate to the user's problem.
 - **Trigger Warning:** If user asks about cheap solutions/shortcuts, warn them about the risks (based on your past failures).
 
@@ -193,6 +221,7 @@ export const useSibosChat = (
       const dynamicInstruction = `
         ${SIBOS_BRAIN_CONTEXT}
         ${BRAND_CONTEXT}
+        ${PRE_SALES_KNOWLEDGE}
         ${INTERNAL_LINKING_RULES}
         
         [CURRENT MOOD/MEMORY INJECTION]

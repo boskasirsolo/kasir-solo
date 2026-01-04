@@ -202,3 +202,13 @@ export interface Lead {
   status: 'new' | 'followup' | 'converted' | 'junk';
   notes?: string;
 }
+
+// --- SOCIAL AUTOMATION TYPES ---
+export interface ScheduledPost {
+  day: string; // e.g. "Senin"
+  theme: string; // e.g. "Edukasi"
+  hook: string;
+  caption: string;
+  image_idea: string;
+  status: 'pending' | 'posted';
+}

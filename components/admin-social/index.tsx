@@ -1,9 +1,10 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useSocialStudio } from './logic';
 import { SourceCard, CaptionEditor, PhoneMockup, PlatformIcon } from './ui-parts';
+import { ContentCalendar } from './calendar'; // Import Calendar
 import { Product, Article, GalleryItem } from '../../types';
-import { Search, UploadCloud, Rocket, Loader2, Image as ImageIcon, Sparkles, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, UploadCloud, Rocket, Loader2, Image as ImageIcon, Sparkles, Check, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Edit3 } from 'lucide-react';
 import { ActiveTab, SOCIAL_TONES, PlatformState } from './types';
 
 // List of all supported platforms for UI loops
@@ -20,256 +21,283 @@ export const AdminSocialStudio = ({
 }) => {
     const { state, setters, actions } = useSocialStudio(products, articles, gallery);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    // NEW: Mode Switcher State
+    const [studioMode, setStudioMode] = useState<'single' | 'calendar'>('single');
 
     // --- RENDER ---
     return (
-        <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
+        <div className="flex flex-col h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
             
-            {/* PANE 1: SOURCE PICKER (25%) */}
-            <div className="w-[25%] min-w-[280px] border-r border-white/5 bg-brand-dark/50 flex flex-col">
-                {/* Header Filter */}
-                <div className="p-4 border-b border-white/5 space-y-3">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">1. Pilih Konten (Source)</h3>
-                    <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
-                        {['all', 'product', 'service', 'article', 'gallery'].map(type => (
-                            <button
-                                key={type}
-                                onClick={() => setters.setSelectedSourceType(type as any)}
-                                className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase whitespace-nowrap border transition-all ${
-                                    state.selectedSourceType === type 
-                                    ? 'bg-brand-orange text-white border-brand-orange' 
-                                    : 'bg-transparent text-gray-500 border-white/10 hover:border-white/30'
-                                }`}
-                            >
-                                {type}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="relative">
-                        <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
-                        <input 
-                            value={state.searchTerm}
-                            onChange={(e) => setters.setSearchTerm(e.target.value)}
-                            placeholder="Cari konten..."
-                            className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-brand-orange"
-                        />
-                    </div>
-                </div>
-
-                {/* List Items (PAGINATED) */}
-                <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
-                    {state.paginatedItems.map(item => (
-                        <SourceCard 
-                            key={`${item.type}-${item.id}`} 
-                            item={item} 
-                            onClick={() => actions.selectItem(item)}
-                            active={state.selectedItem?.id === item.id}
-                        />
-                    ))}
-                    {state.paginatedItems.length === 0 && (
-                        <div className="text-center py-10 text-gray-500 text-xs">
-                            Konten tidak ditemukan.
-                        </div>
-                    )}
-                </div>
-
-                {/* Pagination Controls */}
-                {state.totalSourcePages > 1 && (
-                    <div className="p-3 border-t border-white/5 flex justify-between items-center bg-black/20">
-                        <button 
-                            onClick={() => setters.setSourcePage(Math.max(1, state.sourcePage - 1))}
-                            disabled={state.sourcePage === 1}
-                            className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                        >
-                            <ChevronLeft size={16}/>
-                        </button>
-                        <span className="text-[10px] font-bold text-gray-400">
-                            Hal {state.sourcePage} / {state.totalSourcePages}
-                        </span>
-                        <button 
-                            onClick={() => setters.setSourcePage(Math.min(state.totalSourcePages, state.sourcePage + 1))}
-                            disabled={state.sourcePage === state.totalSourcePages}
-                            className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                        >
-                            <ChevronRight size={16}/>
-                        </button>
-                    </div>
-                )}
+            {/* MODE SWITCHER HEADER */}
+            <div className="flex items-center gap-4 p-2 bg-black/40 border-b border-white/10">
+                <button 
+                    onClick={() => setStudioMode('single')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${studioMode === 'single' ? 'bg-brand-orange text-white' : 'text-gray-500 hover:text-white'}`}
+                >
+                    <Edit3 size={14} /> Single Post
+                </button>
+                <button 
+                    onClick={() => setStudioMode('calendar')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${studioMode === 'calendar' ? 'bg-brand-orange text-white' : 'text-gray-500 hover:text-white'}`}
+                >
+                    <CalendarIcon size={14} /> Bulk Scheduler (Auto-Pilot)
+                </button>
             </div>
 
-            {/* PANE 2: COMPOSER (45%) */}
-            <div className="flex-1 border-r border-white/5 bg-brand-dark flex flex-col relative">
-                {/* Overlay if no item selected */}
-                {!state.selectedItem && (
-                    <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center backdrop-blur-sm">
-                        <p className="text-gray-500 text-sm">Pilih konten dari kiri untuk mulai meracik.</p>
-                    </div>
-                )}
-
-                {/* Platform Toggles */}
-                <div className="p-4 border-b border-white/5 flex flex-col gap-2 bg-black/20">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">2. Target Platform</h3>
-                    <div className="flex gap-2 flex-wrap">
-                        {ALL_PLATFORMS.map(plat => (
-                            <button
-                                key={plat}
-                                onClick={() => setters.setPlatforms(p => ({...p, [plat]: !p[plat]}))}
-                                className={`p-2 rounded-lg border transition-all ${
-                                    state.platforms[plat] 
-                                    ? 'bg-blue-500/20 border-blue-500 text-blue-400' 
-                                    : 'bg-white/5 border-white/10 text-gray-600'
-                                }`}
-                                title={`Toggle ${plat}`}
-                            >
-                                <PlatformIcon id={plat} />
-                            </button>
-                        ))}
-                    </div>
+            {/* MODE CONTENT */}
+            {studioMode === 'calendar' ? (
+                <div className="flex-1 p-4">
+                    <ContentCalendar />
                 </div>
-
-                {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
-                    
-                    {/* Visual Canvas */}
-                    <div className="bg-black/40 border border-white/10 rounded-xl p-4 flex gap-4 items-center">
-                        <div className="relative w-24 h-24 bg-black rounded-lg border border-white/10 overflow-hidden group shrink-0">
-                            <img 
-                                src={state.customImage || state.selectedItem?.image || ''} 
-                                className="w-full h-full object-cover" 
-                            />
-                            <div 
-                                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity"
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                <UploadCloud size={20} className="text-white"/>
-                            </div>
-                            <input 
-                                type="file" 
-                                ref={fileInputRef} 
-                                className="hidden" 
-                                accept="image/*"
-                                onChange={(e) => e.target.files?.[0] && actions.handleImageUpload(e.target.files[0])}
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <h4 className="font-bold text-white text-sm mb-1">{state.selectedItem?.title}</h4>
-                            <p className="text-[10px] text-gray-500 line-clamp-2">{state.selectedItem?.description}</p>
-                            <button 
-                                onClick={() => fileInputRef.current?.click()}
-                                className="mt-2 text-[10px] text-brand-orange hover:text-white flex items-center gap-1"
-                            >
-                                <ImageIcon size={12}/> Ganti Gambar
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* NEW: MULTI-TONE SELECTOR */}
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="flex justify-between items-center mb-3">
-                            <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-2">
-                                <Sparkles size={12} className="text-brand-orange"/> Tone (Bisa Pilih Banyak)
-                            </label>
-                            <span className="text-[9px] text-gray-500 bg-black/40 px-2 py-0.5 rounded border border-white/5">
-                                {state.selectedTones.length}/3
-                            </span>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                            {SOCIAL_TONES.map(tone => {
-                                const isSelected = state.selectedTones.includes(tone.id);
-                                return (
+            ) : (
+                <div className="flex flex-1 overflow-hidden">
+                    {/* PANE 1: SOURCE PICKER (25%) */}
+                    <div className="w-[25%] min-w-[280px] border-r border-white/5 bg-brand-dark/50 flex flex-col">
+                        {/* Header Filter */}
+                        <div className="p-4 border-b border-white/5 space-y-3">
+                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">1. Pilih Konten (Source)</h3>
+                            <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
+                                {['all', 'product', 'service', 'article', 'gallery'].map(type => (
                                     <button
-                                        key={tone.id}
-                                        onClick={() => setters.toggleTone(tone.id)}
-                                        className={`px-2 py-2 rounded text-[10px] font-bold text-center transition-all border relative overflow-hidden ${
-                                            isSelected
-                                            ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text' 
-                                            : 'bg-black/20 text-gray-400 border-white/10 hover:border-white/30 hover:text-white'
+                                        key={type}
+                                        onClick={() => setters.setSelectedSourceType(type as any)}
+                                        className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase whitespace-nowrap border transition-all ${
+                                            state.selectedSourceType === type 
+                                            ? 'bg-brand-orange text-white border-brand-orange' 
+                                            : 'bg-transparent text-gray-500 border-white/10 hover:border-white/30'
                                         }`}
-                                        title={tone.desc}
                                     >
-                                        {tone.label}
-                                        {isSelected && (
-                                            <div className="absolute top-0 right-0 p-0.5 bg-white/20 rounded-bl">
-                                                <Check size={8} className="text-white"/>
-                                            </div>
-                                        )}
+                                        {type}
                                     </button>
-                                );
-                            })}
+                                ))}
+                            </div>
+                            <div className="relative">
+                                <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
+                                <input 
+                                    value={state.searchTerm}
+                                    onChange={(e) => setters.setSearchTerm(e.target.value)}
+                                    placeholder="Cari konten..."
+                                    className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-brand-orange"
+                                />
+                            </div>
+                        </div>
+
+                        {/* List Items (PAGINATED) */}
+                        <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+                            {state.paginatedItems.map(item => (
+                                <SourceCard 
+                                    key={`${item.type}-${item.id}`} 
+                                    item={item} 
+                                    onClick={() => actions.selectItem(item)}
+                                    active={state.selectedItem?.id === item.id}
+                                />
+                            ))}
+                            {state.paginatedItems.length === 0 && (
+                                <div className="text-center py-10 text-gray-500 text-xs">
+                                    Konten tidak ditemukan.
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {state.totalSourcePages > 1 && (
+                            <div className="p-3 border-t border-white/5 flex justify-between items-center bg-black/20">
+                                <button 
+                                    onClick={() => setters.setSourcePage(Math.max(1, state.sourcePage - 1))}
+                                    disabled={state.sourcePage === 1}
+                                    className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                    <ChevronLeft size={16}/>
+                                </button>
+                                <span className="text-[10px] font-bold text-gray-400">
+                                    Hal {state.sourcePage} / {state.totalSourcePages}
+                                </span>
+                                <button 
+                                    onClick={() => setters.setSourcePage(Math.min(state.totalSourcePages, state.sourcePage + 1))}
+                                    disabled={state.sourcePage === state.totalSourcePages}
+                                    className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                    <ChevronRight size={16}/>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* PANE 2: COMPOSER (45%) */}
+                    <div className="flex-1 border-r border-white/5 bg-brand-dark flex flex-col relative">
+                        {/* Overlay if no item selected */}
+                        {!state.selectedItem && (
+                            <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center backdrop-blur-sm">
+                                <p className="text-gray-500 text-sm">Pilih konten dari kiri untuk mulai meracik.</p>
+                            </div>
+                        )}
+
+                        {/* Platform Toggles */}
+                        <div className="p-4 border-b border-white/5 flex flex-col gap-2 bg-black/20">
+                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">2. Target Platform</h3>
+                            <div className="flex gap-2 flex-wrap">
+                                {ALL_PLATFORMS.map(plat => (
+                                    <button
+                                        key={plat}
+                                        onClick={() => setters.setPlatforms(p => ({...p, [plat]: !p[plat]}))}
+                                        className={`p-2 rounded-lg border transition-all ${
+                                            state.platforms[plat] 
+                                            ? 'bg-blue-500/20 border-blue-500 text-blue-400' 
+                                            : 'bg-white/5 border-white/10 text-gray-600'
+                                        }`}
+                                        title={`Toggle ${plat}`}
+                                    >
+                                        <PlatformIcon id={plat} />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
+                            
+                            {/* Visual Canvas */}
+                            <div className="bg-black/40 border border-white/10 rounded-xl p-4 flex gap-4 items-center">
+                                <div className="relative w-24 h-24 bg-black rounded-lg border border-white/10 overflow-hidden group shrink-0">
+                                    <img 
+                                        src={state.customImage || state.selectedItem?.image || ''} 
+                                        className="w-full h-full object-cover" 
+                                    />
+                                    <div 
+                                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity"
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
+                                        <UploadCloud size={20} className="text-white"/>
+                                    </div>
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        className="hidden" 
+                                        accept="image/*"
+                                        onChange={(e) => e.target.files?.[0] && actions.handleImageUpload(e.target.files[0])}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-white text-sm mb-1">{state.selectedItem?.title}</h4>
+                                    <p className="text-[10px] text-gray-500 line-clamp-2">{state.selectedItem?.description}</p>
+                                    <button 
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="mt-2 text-[10px] text-brand-orange hover:text-white flex items-center gap-1"
+                                    >
+                                        <ImageIcon size={12}/> Ganti Gambar
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* MULTI-TONE SELECTOR */}
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                <div className="flex justify-between items-center mb-3">
+                                    <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-2">
+                                        <Sparkles size={12} className="text-brand-orange"/> Tone (Bisa Pilih Banyak)
+                                    </label>
+                                    <span className="text-[9px] text-gray-500 bg-black/40 px-2 py-0.5 rounded border border-white/5">
+                                        {state.selectedTones.length}/3
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    {SOCIAL_TONES.map(tone => {
+                                        const isSelected = state.selectedTones.includes(tone.id);
+                                        return (
+                                            <button
+                                                key={tone.id}
+                                                onClick={() => setters.toggleTone(tone.id)}
+                                                className={`px-2 py-2 rounded text-[10px] font-bold text-center transition-all border relative overflow-hidden ${
+                                                    isSelected
+                                                    ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text' 
+                                                    : 'bg-black/20 text-gray-400 border-white/10 hover:border-white/30 hover:text-white'
+                                                }`}
+                                                title={tone.desc}
+                                            >
+                                                {tone.label}
+                                                {isSelected && (
+                                                    <div className="absolute top-0 right-0 p-0.5 bg-white/20 rounded-bl">
+                                                        <Check size={8} className="text-white"/>
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Caption Tabs - SCROLLABLE HEADER */}
+                            <div className="flex flex-col h-[400px]">
+                                <div className="flex gap-1 border-b border-white/10 overflow-x-auto custom-scrollbar pb-1">
+                                    <button
+                                        onClick={() => setters.setActiveTab('master')}
+                                        className={`px-4 py-2 text-[10px] font-bold uppercase rounded-t-lg transition-all flex items-center gap-2 whitespace-nowrap ${
+                                            state.activeTab === 'master' 
+                                            ? 'bg-brand-orange text-white' 
+                                            : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                                        }`}
+                                    >
+                                        MASTER
+                                    </button>
+                                    {ALL_PLATFORMS.filter(p => state.platforms[p]).map(tab => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setters.setActiveTab(tab as ActiveTab)}
+                                            className={`px-4 py-2 text-[10px] font-bold uppercase rounded-t-lg transition-all flex items-center gap-2 whitespace-nowrap ${
+                                                state.activeTab === tab 
+                                                ? 'bg-brand-orange text-white' 
+                                                : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                                            }`}
+                                        >
+                                            <PlatformIcon id={tab} size={12}/>
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex-1 bg-black/20 p-2 rounded-b-xl border border-white/10 border-t-0">
+                                    <CaptionEditor 
+                                        value={state.captions[state.activeTab]}
+                                        onChange={(val) => setters.setCaptions(p => ({...p, [state.activeTab]: val}))}
+                                        onGenerate={() => actions.generateAICaption(state.activeTab as any)}
+                                        isGenerating={state.isLoading.ai}
+                                        platform={state.activeTab}
+                                    />
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
-                    {/* Caption Tabs - SCROLLABLE HEADER */}
-                    <div className="flex flex-col h-[400px]">
-                        <div className="flex gap-1 border-b border-white/10 overflow-x-auto custom-scrollbar pb-1">
-                            <button
-                                onClick={() => setters.setActiveTab('master')}
-                                className={`px-4 py-2 text-[10px] font-bold uppercase rounded-t-lg transition-all flex items-center gap-2 whitespace-nowrap ${
-                                    state.activeTab === 'master' 
-                                    ? 'bg-brand-orange text-white' 
-                                    : 'bg-white/5 text-gray-500 hover:bg-white/10'
-                                }`}
-                            >
-                                MASTER
-                            </button>
-                            {ALL_PLATFORMS.filter(p => state.platforms[p]).map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setters.setActiveTab(tab as ActiveTab)}
-                                    className={`px-4 py-2 text-[10px] font-bold uppercase rounded-t-lg transition-all flex items-center gap-2 whitespace-nowrap ${
-                                        state.activeTab === tab 
-                                        ? 'bg-brand-orange text-white' 
-                                        : 'bg-white/5 text-gray-500 hover:bg-white/10'
-                                    }`}
-                                >
-                                    <PlatformIcon id={tab} size={12}/>
-                                </button>
-                            ))}
+                    {/* PANE 3: PREVIEW (30%) */}
+                    <div className="w-[30%] min-w-[320px] bg-black/80 flex flex-col border-l border-white/5">
+                        <div className="p-4 border-b border-white/5 text-center">
+                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">3. Preview & Launch</h3>
                         </div>
-                        <div className="flex-1 bg-black/20 p-2 rounded-b-xl border border-white/10 border-t-0">
-                            <CaptionEditor 
-                                value={state.captions[state.activeTab]}
-                                onChange={(val) => setters.setCaptions(p => ({...p, [state.activeTab]: val}))}
-                                onGenerate={() => actions.generateAICaption(state.activeTab as any)}
-                                isGenerating={state.isLoading.ai}
-                                platform={state.activeTab}
+
+                        <div className="flex-1 flex items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+                            {/* Toggle Preview View based on active tab or first active platform */}
+                            <PhoneMockup 
+                                image={state.customImage || state.selectedItem?.image || ''}
+                                caption={state.captions[state.activeTab === 'master' ? 'instagram' : state.activeTab]} // Fallback to IG style for master preview
+                                platform={state.activeTab === 'master' ? 'instagram' : state.activeTab}
                             />
                         </div>
+
+                        <div className="p-6 border-t border-white/5 bg-brand-dark">
+                            <button 
+                                onClick={actions.broadcastPost}
+                                disabled={state.isLoading.posting || !state.selectedItem}
+                                className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl font-bold shadow-neon flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                            >
+                                {state.isLoading.posting ? <Loader2 size={20} className="animate-spin"/> : <Rocket size={20} />}
+                                BROADCAST SEKARANG
+                            </button>
+                            <p className="text-[10px] text-gray-500 text-center mt-3">
+                                Akan diposting ke: {Object.entries(state.platforms).filter(([k,v])=>v).map(([k])=>k).join(', ')}
+                            </p>
+                        </div>
                     </div>
-
                 </div>
-            </div>
-
-            {/* PANE 3: PREVIEW (30%) */}
-            <div className="w-[30%] min-w-[320px] bg-black/80 flex flex-col border-l border-white/5">
-                <div className="p-4 border-b border-white/5 text-center">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">3. Preview & Launch</h3>
-                </div>
-
-                <div className="flex-1 flex items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
-                    {/* Toggle Preview View based on active tab or first active platform */}
-                    <PhoneMockup 
-                        image={state.customImage || state.selectedItem?.image || ''}
-                        caption={state.captions[state.activeTab === 'master' ? 'instagram' : state.activeTab]} // Fallback to IG style for master preview
-                        platform={state.activeTab === 'master' ? 'instagram' : state.activeTab}
-                    />
-                </div>
-
-                <div className="p-6 border-t border-white/5 bg-brand-dark">
-                    <button 
-                        onClick={actions.broadcastPost}
-                        disabled={state.isLoading.posting || !state.selectedItem}
-                        className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl font-bold shadow-neon flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                    >
-                        {state.isLoading.posting ? <Loader2 size={20} className="animate-spin"/> : <Rocket size={20} />}
-                        BROADCAST SEKARANG
-                    </button>
-                    <p className="text-[10px] text-gray-500 text-center mt-3">
-                        Akan diposting ke: {Object.entries(state.platforms).filter(([k,v])=>v).map(([k])=>k).join(', ')}
-                    </p>
-                </div>
-            </div>
-
+            )}
         </div>
     );
 };
