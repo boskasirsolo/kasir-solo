@@ -396,9 +396,9 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                <div className="w-20 h-20 bg-brand-orange/10 rounded-full flex items-center justify-center mb-6 text-brand-orange shadow-neon">
                   <Shield size={32} />
                </div>
-               <h3 className="text-2xl font-bold text-white mb-2">Posisi Lagi Penuh</h3>
+               <h3 className="text-2xl font-bold text-white mb-2">Gue Belum Buka Lowongan</h3>
                <p className="text-gray-400 max-w-md text-center mb-8 leading-relaxed">
-                 Tim inti gue lagi lengkap. Tapi, kalau lo ngerasa skill lo di atas rata-rata (Top 1%) dan yakin bisa kasih impact gila ke visi-misi Mesin Kasir Solo, coba paksa gue buat hire lo lewat tombol ini.
+                 Saat ini gue belum butuh tambahan pasukan. Tapi, kalau lo ngerasa skill lo di atas rata-rata (Top 1%) dan yakin bisa kasih impact gila ke visi-misi Mesin Kasir Solo, coba paksa gue buat hire lo lewat tombol ini.
                </p>
                <Button 
                   onClick={() => handleApplyClick("Spontaneous Application (Jalur Nekat)")} 
