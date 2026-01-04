@@ -286,7 +286,11 @@ export const CheckoutPage = ({ setPage }: { setPage: (p: string) => void }) => {
                     <span className="text-2xl text-brand-orange font-bold font-display">{formatRupiah(totalPrice)}</span>
                   </div>
 
-                  <Button type="submit" className="w-full py-4 text-lg" disabled={isSubmitting}>
+                  <Button 
+                    type="submit" 
+                    className="w-full py-4 text-lg" 
+                    disabled={isSubmitting || !agreedToTerms}
+                  >
                     {isSubmitting ? <LoadingSpinner /> : "BUAT PESANAN SEKARANG"}
                   </Button>
                   <p className="text-center text-xs text-gray-600 mt-4 flex items-center justify-center gap-1">
