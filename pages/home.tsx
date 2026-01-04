@@ -377,7 +377,7 @@ export const HomePage = ({
            <div className="container mx-auto px-4 relative z-10 mb-12 text-center">
               <div className="max-w-3xl mx-auto">
                 <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
-                  Bukti Instalasi <span className="text-brand-orange">Mesin Kasir Solo</span>
+                  Jejak Perang <span className="text-brand-orange">Mesin Kasir Solo</span>
                 </h2>
                 <p className="text-gray-400 text-base">Ini bukti lapangan instalasi di tempat klien. Bukan foto colongan dari Google.</p>
               </div>
@@ -517,7 +517,7 @@ export const HomePage = ({
             </h2>
             <p className="max-w-2xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
                Lo gak bakal dilayani sama Chatbot atau Admin magang yang jawab pake template robot. 
-               Gue, <strong>Amin Maghfuri</strong>, bakal langsung bedah kebutuhan bisnis lo dan kasih solusi <strong>mesin kasir</strong> yang paling efisien.
+               Gue, <strong>Amin Maghfuri</strong>, bakal langsung bedah kebutuhan bisnis lo dan kasih solusi <strong>mesin kasir</strong> yang paling efisien. Gue cuman tanem chatbot SIBOS AI di website ini.
             </p>
             
             <div className="flex justify-center">

@@ -32,7 +32,7 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                         "Jujur-jujuran aja. Tahun 2022, gue pernah 'mati suri'."
                     </h3>
                     <p className="text-gray-400 text-lg leading-relaxed">
-                        Aset digital ilang, domain diambil orang, sistem berantakan gara-gara gue terlalu percaya sama 'manusia' tanpa sistem kontrol. Saat itu gue belajar satu hal mahal: <strong>Bisnis tanpa sistem yang kuat cuma nunggu waktu buat meledak.</strong>
+                        Aset digital ilang, domain diambil orang, profil google bisnis disuspend, sistem berantakan gara-gara gue terlalu percaya sama 'manusia' tanpa sistem kontrol. Saat itu gue belajar satu hal mahal: <strong>Bisnis tanpa sistem yang kuat cuma nunggu waktu buat meledak.</strong>
                     </p>
                 </div>
 
@@ -166,8 +166,8 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
             )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-transparent to-transparent flex flex-col justify-end pb-12 px-4 text-center">
-            <h3 className="text-2xl md:text-4xl font-display font-bold text-white mb-2">Markas Besar</h3>
-            <p className="text-gray-400">Tempat di mana ide liar dieksekusi jadi solusi nyata.</p>
+            <h3 className="text-2xl md:text-4xl font-display font-bold text-white mb-2">Markas Legal Mesin Kasir Solo</h3>
+            <p className="text-gray-400">Tempat di mana ide liar dieksekusi jadi solusi nyata. Dari garasi kecil gue sulap jadi markas Mesin Kasir Solo</p>
         </div>
     </section>
 

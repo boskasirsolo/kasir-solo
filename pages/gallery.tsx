@@ -103,7 +103,7 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
             </div>
             
             <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight">
-               Bukan <span className="text-brand-orange">Kaleng-Kaleng.</span>
+               Jejak Perjuangan Mesin Kasir Solo. Bukan <span className="text-brand-orange">Kaleng-Kaleng.</span>
             </h1>
             
             <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed">
