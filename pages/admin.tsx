@@ -3,16 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, Mail, Lock, Zap, Quote, FileText, Home, ArrowLeft, Briefcase, BarChart, Download, Share2, Globe } from 'lucide-react';
 import { Product, GalleryItem, SiteConfig, Testimonial, Article, JobOpening } from '../types';
 import { Button, Input, LoadingSpinner } from '../components/ui';
-import { AdminProducts } from '../components/admin-products';
-import { AdminGallery } from '../components/admin-gallery';
-import { AdminSettings } from '../components/admin-settings';
-import { AdminOrders } from '../components/admin-orders';
-import { AdminArticles } from '../components/admin-articles';
-import { AdminCareer } from '../components/admin-career'; 
-import { AdminDownloads } from '../components/admin-downloads';
-import { AdminSocialStudio } from '../components/admin-social'; 
-import { AdminSEO } from '../components/admin-seo'; // NEW IMPORT
-import { AnalyticsDashboard } from '../components/admin-analytics'; 
+import { AdminProducts } from '../components/admin-products/index'; 
+import { AdminGallery } from '../components/admin-gallery/index'; 
+import { AdminSettings } from '../components/admin-settings/index'; 
+import { AdminOrders } from '../components/admin-orders/index'; 
+import { AdminArticles } from '../components/admin-articles/index';
+import { AdminCareer } from '../components/admin-career/index'; 
+import { AdminDownloads } from '../components/admin-downloads/index'; 
+import { AdminSocialStudio } from '../components/admin-social/index'; 
+import { AdminSEO } from '../components/admin-seo/index'; 
+import { AnalyticsDashboard } from '../components/admin-analytics/index'; 
 import { activateGhostMode } from '../hooks/use-analytics'; 
 import { supabase } from '../utils';
 import { useNavigate } from 'react-router-dom';
@@ -180,7 +180,7 @@ export const AdminDashboard = ({
           <div className="flex flex-wrap justify-center gap-1.5">
             <TabButton id="analytics" label="TRAFFIC" icon={BarChart} />
             <TabButton id="store" label="TOKO" icon={ShoppingBag} />
-            <TabButton id="seo" label="SEO KOTA" icon={Globe} /> {/* NEW TAB */}
+            <TabButton id="seo" label="SEO KOTA" icon={Globe} />
             <TabButton id="gallery" label="GALERI" icon={Image} />
             <TabButton id="articles" label="ARTIKEL" icon={FileText} />
             <TabButton id="career" label="KARIR" icon={Briefcase} /> 

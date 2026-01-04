@@ -1,0 +1,75 @@
+
+import React from 'react';
+import { TabProps } from './types';
+import { SettingsSection, ImageUploader, AIGeneratorBox } from './ui-atoms';
+import { Input, TextArea } from '../ui';
+import { ShieldCheck } from 'lucide-react';
+
+export const TabGeneral = ({ config, setConfig, state, actions }: TabProps) => {
+    return (
+        <div className="space-y-8 animate-fade-in">
+            {/* HERO SECTION */}
+            <SettingsSection title="Tampilan Utama (Hero)" desc="Konten yang muncul paling depan di website.">
+                <AIGeneratorBox 
+                    context={state.magicContext} 
+                    setContext={actions.setMagicContext} 
+                    onGenerate={actions.generateHeroContent} 
+                    isGenerating={state.isGenerating} 
+                />
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Judul Besar (H1)</label>
+                        <Input value={config.heroTitle} onChange={(e) => setConfig({...config, heroTitle: e.target.value})} />
+                    </div>
+                    <div>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Sub-Judul</label>
+                        <TextArea value={config.heroSubtitle} onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})} className="h-24" />
+                    </div>
+                </div>
+            </SettingsSection>
+
+            {/* IMAGES */}
+            <SettingsSection title="Aset Visual">
+                <div className="grid md:grid-cols-2 gap-6">
+                    <ImageUploader 
+                        label="Foto Kantor (Landscape)" 
+                        previewUrl={state.aboutImagePreview} 
+                        onSelect={(f) => actions.handleImageSelect('about', f)}
+                        helperText="Muncul di halaman About & Contact."
+                    />
+                    <ImageUploader 
+                        label="Foto Founder (Portrait)" 
+                        previewUrl={state.founderImagePreview} 
+                        onSelect={(f) => actions.handleImageSelect('founder', f)}
+                        aspect="portrait"
+                        helperText="Muncul di section 'Jujur-jujuran'."
+                    />
+                </div>
+            </SettingsSection>
+
+            {/* LEGALITY */}
+            <SettingsSection title="Legalitas Perusahaan">
+                <div className="bg-brand-dark/30 p-4 rounded-xl border border-white/5 space-y-4">
+                    <div className="md:col-span-2">
+                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Nama Resmi (PT)</label>
+                        <Input value={config.companyLegalName || ''} onChange={(e) => setConfig({...config, companyLegalName: e.target.value})} placeholder="PT MESIN KASIR SOLO" />
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">NIB</label>
+                            <Input value={config.nibNumber || ''} onChange={(e) => setConfig({...config, nibNumber: e.target.value})} placeholder="1234xxx" />
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">SK Kemenkumham (AHU)</label>
+                            <Input value={config.ahuNumber || ''} onChange={(e) => setConfig({...config, ahuNumber: e.target.value})} placeholder="AHU-xxx" />
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">NPWP</label>
+                            <Input value={config.npwpNumber || ''} onChange={(e) => setConfig({...config, npwpNumber: e.target.value})} placeholder="XX.XXX..." />
+                        </div>
+                    </div>
+                </div>
+            </SettingsSection>
+        </div>
+    );
+};
