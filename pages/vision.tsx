@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Target, Compass, Zap, ShieldCheck, Users, TrendingUp, Lightbulb, Flag } from 'lucide-react';
+import { Target, Compass, Zap, ShieldCheck, Users, TrendingUp, Lightbulb, Flag, Anchor } from 'lucide-react';
 import { SectionHeader, Card } from '../components/ui';
 
 const ValueCard = ({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) => (
@@ -24,14 +24,14 @@ export const VisionPage = () => {
         
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-6">
-            <Compass size={14} className="text-brand-orange" />
-            <span className="text-xs font-bold text-gray-300 tracking-[0.2em] uppercase">Arah & Tujuan Kami</span>
+            <Anchor size={14} className="text-brand-orange" />
+            <span className="text-xs font-bold text-gray-300 tracking-[0.2em] uppercase">Peta Perang Kita</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-display font-bold text-white mb-6 leading-tight">
-            Visi & <span className="text-brand-orange">Misi</span>
+            Mimpi Gede, <br/><span className="text-brand-orange">Kerja Keras.</span>
           </h1>
           <p className="max-w-2xl mx-auto text-lg text-gray-400 leading-relaxed">
-            Peta jalan PT Mesin Kasir Solo dalam menavigasi era digital dan membawa UMKM Indonesia naik kelas.
+            Gue gak bangun PT Mesin Kasir Solo cuma buat cari untung receh. Gue punya misi buat nyelametin ribuan UMKM dari kebangkrutan karena buta data.
           </p>
         </div>
       </section>
@@ -53,9 +53,9 @@ export const VisionPage = () => {
                     <Target size={32} />
                   </div>
                   
-                  <h2 className="text-3xl font-display font-bold text-white mb-6">Visi Kami (The Dream)</h2>
+                  <h2 className="text-3xl font-display font-bold text-white mb-6">Visi Gue (The Dream)</h2>
                   <p className="text-xl md:text-2xl text-gray-200 leading-relaxed font-light">
-                    "Menjadi <strong className="text-brand-orange">Ekosistem Digital #1</strong> yang paling dipercaya oleh pengusaha UMKM di Indonesia, dengan menyediakan solusi teknologi yang terjangkau, edukatif, dan berdampak nyata."
+                    "Menjadi <strong className="text-brand-orange">Benteng Pertahanan Digital #1</strong> buat UMKM Indonesia. Gue mau liat warung kecil punya sistem secanggih minimarket modern, tanpa harus bayar mahal."
                   </p>
                </div>
             </div>
@@ -64,16 +64,16 @@ export const VisionPage = () => {
             <div className="flex flex-col justify-center space-y-6">
                <div className="mb-4">
                   <h2 className="text-3xl font-display font-bold text-white mb-2 flex items-center gap-3">
-                    <Flag className="text-brand-orange"/> Misi Kami (The Roadmap)
+                    <Flag className="text-brand-orange"/> Misi Harian (The Grind)
                   </h2>
-                  <p className="text-gray-400">Langkah konkret yang kami lakukan setiap hari:</p>
+                  <p className="text-gray-400">Ini yang tim gue kerjain tiap hari buat lo:</p>
                </div>
 
                {[
-                 { title: "Demokratisasi Teknologi", desc: "Menghapus stigma bahwa teknologi canggih itu mahal. Kami menghadirkan mesin kasir & software enterprise dengan harga UMKM." },
-                 { title: "Edukasi Berkelanjutan", desc: "Bukan sekadar jual putus. Kami berkomitmen mengedukasi owner & staff agar melek digital lewat training dan pendampingan." },
-                 { title: "Inovasi Tanpa Henti", desc: "Terus mengembangkan SIBOS & QALAM agar selalu relevan dengan perubahan zaman dan kebutuhan pasar yang dinamis." },
-                 { title: "Layanan Purna Jual Prima", desc: "Memberikan rasa aman kepada klien dengan layanan support teknis yang responsif dan solutif seumur hidup." }
+                 { title: "Hancurin Mitos Mahal", desc: "Teknologi canggih gak harus bikin kantong bolong. Gue hadirkan mesin kasir & software enterprise dengan harga rakyat." },
+                 { title: "Edukasi Sampai Pinter", desc: "Gue haram hukumnya jual putus. Lo dan staf lo bakal gue training sampai bener-bener ngerti cara baca data bisnis." },
+                 { title: "Inovasi Gak Ada Matinya", desc: "SIBOS & QALAM bakal terus gue update. Lo gak perlu pusing mikirin coding, biar itu urusan gue." },
+                 { title: "Support Tanpa Drama", desc: "Kalau alat rusak, gue yang pusing, bukan lo. Tim teknis gue siap backup biar jualan lo gak keganggu." }
                ].map((m, i) => (
                  <div key={i} className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                     <div className="text-brand-orange font-display font-bold text-xl opacity-50">0{i+1}</div>
@@ -92,38 +92,38 @@ export const VisionPage = () => {
       {/* CORE VALUES */}
       <section className="py-20 bg-brand-dark border-t border-white/5">
         <div className="container mx-auto px-4">
-          <SectionHeader title="DNA" highlight="Perusahaan" subtitle="Nilai-nilai inti yang menjadi pondasi karakter tim kami." />
+          <SectionHeader title="DNA" highlight="Gue" subtitle="Prinsip jalanan yang gue tanam ke semua anak buah gue." />
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
              <ValueCard 
                 icon={ShieldCheck} 
-                title="Integrity First" 
-                desc="Kejujuran adalah mata uang kami. Kami tidak akan merekomendasikan produk yang tidak Anda butuhkan hanya demi omzet."
+                title="Jujur Harga Mati" 
+                desc="Gue gak bakal jual barang yang gak lo butuhin cuma demi omzet. Kalau barang jelek, gue bilang jelek. Transparansi nomor satu."
              />
              <ValueCard 
                 icon={TrendingUp} 
-                title="Resilience (Bangkit)" 
-                desc="Lahir dari kegagalan dan kehilangan, kami memiliki mental baja. Kami mengerti perjuangan UMKM karena kami juga pernah di posisi terendah."
+                title="Mental Baja" 
+                desc="Lahir dari kegagalan 2022, gue punya mental survivor. Gue ngerti susahnya bangun bisnis dari nol karena gue juga ngalamin."
              />
              <ValueCard 
                 icon={Lightbulb} 
-                title="Solution Oriented" 
-                desc="Kami tidak fokus pada masalah, tapi pada solusi. Setiap kendala teknis adalah tantangan yang harus dipecahkan dengan cepat."
+                title="Anti Sambat" 
+                desc="Disini gak ada tempat buat ngeluh. Ada masalah? Cari solusi. Error? Perbaiki. Deadline? Sikat."
              />
              <ValueCard 
                 icon={Users} 
-                title="Customer Obsessed" 
-                desc="Klien bukan raja, tapi partner. Kesuksesan bisnis Anda adalah portofolio terbaik bagi kami."
+                title="Lo Bosnya" 
+                desc="Gue idup dari profit lo. Kalau bisnis lo mati, bisnis gue juga mati. Jadi gue bakal mati-matian bikin lo sukses."
              />
              <ValueCard 
                 icon={Zap} 
-                title="Speed & Agility" 
-                desc="Dunia bisnis bergerak cepat. Kami bekerja dengan speed tinggi dalam pelayanan, pengiriman, dan support."
+                title="Sat Set Wat Wet" 
+                desc="Bisnis itu balapan. Gue kerja cepet. Chat dibales kilat, pengiriman gak pake lama, support sat-set."
              />
              <ValueCard 
                 icon={Compass} 
-                title="Long Term Vision" 
-                desc="Kami membangun hubungan jangka panjang. Kami ingin menemani bisnis Anda tumbuh dari rintisan hingga menjadi raksasa."
+                title="Jangka Panjang" 
+                desc="Gue gak cari 'hit and run'. Gue mau nemenin lo dari jualan di garasi sampai punya cabang di mana-mana."
              />
           </div>
         </div>
@@ -134,15 +134,15 @@ export const VisionPage = () => {
          <div className="absolute inset-0 bg-brand-orange/5"></div>
          <div className="container mx-auto px-4 relative z-10 text-center">
             <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-8">
-               "We Don't Just Sell Tools,<br/>We <span className="text-brand-orange">Upgrade Businesses.</span>"
+               "Gue Gak Jual Alat Sulap,<br/>Gue Jual <span className="text-brand-orange">Senjata Perang.</span>"
             </h2>
             <div className="max-w-3xl mx-auto bg-black/40 backdrop-blur-md border border-white/10 p-8 rounded-2xl">
                <p className="text-gray-300 text-lg leading-relaxed italic">
-                  "Di PT Mesin Kasir Solo, kami percaya bahwa setiap transaksi yang tercatat rapi adalah langkah awal menuju kebebasan finansial. Tugas kami adalah memastikan alat perang Anda (Hardware & Software) selalu siap tempur, agar Anda bisa fokus memenangkan pasar."
+                  "Di PT Mesin Kasir Solo, gue percaya satu hal: Bisnis tanpa data itu judi. Tugas gue adalah mastiin lo pegang kartu As (Sistem & Data) biar lo selalu menang di pasar."
                </p>
                <div className="mt-6 flex items-center justify-center gap-4">
                   <div className="h-px w-12 bg-brand-orange"></div>
-                  <span className="text-brand-orange font-bold uppercase tracking-widest text-xs">Amin Maghfuri, CEO</span>
+                  <span className="text-brand-orange font-bold uppercase tracking-widest text-xs">Amin Maghfuri, Founder</span>
                   <div className="h-px w-12 bg-brand-orange"></div>
                </div>
             </div>
