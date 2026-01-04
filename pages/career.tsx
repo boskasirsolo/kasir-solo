@@ -130,7 +130,7 @@ const ApplicationModal = ({
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2">Berkas Masuk!</h3>
                     <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-                        Sip, <span className="text-white font-bold">{form.full_name}</span>. Data lo udah di meja gue. Kalau profil lo "ngeri" dan cocok, tim HR bakal langsung WA lo.
+                        Sip, <span className="text-white font-bold">{form.full_name}</span>. Data lo udah di meja gue. Kalau profil lo "ngeri" dan cocok, gue atau tim inti bakal langsung WA lo.
                     </p>
                     <Button onClick={onClose} className="px-8 py-3 mx-auto shadow-neon">Siap, Ditunggu</Button>
                 </div>
@@ -155,7 +155,7 @@ const ApplicationModal = ({
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar max-h-[70vh]">
                     <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Identitas Diri</label>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Siapa Lo? (Identitas)</label>
                         <Input 
                             value={form.full_name} 
                             onChange={e => setForm({...form, full_name: e.target.value})} 
@@ -170,7 +170,7 @@ const ApplicationModal = ({
                     </div>
 
                     <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Jejak Digital (Portfolio/LinkedIn)</label>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Pamerin Skill Lo (Portfolio)</label>
                         <Input value={form.portfolio_url} onChange={e => setForm({...form, portfolio_url: e.target.value})} placeholder="https://linkedin.com/in/..." className="text-sm"/>
                         <p className="text-[10px] text-gray-500 mt-1 italic">*Biar gue bisa kepo skill lo sedalam apa.</p>
                     </div>
@@ -206,11 +206,11 @@ const ApplicationModal = ({
                     </div>
 
                     <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Kenapa Gue Harus Pilih Lo? (Pitching)</label>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1.5">Yakinin Gue (Pitching)</label>
                         <TextArea 
                             value={form.cover_letter} 
                             onChange={e => setForm({...form, cover_letter: e.target.value})} 
-                            placeholder="Gak usah formal kayak surat lamaran CPNS. Ceritain skill lo yang bisa bikin bisnis ini makin kenceng..." 
+                            placeholder="Gak usah formal kayak surat lamaran CPNS. Ceritain kenapa skill lo bakal bikin bisnis ini makin kenceng..." 
                             className="h-24 text-sm"
                         />
                     </div>
@@ -222,7 +222,7 @@ const ApplicationModal = ({
                         {isSubmitting ? <Loader2 className="animate-spin" /> : <><Mail size={16}/> KIRIM LAMARAN & BERJUANG</>}
                     </Button>
                     <p className="text-[10px] text-gray-500 text-center mt-3">
-                        *Data lo aman di server gue. Gak bakal gue jual ke pihak ketiga.
+                        *Tenang, data lo aman di server gue. Gak bakal gue jual ke pihak ketiga.
                     </p>
                 </div>
             </div>
@@ -309,12 +309,12 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
             <span className="text-xs font-bold text-gray-300 tracking-[0.2em] uppercase">Join The Resistance</span>
           </div>
           <h1 className="text-4xl md:text-7xl font-display font-bold text-white mb-6 leading-tight">
-            Kami Tidak Mencari Karyawan,<br/>
-            Kami Mencari <span className="text-brand-orange">Partner Perjuangan.</span>
+            Gue Gak Cari Karyawan,<br/>
+            Gue Cari <span className="text-brand-orange">Partner Perjuangan.</span>
           </h1>
           <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed mb-10">
-            PT Mesin Kasir Solo bukan tempat buat orang yang cuma cari "zona nyaman" 9-to-5. <br/>
-            Ini markas buat mereka yang mau ngebangun sistem buat nyelametin ribuan UMKM.
+            PT Mesin Kasir Solo bukan tempat buat lo yang cuma cari "zona nyaman" 9-to-5. <br/>
+            Ini markas buat lo yang mau ngebangun sistem buat nyelametin ribuan UMKM bareng gue.
           </p>
         </div>
       </section>
@@ -323,8 +323,8 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
       <section className="py-20 bg-brand-dark relative overflow-hidden">
          <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-               <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">DNA <span className="text-brand-orange">KAMI</span></h2>
-               <p className="text-gray-400 text-sm max-w-2xl mx-auto">Kami pernah jatuh di tahun 2022. Kehilangan domain, kehilangan aset. Kami bangkit kembali dengan mental baja. Jika lo gak punya mental survivor, lo gak akan bertahan di sini.</p>
+               <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">DNA <span className="text-brand-orange">GUE</span></h2>
+               <p className="text-gray-400 text-sm max-w-2xl mx-auto">Gue pernah jatuh sejatuh-jatuhnya di 2022. Kehilangan domain, kehilangan aset. Gue bangkit lagi sendirian. Kalau mental lo tempe, lo gak bakal bertahan di sini.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
@@ -335,7 +335,7 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                   </div>
                   <h4 className="text-xl font-bold text-white mb-3">Tahan Banting (Resilience)</h4>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                     Masalah teknis, komplain klien, dan deadline adalah makanan sehari-hari. Kami gak butuh orang yang dikit-dikit ngeluh (sambat). Kami butuh <em>Problem Solver</em> yang tenang pas badai dateng.
+                     Masalah teknis, komplain klien, deadline mepet itu makanan sehari-hari gue. Gue gak butuh orang yang dikit-dikit ngeluh (sambat). Gue butuh <em>Problem Solver</em> yang tenang pas badai dateng.
                   </p>
                </div>
 
@@ -346,7 +346,7 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                   </div>
                   <h4 className="text-xl font-bold text-white mb-3">Impact Over Output</h4>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                     Jangan bangga cuma karena udah "kelihatan sibuk". Kami menilai hasil akhir. Apakah kode lo bikin transaksi UMKM makin cepet? Apakah desain lo bikin kasir lansia paham? Itu yang diitung.
+                     Jangan bangga cuma karena lo 'lembur' atau 'kelihatan sibuk'. Gue cuma nilai hasil akhir. Kode lo bikin transaksi makin cepet? Desain lo bikin user paham? Itu yang gue itung.
                   </p>
                </div>
 
@@ -357,7 +357,7 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                   </div>
                   <h4 className="text-xl font-bold text-white mb-3">Empati ke User</h4>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                     Klien kami bukan perusahaan raksasa. Klien kami itu pemilik toko kelontong, ustadz TPA, dan pengusaha kafe rintisan. Sistem lo harus bisa dipake mereka tanpa perlu gelar Sarjana Komputer.
+                     Klien gue itu pedagang pasar, ustadz TPA, dan pengusaha rintisan. Sistem lo harus membumi. Jangan bikin UI/UX rumit yang cuma dimengerti sama anak startup Jaksel.
                   </p>
                </div>
             </div>
@@ -396,9 +396,9 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                <div className="w-20 h-20 bg-brand-orange/10 rounded-full flex items-center justify-center mb-6 text-brand-orange shadow-neon">
                   <Shield size={32} />
                </div>
-               <h3 className="text-2xl font-bold text-white mb-2">Benteng Pertahanan Penuh</h3>
+               <h3 className="text-2xl font-bold text-white mb-2">Posisi Lagi Penuh</h3>
                <p className="text-gray-400 max-w-md text-center mb-8 leading-relaxed">
-                 Saat ini semua pos tempur udah keisi. Tapi, kalau lo yakin skill lo di atas rata-rata (Top 1%) dan bisa kasih impact gila, paksa masuk lewat jalur ini.
+                 Tim inti gue lagi lengkap. Tapi, kalau lo ngerasa skill lo di atas rata-rata (Top 1%) dan yakin bisa kasih impact gila ke bisnis gue, coba paksa gue buat hire lo lewat tombol ini.
                </p>
                <Button 
                   onClick={() => handleApplyClick("Spontaneous Application (Jalur Nekat)")} 
