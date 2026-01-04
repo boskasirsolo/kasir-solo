@@ -182,7 +182,7 @@ export const GalleryPage = ({ gallery, testimonials }: { gallery: GalleryItem[],
             <p className="text-gray-400 mb-8 max-w-xl mx-auto">
                Jangan cuma jadi penonton kesuksesan orang lain. Saatnya giliran lo yang gue bantu upgrade sistemnya.
             </p>
-            <Button onClick={() => navigate('/contact')} className="px-10 py-4 shadow-neon hover:shadow-neon-strong">
+            <Button onClick={() => navigate('/contact')} className="px-10 py-4 shadow-neon hover:shadow-neon-strong mx-auto">
                MULAI PROYEK BARU
             </Button>
          </div>

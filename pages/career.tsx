@@ -398,7 +398,7 @@ export const CareerPage = ({ jobs }: { jobs: JobOpening[] }) => {
                </div>
                <h3 className="text-2xl font-bold text-white mb-2">Posisi Lagi Penuh</h3>
                <p className="text-gray-400 max-w-md text-center mb-8 leading-relaxed">
-                 Tim inti gue lagi lengkap. Tapi, kalau lo ngerasa skill lo di atas rata-rata (Top 1%) dan yakin bisa kasih impact gila ke bisnis gue, coba paksa gue buat hire lo lewat tombol ini.
+                 Tim inti gue lagi lengkap. Tapi, kalau lo ngerasa skill lo di atas rata-rata (Top 1%) dan yakin bisa kasih impact gila ke visi-misi Mesin Kasir Solo, coba paksa gue buat hire lo lewat tombol ini.
                </p>
                <Button 
                   onClick={() => handleApplyClick("Spontaneous Application (Jalur Nekat)")} 
