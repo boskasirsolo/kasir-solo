@@ -142,7 +142,7 @@ const Footer = ({ setPage, config }: { setPage: (p: string) => void, config: Sit
     { label: 'Cek Resi Pesanan', action: () => setPage('track-order') }, // NEW FOOTER LINK
     { label: 'Download Center', action: () => setPage('support') },
     { label: 'Klien & Portfolio', action: () => setPage('gallery') },
-    { label: 'Tentang Kami', action: () => setPage('about') },
+    { label: 'Profil Perusahaan', action: () => setPage('about') },
     { label: 'Hubungi', action: () => setPage('contact') },
   ];
 
