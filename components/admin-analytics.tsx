@@ -3,7 +3,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   BarChart3, Users, MousePointer, Smartphone, Monitor, Eye, 
   ArrowUp, ArrowDown, Calendar, ShieldCheck, Link as LinkIcon, 
-  Copy, Check, Globe, Clock, Activity, TrendingUp, Filter, Tablet
+  Copy, Check, Globe, Clock, Activity, TrendingUp, Filter, Tablet,
+  PieChart, LogOut, RefreshCw, Zap
 } from 'lucide-react';
 import { supabase } from '../utils';
 import { AnalyticsLog } from '../types';
@@ -26,7 +27,7 @@ const useAnalyticsData = () => {
     // Calculate date range
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - period);
-    startDate.setHours(0, 0, 0, 0); // Start of day
+    startDate.setHours(0, 0, 0, 0); 
 
     const { data, error } = await supabase
       .from('analytics_logs')
@@ -51,38 +52,33 @@ const useAnalyticsData = () => {
     const trafficByDate: Record<string, number> = {};
     const today = new Date();
     
-    // Pre-fill dates with 0 to ensure chart scale is correct and continuous
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(today.getDate() - i);
-        // Format: "1 Jan"
         const key = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
         trafficByDate[key] = 0;
     }
 
-    // Fill actual data from logs
     logs.forEach(log => {
       const d = new Date(log.created_at!);
       const key = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-      // Only count if the date is within our generated range (handles edge cases)
       if (trafficByDate.hasOwnProperty(key) && log.event_type === 'page_view') {
         trafficByDate[key]++;
       }
     });
 
-    // 2. Page Views Ranking
+    // 2. Page & Referrer & Device
     const pageViews: Record<string, number> = {};
-    // 3. Device Breakdown
     const devices: Record<string, number> = { mobile: 0, desktop: 0, tablet: 0 };
-    // 4. Referrer Stats
     const referrers: Record<string, number> = {};
-    // 5. Peak Hours (0-23)
     const hours: number[] = new Array(24).fill(0);
+    
+    // 3. ADVANCED: Visitor Behavior (Retention & Bounce)
+    const visitorHistory: Record<string, string[]> = {}; // visitor_id -> [pages visited]
 
     logs.forEach(log => {
       if (log.event_type === 'page_view') {
-        // Page Ranking
-        const path = log.page_path.split('?')[0]; // Remove query params
+        const path = log.page_path.split('?')[0]; 
         pageViews[path] = (pageViews[path] || 0) + 1;
         
         // Device
@@ -90,7 +86,7 @@ const useAnalyticsData = () => {
         else if (log.device_type === 'desktop') devices.desktop++;
         else devices.tablet++;
 
-        // Referrer Logic
+        // Referrer
         let ref = log.referrer || 'Direct';
         const lowerRef = ref.toLowerCase();
         if (lowerRef.includes('google')) ref = 'Google Search';
@@ -103,27 +99,55 @@ const useAnalyticsData = () => {
             try {
                 const url = new URL(ref);
                 ref = url.hostname.replace('www.', '');
-            } catch(e) { /* keep original if not url */ }
+            } catch(e) { /* keep original */ }
         }
         referrers[ref] = (referrers[ref] || 0) + 1;
 
-        // Peak Hour
+        // Hour
         const hour = new Date(log.created_at!).getHours();
         hours[hour]++;
+
+        // Visitor Tracking
+        if (!visitorHistory[log.visitor_id]) {
+            visitorHistory[log.visitor_id] = [];
+        }
+        visitorHistory[log.visitor_id].push(path);
       }
     });
 
-    const sortedPages = Object.entries(pageViews)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 6);
+    // Calculate Retention & Bounce
+    let newVisitors = 0;
+    let returningVisitors = 0;
+    let singlePageVisits = 0;
+    const exitPages: Record<string, number> = {};
 
-    const sortedReferrers = Object.entries(referrers)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 5);
+    Object.entries(visitorHistory).forEach(([vid, pages]) => {
+        // If visited only 1 page ever in this period -> Bounce / New (Simplified logic)
+        // If visited > 1 distinct pages or sessions -> Returning/Engaged
+        if (pages.length === 1) {
+            newVisitors++;
+            singlePageVisits++;
+        } else {
+            returningVisitors++;
+        }
+
+        // The last page they visited is the "Exit Page"
+        const lastPage = pages[pages.length - 1];
+        exitPages[lastPage] = (exitPages[lastPage] || 0) + 1;
+    });
+
+    const bounceRate = uniqueVisitors > 0 ? Math.round((singlePageVisits / uniqueVisitors) * 100) : 0;
+    const avgPagesPerSession = uniqueVisitors > 0 ? (totalViews / uniqueVisitors).toFixed(1) : "0";
+
+    const sortedPages = Object.entries(pageViews).sort(([,a], [,b]) => b - a).slice(0, 6);
+    const sortedReferrers = Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 5);
+    const sortedExitPages = Object.entries(exitPages).sort(([,a], [,b]) => b - a).slice(0, 5);
 
     return { 
         totalViews, uniqueVisitors, totalActions, conversionRate,
-        trafficByDate, sortedPages, devices, sortedReferrers, hours 
+        trafficByDate, sortedPages, devices, sortedReferrers, hours,
+        // New Advanced Stats
+        newVisitors, returningVisitors, bounceRate, avgPagesPerSession, sortedExitPages
     };
   }, [logs, period]);
 
@@ -150,12 +174,10 @@ const StatCard = ({ label, value, sub, icon: Icon, color }: { label: string, val
 // --- MOLECULE: Improved Bar Chart ---
 const EnhancedTrafficChart = ({ data }: { data: Record<string, number> }) => {
   const values = Object.values(data);
-  // Ensure minimum scale of 5 so small data (1, 2) doesn't look like 100% height
   const maxValue = Math.max(...values, 5); 
 
   return (
     <div className="h-64 flex items-end justify-between gap-2 pt-10 pb-2 relative w-full">
-      {/* Grid Lines (Visual Guide) */}
       <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20 z-0">
          <div className="border-t border-dashed border-gray-500 w-full h-px"></div>
          <div className="border-t border-dashed border-gray-500 w-full h-px"></div>
@@ -170,12 +192,9 @@ const EnhancedTrafficChart = ({ data }: { data: Record<string, number> }) => {
         
         return (
           <div key={idx} className="flex-1 flex flex-col items-center group relative z-10 h-full justify-end">
-            {/* Tooltip on Hover */}
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-brand-dark border border-brand-orange/50 text-brand-orange text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-neon whitespace-nowrap z-20 pointer-events-none">
                {count} View
             </div>
-            
-            {/* Bar */}
             <div className="w-full px-1 h-full flex items-end relative">
                 <div 
                     className={`w-full rounded-t-sm transition-all duration-500 relative ${
@@ -187,8 +206,6 @@ const EnhancedTrafficChart = ({ data }: { data: Record<string, number> }) => {
                 >
                 </div>
             </div>
-            
-            {/* Label */}
             <span className="text-[9px] text-gray-500 mt-2 truncate w-full text-center font-mono group-hover:text-white transition-colors">
                 {date}
             </span>
@@ -208,7 +225,6 @@ const PeakHoursChart = ({ hours }: { hours: number[] }) => {
             <div className="flex items-end gap-[2px] h-24 mt-4 w-full">
                 {hours.map((count, h) => {
                     const intensity = count / maxVal;
-                    // Determine color based on intensity
                     let bgClass = 'bg-white/5';
                     if (count > 0) {
                         if (intensity > 0.75) bgClass = 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]';
@@ -223,7 +239,6 @@ const PeakHoursChart = ({ hours }: { hours: number[] }) => {
                                 className={`w-full rounded-sm ${bgClass} transition-all hover:opacity-80 min-h-[4px]`} 
                                 style={{ height: `${Math.max(intensity * 100, 5)}%` }}
                             ></div>
-                            {/* Hover Tooltip */}
                             <div className="absolute bottom-full mb-1 hidden group-hover:block bg-black/90 text-white text-[9px] px-2 py-1 rounded z-20 border border-white/10 whitespace-nowrap -translate-x-1/2 left-1/2">
                                 <span className="font-bold text-brand-orange">{h}:00</span> • {count} view
                             </div>
@@ -242,59 +257,78 @@ const PeakHoursChart = ({ hours }: { hours: number[] }) => {
     );
 };
 
-// --- MOLECULE: Device Progress Bar ---
-const DeviceBar = ({ label, count, total, icon: Icon }: { label: string, count: number, total: number, icon: any }) => {
-  const percent = total > 0 ? Math.round((count / total) * 100) : 0;
-  return (
-    <div className="mb-4 last:mb-0">
-      <div className="flex justify-between items-center mb-1 text-xs">
-        <span className="flex items-center gap-2 text-gray-300"><Icon size={14}/> {label}</span>
-        <span className="font-bold text-white">{percent}% <span className="text-gray-500 font-normal">({count})</span></span>
-      </div>
-      <div className="w-full h-1.5 bg-black rounded-full overflow-hidden border border-white/5">
-        <div 
-            className="h-full bg-gradient-to-r from-brand-orange to-red-500 rounded-full transition-all duration-1000 shadow-[0_0_5px_rgba(255,95,31,0.5)]" 
-            style={{ width: `${percent}%` }}
-        ></div>
-      </div>
-    </div>
-  );
+// --- MOLECULE: Circular Retention Chart (CSS Only) ---
+const RetentionDonut = ({ newUsers, returningUsers }: { newUsers: number, returningUsers: number }) => {
+    const total = newUsers + returningUsers;
+    const newPercent = total > 0 ? (newUsers / total) * 100 : 0;
+    const returningPercent = total > 0 ? (returningUsers / total) * 100 : 0;
+
+    return (
+        <div className="flex items-center gap-6">
+            <div className="relative w-32 h-32 rounded-full flex items-center justify-center shadow-lg"
+                 style={{
+                     background: `conic-gradient(#FF5F1F ${returningPercent}%, #333 0)`
+                 }}>
+                <div className="absolute inset-2 bg-brand-dark rounded-full flex flex-col items-center justify-center">
+                    <span className="text-2xl font-bold text-white">{total}</span>
+                    <span className="text-[10px] text-gray-500 uppercase">Users</span>
+                </div>
+            </div>
+            <div className="space-y-3 flex-1">
+                <div>
+                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-brand-orange"></div> Returning</span>
+                        <span className="text-white font-bold">{Math.round(returningPercent)}%</span>
+                    </div>
+                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-brand-orange h-full" style={{ width: `${returningPercent}%` }}></div>
+                    </div>
+                </div>
+                <div>
+                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gray-600"></div> New Visitor</span>
+                        <span className="text-white font-bold">{Math.round(newPercent)}%</span>
+                    </div>
+                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-gray-600 h-full" style={{ width: `${newPercent}%` }}></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 // --- ATOM: Ghost Link Copier ---
 const GhostLinkCopier = () => {
-    const [copied, setCopied] = useState(false);
-    const ghostLink = typeof window !== 'undefined' ? `${window.location.origin}/?mode=ghost_access` : '';
+  const [copied, setCopied] = useState(false);
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const ghostLink = `${origin}/?mode=ghost_access`;
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(ghostLink);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+  const copyLink = () => {
+    navigator.clipboard.writeText(ghostLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-    return (
-        <div className="mt-6 p-4 bg-brand-dark border border-white/10 rounded-xl">
-            <h4 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
-                <ShieldCheck size={16} className="text-brand-orange"/> Ghost Access (Anti-Tracking)
-            </h4>
-            <p className="text-xs text-gray-400 mb-3 leading-relaxed">
-                Gunakan link ini untuk akses admin/internal agar view <strong>TIDAK TERHITUNG</strong> di grafik.
-            </p>
-            <div className="flex gap-2">
-                <input 
-                    readOnly 
-                    value={ghostLink} 
-                    className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 text-xs text-gray-300 focus:outline-none font-mono"
-                />
-                <button 
-                    onClick={handleCopy}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold text-white transition-all"
-                >
-                    {copied ? <Check size={14} className="text-green-500"/> : <Copy size={14}/>}
-                </button>
-            </div>
-        </div>
-    );
+  return (
+    <div className="bg-brand-dark border border-white/5 rounded-xl p-6 h-full flex flex-col justify-center items-center text-center">
+       <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 border border-white/10">
+          <ShieldCheck size={32} className="text-green-400" />
+       </div>
+       <h4 className="text-white font-bold text-sm mb-2">Ghost Access Link</h4>
+       <p className="text-[10px] text-gray-500 mb-6 leading-relaxed max-w-[200px]">
+          Gunakan link ini di device baru agar tidak terhitung dalam analytics (Admin Mode).
+       </p>
+       
+       <button 
+          onClick={copyLink}
+          className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold text-gray-300 transition-all w-full justify-center"
+       >
+          {copied ? <Check size={14} className="text-green-400"/> : <Copy size={14} />}
+          {copied ? 'Link Disalin!' : 'Salin Ghost Link'}
+       </button>
+    </div>
+  );
 };
 
 // --- ORGANISM: Main Dashboard View ---
@@ -305,7 +339,7 @@ export const AnalyticsDashboard = () => {
   if (loading) return <div className="flex justify-center p-20"><LoadingSpinner size={32} /></div>;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-10">
       
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row justify-between items-center bg-brand-card/30 p-4 rounded-xl border border-white/5 gap-4">
@@ -371,6 +405,7 @@ export const AnalyticsDashboard = () => {
          />
       </div>
 
+      {/* Main Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
          
          {/* Main Chart */}
@@ -399,10 +434,30 @@ export const AnalyticsDashboard = () => {
                 <h4 className="text-white font-bold text-sm mb-6 flex items-center gap-2">
                     <Smartphone size={16} className="text-brand-orange"/> Device User
                 </h4>
-                <div className="flex-grow">
-                    <DeviceBar label="Mobile (HP)" count={stats.devices.mobile} total={stats.totalViews} icon={Smartphone} />
-                    <DeviceBar label="Desktop (PC)" count={stats.devices.desktop} total={stats.totalViews} icon={Monitor} />
-                    <DeviceBar label="Tablet" count={stats.devices.tablet} total={stats.totalViews} icon={Tablet} />
+                <div className="flex-grow space-y-4">
+                    <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-gray-400 flex items-center gap-2"><Smartphone size={14}/> Mobile</span>
+                        <span className="text-white font-bold">{stats.devices.mobile}</span>
+                    </div>
+                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-brand-orange h-full" style={{ width: `${(stats.devices.mobile / stats.totalViews) * 100}%` }}></div>
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-gray-400 flex items-center gap-2"><Monitor size={14}/> Desktop</span>
+                        <span className="text-white font-bold">{stats.devices.desktop}</span>
+                    </div>
+                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-blue-500 h-full" style={{ width: `${(stats.devices.desktop / stats.totalViews) * 100}%` }}></div>
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-gray-400 flex items-center gap-2"><Tablet size={14}/> Tablet</span>
+                        <span className="text-white font-bold">{stats.devices.tablet}</span>
+                    </div>
+                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-purple-500 h-full" style={{ width: `${(stats.devices.tablet / stats.totalViews) * 100}%` }}></div>
+                    </div>
                 </div>
              </div>
 
@@ -421,6 +476,66 @@ export const AnalyticsDashboard = () => {
                 </div>
              </div>
          </div>
+
+      </div>
+
+      {/* DEMOGRAPHICS & BEHAVIOR SECTION (NEW) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* RETENTION */}
+          <div className="bg-brand-dark border border-white/5 rounded-xl p-6">
+              <h4 className="text-white font-bold text-sm mb-6 flex items-center gap-2">
+                  <RefreshCw size={16} className="text-green-400"/> User Retention
+              </h4>
+              <RetentionDonut newUsers={stats.newVisitors} returningUsers={stats.returningVisitors} />
+              <p className="text-[10px] text-gray-500 mt-6 text-center italic">
+                  *Returning user = Pengunjung yang datang lebih dari 1 kali dalam periode ini.
+              </p>
+          </div>
+
+          {/* ENGAGEMENT METRICS */}
+          <div className="bg-brand-dark border border-white/5 rounded-xl p-6 flex flex-col justify-between">
+              <div>
+                  <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+                      <Zap size={16} className="text-yellow-400"/> Quality Score
+                  </h4>
+                  <div className="space-y-4">
+                      <div className="p-4 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between">
+                          <div>
+                              <p className="text-xs text-gray-400 mb-1">Bounce Rate</p>
+                              <h3 className="text-2xl font-bold text-white">{stats.bounceRate}%</h3>
+                          </div>
+                          <div className={`text-[10px] px-2 py-1 rounded font-bold ${stats.bounceRate < 40 ? 'bg-green-500/20 text-green-400' : stats.bounceRate < 70 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
+                              {stats.bounceRate < 40 ? 'Excellent' : stats.bounceRate < 70 ? 'Normal' : 'High'}
+                          </div>
+                      </div>
+                      <div className="p-4 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between">
+                          <div>
+                              <p className="text-xs text-gray-400 mb-1">Avg. Pages/Visit</p>
+                              <h3 className="text-2xl font-bold text-white">{stats.avgPagesPerSession}</h3>
+                          </div>
+                          <Activity size={20} className="text-blue-400"/>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          {/* EXIT PAGES */}
+          <div className="bg-brand-dark border border-white/5 rounded-xl p-6">
+              <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+                  <LogOut size={16} className="text-red-400"/> Top Exit Pages
+              </h4>
+              <p className="text-[10px] text-gray-500 mb-4">Halaman terakhir yang dilihat user sebelum pergi.</p>
+              <div className="space-y-2">
+                  {stats.sortedExitPages.map(([page, count], idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs border-b border-white/5 pb-2 last:border-0">
+                          <span className="text-gray-300 truncate max-w-[180px]">{page}</span>
+                          <span className="text-red-400 font-bold">{count} Exit</span>
+                      </div>
+                  ))}
+                  {stats.sortedExitPages.length === 0 && <p className="text-[10px] text-gray-500 italic">Belum ada data.</p>}
+              </div>
+          </div>
 
       </div>
 
