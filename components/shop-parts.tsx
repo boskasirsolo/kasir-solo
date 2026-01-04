@@ -6,6 +6,7 @@ import { Badge, Card, Input, Button } from './ui';
 import { formatRupiah } from '../utils';
 import { useCart } from '../context/cart-context';
 import { createPortal } from 'react-dom';
+import { ProductSchema } from './seo'; // IMPORT SEO
 
 // --- ATOMS ---
 
@@ -381,6 +382,9 @@ export const ProductDetailView = ({ product, onClose, isModal = false }: { produ
 
   return (
     <Wrapper>
+      {/* INJECT SCHEMA HERE */}
+      <ProductSchema product={product} />
+
       <div className={`relative w-full max-w-6xl ${isModal ? 'h-[90vh]' : 'min-h-[600px] md:h-[80vh]'} bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row overflow-hidden rounded-2xl`}>
         <button onClick={onClose} className="absolute top-4 right-4 z-50 p-2 bg-black/50 text-white rounded-full hover:bg-brand-action transition-colors border border-white/10 shadow-lg">{isModal ? <X size={20} /> : <ArrowLeft size={20} />}</button>
         <div className="w-full md:w-[60%] bg-brand-dark flex flex-col h-full relative border-b md:border-b-0 md:border-r border-white/10 shrink-0">

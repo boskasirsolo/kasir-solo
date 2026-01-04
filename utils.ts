@@ -1,3 +1,4 @@
+
 import { Product, Article, GalleryItem, Testimonial, JobOpening, DownloadItem, Tutorial, FAQ } from './types';
 
 // --- RE-EXPORTS FROM MODULAR ARCHITECTURE ---
@@ -6,6 +7,26 @@ export { supabase } from './lib/supabase-client';
 export { formatRupiah, formatNumberInput, cleanNumberInput, slugify, renameFile, normalizePhone } from './lib/formatters';
 export { ensureAPIKey, callGeminiWithRotation } from './services/ai-service';
 export { uploadToSupabase, uploadToCloudinary, deleteFromSupabase, processBackgroundMigration, getSignedUrl } from './services/storage-service';
+
+// --- SEO TARGET CITIES (PROGRAMMATIC DATA) ---
+export const TARGET_CITIES = [
+  { slug: 'solo', name: 'Solo (Surakarta)', type: 'Kandang' },
+  { slug: 'sukoharjo', name: 'Sukoharjo', type: 'Kandang' },
+  { slug: 'klaten', name: 'Klaten', type: 'Kandang' },
+  { slug: 'boyolali', name: 'Boyolali', type: 'Kandang' },
+  { slug: 'sragen', name: 'Sragen', type: 'Kandang' },
+  { slug: 'karanganyar', name: 'Karanganyar', type: 'Kandang' },
+  { slug: 'wonogiri', name: 'Wonogiri', type: 'Kandang' },
+  { slug: 'semarang', name: 'Semarang', type: 'Ekspansi' },
+  { slug: 'jogja', name: 'Yogyakarta', type: 'Ekspansi' },
+  { slug: 'surabaya', name: 'Surabaya', type: 'Ekspansi' },
+  { slug: 'madiun', name: 'Madiun', type: 'Ekspansi' },
+  { slug: 'ngawi', name: 'Ngawi', type: 'Ekspansi' },
+];
+
+export const getCityData = (slug: string) => {
+  return TARGET_CITIES.find(c => c.slug === slug);
+};
 
 // --- TIMEZONE CONSTANTS & HELPERS ---
 export const INDONESIA_TIMEZONES = [

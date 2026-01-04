@@ -164,6 +164,7 @@ export const FooterBottom = ({
         © {year} <strong className="text-gray-500">PT Mesin Kasir Solo</strong>. All Rights Reserved.
       </p>
       <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+        <button onClick={() => onLegalClick('area-layanan')} className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Area Layanan</button>
         <button onClick={() => onLegalClick('legal/refund')} className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Kebijakan Refund</button>
         <button onClick={() => onLegalClick('legal/privacy')} className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Privasi</button>
         <button onClick={() => onLegalClick('legal/terms')} className="text-xs text-gray-500 hover:text-brand-orange transition-colors">Syarat & Ketentuan</button>

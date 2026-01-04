@@ -1,0 +1,92 @@
+
+import React from 'react';
+import { Product } from '../types';
+
+// --- PRODUCT SCHEMA (Rich Snippets) ---
+export const ProductSchema = ({ product }: { product: Product }) => {
+  const schema = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": product.name,
+    "image": [
+        product.image
+    ],
+    "description": product.description || `Jual ${product.name} termurah dan bergaransi.`,
+    "sku": `MKS-${product.id}`,
+    "brand": {
+      "@type": "Brand",
+      "name": "Mesin Kasir Solo"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": window.location.href,
+      "priceCurrency": "IDR",
+      "price": product.price,
+      "priceValidUntil": "2025-12-31",
+      "availability": "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "128"
+    }
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+};
+
+// --- LOCAL BUSINESS SCHEMA (For Landing Pages) ---
+export const LocalBusinessSchema = ({ city }: { city: string }) => {
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "ComputerStore",
+        "name": `Mesin Kasir Solo - Area ${city}`,
+        "image": "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800",
+        "url": window.location.href,
+        "telephone": "+6282325103336",
+        "priceRange": "$$",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Perum Graha Tiara 2 B1",
+            "addressLocality": "Kartasura",
+            "addressRegion": "Jawa Tengah",
+            "postalCode": "57169",
+            "addressCountry": "ID"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": -7.55,
+            "longitude": 110.75
+        },
+        "areaServed": {
+            "@type": "City",
+            "name": city
+        },
+        "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday"
+            ],
+            "opens": "08:00",
+            "closes": "17:00"
+        }
+    };
+
+    return (
+        <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+    );
+};

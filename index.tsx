@@ -33,6 +33,7 @@ const MaintenanceServicePage = lazy(() => import('./pages/services').then(module
 const LegalPage = lazy(() => import('./pages/legal').then(module => ({ default: module.LegalPage })));
 const SupportPage = lazy(() => import('./pages/support').then(module => ({ default: module.SupportPage })));
 const TrackOrderPage = lazy(() => import('./pages/track-order').then(module => ({ default: module.TrackOrderPage })));
+const CityLandingPage = lazy(() => import('./pages/city-landing').then(module => ({ default: module.CityLandingPage }))); // NEW IMPORT
 const NotFoundPage = lazy(() => import('./pages/not-found').then(module => ({ default: module.NotFoundPage })));
 
 // Loading Fallback Component
@@ -335,6 +336,10 @@ const AppContent = () => {
             <Route path="/legal/:type" element={<LegalPage />} />
             <Route path="/support" element={<SupportPage />} />
             <Route path="/track-order" element={<TrackOrderPage />} /> 
+            
+            {/* NEW: PROGRAMMATIC SEO ROUTE */}
+            <Route path="/jual-mesin-kasir-di-:citySlug" element={<CityLandingPage />} />
+            <Route path="/area-layanan" element={<CityLandingPage />} />
 
             <Route path="/about" element={<AboutPage config={config} />} />
             <Route path="/about/vision" element={<VisionPage />} /> 
