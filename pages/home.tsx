@@ -121,21 +121,22 @@ export const HomePage = ({
           <div className="inline-flex items-center gap-2 px-6 py-2 border border-brand-orange/50 rounded-full bg-brand-orange/10 mb-8 backdrop-blur-md shadow-neon hover:bg-brand-orange/20 transition-colors cursor-default">
             <ShieldCheck size={16} className="text-brand-orange" />
             <span className="text-brand-orange text-xs md:text-sm font-bold tracking-widest uppercase">
-              10 Tahun Pengalaman • 500+ Outlet
+              Stop Kebocoran Omzet • Stop Maling Internal
             </span>
           </div>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-8 leading-tight drop-shadow-lg">
-            {config.heroTitle}
+            Jangan Cuma Dagang.<br/>
+            <span className="text-brand-orange">Bangun Sistem.</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-            {config.heroSubtitle}
+            Tanpa sistem, Anda bukan Pengusaha, tapi Karyawan di toko sendiri. Kami menyediakan alat perang (Hardware & Software) agar Anda bisa punya kendali penuh, walau sedang tidur.
           </p>
           <div className="flex flex-col md:flex-row gap-6 justify-center">
             <Button onClick={() => setPage('shop')} className="px-10 py-4 text-base">
-              LIHAT KATALOG <ArrowRight size={22} />
+              LIHAT ALAT PERANG <ArrowRight size={22} />
             </Button>
             <Button variant="outline" onClick={() => setPage('about')} className="px-10 py-4 text-base">
-              KENAPA KAMI?
+              SIAPA KAMI?
             </Button>
           </div>
         </div>
