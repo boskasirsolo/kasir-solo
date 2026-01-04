@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, ChevronLeft, ChevronRight, X, MessageCircle, Tag, ShoppingCart, Plus, Check, ArrowLeft, PackageOpen, Scale, XCircle, ThumbsUp, Zap, ShieldCheck } from 'lucide-react';
 import { Product } from '../types';
 import { Badge, Card, Input, Button } from './ui';
-import { formatRupiah } from '../utils';
+import { formatRupiah, optimizeImage } from '../utils';
 import { useCart } from '../context/cart-context';
 import { createPortal } from 'react-dom';
 import { ProductSchema } from './seo'; // IMPORT SEO
@@ -99,7 +99,7 @@ export const ComparisonModal = ({ products, onClose, onRemove }: { products: Pro
                                     <th key={p.id} className="p-4 bg-brand-card/90 text-white min-w-[250px] border-b border-r border-white/10 sticky top-0 z-10 backdrop-blur-sm">
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="h-16 w-16 bg-black rounded-lg border border-white/10 overflow-hidden shrink-0">
-                                                <img src={p.image} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                                                <img src={optimizeImage(p.image, 150)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
                                             </div>
                                             <button onClick={() => onRemove(p.id)} className="text-gray-500 hover:text-red-500 p-1"><XCircle size={16}/></button>
                                         </div>
@@ -145,7 +145,7 @@ export const ComparisonBar = ({ selectedProducts, onRemove, onClear, onCompare }
                 <div className="flex gap-3 overflow-x-auto max-w-full md:flex-1 py-1 custom-scrollbar">
                     {selectedProducts.map(p => (
                         <div key={p.id} className="relative group shrink-0">
-                            <div className="w-12 h-12 rounded-lg bg-black border border-white/20 overflow-hidden"><img src={p.image} className="w-full h-full object-cover" loading="lazy" /></div>
+                            <div className="w-12 h-12 rounded-lg bg-black border border-white/20 overflow-hidden"><img src={optimizeImage(p.image, 100)} className="w-full h-full object-cover" loading="lazy" /></div>
                             <button onClick={() => onRemove(p.id)} className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
                         </div>
                     ))}
@@ -164,7 +164,7 @@ export const ComparisonBar = ({ selectedProducts, onRemove, onClear, onCompare }
 const ProductImage = ({ image, name, category }: { image: string, name: string, category: string }) => (
   <div className="relative h-56 overflow-hidden bg-black">
     <img 
-      src={image} 
+      src={optimizeImage(image, 500)} // OPTIMIZED: w=500, webp
       alt={name} 
       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
       loading="lazy"
@@ -211,7 +211,7 @@ export const FlyingParticle = ({ src, startRect, targetRect, onFinish }: { src: 
     return () => clearTimeout(timer);
   }, [targetRect, onFinish]);
 
-  return <img src={src} style={style} alt="flying-product" />;
+  return <img src={optimizeImage(src, 100)} style={style} alt="flying-product" />;
 };
 
 const ProductActions = ({ product, onDetail, onCompare, isSelected }: { product: Product, onDetail: () => void, onCompare: (p: Product) => void, isSelected: boolean }) => {
@@ -394,7 +394,7 @@ export const ProductDetailView = ({ product, onClose, isModal = false }: { produ
                 <p className="text-3xl font-bold text-brand-orange">{formatRupiah(product.price)}</p>
             </div>
             <div className="flex-grow relative bg-black/20 m-4 md:mx-8 rounded-2xl border border-white/5 overflow-hidden group flex items-center justify-center min-h-[200px]">
-                <img src={product.image} alt={product.name} className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105" />
+                <img src={optimizeImage(product.image, 800)} alt={product.name} className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105" />
             </div>
             <div className="p-6 md:p-8 pt-2 mt-auto shrink-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

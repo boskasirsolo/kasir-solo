@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Article, Product } from '../types';
 import { Button, Input, TextArea } from './ui';
-import { formatRupiah, slugify } from '../utils';
+import { formatRupiah, slugify, optimizeImage } from '../utils';
 import { useCart } from '../context/cart-context';
 import { ProductDetailModal, FlyingParticle } from './shop-parts'; 
 
@@ -148,13 +148,6 @@ export const ArticlePaginationControl = ({ currentPage, totalPages, setPage }: {
   );
 };
 
-// ... (Other Reader Components remain same, removed for brevity, will auto-include in final file if full replace is needed, but assuming smart update based on context) ...
-// Assuming user wants full file content for safety as previous logic implies:
-
-// ... RE-EXPORT READER HOOKS & COMPONENTS (Keeping them intact) ...
-// [OMITTED LONG SECTIONS FOR READER VIEW TO FOCUS ON THE REQUESTED CHANGES]
-// I will include the full file content below to ensure no breakage.
-
 export const useReadingProgress = () => {
   const [progress, setProgress] = useState(0);
   const [scrollPos, setScrollPos] = useState(0);
@@ -255,7 +248,12 @@ const ProjectEmbedCard: React.FC<{ title: string, url: string, image: string, de
         <div className="my-10 bg-brand-dark rounded-2xl border border-white/5 overflow-hidden group hover:border-brand-orange/30 transition-all shadow-lg">
             <div className="flex flex-col md:flex-row h-full">
                 <div className="w-full md:w-56 h-48 md:h-auto relative bg-black shrink-0">
-                    <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+                    <img 
+                        src={optimizeImage(image, 400)} 
+                        alt={title} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                        loading="lazy" 
+                    />
                     <div className="absolute top-3 left-3 bg-brand-orange text-white text-[10px] font-bold px-2 py-1 rounded shadow-neon">STUDI KASUS</div>
                 </div>
                 <div className="p-6 flex flex-col justify-between flex-1">
@@ -309,7 +307,12 @@ export const CategoryTab = ({ label, active, onClick }: { label: string, active:
 export const ArticleGridCard = ({ article, onClick }: { article: Article, onClick: () => void }) => (
   <div onClick={onClick} className="bg-brand-card border border-white/5 rounded-2xl overflow-hidden hover:border-brand-orange transition-all duration-300 hover:shadow-neon hover:-translate-y-2 cursor-pointer flex flex-col group h-full">
     <div className="relative h-56 overflow-hidden">
-      <img src={article.image} alt={article.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+      <img 
+        src={optimizeImage(article.image, 500)} 
+        alt={article.title} 
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+        loading="lazy" 
+      />
       <div className="absolute top-4 left-4"><span className="px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold rounded border border-white/10">{article.category}</span></div>
     </div>
     <div className="p-6 flex flex-col flex-grow">
@@ -335,7 +338,7 @@ export const InFeedProductCard = ({ product, onClick }: { product: Product, onCl
         </div>
         <div className="relative h-56 overflow-hidden bg-black p-4">
             <img 
-                src={product.image} 
+                src={optimizeImage(product.image, 400)} 
                 alt={product.name} 
                 className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110" 
                 loading="lazy" 
@@ -365,7 +368,12 @@ export const InFeedProductCard = ({ product, onClick }: { product: Product, onCl
 // ... (Rest of FeaturedArticleHero, SidebarProductCard, ArticleSidebarRight, ArticleReaderView unchanged) ...
 export const FeaturedArticleHero = ({ article, onClick }: { article: Article, onClick: () => void }) => (
   <div onClick={onClick} className="group relative w-full h-[500px] rounded-3xl overflow-hidden cursor-pointer border border-white/5 hover:border-brand-orange/50 transition-all shadow-2xl mb-16">
-    <img src={article.image} alt={article.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" loading="eager" />
+    <img 
+        src={optimizeImage(article.image, 1200)} 
+        alt={article.title} 
+        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+        loading="eager" 
+    />
     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
     <div className="absolute top-8 right-8">
         <div className="bg-red-600 text-white font-bold px-4 py-2 rounded-lg shadow-neon animate-pulse text-xs uppercase tracking-widest border border-red-400">Wajib Baca Bos</div>
@@ -407,7 +415,12 @@ export const SidebarProductCard = ({ product, onDetail }: { product: Product, on
       {flyData && createPortal(<FlyingParticle src={product.image} startRect={flyData.start} targetRect={flyData.target} onFinish={() => {}} />, document.body)}
       <div onClick={onDetail} className="bg-brand-card border border-white/10 rounded-xl overflow-hidden hover:border-brand-orange transition-all shadow-lg hover:shadow-neon flex flex-col group cursor-pointer">
         <div className="relative h-28 w-full bg-black border-b border-white/5 overflow-hidden">
-          <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+          <img 
+            src={optimizeImage(product.image, 300)} 
+            alt={product.name} 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+            loading="lazy" 
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-60"></div>
           <div className="absolute top-2 right-2"><span className="bg-brand-orange text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">{product.category}</span></div>
         </div>
@@ -500,7 +513,7 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles }: {
         <div className="fixed top-0 left-0 w-full z-50 overflow-hidden border-b border-white/10 shadow-2xl will-change-[height]" style={{ height: `${currentHeight}px`, transition: 'none' }} onWheel={onWheelProxy}>
             <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10 z-50"><div className="h-full bg-brand-orange shadow-[0_0_10px_rgba(255,95,31,0.8)]" style={{ width: `${progress}%`, transition: 'width 0.1s linear' }}></div></div>
             <button onClick={onClose} className="absolute top-6 right-6 z-[60] p-2 bg-black/50 hover:bg-red-500 text-white rounded-full backdrop-blur-md transition-colors border border-white/10 shadow-lg group"><X size={24} className="group-hover:rotate-90 transition-transform" /></button>
-            <div className="absolute inset-0 w-full h-full"><img src={article.image} alt={article.title} className="w-full h-full object-cover" style={{ filter: `brightness(${0.4 + (expandRatio * 0.4)})` }} /><div className="absolute inset-0 bg-brand-black" style={{ opacity: collapseRatio * 0.9 }}></div><div className="absolute inset-0 bg-gradient-to-t from-brand-black via-transparent to-transparent" style={{ opacity: expandRatio }}></div></div>
+            <div className="absolute inset-0 w-full h-full"><img src={optimizeImage(article.image, 1200)} alt={article.title} className="w-full h-full object-cover" style={{ filter: `brightness(${0.4 + (expandRatio * 0.4)})` }} /><div className="absolute inset-0 bg-brand-black" style={{ opacity: collapseRatio * 0.9 }}></div><div className="absolute inset-0 bg-gradient-to-t from-brand-black via-transparent to-transparent" style={{ opacity: expandRatio }}></div></div>
             <div className="container mx-auto px-4 h-full relative z-10 max-w-7xl pointer-events-none">
                 <div className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 flex items-center" style={{ opacity: collapseRatio, pointerEvents: collapseRatio > 0.5 ? 'auto' : 'none' }}><h2 className="text-lg md:text-xl font-bold text-white line-clamp-1 max-w-xl drop-shadow-md">{article.title}</h2></div>
                 <div className="absolute bottom-10 left-4 md:left-8 origin-bottom-left" style={{ opacity: expandRatio, transform: `scale(${0.9 + (expandRatio * 0.1)}) translateY(${collapseRatio * 20}px)`, pointerEvents: expandRatio > 0.5 ? 'auto' : 'none' }}>
@@ -534,7 +547,7 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles }: {
                 return <p key={idx} className="text-lg leading-8 text-gray-300">{renderFormattedText(p)}</p>;
             })}
             {totalPages > 1 && (<div className="mt-12 pt-8 border-t border-white/10 flex items-center justify-between"><Button variant="outline" onClick={() => onPageChange(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="px-4 py-2"><ChevronLeft size={16} /> Sebelumnya</Button><span className="text-sm font-bold text-gray-400">Halaman <span className="text-brand-orange">{currentPage}</span> dari {totalPages}</span><Button variant="primary" onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="px-4 py-2">Selanjutnya <ChevronRight size={16} /></Button></div>)}
-            {currentPage === totalPages && (<div className="mt-16"><div className="mb-8 p-6 bg-brand-orange/5 border-l-4 border-brand-orange rounded-r-xl flex gap-4 items-start"><HeartHandshake className="text-brand-orange shrink-0 mt-1" size={24} /><div><p className="text-gray-300 italic text-base leading-relaxed">"Semoga artikel ini bermanfaat dan memberikan wawasan baru untuk perkembangan bisnis Anda. Jangan ragu untuk memulai langkah kecil digitalisasi hari ini. Sukses selalu, Juragan!"</p></div></div><div className="p-8 bg-brand-card rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left animate-fade-in hover:border-brand-orange/30 transition-colors"><div className="w-20 h-20 rounded-full flex items-center justify-center border-2 border-brand-orange/30 shrink-0 overflow-hidden bg-brand-dark shadow-neon">{article.author_avatar ? (<img src={article.author_avatar} alt={article.author} className="w-full h-full object-cover" />) : (<div className="w-full h-full bg-brand-orange flex items-center justify-center text-white font-bold text-2xl">{authorInfo.initials}</div>)}</div><div><p className="text-xs text-brand-orange uppercase font-bold mb-1 tracking-widest flex items-center justify-center sm:justify-start gap-2"><Briefcase size={12} /> {authorInfo.role}</p><h4 className="text-2xl font-bold text-white mb-3">{article.author || "Tim Redaksi"}</h4><p className="text-sm text-gray-400 leading-relaxed max-w-xl">{authorInfo.desc}</p></div></div></div>)}
+            {currentPage === totalPages && (<div className="mt-16"><div className="mb-8 p-6 bg-brand-orange/5 border-l-4 border-brand-orange rounded-r-xl flex gap-4 items-start"><HeartHandshake className="text-brand-orange shrink-0 mt-1" size={24} /><div><p className="text-gray-300 italic text-base leading-relaxed">"Semoga artikel ini bermanfaat dan memberikan wawasan baru untuk perkembangan bisnis Anda. Jangan ragu untuk memulai langkah kecil digitalisasi hari ini. Sukses selalu, Juragan!"</p></div></div><div className="p-8 bg-brand-card rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left animate-fade-in hover:border-brand-orange/30 transition-colors"><div className="w-20 h-20 rounded-full flex items-center justify-center border-2 border-brand-orange/30 shrink-0 overflow-hidden bg-brand-dark shadow-neon">{article.author_avatar ? (<img src={optimizeImage(article.author_avatar, 100)} alt={article.author} className="w-full h-full object-cover" />) : (<div className="w-full h-full bg-brand-orange flex items-center justify-center text-white font-bold text-2xl">{authorInfo.initials}</div>)}</div><div><p className="text-xs text-brand-orange uppercase font-bold mb-1 tracking-widest flex items-center justify-center sm:justify-start gap-2"><Briefcase size={12} /> {authorInfo.role}</p><h4 className="text-2xl font-bold text-white mb-3">{article.author || "Tim Redaksi"}</h4><p className="text-sm text-gray-400 leading-relaxed max-w-xl">{authorInfo.desc}</p></div></div></div>)}
         </div>
       );
   };

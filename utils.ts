@@ -8,6 +8,20 @@ export { formatRupiah, formatNumberInput, cleanNumberInput, slugify, renameFile,
 export { ensureAPIKey, callGeminiWithRotation } from './services/ai-service';
 export { uploadToSupabase, uploadToCloudinary, deleteFromSupabase, processBackgroundMigration, getSignedUrl } from './services/storage-service';
 
+// --- IMAGE OPTIMIZATION (CLOUDINARY) ---
+export const optimizeImage = (url: string, width?: number) => {
+  if (!url || !url.includes('cloudinary.com')) return url;
+  // Prevent double optimization
+  if (url.includes('f_auto,q_auto')) return url;
+
+  // Params: f_auto (WebP/AVIF), q_auto (Smart Compression)
+  const params = ['f_auto', 'q_auto'];
+  if (width) params.push(`w_${width}`);
+
+  // Insert params after /upload/
+  return url.replace('/upload/', `/upload/${params.join(',')}/`);
+};
+
 // --- WATERMARK ENGINE (SECURITY) ---
 export const addWatermarkToFile = async (file: File): Promise<File> => {
   return new Promise((resolve, reject) => {

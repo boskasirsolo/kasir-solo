@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { GalleryItem } from '../types';
 import { SectionHeader } from './ui';
+import { optimizeImage } from '../utils';
 
 // --- ATOMS ---
 
@@ -98,7 +99,7 @@ export const DigitalProjectCard = ({ item, onClick }: { item: GalleryItem, onCli
          <div className="relative rounded-t-xl bg-black border-[6px] border-gray-800 border-b-0 overflow-hidden aspect-[16/10] shadow-2xl">
             <div 
                 className="w-full h-full bg-cover bg-top transition-all duration-[4000ms] ease-linear group-hover:bg-bottom"
-                style={{ backgroundImage: `url(${item.image_url})` }}
+                style={{ backgroundImage: `url(${optimizeImage(item.image_url, 600)})` }}
                 role="img"
                 aria-label={item.title}
             >
@@ -140,7 +141,7 @@ export const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onCl
       <div className="relative bg-gray-900 p-4 border-b border-white/5">
          <div className="relative rounded-xl bg-black border border-white/10 overflow-hidden aspect-[16/10] shadow-2xl">
             <img 
-              src={item.image_url} 
+              src={optimizeImage(item.image_url, 600)} 
               alt={item.title} 
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               loading="lazy"
