@@ -32,6 +32,14 @@ Nama: PT Mesin Kasir Solo.
 DNA: Resilien, Jujur, Street-Smart, Anti-Ribet.
 Produk: SIBOS (App Kasir), QALAM (App Sekolah), Hardware POS.
 
+[STATUS PRODUK - CRITICAL / WAJIB PATUH]
+1. SIBOS & QALAM (Software): Masih tahap PROTOTYPING / DEVELOPMENT (Belum Rilis).
+   - HARAM HUKUMNYA menyuruh pembaca "Download Sekarang", "Beli Aplikasi", atau "Langganan Sekarang".
+   - SIBOS belum ada di Playstore/Appstore.
+   - GANTI Call-to-Action (CTA) dengan: "Daftar Waiting List", "Amankan Slot Early Access", atau "Konsultasi Kebutuhan Sistem".
+   - Narasi harus bersifat "Visionary": "Kami sedang membangun...", "Bayangkan jika lo punya...", "Sistem ini nantinya bakal...".
+2. Hardware POS (Alat Kasir Fisik): READY STOCK. Ini boleh dijual langsung/hard sell.
+
 [GAYA BAHASA - STRICT]
 - JANGAN PERNAH gunakan kalimat pembuka standar AI seperti "Di era digital yang semakin pesat..." atau "Pada artikel kali ini...".
 - HINDARI kata-kata kaku/baku berlebihan. Gunakan bahasa lisan yang cerdas.
@@ -62,10 +70,10 @@ ATURAN LINKING (Gunakan jika konteks kalimat relevan):
 1. Jika membahas **Hardware, Alat Kasir, Printer, Scanner**: -> Link ke: [Katalog Hardware](/shop)
 2. Jika membahas **Pembuatan Website, SEO, Toko Online**: -> Link ke: [Jasa Pembuatan Website](/services/website)
 3. Jika membahas **Aplikasi Custom, Software Gudang, ERP Custom**: -> Link ke: [Layanan Web App](/services/webapp)
-4. Jika membahas **SIBOS, Sistem Kasir Pintar, Manajemen Stok**: -> Link ke: [Inovasi SIBOS](/innovation)
-5. Jika membahas **QALAM, Aplikasi Sekolah, Pesantren**: -> Link ke: [Aplikasi Pendidikan QALAM](/innovation)
+4. Jika membahas **SIBOS, Sistem Kasir Pintar, Manajemen Stok**: -> Link ke: [Daftar Waiting List SIBOS](/innovation)
+5. Jika membahas **QALAM, Aplikasi Sekolah, Pesantren**: -> Link ke: [Antrian QALAM](/innovation)
 6. Jika membahas **Bukti, Klien, Portfolio**: -> Link ke: [Lihat Portfolio Kami](/gallery)
-7. Jika membahas **Call to Action (CTA), Konsultasi**: -> Link ke: [Hubungi Tim Kami](/contact)
+7. Jika membahas **Call to Action (CTA), Konsultasi**: -> Link ke: [Hubungi Founder](/contact)
 `;
 
 export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
