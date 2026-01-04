@@ -25,7 +25,7 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
         <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-12 gap-10 items-start">
                 
-                {/* LEFT: FOUNDER PORTRAIT (COL-3 - Smaller) */}
+                {/* LEFT: FOUNDER PORTRAIT (COL-3 - Smaller & Cleaner) */}
                 <div className="md:col-span-3 sticky top-28">
                     {config?.founderPortrait ? (
                         <div className="relative rounded-2xl overflow-hidden border border-white/10 group aspect-[3/4] max-w-[260px]">
@@ -53,7 +53,7 @@ export const AboutPage = ({ config }: { config?: SiteConfig }) => (
                 <div className="md:col-span-9 space-y-12">
                     
                     {/* Quote Block 1 (Reduced Width & Orange BG) */}
-                    <div className="relative p-8 bg-brand-orange rounded-3xl w-full md:w-1/2 shadow-lg">
+                    <div className="relative p-8 bg-brand-orange rounded-3xl w-full md:w-1/2 shadow-lg group hover:-translate-y-1 transition-transform duration-300">
                         <Quote className="absolute top-6 right-6 text-white/20 w-12 h-12 rotate-180" />
                         <h3 className="text-2xl font-display font-bold text-white leading-tight mb-4 relative z-10">
                             "Jujur-jujuran aja. Tahun 2022, gue pernah 'mati suri'."
