@@ -15,13 +15,13 @@ export const HomeHero = ({ setPage }: { setPage: (p: string) => void }) => (
       <div className="inline-flex items-center gap-2 px-4 md:px-6 py-2 border border-brand-orange/50 rounded-full bg-brand-orange/10 mb-6 md:mb-8 backdrop-blur-md shadow-neon hover:bg-brand-orange/20 transition-colors cursor-default">
         <ShieldCheck size={16} className="text-brand-orange shrink-0" />
         <h2 className="text-brand-orange text-[10px] md:text-sm font-bold tracking-widest uppercase whitespace-nowrap">
-          Pusat Mesin Kasir Solo Raya & Jateng
+          Pusat Jual Paket Mesin Kasir Terlengkap
         </h2>
       </div>
       
       {/* LCP OPTIMIZATION: Use 'font-display' class which sets font-display:swap/optional via Tailwind or CSS */}
       <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-6 md:mb-8 leading-tight drop-shadow-lg max-w-5xl">
-        Revolusi <span className="text-brand-orange">Mesin Kasir.</span><br/>
+        Solusi <span className="text-brand-orange">Paket Mesin Kasir.</span><br/>
         Bisnis Jalan, Lo Jalan-Jalan.
       </h1>
       
@@ -31,7 +31,7 @@ export const HomeHero = ({ setPage }: { setPage: (p: string) => void }) => (
       
       <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center w-full px-4 sm:px-0">
         <Button onClick={() => setPage('shop')} className="w-full sm:w-auto px-8 md:px-10 py-4 text-sm md:text-base shadow-neon hover:shadow-neon-strong">
-          LIHAT KATALOG MESIN KASIR <ArrowRight size={20} />
+          LIHAT PAKET MESIN KASIR <ArrowRight size={20} />
         </Button>
         <Button variant="outline" onClick={() => setPage('about')} className="w-full sm:w-auto px-8 md:px-10 py-4 text-sm md:text-base">
           KENAPA HARUS GUE?

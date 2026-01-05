@@ -99,7 +99,8 @@ const AppContent = () => {
     quotaOnsiteMax: 4,
     quotaOnsiteUsed: 3,
     quotaDigitalMax: 2,
-    quotaDigitalUsed: 0
+    quotaDigitalUsed: 0,
+    googleMerchantId: ""
   });
 
   const getCurrentPageId = () => location.pathname.substring(1) || 'home';
@@ -161,6 +162,7 @@ const AppContent = () => {
                     linkedinUrl: settingsData.linkedin_url || settingsData.linkedinUrl || prev.linkedinUrl,
                     googleAnalyticsId: settingsData.google_analytics_id || settingsData.googleAnalyticsId || prev.googleAnalyticsId,
                     googleSearchConsoleCode: settingsData.google_search_console_code || settingsData.googleSearchConsoleCode || prev.googleSearchConsoleCode,
+                    googleMerchantId: settingsData.google_merchant_id || settingsData.googleMerchantId || prev.googleMerchantId,
                     timezone: settingsData.timezone || prev.timezone,
                     quotaOnsiteMax: settingsData.quota_onsite_max ?? settingsData.quotaOnsiteMax ?? prev.quotaOnsiteMax,
                     quotaOnsiteUsed: settingsData.quota_onsite_used ?? settingsData.quotaOnsiteUsed ?? prev.quotaOnsiteUsed,

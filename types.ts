@@ -146,6 +146,7 @@ export interface SiteConfig {
   // Google Integration
   googleAnalyticsId?: string; // G-XXXXXXXXXX
   googleSearchConsoleCode?: string; // Verification meta content
+  googleMerchantId?: string; // NEW: Merchant Center ID
   // Global Settings
   timezone?: string; // 'Asia/Jakarta' | 'Asia/Makassar' | 'Asia/Jayapura'
   

@@ -126,6 +126,7 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                 linkedin_url: config.linkedinUrl,
                 google_analytics_id: config.googleAnalyticsId,
                 google_search_console_code: config.googleSearchConsoleCode,
+                google_merchant_id: config.googleMerchantId,
                 timezone: config.timezone,
                 quota_onsite_max: config.quotaOnsiteMax,
                 quota_onsite_used: config.quotaOnsiteUsed,
@@ -140,7 +141,6 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                 console.warn("Penyimpanan format baru gagal, mencoba fallback ke format lama...", errorSnake.message);
                 
                 // 2. STRATEGI CADANGAN: Format Camel Case (Untuk DB Lama)
-                // Jika errornya karena kolom tidak ditemukan, kita coba kirim dengan nama kolom lama.
                 const dbDataCamel = {
                     id: 1,
                     heroTitle: config.heroTitle,
@@ -148,7 +148,7 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                     aboutImage: finalAboutImage,
                     founderPortrait: finalFounderImage,
                     sibosUrl: config.sibosUrl,
-                    qalamUrl: config.qalamUrl,
+                    qalam_url: config.qalamUrl,
                     companyLegalName: config.companyLegalName,
                     nibNumber: config.nibNumber,
                     ahuNumber: config.ahuNumber,
@@ -168,6 +168,7 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                     linkedinUrl: config.linkedinUrl,
                     googleAnalyticsId: config.googleAnalyticsId,
                     googleSearchConsoleCode: config.googleSearchConsoleCode,
+                    googleMerchantId: config.googleMerchantId,
                     timezone: config.timezone,
                     quotaOnsiteMax: config.quotaOnsiteMax,
                     quotaOnsiteUsed: config.quotaOnsiteUsed,
@@ -178,7 +179,6 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                 const { error: errorCamel } = await supabase.from('site_settings').upsert(dbDataCamel);
                 
                 if (errorCamel) {
-                    // Jika dua-duanya gagal, baru kita lempar error ke user
                     throw new Error(`Gagal menyimpan ke Database. Error Teknis: ${errorSnake.message}`);
                 }
             }
