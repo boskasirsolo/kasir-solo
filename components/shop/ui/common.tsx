@@ -50,6 +50,7 @@ export const PaginationControl = ({ page, totalPages, setPage }: { page: number,
       <button 
         onClick={() => setPage(Math.max(1, page - 1))}
         disabled={page === 1}
+        aria-label="Halaman Sebelumnya"
         className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white group"
       >
         <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -60,6 +61,7 @@ export const PaginationControl = ({ page, totalPages, setPage }: { page: number,
       <button 
         onClick={() => setPage(Math.min(totalPages, page + 1))}
         disabled={page === totalPages}
+        aria-label="Halaman Selanjutnya"
         className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white group"
       >
         <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />

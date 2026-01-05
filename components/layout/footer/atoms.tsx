@@ -28,15 +28,17 @@ export const FooterLink: React.FC<FooterLinkProps> = ({ label, onClick }) => (
 interface SocialButtonProps {
   icon: any;
   href?: string;
+  label?: string; // NEW optional label
 }
 
-export const SocialButton: React.FC<SocialButtonProps> = ({ icon: Icon, href }) => {
+export const SocialButton: React.FC<SocialButtonProps> = ({ icon: Icon, href, label }) => {
   if (!href) return null;
   return (
     <a 
       href={href} 
       target="_blank" 
       rel="noreferrer" 
+      aria-label={label || "Social Media Link"}
       className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-colors hover:shadow-neon text-gray-400"
     >
       <Icon size={18} />
