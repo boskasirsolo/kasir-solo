@@ -21,6 +21,7 @@ export const WebsiteServicePage = ({ config }: { config?: SiteConfig }) => {
             calcData={WEBSITE_CALC}
             calcServiceName="Jasa Pembuatan Website (Ruko Digital)"
             steps={WEBSITE_DATA.steps}
+            waNumber={config?.whatsappNumber}
             narrativeContent={
                 <>
                     <div className="relative">
@@ -86,6 +87,7 @@ export const WebAppServicePage = ({ config }: { config?: SiteConfig }) => {
             calcData={WEBAPP_CALC}
             calcServiceName="Jasa Custom Web App (ERP)"
             steps={WEBAPP_DATA.steps}
+            waNumber={config?.whatsappNumber}
             narrativeContent={
                 <>
                     <div>
@@ -138,7 +140,7 @@ export const WebAppServicePage = ({ config }: { config?: SiteConfig }) => {
     );
 };
 
-export const SeoServicePage = () => {
+export const SeoServicePage = ({ config }: { config?: SiteConfig }) => {
     return (
         <ServicePageTemplate 
             title="Berhenti Membakar"
@@ -149,6 +151,7 @@ export const SeoServicePage = () => {
             calcData={SEO_CALC}
             calcServiceName="Jasa SEO & Traffic"
             steps={SEO_DATA.steps}
+            waNumber={config?.whatsappNumber}
             narrativeContent={
                 <>
                     <div className="relative order-2 md:order-1">
@@ -209,7 +212,7 @@ export const SeoServicePage = () => {
     );
 };
 
-export const MaintenanceServicePage = () => {
+export const MaintenanceServicePage = ({ config }: { config?: SiteConfig }) => {
     return (
         <ServicePageTemplate 
             title="Punya Toko,"
@@ -220,6 +223,7 @@ export const MaintenanceServicePage = () => {
             calcData={MAINTENANCE_CALC}
             calcServiceName="Jasa Maintenance & Keamanan"
             steps={MAINTENANCE_DATA.steps}
+            waNumber={config?.whatsappNumber}
             narrativeContent={
                 <>
                     <div>

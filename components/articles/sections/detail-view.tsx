@@ -2,7 +2,7 @@
 import React from 'react';
 import { X, Calendar, Clock, Quote, Briefcase, ChevronLeft, ChevronRight, Hash, Share2, Facebook, Twitter, Linkedin, MessageCircle, Link as LinkIcon, Network, Target, TrendingUp, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Article, Product } from '../../types';
+import { Article, Product, SiteConfig } from '../../types';
 import { ArticleDetailProps } from '../types';
 import { optimizeImage, formatRupiah, slugify } from '../../../utils';
 import { useArticleReader } from '../hooks/use-article-reader';
@@ -54,8 +54,13 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
     );
 };
 
-export const ArticleReaderView = ({ article, onClose, products, allArticles }: ArticleDetailProps) => {
+interface ExtendedDetailProps extends ArticleDetailProps {
+    config?: SiteConfig;
+}
+
+export const ArticleReaderView = ({ article, onClose, products, allArticles, config }: ExtendedDetailProps) => {
   const { progress, scrollPos, containerRef, currentBlocks, currentReaderPage, totalReaderPages, handlePageChange, activeHeadingId, handleToCClick } = useArticleReader(article.content);
+  const waNumber = config?.whatsappNumber || "6282325103336";
   
   const MAX_HEIGHT = 500; const MIN_HEIGHT = 80; 
   const currentHeaderHeight = Math.max(MIN_HEIGHT, MAX_HEIGHT - scrollPos);
@@ -103,7 +108,7 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles }: A
                             )}
                             <div>
                                  <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4"><RecIcon size={16} className="text-brand-orange" /><h5 className="text-xs font-bold text-white uppercase tracking-widest">{recTitle}</h5></div>
-                                 <div className="space-y-4">{recommendedProducts.map((p: Product) => (<React.Fragment key={p.id}><SidebarProductCard product={p} onDetail={() => window.open(`https://wa.me/6282325103336?text=Tanya produk ${p.name}`, '_blank')} /></React.Fragment>))}</div>
+                                 <div className="space-y-4">{recommendedProducts.map((p: Product) => (<React.Fragment key={p.id}><SidebarProductCard product={p} onDetail={() => window.open(`https://wa.me/${waNumber}?text=Tanya produk ${p.name}`, '_blank')} waNumber={waNumber} /></React.Fragment>))}</div>
                             </div>
                         </div>
                     </div>

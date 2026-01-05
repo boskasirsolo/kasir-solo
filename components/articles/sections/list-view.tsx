@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Filter, X, Zap, ChevronLeft, ChevronRight, Skull } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Article, Product } from '../../types';
+import { Article, Product, SiteConfig } from '../../types';
 import { ArticleGridCard, InFeedProductCard } from '../ui/cards';
 import { ArticleSearchWidget, CategorySidebar, TagCloudWidget, ProductSidebarWidget } from '../ui/widgets';
 import { FeaturedArticleHero } from './hero';
@@ -11,10 +11,15 @@ import { slugify } from '../../../utils';
 import { useArticleList } from '../hooks/use-article-list';
 import { ArticleListProps } from '../types';
 
-export const ArticleListView = ({ articles, products }: ArticleListProps) => {
+interface ExtendedListProps extends ArticleListProps {
+    config?: SiteConfig;
+}
+
+export const ArticleListView = ({ articles, products, config }: ExtendedListProps) => {
   const navigate = useNavigate();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false); 
+  const waNumber = config?.whatsappNumber;
   
   const { 
     searchTerm, setSearchTerm, 
@@ -128,6 +133,7 @@ export const ArticleListView = ({ articles, products }: ArticleListProps) => {
           <ProductSidebarWidget 
             products={products} 
             onDetail={setSelectedProduct} 
+            waNumber={waNumber}
           />
         </div>
       </div>

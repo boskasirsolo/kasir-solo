@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { CalcData } from './types';
 import { formatRupiah } from '../../../utils';
 
-export const useCalculator = (data: CalcData, serviceName: string) => {
+export const useCalculator = (data: CalcData, serviceName: string, waNumber?: string) => {
   const [selectedBase, setSelectedBase] = useState<string | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
 
@@ -57,7 +57,8 @@ export const useCalculator = (data: CalcData, serviceName: string) => {
                     `*${estimateText}*` +
                     `Bisa diskusi detailnya?`;
 
-    window.open(`https://wa.me/6282325103336?text=${message}`, '_blank');
+    const targetWa = waNumber || "6282325103336";
+    window.open(`https://wa.me/${targetWa}?text=${message}`, '_blank');
   };
 
   return {

@@ -10,9 +10,12 @@ interface HeroSectionProps {
     isKandang: boolean;
     quota: QuotaInfo;
     onShop: () => void;
+    waNumber?: string;
 }
 
-export const HeroSection = ({ city, isKandang, quota, onShop }: HeroSectionProps) => {
+export const HeroSection = ({ city, isKandang, quota, onShop, waNumber }: HeroSectionProps) => {
+    const targetWa = waNumber || "6282325103336";
+
     return (
         <section className="relative py-24 md:py-32 overflow-hidden border-b border-white/5">
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-orange/5 rounded-full blur-[150px] pointer-events-none translate-x-1/2"></div>
@@ -44,7 +47,7 @@ export const HeroSection = ({ city, isKandang, quota, onShop }: HeroSectionProps
                       LIHAT SENJATA (KATALOG)
                    </Button>
                    <a 
-                      href={`https://wa.me/6282325103336?text=Halo Mas Amin, saya Juragan dari ${city.name}. Mau konsul mesin kasir, katanya langsung sama Founder ya?`}
+                      href={`https://wa.me/${targetWa}?text=Halo Mas Amin, saya Juragan dari ${city.name}. Mau konsul mesin kasir, katanya langsung sama Founder ya?`}
                       target="_blank"
                       rel="noreferrer"
                       className="px-8 py-4 rounded-lg font-bold border border-white/10 hover:bg-white/5 text-white transition-all flex items-center gap-2 justify-center text-sm"

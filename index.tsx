@@ -247,17 +247,17 @@ const AppContent = () => {
             <Route path="/" element={<HomePage setPage={handleNavigation} config={config} gallery={gallery} testimonials={testimonials} />} />
             <Route path="/home" element={<HomePage setPage={handleNavigation} config={config} gallery={gallery} testimonials={testimonials} />} />
             <Route path="/shop" element={<ShopPage products={products} />} />
-            <Route path="/shop/:slug" element={<ProductDetailPage products={products} />} />
+            <Route path="/shop/:slug" element={<ProductDetailPage products={products} config={config} />} />
             <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
             <Route path="/gallery/:slug" element={<ProjectDetailPage gallery={gallery} testimonials={testimonials} />} />
-            <Route path="/articles" element={<ArticlesPage articles={publishedArticles} products={products} />} />
-            <Route path="/articles/:slug" element={<ArticleDetailPage articles={publishedArticles} products={products} />} />
+            <Route path="/articles" element={<ArticlesPage articles={publishedArticles} products={products} config={config} />} />
+            <Route path="/articles/:slug" element={<ArticleDetailPage articles={publishedArticles} products={products} config={config} />} />
             <Route path="/services/website" element={<WebsiteServicePage config={config} />} />
             <Route path="/services/webapp" element={<WebAppServicePage config={config} />} />
-            <Route path="/services/seo" element={<SeoServicePage />} />
-            <Route path="/services/maintenance" element={<MaintenanceServicePage />} />
+            <Route path="/services/seo" element={<SeoServicePage config={config} />} />
+            <Route path="/services/maintenance" element={<MaintenanceServicePage config={config} />} />
             <Route path="/legal/:type" element={<LegalPage />} />
-            <Route path="/support" element={<SupportPage />} />
+            <Route path="/support" element={<SupportPage config={config} />} />
             <Route path="/track-order" element={<TrackOrderPage />} /> 
             <Route path="/jual-mesin-kasir-di/:citySlug" element={<CityLandingPage config={config} />} />
             <Route path="/jual-mesin-kasir-di" element={<CityLandingPage config={config} />} />
@@ -266,7 +266,7 @@ const AppContent = () => {
             <Route path="/about/vision" element={<VisionPage />} /> 
             <Route path="/career" element={<CareerPage jobs={jobs} />} />
             <Route path="/contact" element={<ContactPage config={config} />} /> 
-            <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} />} />
+            <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} config={config} />} />
             <Route path="/innovation" element={<InnovationPage config={config} />} />
             <Route path="/admin" element={session ? <AdminDashboard products={products} setProducts={setProducts} gallery={gallery} setGallery={setGallery} testimonials={testimonials} setTestimonials={setTestimonials} articles={articles} setArticles={setArticles} jobs={jobs} setJobs={setJobs} config={config} setConfig={setConfig} onLogout={() => supabase?.auth.signOut()} /> : <AdminLogin />} />
             <Route path="*" element={<NotFoundPage setPage={handleNavigation} />} />

@@ -65,12 +65,13 @@ export const InFeedProductCard = ({ product, onClick }: { product: Product, onCl
     </div>
 );
 
-export const SidebarProductCard = ({ product, onDetail }: { product: Product, onDetail: () => void }) => {
+export const SidebarProductCard = ({ product, onDetail, waNumber }: { product: Product, onDetail: () => void, waNumber?: string }) => {
   const { addToCart } = useCart();
   const [isAnimating, setIsAnimating] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [flyData, setFlyData] = useState<{ start: DOMRect, target: DOMRect } | null>(null);
+  const targetWa = waNumber || "6282325103336";
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation(); 
@@ -107,7 +108,7 @@ export const SidebarProductCard = ({ product, onDetail }: { product: Product, on
           <div className="mt-1">
             <p className="text-brand-orange font-bold text-sm mb-2 font-display">{formatRupiah(product.price)}</p>
             <div className="grid grid-cols-2 gap-2">
-              <a href={`https://wa.me/6282325103336?text=Halo, saya tertarik dengan produk ${product.name} yang ada di artikel.`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="px-2 py-1.5 rounded-lg border border-brand-orange text-gray-300 hover:text-white hover:bg-brand-orange font-bold text-[10px] transition-all hover:shadow-neon flex items-center justify-center gap-1"><MessageCircle size={12} /> Chat</a>
+              <a href={`https://wa.me/${targetWa}?text=Halo, saya tertarik dengan produk ${product.name} yang ada di artikel.`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="px-2 py-1.5 rounded-lg border border-brand-orange text-gray-300 hover:text-white hover:bg-brand-orange font-bold text-[10px] transition-all hover:shadow-neon flex items-center justify-center gap-1"><MessageCircle size={12} /> Chat</a>
               <button ref={buttonRef} onClick={handleAddToCart} className={`px-2 py-1.5 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 transition-all group/btn ${isAdded ? 'bg-green-500 text-white shadow-lg' : 'bg-brand-orange text-white hover:bg-brand-glow hover:shadow-neon'}`}>{isAdded ? <><Check size={12} /> OK</> : <><Plus size={12} className={isAnimating ? "animate-spin" : "group-hover/btn:scale-125 transition-transform"}/> Beli</>}</button>
             </div>
           </div>

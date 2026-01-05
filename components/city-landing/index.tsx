@@ -46,6 +46,7 @@ export const CityLandingModule = (props: CityLogicProps) => {
                 isKandang={isKandang}
                 quota={quotaInfo}
                 onShop={() => navigate('/shop')}
+                waNumber={props.config?.whatsappNumber}
             />
 
             <WhyUsSection 

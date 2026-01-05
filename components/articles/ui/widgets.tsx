@@ -82,7 +82,7 @@ export const TagCloudWidget = ({ onSelectTag }: { onSelectTag: (tag: string) => 
   </div>
 );
 
-export const ProductSidebarWidget = ({ products, onDetail }: { products: Product[], onDetail: (p: Product) => void }) => (
+export const ProductSidebarWidget = ({ products, onDetail, waNumber }: { products: Product[], onDetail: (p: Product) => void, waNumber?: string }) => (
   <div className="bg-brand-card border border-white/10 rounded-2xl p-5 shadow-lg">
      <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
         <TrendingUp size={16} className="text-green-500" />
@@ -91,7 +91,7 @@ export const ProductSidebarWidget = ({ products, onDetail }: { products: Product
      <div className="space-y-4">
         {products.slice(0, 2).map((product) => (
            <React.Fragment key={product.id}>
-              <SidebarProductCard product={product} onDetail={() => onDetail(product)} />
+              <SidebarProductCard product={product} onDetail={() => onDetail(product)} waNumber={waNumber} />
            </React.Fragment>
         ))}
      </div>

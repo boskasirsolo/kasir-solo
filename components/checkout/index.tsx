@@ -6,8 +6,9 @@ import { EmptyCartView } from './ui-parts';
 import { SuccessView } from './sections/success-view';
 import { CartSummary } from './sections/cart-summary';
 import { ShippingForm } from './sections/shipping-form';
+import { SiteConfig } from '../../types';
 
-export const CheckoutModule = ({ setPage }: { setPage: (p: string) => void }) => {
+export const CheckoutModule = ({ setPage, config }: { setPage: (p: string) => void, config?: SiteConfig }) => {
     const {
         cart, removeFromCart, updateQuantity, totalPrice, clearCart,
         formData, handleFieldChange, handleBlur,
@@ -18,7 +19,7 @@ export const CheckoutModule = ({ setPage }: { setPage: (p: string) => void }) =>
 
     // VIEW 1: SUCCESS
     if (orderSuccess) {
-        return <SuccessView order={orderSuccess} onHome={() => setPage('home')} />;
+        return <SuccessView order={orderSuccess} onHome={() => setPage('home')} config={config} />;
     }
 
     // VIEW 2: CART / EMPTY

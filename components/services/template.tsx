@@ -14,6 +14,7 @@ interface ServicePageTemplateProps {
     calcData: CalcData;
     calcServiceName: string;
     steps: any[];
+    waNumber?: string;
 }
 
 export const ServicePageTemplate = ({
@@ -21,7 +22,8 @@ export const ServicePageTemplate = ({
     narrativeContent,
     features,
     calcData, calcServiceName,
-    steps
+    steps,
+    waNumber
 }: ServicePageTemplateProps) => {
     return (
         <div className="animate-fade-in">
@@ -30,6 +32,7 @@ export const ServicePageTemplate = ({
                 highlight={highlight} 
                 subtitle={subtitle} 
                 icon={icon} 
+                waNumber={waNumber}
             />
             
             <NarrativeSection>
@@ -40,7 +43,11 @@ export const ServicePageTemplate = ({
             
             <section className="py-16 bg-brand-dark border-t border-white/5">
                 <div className="container mx-auto px-4">
-                    <InvestmentSimulator data={calcData} serviceName={calcServiceName} />
+                    <InvestmentSimulator 
+                        data={calcData} 
+                        serviceName={calcServiceName} 
+                        waNumber={waNumber}
+                    />
                 </div>
             </section>
 

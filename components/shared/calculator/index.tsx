@@ -4,13 +4,17 @@ import { CalculatorProps } from './types';
 import { useCalculator } from './logic';
 import { CalcHeader, BaseOptionItem, AddonOptionItem, ResultCard } from './ui-parts';
 
-export const InvestmentSimulator = ({ data, serviceName }: CalculatorProps) => {
+interface ExtendedCalculatorProps extends CalculatorProps {
+    waNumber?: string;
+}
+
+export const InvestmentSimulator = ({ data, serviceName, waNumber }: ExtendedCalculatorProps) => {
   const { 
       selectedBase, setSelectedBase, 
       selectedAddons, toggleAddon, 
       calculation, 
       handleConsultation 
-  } = useCalculator(data, serviceName);
+  } = useCalculator(data, serviceName, waNumber);
 
   return (
     <div className="bg-brand-dark border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">

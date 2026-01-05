@@ -4,20 +4,24 @@ import { CheckCircle2, MessageCircle } from 'lucide-react';
 import { formatRupiah } from '../../../utils';
 import { BankTransferCard } from '../ui-parts';
 import { OrderSuccessState } from '../types';
+import { SiteConfig } from '../../../types';
 
 export const SuccessView = ({ 
     order, 
-    onHome 
+    onHome,
+    config
 }: { 
     order: OrderSuccessState, 
-    onHome: () => void 
+    onHome: () => void,
+    config?: SiteConfig
 }) => {
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
         alert("Nomor rekening disalin!");
     };
 
-    const waLink = `https://wa.me/6282325103336?text=Halo Admin PT Mesin Kasir Solo, saya sudah transfer untuk Order ID #${order.id} sebesar ${formatRupiah(order.total)}. Berikut bukti transfernya...`;
+    const waNumber = config?.whatsappNumber || "6282325103336";
+    const waLink = `https://wa.me/${waNumber}?text=Halo Admin PT Mesin Kasir Solo, saya sudah transfer untuk Order ID #${order.id} sebesar ${formatRupiah(order.total)}. Berikut bukti transfernya...`;
 
     return (
         <div className="container mx-auto px-4 py-20 animate-fade-in flex justify-center">

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ArrowLeft, Tag, Check, ShoppingCart, MessageCircle, ThumbsUp, ShieldCheck, Zap, PackageOpen } from 'lucide-react';
-import { Product } from '../../types';
+import { Product, SiteConfig } from '../../types';
 import { optimizeImage, formatRupiah } from '../../../utils';
 import { useCart } from '../../../context/cart-context';
 import { ProductSchema } from '../../seo';
@@ -63,10 +63,18 @@ const FormattedDescription = ({ text }: { text: string }) => {
   return <div>{renderedContent}</div>;
 };
 
+interface ProductDetailProps {
+    product: Product;
+    onClose: () => void;
+    isModal?: boolean;
+    config?: SiteConfig;
+}
+
 // --- MAIN DETAIL VIEW ---
-export const ProductDetailView = ({ product, onClose, isModal = false }: { product: Product, onClose: () => void, isModal?: boolean }) => {
+export const ProductDetailView = ({ product, onClose, isModal = false, config }: ProductDetailProps) => {
   const { addToCart } = useCart();
   const [isAnimating, setIsAnimating] = useState(false);
+  const waNumber = config?.whatsappNumber || "6282325103336";
   
   const handleAddToCart = () => {
     setIsAnimating(true);
@@ -95,7 +103,7 @@ export const ProductDetailView = ({ product, onClose, isModal = false }: { produ
                     <button onClick={handleAddToCart} className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${isAnimating ? 'bg-green-500 text-white' : 'bg-brand-gradient hover:bg-brand-gradient-hover text-white'}`}>
                         {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} {isAnimating ? "Berhasil" : "ANGKUT SEKARANG"}
                     </button>
-                    <a href={`https://wa.me/6282325103336?text=Halo Mas Amin, saya mau nego/tanya detail produk: ${product.name}.`} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full py-4 border border-brand-orange hover:bg-brand-orange text-white rounded-xl font-bold transition-all gap-2 hover:shadow-neon">
+                    <a href={`https://wa.me/${waNumber}?text=Halo Mas Amin, saya mau nego/tanya detail produk: ${product.name}.`} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full py-4 border border-brand-orange hover:bg-brand-orange text-white rounded-xl font-bold transition-all gap-2 hover:shadow-neon">
                         <MessageCircle size={20} /> NEGO HARGA
                     </a>
                 </div>

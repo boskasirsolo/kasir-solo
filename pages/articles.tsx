@@ -1,24 +1,28 @@
 
 import React from 'react';
-import { Article, Product } from '../types';
+import { Article, Product, SiteConfig } from '../types';
 import { ArticlesModule } from '../components/articles';
 
 export const ArticlesPage = ({ 
   articles, 
-  products 
+  products,
+  config
 }: { 
   articles: Article[], 
-  products: Product[] 
+  products: Product[],
+  config?: SiteConfig
 }) => {
-  return <ArticlesModule articles={articles} products={products} />;
+  return <ArticlesModule articles={articles} products={products} config={config} />;
 };
 
 export const ArticleDetailPage = ({ 
   articles, 
-  products 
+  products,
+  config
 }: { 
   articles: Article[], 
-  products: Product[] 
+  products: Product[],
+  config?: SiteConfig
 }) => {
-  return <ArticlesModule articles={articles} products={products} />;
+  return <ArticlesModule articles={articles} products={products} config={config} />;
 };

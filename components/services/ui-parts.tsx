@@ -9,38 +9,44 @@ export const ServiceHero = ({
   title, 
   highlight, 
   subtitle, 
-  icon: Icon 
+  icon: Icon,
+  waNumber
 }: { 
   title: string, 
   highlight: string, 
   subtitle: string, 
-  icon: any 
-}) => (
-  <section className="relative py-20 overflow-hidden border-b border-white/5">
-    <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/5 rounded-full blur-[120px] pointer-events-none"></div>
-    <div className="container mx-auto px-4 relative z-10 text-center">
-      <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-brand-orange mx-auto mb-6 shadow-neon border border-white/10">
-        <Icon size={32} />
+  icon: any,
+  waNumber?: string
+}) => {
+  const targetWa = waNumber || "6282325103336";
+  
+  return (
+    <section className="relative py-20 overflow-hidden border-b border-white/5">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/5 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="container mx-auto px-4 relative z-10 text-center">
+        <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-brand-orange mx-auto mb-6 shadow-neon border border-white/10">
+          <Icon size={32} />
+        </div>
+        <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6">
+          {title} <span className="text-brand-orange">{highlight}</span>
+        </h1>
+        <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed mb-8">
+          {subtitle}
+        </p>
+        <div className="flex justify-center gap-4">
+          <a 
+            href={`https://wa.me/${targetWa}?text=Halo, saya ingin konsultasi layanan digital.`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-brand-action hover:bg-brand-actionGlow text-white rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong"
+          >
+            Konsultasi Gratis <ArrowRight size={18} />
+          </a>
+        </div>
       </div>
-      <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6">
-        {title} <span className="text-brand-orange">{highlight}</span>
-      </h1>
-      <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed mb-8">
-        {subtitle}
-      </p>
-      <div className="flex justify-center gap-4">
-        <a 
-          href="https://wa.me/6282325103336?text=Halo, saya ingin konsultasi layanan digital."
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 px-8 py-3 bg-brand-action hover:bg-brand-actionGlow text-white rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong"
-        >
-          Konsultasi Gratis <ArrowRight size={18} />
-        </a>
-      </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export const FeatureGrid = ({ features }: { features: { title: string, desc: string, icon: any }[] }) => (
   <section className="py-16 bg-brand-dark">

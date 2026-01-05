@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { HardDrive, PlayCircle, HelpCircle, MessageCircle, Search } from 'lucide-react';
 import { SectionHeader, Button } from '../components/ui';
@@ -13,10 +14,11 @@ import {
     PAGE_SIZE_VIDEOS,
     PAGE_SIZE_FAQS 
 } from '../components/support/index';
-import { DownloadItem, Tutorial, FAQ } from '../types';
+import { DownloadItem, Tutorial, FAQ, SiteConfig } from '../types';
 
-export const SupportPage = () => {
+export const SupportPage = ({ config }: { config?: SiteConfig }) => {
   const { state, computed, actions } = useSupportLogic();
+  const waNumber = config?.whatsappNumber || "6282325103336";
 
   const handleFileClick = (item: DownloadItem) => {
       actions.setSelectedDownload(item);
@@ -125,7 +127,7 @@ export const SupportPage = () => {
                         Udah mentok? Jangan dipaksa, Bos. Daripada makin ambyar, mending serahin ke teknisi gue.
                     </p>
                     <a 
-                        href="https://wa.me/6282325103336?text=Halo Tim Teknis, saya butuh bantuan urgent."
+                        href={`https://wa.me/${waNumber}?text=Halo Tim Teknis, saya butuh bantuan urgent.`}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-orange to-red-600 hover:from-brand-orange hover:to-red-500 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-neon w-full justify-center transform hover:-translate-y-0.5 transition-all"

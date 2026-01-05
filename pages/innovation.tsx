@@ -70,9 +70,10 @@ const LossCalculator = () => {
 };
 
 // --- COMPONENT: SMART LINK BUTTON ---
-const SmartLinkButton = ({ url, defaultLabel, waLabel }: { url?: string, defaultLabel: string, waLabel: string }) => {
+const SmartLinkButton = ({ url, defaultLabel, waLabel, waNumber }: { url?: string, defaultLabel: string, waLabel: string, waNumber?: string }) => {
   const isLinkActive = url && url.length > 5;
-  const targetUrl = isLinkActive ? url : "https://wa.me/6282325103336?text=Halo Mas Amin, gue mau masuk Waiting List SIBOS/QALAM.";
+  const targetWa = waNumber || "6282325103336";
+  const targetUrl = isLinkActive ? url : `https://wa.me/${targetWa}?text=Halo Mas Amin, gue mau masuk Waiting List SIBOS/QALAM.`;
 
   return (
     <a 
@@ -185,6 +186,7 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
                 url={config.sibosUrl} 
                 defaultLabel="Akses SIBOS" 
                 waLabel="Antri SIBOS Sekarang" 
+                waNumber={config.whatsappNumber}
               />
             </div>
 
@@ -282,6 +284,7 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
                   url={config.qalamUrl} 
                   defaultLabel="Akses QALAM" 
                   waLabel="Daftar Antrian QALAM" 
+                  waNumber={config.whatsappNumber}
                 />
               </div>
             </div>
@@ -314,11 +317,13 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
                         url={config.sibosUrl} 
                         defaultLabel="Amankan Slot SIBOS" 
                         waLabel="Antri SIBOS" 
+                        waNumber={config.whatsappNumber}
                     />
                     <SmartLinkButton 
                         url={config.qalamUrl} 
                         defaultLabel="Amankan Slot QALAM" 
                         waLabel="Antri QALAM" 
+                        waNumber={config.whatsappNumber}
                     />
                 </div>
                 <p className="mt-8 text-xs text-gray-500 uppercase tracking-widest">
