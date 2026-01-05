@@ -1,16 +1,41 @@
 
-// --- IMAGE OPTIMIZATION (CLOUDINARY) ---
-export const optimizeImage = (url: string, width?: number) => {
-  if (!url || !url.includes('cloudinary.com')) return url;
-  // Prevent double optimization
-  if (url.includes('f_auto,q_auto')) return url;
+// --- IMAGE OPTIMIZATION (CLOUDINARY & UNSPLASH) ---
+export const optimizeImage = (url: string, width: number = 800) => {
+  if (!url) return '';
 
-  // Params: f_auto (WebP/AVIF), q_auto (Smart Compression)
-  const params = ['f_auto', 'q_auto'];
-  if (width) params.push(`w_${width}`);
+  // 1. Handle Cloudinary
+  if (url.includes('cloudinary.com')) {
+    // Prevent double optimization if params already exist
+    if (url.includes('f_auto,q_auto')) return url;
 
-  // Insert params after /upload/
-  return url.replace('/upload/', `/upload/${params.join(',')}/`);
+    // Params: 
+    // f_auto: Format auto (WebP/AVIF)
+    // q_auto:eco: Aggressive compression for speed
+    // c_limit: Resize without upscaling (maintains aspect ratio)
+    // w_{width}: Target width
+    const params = [`f_auto`, `q_auto:eco`, `c_limit`, `w_${width}`];
+
+    // Insert params after /upload/
+    return url.replace('/upload/', `/upload/${params.join(',')}/`);
+  }
+
+  // 2. Handle Unsplash (Common in Mock Data)
+  if (url.includes('images.unsplash.com')) {
+    try {
+        const urlObj = new URL(url);
+        urlObj.searchParams.set('w', width.toString());
+        urlObj.searchParams.set('q', '75'); // Eco quality
+        urlObj.searchParams.set('fm', 'webp'); // Next-gen format
+        urlObj.searchParams.set('fit', 'max'); // Prevent upscaling
+        return urlObj.toString();
+    } catch(e) {
+        // Fallback if URL parsing fails
+        return url;
+    }
+  }
+
+  // 3. Fallback for others (return original)
+  return url;
 };
 
 // --- WATERMARK ENGINE (SECURITY) ---

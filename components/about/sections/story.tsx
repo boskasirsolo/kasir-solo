@@ -2,6 +2,7 @@
 import React from 'react';
 import { Users, Quote } from 'lucide-react';
 import { SiteConfig } from '../../../types';
+import { optimizeImage } from '../../../utils';
 
 export const AboutStory = ({ config }: { config?: SiteConfig }) => (
     <section className="py-20 bg-brand-black relative">
@@ -14,9 +15,10 @@ export const AboutStory = ({ config }: { config?: SiteConfig }) => (
                         <div className="aspect-[3/4] w-full rounded-2xl overflow-hidden border border-white/10 bg-brand-dark relative grayscale group-hover:grayscale-0 transition-all duration-700">
                             {config?.founderPortrait ? (
                                 <img 
-                                    src={config.founderPortrait} 
+                                    src={optimizeImage(config.founderPortrait, 600)} 
                                     alt="Amin Maghfuri" 
                                     className="w-full h-full object-cover"
+                                    loading="lazy"
                                 />
                             ) : (
                                 <div className="w-full h-full flex flex-col items-center justify-center text-gray-600">

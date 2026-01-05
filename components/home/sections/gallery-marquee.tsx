@@ -3,6 +3,7 @@ import React from 'react';
 import { Quote, User, Star, ArrowRight } from 'lucide-react';
 import { GalleryItem, Testimonial } from '../../types';
 import { Button } from '../../ui';
+import { optimizeImage } from '../../../utils';
 
 // --- ATOM: Combined Card (Project + Testimonial) ---
 const CombinedCard = ({ 
@@ -22,9 +23,10 @@ const CombinedCard = ({
       {/* TOP: Project Card */}
       <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 group-hover/container:border-brand-orange transition-all shadow-lg group-hover/container:shadow-neon">
           <img 
-            src={item.image_url} 
+            src={optimizeImage(item.image_url, 400)} // Optimized for card size
             alt={item.title} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover/container:scale-105" 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover/container:scale-105"
+            loading="lazy" 
           />
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
@@ -57,7 +59,7 @@ const CombinedCard = ({
           <div className="flex items-center gap-3 pt-3 border-t border-white/5">
               <div className="w-8 h-8 rounded-full bg-brand-dark border border-brand-orange/30 overflow-hidden flex items-center justify-center shrink-0">
                  {testimonial.image_url ? (
-                   <img src={testimonial.image_url} className="w-full h-full object-cover" />
+                   <img src={optimizeImage(testimonial.image_url, 100)} className="w-full h-full object-cover" loading="lazy" />
                  ) : (
                    <User size={14} className="text-gray-500"/>
                  )}
