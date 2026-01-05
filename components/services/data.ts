@@ -1,6 +1,6 @@
 
 import { Target, MapPin, Zap, Award, ShoppingBag, GitMerge, Eye, Lock, ShieldAlert, Cpu, Server, Anchor, Layers, PenTool, ShieldCheck, HardDrive, Activity, RefreshCw, LifeBuoy } from 'lucide-react';
-import { CalcData } from '../calculator';
+import { CalcData } from '../shared/calculator/types';
 
 export const WEBSITE_DATA = {
   features: [

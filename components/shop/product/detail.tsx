@@ -74,7 +74,7 @@ export const ProductDetailView = ({ product, onClose, isModal = false }: { produ
     setTimeout(() => { setIsAnimating(false); if(isModal) onClose(); }, 500);
   };
 
-  const innerContent: React.ReactNode = (
+  const innerContent = (
     <>
       {/* INJECT SCHEMA HERE */}
       <ProductSchema product={product} />
@@ -129,7 +129,10 @@ export const ProductDetailView = ({ product, onClose, isModal = false }: { produ
                         <div className="p-4 bg-white/5 border-b border-white/5 flex items-center gap-2"><Zap size={18} className="text-brand-orange"/><h4 className="text-sm font-bold text-white uppercase tracking-widest">Jeroan Mesin (Specs)</h4></div>
                         <div className="divide-y divide-white/5">
                             {Object.entries(product.specs).map(([key, val]) => (
-                                <div key={key} className="flex justify-between p-4 hover:bg-white/5 transition-colors"><span className="text-gray-500 text-xs font-bold uppercase tracking-wider">{key}</span><span className="text-white font-bold text-sm text-right">{val}</span></div>
+                                <div key={key} className="flex justify-between p-4 hover:bg-white/5 transition-colors">
+                                    <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">{key}</span>
+                                    <span className="text-white font-bold text-sm text-right">{val as React.ReactNode}</span>
+                                </div>
                             ))}
                         </div>
                     </div>

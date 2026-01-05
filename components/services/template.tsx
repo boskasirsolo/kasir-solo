@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { ServiceHero, FeatureGrid, WorkflowSection, NarrativeSection } from './ui-parts';
-import { InvestmentSimulator, CalcData } from '../calculator';
+import { InvestmentSimulator } from '../shared/calculator/index';
+import { CalcData } from '../shared/calculator/types';
 
 interface ServicePageTemplateProps {
     title: string;
