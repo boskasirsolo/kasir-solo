@@ -3,7 +3,7 @@ import React from 'react';
 import { TabProps } from './types';
 import { SettingsSection } from './ui-atoms';
 import { Input, Button } from '../ui';
-import { Clock, Globe, BarChart, Monitor, Rss, Copy, ExternalLink, Check, ShoppingBag } from 'lucide-react';
+import { Clock, BarChart, Monitor, Rss, Copy, ExternalLink, Check, ShoppingBag, Download, AlertTriangle } from 'lucide-react';
 import { INDONESIA_TIMEZONES, CONFIG } from '../../utils';
 
 export const TabSystem = ({ config, setConfig }: TabProps) => {
@@ -23,20 +23,28 @@ export const TabSystem = ({ config, setConfig }: TabProps) => {
 
     return (
         <div className="space-y-8 animate-fade-in">
-            {/* GOOGLE MERCHANT FEED (NEW) */}
-            <SettingsSection title="Google Merchant Center (Product Feed)" desc="Gunakan link ini untuk sinkronisasi produk otomatis ke Google Shopping.">
+            {/* GOOGLE MERCHANT FEED (UPDATED INSTRUCTIONS) */}
+            <SettingsSection title="Google Merchant Center (Product Feed)" desc="Sinkronisasi produk otomatis ke Google Shopping (Free Listing/Ads).">
                 <div className="bg-brand-orange/5 p-6 rounded-xl border border-brand-orange/20 relative">
                     <div className="flex items-start gap-4">
-                        <div className="p-3 bg-brand-orange/10 rounded-lg text-brand-orange">
+                        <div className="p-3 bg-brand-orange/10 rounded-lg text-brand-orange shrink-0">
                             <Rss size={24} />
                         </div>
                         <div className="flex-1">
-                            <h4 className="text-white font-bold text-sm mb-2">Jalur API / Feed Otomatis</h4>
-                            <p className="text-xs text-gray-400 mb-4 leading-relaxed">
-                                Salin URL di bawah ini. Di Google Merchant Center, pilih menu <strong>Products {'>'} Feeds</strong>, lalu pilih opsi <strong>"Scheduled Fetch"</strong> dan tempel URL ini.
-                            </p>
+                            <h4 className="text-white font-bold text-sm mb-2">Link XML Feed Otomatis</h4>
                             
-                            <div className="flex gap-2">
+                            <div className="bg-brand-dark/50 p-3 rounded-lg border border-white/10 mb-4 text-xs text-gray-300 leading-relaxed">
+                                <strong className="text-brand-orange flex items-center gap-2 mb-1"><AlertTriangle size={12}/> PENTING: Cara Setting di Google</strong>
+                                <ol className="list-decimal pl-4 space-y-1 text-gray-400">
+                                    <li>Buka Google Merchant Center.</li>
+                                    <li>Pilih menu <strong>Products {'>'} Feeds</strong>.</li>
+                                    <li>Klik tombol <strong>(+) Add Product Feed</strong>.</li>
+                                    <li>Pilih metode <strong>"Scheduled Fetch"</strong> (Pengambilan Terjadwal). <span className="text-red-400 font-bold">JANGAN pilih "API".</span></li>
+                                    <li>Paste URL di bawah ini ke kolom "File URL".</li>
+                                </ol>
+                            </div>
+                            
+                            <div className="flex gap-2 mb-2">
                                 <div className="relative flex-1">
                                     <Input 
                                         value={feedUrl} 
@@ -45,15 +53,15 @@ export const TabSystem = ({ config, setConfig }: TabProps) => {
                                         className="bg-black/50 border-brand-orange/30 text-brand-orange font-mono text-xs pr-10 cursor-text"
                                     />
                                 </div>
-                                <Button onClick={handleCopy} className="bg-brand-orange hover:bg-brand-action text-white px-4">
+                                <Button onClick={handleCopy} className="bg-brand-orange hover:bg-brand-action text-white px-4 shrink-0" title="Salin URL">
                                     {copied ? <Check size={16}/> : <Copy size={16}/>}
                                 </Button>
-                                <Button onClick={() => window.open(feedUrl, '_blank')} variant="outline" className="px-4 border-brand-orange/30 text-brand-orange hover:bg-brand-orange/10">
+                                <Button onClick={() => window.open(feedUrl, '_blank')} variant="outline" className="px-4 border-brand-orange/30 text-brand-orange hover:bg-brand-orange/10 shrink-0" title="Tes Buka Link">
                                     <ExternalLink size={16}/>
                                 </Button>
                             </div>
-                            <p className="text-[10px] text-gray-500 mt-2 italic">
-                                *Link ini akan meng-generate file XML berisi semua produk aktif Anda secara real-time.
+                            <p className="text-[10px] text-gray-500 italic">
+                                *Link ini berisi data semua produk lo dalam format XML yang disukai Google. Update otomatis real-time.
                             </p>
                         </div>
                     </div>

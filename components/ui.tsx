@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, AlertTriangle } from 'lucide-react';
@@ -11,14 +10,16 @@ export const Button = ({
   onClick, 
   className = '', 
   disabled = false,
-  type = 'button'
+  type = 'button',
+  ...props
 }: { 
   children?: React.ReactNode, 
   variant?: 'primary' | 'outline' | 'ghost' | 'danger', 
   onClick?: () => void, 
   className?: string,
   disabled?: boolean,
-  type?: 'button' | 'submit'
+  type?: 'button' | 'submit',
+  [key: string]: any
 }) => {
   const baseStyles = "rounded-lg font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
   
@@ -36,6 +37,7 @@ export const Button = ({
       onClick={onClick} 
       disabled={disabled}
       className={`${baseStyles} ${variants[variant]} ${className}`}
+      {...props}
     >
       {children}
     </button>
