@@ -62,7 +62,7 @@ export const ServicesGrid = ({ setPage }: { setPage: (p: string) => void }) => (
               </div>
               
               <div className="mb-4">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{service.subtitle}</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{service.subtitle}</p>
                 <h3 className="text-xl font-bold text-white group-hover:text-brand-orange transition-colors">{service.title}</h3>
               </div>
               

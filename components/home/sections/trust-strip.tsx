@@ -13,7 +13,7 @@ export const TrustStrip = () => (
             </div>
             <div>
                <h4 className="text-2xl md:text-3xl font-display font-bold text-white">500+</h4>
-               <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Mitra Mesin Kasir</p>
+               <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Mitra Mesin Kasir</p>
             </div>
          </div>
          <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
@@ -22,7 +22,7 @@ export const TrustStrip = () => (
             </div>
             <div>
                <h4 className="text-2xl md:text-3xl font-display font-bold text-white">34</h4>
-               <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Kirim se-Indonesia</p>
+               <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Kirim se-Indonesia</p>
             </div>
          </div>
          <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
@@ -31,7 +31,7 @@ export const TrustStrip = () => (
             </div>
             <div>
                <h4 className="text-2xl md:text-3xl font-display font-bold text-white">99%</h4>
-               <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Uptime Server</p>
+               <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Uptime Server</p>
             </div>
          </div>
          <div className="p-6 md:p-8 flex items-center justify-center gap-4 hover:bg-white/5 transition-colors">
@@ -40,7 +40,7 @@ export const TrustStrip = () => (
             </div>
             <div>
                <h4 className="text-2xl md:text-3xl font-display font-bold text-white">24/7</h4>
-               <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Support Teknis</p>
+               <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Support Teknis</p>
             </div>
          </div>
       </div>
