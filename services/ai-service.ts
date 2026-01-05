@@ -1,5 +1,4 @@
 
-import { GoogleGenAI } from "@google/genai";
 import { getEnv } from '../config/env';
 
 // --- API KEY MANAGEMENT ---
@@ -54,6 +53,10 @@ export const callGeminiWithRotation = async (params: {
   if (!selectedKey) {
       throw new Error("API Key not found. Please connect AI Studio or set VITE_GEMINI_API_KEY.");
   }
+
+  // DYNAMIC IMPORT: Load GenAI library ONLY when this function is called
+  // This removes ~46KB from the initial page load bundle
+  const { GoogleGenAI } = await import("@google/genai");
 
   const ai = new GoogleGenAI({ apiKey: selectedKey });
 

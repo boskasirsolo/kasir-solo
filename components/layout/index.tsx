@@ -1,12 +1,16 @@
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { SiteConfig } from '../../types';
-import { SibosWidget } from '../sibos-core/index';
 import { INITIAL_PRODUCTS } from '../../utils';
 import { useAnalytics } from '../../hooks/use-analytics';
 import { Header } from './header';
 import { Footer } from './footer';
 import { ScrollToTop } from './ui/scroll-top';
+
+// LAZY LOAD SIBOS WIDGET
+// This ensures the chat logic (and its heavy dependencies) aren't loaded 
+// until the browser is idle or interaction happens.
+const SibosWidget = lazy(() => import('../sibos-core/index').then(module => ({ default: module.SibosWidget })));
 
 export const Layout = ({ 
   children, 
@@ -33,8 +37,10 @@ export const Layout = ({
         <main className="flex-grow">
           {children}
         </main>
-        {/* SIBOS AI WIDGET (ADMIN MODE) */}
-        <SibosWidget products={INITIAL_PRODUCTS} isAdmin={true} currentPage={currentPage} setConfig={setConfig} session={session} />
+        {/* SIBOS AI WIDGET (ADMIN MODE) - Wrapped in Suspense */}
+        <Suspense fallback={null}>
+            <SibosWidget products={INITIAL_PRODUCTS} isAdmin={true} currentPage={currentPage} setConfig={setConfig} session={session} />
+        </Suspense>
       </div>
     );
   }
@@ -52,8 +58,10 @@ export const Layout = ({
       {/* SCROLL TO TOP BUTTON */}
       <ScrollToTop />
 
-      {/* SIBOS AI WIDGET (PUBLIC MODE) - Pass currentPage & session */}
-      <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} currentPage={currentPage} setConfig={setConfig} session={session} />
+      {/* SIBOS AI WIDGET (PUBLIC MODE) - Wrapped in Suspense */}
+      <Suspense fallback={null}>
+        <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} currentPage={currentPage} setConfig={setConfig} session={session} />
+      </Suspense>
     </div>
   );
 };
