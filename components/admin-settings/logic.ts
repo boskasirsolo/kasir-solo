@@ -97,7 +97,8 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
 
             setConfig({ ...config, aboutImage: finalAboutImage, founderPortrait: finalFounderImage });
 
-            const dbData = {
+            // 1. STRATEGI UTAMA: Format Snake Case (Standar DB Baru)
+            const dbDataSnake = {
                 id: 1,
                 hero_title: config.heroTitle,
                 hero_subtitle: config.heroSubtitle,
@@ -131,10 +132,57 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                 quota_digital_used: config.quotaDigitalUsed
             };
 
-            const { error } = await supabase.from('site_settings').upsert(dbData);
-            if (error) throw error;
+            // Coba simpan pakai format baru
+            const { error: errorSnake } = await supabase.from('site_settings').upsert(dbDataSnake);
+
+            if (errorSnake) {
+                console.warn("Penyimpanan format baru gagal, mencoba fallback ke format lama...", errorSnake.message);
+                
+                // 2. STRATEGI CADANGAN: Format Camel Case (Untuk DB Lama)
+                // Jika errornya karena kolom tidak ditemukan, kita coba kirim dengan nama kolom lama.
+                const dbDataCamel = {
+                    id: 1,
+                    heroTitle: config.heroTitle,
+                    heroSubtitle: config.heroSubtitle,
+                    aboutImage: finalAboutImage,
+                    founderPortrait: finalFounderImage,
+                    sibosUrl: config.sibosUrl,
+                    qalamUrl: config.qalamUrl,
+                    companyLegalName: config.companyLegalName,
+                    nibNumber: config.nibNumber,
+                    ahuNumber: config.ahuNumber,
+                    npwpNumber: config.npwpNumber,
+                    whatsappNumber: config.whatsappNumber,
+                    emailAddress: config.emailAddress,
+                    addressSolo: config.addressSolo,
+                    addressBlora: config.addressBlora,
+                    mapSoloLink: config.mapSoloLink,
+                    mapBloraLink: config.mapBloraLink,
+                    mapSoloEmbed: config.mapSoloEmbed,
+                    mapBloraEmbed: config.mapBloraEmbed,
+                    instagramUrl: config.instagramUrl,
+                    facebookUrl: config.facebookUrl,
+                    youtubeUrl: config.youtubeUrl,
+                    tiktokUrl: config.tiktokUrl,
+                    linkedinUrl: config.linkedinUrl,
+                    googleAnalyticsId: config.googleAnalyticsId,
+                    googleSearchConsoleCode: config.googleSearchConsoleCode,
+                    timezone: config.timezone,
+                    quotaOnsiteMax: config.quotaOnsiteMax,
+                    quotaOnsiteUsed: config.quotaOnsiteUsed,
+                    quotaDigitalMax: config.quotaDigitalMax,
+                    quotaDigitalUsed: config.quotaDigitalUsed
+                };
+
+                const { error: errorCamel } = await supabase.from('site_settings').upsert(dbDataCamel);
+                
+                if (errorCamel) {
+                    // Jika dua-duanya gagal, baru kita lempar error ke user
+                    throw new Error(`Gagal menyimpan ke Database. Error Teknis: ${errorSnake.message}`);
+                }
+            }
             
-            alert("Pengaturan berhasil disimpan.");
+            alert("Pengaturan berhasil disimpan!");
             setState(p => ({ ...p, aboutImageFile: null, founderImageFile: null }));
         } catch (e: any) {
             alert("Gagal menyimpan: " + e.message);

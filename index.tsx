@@ -128,40 +128,40 @@ const AppContent = () => {
 
         // 1. Fetch Config First (Critical for Head/Meta/Contact)
         try {
-            // Using maybeSingle() to avoid error if table is empty (0 rows)
+            // Fetch raw data from table
             const { data: settingsData } = await supabase.from('site_settings').select('*').limit(1).maybeSingle();
             
             if (settingsData) {
-                // ROBUST MAPPING: Check snake_case first, then camelCase, then fallback to current state (prev)
-                // This handles both DB schema scenarios safely.
+                // UNIVERSAL ADAPTER: Maps any DB format (snake/camel) to App format (camel)
+                // This ensures frontend works regardless of DB column naming style
                 setConfig(prev => ({
                     ...prev,
-                    heroTitle: settingsData.hero_title ?? settingsData.heroTitle ?? prev.heroTitle,
-                    heroSubtitle: settingsData.hero_subtitle ?? settingsData.heroSubtitle ?? prev.heroSubtitle,
-                    aboutImage: settingsData.about_image ?? settingsData.aboutImage ?? prev.aboutImage,
-                    founderPortrait: settingsData.founder_portrait ?? settingsData.founderPortrait ?? prev.founderPortrait,
-                    sibosUrl: settingsData.sibos_url ?? settingsData.sibosUrl ?? prev.sibosUrl,
-                    qalamUrl: settingsData.qalam_url ?? settingsData.qalamUrl ?? prev.qalamUrl,
-                    companyLegalName: settingsData.company_legal_name ?? settingsData.companyLegalName ?? prev.companyLegalName,
-                    nibNumber: settingsData.nib_number ?? settingsData.nibNumber ?? prev.nibNumber,
-                    ahuNumber: settingsData.ahu_number ?? settingsData.ahuNumber ?? prev.ahuNumber,
-                    npwpNumber: settingsData.npwp_number ?? settingsData.npwpNumber ?? prev.npwpNumber,
-                    whatsappNumber: settingsData.whatsapp_number ?? settingsData.whatsappNumber ?? prev.whatsappNumber,
-                    emailAddress: settingsData.email_address ?? settingsData.emailAddress ?? prev.emailAddress,
-                    addressSolo: settingsData.address_solo ?? settingsData.addressSolo ?? prev.addressSolo,
-                    addressBlora: settingsData.address_blora ?? settingsData.addressBlora ?? prev.addressBlora,
-                    mapSoloLink: settingsData.map_solo_link ?? settingsData.mapSoloLink ?? prev.mapSoloLink,
-                    mapBloraLink: settingsData.map_blora_link ?? settingsData.mapBloraLink ?? prev.mapBloraLink,
-                    mapSoloEmbed: settingsData.map_solo_embed ?? settingsData.mapSoloEmbed ?? prev.mapSoloEmbed,
-                    mapBloraEmbed: settingsData.map_blora_embed ?? settingsData.mapBloraEmbed ?? prev.mapBloraEmbed,
-                    instagramUrl: settingsData.instagram_url ?? settingsData.instagramUrl ?? prev.instagramUrl,
-                    facebookUrl: settingsData.facebook_url ?? settingsData.facebookUrl ?? prev.facebookUrl,
-                    youtubeUrl: settingsData.youtube_url ?? settingsData.youtubeUrl ?? prev.youtubeUrl,
-                    tiktokUrl: settingsData.tiktok_url ?? settingsData.tiktokUrl ?? prev.tiktokUrl,
-                    linkedinUrl: settingsData.linkedin_url ?? settingsData.linkedinUrl ?? prev.linkedinUrl,
-                    googleAnalyticsId: settingsData.google_analytics_id ?? settingsData.googleAnalyticsId ?? prev.googleAnalyticsId,
-                    googleSearchConsoleCode: settingsData.google_search_console_code ?? settingsData.googleSearchConsoleCode ?? prev.googleSearchConsoleCode,
-                    timezone: settingsData.timezone ?? prev.timezone,
+                    heroTitle: settingsData.hero_title || settingsData.heroTitle || prev.heroTitle,
+                    heroSubtitle: settingsData.hero_subtitle || settingsData.heroSubtitle || prev.heroSubtitle,
+                    aboutImage: settingsData.about_image || settingsData.aboutImage || prev.aboutImage,
+                    founderPortrait: settingsData.founder_portrait || settingsData.founderPortrait || prev.founderPortrait,
+                    sibosUrl: settingsData.sibos_url || settingsData.sibosUrl || prev.sibosUrl,
+                    qalamUrl: settingsData.qalam_url || settingsData.qalamUrl || prev.qalamUrl,
+                    companyLegalName: settingsData.company_legal_name || settingsData.companyLegalName || prev.companyLegalName,
+                    nibNumber: settingsData.nib_number || settingsData.nibNumber || prev.nibNumber,
+                    ahuNumber: settingsData.ahu_number || settingsData.ahuNumber || prev.ahuNumber,
+                    npwpNumber: settingsData.npwp_number || settingsData.npwpNumber || prev.npwpNumber,
+                    whatsappNumber: settingsData.whatsapp_number || settingsData.whatsappNumber || prev.whatsappNumber,
+                    emailAddress: settingsData.email_address || settingsData.emailAddress || prev.emailAddress,
+                    addressSolo: settingsData.address_solo || settingsData.addressSolo || prev.addressSolo,
+                    addressBlora: settingsData.address_blora || settingsData.addressBlora || prev.addressBlora,
+                    mapSoloLink: settingsData.map_solo_link || settingsData.mapSoloLink || prev.mapSoloLink,
+                    mapBloraLink: settingsData.map_blora_link || settingsData.mapBloraLink || prev.mapBloraLink,
+                    mapSoloEmbed: settingsData.map_solo_embed || settingsData.mapSoloEmbed || prev.mapSoloEmbed,
+                    mapBloraEmbed: settingsData.map_blora_embed || settingsData.mapBloraEmbed || prev.mapBloraEmbed,
+                    instagramUrl: settingsData.instagram_url || settingsData.instagramUrl || prev.instagramUrl,
+                    facebookUrl: settingsData.facebook_url || settingsData.facebookUrl || prev.facebookUrl,
+                    youtubeUrl: settingsData.youtube_url || settingsData.youtubeUrl || prev.youtubeUrl,
+                    tiktokUrl: settingsData.tiktok_url || settingsData.tiktokUrl || prev.tiktokUrl,
+                    linkedinUrl: settingsData.linkedin_url || settingsData.linkedinUrl || prev.linkedinUrl,
+                    googleAnalyticsId: settingsData.google_analytics_id || settingsData.googleAnalyticsId || prev.googleAnalyticsId,
+                    googleSearchConsoleCode: settingsData.google_search_console_code || settingsData.googleSearchConsoleCode || prev.googleSearchConsoleCode,
+                    timezone: settingsData.timezone || prev.timezone,
                     quotaOnsiteMax: settingsData.quota_onsite_max ?? settingsData.quotaOnsiteMax ?? prev.quotaOnsiteMax,
                     quotaOnsiteUsed: settingsData.quota_onsite_used ?? settingsData.quotaOnsiteUsed ?? prev.quotaOnsiteUsed,
                     quotaDigitalMax: settingsData.quota_digital_max ?? settingsData.quotaDigitalMax ?? prev.quotaDigitalMax,
