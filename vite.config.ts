@@ -16,35 +16,32 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        // Smart Chunking Strategy
+        // Smart Chunking Strategy - Optimized for Reduced Depth
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // Core React (Stable, jarang berubah)
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('scheduler')) {
-              return 'vendor-react';
+            // Core Essentials (React + Router + Utils + UI Icons)
+            // Grouping these reduces the number of initial requests
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('scheduler') || id.includes('lucide-react')) {
+              return 'vendor-core';
             }
-            // Supabase (Berat, dipisah)
+            // Supabase (Large, heavy, distinct)
             if (id.includes('@supabase')) {
               return 'vendor-supabase';
             }
-            // Lucide Icons (Berat jika tidak tree-shaken, pisahkan agar tidak memblokir render utama)
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons';
-            }
-            // AI SDKs (Sangat berat, wajib isolasi)
+            // AI SDKs (Very heavy, must be isolated)
             if (id.includes('@google/genai')) {
               return 'vendor-ai';
             }
-            // Sisa libs lainnya
+            // Remaining libs (small utilities)
             return 'vendor-libs';
           }
           
-          // Split Admin Pages agar tidak diload user biasa
+          // Split Admin Pages (Security & Performance: Ordinary users don't need this)
           if (id.includes('/pages/admin') || id.includes('/components/admin')) {
             return 'feature-admin';
           }
           
-          // Split Shop Logic
+          // Split Shop Logic (Optional, keep if Shop is heavy)
           if (id.includes('/components/shop')) {
             return 'feature-shop';
           }
