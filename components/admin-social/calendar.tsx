@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Calendar, Sparkles, Loader2, Copy, Check, Clock, CloudLightning } from 'lucide-react';
 import { ScheduledPost } from '../../types';
 import { Button, Input, LoadingSpinner } from '../ui';
-import { callGeminiWithRotation } from '../../utils';
+import { SocialAI } from '../../services/ai/social'; // UPDATED
 
 export const ContentCalendar = () => {
     const [topic, setTopic] = useState('');
@@ -11,40 +11,15 @@ export const ContentCalendar = () => {
     const [posts, setPosts] = useState<ScheduledPost[]>([]);
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
+    // REFACTORED: Use SocialAI
     const generateWeeklyPlan = async () => {
         if (!topic) return alert("Isi topik dulu bos, misal: 'Promo Lebaran' atau 'Tips Kasir'.");
         setIsGenerating(true);
         setPosts([]);
 
         try {
-            const prompt = `
-            Act as a Social Media Strategist for 'PT Mesin Kasir Solo'.
-            Task: Create a 7-Day Content Plan (Monday - Sunday) based on the topic: "${topic}".
-            Target Audience: UMKM Owners, Retailers, Cafe Owners.
-            Brand Persona: 'Mas Amin' (Founder) - Street smart, gritty, honest, experienced. Use "Gue/Lo".
-
-            STRICT JSON OUTPUT FORMAT (Array of Objects):
-            [
-              {
-                "day": "Senin",
-                "theme": "Motivasi / Hard Truth",
-                "hook": "Satu kalimat pembuka yang nampol.",
-                "caption": "Caption lengkap (max 300 char). Include CTA.",
-                "image_idea": "Deskripsi visual untuk gambar/foto."
-              },
-              ... (for all 7 days)
-            ]
-            `;
-
-            const res = await callGeminiWithRotation({ 
-                model: 'gemini-3-flash-preview', 
-                contents: prompt,
-                config: { responseMimeType: "application/json" }
-            });
-
-            const data = JSON.parse(res.text || '[]');
+            const data = await SocialAI.generateWeeklyPlan(topic);
             setPosts(data.map((p: any) => ({ ...p, status: 'pending' })));
-
         } catch (e: any) {
             alert("Gagal generate: " + e.message);
         } finally {

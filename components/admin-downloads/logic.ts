@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from 'react';
-import { supabase, uploadToSupabase, renameFile, slugify, callGeminiWithRotation } from '../../utils';
+import { supabase, uploadToSupabase, renameFile, slugify } from '../../utils';
 import { DownloadItem, Tutorial, FAQ } from '../../types';
 import { DownloadFormState, ResearchResult } from './types';
 import { parseVolume } from './utils';
+import { SupportAI } from '../../services/ai/support'; // UPDATED
 
 // --- DOWNLOAD LOGIC ---
 export const useDownloadLogic = () => {
@@ -46,40 +47,28 @@ export const useDownloadLogic = () => {
         if (window.innerWidth < 1024) window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    // REFACTORED: Use SupportAI
     const researchTitles = async () => {
         if (!contextInput) return alert("Isi 'Konteks Produk' dulu.");
         setAiLoading(p => ({...p, research: true}));
         setGeneratedTitles([]);
 
         try {
-            const prompt = `
-            Role: SEO Specialist for Technical Support (Drivers, Manuals, Software).
-            Context: User wants to upload a file regarding "${contextInput}".
-            Category: ${form.category}.
-            Task: Generate 5 High-Potential Long-tail Keyword Titles.
-            Metrics Requirement: Estimate Monthly Search Volume (Indonesia) & Competition.
-            Format: JSON Array of Objects. Example: [{"title": "Driver Epson L3210 Windows 10", "volume": "1.2k/mo", "competition": "Low"}].
-            Output: JUST the JSON Array.
-            `;
-            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
-            const rawTitles: ResearchResult[] = JSON.parse(res.text || '[]');
+            const rawTitles: ResearchResult[] = await SupportAI.researchDownloadKeywords(contextInput, form.category);
             const sortedTitles = rawTitles.sort((a, b) => parseVolume(b.volume) - parseVolume(a.volume));
             setGeneratedTitles(sortedTitles);
         } catch (e) { alert("Gagal riset judul."); } 
         finally { setAiLoading(p => ({...p, research: false})); }
     };
 
+    // REFACTORED: Use SupportAI
     const generateDescription = async () => {
         const trigger = form.title || contextInput;
         if (!trigger) return alert("Pilih Judul atau isi Konteks dulu.");
         setAiLoading(p => ({...p, desc: true}));
         try {
-            const prompt = `
-            Role: UX Writer. Task: Write a file description for: "${trigger}". Category: ${form.category}.
-            Guidelines: Focus on User Intent. Mention OS compatibility. No intro/outro. 2-3 sentences. Indonesian.
-            `;
-            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            setForm(prev => ({ ...prev, description: res.text?.trim() || '' }));
+            const text = await SupportAI.generateDownloadDesc(trigger, form.category);
+            setForm(prev => ({ ...prev, description: text }));
         } catch (e) { alert("Gagal generate deskripsi."); } 
         finally { setAiLoading(p => ({...p, desc: false})); }
     };
@@ -134,7 +123,6 @@ export const useDownloadLogic = () => {
         if (form.id === id) resetForm();
     };
 
-    // CRASH FIX: Ensure title exists before toLowerCase()
     const filtered = downloads.filter(item => (item.title || '').toLowerCase().includes(searchTerm.toLowerCase()));
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
     const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
@@ -146,7 +134,6 @@ export const useDownloadLogic = () => {
         uploadFile, setUploadFile, 
         loading, aiLoading, 
         
-        // Grouped Actions for UI compatibility
         actions: {
             researchTitles, 
             generateDescription, 
@@ -157,15 +144,8 @@ export const useDownloadLogic = () => {
             setGeneratedTitles
         },
         
-        // Grouped State for List UI
         listState: { 
-            paginated, 
-            totalPages, 
-            page, 
-            setPage, 
-            searchTerm, 
-            setSearchTerm, 
-            totalItems: filtered.length 
+            paginated, totalPages, page, setPage, searchTerm, setSearchTerm, totalItems: filtered.length 
         } 
     };
 };
@@ -239,13 +219,13 @@ export const useFaqLogic = () => {
         setFaqs(p => p.filter(x => x.id !== id));
     };
 
+    // REFACTORED: Use SupportAI
     const generateAnswer = async () => {
         if (!form.question) return alert("Isi Pertanyaan (Q) dulu.");
         setIsGenerating(true);
         try {
-            const prompt = `Role: Support Agent. Task: Answer FAQ "${form.question}". Product: POS System (Hardware/Software). Lang: ID. Tone: Helpful. Length: 2-3 sentences.`;
-            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            setForm(prev => ({ ...prev, answer: res.text?.trim() || '' }));
+            const text = await SupportAI.generateFaqAnswer(form.question || "");
+            setForm(prev => ({ ...prev, answer: text }));
         } catch (e) { alert("Gagal generate."); } 
         finally { setIsGenerating(false); }
     };

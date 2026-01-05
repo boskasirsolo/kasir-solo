@@ -1,8 +1,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Product } from '../../types';
-import { supabase, CONFIG, formatNumberInput, cleanNumberInput, callGeminiWithRotation, slugify, renameFile, addWatermarkToFile, uploadToSupabase, processBackgroundMigration } from '../../utils';
+import { supabase, formatNumberInput, cleanNumberInput, slugify, renameFile, addWatermarkToFile, uploadToSupabase, processBackgroundMigration } from '../../utils';
 import { ProductFormState, LoadingState, PRODUCT_CATEGORIES } from './types';
+import { MerchantAI } from '../../services/ai/merchant';
+import { VisionAI } from '../../services/ai/vision';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -82,13 +84,13 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         if (form.id === id) resetForm();
     };
 
-    // --- AI GENERATORS ---
+    // --- AI GENERATORS (REFACTORED TO USE MERCHANT AI) ---
 
-    const generateAI = async (target: keyof LoadingState, prompt: string, onSuccess: (text: string) => void) => {
+    const generateAI = async (target: keyof LoadingState, generator: () => Promise<string>, onSuccess: (text: string) => void) => {
         setLoading(p => ({ ...p, [target]: true }));
         try {
-            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            onSuccess(res.text?.trim() || '');
+            const text = await generator();
+            onSuccess(text);
         } catch (e: any) {
             alert(`AI Error: ${e.message}`);
         } finally {
@@ -99,7 +101,7 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
     const generateTitle = () => {
         if (!form.shortDesc) return alert("Isi 'Keywords' dulu.");
         generateAI('generatingTitle', 
-            `Create a short, catchy POS product name based on: ${form.shortDesc}. Category: ${form.category}. Lang: ID. Output: JUST Name.`,
+            () => MerchantAI.generateProductName(form.shortDesc, form.category),
             (text) => setForm(p => ({ ...p, name: text }))
         );
     };
@@ -107,15 +109,15 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
     const generateDesc = () => {
         if (!form.name) return alert("Isi Nama Produk dulu.");
         generateAI('generatingDesc',
-            `Write persuasive product description for "${form.name}" (${form.category}). Features: ${form.shortDesc}. Lang: ID. No markdown formatting.`,
-            (text) => setForm(p => ({ ...p, desc: text.replace(/\*\*/g, '') }))
+            () => MerchantAI.generateSalesCopy(form.name, form.shortDesc),
+            (text) => setForm(p => ({ ...p, desc: text }))
         );
     };
 
     const generateSpecs = () => {
         if (!form.name) return alert("Isi Nama Produk dulu.");
         generateAI('generatingSpecs',
-            `Generate tech specs for POS "${form.name}". Format: Key: Value (one per line). Max 6 lines.`,
+            () => MerchantAI.generateSpecs(form.name),
             (text) => setForm(p => ({ ...p, specsStr: text }))
         );
     };
@@ -123,7 +125,7 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
     const generateIncludes = () => {
         if (!form.name) return alert("Isi Nama Produk dulu.");
         generateAI('generatingIncludes',
-            `List "Package Includes" for "${form.name}". One item per line. Lang: ID.`,
+            () => MerchantAI.generateIncludes(form.name),
             (text) => setForm(p => ({ ...p, includesStr: text }))
         );
     };
@@ -131,24 +133,17 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
     const generateWhyBuy = () => {
         if (!form.name) return alert("Isi Nama Produk dulu.");
         generateAI('generatingWhyBuy',
-            `3-5 reasons to buy "${form.name}". Short sentences. One per line. Lang: ID. Focus on ROI/Durability.`,
+            () => MerchantAI.generateWhyBuy(form.name),
             (text) => setForm(p => ({ ...p, whyBuyStr: text }))
         );
     };
 
+    // Uses VisionAI now
     const generateImage = async () => {
         if (!form.name) return alert("Isi Nama Produk dulu.");
         setLoading(p => ({ ...p, generatingImage: true }));
         try {
-            const seed = Math.floor(Math.random() * 999999);
-            // ENHANCED PROMPT FOR PRODUCTS
-            const prompt = `Professional product photography of ${form.name} (${form.category}), modern sleek design, high tech hardware, studio lighting, white background, 4k ultra realistic, --no text`;
-            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=800&model=flux&nologo=true&seed=${seed}`;
-            
-            const res = await fetch(url);
-            const blob = await res.blob();
-            const file = new File([blob], "ai-gen.jpg", { type: "image/jpeg" });
-            
+            const { url, file } = await VisionAI.generate(form.name, form.category, 'corporate');
             setForm(p => ({ ...p, imagePreview: url, uploadFile: file }));
         } catch (e) {
             console.error(e);

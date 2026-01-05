@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { JobOpening } from '../../types';
-import { supabase, callGeminiWithRotation, getSignedUrl } from '../../utils';
+import { supabase, getSignedUrl } from '../../utils';
 import { JobFormState, JobAiLoading, Applicant } from './types';
+import { HRAI } from '../../services/ai/hr'; // UPDATED
 
 // --- JOB LOGIC ---
 export const useJobLogic = (jobs: JobOpening[], setJobs: (j: JobOpening[]) => void) => {
@@ -32,20 +33,19 @@ export const useJobLogic = (jobs: JobOpening[], setJobs: (j: JobOpening[]) => vo
         setForm({ ...job, id: job.id });
     };
 
+    // REFACTORED: Use HRAI
     const generateJobContent = async (target: 'desc' | 'req') => {
         if (!form.title) return alert("Mohon isi 'Posisi / Judul' terlebih dahulu sebagai konteks AI.");
         setAiLoading(prev => ({ ...prev, [target]: true }));
         try {
-            let prompt = "";
+            let text = "";
             if (target === 'desc') {
-                prompt = `Bertindaklah sebagai HRD Manager profesional. Tugas: Buat deskripsi pekerjaan singkat (Job Description) yang menarik untuk posisi: "${form.title}". Divisi: ${form.division || "Umum"}. Tipe: ${form.type}. Bahasa: Indonesia. Tone: Profesional, Mengundang, dan Jelas. Output: HANYA teks deskripsi (maksimal 3 kalimat paragraf). Jangan pakai markdown bold/heading.`;
+                text = await HRAI.generateJobDesc(form.title, form.division || "Umum", form.type);
+                setForm(prev => ({ ...prev, description: text }));
             } else {
-                prompt = `Bertindaklah sebagai HRD Manager profesional. Tugas: Buat daftar Kualifikasi (Requirements) untuk posisi: "${form.title}". Divisi: ${form.division || "Umum"}. Bahasa: Indonesia. Output: Daftar poin-poin (bullet points) menggunakan tanda strip (-). Maksimal 5-7 poin kunci. HANYA listnya saja.`;
+                text = await HRAI.generateRequirements(form.title, form.division || "Umum");
+                setForm(prev => ({ ...prev, requirements: text }));
             }
-            const response = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            const text = response.text?.trim() || "";
-            if (target === 'desc') setForm(prev => ({ ...prev, description: text }));
-            else setForm(prev => ({ ...prev, requirements: text }));
         } catch (e: any) { alert(`Gagal generate AI: ${e.message}`); } 
         finally { setAiLoading(prev => ({ ...prev, [target]: false })); }
     };

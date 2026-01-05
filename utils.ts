@@ -15,7 +15,8 @@ export { getTimezoneOffset, convertLocalToUTC, convertUTCToLocal } from './lib/d
 export { getCityData } from './lib/geo-utils';
 
 // Services
-export { ensureAPIKey, callGeminiWithRotation } from './services/ai-service';
+// UPDATED: Now pointing to the new AI Core
+export { ensureAPIKey, callGeminiWithRotation } from './services/ai/core'; 
 export { uploadToSupabase, uploadToCloudinary, deleteFromSupabase, processBackgroundMigration, getSignedUrl } from './services/storage-service';
 
 // Data Constants (Re-exporting for easy access)
