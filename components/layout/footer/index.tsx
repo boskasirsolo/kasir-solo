@@ -45,6 +45,7 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
 
   return (
     <FooterContainer>
+      {/* Optimized Grid Gap for Tablet */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-x-4 md:gap-y-8 lg:gap-8">
         
         {/* 1. Brand Section */}

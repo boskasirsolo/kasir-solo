@@ -18,6 +18,7 @@ export const HomeHero = ({ setPage }: { setPage: (p: string) => void }) => (
         </h2>
       </div>
       
+      {/* Optimized Text Size for Mobile (text-4xl) vs Desktop (text-7xl) */}
       <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-6 md:mb-8 leading-tight drop-shadow-lg">
         Revolusi <span className="text-brand-orange">Mesin Kasir.</span><br/>
         Bisnis Jalan, Lo Jalan-Jalan.

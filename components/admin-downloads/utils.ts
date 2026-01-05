@@ -2,6 +2,7 @@
 import { HardDrive, FileText, Smartphone, Wrench } from 'lucide-react';
 
 export const parseVolume = (volStr: string): number => {
+    if (!volStr) return 0; // Guard clause
     try {
         const clean = volStr.toLowerCase().replace('/mo', '').trim();
         if (clean.includes('k')) {

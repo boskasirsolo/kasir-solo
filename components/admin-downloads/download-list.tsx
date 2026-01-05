@@ -15,6 +15,9 @@ export const DownloadList = ({
     onDelete: (id: string) => void, 
     onReset: () => void 
 }) => {
+    // GUARD CLAUSE: Prevent crash if state is undefined during init
+    if (!state || !state.paginated) return <div className="p-4 text-gray-500 text-xs">Memuat data...</div>;
+
     return (
         <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden">
             {/* SEARCH BAR & ADD BUTTON */}

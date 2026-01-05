@@ -134,7 +134,8 @@ export const useDownloadLogic = () => {
         if (form.id === id) resetForm();
     };
 
-    const filtered = downloads.filter(item => item.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    // CRASH FIX: Ensure title exists before toLowerCase()
+    const filtered = downloads.filter(item => (item.title || '').toLowerCase().includes(searchTerm.toLowerCase()));
     const totalPages = Math.ceil(filtered.length / itemsPerPage);
     const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
