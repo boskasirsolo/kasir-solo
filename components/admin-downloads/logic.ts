@@ -81,7 +81,8 @@ export const useDownloadLogic = () => {
             let finalFileSize = form.file_size;
 
             if (uploadFile && supabase) {
-                const safeName = slugify(form.title || 'download-file').substring(0, 50);
+                // SEO INJECTION
+                const safeName = `${slugify(form.title || 'download-file').substring(0, 50)}-mesin-kasir-solo`;
                 const fileToUpload = renameFile(uploadFile, safeName);
                 const { url } = await uploadToSupabase(fileToUpload, 'files', 'downloads');
                 finalFileUrl = url;

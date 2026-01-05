@@ -179,7 +179,8 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 }
 
                 if (supabase && fileToMigrate) {
-                    const seoName = `${slugify(form.name)}-mesin-kasir`;
+                    // SEO INJECTION: Add 'mesin-kasir-solo'
+                    const seoName = `${slugify(form.name)}-mesin-kasir-solo`;
                     const renamedFile = renameFile(fileToMigrate, seoName);
                     const { url, path } = await uploadToSupabase(renamedFile, 'products');
                     finalImageUrl = url;
@@ -195,7 +196,8 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 const uploadPromises = form.newGalleryFiles.map(async (file, idx) => {
                     let f = file;
                     if (useWatermark) f = await addWatermarkToFile(f);
-                    const seoName = `${slugify(form.name)}-gallery-${idx+1}`;
+                    // SEO INJECTION: Add 'mesin-kasir-solo'
+                    const seoName = `${slugify(form.name)}-mesin-kasir-solo-gallery-${idx+1}`;
                     const renamed = renameFile(f, seoName);
                     if (supabase) {
                         const { url } = await uploadToSupabase(renamed, 'products');

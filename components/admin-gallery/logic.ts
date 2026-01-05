@@ -175,7 +175,8 @@ export const useGalleryLogic = (
                     file = await addWatermarkToFile(file);
                     setLoading(prev => ({ ...prev, processingImage: false }));
                 }
-                const seoName = `${slugify(form.title)}-cover`;
+                // SEO INJECTION
+                const seoName = `${slugify(form.title)}-mesin-kasir-solo-project-cover`;
                 const renamed = renameFile(file, seoName);
                 finalCoverUrl = await uploadToCloudinary(renamed);
             }
@@ -187,7 +188,8 @@ export const useGalleryLogic = (
                 const uploadPromises = form.newGalleryFiles.map(async (file, idx) => {
                     let f = file;
                     if (useWatermark) f = await addWatermarkToFile(f);
-                    const seoName = `${slugify(form.title)}-gallery-${idx+1}`;
+                    // SEO INJECTION
+                    const seoName = `${slugify(form.title)}-mesin-kasir-solo-gallery-${idx+1}`;
                     const renamed = renameFile(f, seoName);
                     return uploadToCloudinary(renamed);
                 });
@@ -223,7 +225,8 @@ export const useGalleryLogic = (
             if (testiForm.hasTestimonial) {
                 let finalTestiImage = testiForm.imagePreview;
                 if (testiForm.uploadFile) {
-                    const seoName = `${slugify(testiForm.client_name || 'klien')}-avatar`;
+                    // SEO INJECTION
+                    const seoName = `${slugify(testiForm.client_name || 'klien')}-avatar-mesin-kasir-solo`;
                     const renamed = renameFile(testiForm.uploadFile, seoName);
                     finalTestiImage = await uploadToCloudinary(renamed);
                 }

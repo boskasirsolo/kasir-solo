@@ -91,7 +91,8 @@ const ApplicationModal = ({
 
         try {
             // 1. Upload CV to 'careers' bucket
-            const seoName = `${slugify(form.full_name)}-cv-${slugify(positionTitle)}`;
+            // SEO INJECTION for PDF
+            const seoName = `${slugify(form.full_name)}-cv-${slugify(positionTitle)}-mesin-kasir-solo`;
             const fileToUpload = renameFile(cvFile, seoName);
             
             // NOTE: Uploading to 'careers' bucket, folder 'resumes'

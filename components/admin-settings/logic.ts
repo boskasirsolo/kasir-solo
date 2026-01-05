@@ -88,7 +88,8 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
             // Upload Founder Image
             if (state.founderImageFile && CONFIG.CLOUDINARY_CLOUD_NAME) {
                 const formData = new FormData();
-                formData.append('file', renameFile(state.founderImageFile, 'founder-amin-maghfuri'));
+                // SEO INJECTION: 'founder-amin-maghfuri-mesin-kasir-solo'
+                formData.append('file', renameFile(state.founderImageFile, 'founder-amin-maghfuri-mesin-kasir-solo'));
                 formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();

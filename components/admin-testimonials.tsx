@@ -63,8 +63,8 @@ const useTestimonialManager = (
             let finalImageUrl = form.imagePreview;
 
             if (form.uploadFile) {
-                // SEO OPTIMIZATION: Rename file
-                const seoName = `${slugify(form.client_name)}-review-klien`;
+                // SEO OPTIMIZATION: Rename file with 'mesin-kasir-solo'
+                const seoName = `${slugify(form.client_name)}-review-klien-mesin-kasir-solo`;
                 const fileToUpload = renameFile(form.uploadFile, seoName);
 
                 const formData = new FormData();

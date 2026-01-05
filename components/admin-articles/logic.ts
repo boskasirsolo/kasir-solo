@@ -184,7 +184,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         aiLogic.setLoading(p => ({ ...p, uploading: true, progressMessage: 'Uploading Avatar...' }));
         try {
             let avatarUrl = URL.createObjectURL(file);
-            const seoName = `${slugify(activePersona.name)}-author-avatar`;
+            // SEO INJECTION
+            const seoName = `${slugify(activePersona.name)}-author-avatar-mesin-kasir-solo`;
             const fileToUpload = renameFile(file, seoName);
 
             if (supabase) {
@@ -210,7 +211,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             let fileToMigrate: File | null = form.uploadFile;
 
             if (form.uploadFile) {
-                const seoName = `${slugify(form.title)}-artikel-cover`;
+                // SEO INJECTION
+                const seoName = `${slugify(form.title)}-artikel-cover-mesin-kasir-solo`;
                 fileToMigrate = renameFile(form.uploadFile, seoName);
 
                 if (supabase) {
