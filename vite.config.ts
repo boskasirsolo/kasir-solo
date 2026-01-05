@@ -11,6 +11,7 @@ export default defineConfig({
     cssCodeSplit: true,
     minify: 'esbuild', // Gunakan esbuild untuk minifikasi cepat
     target: 'es2020',
+    modulePreload: false, // MATIKAN PRELOAD OTOMATIS: Mencegah browser mendownload chunk lazy (Admin/AI) di awal.
     esbuild: {
       drop: ['console', 'debugger'], // Hapus console.log di production untuk mengurangi ukuran
     },
