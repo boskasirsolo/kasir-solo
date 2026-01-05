@@ -10,7 +10,7 @@ export const BrandColumn = ({
   config
 }: { 
   description: string, 
-  socials: { icon: any, url?: string }[],
+  socials: { icon: any, url?: string, label?: string }[],
   config: SiteConfig
 }) => (
   <div className="col-span-2 lg:col-span-1 space-y-6">
@@ -51,7 +51,7 @@ export const BrandColumn = ({
 
     <div className="flex gap-3 flex-wrap">
       {socials.map((s, idx) => (
-        <SocialButton key={idx} icon={s.icon} href={s.url} />
+        <SocialButton key={idx} icon={s.icon} href={s.url} label={s.label} />
       ))}
     </div>
   </div>

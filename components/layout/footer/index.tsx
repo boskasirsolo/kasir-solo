@@ -36,11 +36,11 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
   ];
 
   const socialLinks = [
-    { icon: Instagram, url: config.instagramUrl },
-    { icon: Facebook, url: config.facebookUrl },
-    { icon: Youtube, url: config.youtubeUrl },
-    { icon: Linkedin, url: config.linkedinUrl },
-    { icon: Video, url: config.tiktokUrl },
+    { icon: Instagram, url: config.instagramUrl, label: "Instagram" },
+    { icon: Facebook, url: config.facebookUrl, label: "Facebook" },
+    { icon: Youtube, url: config.youtubeUrl, label: "YouTube" },
+    { icon: Linkedin, url: config.linkedinUrl, label: "LinkedIn" },
+    { icon: Video, url: config.tiktokUrl, label: "TikTok" },
   ];
 
   return (
