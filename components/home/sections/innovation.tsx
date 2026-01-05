@@ -72,7 +72,8 @@ export const InnovationTeaser = ({ setPage }: { setPage: (p: string) => void }) 
                        <div className="bg-blue-900/20 p-4 rounded-xl border border-blue-500/20">
                           <p className="text-gray-400 text-xs mb-1">Active User</p>
                           <p className="text-white font-bold text-xl">1,240</p>
-                          <div className="mt-2 text-[10px] text-blue-400">Real-time</div>
+                          {/* UPDATED: Contrast Fix -> text-blue-300 instead of text-blue-400 */}
+                          <div className="mt-2 text-[10px] text-blue-300">Real-time</div>
                        </div>
                     </div>
 
@@ -80,7 +81,8 @@ export const InnovationTeaser = ({ setPage }: { setPage: (p: string) => void }) 
                        <div className="h-2 bg-gray-700 rounded-full w-full overflow-hidden">
                           <div className="h-full bg-blue-500 w-[70%]"></div>
                        </div>
-                       <div className="flex justify-between text-[10px] text-gray-500">
+                       {/* UPDATED: Contrast Fix -> text-gray-400 instead of text-gray-500 */}
+                       <div className="flex justify-between text-[10px] text-gray-400">
                           <span>System Load</span>
                           <span>70%</span>
                        </div>

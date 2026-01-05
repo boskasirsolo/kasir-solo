@@ -12,7 +12,7 @@ export const TrustStrip = () => (
                <User size={24} />
             </div>
             <div>
-               <h4 className="text-2xl md:text-3xl font-display font-bold text-white">500+</h4>
+               <p className="text-2xl md:text-3xl font-display font-bold text-white">500+</p>
                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Mitra Mesin Kasir</p>
             </div>
          </div>
@@ -21,7 +21,7 @@ export const TrustStrip = () => (
                <MapPin size={24} />
             </div>
             <div>
-               <h4 className="text-2xl md:text-3xl font-display font-bold text-white">34</h4>
+               <p className="text-2xl md:text-3xl font-display font-bold text-white">34</p>
                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Kirim se-Indonesia</p>
             </div>
          </div>
@@ -30,7 +30,7 @@ export const TrustStrip = () => (
                <Activity size={24} />
             </div>
             <div>
-               <h4 className="text-2xl md:text-3xl font-display font-bold text-white">99%</h4>
+               <p className="text-2xl md:text-3xl font-display font-bold text-white">99%</p>
                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Uptime Server</p>
             </div>
          </div>
@@ -39,7 +39,7 @@ export const TrustStrip = () => (
                <Clock size={24} />
             </div>
             <div>
-               <h4 className="text-2xl md:text-3xl font-display font-bold text-white">24/7</h4>
+               <p className="text-2xl md:text-3xl font-display font-bold text-white">24/7</p>
                <p className="text-xs text-gray-400 uppercase tracking-wider font-bold">Support Teknis</p>
             </div>
          </div>
