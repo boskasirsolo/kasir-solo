@@ -81,7 +81,7 @@ const AppContent = () => {
   const [jobs, setJobs] = useState<JobOpening[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Config State
+  // Config State (Default Values)
   const [config, setConfig] = useState<SiteConfig>({
     heroTitle: "MESIN KASIR SOLO",
     heroSubtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM.",
