@@ -130,7 +130,42 @@ const AppContent = () => {
         try {
             const { data: settingsData } = await supabase.from('site_settings').select('*').single();
             if (settingsData) {
-                setConfig(prev => ({ ...prev, ...settingsData }));
+                // MANUAL MAPPING: Snake Case (DB) -> Camel Case (App)
+                const mappedConfig: SiteConfig = {
+                    heroTitle: settingsData.hero_title,
+                    heroSubtitle: settingsData.hero_subtitle,
+                    aboutImage: settingsData.about_image,
+                    founderPortrait: settingsData.founder_portrait,
+                    sibosUrl: settingsData.sibos_url,
+                    qalamUrl: settingsData.qalam_url,
+                    companyLegalName: settingsData.company_legal_name,
+                    nibNumber: settingsData.nib_number,
+                    ahuNumber: settingsData.ahu_number,
+                    npwpNumber: settingsData.npwp_number,
+                    whatsappNumber: settingsData.whatsapp_number,
+                    emailAddress: settingsData.email_address,
+                    addressSolo: settingsData.address_solo,
+                    addressBlora: settingsData.address_blora,
+                    mapSoloLink: settingsData.map_solo_link,
+                    mapBloraLink: settingsData.map_blora_link,
+                    mapSoloEmbed: settingsData.map_solo_embed,
+                    mapBloraEmbed: settingsData.map_blora_embed,
+                    instagramUrl: settingsData.instagram_url,
+                    facebookUrl: settingsData.facebook_url,
+                    youtubeUrl: settingsData.youtube_url,
+                    tiktokUrl: settingsData.tiktok_url,
+                    linkedinUrl: settingsData.linkedin_url,
+                    googleAnalyticsId: settingsData.google_analytics_id,
+                    googleSearchConsoleCode: settingsData.google_search_console_code,
+                    timezone: settingsData.timezone,
+                    quotaOnsiteMax: settingsData.quota_onsite_max,
+                    quotaOnsiteUsed: settingsData.quota_onsite_used,
+                    quotaDigitalMax: settingsData.quota_digital_max,
+                    quotaDigitalUsed: settingsData.quota_digital_used
+                };
+                
+                // Merge with default config to ensure no undefined fields
+                setConfig(prev => ({ ...prev, ...mappedConfig }));
                 injectGoogleTags(settingsData.google_analytics_id, settingsData.google_search_console_code);
             }
         } catch (e) {
