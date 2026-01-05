@@ -8,17 +8,38 @@ export const useArticleReader = (content: string) => {
   const [activeHeadingId, setActiveHeadingId] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll Progress Tracking
-  const handleScroll = () => {
-    if (containerRef.current) {
-      const currentScroll = containerRef.current.scrollTop;
-      const scrollHeight = containerRef.current.scrollHeight;
-      const clientHeight = containerRef.current.clientHeight;
-      const height = scrollHeight - clientHeight;
-      setScrollPos(currentScroll);
-      setProgress(height > 0 ? (currentScroll / height) * 100 : 100);
+  // Scroll Progress Tracking (OPTIMIZED with requestAnimationFrame)
+  useEffect(() => {
+    let ticking = false;
+    const container = containerRef.current;
+
+    const handleScroll = () => {
+      if (!ticking && container) {
+        window.requestAnimationFrame(() => {
+          const currentScroll = container.scrollTop;
+          const scrollHeight = container.scrollHeight;
+          const clientHeight = container.clientHeight;
+          const height = scrollHeight - clientHeight;
+          
+          setScrollPos(currentScroll);
+          setProgress(height > 0 ? (currentScroll / height) * 100 : 100);
+          
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    if (container) {
+        container.addEventListener('scroll', handleScroll, { passive: true });
     }
-  };
+    
+    return () => {
+        if (container) {
+            container.removeEventListener('scroll', handleScroll);
+        }
+    };
+  }, []);
 
   // Content Block Parsing (Pagination inside reader)
   const READER_ITEMS_PER_PAGE = 30;
@@ -106,7 +127,6 @@ export const useArticleReader = (content: string) => {
     progress,
     scrollPos,
     containerRef,
-    handleScroll,
     currentBlocks,
     currentReaderPage,
     totalReaderPages,

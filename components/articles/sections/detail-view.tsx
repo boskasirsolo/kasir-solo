@@ -55,7 +55,7 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
 };
 
 export const ArticleReaderView = ({ article, onClose, products, allArticles }: ArticleDetailProps) => {
-  const { progress, scrollPos, containerRef, handleScroll, currentBlocks, currentReaderPage, totalReaderPages, handlePageChange, activeHeadingId, handleToCClick } = useArticleReader(article.content);
+  const { progress, scrollPos, containerRef, currentBlocks, currentReaderPage, totalReaderPages, handlePageChange, activeHeadingId, handleToCClick } = useArticleReader(article.content);
   
   const MAX_HEIGHT = 500; const MIN_HEIGHT = 80; 
   const currentHeaderHeight = Math.max(MIN_HEIGHT, MAX_HEIGHT - scrollPos);
@@ -72,7 +72,8 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles }: A
   return (
     <div className="fixed inset-0 z-[9999] bg-brand-black" aria-modal="true" role="dialog">
       <ReaderHeader article={article} progress={progress} currentHeight={currentHeaderHeight} maxHeight={MAX_HEIGHT} minHeight={MIN_HEIGHT} onClose={onClose} onWheelProxy={(e:any) => { if(containerRef.current) containerRef.current.scrollTop += e.deltaY; }} />
-      <div ref={containerRef} onScroll={handleScroll} className="h-full w-full overflow-y-auto custom-scrollbar relative bg-brand-black">
+      {/* Removed direct onScroll prop, handled by ref inside hook */}
+      <div ref={containerRef} className="h-full w-full overflow-y-auto custom-scrollbar relative bg-brand-black">
         <div style={{ height: `${MAX_HEIGHT}px` }} className="w-full bg-transparent pointer-events-none"></div>
         <div className="bg-brand-black relative z-10 border-t border-white/5 min-h-[100vh]">
             <div className="container mx-auto px-4 pb-20 max-w-7xl">
