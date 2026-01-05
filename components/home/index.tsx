@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { GalleryItem, Testimonial, SiteConfig } from '../../types';
-import { ProjectDetailModal } from '../gallery-modal';
+import { ProjectDetailModal } from '../gallery';
 import { useHomeLogic } from './logic';
 
 // Import Sections

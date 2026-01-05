@@ -9,7 +9,7 @@ import { LoadingSpinner } from './components/ui';
 import './index.css'; // Import compiled CSS
 
 // Component Imports (Eager Load Core Layout)
-import { Layout } from './components/layout';
+import { Layout } from './components/layout/index';
 
 // Lazy Load Pages to optimize initial bundle size
 const HomePage = lazy(() => import('./pages/home').then(module => ({ default: module.HomePage })));

@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { Article, Product } from '../../types';
 import { optimizeImage, formatRupiah } from '../../../utils';
 import { useCart } from '../../../context/cart-context';
-import { FlyingParticle } from '../../../components/shop-parts'; // Reuse existing from shop
+import { FlyingParticle } from '../../shop/ui/fly-animation';
 
 export const ArticleGridCard = ({ article, onClick }: { article: Article, onClick: () => void }) => (
   <div onClick={onClick} className="bg-brand-card border border-white/5 rounded-2xl overflow-hidden hover:border-brand-orange transition-all duration-300 hover:shadow-neon hover:-translate-y-2 cursor-pointer flex flex-col group h-full">

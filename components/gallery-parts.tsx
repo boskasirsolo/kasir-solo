@@ -1,3 +1,1 @@
-
-// DEPRECATED.
-// Moved to components/gallery/
+// DEPRECATED. SAFE TO DELETE.

@@ -1,3 +1,1 @@
-
-// DEPRECATED.
-// Moved to components/services/ui-parts.tsx
+// DEPRECATED. SAFE TO DELETE.
