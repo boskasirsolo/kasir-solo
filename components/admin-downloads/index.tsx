@@ -37,9 +37,9 @@ export const AdminDownloads = () => {
                         <div className="lg:col-span-7 h-full">
                             <DownloadList 
                                 state={dlLogic.listState} 
-                                onEdit={dlLogic.handleEditClick} 
-                                onDelete={dlLogic.deleteItem}
-                                onReset={dlLogic.resetForm}
+                                onEdit={dlLogic.actions.handleEditClick} 
+                                onDelete={dlLogic.actions.deleteItem}
+                                onReset={dlLogic.actions.resetForm}
                             />
                         </div>
                         <div className="lg:col-span-5 h-full">

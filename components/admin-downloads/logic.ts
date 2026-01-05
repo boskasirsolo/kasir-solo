@@ -58,7 +58,7 @@ export const useDownloadLogic = () => {
             Category: ${form.category}.
             Task: Generate 5 High-Potential Long-tail Keyword Titles.
             Metrics Requirement: Estimate Monthly Search Volume (Indonesia) & Competition.
-            Format: JSON Array of Objects: [{"title": "...", "volume": "1.2k/mo", "competition": "Low"}].
+            Format: JSON Array of Objects. Example: [{"title": "Driver Epson L3210 Windows 10", "volume": "1.2k/mo", "competition": "Low"}].
             Output: JUST the JSON Array.
             `;
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
@@ -139,8 +139,23 @@ export const useDownloadLogic = () => {
     const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
     return { 
-        form, setForm, contextInput, setContextInput, generatedTitles, setGeneratedTitles, uploadFile, setUploadFile, 
-        loading, aiLoading, researchTitles, generateDescription, handleSubmit, handleEditClick, resetForm, deleteItem, 
+        form, setForm, 
+        contextInput, setContextInput, 
+        generatedTitles, setGeneratedTitles, 
+        uploadFile, setUploadFile, 
+        loading, aiLoading, 
+        
+        // Grouped Actions for Editor compatibility
+        actions: {
+            researchTitles, 
+            generateDescription, 
+            handleSubmit, 
+            handleEditClick, 
+            resetForm, 
+            deleteItem,
+            setGeneratedTitles
+        },
+        
         listState: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm, totalItems: filtered.length } 
     };
 };
