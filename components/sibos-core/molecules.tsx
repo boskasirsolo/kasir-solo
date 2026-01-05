@@ -50,6 +50,7 @@ export const ChatHeader = ({
       onClick={onClear}
       className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-full transition-colors"
       title="Hapus Chat"
+      aria-label="Hapus Riwayat Chat"
     >
       <Eraser size={18} />
     </button>
@@ -128,6 +129,7 @@ export const ChatInputArea = ({
                 placeholder="Masukkan Password..."
                 disabled={disabled}
                 className="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none h-11 px-3 disabled:opacity-50"
+                aria-label="Input Password Admin"
             />
           ) : (
             <textarea
@@ -139,6 +141,7 @@ export const ChatInputArea = ({
                 className="w-full bg-transparent text-sm text-white placeholder-gray-500 resize-none outline-none max-h-24 py-3 px-3 custom-scrollbar disabled:opacity-50"
                 rows={1}
                 style={{ minHeight: '44px' }}
+                aria-label="Ketik pesan chat"
             />
           )}
         </div>
@@ -147,6 +150,7 @@ export const ChatInputArea = ({
         <button 
           onClick={onSend}
           disabled={!input.trim() || disabled}
+          aria-label="Kirim Pesan"
           // UPDATED: bg-brand-gradient for Send button
           className="p-3 bg-brand-gradient text-white rounded-xl hover:bg-brand-gradient-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-action"
         >

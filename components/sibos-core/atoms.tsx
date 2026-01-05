@@ -29,6 +29,7 @@ const parseCellContent = (text: string) => {
                      target="_blank" 
                      rel="noreferrer" 
                      className="text-blue-400 hover:text-blue-300 underline underline-offset-2 break-all inline-flex items-center gap-0.5"
+                     aria-label={`Link ke ${subPart}`}
                    >
                      {subPart} <ExternalLink size={10} />
                    </a>
@@ -165,6 +166,7 @@ export const SibosTrigger = ({
   // UPDATED: bg-brand-gradient for trigger button
   <button
     onClick={onClick}
+    aria-label={isOpen ? "Tutup Chat" : "Buka Chat dengan SIBOS AI"}
     className={`fixed bottom-6 right-6 z-[9990] w-14 h-14 rounded-full shadow-action-strong flex items-center justify-center transition-all duration-300 hover:scale-110 ${
       isOpen ? 'bg-brand-dark border border-brand-orange text-brand-orange' : 'bg-brand-gradient text-white'
     }`}
@@ -261,7 +263,11 @@ export const ImagePreview = ({
       </div>
       <span className="text-xs text-brand-orange font-bold truncate">Gambar terlampir</span>
     </div>
-    <button onClick={onRemove} className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-red-500 transition-colors">
+    <button 
+      onClick={onRemove} 
+      aria-label="Hapus gambar"
+      className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-red-500 transition-colors"
+    >
       <X size={16} />
     </button>
   </div>
