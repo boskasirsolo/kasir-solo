@@ -5,7 +5,6 @@ import { GalleryItem, Testimonial } from '../../types';
 import { Button } from '../../ui';
 import { optimizeImage } from '../../../utils';
 
-// --- ATOM: Combined Card (Project + Testimonial) ---
 const CombinedCard = ({ 
   item, 
   testimonial, 
@@ -18,20 +17,16 @@ const CombinedCard = ({
   return (
     <div 
       onClick={() => onClick(item)}
-      className="w-[350px] md:w-[450px] shrink-0 flex flex-col gap-4 group/container cursor-pointer"
+      className="w-[300px] md:w-[450px] shrink-0 flex flex-col gap-4 group/container cursor-pointer"
     >
-      {/* TOP: Project Card */}
-      <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 group-hover/container:border-brand-orange transition-all shadow-lg group-hover/container:shadow-neon">
+      <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/10 group-hover/container:border-brand-orange transition-all shadow-lg group-hover/container:shadow-neon bg-gray-900">
           <img 
-            src={optimizeImage(item.image_url, 400)} // Optimized for card size
+            src={optimizeImage(item.image_url, 400)} 
             alt={item.title} 
             className="w-full h-full object-cover transition-transform duration-700 group-hover/container:scale-105"
             loading="lazy" 
           />
-          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
-          
-          {/* Content Overlay */}
           <div className="absolute bottom-5 left-5 right-5">
               <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase mb-3 border ${item.category_type === 'physical' ? 'bg-brand-orange text-white border-brand-orange' : 'bg-blue-600 text-white border-blue-500'}`}>
                 {item.category_type === 'physical' ? 'Mesin Kasir' : 'Software'}
@@ -45,17 +40,13 @@ const CombinedCard = ({
           </div>
       </div>
 
-      {/* BOTTOM: Testimonial Card */}
       <div className="bg-brand-card/80 backdrop-blur-sm border border-white/5 rounded-xl p-5 relative mt-auto hover:bg-brand-card transition-colors">
-          {/* Quote Icon */}
           <div className="absolute -top-3 left-6 bg-brand-dark p-1 rounded-full border border-white/10 text-brand-orange">
              <Quote size={16} fill="currentColor" />
           </div>
-          
-          <p className="text-gray-400 text-sm italic mb-4 leading-relaxed line-clamp-2">
+          <p className="text-gray-400 text-sm italic mb-4 leading-relaxed line-clamp-2 min-h-[40px]">
              "{testimonial.content}"
           </p>
-          
           <div className="flex items-center gap-3 pt-3 border-t border-white/5">
               <div className="w-8 h-8 rounded-full bg-brand-dark border border-brand-orange/30 overflow-hidden flex items-center justify-center shrink-0">
                  {testimonial.image_url ? (
@@ -78,7 +69,6 @@ const CombinedCard = ({
   );
 };
 
-// --- SECTION: Gallery Marquee ---
 export const GalleryMarquee = ({
     featuredGallery,
     getTestimonialForProject,
@@ -90,7 +80,20 @@ export const GalleryMarquee = ({
     onProjectClick: (item: GalleryItem) => void,
     onViewAll: () => void
 }) => {
-    if (featuredGallery.length === 0) return null;
+    // CLS FIX: Render empty space/skeleton if data not ready yet
+    if (featuredGallery.length === 0) {
+        return (
+            <section className="py-24 bg-brand-black border-t border-white/5 min-h-[600px] flex items-center justify-center">
+                <div className="w-full max-w-4xl px-4 text-center">
+                    <div className="h-10 w-64 bg-white/5 rounded-lg mx-auto mb-4 animate-pulse"></div>
+                    <div className="h-4 w-96 bg-white/5 rounded-lg mx-auto mb-12 animate-pulse"></div>
+                    <div className="flex gap-4 overflow-hidden opacity-50">
+                        {[1,2,3].map(i => <div key={i} className="w-[300px] h-[200px] bg-white/5 rounded-2xl animate-pulse"></div>)}
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="py-24 bg-brand-black border-t border-white/5 relative overflow-hidden">
