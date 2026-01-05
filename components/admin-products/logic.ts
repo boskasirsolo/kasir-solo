@@ -6,7 +6,7 @@ import { ProductFormState, LoadingState, PRODUCT_CATEGORIES } from './types';
 import { MerchantAI } from '../../services/ai/merchant';
 import { VisionAI } from '../../services/ai/vision';
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 8;
 
 export const useProductLogic = (products: Product[], setProducts: (p: Product[]) => void) => {
     const [form, setForm] = useState<ProductFormState>({
