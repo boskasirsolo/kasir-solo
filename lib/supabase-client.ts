@@ -3,9 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 import { CONFIG } from '../config/env';
 
 // Helper to validate URL structure to prevent "ERR_NAME_NOT_RESOLVED" in console
+// Also checks if it looks like a valid Supabase project URL or localhost
 const isValidUrl = (urlString: string) => {
   try { 
-    return Boolean(new URL(urlString)); 
+    const url = new URL(urlString);
+    // Basic check: must be http/https and have a hostname
+    if (!url.protocol.startsWith('http') || !url.hostname) return false;
+    
+    // Filter out obvious placeholders
+    if (url.hostname.includes('placeholder') || url.hostname.includes('your-project')) return false;
+    
+    return true; 
   } catch(e) { 
     return false; 
   }
@@ -23,6 +31,7 @@ export const supabase = (
       auth: {
         persistSession: true,
         autoRefreshToken: true,
+        detectSessionInUrl: true
       },
       // Retry configuration to reduce console noise on network blips
       global: {

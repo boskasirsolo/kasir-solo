@@ -6,14 +6,14 @@ import { CartItem } from '../../types';
 import { Button } from '../ui';
 
 // --- ATOM: Cart Item Row ---
-export const CartItemRow = ({ 
-    item, 
-    onUpdateQty, 
-    onRemove 
-}: { 
+export const CartItemRow: React.FC<{ 
     item: CartItem, 
     onUpdateQty: (id: number, delta: number) => void, 
     onRemove: (id: number) => void 
+}> = ({ 
+    item, 
+    onUpdateQty, 
+    onRemove 
 }) => (
     <div className="flex gap-4 p-4 bg-brand-card border border-white/5 rounded-xl items-center">
         <div className="w-20 h-20 bg-black rounded-lg shrink-0 overflow-hidden border border-white/10">

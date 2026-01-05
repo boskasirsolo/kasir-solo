@@ -16,9 +16,9 @@ interface OrderCardProps {
     config: SiteConfig;
 }
 
-export const OrderCard = ({ 
+export const OrderCard: React.FC<OrderCardProps> = ({ 
     order, expanded, onToggle, items, onStatusUpdate, onShippingUpdate, config 
-}: OrderCardProps) => {
+}) => {
     const copyId = (e: React.MouseEvent) => {
         e.stopPropagation();
         navigator.clipboard.writeText(order.id.toString());

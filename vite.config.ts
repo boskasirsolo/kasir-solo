@@ -9,12 +9,7 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['lucide-react'],
-          supabase: ['@supabase/supabase-js'],
-          genai: ['@google/genai']
-        }
+        manualChunks: undefined // Let Vite handle chunk splitting automatically for better reliability
       }
     }
   }

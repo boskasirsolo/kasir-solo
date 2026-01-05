@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { FAQ } from '../../types';
 
-export const FaqItem = ({ item }: { item: FAQ }) => {
+export const FaqItem: React.FC<{ item: FAQ }> = ({ item }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="border border-white/5 rounded-lg bg-brand-card/30 overflow-hidden mb-2">

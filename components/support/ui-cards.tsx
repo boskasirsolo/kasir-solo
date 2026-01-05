@@ -14,7 +14,7 @@ export const getCategoryColor = (category: string) => {
     }
 };
 
-export const DownloadCard = ({ item, onClick }: { item: DownloadItem, onClick: () => void }) => {
+export const DownloadCard: React.FC<{ item: DownloadItem, onClick: () => void }> = ({ item, onClick }) => {
   const getIcon = () => {
     switch (item.category) {
       case 'driver': return <HardDrive size={20} className="text-blue-400" />;
@@ -53,7 +53,7 @@ export const DownloadCard = ({ item, onClick }: { item: DownloadItem, onClick: (
   );
 };
 
-export const VideoCard = ({ item }: { item: Tutorial }) => (
+export const VideoCard: React.FC<{ item: Tutorial }> = ({ item }) => (
     <a 
         href={item.video_url} 
         target="_blank" 

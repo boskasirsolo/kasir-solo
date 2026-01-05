@@ -39,6 +39,10 @@
           "value": "max-age=63072000; includeSubDomains; preload"
         },
         {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
+        },
+        {
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh https://*.googletagmanager.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.cloudinary.com https://image.pollinations.ai https://*.google-analytics.com https://*.googleapis.com https://generativelanguage.googleapis.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; frame-src 'self' https://*.google.com https://*.youtube.com; object-src 'none'; base-uri 'self'; upgrade-insecure-requests;"
         }

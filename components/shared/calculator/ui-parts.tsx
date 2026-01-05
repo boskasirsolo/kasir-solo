@@ -15,14 +15,14 @@ export const CalcHeader = ({ title, subtitle }: { title: string, subtitle: strin
   </div>
 );
 
-export const BaseOptionItem = ({ 
-    option, 
-    isSelected, 
-    onSelect 
-}: { 
+export const BaseOptionItem: React.FC<{ 
     option: CalcOption, 
     isSelected: boolean, 
     onSelect: () => void 
+}> = ({ 
+    option, 
+    isSelected, 
+    onSelect 
 }) => (
     <div 
         onClick={onSelect}
@@ -44,14 +44,14 @@ export const BaseOptionItem = ({
     </div>
 );
 
-export const AddonOptionItem = ({ 
-    option, 
-    isSelected, 
-    onToggle 
-}: { 
+export const AddonOptionItem: React.FC<{ 
     option: CalcOption, 
     isSelected: boolean, 
     onToggle: () => void 
+}> = ({ 
+    option, 
+    isSelected, 
+    onToggle 
 }) => (
     <div 
         onClick={onToggle}

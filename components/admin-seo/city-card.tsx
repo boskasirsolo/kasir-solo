@@ -4,14 +4,14 @@ import { ExternalLink, Edit, Trash2 } from 'lucide-react';
 import { CityTarget } from './types';
 import { CityTypeBadge } from './ui-atoms';
 
-export const CityCard = ({ 
-    city, 
-    onEdit, 
-    onDelete 
-}: { 
+export const CityCard: React.FC<{ 
     city: CityTarget, 
     onEdit: (c: CityTarget) => void, 
     onDelete: (id: number) => void 
+}> = ({ 
+    city, 
+    onEdit, 
+    onDelete 
 }) => {
     return (
         <div className="group bg-brand-card border border-white/5 p-4 rounded-xl hover:border-brand-orange/50 transition-all relative flex flex-col h-full">
