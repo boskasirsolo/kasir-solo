@@ -21,6 +21,9 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         whyBuyStr: '',
         imagePreview: '',
         uploadFile: null,
+        galleryImages: [],
+        newGalleryFiles: [],
+        videoUrl: '',
         affiliateLink: '',
         ctaText: 'Beli Sekarang'
     });
@@ -50,6 +53,7 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         setForm({
             id: null, name: '', category: PRODUCT_CATEGORIES[0], price: '', desc: '', shortDesc: '',
             specsStr: '', includesStr: '', whyBuyStr: '', imagePreview: '', uploadFile: null,
+            galleryImages: [], newGalleryFiles: [], videoUrl: '',
             affiliateLink: '', ctaText: 'Beli Sekarang'
         });
         setUseWatermark(true);
@@ -72,6 +76,9 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             whyBuyStr: whyBuyString,
             imagePreview: p.image,
             uploadFile: null,
+            galleryImages: p.gallery_images || [],
+            newGalleryFiles: [],
+            videoUrl: p.video_url || '',
             affiliateLink: p.affiliate_link || '',
             ctaText: p.cta_text || 'Beli Sekarang'
         });
@@ -159,19 +166,18 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         setLoading(p => ({ ...p, uploading: true }));
 
         try {
+            // 1. Handle Main Image
             let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/400';
             let supabasePath = '';
             let fileToMigrate = form.uploadFile;
 
             if (form.uploadFile) {
-                // 1. Watermark
                 if (useWatermark) {
                     setLoading(p => ({ ...p, processingImage: true }));
                     fileToMigrate = await addWatermarkToFile(form.uploadFile);
                     setLoading(p => ({ ...p, processingImage: false }));
                 }
 
-                // 2. Upload to Supabase (Temp)
                 if (supabase && fileToMigrate) {
                     const seoName = `${slugify(form.name)}-mesin-kasir`;
                     const renamedFile = renameFile(fileToMigrate, seoName);
@@ -181,7 +187,30 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 }
             }
 
-            // Parse text areas
+            // 2. Handle Gallery Images (Multiple)
+            const newGalleryUrls: string[] = [];
+            if (form.newGalleryFiles.length > 0) {
+                if (useWatermark) setLoading(p => ({ ...p, processingImage: true }));
+                
+                const uploadPromises = form.newGalleryFiles.map(async (file, idx) => {
+                    let f = file;
+                    if (useWatermark) f = await addWatermarkToFile(f);
+                    const seoName = `${slugify(form.name)}-gallery-${idx+1}`;
+                    const renamed = renameFile(f, seoName);
+                    if (supabase) {
+                        const { url } = await uploadToSupabase(renamed, 'products');
+                        return url;
+                    }
+                    return null;
+                });
+
+                const results = await Promise.all(uploadPromises);
+                if (useWatermark) setLoading(p => ({ ...p, processingImage: false }));
+                results.forEach(url => { if (url) newGalleryUrls.push(url); });
+            }
+            const finalGallery = [...form.galleryImages, ...newGalleryUrls];
+
+            // 3. Parse text areas
             const specsObj: Record<string, string> = {};
             if (form.specsStr) {
                 form.specsStr.split('\n').forEach(line => {
@@ -192,12 +221,15 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             const includesArr = form.includesStr ? form.includesStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
             const whyBuyArr = form.whyBuyStr ? form.whyBuyStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
 
+            // 4. Construct DB Data
             const dbData = {
                 name: form.name,
                 price: cleanNumberInput(form.price),
                 category: form.category,
                 description: form.desc,
                 image_url: finalImageUrl,
+                gallery_images: finalGallery,
+                video_url: form.videoUrl,
                 specs: specsObj,
                 package_includes: includesArr,
                 why_buy: whyBuyArr,
@@ -219,7 +251,7 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 }
             }
 
-            // Background Migration to Cloudinary
+            // Background Migration to Cloudinary (Cover Only for now to save bandwidth)
             if (supabasePath && fileToMigrate && savedId) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'products', savedId, 'image_url');
             }

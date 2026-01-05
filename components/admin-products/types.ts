@@ -11,9 +11,13 @@ export interface ProductFormState {
     specsStr: string;
     includesStr: string;
     whyBuyStr: string;
-    imagePreview: string;
+    imagePreview: string; // Cover
     uploadFile: File | null;
-    // New Affiliate Fields
+    // New Media Fields
+    galleryImages: string[];
+    newGalleryFiles: File[];
+    videoUrl: string;
+    // Affiliate Fields
     affiliateLink: string;
     ctaText: string;
 }

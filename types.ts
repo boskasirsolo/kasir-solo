@@ -6,6 +6,9 @@ export interface Product {
   category: string;
   description: string;
   image: string;
+  // NEW: Multiple Images & Video
+  gallery_images?: string[]; 
+  video_url?: string;
   // NEW: Affiliate / External Link Support
   affiliate_link?: string;
   cta_text?: string; // Custom button text e.g., "Beli di Shopee"
