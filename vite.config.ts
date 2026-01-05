@@ -9,40 +9,43 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     cssCodeSplit: true,
-    minify: 'esbuild', // Gunakan esbuild untuk minifikasi cepat
+    minify: 'esbuild', // Esbuild sudah sangat cepat dan efisien
     target: 'es2020',
-    modulePreload: false, // MATIKAN PRELOAD OTOMATIS: Mencegah browser mendownload chunk lazy (Admin/AI) di awal.
+    modulePreload: false, // MATIKAN PRELOAD: Sangat penting untuk mencegah download chunk Admin/AI di awal.
     esbuild: {
-      drop: ['console', 'debugger'], // Hapus console.log di production untuk mengurangi ukuran
+      drop: ['console', 'debugger'], // Hapus log untuk ukuran lebih kecil
     },
     rollupOptions: {
       output: {
-        // Smart Chunking Strategy - Optimized for Reduced Depth
+        // Smart Chunking Strategy
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // Core Essentials (React + Router + Utils + UI Icons)
-            // Grouping these reduces the number of initial requests
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('scheduler') || id.includes('lucide-react')) {
+            // Core React (Wajib load di awal)
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('scheduler')) {
               return 'vendor-core';
             }
-            // Supabase (Large, heavy, distinct)
+            // Supabase (Berat, dipisah)
             if (id.includes('@supabase')) {
               return 'vendor-supabase';
             }
-            // AI SDKs (Very heavy, must be isolated)
+            // AI SDKs (Sangat berat, wajib isolasi total)
             if (id.includes('@google/genai')) {
               return 'vendor-ai';
             }
-            // Remaining libs (small utilities)
+            // Lucide Icons (Pisahkan agar tidak masuk core, biar tree-shaking berjalan per-file jika memungkinkan)
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            // Sisa libs lainnya
             return 'vendor-libs';
           }
           
-          // Split Admin Pages (Security & Performance: Ordinary users don't need this)
+          // Split Admin Pages (Security & Performance)
           if (id.includes('/pages/admin') || id.includes('/components/admin')) {
             return 'feature-admin';
           }
           
-          // Split Shop Logic (Optional, keep if Shop is heavy)
+          // Split Shop Logic
           if (id.includes('/components/shop')) {
             return 'feature-shop';
           }
