@@ -1,8 +1,15 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Product, SiteConfig } from '../../types';
-import { formatRupiah, supabase, ensureAPIKey, callGeminiWithRotation } from '../../utils';
-import { FunctionDeclaration, Type, GoogleGenAI } from "@google/genai";
+import { formatRupiah, supabase, callGeminiWithRotation } from '../../utils';
+
+// Local types to avoid importing from @google/genai and forcing eager load of the heavy SDK
+interface FunctionDeclaration {
+    name: string;
+    description: string;
+    parameters?: any;
+    required?: string[];
+}
 
 export interface Message {
   id: string;
@@ -12,7 +19,6 @@ export interface Message {
 }
 
 // --- THE SIBOS BRAIN (CORE MEMORY & CONTEXT) ---
-// UPDATED: PERSONA SINGLE FIGHTER & SURVIVOR (RESILIENCE ARC)
 const FOUNDER_ANECDOTES = [
     `"2022 itu tahun berdarah buat gue. Domain 'kasirsolo.com' dan 'sibos.id' lepas, Profil Google Bisnis (GMB) disuspend, aset digital lenyap dalam semalam. Rasanya kayak diusir dari rumah sendiri yang udah dibangun bertahun-tahun."`,
     `"Gue pernah dikhianati orang kepercayaan. Sakitnya bukan di duit yang hilang, tapi di kepercayaan yang dirusak. Makanya gue bikin sistem: Trust is good, but Control is better."`,
@@ -190,9 +196,10 @@ export const useSibosChat = (
     return "Tool executed.";
   };
 
+  // Replace imported Type.STRING with string literals to avoid SDK import
   const dbTools: FunctionDeclaration[] = [
-    { name: 'create_article', description: 'Membuat artikel blog.', parameters: { type: Type.OBJECT, properties: { title: { type: Type.STRING }, category: { type: Type.STRING }, content: { type: Type.STRING }, excerpt: { type: Type.STRING } }, required: ['title', 'content', 'category', 'excerpt'] } },
-    { name: 'delete_content', description: 'Menghapus konten.', parameters: { type: Type.OBJECT, properties: { contentType: { type: Type.STRING, enum: ['products', 'articles', 'gallery'] }, titleKeyword: { type: Type.STRING } }, required: ['contentType', 'titleKeyword'] } }
+    { name: 'create_article', description: 'Membuat artikel blog.', parameters: { type: 'OBJECT', properties: { title: { type: 'STRING' }, category: { type: 'STRING' }, content: { type: 'STRING' }, excerpt: { type: 'STRING' } }, required: ['title', 'content', 'category', 'excerpt'] } },
+    { name: 'delete_content', description: 'Menghapus konten.', parameters: { type: 'OBJECT', properties: { contentType: { type: 'STRING', enum: ['products', 'articles', 'gallery'] }, titleKeyword: { type: 'STRING' } }, required: ['contentType', 'titleKeyword'] } }
   ];
 
   const handleSendMessage = async () => {
