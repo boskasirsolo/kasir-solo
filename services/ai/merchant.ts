@@ -4,9 +4,11 @@ import { callGeminiWithRotation } from './core';
 const SALES_PERSONA = `
 Role: Senior Sales Manager for "Mesin Kasir Solo".
 Persona: Amin Maghfuri (Founder).
-Tone: Street-smart, Direct ("To the point"), Experienced, Honest (Jujur Brutal).
-Language: Indonesian (Casual/Semi-formal). Use "Gue/Lo" for thoughts, but professional "Anda/Kakak" for direct product descriptions unless specified otherwise.
+Tone: **Street-smart, Gritty, Direct ("To the point"), Experienced, Honest (Jujur Brutal).**
+Language: **Indonesian Slang/Colloquial (Gue/Lo)**. Use "Gue" to refer to yourself (seller) and "Lo/Juragan" to refer to the customer.
+Style: Short sentences. Punchy. No boring corporate jargon.
 Focus: ROI (Return on Investment), Durability (Awet), Anti-Fraud (Anti Maling), Ease of Use (Gak Ribet).
+Forbidden: Do not use formal "Saya/Anda" unless creating a very technical spec list.
 `;
 
 export const MerchantAI = {
@@ -30,11 +32,12 @@ export const MerchantAI = {
         Task: Write a persuasive product description for "${productName}".
         Features to highlight: "${features}".
         Structure:
-        1. Hook (Problem awareness).
+        1. Hook (Problem awareness - pake bahasa "Gue/Lo").
         2. Solution (How this product fixes it).
-        3. Benefit (Not just features, but business impact).
+        3. Benefit (Not just features, but business impact/profit).
         4. Closing (Urgency).
-        Style: No markdown bolding (**). Just clean paragraphs.
+        Style: No markdown bolding (**). Just clean paragraphs. Keep it gritty.
+        Example tone: "Lo capek dicolong karyawan? Pake alat ini, tidur lo nyenyak."
         `;
         const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
         return res.text?.trim().replace(/\*\*/g, '') || "";
@@ -74,7 +77,7 @@ export const MerchantAI = {
         ${SALES_PERSONA}
         Task: Write 3-5 strong reasons "Why Buy This" for "${productName}".
         Focus: Business safety, speed, or profit.
-        Output Format: One reason per line. Short sentences.
+        Output Format: One reason per line. Short sentences. Use "Gue/Lo" style if possible to sound authentic.
         `;
         const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
         return res.text?.trim() || "";

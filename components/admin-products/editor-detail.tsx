@@ -75,13 +75,13 @@ export const EditorDetail = ({
                     />
                 </div>
 
-            </div>
+                {/* ACTION BUTTON (INSIDE SCROLL) */}
+                <div className="pt-2 pb-4">
+                    <Button onClick={actions.handleSubmit} disabled={loading.uploading || loading.processingImage} className="w-full py-3 text-xs font-bold shadow-neon">
+                        {loading.processingImage ? <><LoadingSpinner/> Watermarking...</> : loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={14}/> UPDATE PRODUK</> : <><Plus size={14}/> SIMPAN PRODUK</>)}
+                    </Button>
+                </div>
 
-            {/* STICKY FOOTER WITH ACTION BUTTON */}
-            <div className="p-4 border-t border-white/5 bg-brand-dark shrink-0">
-                <Button onClick={actions.handleSubmit} disabled={loading.uploading || loading.processingImage} className="w-full py-3 text-xs font-bold shadow-neon">
-                    {loading.processingImage ? <><LoadingSpinner/> Watermarking...</> : loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={14}/> UPDATE PRODUK</> : <><Plus size={14}/> SIMPAN PRODUK</>)}
-                </Button>
             </div>
         </div>
     );
