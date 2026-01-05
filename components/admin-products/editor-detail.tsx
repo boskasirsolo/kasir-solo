@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { List, Scale, ThumbsUp, AlignLeft } from 'lucide-react';
-import { TextArea } from '../ui';
+import { List, Scale, ThumbsUp, AlignLeft, Save, Plus } from 'lucide-react';
+import { TextArea, Button, LoadingSpinner } from '../ui';
 import { FieldHeader } from './atoms';
 
 export const EditorDetail = ({ 
     form, 
     setForm, 
     loading, 
-    aiActions 
+    aiActions,
+    actions
 }: any) => {
     return (
         <div className="bg-brand-dark rounded-xl border border-white/5 shadow-2xl flex flex-col h-full overflow-hidden">
@@ -21,18 +22,7 @@ export const EditorDetail = ({
 
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-6">
                 
-                {/* DESCRIPTION */}
-                <div>
-                    <FieldHeader label="Deskripsi (Sales Copy)" onAI={aiActions.generateDesc} loading={loading.generatingDesc} />
-                    <TextArea 
-                        value={form.desc} 
-                        onChange={e => setForm((p:any) => ({...p, desc: e.target.value}))} 
-                        placeholder="Deskripsi persuasif..." 
-                        className="h-32 text-[10px] leading-relaxed custom-scrollbar whitespace-pre-line" 
-                    />
-                </div>
-
-                {/* SPECS */}
+                {/* 1. SPECS */}
                 <div>
                     <FieldHeader label="Spesifikasi Teknis" onAI={aiActions.generateSpecs} loading={loading.generatingSpecs} />
                     <div className="relative">
@@ -46,7 +36,7 @@ export const EditorDetail = ({
                     </div>
                 </div>
 
-                {/* INCLUDES */}
+                {/* 2. INCLUDES */}
                 <div>
                     <FieldHeader label="Paket Termasuk" onAI={aiActions.generateIncludes} loading={loading.generatingIncludes} />
                     <div className="relative">
@@ -60,7 +50,7 @@ export const EditorDetail = ({
                     </div>
                 </div>
 
-                {/* WHY BUY */}
+                {/* 3. WHY BUY */}
                 <div>
                     <FieldHeader label="Kenapa Harus Beli?" onAI={aiActions.generateWhyBuy} loading={loading.generatingWhyBuy} />
                     <div className="relative">
@@ -74,6 +64,24 @@ export const EditorDetail = ({
                     </div>
                 </div>
 
+                {/* 4. DESCRIPTION (MOVED TO BOTTOM) */}
+                <div>
+                    <FieldHeader label="Deskripsi (Sales Copy)" onAI={aiActions.generateDesc} loading={loading.generatingDesc} />
+                    <TextArea 
+                        value={form.desc} 
+                        onChange={e => setForm((p:any) => ({...p, desc: e.target.value}))} 
+                        placeholder="Deskripsi persuasif..." 
+                        className="h-32 text-[10px] leading-relaxed custom-scrollbar whitespace-pre-line" 
+                    />
+                </div>
+
+            </div>
+
+            {/* STICKY FOOTER (MOVED FROM BASIC EDITOR) */}
+            <div className="p-4 border-t border-white/5 bg-brand-dark shrink-0">
+                <Button onClick={actions.handleSubmit} disabled={loading.uploading || loading.processingImage} className="w-full py-3 text-xs font-bold shadow-neon">
+                    {loading.processingImage ? <><LoadingSpinner/> Watermarking...</> : loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={14}/> UPDATE PRODUK</> : <><Plus size={14}/> SIMPAN PRODUK</>)}
+                </Button>
             </div>
         </div>
     );

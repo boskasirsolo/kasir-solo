@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
-import { Tag, Edit, ImageIcon, UploadCloud, ShieldCheck, Wand2, Sparkles, DollarSign, Filter, Save, Plus, X as XIcon, Link as LinkIcon, ExternalLink, Grid, PlayCircle, FolderOpen } from 'lucide-react';
-import { Input, LoadingSpinner, Button } from '../ui';
+import { Tag, Edit, ImageIcon, UploadCloud, ShieldCheck, Wand2, Sparkles, DollarSign, Filter, X as XIcon, Link as LinkIcon, ExternalLink, Grid, PlayCircle, FolderOpen } from 'lucide-react';
+import { Input, LoadingSpinner } from '../ui';
 import { formatNumberInput } from '../../utils';
 import { PRODUCT_CATEGORIES } from './types';
 import { Label, FieldHeader } from './atoms';
@@ -85,33 +85,39 @@ export const EditorBasic = ({
                     </div>
                 </div>
 
-                {/* 2. PRODUCT GALLERY (MULTIPLE) */}
+                {/* 2. PRODUCT GALLERY (MULTIPLE - HORIZONTAL SCROLL) */}
                 <div className="space-y-2">
                     <div className="flex justify-between items-center">
                         <Label icon={Grid}>Galeri Tambahan</Label>
                         <span className="text-[9px] text-gray-500">{form.galleryImages.length + form.newGalleryFiles.length} foto</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-2">
-                        {form.galleryImages.map((url: string, idx: number) => (
-                            <div key={`ex-${idx}`} className="relative aspect-square rounded bg-black border border-white/10 group">
-                                <img src={url} className="w-full h-full object-cover rounded" />
-                                <button onClick={() => setForm((p:any) => ({...p, galleryImages: p.galleryImages.filter((_:any, i:number) => i !== idx)}))} className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><XIcon size={10}/></button>
-                            </div>
-                        ))}
-                        {form.newGalleryFiles.map((file: File, idx: number) => (
-                            <div key={`new-${idx}`} className="relative aspect-square rounded bg-black border border-green-500/30">
-                                <img src={URL.createObjectURL(file)} className="w-full h-full object-cover rounded opacity-80" />
-                                <button onClick={() => setForm((p:any) => ({...p, newGalleryFiles: p.newGalleryFiles.filter((_:any, i:number) => i !== idx)}))} className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full p-0.5"><XIcon size={10}/></button>
-                            </div>
-                        ))}
-                        <div className="relative aspect-square rounded bg-white/5 border border-dashed border-white/20 hover:border-brand-orange/50 cursor-pointer flex flex-col items-center justify-center text-gray-500 hover:text-brand-orange transition-colors gap-1 group">
-                            <Plus size={14} />
-                            <div className="flex gap-1 absolute inset-0 opacity-0 group-hover:opacity-100 bg-black/80 items-center justify-center">
+                    
+                    <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                        {/* Add Button */}
+                        <div className="relative w-20 h-20 shrink-0 rounded-lg bg-white/5 border border-dashed border-white/20 hover:border-brand-orange/50 cursor-pointer flex flex-col items-center justify-center text-gray-500 hover:text-brand-orange transition-colors gap-1 group">
+                            <div className="flex gap-1 absolute inset-0 opacity-0 group-hover:opacity-100 bg-black/80 items-center justify-center rounded-lg z-10 transition-opacity">
                                 <button onClick={() => galleryInputRef.current?.click()} className="p-1.5 bg-white/10 rounded hover:bg-white/20 text-white" title="Upload"><UploadCloud size={12}/></button>
                                 <button onClick={() => openMediaLib('gallery')} className="p-1.5 bg-brand-orange/20 rounded hover:bg-brand-orange/30 text-brand-orange" title="Pilih Media"><FolderOpen size={12}/></button>
                             </div>
+                            <span className="text-2xl font-light">+</span>
                             <input type="file" multiple accept="image/*" ref={galleryInputRef} className="hidden" onChange={handleGalleryUpload} />
                         </div>
+
+                        {/* Existing Images */}
+                        {form.galleryImages.map((url: string, idx: number) => (
+                            <div key={`ex-${idx}`} className="relative w-20 h-20 shrink-0 rounded-lg bg-black border border-white/10 group">
+                                <img src={url} className="w-full h-full object-cover rounded-lg" />
+                                <button onClick={() => setForm((p:any) => ({...p, galleryImages: p.galleryImages.filter((_:any, i:number) => i !== idx)}))} className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><XIcon size={10}/></button>
+                            </div>
+                        ))}
+                        
+                        {/* New Files */}
+                        {form.newGalleryFiles.map((file: File, idx: number) => (
+                            <div key={`new-${idx}`} className="relative w-20 h-20 shrink-0 rounded-lg bg-black border border-green-500/30 group">
+                                <img src={URL.createObjectURL(file)} className="w-full h-full object-cover rounded-lg opacity-80" />
+                                <button onClick={() => setForm((p:any) => ({...p, newGalleryFiles: p.newGalleryFiles.filter((_:any, i:number) => i !== idx)}))} className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full p-0.5"><XIcon size={10}/></button>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -208,13 +214,6 @@ export const EditorBasic = ({
                     </div>
                 </div>
 
-            </div>
-
-            {/* STICKY FOOTER */}
-            <div className="p-4 border-t border-white/5 bg-brand-dark shrink-0">
-                <Button onClick={actions.handleSubmit} disabled={loading.uploading || loading.processingImage} className="w-full py-3 text-xs font-bold shadow-neon">
-                    {loading.processingImage ? <><LoadingSpinner/> Watermarking...</> : loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={14}/> UPDATE PRODUK</> : <><Plus size={14}/> SIMPAN PRODUK</>)}
-                </Button>
             </div>
         </div>
     );

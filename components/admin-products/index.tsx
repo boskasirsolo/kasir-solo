@@ -43,6 +43,7 @@ export const AdminProducts = ({
             setForm={setForm}
             loading={loading}
             aiActions={aiActions}
+            actions={actions}
          />
       </div>
 
