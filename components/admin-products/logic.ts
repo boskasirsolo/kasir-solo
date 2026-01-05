@@ -141,7 +141,8 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         setLoading(p => ({ ...p, generatingImage: true }));
         try {
             const seed = Math.floor(Math.random() * 999999);
-            const prompt = `${form.name} ${form.category} modern point of sale hardware, white background, high quality, realistic`;
+            // ENHANCED PROMPT FOR PRODUCTS
+            const prompt = `Professional product photography of ${form.name} (${form.category}), modern sleek design, high tech hardware, studio lighting, white background, 4k ultra realistic, --no text`;
             const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=800&model=flux&nologo=true&seed=${seed}`;
             
             const res = await fetch(url);
