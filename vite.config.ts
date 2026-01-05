@@ -8,35 +8,45 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    cssCodeSplit: true, // Ensure CSS is also split per chunk
+    cssCodeSplit: true,
+    minify: 'esbuild', // Gunakan esbuild untuk minifikasi cepat
+    target: 'es2020',
+    esbuild: {
+      drop: ['console', 'debugger'], // Hapus console.log di production untuk mengurangi ukuran
+    },
     rollupOptions: {
       output: {
-        // Smart Chunking Strategy to reduce main thread blocking
+        // Smart Chunking Strategy
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // Core React Bundle
+            // Core React (Stable, jarang berubah)
             if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('scheduler')) {
               return 'vendor-react';
             }
-            // Supabase Client (Heavy)
+            // Supabase (Berat, dipisah)
             if (id.includes('@supabase')) {
               return 'vendor-supabase';
             }
-            // Lucide Icons (Very Heavy if not tree-shaken perfectly)
+            // Lucide Icons (Berat jika tidak tree-shaken, pisahkan agar tidak memblokir render utama)
             if (id.includes('lucide-react')) {
               return 'vendor-icons';
             }
-            // AI SDKs (Isolate them)
+            // AI SDKs (Sangat berat, wajib isolasi)
             if (id.includes('@google/genai')) {
               return 'vendor-ai';
             }
-            // Other smaller libs
+            // Sisa libs lainnya
             return 'vendor-libs';
           }
           
-          // Group Admin Components to prevent them from leaking into client-side bundles
-          if (id.includes('/components/admin') || id.includes('/pages/admin')) {
+          // Split Admin Pages agar tidak diload user biasa
+          if (id.includes('/pages/admin') || id.includes('/components/admin')) {
             return 'feature-admin';
+          }
+          
+          // Split Shop Logic
+          if (id.includes('/components/shop')) {
+            return 'feature-shop';
           }
         }
       }
