@@ -11,7 +11,7 @@ import { AdminProducts } from '../../admin-products/index';
 import { AdminGallery } from '../../admin-gallery/index'; 
 import { AdminSettings } from '../../admin-settings/index'; 
 import { AdminOrders } from '../../admin-orders/index'; 
-import { AdminArticles } from '../../admin-articles/index';
+import { AdminArticles } from '../../admin-articles/index'; // Updated import to be explicit
 import { AdminCareer } from '../../admin-career/index'; 
 import { AdminDownloads } from '../../admin-downloads/index'; 
 import { AdminSocialStudio } from '../../admin-social/index'; 
