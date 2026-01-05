@@ -44,6 +44,30 @@ const PageLoader = () => (
   </div>
 );
 
+// --- SKELETON HOME (MATCHES INDEX.HTML APP SHELL) ---
+const SkeletonHome = () => (
+  <div className="min-h-screen flex flex-col bg-brand-black text-white font-sans overflow-hidden">
+    {/* Nav Skeleton */}
+    <nav className="h-[76px] border-b border-white/5 flex items-center justify-between px-5 fixed top-0 w-full z-50 bg-brand-black/90 backdrop-blur-md">
+       <div className="w-[160px] h-[40px] bg-white/10 rounded-lg animate-pulse"></div>
+       <div className="hidden md:flex gap-5">
+          {[1,2,3,4].map(i => <div key={i} className="w-[80px] h-[16px] bg-white/5 rounded animate-pulse"></div>)}
+       </div>
+    </nav>
+    {/* Hero Skeleton */}
+    <div className="flex-1 flex flex-col items-center justify-center text-center px-5 gap-6 mt-[60px] relative overflow-hidden">
+       <div className="absolute top-[20%] right-[10%] w-[300px] h-[300px] rounded-full bg-brand-orange/15 blur-[80px] -z-10"></div>
+       <div className="w-[220px] h-[32px] bg-brand-orange/10 rounded-full border border-brand-orange/20 animate-pulse"></div>
+       <div className="w-[80%] max-w-[600px] h-[70px] bg-white/10 rounded-xl animate-pulse"></div>
+       <div className="w-[60%] max-w-[450px] h-[24px] bg-white/5 rounded animate-pulse"></div>
+       <div className="flex gap-4 mt-2">
+          <div className="w-[160px] h-[50px] bg-white/10 rounded-xl animate-pulse"></div>
+          <div className="w-[160px] h-[50px] bg-white/5 rounded-xl animate-pulse"></div>
+       </div>
+    </div>
+  </div>
+);
+
 const AppContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -279,12 +303,8 @@ const AppContent = () => {
   }, []);
 
   if (isInitializing) {
-      return (
-          <div className="min-h-screen bg-brand-black flex flex-col items-center justify-center gap-4">
-              <LoadingSpinner size={48} className="text-brand-orange" />
-              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest animate-pulse">Memuat Sistem...</p>
-          </div>
-      );
+      // RENDERING SKELETON INSTEAD OF SPINNER FOR SEAMLESS TRANSITION
+      return <SkeletonHome />;
   }
 
   // --- FILTER: AUTO-PUBLISH LOGIC (Uses Live `currentTime`) ---
