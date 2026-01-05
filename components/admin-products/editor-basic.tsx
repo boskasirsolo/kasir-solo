@@ -1,6 +1,6 @@
 
 import React, { useRef } from 'react';
-import { Tag, Edit, ImageIcon, UploadCloud, ShieldCheck, Wand2, Sparkles, DollarSign, Filter, Save, Plus, X as XIcon } from 'lucide-react';
+import { Tag, Edit, ImageIcon, UploadCloud, ShieldCheck, Wand2, Sparkles, DollarSign, Filter, Save, Plus, X as XIcon, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { Input, LoadingSpinner, Button } from '../ui';
 import { formatNumberInput } from '../../utils';
 import { PRODUCT_CATEGORIES } from './types';
@@ -123,6 +123,31 @@ export const EditorBasic = ({
                                 className="pl-8 py-2 text-xs font-mono" 
                             />
                         </div>
+                    </div>
+                </div>
+
+                {/* 6. AFFILIATE / EXTERNAL LINK (NEW) */}
+                <div className="bg-blue-500/10 p-3 rounded-lg border border-blue-500/20">
+                    <Label icon={LinkIcon} className="text-blue-400 mb-2">Link Affiliate / Marketplace (Opsional)</Label>
+                    <div className="space-y-2">
+                        <div className="relative">
+                            <ExternalLink size={12} className="absolute left-2.5 top-2.5 text-gray-500"/>
+                            <input 
+                                value={form.affiliateLink} 
+                                onChange={e => setForm((p:any) => ({...p, affiliateLink: e.target.value}))} 
+                                placeholder="https://tokopedia.com/..." 
+                                className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-2 py-2 text-xs text-white focus:outline-none focus:border-blue-500 placeholder-gray-600"
+                            />
+                        </div>
+                        <input 
+                            value={form.ctaText} 
+                            onChange={e => setForm((p:any) => ({...p, ctaText: e.target.value}))} 
+                            placeholder="Text Tombol (Default: Beli Sekarang)" 
+                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 placeholder-gray-600"
+                        />
+                        <p className="text-[9px] text-gray-500 leading-tight">
+                            *Jika diisi, tombol 'Beli' akan mengarah ke link ini (bukan masuk keranjang).
+                        </p>
                     </div>
                 </div>
 

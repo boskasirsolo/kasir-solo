@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ArrowLeft, Tag, Check, ShoppingCart, MessageCircle, ThumbsUp, ShieldCheck, Zap, PackageOpen } from 'lucide-react';
+import { X, ArrowLeft, Tag, Check, ShoppingCart, MessageCircle, ThumbsUp, ShieldCheck, Zap, PackageOpen, ExternalLink } from 'lucide-react';
 import { Product, SiteConfig } from '../../types';
 import { optimizeImage, formatRupiah } from '../../../utils';
 import { useCart } from '../../../context/cart-context';
@@ -76,7 +76,15 @@ export const ProductDetailView = ({ product, onClose, isModal = false, config }:
   const [isAnimating, setIsAnimating] = useState(false);
   const waNumber = config?.whatsappNumber || "6282325103336";
   
+  const isExternal = !!product.affiliate_link;
+  const buyButtonLabel = product.cta_text || (isExternal ? 'Beli di Marketplace' : 'ANGKUT SEKARANG');
+
   const handleAddToCart = () => {
+    if (isExternal && product.affiliate_link) {
+        window.open(product.affiliate_link, '_blank');
+        return;
+    }
+
     setIsAnimating(true);
     addToCart(product);
     setTimeout(() => { setIsAnimating(false); if(isModal) onClose(); }, 500);
@@ -100,8 +108,16 @@ export const ProductDetailView = ({ product, onClose, isModal = false, config }:
             </div>
             <div className="p-6 md:p-8 pt-2 mt-auto shrink-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button onClick={handleAddToCart} className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${isAnimating ? 'bg-green-500 text-white' : 'bg-brand-gradient hover:bg-brand-gradient-hover text-white'}`}>
-                        {isAnimating ? <Check size={20} /> : <ShoppingCart size={20} />} {isAnimating ? "Berhasil" : "ANGKUT SEKARANG"}
+                    <button 
+                        onClick={handleAddToCart} 
+                        className={`flex items-center justify-center w-full py-4 rounded-xl font-bold transition-all shadow-action hover:shadow-action-strong gap-2 ${
+                            isAnimating ? 'bg-green-500 text-white' : 
+                            isExternal ? 'bg-blue-600 hover:bg-blue-500 text-white' :
+                            'bg-brand-gradient hover:bg-brand-gradient-hover text-white'
+                        }`}
+                    >
+                        {isAnimating ? <Check size={20} /> : (isExternal ? <ExternalLink size={20}/> : <ShoppingCart size={20} />)} 
+                        {isAnimating ? "Berhasil" : buyButtonLabel}
                     </button>
                     <a href={`https://wa.me/${waNumber}?text=Halo Mas Amin, saya mau nego/tanya detail produk: ${product.name}.`} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full py-4 border border-brand-orange hover:bg-brand-orange text-white rounded-xl font-bold transition-all gap-2 hover:shadow-neon">
                         <MessageCircle size={20} /> NEGO HARGA

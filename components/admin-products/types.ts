@@ -13,6 +13,9 @@ export interface ProductFormState {
     whyBuyStr: string;
     imagePreview: string;
     uploadFile: File | null;
+    // New Affiliate Fields
+    affiliateLink: string;
+    ctaText: string;
 }
 
 export interface LoadingState {

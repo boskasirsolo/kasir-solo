@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ShoppingCart, Check, Scale } from 'lucide-react';
+import { ShoppingCart, Check, Scale, ExternalLink } from 'lucide-react';
 import { Product } from '../../types';
 import { Badge, Card } from '../../ui';
 import { formatRupiah, optimizeImage } from '../../../utils';
@@ -34,6 +34,13 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: ProductCar
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation(); 
+    
+    // External Link Handling
+    if (product.affiliate_link) {
+        window.open(product.affiliate_link, '_blank');
+        return;
+    }
+
     if (isAnimating) return;
 
     const cartBtnDesktop = document.getElementById('desktop-cart-btn');
@@ -51,6 +58,9 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: ProductCar
       addToCart(product);
     }
   };
+
+  const isExternal = !!product.affiliate_link;
+  const buyButtonLabel = isExternal ? (product.cta_text || 'Beli') : 'Beli';
 
   return (
     <>
@@ -77,10 +87,20 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: ProductCar
         <button 
             ref={buttonRef} 
             onClick={handleAddToCart} 
-            className={`col-span-1 py-2 rounded-lg font-bold flex items-center justify-center transition-all group/btn ${isAdded ? 'bg-green-500 text-white shadow-lg scale-95' : 'bg-brand-gradient text-white hover:bg-brand-gradient-hover hover:shadow-action'}`}
-            title="Angkut Barang Ini"
+            className={`col-span-1 py-2 rounded-lg font-bold flex items-center justify-center transition-all group/btn ${
+                isAdded 
+                ? 'bg-green-500 text-white shadow-lg scale-95' 
+                : isExternal 
+                    ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg'
+                    : 'bg-brand-gradient text-white hover:bg-brand-gradient-hover hover:shadow-action'
+            }`}
+            title={isExternal ? `Buka Link: ${buyButtonLabel}` : "Angkut Barang Ini"}
         >
-            {isAdded ? <Check size={16} /> : <ShoppingCart size={18} className={isAnimating ? "animate-spin" : "group-hover/btn:scale-125 transition-transform"}/>}
+            {isAdded ? <Check size={16} /> : (
+                isExternal 
+                ? <ExternalLink size={16} />
+                : <ShoppingCart size={18} className={isAnimating ? "animate-spin" : "group-hover/btn:scale-125 transition-transform"}/>
+            )}
         </button>
       </div>
     </>

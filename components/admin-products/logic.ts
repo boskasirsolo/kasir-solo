@@ -18,7 +18,9 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         includesStr: '',
         whyBuyStr: '',
         imagePreview: '',
-        uploadFile: null
+        uploadFile: null,
+        affiliateLink: '',
+        ctaText: 'Beli Sekarang'
     });
 
     const [loading, setLoading] = useState<LoadingState>({
@@ -45,7 +47,8 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
     const resetForm = () => {
         setForm({
             id: null, name: '', category: PRODUCT_CATEGORIES[0], price: '', desc: '', shortDesc: '',
-            specsStr: '', includesStr: '', whyBuyStr: '', imagePreview: '', uploadFile: null
+            specsStr: '', includesStr: '', whyBuyStr: '', imagePreview: '', uploadFile: null,
+            affiliateLink: '', ctaText: 'Beli Sekarang'
         });
         setUseWatermark(true);
     };
@@ -66,7 +69,9 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             includesStr: includesString,
             whyBuyStr: whyBuyString,
             imagePreview: p.image,
-            uploadFile: null
+            uploadFile: null,
+            affiliateLink: p.affiliate_link || '',
+            ctaText: p.cta_text || 'Beli Sekarang'
         });
     };
 
@@ -199,7 +204,9 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 image_url: finalImageUrl,
                 specs: specsObj,
                 package_includes: includesArr,
-                why_buy: whyBuyArr
+                why_buy: whyBuyArr,
+                affiliate_link: form.affiliateLink,
+                cta_text: form.ctaText
             };
 
             let savedId = form.id;

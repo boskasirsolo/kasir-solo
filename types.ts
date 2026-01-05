@@ -6,6 +6,9 @@ export interface Product {
   category: string;
   description: string;
   image: string;
+  // NEW: Affiliate / External Link Support
+  affiliate_link?: string;
+  cta_text?: string; // Custom button text e.g., "Beli di Shopee"
   // NEW: Technical Specifications for Comparison
   specs?: {
     [key: string]: string; // Flexible key-value pairs (e.g., "RAM": "4GB")
