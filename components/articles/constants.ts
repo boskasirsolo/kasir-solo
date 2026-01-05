@@ -17,4 +17,4 @@ export const CATEGORY_TREE = [
   }
 ];
 
-export const ITEMS_PER_PAGE = 9;
+export const ITEMS_PER_PAGE = 8;
