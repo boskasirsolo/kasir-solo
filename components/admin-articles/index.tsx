@@ -33,10 +33,10 @@ export const AdminArticles = ({
   };
 
   return (
-    <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
+    <div className="flex flex-col lg:flex-row h-auto lg:h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
       
       {/* 1. LEFT PANEL: List & Filter & Persona (25%) */}
-      <div className="w-[25%] border-r border-white/5 min-w-[280px]">
+      <div className="w-full lg:w-[25%] h-[500px] lg:h-full border-r-0 lg:border-r border-b lg:border-b-0 border-white/5 min-w-[280px]">
          <ListPanel 
             articles={articles}
             logic={{ ...filterLogic, actions: { 
@@ -51,7 +51,7 @@ export const AdminArticles = ({
       </div>
 
       {/* 2. MIDDLE PANEL: Command Center (25%) */}
-      <div className="w-[25%] border-r border-white/5 min-w-[300px]">
+      <div className="w-full lg:w-[25%] h-[400px] lg:h-full border-r-0 lg:border-r border-b lg:border-b-0 border-white/5 min-w-[300px]">
          <EditorPanel 
             form={form}
             setForm={manager.setForm}
@@ -69,10 +69,10 @@ export const AdminArticles = ({
       </div>
 
       {/* 3. RIGHT PANEL: The Canvas & Publishing (50%) */}
-      <div className="w-[50%] bg-black flex flex-col relative overflow-hidden">
+      <div className="w-full lg:w-[50%] h-[700px] lg:h-full bg-black flex flex-col relative overflow-hidden">
          
          {/* Top Bar: Title & Meta Controls */}
-         <div className="p-6 border-b border-white/5 bg-brand-dark/50 backdrop-blur-sm z-10 sticky top-0 flex flex-col gap-6">
+         <div className="p-4 md:p-6 border-b border-white/5 bg-brand-dark/50 backdrop-blur-sm z-10 sticky top-0 flex flex-col gap-4 md:gap-6 shrink-0">
             
             {/* Title Editor */}
             <input 
@@ -80,14 +80,14 @@ export const AdminArticles = ({
                 value={form.title}
                 onChange={(e) => manager.setForm((p:any) => ({...p, title: e.target.value}))}
                 placeholder="Judul Artikel (H1)..."
-                className="w-full bg-transparent text-3xl font-display font-bold text-white placeholder-gray-600 outline-none"
+                className="w-full bg-transparent text-xl md:text-3xl font-display font-bold text-white placeholder-gray-600 outline-none"
             />
 
             {/* Meta Row: Image & Author */}
-            <div className="flex gap-6 items-start">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
                 
                 {/* Cover Image Control */}
-                <div className="group relative w-32 h-20 bg-black/40 rounded-lg overflow-hidden border border-white/10 shrink-0">
+                <div className="group relative w-32 h-20 bg-black/40 rounded-lg overflow-hidden border border-white/10 shrink-0 hidden sm:block">
                     {form.imagePreview ? (
                         <img src={form.imagePreview} alt="Cover" className="w-full h-full object-cover" />
                     ) : (
@@ -108,13 +108,13 @@ export const AdminArticles = ({
                 </div>
 
                 {/* Author Info */}
-                <div className="flex-1">
+                <div className="flex-1 w-full sm:w-auto">
                     <div className="flex items-center gap-2 mb-1">
                         <img src={form.authorAvatar || 'https://via.placeholder.com/30'} className="w-6 h-6 rounded-full border border-white/20 object-cover" />
                         <span className="text-sm font-bold text-gray-300">{form.author}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                        {/* EDITABLE PUBLISH DATE (Previously static) */}
+                    <div className="flex items-center gap-3 text-xs text-gray-500 w-full">
+                        {/* EDITABLE PUBLISH DATE */}
                         <input 
                             value={form.date} 
                             onChange={(e) => manager.setForm((p:any) => ({...p, date: e.target.value}))}
@@ -131,10 +131,10 @@ export const AdminArticles = ({
                 </div>
 
                 {/* Publish Controls (Top Right) */}
-                <div className="flex flex-col gap-2 items-end">
+                <div className="flex flex-col gap-2 items-end w-full sm:w-auto">
                     
-                    <div className="flex items-center gap-2">
-                        {/* SCHEDULE INPUT (MOVED TO LEFT) */}
+                    <div className="flex items-center gap-2 justify-end w-full">
+                        {/* SCHEDULE INPUT */}
                         {form.status === 'scheduled' && (
                             <input 
                                 type="datetime-local" 
@@ -160,7 +160,7 @@ export const AdminArticles = ({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 justify-end w-full">
                         {/* REGENERATE BUTTON (AI) */}
                         {form.content.length > 50 && (
                             <button 
@@ -182,7 +182,7 @@ export const AdminArticles = ({
          </div>
          
          {/* Live Editor Area */}
-         <div id="live-editor-area" className="flex-grow overflow-y-auto custom-scrollbar p-8 relative">
+         <div id="live-editor-area" className="flex-grow overflow-y-auto custom-scrollbar p-4 md:p-8 relative">
             <LiveEditor 
                 content={form.content} 
                 onChange={(newContent) => manager.setForm((prev: any) => ({ ...prev, content: newContent }))}
@@ -193,18 +193,18 @@ export const AdminArticles = ({
             {aiLogic.loading.generatingText && aiLogic.loading.progressMessage && (
                 <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-50 animate-fade-in backdrop-blur-sm">
                     <Loader2 size={40} className="text-brand-orange animate-spin mb-4"/>
-                    <p className="text-white font-bold text-lg animate-pulse">{aiLogic.loading.progressMessage}</p>
+                    <p className="text-white font-bold text-lg animate-pulse text-center px-4">{aiLogic.loading.progressMessage}</p>
                     <p className="text-gray-500 text-xs mt-2">Generating deep long-form content...</p>
                 </div>
             )}
          </div>
 
          {/* Bottom Status Bar */}
-         <div className="p-2 bg-brand-dark border-t border-white/5 flex justify-between items-center text-[10px] text-gray-500 px-4">
+         <div className="p-2 bg-brand-dark border-t border-white/5 flex justify-between items-center text-[10px] text-gray-500 px-4 shrink-0">
             <div className="flex gap-4">
                 <span>Words: {form.content.split(/\s+/).length}</span>
-                <span>Blocks: {form.content.split('\n\n').length}</span>
-                {config.timezone && <span className="text-brand-orange">Timezone: {config.timezone}</span>}
+                <span className="hidden sm:inline">Blocks: {form.content.split('\n\n').length}</span>
+                {config.timezone && <span className="text-brand-orange hidden sm:inline">Timezone: {config.timezone}</span>}
             </div>
             {form.status === 'draft' && (
                 <div className="flex items-center gap-2 text-yellow-500">

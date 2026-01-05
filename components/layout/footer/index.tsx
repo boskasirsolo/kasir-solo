@@ -7,7 +7,7 @@ import { FooterColumn, ContactItem } from './molecules';
 import { SectionTitle } from './atoms';
 
 export const FooterContainer: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
-  <footer className="bg-brand-dark border-t border-white/5 py-16 mt-20 relative overflow-hidden">
+  <footer className="bg-brand-dark border-t border-white/5 py-12 md:py-16 mt-20 relative overflow-hidden">
     {/* Decorative Top Line */}
     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-transparent via-brand-orange to-transparent shadow-neon opacity-70"></div>
     
@@ -45,7 +45,7 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
 
   return (
     <FooterContainer>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-x-4 md:gap-y-8 lg:gap-8">
         
         {/* 1. Brand Section */}
         <BrandColumn 
@@ -61,7 +61,7 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
         <FooterColumn title="Perusahaan & Support" links={companyLinks} />
 
         {/* 4. Contact Section */}
-        <div className="col-span-2 lg:col-span-1">
+        <div className="col-span-1 md:col-span-1 lg:col-span-1">
           <SectionTitle>Hubungi Kami</SectionTitle>
           <ul className="space-y-5">
             <ContactItem 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { GalleryItem, Testimonial } from '../../types';
 import { useGalleryLogic } from './logic';
@@ -19,15 +20,15 @@ export const AdminGallery = ({
   } = useGalleryLogic(gallery, setGallery, testimonials, setTestimonials);
 
   return (
-    <div className="flex h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
+    <div className="flex flex-col lg:flex-row h-auto lg:h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
       
       {/* COLUMN 1: LIST (25%) */}
-      <div className="w-[25%] min-w-[280px] border-r border-white/5">
+      <div className="w-full lg:w-[25%] h-[400px] lg:h-full border-r-0 lg:border-r border-b lg:border-b-0 border-white/5 min-w-[280px]">
           <ListPanel state={listState} actions={actions} activeId={form.id} />
       </div>
 
       {/* COLUMN 2: EDITOR (40%) */}
-      <div className="w-[40%] min-w-[350px] border-r border-white/5">
+      <div className="w-full lg:w-[40%] h-[600px] lg:h-full border-r-0 lg:border-r border-b lg:border-b-0 border-white/5 min-w-[350px]">
           <EditorPanel 
              form={form} setForm={setForm}
              testiForm={testiForm} setTestiForm={setTestiForm}
@@ -38,7 +39,7 @@ export const AdminGallery = ({
       </div>
 
       {/* COLUMN 3: PREVIEW (35%) */}
-      <div className="w-[35%] min-w-[300px]">
+      <div className="w-full lg:w-[35%] h-[400px] lg:h-full min-w-[300px]">
           <PreviewPanel form={form} testiForm={testiForm} />
       </div>
 

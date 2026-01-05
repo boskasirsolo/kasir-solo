@@ -16,15 +16,15 @@ export const AdminProducts = ({
   const { form, setForm, loading, useWatermark, setUseWatermark, listState, actions, aiActions } = useProductLogic(products, setProducts);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start h-[850px]">
+    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start h-auto lg:h-[850px]">
       
       {/* COLUMN 1: LIST (40%) */}
-      <div className="lg:col-span-4 h-full">
+      <div className="lg:col-span-4 h-[500px] lg:h-full">
          <ListPanel state={listState} actions={actions} />
       </div>
       
       {/* COLUMN 2: BASIC EDITOR (30%) */}
-      <div className="lg:col-span-3 h-full">
+      <div className="lg:col-span-3 h-auto lg:h-full">
          <EditorBasic 
             form={form} 
             setForm={setForm} 
@@ -37,7 +37,7 @@ export const AdminProducts = ({
       </div>
 
       {/* COLUMN 3: DETAIL EDITOR (30%) */}
-      <div className="lg:col-span-3 h-full">
+      <div className="lg:col-span-3 h-auto lg:h-full">
          <EditorDetail 
             form={form}
             setForm={setForm}

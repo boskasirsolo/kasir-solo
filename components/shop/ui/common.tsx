@@ -4,15 +4,15 @@ import { Search, PackageOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '../../ui';
 
 export const ShopHero = () => (
-  <div className="text-left mb-8 md:mb-0">
+  <div className="text-left mb-6 md:mb-0">
     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-orange/30 bg-brand-orange/10 mb-4">
         <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span>
         <span className="text-[10px] font-bold text-brand-orange uppercase tracking-widest">Ready Stock</span>
     </div>
-    <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
+    <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">
       Pilih <span className="text-brand-orange">Senjata Lo.</span>
     </h2>
-    <p className="text-gray-400 text-lg leading-relaxed max-w-xl">
+    <p className="text-gray-400 text-sm md:text-lg leading-relaxed max-w-xl">
       Jangan asal beli murah. Ini investasi jangka panjang. <br className="hidden md:block"/>
       Pilih mesin yang tahan banting buat ngadepin ribuan transaksi.
     </p>

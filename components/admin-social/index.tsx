@@ -27,10 +27,10 @@ export const AdminSocialStudio = ({
 
     // --- RENDER ---
     return (
-        <div className="flex flex-col h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
+        <div className="flex flex-col h-auto lg:h-[850px] border-t border-white/5 bg-brand-black overflow-hidden rounded-xl border-b shadow-2xl">
             
             {/* MODE SWITCHER HEADER */}
-            <div className="flex items-center gap-4 p-2 bg-black/40 border-b border-white/10">
+            <div className="flex items-center gap-4 p-2 bg-black/40 border-b border-white/10 shrink-0">
                 <button 
                     onClick={() => setStudioMode('single')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${studioMode === 'single' ? 'bg-brand-orange text-white' : 'text-gray-500 hover:text-white'}`}
@@ -47,15 +47,15 @@ export const AdminSocialStudio = ({
 
             {/* MODE CONTENT */}
             {studioMode === 'calendar' ? (
-                <div className="flex-1 p-4">
+                <div className="flex-1 p-4 h-[700px] lg:h-auto">
                     <ContentCalendar />
                 </div>
             ) : (
-                <div className="flex flex-1 overflow-hidden">
+                <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
                     {/* PANE 1: SOURCE PICKER (25%) */}
-                    <div className="w-[25%] min-w-[280px] border-r border-white/5 bg-brand-dark/50 flex flex-col">
+                    <div className="w-full lg:w-[25%] min-w-[280px] h-[400px] lg:h-full border-r-0 lg:border-r border-b lg:border-b-0 border-white/5 bg-brand-dark/50 flex flex-col">
                         {/* Header Filter */}
-                        <div className="p-4 border-b border-white/5 space-y-3">
+                        <div className="p-4 border-b border-white/5 space-y-3 shrink-0">
                             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">1. Pilih Konten (Source)</h3>
                             <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
                                 {['all', 'product', 'service', 'article', 'gallery'].map(type => (
@@ -102,7 +102,7 @@ export const AdminSocialStudio = ({
 
                         {/* Pagination Controls */}
                         {state.totalSourcePages > 1 && (
-                            <div className="p-3 border-t border-white/5 flex justify-between items-center bg-black/20">
+                            <div className="p-3 border-t border-white/5 flex justify-between items-center bg-black/20 shrink-0">
                                 <button 
                                     onClick={() => setters.setSourcePage(Math.max(1, state.sourcePage - 1))}
                                     disabled={state.sourcePage === 1}
@@ -125,7 +125,7 @@ export const AdminSocialStudio = ({
                     </div>
 
                     {/* PANE 2: COMPOSER (45%) */}
-                    <div className="flex-1 border-r border-white/5 bg-brand-dark flex flex-col relative">
+                    <div className="w-full lg:flex-1 h-[600px] lg:h-full border-r-0 lg:border-r border-b lg:border-b-0 border-white/5 bg-brand-dark flex flex-col relative">
                         {/* Overlay if no item selected */}
                         {!state.selectedItem && (
                             <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center backdrop-blur-sm">
@@ -134,7 +134,7 @@ export const AdminSocialStudio = ({
                         )}
 
                         {/* Platform Toggles */}
-                        <div className="p-4 border-b border-white/5 flex flex-col gap-2 bg-black/20">
+                        <div className="p-4 border-b border-white/5 flex flex-col gap-2 bg-black/20 shrink-0">
                             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">2. Target Platform</h3>
                             <div className="flex gap-2 flex-wrap">
                                 {ALL_PLATFORMS.map(plat => (
@@ -178,8 +178,8 @@ export const AdminSocialStudio = ({
                                         onChange={(e) => e.target.files?.[0] && actions.handleImageUpload(e.target.files[0])}
                                     />
                                 </div>
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-white text-sm mb-1">{state.selectedItem?.title}</h4>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-white text-sm mb-1 truncate">{state.selectedItem?.title}</h4>
                                     <p className="text-[10px] text-gray-500 line-clamp-2">{state.selectedItem?.description}</p>
                                     <button 
                                         onClick={() => fileInputRef.current?.click()}
@@ -227,7 +227,7 @@ export const AdminSocialStudio = ({
                             </div>
 
                             {/* Caption Tabs - SCROLLABLE HEADER */}
-                            <div className="flex flex-col h-[400px]">
+                            <div className="flex flex-col h-[300px] lg:h-[400px]">
                                 <div className="flex gap-1 border-b border-white/10 overflow-x-auto custom-scrollbar pb-1">
                                     <button
                                         onClick={() => setters.setActiveTab('master')}
@@ -268,21 +268,23 @@ export const AdminSocialStudio = ({
                     </div>
 
                     {/* PANE 3: PREVIEW (30%) */}
-                    <div className="w-[30%] min-w-[320px] bg-black/80 flex flex-col border-l border-white/5">
-                        <div className="p-4 border-b border-white/5 text-center">
+                    <div className="w-full lg:w-[30%] min-w-[320px] h-[500px] lg:h-full bg-black/80 flex flex-col border-l border-white/5">
+                        <div className="p-4 border-b border-white/5 text-center shrink-0">
                             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">3. Preview & Launch</h3>
                         </div>
 
-                        <div className="flex-1 flex items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+                        <div className="flex-1 flex items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] overflow-hidden">
                             {/* Toggle Preview View based on active tab or first active platform */}
-                            <PhoneMockup 
-                                image={state.customImage || state.selectedItem?.image || ''}
-                                caption={state.captions[state.activeTab === 'master' ? 'instagram' : state.activeTab]} // Fallback to IG style for master preview
-                                platform={state.activeTab === 'master' ? 'instagram' : state.activeTab}
-                            />
+                            <div className="scale-75 lg:scale-90 transform origin-center">
+                                <PhoneMockup 
+                                    image={state.customImage || state.selectedItem?.image || ''}
+                                    caption={state.captions[state.activeTab === 'master' ? 'instagram' : state.activeTab]} // Fallback to IG style for master preview
+                                    platform={state.activeTab === 'master' ? 'instagram' : state.activeTab}
+                                />
+                            </div>
                         </div>
 
-                        <div className="p-6 border-t border-white/5 bg-brand-dark">
+                        <div className="p-6 border-t border-white/5 bg-brand-dark shrink-0">
                             <button 
                                 onClick={actions.broadcastPost}
                                 disabled={state.isLoading.posting || !state.selectedItem}
