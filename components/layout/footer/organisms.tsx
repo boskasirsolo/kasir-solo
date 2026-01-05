@@ -14,8 +14,8 @@ export const BrandColumn = ({
   config: SiteConfig
 }) => (
   <div className="col-span-2 lg:col-span-1 space-y-6">
-    <div>
-      <h3 className="text-2xl font-display font-bold text-white mb-2">PT MESIN KASIR SOLO</h3>
+    <div className="min-h-[50px] flex flex-col justify-center">
+      <h3 className="text-2xl font-display font-bold text-white mb-2 leading-none">PT MESIN KASIR SOLO</h3>
       <div className="h-1 w-12 bg-brand-orange rounded-full"></div>
     </div>
     <p className="text-gray-400 text-sm leading-relaxed">

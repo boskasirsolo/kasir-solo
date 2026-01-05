@@ -6,6 +6,7 @@ import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_
 import { Product, Article, GalleryItem, SiteConfig, Testimonial, JobOpening } from './types';
 import { CartProvider } from './context/cart-context';
 import { LoadingSpinner } from './components/ui';
+import './index.css'; // Import compiled CSS
 
 // Component Imports (Eager Load Core Layout)
 import { Layout } from './components/layout';

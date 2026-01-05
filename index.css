@@ -1,0 +1,44 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-brand-black text-gray-200 font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0f0f0f; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #FF5F1F; }
+
+/* HIDE NUMBER INPUT SPINNERS (CHROME/SAFARI/EDGE) */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* HIDE NUMBER INPUT SPINNERS (FIREFOX) */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* ERROR SUPPRESSOR (Anti-Overlay) */
+iframe[style*="z-index: 2147483647"], 
+#webpack-dev-server-client-overlay-div, 
+.react-error-overlay { 
+  display: none !important; 
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* Map Embed Container */
+.iframe-map-container iframe {
+  filter: grayscale(100%) invert(100%) contrast(80%);
+}
