@@ -64,7 +64,7 @@ export const EditorDetail = ({
                     </div>
                 </div>
 
-                {/* 4. DESCRIPTION (MOVED TO BOTTOM) */}
+                {/* 4. DESCRIPTION (MOVED TO BOTTOM AS REQUESTED) */}
                 <div>
                     <FieldHeader label="Deskripsi (Sales Copy)" onAI={aiActions.generateDesc} loading={loading.generatingDesc} />
                     <TextArea 
@@ -77,7 +77,7 @@ export const EditorDetail = ({
 
             </div>
 
-            {/* STICKY FOOTER (MOVED FROM BASIC EDITOR) */}
+            {/* STICKY FOOTER WITH ACTION BUTTON */}
             <div className="p-4 border-t border-white/5 bg-brand-dark shrink-0">
                 <Button onClick={actions.handleSubmit} disabled={loading.uploading || loading.processingImage} className="w-full py-3 text-xs font-bold shadow-neon">
                     {loading.processingImage ? <><LoadingSpinner/> Watermarking...</> : loading.uploading ? <LoadingSpinner /> : (form.id ? <><Save size={14}/> UPDATE PRODUK</> : <><Plus size={14}/> SIMPAN PRODUK</>)}

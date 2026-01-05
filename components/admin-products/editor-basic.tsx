@@ -1,6 +1,6 @@
 
 import React, { useRef, useState } from 'react';
-import { Tag, Edit, ImageIcon, UploadCloud, ShieldCheck, Wand2, Sparkles, DollarSign, Filter, X as XIcon, Link as LinkIcon, ExternalLink, Grid, PlayCircle, FolderOpen } from 'lucide-react';
+import { Tag, Edit, ImageIcon, UploadCloud, ShieldCheck, Wand2, Sparkles, DollarSign, Filter, X as XIcon, Link as LinkIcon, ExternalLink, PlayCircle, FolderOpen, RefreshCw } from 'lucide-react';
 import { Input, LoadingSpinner } from '../ui';
 import { formatNumberInput } from '../../utils';
 import { PRODUCT_CATEGORIES } from './types';
@@ -56,54 +56,57 @@ export const EditorBasic = ({
 
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-5">
                 
-                {/* 1. COVER IMAGE */}
+                {/* 1. MEDIA VISUAL (COVER + GALLERY HORIZONTAL) */}
                 <div className="space-y-2">
-                    <Label icon={ImageIcon}>Foto Utama (Cover)</Label>
-                    <div className="relative w-full h-48 bg-black/40 rounded-xl overflow-hidden border border-white/10 group">
-                        {form.imagePreview ? (
-                            <img src={form.imagePreview} alt="Preview" className="w-full h-full object-contain p-2" />
-                        ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-2">
-                                <ImageIcon size={32} />
-                                <span className="text-[10px]">Preview Produk</span>
-                            </div>
-                        )}
-                        
-                        {/* Hover Overlay Actions */}
-                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-6">
-                            <button onClick={aiActions.generateImage} disabled={loading.generatingImage} className="w-full py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-blue-500">
-                                {loading.generatingImage ? <LoadingSpinner size={12}/> : <><Wand2 size={12}/> AI Gen</>}
-                            </button>
-                            <button onClick={() => fileInputRef.current?.click()} className="w-full py-1.5 bg-white/10 text-white text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-white/20 border border-white/20">
-                                <UploadCloud size={12}/> Upload
-                            </button>
-                            <button onClick={() => openMediaLib('cover')} className="w-full py-1.5 bg-brand-orange/20 text-brand-orange text-[10px] font-bold rounded flex items-center justify-center gap-2 hover:bg-brand-orange/30 border border-brand-orange/30">
-                                <FolderOpen size={12}/> Pilih Media
-                            </button>
-                            <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={(e) => { const file = e.target.files ? e.target.files[0] : null; if (file) setForm((p: any) => ({ ...p, uploadFile: file, imagePreview: URL.createObjectURL(file) })); }} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* 2. PRODUCT GALLERY (MULTIPLE - HORIZONTAL SCROLL) */}
-                <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                        <Label icon={Grid}>Galeri Tambahan</Label>
-                        <span className="text-[9px] text-gray-500">{form.galleryImages.length + form.newGalleryFiles.length} foto</span>
-                    </div>
+                    <Label icon={ImageIcon}>Media Produk (Cover & Galeri)</Label>
                     
-                    <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                        {/* Add Button */}
+                    <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar items-start">
+                        
+                        {/* A. COVER IMAGE (Fixed First) */}
+                        <div className="shrink-0 group relative">
+                            <div className="relative w-20 h-20 bg-black/40 rounded-lg overflow-hidden border-2 border-brand-orange/60 group-hover:border-brand-orange transition-colors">
+                                {form.imagePreview ? (
+                                    <img src={form.imagePreview} alt="Cover" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-1">
+                                        <ImageIcon size={16} />
+                                    </div>
+                                )}
+                                
+                                {/* Hover Actions (Mini) */}
+                                <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                                    <div className="flex gap-1">
+                                        <button onClick={aiActions.generateImage} disabled={loading.generatingImage} className="p-1 bg-blue-600 text-white rounded hover:bg-blue-500" title="AI Gen">
+                                            {loading.generatingImage ? <LoadingSpinner size={10}/> : <Wand2 size={10}/>}
+                                        </button>
+                                        <button onClick={() => fileInputRef.current?.click()} className="p-1 bg-white/20 text-white rounded hover:bg-white/30" title="Upload">
+                                            <UploadCloud size={10}/>
+                                        </button>
+                                    </div>
+                                    <button onClick={() => openMediaLib('cover')} className="px-2 py-0.5 bg-brand-orange/20 text-brand-orange text-[8px] font-bold rounded border border-brand-orange/30 hover:bg-brand-orange/30">
+                                        Pilih
+                                    </button>
+                                    <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={(e) => { const file = e.target.files ? e.target.files[0] : null; if (file) setForm((p: any) => ({ ...p, uploadFile: file, imagePreview: URL.createObjectURL(file) })); }} />
+                                </div>
+                            </div>
+                            <div className="text-[9px] text-center mt-1 text-brand-orange font-bold uppercase tracking-wider">Cover</div>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="w-px h-16 bg-white/10 mx-1 shrink-0 self-center"></div>
+
+                        {/* B. ADD BUTTON */}
                         <div className="relative w-20 h-20 shrink-0 rounded-lg bg-white/5 border border-dashed border-white/20 hover:border-brand-orange/50 cursor-pointer flex flex-col items-center justify-center text-gray-500 hover:text-brand-orange transition-colors gap-1 group">
                             <div className="flex gap-1 absolute inset-0 opacity-0 group-hover:opacity-100 bg-black/80 items-center justify-center rounded-lg z-10 transition-opacity">
                                 <button onClick={() => galleryInputRef.current?.click()} className="p-1.5 bg-white/10 rounded hover:bg-white/20 text-white" title="Upload"><UploadCloud size={12}/></button>
                                 <button onClick={() => openMediaLib('gallery')} className="p-1.5 bg-brand-orange/20 rounded hover:bg-brand-orange/30 text-brand-orange" title="Pilih Media"><FolderOpen size={12}/></button>
                             </div>
                             <span className="text-2xl font-light">+</span>
+                            <span className="text-[8px] font-bold">Galeri</span>
                             <input type="file" multiple accept="image/*" ref={galleryInputRef} className="hidden" onChange={handleGalleryUpload} />
                         </div>
 
-                        {/* Existing Images */}
+                        {/* C. EXISTING GALLERY */}
                         {form.galleryImages.map((url: string, idx: number) => (
                             <div key={`ex-${idx}`} className="relative w-20 h-20 shrink-0 rounded-lg bg-black border border-white/10 group">
                                 <img src={url} className="w-full h-full object-cover rounded-lg" />
@@ -111,7 +114,7 @@ export const EditorBasic = ({
                             </div>
                         ))}
                         
-                        {/* New Files */}
+                        {/* D. NEW UPLOADS */}
                         {form.newGalleryFiles.map((file: File, idx: number) => (
                             <div key={`new-${idx}`} className="relative w-20 h-20 shrink-0 rounded-lg bg-black border border-green-500/30 group">
                                 <img src={URL.createObjectURL(file)} className="w-full h-full object-cover rounded-lg opacity-80" />
@@ -121,7 +124,7 @@ export const EditorBasic = ({
                     </div>
                 </div>
 
-                {/* 3. VIDEO URL */}
+                {/* 2. VIDEO URL */}
                 <div className="space-y-1">
                     <Label icon={PlayCircle}>Video Produk (YouTube/MP4)</Label>
                     <div className="relative">
@@ -134,7 +137,7 @@ export const EditorBasic = ({
                     </div>
                 </div>
 
-                {/* 4. WATERMARK TOGGLE */}
+                {/* 3. WATERMARK TOGGLE */}
                 <div className="flex items-center justify-between bg-black/20 p-2.5 rounded-lg border border-white/5">
                     <span className="text-[10px] font-bold text-gray-400 flex items-center gap-2">
                         <ShieldCheck size={12} className={useWatermark ? "text-green-500" : "text-gray-600"}/> 
@@ -146,7 +149,7 @@ export const EditorBasic = ({
                     </label>
                 </div>
 
-                {/* 5. KEYWORDS (AI CONTEXT) */}
+                {/* 4. KEYWORDS (AI CONTEXT) */}
                 <div className="bg-brand-orange/5 p-3 rounded-lg border border-brand-orange/20">
                     <Label icon={Sparkles} className="text-brand-orange mb-2">Keywords (Trigger AI)</Label>
                     <input 
@@ -157,13 +160,13 @@ export const EditorBasic = ({
                     />
                 </div>
 
-                {/* 6. NAME */}
+                {/* 5. NAME */}
                 <div>
                     <FieldHeader label="Nama Produk" onAI={aiActions.generateTitle} loading={loading.generatingTitle} />
                     <Input value={form.name} onChange={e => setForm((p:any) => ({...p, name: e.target.value}))} placeholder="Nama Produk..." className="py-2 text-xs font-bold" />
                 </div>
 
-                {/* 7. PRICE & CATEGORY */}
+                {/* 6. PRICE & CATEGORY */}
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <Label>Kategori</Label>
@@ -192,7 +195,7 @@ export const EditorBasic = ({
                     </div>
                 </div>
 
-                {/* 8. AFFILIATE / EXTERNAL LINK */}
+                {/* 7. AFFILIATE / EXTERNAL LINK */}
                 <div className="bg-blue-500/10 p-3 rounded-lg border border-blue-500/20">
                     <Label icon={LinkIcon} className="text-blue-400 mb-2">Link Affiliate / Marketplace (Opsional)</Label>
                     <div className="space-y-2">
