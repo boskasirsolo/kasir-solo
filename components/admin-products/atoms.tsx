@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Sparkles, Loader2, Wand2 } from 'lucide-react';
 
-export const Label = ({ children, icon: Icon, className = "" }: { children: React.ReactNode, icon?: any, className?: string }) => (
+export const Label = ({ children, icon: Icon, className = "" }: { children?: React.ReactNode, icon?: any, className?: string }) => (
     <label className={`text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 block flex items-center gap-1 ${className}`}>
         {Icon && <Icon size={10} />}
         {children}

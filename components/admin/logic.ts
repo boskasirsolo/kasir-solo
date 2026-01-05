@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../utils';
 import { activateGhostMode } from '../../hooks/use-analytics';
 import { AdminTabId } from './types';

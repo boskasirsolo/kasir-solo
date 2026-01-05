@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { getStatusColor } from './utils';
 
@@ -16,7 +15,7 @@ export const ActionBtn = ({
     title = ""
 }: { 
     onClick: (e: any) => void, 
-    children: React.ReactNode, 
+    children?: React.ReactNode, 
     variant?: "default" | "success" | "ghost",
     disabled?: boolean,
     title?: string

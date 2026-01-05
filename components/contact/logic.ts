@@ -1,5 +1,4 @@
-
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { supabase, normalizePhone } from '../../utils';
 import { ContactFormState } from './types';
 import { SiteConfig } from '../../types';

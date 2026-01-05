@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HardDrive, PlayCircle, HelpCircle, MessageCircle, Search } from 'lucide-react';
 import { SectionHeader, Button } from '../components/ui';
@@ -14,11 +13,12 @@ import {
     PAGE_SIZE_VIDEOS,
     PAGE_SIZE_FAQS 
 } from '../components/support/index';
+import { DownloadItem, Tutorial, FAQ } from '../types';
 
 export const SupportPage = () => {
   const { state, computed, actions } = useSupportLogic();
 
-  const handleFileClick = (item: any) => {
+  const handleFileClick = (item: DownloadItem) => {
       actions.setSelectedDownload(item);
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -66,7 +66,7 @@ export const SupportPage = () => {
                     <>
                         {computed.filteredDownloads.length > 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                {computed.paginate(computed.filteredDownloads, state.pageFiles, PAGE_SIZE_FILES).map((item) => (
+                                {computed.paginate(computed.filteredDownloads, state.pageFiles, PAGE_SIZE_FILES).map((item: DownloadItem) => (
                                     <DownloadCard 
                                         key={item.id} 
                                         item={item} 
@@ -89,7 +89,7 @@ export const SupportPage = () => {
                 </h3>
                 
                 <div className="space-y-2">
-                    {computed.paginate(computed.filteredTutorials, state.pageVideos, PAGE_SIZE_VIDEOS).map(item => (
+                    {computed.paginate(computed.filteredTutorials, state.pageVideos, PAGE_SIZE_VIDEOS).map((item: Tutorial) => (
                         <VideoCard key={item.id} item={item} />
                     ))}
                     {computed.filteredTutorials.length === 0 && <div className="text-center py-8 text-gray-500 text-xs">Video tidak ditemukan.</div>}
@@ -110,7 +110,7 @@ export const SupportPage = () => {
                         <HelpCircle size={18} className="text-brand-orange" /> Pertanyaan Langganan
                     </h3>
                     <div className="space-y-1">
-                        {computed.paginate(computed.filteredFaqs, state.pageFaqs, PAGE_SIZE_FAQS).map(item => (
+                        {computed.paginate(computed.filteredFaqs, state.pageFaqs, PAGE_SIZE_FAQS).map((item: FAQ) => (
                             <FaqItem key={item.id} item={item} />
                         ))}
                         {computed.filteredFaqs.length === 0 && <div className="text-center py-8 text-gray-500 text-xs">FAQ tidak ditemukan.</div>}

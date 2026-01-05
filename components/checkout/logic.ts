@@ -1,5 +1,4 @@
-
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCart } from '../../context/cart-context';
 import { supabase, normalizePhone } from '../../utils';
 import { CheckoutFormData, OrderSuccessState } from './types';

@@ -1,9 +1,8 @@
-
 import React, { useRef } from 'react';
 import { UploadCloud, Image as ImageIcon, Sparkles, Loader2 } from 'lucide-react';
 import { Input, Button } from '../ui';
 
-export const SettingsSection = ({ title, desc, children }: { title: string, desc?: string, children: React.ReactNode }) => (
+export const SettingsSection = ({ title, desc, children }: { title: string, desc?: string, children?: React.ReactNode }) => (
     <div className="space-y-6">
         <div className="border-b border-white/5 pb-2 mb-4">
             <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">{title}</h3>
