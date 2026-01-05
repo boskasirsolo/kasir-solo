@@ -13,8 +13,8 @@ export const AdminDownloads = () => {
 
     return (
         <div className="h-[650px] flex flex-col">
-            {/* TAB NAV */}
-            <div className="flex gap-2 mb-6 border-b border-white/10 pb-1">
+            {/* TAB NAV - Scrollable on mobile */}
+            <div className="flex gap-2 mb-6 border-b border-white/10 pb-1 overflow-x-auto custom-scrollbar">
                 {[
                     { id: 'files', label: 'File Download', icon: HardDrive },
                     { id: 'tutorials', label: 'Video Tutorial', icon: PlayCircle },
@@ -23,7 +23,7 @@ export const AdminDownloads = () => {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-t-lg transition-colors ${activeTab === tab.id ? 'bg-brand-orange text-white' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+                        className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-t-lg transition-colors whitespace-nowrap ${activeTab === tab.id ? 'bg-brand-orange text-white' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
                     >
                         <tab.icon size={14} /> {tab.label}
                     </button>
@@ -42,8 +42,15 @@ export const AdminDownloads = () => {
                                 onReset={dlLogic.actions.resetForm}
                             />
                         </div>
-                        <div className="lg:col-span-5 h-full">
+                        <div className="hidden lg:block lg:col-span-5 h-full">
                             <DownloadEditor logic={dlLogic} />
+                        </div>
+                        {/* Mobile Editor Logic: Render editor as modal/overlay if needed, or simply stack it. 
+                            For simplicity in this fix, we keep 2-col on desktop. On mobile, user scrolls down to see editor 
+                            or we can use conditional rendering. Here we stack them on mobile order-2 */}
+                        <div className="block lg:hidden mt-6 h-fit pb-20">
+                             <div className="mb-4 text-xs font-bold text-gray-500 uppercase">Editor / Upload</div>
+                             <DownloadEditor logic={dlLogic} />
                         </div>
                     </div>
                 )}

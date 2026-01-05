@@ -17,29 +17,37 @@ export const DownloadList = ({
 }) => {
     return (
         <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden">
-            <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
-                <div className="relative flex-grow">
+            {/* SEARCH BAR & ADD BUTTON */}
+            <div className="p-4 border-b border-white/10 bg-black/20 flex flex-col sm:flex-row items-center gap-3">
+                <div className="relative w-full">
                     <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
                     <input 
                         type="text" 
                         value={state.searchTerm} 
                         onChange={(e) => state.setSearchTerm(e.target.value)} 
                         placeholder="Cari file..." 
-                        className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-brand-orange" 
+                        className="w-full bg-brand-card border border-white/10 rounded-full pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-brand-orange" 
                     />
                 </div>
-                <button onClick={onReset} className="bg-brand-orange text-white p-2 rounded-lg hover:bg-brand-action"><Plus size={16}/></button>
+                <button 
+                    onClick={onReset} 
+                    className="w-full sm:w-auto bg-brand-orange text-white p-2 rounded-lg hover:bg-brand-action flex items-center justify-center shadow-neon"
+                >
+                    <Plus size={16}/>
+                </button>
             </div>
             
+            {/* GRID CONTENT */}
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* Responsive Grid: 1 col mobile, 2 col sm, 3 col lg, 4 col xl */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {state.paginated.map((item: DownloadItem) => {
                         const Icon = getFileIcon(item.category);
                         return (
                             <div 
                                 key={item.id} 
                                 onClick={() => onEdit(item)}
-                                className="bg-brand-card border border-white/5 rounded-lg p-3 cursor-pointer group transition-all flex flex-col h-full relative hover:border-brand-orange/50"
+                                className="bg-brand-card border border-white/5 rounded-lg p-3 cursor-pointer group transition-all flex flex-col h-full relative hover:border-brand-orange/50 hover:bg-white/5 active:scale-95"
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center shrink-0 text-gray-400 group-hover:text-brand-orange group-hover:bg-brand-orange/10 transition-colors">
@@ -55,7 +63,7 @@ export const DownloadList = ({
                                 
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} 
-                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 p-1 rounded transition-all"
+                                    className="absolute top-2 right-2 opacity-100 sm:opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 p-1 rounded transition-all"
                                 >
                                     <Trash2 size={12}/>
                                 </button>
@@ -64,10 +72,12 @@ export const DownloadList = ({
                     })}
                 </div>
             </div>
+
+            {/* PAGINATION */}
             {state.totalPages > 1 && (
-                <div className="p-2 border-t border-white/10 flex justify-center gap-2">
+                <div className="p-2 border-t border-white/10 flex justify-center gap-2 bg-black/20">
                     <button onClick={() => state.setPage(Math.max(1, state.page-1))} className="p-1.5 bg-white/5 rounded text-white disabled:opacity-30"><ChevronLeft size={16}/></button>
-                    <span className="text-xs text-gray-400 py-1.5">{state.page} / {state.totalPages}</span>
+                    <span className="text-xs text-gray-400 py-1.5 font-bold">{state.page} / {state.totalPages}</span>
                     <button onClick={() => state.setPage(Math.min(state.totalPages, state.page+1))} className="p-1.5 bg-white/5 rounded text-white disabled:opacity-30"><ChevronRight size={16}/></button>
                 </div>
             )}

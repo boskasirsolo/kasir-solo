@@ -145,7 +145,7 @@ export const useDownloadLogic = () => {
         uploadFile, setUploadFile, 
         loading, aiLoading, 
         
-        // Grouped Actions for Editor compatibility
+        // Grouped Actions for UI compatibility
         actions: {
             researchTitles, 
             generateDescription, 
@@ -156,7 +156,16 @@ export const useDownloadLogic = () => {
             setGeneratedTitles
         },
         
-        listState: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm, totalItems: filtered.length } 
+        // Grouped State for List UI
+        listState: { 
+            paginated, 
+            totalPages, 
+            page, 
+            setPage, 
+            searchTerm, 
+            setSearchTerm, 
+            totalItems: filtered.length 
+        } 
     };
 };
 
