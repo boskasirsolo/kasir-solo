@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle, FileType } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, LoadingSpinner } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
@@ -251,6 +251,20 @@ export const EditorPanel = ({
                     </div>
                 )}
 
+                {/* RESTORED: EXCERPT FIELD */}
+                <div className="bg-white/5 p-3 rounded-lg border border-white/10">
+                    <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center justify-between">
+                        <span className="flex items-center gap-2"><FileText size={10} /> Ringkasan (Excerpt / Meta Desc)</span>
+                        <span className="text-[8px] text-gray-500">{form.excerpt?.length || 0} chars</span>
+                    </label>
+                    <textarea
+                        value={form.excerpt}
+                        onChange={(e) => setForm((p:any) => ({...p, excerpt: e.target.value}))}
+                        placeholder="Tulis ringkasan singkat untuk SEO & Preview di card..."
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white focus:outline-none focus:border-brand-orange placeholder-gray-600 resize-none h-20 custom-scrollbar"
+                    />
+                </div>
+
                 {/* 3. CATEGORIES */}
                 <div>
                     <div className="flex justify-between items-center mb-2">
@@ -298,7 +312,7 @@ export const EditorPanel = ({
                 {/* 4. WORD COUNT SELECTOR */}
                 <div className="bg-white/5 p-3 rounded-lg border border-white/10">
                     <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center justify-between">
-                        <span className="flex items-center gap-2"><FileText size={10} /> Target Panjang Artikel</span>
+                        <span className="flex items-center gap-2"><FileType size={10} /> Target Panjang Artikel</span>
                         <span className="text-brand-orange">{form.targetWordCount || 1000} Kata</span>
                     </label>
                     
