@@ -41,13 +41,13 @@ export const SEOHelmet = ({
             <meta property="og:site_name" content="Mesin Kasir Solo" />
 
             {/* Twitter */}
-            <meta property="twitter:card" content="summary_large_image" />
-            <meta property="twitter:url" content={finalUrl} />
-            <meta property="twitter:title" content={finalTitle} />
-            <meta property="twitter:description" content={finalDesc} />
-            <meta property="twitter:image" content={finalImage} />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:url" content={finalUrl} />
+            <meta name="twitter:title" content={finalTitle} />
+            <meta name="twitter:description" content={finalDesc} />
+            <meta name="twitter:image" content={finalImage} />
             
-            {/* Schema Itemprops */}
+            {/* Schema Itemprops (Google+) */}
             <meta itemprop="name" content={finalTitle} />
             <meta itemprop="description" content={finalDesc} />
             <meta itemprop="image" content={finalImage} />
@@ -87,10 +87,11 @@ export const ProductSchema = ({ product }: { product: Product }) => {
   };
 
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <Helmet>
+      <script type="application/ld+json">
+        {JSON.stringify(schema)}
+      </script>
+    </Helmet>
   );
 };
 
@@ -137,9 +138,10 @@ export const LocalBusinessSchema = ({ city }: { city: string }) => {
     };
 
     return (
-        <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
+        <Helmet>
+            <script type="application/ld+json">
+                {JSON.stringify(schema)}
+            </script>
+        </Helmet>
     );
 };
