@@ -5,9 +5,18 @@ import { Product, SiteConfig } from '../types';
 import { slugify } from '../utils';
 import { NotFoundPage } from './not-found';
 import { ShopModule, ProductDetailView } from '../components/shop';
+import { SEOHelmet } from '../components/seo';
 
 export const ShopPage = ({ products }: { products: Product[] }) => {
-  return <ShopModule products={products} />;
+  return (
+    <>
+        <SEOHelmet 
+            title="Katalog Mesin Kasir" 
+            description="Daftar paket mesin kasir lengkap Android & Windows. Garansi resmi, siap kirim seluruh Indonesia."
+        />
+        <ShopModule products={products} />
+    </>
+  );
 };
 
 export const ProductDetailPage = ({ products, config }: { products: Product[], config?: SiteConfig }) => {
@@ -22,10 +31,18 @@ export const ProductDetailPage = ({ products, config }: { products: Product[], c
   }
 
   return (
-    <ProductDetailView 
-      product={product} 
-      onClose={() => navigate('/shop')} 
-      config={config}
-    />
+    <>
+        <SEOHelmet 
+            title={product.name}
+            description={product.description || `Beli ${product.name} termurah dan bergaransi resmi di Mesin Kasir Solo.`}
+            image={product.image}
+            type="product"
+        />
+        <ProductDetailView 
+          product={product} 
+          onClose={() => navigate('/shop')} 
+          config={config}
+        />
+    </>
   );
 };

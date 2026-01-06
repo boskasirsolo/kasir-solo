@@ -10,6 +10,7 @@ import { cleanId, renderFormattedText, extractHeadings } from '../utils';
 import { MarkdownTable, FileDownloadCard, ProjectEmbedCard } from '../ui/content-renderers';
 import { SidebarProductCard } from '../ui/cards';
 import { Button, Input, TextArea } from '../../ui';
+import { SEOHelmet } from '../../seo';
 
 const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, onClose, onWheelProxy }: any) => {
     const expandRatio = Math.max(0, (currentHeight - minHeight) / (maxHeight - minHeight));
@@ -75,48 +76,56 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
   if (article.type === 'pillar' && article.related_pillars && article.related_pillars.length > 0) { relatedArticles = allArticles.filter(a => article.related_pillars?.includes(a.id)); relatedTitle = "Topik Utama Terkait"; } else { relatedArticles = allArticles.filter(a => a.id !== article.id).slice(0, 4); }
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-brand-black" aria-modal="true" role="dialog">
-      <ReaderHeader article={article} progress={progress} currentHeight={currentHeaderHeight} maxHeight={MAX_HEIGHT} minHeight={MIN_HEIGHT} onClose={onClose} onWheelProxy={(e:any) => { if(containerRef.current) containerRef.current.scrollTop += e.deltaY; }} />
-      {/* Removed direct onScroll prop, handled by ref inside hook */}
-      <div ref={containerRef} className="h-full w-full overflow-y-auto custom-scrollbar relative bg-brand-black">
-        <div style={{ height: `${MAX_HEIGHT}px` }} className="w-full bg-transparent pointer-events-none"></div>
-        <div className="bg-brand-black relative z-10 border-t border-white/5 min-h-[100vh]">
-            <div className="container mx-auto px-4 pb-20 max-w-7xl">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 pt-12 relative">
-                    
-                    {/* LEFT SIDEBAR: TOC & SHARE */}
-                    <div className="hidden lg:block lg:col-span-3">
-                        <div className="sticky top-28 space-y-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                            <div className="border-l border-white/10 pl-5 py-2 mb-10"><h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2"><Hash size={14}/> Daftar Isi</h4><ul className="space-y-4 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">{headings.length === 0 && <li className="text-xs text-gray-500 italic">Tidak ada sub-judul.</li>}{headings.map((h: any, idx: number) => (<li key={idx}><button onClick={() => handleToCClick(h)} className={`text-left text-sm transition-all duration-300 block w-full relative ${h.id === activeHeadingId ? 'text-brand-orange font-bold translate-x-2' : 'text-gray-500 hover:text-gray-300 hover:translate-x-1'} ${h.level > 1 ? 'pl-4' : ''}`}>{h.id === activeHeadingId && (<span className="absolute -left-4 top-1.5 w-1.5 h-1.5 rounded-full bg-brand-orange shadow-neon"></span>)}{h.text}</button></li>))}</ul></div>
-                            <div className="border-l border-white/5 pl-5 pt-2 mb-10"><h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Share2 size={12}/> Bagikan</h5><div className="grid grid-cols-4 gap-2 mb-6"><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1877F2] transition-all"><Facebook size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1DA1F2] transition-all"><Twitter size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#0A66C2] transition-all"><Linkedin size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><LinkIcon size={16} /></button></div></div>
-                        </div>
-                    </div>
+    <>
+      <SEOHelmet 
+        title={article.title}
+        description={article.excerpt || article.content.substring(0, 150)}
+        image={article.image}
+        type="article"
+      />
+      <div className="fixed inset-0 z-[9999] bg-brand-black" aria-modal="true" role="dialog">
+        <ReaderHeader article={article} progress={progress} currentHeight={currentHeaderHeight} maxHeight={MAX_HEIGHT} minHeight={MIN_HEIGHT} onClose={onClose} onWheelProxy={(e:any) => { if(containerRef.current) containerRef.current.scrollTop += e.deltaY; }} />
+        {/* Removed direct onScroll prop, handled by ref inside hook */}
+        <div ref={containerRef} className="h-full w-full overflow-y-auto custom-scrollbar relative bg-brand-black">
+          <div style={{ height: `${MAX_HEIGHT}px` }} className="w-full bg-transparent pointer-events-none"></div>
+          <div className="bg-brand-black relative z-10 border-t border-white/5 min-h-[100vh]">
+              <div className="container mx-auto px-4 pb-20 max-w-7xl">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 pt-12 relative">
+                      
+                      {/* LEFT SIDEBAR: TOC & SHARE */}
+                      <div className="hidden lg:block lg:col-span-3">
+                          <div className="sticky top-28 space-y-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                              <div className="border-l border-white/10 pl-5 py-2 mb-10"><h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2"><Hash size={14}/> Daftar Isi</h4><ul className="space-y-4 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">{headings.length === 0 && <li className="text-xs text-gray-500 italic">Tidak ada sub-judul.</li>}{headings.map((h: any, idx: number) => (<li key={idx}><button onClick={() => handleToCClick(h)} className={`text-left text-sm transition-all duration-300 block w-full relative ${h.id === activeHeadingId ? 'text-brand-orange font-bold translate-x-2' : 'text-gray-500 hover:text-gray-300 hover:translate-x-1'} ${h.level > 1 ? 'pl-4' : ''}`}>{h.id === activeHeadingId && (<span className="absolute -left-4 top-1.5 w-1.5 h-1.5 rounded-full bg-brand-orange shadow-neon"></span>)}{h.text}</button></li>))}</ul></div>
+                              <div className="border-l border-white/5 pl-5 pt-2 mb-10"><h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Share2 size={12}/> Bagikan</h5><div className="grid grid-cols-4 gap-2 mb-6"><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1877F2] transition-all"><Facebook size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1DA1F2] transition-all"><Twitter size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#0A66C2] transition-all"><Linkedin size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><LinkIcon size={16} /></button></div></div>
+                          </div>
+                      </div>
 
-                    {/* MAIN CONTENT */}
-                    <div className="lg:col-span-6 min-h-screen">
-                        <ReaderContent blocks={currentBlocks} currentPage={currentReaderPage} totalPages={totalReaderPages} onPageChange={handlePageChange} article={article} />
-                    </div>
+                      {/* MAIN CONTENT */}
+                      <div className="lg:col-span-6 min-h-screen">
+                          <ReaderContent blocks={currentBlocks} currentPage={currentReaderPage} totalPages={totalReaderPages} onPageChange={handlePageChange} article={article} />
+                      </div>
 
-                    {/* RIGHT SIDEBAR: PRODUCTS & RELATED */}
-                    <div className="hidden lg:block lg:col-span-3">
-                        <div className="sticky top-28 space-y-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                            {relatedArticles.length > 0 && (
-                                <div className="bg-brand-card border border-white/5 rounded-xl p-5 shadow-lg">
-                                    <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4"><Network size={16} className="text-brand-orange" /><h5 className="text-xs font-bold text-white uppercase tracking-widest">{relatedTitle}</h5></div>
-                                    <div className="space-y-4">{relatedArticles.map(a => (<Link to={`/articles/${slugify(a.title)}`} key={a.id} className="block group"><h6 className="text-xs font-bold text-gray-300 group-hover:text-brand-orange transition-colors line-clamp-2 mb-1">{a.title}</h6><div className="flex items-center gap-2 text-[10px] text-gray-600"><span>{a.date}</span><span>•</span><span>{a.readTime}</span></div></Link>))}</div>
-                                </div>
-                            )}
-                            <div>
-                                 <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4"><RecIcon size={16} className="text-brand-orange" /><h5 className="text-xs font-bold text-white uppercase tracking-widest">{recTitle}</h5></div>
-                                 <div className="space-y-4">{recommendedProducts.map((p: Product) => (<React.Fragment key={p.id}><SidebarProductCard product={p} onDetail={() => window.open(`https://wa.me/${waNumber}?text=Tanya produk ${p.name}`, '_blank')} waNumber={waNumber} /></React.Fragment>))}</div>
-                            </div>
-                        </div>
-                    </div>
+                      {/* RIGHT SIDEBAR: PRODUCTS & RELATED */}
+                      <div className="hidden lg:block lg:col-span-3">
+                          <div className="sticky top-28 space-y-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                              {relatedArticles.length > 0 && (
+                                  <div className="bg-brand-card border border-white/5 rounded-xl p-5 shadow-lg">
+                                      <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4"><Network size={16} className="text-brand-orange" /><h5 className="text-xs font-bold text-white uppercase tracking-widest">{relatedTitle}</h5></div>
+                                      <div className="space-y-4">{relatedArticles.map(a => (<Link to={`/articles/${slugify(a.title)}`} key={a.id} className="block group"><h6 className="text-xs font-bold text-gray-300 group-hover:text-brand-orange transition-colors line-clamp-2 mb-1">{a.title}</h6><div className="flex items-center gap-2 text-[10px] text-gray-600"><span>{a.date}</span><span>•</span><span>{a.readTime}</span></div></Link>))}</div>
+                                  </div>
+                              )}
+                              <div>
+                                  <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4"><RecIcon size={16} className="text-brand-orange" /><h5 className="text-xs font-bold text-white uppercase tracking-widest">{recTitle}</h5></div>
+                                  <div className="space-y-4">{recommendedProducts.map((p: Product) => (<React.Fragment key={p.id}><SidebarProductCard product={p} onDetail={() => window.open(`https://wa.me/${waNumber}?text=Tanya produk ${p.name}`, '_blank')} waNumber={waNumber} /></React.Fragment>))}</div>
+                              </div>
+                          </div>
+                      </div>
 
-                </div>
-            </div>
+                  </div>
+              </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

@@ -2,15 +2,16 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS, INITIAL_JOBS, injectGoogleTags } from './utils';
 import { Product, Article, GalleryItem, SiteConfig, Testimonial, JobOpening } from './types';
 import { CartProvider } from './context/cart-context';
 import { LoadingSpinner } from './components/ui';
-import './index.css'; // Import compiled CSS
+import './index.css'; 
 
-// Component Imports (Eager Load Core Layout)
+// Component Imports
 import { Layout } from './components/layout/index';
-import { HomePage } from './pages/home'; // EAGER LOAD HOME PAGE FOR LCP OPTIMIZATION
+import { HomePage } from './pages/home';
 
 // Lazy Load Other Pages
 const ShopPage = lazy(() => import('./pages/shop').then(module => ({ default: module.ShopPage })));
@@ -37,14 +38,12 @@ const TrackOrderPage = lazy(() => import('./pages/track-order').then(module => (
 const CityLandingPage = lazy(() => import('./pages/city-landing').then(module => ({ default: module.CityLandingPage }))); 
 const NotFoundPage = lazy(() => import('./pages/not-found').then(module => ({ default: module.NotFoundPage })));
 
-// Loading Fallback Component
 const PageLoader = () => (
   <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
       <LoadingSpinner size={32} className="text-brand-orange" />
   </div>
 );
 
-// --- SKELETON HOME (Matches Hero Structure Exactly) ---
 const SkeletonHome = () => (
   <div className="min-h-screen flex flex-col bg-brand-black text-white font-sans overflow-hidden">
     <nav className="h-[76px] border-b border-white/5 flex items-center justify-between px-5 fixed top-0 w-full z-50 bg-brand-black/90 backdrop-blur-md">
@@ -81,7 +80,7 @@ const AppContent = () => {
   const [jobs, setJobs] = useState<JobOpening[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Config State (Default Values)
+  // Config State
   const [config, setConfig] = useState<SiteConfig>({
     heroTitle: "MESIN KASIR SOLO",
     heroSubtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM.",
@@ -114,7 +113,6 @@ const AppContent = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // --- OPTIMIZED DATA FETCHING (Parallel & Non-Blocking) ---
   useEffect(() => {
     const loadAppData = async () => {
         if (!supabase) {
@@ -127,14 +125,10 @@ const AppContent = () => {
             return;
         }
 
-        // 1. Fetch Config First (Critical for Head/Meta/Contact)
         try {
-            // Fetch raw data from table
             const { data: settingsData } = await supabase.from('site_settings').select('*').limit(1).maybeSingle();
             
             if (settingsData) {
-                // UNIVERSAL ADAPTER: Maps any DB format (snake/camel) to App format (camel)
-                // This ensures frontend works regardless of DB column naming style
                 setConfig(prev => ({
                     ...prev,
                     heroTitle: settingsData.hero_title || settingsData.heroTitle || prev.heroTitle,
@@ -172,13 +166,11 @@ const AppContent = () => {
                 injectGoogleTags(settingsData.google_analytics_id, settingsData.google_search_console_code);
             }
         } catch (e) {
-            console.warn("Config fetch failed, using defaults", e);
+            console.warn("Config fetch failed", e);
         } finally {
-            // UNBLOCK RENDER HERE: Allow UI to paint immediately after config check
             setIsInitializing(false);
         }
 
-        // 2. Fetch Heavy Data in Background (Parallel)
         try {
             const results = await Promise.allSettled([
                 supabase.from('products').select('*').order('id', { ascending: true }),
@@ -188,7 +180,6 @@ const AppContent = () => {
                 supabase.from('articles').select('*')
             ]);
 
-            // Products
             if (results[0].status === 'fulfilled' && results[0].value.data) {
                 const mappedProducts = results[0].value.data.map((item: any) => ({
                     ...item,
@@ -196,13 +187,9 @@ const AppContent = () => {
                 }));
                 setProducts(mappedProducts);
             }
-            // Gallery
             if (results[1].status === 'fulfilled' && results[1].value.data) setGallery(results[1].value.data);
-            // Testimonials
             if (results[2].status === 'fulfilled' && results[2].value.data) setTestimonials(results[2].value.data);
-            // Jobs
             if (results[3].status === 'fulfilled' && results[3].value.data) setJobs(results[3].value.data);
-            // Articles
             if (results[4].status === 'fulfilled' && results[4].value.data) {
                 const artData = results[4].value.data;
                 const mappedArticles = artData.map((item: any) => ({
@@ -229,7 +216,6 @@ const AppContent = () => {
     }
   }, []);
 
-  // Filter Articles
   const publishedArticles = articles.filter(a => {
       if (a.status === 'published') return true;
       if (a.status === 'scheduled' && a.scheduled_for) {
@@ -280,9 +266,11 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <BrowserRouter>
-    <AppContent />
-  </BrowserRouter>
+  <HelmetProvider>
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  </HelmetProvider>
 );
 
 const root = createRoot(document.getElementById('root')!);

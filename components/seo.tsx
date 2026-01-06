@@ -1,6 +1,51 @@
 
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Product } from '../types';
+
+// --- MAIN HELMET COMPONENT ---
+export const SEOHelmet = ({
+    title,
+    description,
+    image,
+    url,
+    type = 'website'
+}: {
+    title?: string;
+    description?: string;
+    image?: string;
+    url?: string;
+    type?: string;
+}) => {
+    // Fallbacks
+    const siteTitle = "PT MESIN KASIR SOLO";
+    const finalTitle = title ? `${title} | ${siteTitle}` : siteTitle;
+    const finalDesc = description || "Pusat penjualan mesin kasir modern (POS), jasa pembuatan website SEO, dan aplikasi kasir online/offline terlengkap.";
+    const finalImage = image || "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=1200";
+    const finalUrl = url || window.location.href;
+
+    return (
+        <Helmet>
+            {/* Standard */}
+            <title>{finalTitle}</title>
+            <meta name="description" content={finalDesc} />
+
+            {/* Open Graph / Facebook / WhatsApp */}
+            <meta property="og:type" content={type} />
+            <meta property="og:url" content={finalUrl} />
+            <meta property="og:title" content={finalTitle} />
+            <meta property="og:description" content={finalDesc} />
+            <meta property="og:image" content={finalImage} />
+
+            {/* Twitter */}
+            <meta property="twitter:card" content="summary_large_image" />
+            <meta property="twitter:url" content={finalUrl} />
+            <meta property="twitter:title" content={finalTitle} />
+            <meta property="twitter:description" content={finalDesc} />
+            <meta property="twitter:image" content={finalImage} />
+        </Helmet>
+    );
+};
 
 // --- PRODUCT SCHEMA (Rich Snippets) ---
 export const ProductSchema = ({ product }: { product: Product }) => {
