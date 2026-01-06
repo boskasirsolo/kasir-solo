@@ -21,7 +21,7 @@ export const SEOHelmet = ({
     const siteTitle = "PT MESIN KASIR SOLO";
     const finalTitle = title ? `${title} | ${siteTitle}` : siteTitle;
     const finalDesc = description || "Pusat penjualan mesin kasir modern (POS), jasa pembuatan website SEO, dan aplikasi kasir online/offline terlengkap.";
-    const finalImage = image || "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=1200";
+    const finalImage = image || "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=1200&h=630";
     const finalUrl = url || window.location.href;
 
     return (
@@ -36,6 +36,9 @@ export const SEOHelmet = ({
             <meta property="og:title" content={finalTitle} />
             <meta property="og:description" content={finalDesc} />
             <meta property="og:image" content={finalImage} />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:site_name" content="Mesin Kasir Solo" />
 
             {/* Twitter */}
             <meta property="twitter:card" content="summary_large_image" />
@@ -43,6 +46,11 @@ export const SEOHelmet = ({
             <meta property="twitter:title" content={finalTitle} />
             <meta property="twitter:description" content={finalDesc} />
             <meta property="twitter:image" content={finalImage} />
+            
+            {/* Schema Itemprops */}
+            <meta itemprop="name" content={finalTitle} />
+            <meta itemprop="description" content={finalDesc} />
+            <meta itemprop="image" content={finalImage} />
         </Helmet>
     );
 };
