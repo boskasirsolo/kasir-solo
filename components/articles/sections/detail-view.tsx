@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { X, Calendar, Clock, Quote, Briefcase, ChevronLeft, ChevronRight, Hash, Share2, Facebook, Twitter, Linkedin, MessageCircle, Link as LinkIcon, Network, Target, TrendingUp, Send, Globe } from 'lucide-react';
+import { X, Calendar, Clock, Quote, Briefcase, ChevronLeft, ChevronRight, Hash, Share2, Facebook, Twitter, Linkedin, MessageCircle, Link as LinkIcon, Network, Target, TrendingUp, Send, Globe, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Article, Product, SiteConfig } from '../../types';
 import { ArticleDetailProps } from '../types';
-import { optimizeImage, formatRupiah, slugify } from '../../../utils';
+import { optimizeImage, formatRupiah, slugify, supabase } from '../../../utils';
 import { useArticleReader } from '../hooks/use-article-reader';
 import { cleanId, renderFormattedText, extractHeadings } from '../utils';
 import { MarkdownTable, FileDownloadCard, ProjectEmbedCard } from '../ui/content-renderers';
@@ -55,14 +55,36 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
     );
 };
 
-const CommentSection = () => {
-    const [comments, setComments] = React.useState([
-        { id: 1, name: "Budi Santoso", website: "", date: "2 Jam yang lalu", text: "Wah insightful banget Mas Amin. Ditunggu part selanjutnya soal manajemen stok." },
-        { id: 2, name: "Rina Owner Cafe", website: "https://kopi-senja.com", date: "1 Hari yang lalu", text: "Setuju banget soal anti-fraud. Karyawan emang perlu diawasin sistem." }
-    ]);
+const CommentSection = ({ articleId }: { articleId: number }) => {
+    const [comments, setComments] = React.useState<any[]>([]);
     const [form, setForm] = React.useState({ name: '', website: '', text: '' });
+    const [loading, setLoading] = React.useState(false);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // Fetch comments from Supabase
+    React.useEffect(() => {
+        const fetchComments = async () => {
+            if (!supabase) return;
+            setLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from('article_comments')
+                    .select('*')
+                    .eq('article_id', articleId)
+                    .order('created_at', { ascending: false });
+                
+                if (error) console.error("Error fetching comments:", error);
+                else setComments(data || []);
+            } catch (e) {
+                console.error("Fetch error:", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchComments();
+    }, [articleId]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.name || !form.text) return alert("Isi nama dan komentar dulu bos.");
         
@@ -72,15 +94,50 @@ const CommentSection = () => {
             websiteUrl = 'https://' + websiteUrl;
         }
 
-        // Optimistic update
-        setComments([...comments, { 
-            id: Date.now(), 
-            name: form.name,
-            website: websiteUrl,
-            date: "Baru saja", 
-            text: form.text 
-        }]);
-        setForm({ name: '', website: '', text: '' });
+        if (!supabase) return alert("Koneksi database tidak tersedia.");
+
+        setIsSubmitting(true);
+        try {
+            const { data, error } = await supabase
+                .from('article_comments')
+                .insert([{
+                    article_id: articleId,
+                    name: form.name,
+                    website: websiteUrl,
+                    content: form.text
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // Optimistic update
+            setComments([data, ...comments]);
+            setForm({ name: '', website: '', text: '' });
+        } catch(e: any) {
+            alert(`Gagal kirim komentar: ${e.message}`);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Helper: Simple Time Ago
+    const timeAgo = (dateStr: string) => {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+        
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " tahun lalu";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " bulan lalu";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " hari lalu";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " jam lalu";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " menit lalu";
+        return "Baru saja";
     };
 
     return (
@@ -89,7 +146,15 @@ const CommentSection = () => {
                 <MessageCircle size={20} className="text-brand-orange"/> Diskusi Juragan ({comments.length})
             </h3>
 
-            <div className="space-y-6 mb-10">
+            <div className="space-y-6 mb-10 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                {loading && <div className="text-center text-gray-500 py-4"><Loader2 className="animate-spin mx-auto"/> Loading komentar...</div>}
+                
+                {!loading && comments.length === 0 && (
+                    <div className="text-center py-8 bg-white/5 rounded-xl border border-white/5">
+                        <p className="text-gray-500 text-sm">Belum ada komentar. Jadilah yang pertama!</p>
+                    </div>
+                )}
+
                 {comments.map(c => (
                     <div key={c.id} className="flex gap-4 group">
                         <div className="w-10 h-10 rounded-full bg-brand-dark border border-white/10 flex items-center justify-center text-gray-500 font-bold shrink-0 group-hover:border-brand-orange/50 group-hover:text-brand-orange transition-colors">
@@ -109,9 +174,9 @@ const CommentSection = () => {
                                 ) : (
                                     <h5 className="text-sm font-bold text-white">{c.name}</h5>
                                 )}
-                                <span className="text-[10px] text-gray-500">• {c.date}</span>
+                                <span className="text-[10px] text-gray-500">• {timeAgo(c.created_at)}</span>
                             </div>
-                            <p className="text-sm text-gray-400 leading-relaxed">{c.text}</p>
+                            <p className="text-sm text-gray-400 leading-relaxed">{c.content}</p>
                         </div>
                     </div>
                 ))}
@@ -142,8 +207,8 @@ const CommentSection = () => {
                         placeholder="Tulis pendapat lo..." 
                         className="bg-black/40 text-sm h-24"
                     />
-                    <Button type="submit" className="w-full py-3 text-sm font-bold shadow-neon hover:shadow-neon-strong">
-                        KIRIM KOMENTAR
+                    <Button type="submit" disabled={isSubmitting} className="w-full py-3 text-sm font-bold shadow-neon hover:shadow-neon-strong">
+                        {isSubmitting ? <Loader2 className="animate-spin"/> : 'KIRIM KOMENTAR'}
                     </Button>
                 </div>
             </form>
@@ -200,7 +265,7 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
                       <div className="lg:col-span-6 min-h-screen">
                           <ReaderContent blocks={currentBlocks} currentPage={currentReaderPage} totalPages={totalReaderPages} onPageChange={handlePageChange} article={article} />
                           {/* COMMENT SECTION */}
-                          <CommentSection />
+                          <CommentSection articleId={article.id} />
                       </div>
 
                       {/* RIGHT SIDEBAR: PRODUCTS & RELATED */}
