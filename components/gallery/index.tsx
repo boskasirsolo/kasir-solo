@@ -49,7 +49,8 @@ export const GalleryModule = ({ gallery, testimonials }: GalleryProps) => {
                         <span className="text-xs font-bold text-gray-300 tracking-[0.2em] uppercase">Arsip Lapangan</span>
                     </div>
                     <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight">
-                        Jejak Perjuangan Mesin Kasir Solo. Bukan <span className="text-brand-orange">Kaleng-Kaleng.</span>
+                        <span className="text-brand-orange">Jejak Perjuangan</span> Mesin Kasir Solo.<br/>
+                        Bukan <span className="text-brand-orange">Kaleng-Kaleng.</span>
                     </h1>
                     <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed">
                         Gue gak jual janji manis. Ini bukti otentik instalasi <strong>Mesin Kasir Solo</strong> dan sistem digital yang gue kerjain. 
