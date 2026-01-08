@@ -1,6 +1,4 @@
 
-import { getEnv } from '../../config/env';
-
 // --- API KEY MANAGEMENT ---
 export const ensureAPIKey = async () => {
   try {
@@ -26,57 +24,61 @@ export const callGeminiWithRotation = async (params: {
   contents: any,
   config?: any
 }, retries = 3) => {
-  let selectedKey = '';
+  
+  // 1. Cek Google IDX / AI Studio (Development Mode)
+  // Jika jalan di IDX, kita tetap pake Client-Side SDK karena key-nya injeksi dari browser.
   // @ts-ignore
-  const isAIStudio = typeof window !== 'undefined' && window.aistudio;
-
-  if (isAIStudio) {
+  if (typeof window !== 'undefined' && window.aistudio) {
       await ensureAPIKey();
-      selectedKey = process.env.API_KEY || '';
-  } 
-
-  if (!selectedKey) {
-      const keys: string[] = [];
-      for (let i = 1; i <= 10; i++) {
-          const k = getEnv(`VITE_GEMINI_API_KEY_${i}`) || getEnv(`VITE_API_KEY_${i}`);
-          if (k && k.length > 10) keys.push(k);
-      }
-      const kSingle = getEnv('VITE_GEMINI_API_KEY') || getEnv('VITE_API_KEY') || getEnv('API_KEY');
-      if (kSingle && kSingle.length > 10) keys.push(kSingle);
-
-      const uniqueKeys = [...new Set(keys)];
-      if (uniqueKeys.length > 0) {
-          selectedKey = uniqueKeys[Math.floor(Math.random() * uniqueKeys.length)];
-      }
-  }
-
-  if (!selectedKey) {
-      throw new Error("API Key not found. Please connect AI Studio or set VITE_GEMINI_API_KEY.");
-  }
-
-  const { GoogleGenAI } = await import("@google/genai");
-  const ai = new GoogleGenAI({ apiKey: selectedKey });
-
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      const result = await ai.models.generateContent({
+      const apiKey = process.env.API_KEY || ''; // IDX injects this automatically
+      
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey });
+      
+      return await ai.models.generateContent({
         model: params.model,
         contents: params.contents,
         config: params.config
       });
-      return result;
+  }
+
+  // 2. Production Mode (Vercel)
+  // Panggil endpoint /api/gemini yang kita buat.
+  // Tidak ada key yang terekspos di sini.
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `Server Error: ${response.status}`);
+      }
+
+      // 3. Polyfill Response Structure
+      // Karena JSON tidak bisa bawa getter/method, kita bikin ulang properti 'text'
+      // agar kompatibel dengan kode frontend yang pake `response.text`
+      return {
+        ...data,
+        get text() {
+          // Fallback logic untuk ekstrak teks dari struktur JSON Gemini
+          return data.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('') || '';
+        }
+      };
+
     } catch (error: any) {
       const isLastAttempt = attempt === retries - 1;
-      const isNetworkError = error.message?.toLowerCase().includes('fetch') || 
-                             error.message?.toLowerCase().includes('network') ||
-                             error.message?.toLowerCase().includes('failed');
+      console.warn(`API Call Failed (${attempt + 1}/${retries}):`, error.message);
       
-      if (isNetworkError && !isLastAttempt) {
-        console.warn(`Gemini API Call Failed (Attempt ${attempt + 1}/${retries}). Retrying...`);
-        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1))); 
+      if (!isLastAttempt) {
+        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1))); // Exponential backoff
         continue;
       }
-      throw new Error(`Gemini Error: ${error.message || 'Unknown error'}`);
+      throw error;
     }
   }
 };
