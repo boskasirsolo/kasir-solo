@@ -9,6 +9,7 @@ const corsHeaders = {
 
 // FORMATTER HELPER
 const escapeXml = (unsafe: string) => {
+  if (!unsafe) return '';
   return unsafe.replace(/[<>&'"]/g, (c) => {
     switch (c) {
       case '<': return '&lt;';
@@ -36,20 +37,19 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // 2. Fetch Config & Products
-    // Ambil data produk yang sudah ada harganya & namanya
+    // Kita ambil semua produk yang harganya valid dulu
     const { data: products, error } = await supabase
       .from('products')
       .select('*')
-      .gt('price', 0) // Pastikan harga > 0
-      .not('image_url', 'is', null) // Pastikan ada gambar
+      .gt('price', 0) 
 
     if (error) throw error
 
-    // Ambil setting website (untuk base URL dll)
+    // Ambil setting website (optional)
     const { data: settings } = await supabase.from('site_settings').select('*').single()
     
-    // Fallback constants
-    const SITE_URL = 'https://kasirsolo.com' // Hardcoded domain production
+    // CONFIGURATION (FIXED DOMAIN)
+    const SITE_URL = 'https://kasirsolo.my.id' // SESUAI REQUEST USER
     const SITE_TITLE = settings?.hero_title || 'PT Mesin Kasir Solo'
     const SITE_DESC = settings?.hero_subtitle || 'Pusat Mesin Kasir Terlengkap'
 
@@ -63,19 +63,24 @@ serve(async (req) => {
 `
 
     // 4. Loop Products
-    products.forEach((product: any) => {
-      // Logic URL Gambar
-      let imageLink = product.image_url
-      if (imageLink && !imageLink.startsWith('http')) {
-         // Fix relative URLs if any
-         imageLink = `${SITE_URL}${imageLink}` 
-      }
+    if (products && products.length > 0) {
+      products.forEach((product: any) => {
+        // Logic URL Gambar (Cek kedua kolom kemungkinan)
+        let imageLink = product.image_url || product.image
+        
+        // Skip produk hantu (tanpa gambar) biar gak bikin error di Google
+        if (!imageLink) return
 
-      // Logic Slug
-      const slug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      const productLink = `${SITE_URL}/shop/${slug}`
+        // Fix relative URLs if any (e.g. /uploads/...)
+        if (imageLink && !imageLink.startsWith('http')) {
+           imageLink = `${SITE_URL}${imageLink}` 
+        }
 
-      xml += `
+        // Logic Slug
+        const slug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const productLink = `${SITE_URL}/shop/${slug}`
+
+        xml += `
 <item>
 <g:id>MKS-${product.id}</g:id>
 <g:title>${escapeXml(product.name)}</g:title>
@@ -88,7 +93,8 @@ serve(async (req) => {
 <g:brand>PT Mesin Kasir Solo</g:brand>
 <g:google_product_category>Electronics &gt; Electronics Accessories &gt; Computer Components</g:google_product_category>
 </item>`
-    })
+      })
+    }
 
     xml += `
 </channel>
@@ -99,7 +105,7 @@ serve(async (req) => {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/xml',
-        'Cache-Control': 'public, max-age=3600' // Cache 1 jam
+        'Cache-Control': 'public, max-age=3600' // Cache 1 jam di sisi Google
       },
     })
 

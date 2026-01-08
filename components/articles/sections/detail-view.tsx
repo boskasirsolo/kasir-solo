@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Calendar, Clock, Quote, Briefcase, ChevronLeft, ChevronRight, Hash, Share2, Facebook, Twitter, Linkedin, MessageCircle, Link as LinkIcon, Network, Target, TrendingUp, Send } from 'lucide-react';
+import { X, Calendar, Clock, Quote, Briefcase, ChevronLeft, ChevronRight, Hash, Share2, Facebook, Twitter, Linkedin, MessageCircle, Link as LinkIcon, Network, Target, TrendingUp, Send, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Article, Product, SiteConfig } from '../../types';
 import { ArticleDetailProps } from '../types';
@@ -57,23 +57,30 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
 
 const CommentSection = () => {
     const [comments, setComments] = React.useState([
-        { id: 1, name: "Budi Santoso", date: "2 Jam yang lalu", text: "Wah insightful banget Mas Amin. Ditunggu part selanjutnya soal manajemen stok." },
-        { id: 2, name: "Rina Owner Cafe", date: "1 Hari yang lalu", text: "Setuju banget soal anti-fraud. Karyawan emang perlu diawasin sistem." }
+        { id: 1, name: "Budi Santoso", website: "", date: "2 Jam yang lalu", text: "Wah insightful banget Mas Amin. Ditunggu part selanjutnya soal manajemen stok." },
+        { id: 2, name: "Rina Owner Cafe", website: "https://kopi-senja.com", date: "1 Hari yang lalu", text: "Setuju banget soal anti-fraud. Karyawan emang perlu diawasin sistem." }
     ]);
-    const [form, setForm] = React.useState({ name: '', text: '' });
+    const [form, setForm] = React.useState({ name: '', website: '', text: '' });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.name || !form.text) return alert("Isi nama dan komentar dulu bos.");
         
+        let websiteUrl = form.website.trim();
+        // Auto-fix URL scheme
+        if (websiteUrl && !/^https?:\/\//i.test(websiteUrl)) {
+            websiteUrl = 'https://' + websiteUrl;
+        }
+
         // Optimistic update
         setComments([...comments, { 
             id: Date.now(), 
-            name: form.name, 
+            name: form.name,
+            website: websiteUrl,
             date: "Baru saja", 
             text: form.text 
         }]);
-        setForm({ name: '', text: '' });
+        setForm({ name: '', website: '', text: '' });
     };
 
     return (
@@ -90,7 +97,18 @@ const CommentSection = () => {
                         </div>
                         <div>
                             <div className="flex items-center gap-2 mb-1">
-                                <h5 className="text-sm font-bold text-white">{c.name}</h5>
+                                {c.website ? (
+                                    <a 
+                                        href={c.website} 
+                                        target="_blank" 
+                                        rel="nofollow noreferrer" 
+                                        className="text-sm font-bold text-brand-orange hover:underline hover:text-white transition-colors flex items-center gap-1"
+                                    >
+                                        {c.name} <Globe size={10} />
+                                    </a>
+                                ) : (
+                                    <h5 className="text-sm font-bold text-white">{c.name}</h5>
+                                )}
                                 <span className="text-[10px] text-gray-500">• {c.date}</span>
                             </div>
                             <p className="text-sm text-gray-400 leading-relaxed">{c.text}</p>
@@ -104,12 +122,20 @@ const CommentSection = () => {
                     <Send size={14} className="text-gray-500"/> Tinggalkan Jejak
                 </h4>
                 <div className="space-y-4">
-                    <Input 
-                        value={form.name} 
-                        onChange={(e: any) => setForm({...form, name: e.target.value})} 
-                        placeholder="Nama Panggilan" 
-                        className="bg-black/40 text-sm"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input 
+                            value={form.name} 
+                            onChange={(e: any) => setForm({...form, name: e.target.value})} 
+                            placeholder="Nama Panggilan" 
+                            className="bg-black/40 text-sm"
+                        />
+                        <Input 
+                            value={form.website} 
+                            onChange={(e: any) => setForm({...form, website: e.target.value})} 
+                            placeholder="Website (Opsional - Backlink)" 
+                            className="bg-black/40 text-sm"
+                        />
+                    </div>
                     <TextArea 
                         value={form.text} 
                         onChange={(e: any) => setForm({...form, text: e.target.value})} 
