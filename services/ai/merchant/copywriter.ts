@@ -1,5 +1,5 @@
 
-import { callGeminiWithRotation } from '../../core';
+import { callGeminiWithRotation } from '../core';
 import { SALES_PERSONA, COPYWRITING_RULES } from './config';
 
 // --- MODULE: COPYWRITER (CREATIVE SALES) ---

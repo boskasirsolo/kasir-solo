@@ -1,5 +1,5 @@
 
-import { callGeminiWithRotation } from '../../core';
+import { callGeminiWithRotation } from '../core';
 
 // --- MODULE: TECHNICAL (SPECS & DETAILS) ---
 
