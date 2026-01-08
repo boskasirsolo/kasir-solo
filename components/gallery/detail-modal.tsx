@@ -53,6 +53,9 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
         </div>
     );
 
+  const isVideo = item.type === 'video' && item.video_url;
+  const isDigital = item.category_type === 'digital';
+
   return (
     <Wrapper>
       <div className={`relative w-full max-w-7xl ${isModal ? 'h-[90vh]' : 'min-h-[80vh] md:h-[90vh]'} rounded-2xl bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row z-[10000] overflow-hidden`}>
@@ -61,57 +64,71 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
           {isModal ? <X size={24} /> : <ArrowLeft size={24} />}
         </button>
 
-        {/* LEFT COLUMN */}
+        {/* LEFT COLUMN: VISUAL DISPLAY */}
         <div className="w-full md:w-8/12 h-[500px] md:h-full bg-black flex flex-col relative border-b md:border-b-0 md:border-r border-white/10">
-           <div className="flex-grow relative overflow-hidden bg-gray-900 group flex items-center justify-center">
-              {item.type === 'video' && item.video_url ? (
-                 <div className="w-full h-full flex items-center justify-center bg-black">
-                    <iframe src={item.video_url} title={item.title} className="w-full aspect-video" allowFullScreen></iframe>
-                 </div>
-              ) : (
-                 <>
-                    <div className="w-full h-full relative z-10">
+           
+           {/* IMAGE/VIDEO AREA */}
+           <div className="flex-grow relative bg-gray-900 group overflow-hidden">
+                {/* 1. SCROLLABLE CONTAINER (Absolute Inset) */}
+                <div className={`absolute inset-0 w-full h-full ${!isVideo && isDigital ? 'overflow-y-auto custom-scrollbar bg-gray-900' : 'flex items-center justify-center overflow-hidden'}`}>
+                    {isVideo ? (
+                        <div className="w-full h-full flex items-center justify-center bg-black">
+                            <iframe src={item.video_url} title={item.title} className="w-full aspect-video" allowFullScreen></iframe>
+                        </div>
+                    ) : (
                         <img 
                             src={optimizeImage(allImages[currentImageIndex], 1200)} 
                             alt={item.title} 
-                            className={`w-full h-full ${item.category_type === 'digital' ? 'object-cover object-top' : 'object-contain'} transition-all duration-300`} 
+                            className={`w-full ${isDigital ? 'h-auto min-h-full object-cover object-top' : 'h-full object-contain'} transition-all duration-300`} 
                         />
+                    )}
+                </div>
+
+                {/* 2. CONTROLS OVERLAY (Pointer events handling) */}
+                {!isVideo && (
+                    <div className="absolute inset-0 pointer-events-none">
+                        
+                        {/* Nav Buttons */}
                         {allImages.length > 1 && (
                             <>
-                                <button onClick={handlePrev} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-brand-orange p-2 rounded-full text-white backdrop-blur-sm border border-white/10 transition-colors z-20 opacity-0 group-hover:opacity-100 md:opacity-100"><ChevronLeft size={24} /></button>
-                                <button onClick={handleNext} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-brand-orange p-2 rounded-full text-white backdrop-blur-sm border border-white/10 transition-colors z-20 opacity-0 group-hover:opacity-100 md:opacity-100"><ChevronRight size={24} /></button>
+                                <button onClick={handlePrev} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-brand-orange p-2 rounded-full text-white backdrop-blur-sm border border-white/10 transition-colors z-20 pointer-events-auto opacity-0 group-hover:opacity-100 md:opacity-100 shadow-lg"><ChevronLeft size={24} /></button>
+                                <button onClick={handleNext} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-brand-orange p-2 rounded-full text-white backdrop-blur-sm border border-white/10 transition-colors z-20 pointer-events-auto opacity-0 group-hover:opacity-100 md:opacity-100 shadow-lg"><ChevronRight size={24} /></button>
                             </>
                         )}
-                    </div>
-                    {allImages.length > 1 && (
-                        <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center px-4 pointer-events-none">
-                            <div className="flex gap-2 overflow-x-auto max-w-full p-2 bg-black/70 backdrop-blur-md rounded-xl border border-white/10 pointer-events-auto shadow-2xl custom-scrollbar">
-                                {allImages.map((img, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(idx); }}
-                                        className={`relative w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-lg overflow-hidden transition-all border-2 ${
-                                            currentImageIndex === idx 
-                                            ? 'border-brand-orange opacity-100 scale-105 shadow-neon' 
-                                            : 'border-transparent opacity-50 hover:opacity-100 hover:border-white/30 grayscale hover:grayscale-0'
-                                        }`}
-                                    >
-                                        <img src={optimizeImage(img, 100)} className="w-full h-full object-cover" alt={`thumb-${idx}`} />
-                                    </button>
-                                ))}
+
+                        {/* Thumbnails */}
+                        {allImages.length > 1 && (
+                            <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center px-4 pointer-events-none">
+                                <div className="flex gap-2 overflow-x-auto max-w-full p-2 bg-black/70 backdrop-blur-md rounded-xl border border-white/10 pointer-events-auto shadow-2xl custom-scrollbar">
+                                    {allImages.map((img, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(idx); }}
+                                            className={`relative w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-lg overflow-hidden transition-all border-2 ${
+                                                currentImageIndex === idx 
+                                                ? 'border-brand-orange opacity-100 scale-105 shadow-neon' 
+                                                : 'border-transparent opacity-50 hover:opacity-100 hover:border-white/30 grayscale hover:grayscale-0'
+                                            }`}
+                                        >
+                                            <img src={optimizeImage(img, 100)} className="w-full h-full object-cover" alt={`thumb-${idx}`} />
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )}
-                    {allImages.length > 1 && (
-                        <div className="absolute top-4 left-4 bg-black/60 px-3 py-1 rounded-full text-xs text-white font-bold backdrop-blur-sm border border-white/10 flex items-center gap-2 z-20">
-                            <Layers size={12} className="text-brand-orange"/>
-                            {currentImageIndex + 1} / {allImages.length}
-                        </div>
-                    )}
-                 </>
-              )}
+                        )}
+
+                        {/* Counter Badge */}
+                        {allImages.length > 1 && (
+                            <div className="absolute top-4 left-4 bg-black/60 px-3 py-1 rounded-full text-xs text-white font-bold backdrop-blur-sm border border-white/10 flex items-center gap-2 z-20 pointer-events-auto">
+                                <Layers size={12} className="text-brand-orange"/>
+                                {currentImageIndex + 1} / {allImages.length}
+                            </div>
+                        )}
+                    </div>
+                )}
            </div>
 
+           {/* BOTTOM ACTION BAR (CTA) */}
            <div className="shrink-0 bg-brand-dark border-t border-white/10 h-auto md:h-40 flex flex-col md:flex-row relative z-20">
                <div className="flex-1 p-5 flex items-center border-b md:border-b-0 md:border-r border-white/10">
                    {activeTestimonial && (
@@ -148,7 +165,7 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
            </div>
         </div>
 
-        {/* RIGHT COLUMN */}
+        {/* RIGHT COLUMN: TEXT CONTENT */}
         <div className="w-full md:w-4/12 bg-brand-card flex flex-col relative z-20 md:h-full md:overflow-hidden">
           <div className="p-6 md:p-8 border-b border-white/10 bg-brand-card sticky top-0 z-10 shrink-0">
             <div className="flex items-center gap-2 mb-3">
