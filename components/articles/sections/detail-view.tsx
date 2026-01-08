@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, Calendar, Clock, Quote, Briefcase, ChevronLeft, ChevronRight, Hash, Share2, Facebook, Twitter, Linkedin, MessageCircle, Link as LinkIcon, Network, Target, TrendingUp, Send, Globe, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -12,6 +11,11 @@ import { SidebarProductCard } from '../ui/cards';
 import { Button, Input, TextArea } from '../../ui';
 import { SEOHelmet } from '../../seo';
 
+const getPureCategory = (category: string) => {
+  if (!category) return "General";
+  return category.split(',').map(c => c.split('>').pop()?.trim()).filter(Boolean).join(', ');
+};
+
 const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, onClose, onWheelProxy }: any) => {
     const expandRatio = Math.max(0, (currentHeight - minHeight) / (maxHeight - minHeight));
     const collapseRatio = 1 - expandRatio;
@@ -23,7 +27,7 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
           <div className="container mx-auto px-4 h-full relative z-10 max-w-7xl pointer-events-none">
               <div className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 flex items-center" style={{ opacity: collapseRatio, pointerEvents: collapseRatio > 0.5 ? 'auto' : 'none' }}><h2 className="text-lg md:text-xl font-bold text-white line-clamp-1 max-w-xl drop-shadow-md">{article.title}</h2></div>
               <div className="absolute bottom-10 left-4 md:left-8 origin-bottom-left" style={{ opacity: expandRatio, transform: `scale(${0.9 + (expandRatio * 0.1)}) translateY(${collapseRatio * 20}px)`, pointerEvents: expandRatio > 0.5 ? 'auto' : 'none' }}>
-                  <div className="flex flex-wrap gap-3 mb-4"><span className="px-3 py-1 bg-brand-orange text-white text-xs font-bold rounded-full shadow-neon">{article.category}</span><span className="flex items-center gap-2 text-gray-200 text-xs font-bold bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10"><Calendar size={12} /> {article.date}</span><span className="flex items-center gap-2 text-gray-200 text-xs font-bold bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10"><Clock size={12} /> {article.readTime}</span></div>
+                  <div className="flex flex-wrap gap-3 mb-4"><span className="px-3 py-1 bg-brand-orange text-white text-xs font-bold rounded-full shadow-neon">{getPureCategory(article.category)}</span><span className="flex items-center gap-2 text-gray-200 text-xs font-bold bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10"><Calendar size={12} /> {article.date}</span><span className="flex items-center gap-2 text-gray-200 text-xs font-bold bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10"><Clock size={12} /> {article.readTime}</span></div>
                   <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-white leading-tight drop-shadow-lg max-w-4xl">{article.title}</h1>
               </div>
           </div>

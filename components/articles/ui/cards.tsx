@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Calendar, ChevronRight, ShoppingCart, Star, Plus, Check, MessageCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -6,6 +5,12 @@ import { Article, Product } from '../../types';
 import { optimizeImage, formatRupiah } from '../../../utils';
 import { useCart } from '../../../context/cart-context';
 import { FlyingParticle } from '../../shop/ui/fly-animation';
+
+const getPureCategory = (category: string) => {
+  if (!category) return "General";
+  // Split multiple categories by comma, then for each take the last part after '>'
+  return category.split(',').map(c => c.split('>').pop()?.trim()).filter(Boolean).join(', ');
+};
 
 export const ArticleGridCard = ({ article, onClick }: { article: Article, onClick: () => void }) => (
   <div onClick={onClick} className="bg-brand-card border border-white/5 rounded-2xl overflow-hidden hover:border-brand-orange transition-all duration-300 hover:shadow-neon hover:-translate-y-2 cursor-pointer flex flex-col group h-full">
@@ -16,7 +21,7 @@ export const ArticleGridCard = ({ article, onClick }: { article: Article, onClic
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
         loading="lazy" 
       />
-      <div className="absolute top-4 left-4"><span className="px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold rounded border border-white/10">{article.category}</span></div>
+      <div className="absolute top-4 left-4"><span className="px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold rounded border border-white/10">{getPureCategory(article.category)}</span></div>
     </div>
     <div className="p-6 flex flex-col flex-grow">
       <div className="flex items-center gap-3 text-xs text-gray-500 mb-3"><span className="flex items-center gap-1"><Calendar size={12}/> {article.date}</span><span>•</span><span className="text-brand-orange font-bold">{article.readTime || '3 min'}</span></div>
