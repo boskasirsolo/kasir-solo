@@ -5,15 +5,62 @@ import { Link } from 'react-router-dom';
 export const cleanId = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
 
 export const extractHeadings = (content: string) => {
-  const allLines = content.split('\n');
-  const nonEmptyLines = allLines.filter(line => line.trim() !== '');
-  return nonEmptyLines.reduce((acc, line, index) => {
+  const lines = content.split('\n');
+  const headings: { id: string, text: string, level: number, originalIndex: number }[] = [];
+  
+  // Logic ini harus sinkron dengan useArticleReader parsing
+  let validLineIndex = 0;
+  let inTocBlock = false;
+  let tableBuffer: string[] = [];
+
+  lines.forEach((line) => {
     const trimmed = line.trim();
-    if (trimmed.toLowerCase().includes('daftar isi')) return acc;
-    if (trimmed.startsWith('# ')) { acc.push({ id: cleanId(trimmed.replace('# ', '')), text: trimmed.replace('# ', ''), level: 1, originalIndex: index }); } 
-    else if (trimmed.startsWith('## ')) { acc.push({ id: cleanId(trimmed.replace('## ', '')), text: trimmed.replace('## ', ''), level: 2, originalIndex: index }); }
-    return acc;
-  }, [] as { id: string, text: string, level: number, originalIndex: number }[]);
+    
+    // 1. Skip TOC Block (Sama seperti Reader)
+    if (/^(#+)?\s*(\*\*|__)?(Daftar Isi|Table of Contents)(\*\*|__)?/i.test(trimmed)) { 
+        inTocBlock = true; 
+        return; 
+    }
+    if (inTocBlock) {
+        if (trimmed.startsWith('#') || trimmed === '---') { 
+            inTocBlock = false; 
+        } else { 
+            return; 
+        }
+    }
+
+    // 2. Handle Tables (Table counts as 1 block)
+    if (trimmed.startsWith('|')) {
+        tableBuffer.push(line);
+        return; 
+    } else {
+        if (tableBuffer.length > 0) {
+            validLineIndex++; // Table flushed
+            tableBuffer = [];
+        }
+        if (trimmed === '') return; // Skip empty
+    }
+
+    // 3. Detect Headings (H1, H2, H3)
+    // Support bold inside header e.g. "## **Judul**"
+    const match = trimmed.match(/^(#{1,3})\s+(.*)$/);
+    if (match) {
+        const level = match[1].length;
+        const rawText = match[2];
+        const cleanText = rawText.replace(/\*\*/g, '').replace(/__/g, '').replace(/`/g, '').trim();
+        
+        headings.push({
+            id: cleanId(cleanText),
+            text: cleanText,
+            level,
+            originalIndex: validLineIndex
+        });
+    }
+
+    validLineIndex++;
+  });
+
+  return headings;
 };
 
 export const parseLinks = (text: string) => {

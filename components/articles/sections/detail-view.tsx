@@ -41,9 +41,24 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
               if (p.startsWith('|') && p.includes('|')) { return <MarkdownTable key={idx} content={p} />; }
               const fileMatch = p.match(/^\[FILE: (.*?)\]\((.*?)\)$/); if (fileMatch) { return <FileDownloadCard key={idx} label={fileMatch[1]} url={fileMatch[2]} />; }
               const projectMatch = p.match(/^\[PROJECT: (.*?) \| (.*?) \| (.*?) \| (.*?)\]$/); if (projectMatch) { return <ProjectEmbedCard key={idx} title={projectMatch[1]} url={projectMatch[2]} image={projectMatch[3]} desc={projectMatch[4]} />; }
-              if (p.startsWith('# ')) { const text = p.replace('# ', ''); return <h1 id={cleanId(text)} key={idx} className="scroll-mt-32 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-600 mt-12 mb-6 pb-4 border-b border-white/10 heading-observer">{text}</h1>; }
-              if (p.startsWith('## ')) { const text = p.replace('## ', ''); return <h2 id={cleanId(text)} key={idx} className="scroll-mt-32 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-600 mt-10 mb-4 border-l-4 border-brand-orange pl-4 heading-observer">{text}</h2>; }
-              if (p.startsWith('### ')) { return <h3 key={idx} className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-500 mt-8 mb-3">{p.replace('### ', '')}</h3>; }
+              
+              // --- HEADINGS (UPDATED: Strip Formatting for IDs & Support H3) ---
+              if (p.startsWith('# ')) { 
+                  const content = p.replace(/^#\s+/, ''); 
+                  const cleanText = content.replace(/\*\*/g, '');
+                  return <h1 id={cleanId(cleanText)} key={idx} className="scroll-mt-32 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-600 mt-12 mb-6 pb-4 border-b border-white/10 heading-observer">{renderFormattedText(content)}</h1>; 
+              }
+              if (p.startsWith('## ')) { 
+                  const content = p.replace(/^##\s+/, ''); 
+                  const cleanText = content.replace(/\*\*/g, '');
+                  return <h2 id={cleanId(cleanText)} key={idx} className="scroll-mt-32 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-600 mt-10 mb-4 border-l-4 border-brand-orange pl-4 heading-observer">{renderFormattedText(content)}</h2>; 
+              }
+              if (p.startsWith('### ')) { 
+                  const content = p.replace(/^###\s+/, '');
+                  const cleanText = content.replace(/\*\*/g, '');
+                  return <h3 id={cleanId(cleanText)} key={idx} className="scroll-mt-32 text-xl font-bold text-white mt-8 mb-3 heading-observer flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-brand-orange"></span>{renderFormattedText(content)}</h3>; 
+              }
+              
               if (p.startsWith('> ')) return <blockquote key={idx} className="border-l-4 border-gray-600 bg-white/5 p-6 italic text-gray-300 my-8 rounded-r-xl">{renderFormattedText(p.replace('> ', ''))}</blockquote>;
               if (p.startsWith('* ') || p.startsWith('- ')) return <div key={idx} className="flex gap-3 ml-2 mb-3"><div className="w-1.5 h-1.5 rounded-full bg-brand-orange mt-2.5 shrink-0"></div><span>{renderFormattedText(p.substring(2))}</span></div>;
               if (/^\d+\.\s/.test(p)) { const number = p.split('.')[0]; return <div key={idx} className="flex gap-3 ml-2 mb-3"><span className="text-brand-orange font-bold font-mono text-lg">{number}.</span><span className="mt-1">{renderFormattedText(p.substring(p.indexOf('.') + 1).trim())}</span></div>; }
