@@ -34,14 +34,8 @@ export const CategorySidebar = ({
   onSelect: (type: 'parent' | 'sub' | 'all', value: string) => void,
   articles?: Article[] 
 }) => {
-  // Default expanded all 4 main categories
-  const [expandedParents, setExpandedParents] = useState<string[]>(['business', 'tech', 'marketing', 'support']);
-
-  const toggleParent = (id: string) => {
-    setExpandedParents(prev => 
-      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-    );
-  };
+  // Initial state empty for auto-collapse behavior
+  const [expandedParents, setExpandedParents] = useState<string[]>([]);
 
   // --- SMART MAPPING LOGIC ---
   const mergedTree = useMemo(() => {
@@ -101,6 +95,31 @@ export const CategorySidebar = ({
 
       return tree;
   }, [articles]);
+
+  // Effect: Auto-expand/collapse based on selection
+  useEffect(() => {
+    if (selectedFilter.type === 'parent') {
+       setExpandedParents([selectedFilter.value]);
+    } else if (selectedFilter.type === 'sub') {
+       const parent = mergedTree.find((p: any) => p.subCategories.includes(selectedFilter.value));
+       if (parent) {
+           setExpandedParents([parent.id]);
+       }
+    } else {
+       // Collapse all when 'Reset' or 'All' is clicked
+       setExpandedParents([]);
+    }
+  }, [selectedFilter, mergedTree]);
+
+  // Toggle Logic: Accordion style (one open at a time)
+  const toggleParent = (id: string) => {
+    setExpandedParents(prev => {
+      // If clicking currently open parent, collapse it
+      if (prev.includes(id)) return [];
+      // If clicking closed parent, open it and collapse others
+      return [id];
+    });
+  };
 
   // Icons Helper
   const getIcon = (id: string, active: boolean) => {
