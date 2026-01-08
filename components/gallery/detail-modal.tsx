@@ -39,25 +39,8 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
       setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
   };
 
-  const Wrapper = isModal ? 
-    ({children}: any) => createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6" role="dialog" aria-modal="true">
-            <div className="fixed inset-0 bg-black/95 backdrop-blur-md transition-opacity" onClick={onClose} />
-            {children}
-        </div>, document.body
-    ) : 
-    ({children}: any) => (
-        <div className="min-h-screen flex items-center justify-center p-4 md:p-6 animate-fade-in relative">
-             <div className="absolute top-0 left-0 w-full h-full bg-brand-black -z-10"></div>
-             {children}
-        </div>
-    );
-
-  const isVideo = item.type === 'video' && item.video_url;
-  const isDigital = item.category_type === 'digital';
-
-  return (
-    <Wrapper>
+  // Content to be rendered inside the wrapper
+  const modalContent = (
       <div className={`relative w-full max-w-7xl ${isModal ? 'h-[90vh]' : 'min-h-[80vh] md:h-[90vh]'} rounded-2xl bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row z-[10000] overflow-hidden`}>
         
         <button onClick={onClose} className="absolute top-4 right-4 z-50 bg-black/50 p-2 rounded-full text-white backdrop-blur-sm hover:bg-brand-orange transition-colors border border-white/10 shadow-lg">
@@ -70,8 +53,12 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
            {/* IMAGE/VIDEO AREA */}
            <div className="flex-grow relative bg-gray-900 group overflow-hidden">
                 {/* 1. SCROLLABLE CONTAINER (Absolute Inset) */}
-                <div className={`absolute inset-0 w-full h-full ${!isVideo && isDigital ? 'overflow-y-auto custom-scrollbar bg-gray-900' : 'flex items-center justify-center overflow-hidden'}`}>
-                    {isVideo ? (
+                {/* KEY CHANGE: key={currentImageIndex} forces reset scroll on image change */}
+                <div 
+                    key={currentImageIndex}
+                    className={`absolute inset-0 w-full h-full ${!item.video_url && item.category_type === 'digital' ? 'overflow-y-auto custom-scrollbar bg-gray-900' : 'flex items-center justify-center overflow-hidden'}`}
+                >
+                    {item.type === 'video' && item.video_url ? (
                         <div className="w-full h-full flex items-center justify-center bg-black">
                             <iframe src={item.video_url} title={item.title} className="w-full aspect-video" allowFullScreen></iframe>
                         </div>
@@ -79,13 +66,14 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
                         <img 
                             src={optimizeImage(allImages[currentImageIndex], 1200)} 
                             alt={item.title} 
-                            className={`w-full ${isDigital ? 'h-auto min-h-full object-cover object-top' : 'h-full object-contain'} transition-all duration-300`} 
+                            className={`w-full ${item.category_type === 'digital' ? 'h-auto min-h-full object-cover object-top' : 'h-full object-contain'}`}
+                            loading="eager"
                         />
                     )}
                 </div>
 
                 {/* 2. CONTROLS OVERLAY (Pointer events handling) */}
-                {!isVideo && (
+                {(!item.video_url || item.type !== 'video') && (
                     <div className="absolute inset-0 pointer-events-none">
                         
                         {/* Nav Buttons */}
@@ -217,7 +205,22 @@ export const ProjectDetailView = ({ item, testimonials, onClose, isModal = false
           </div>
         </div>
       </div>
-    </Wrapper>
+  );
+
+  if (isModal) {
+      return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6" role="dialog" aria-modal="true">
+            <div className="fixed inset-0 bg-black/95 backdrop-blur-md transition-opacity" onClick={onClose} />
+            {modalContent}
+        </div>, document.body
+      );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-6 animate-fade-in relative">
+         <div className="absolute top-0 left-0 w-full h-full bg-brand-black -z-10"></div>
+         {modalContent}
+    </div>
   );
 };
 
