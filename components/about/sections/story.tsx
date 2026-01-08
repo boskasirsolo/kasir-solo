@@ -1,8 +1,36 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Quote } from 'lucide-react';
 import { SiteConfig } from '../../../types';
 import { optimizeImage } from '../../../utils';
+
+// Sub-component for Safe Image Rendering
+const PortraitImage = ({ src }: { src?: string }) => {
+    const [error, setError] = useState(false);
+    
+    // Reset error if src changes
+    useEffect(() => { setError(false); }, [src]);
+
+    // If no source or error occurred, show placeholder
+    if (!src || error) {
+        return (
+            <div className="w-full h-full flex flex-col items-center justify-center text-gray-600 bg-brand-dark">
+                <Users size={48} strokeWidth={1} />
+                <span className="text-xs mt-2 font-bold tracking-widest uppercase">No Portrait</span>
+            </div>
+        );
+    }
+
+    return (
+        <img 
+            src={optimizeImage(src, 600)} 
+            alt="Amin Maghfuri" 
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={() => setError(true)}
+        />
+    );
+};
 
 export const AboutStory = ({ config }: { config?: SiteConfig }) => (
     <section className="py-20 bg-brand-black relative">
@@ -13,19 +41,7 @@ export const AboutStory = ({ config }: { config?: SiteConfig }) => (
                     {/* 1. PHOTO FOUNDER */}
                     <div className="md:col-span-4 relative group">
                         <div className="aspect-[3/4] w-full rounded-2xl overflow-hidden border border-white/10 bg-brand-dark relative grayscale group-hover:grayscale-0 transition-all duration-700">
-                            {config?.founderPortrait ? (
-                                <img 
-                                    src={optimizeImage(config.founderPortrait, 600)} 
-                                    alt="Amin Maghfuri" 
-                                    className="w-full h-full object-cover"
-                                    loading="lazy"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center text-gray-600">
-                                    <Users size={48} strokeWidth={1} />
-                                    <span className="text-xs mt-2">No Portrait</span>
-                                </div>
-                            )}
+                            <PortraitImage src={config?.founderPortrait} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                         </div>
                     </div>

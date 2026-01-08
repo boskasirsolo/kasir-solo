@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { SiteConfig } from '../../types';
-import { supabase, callGeminiWithRotation, CONFIG, renameFile, normalizePhone } from '../../utils';
+import { supabase, callGeminiWithRotation, CONFIG, renameFile, normalizePhone, uploadToSupabase } from '../../utils';
 import { SettingsState, SettingsTabId } from './types';
 
 export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) => void) => {
@@ -75,31 +75,50 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
             let finalAboutImage = state.aboutImagePreview;
             let finalFounderImage = state.founderImagePreview;
 
-            // Upload About Image
-            if (state.aboutImageFile && CONFIG.CLOUDINARY_CLOUD_NAME) {
-                const formData = new FormData();
-                formData.append('file', renameFile(state.aboutImageFile, 'kantor-mesin-kasir-solo-hq'));
-                formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.secure_url) finalAboutImage = data.secure_url;
+            // --- 1. UPLOAD ABOUT IMAGE ---
+            if (state.aboutImageFile) {
+                const seoName = 'kantor-mesin-kasir-solo-hq';
+                const fileToUpload = renameFile(state.aboutImageFile, seoName);
+
+                if (CONFIG.CLOUDINARY_CLOUD_NAME) {
+                    // Option A: Cloudinary
+                    const formData = new FormData();
+                    formData.append('file', fileToUpload);
+                    formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (data.secure_url) finalAboutImage = data.secure_url;
+                } else {
+                    // Option B: Supabase Storage (Fallback)
+                    // Note: Ensure 'images' bucket is public
+                    const { url } = await uploadToSupabase(fileToUpload, 'settings', 'images');
+                    finalAboutImage = url;
+                }
             }
 
-            // Upload Founder Image
-            if (state.founderImageFile && CONFIG.CLOUDINARY_CLOUD_NAME) {
-                const formData = new FormData();
-                // SEO INJECTION: 'founder-amin-maghfuri-mesin-kasir-solo'
-                formData.append('file', renameFile(state.founderImageFile, 'founder-amin-maghfuri-mesin-kasir-solo'));
-                formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.secure_url) finalFounderImage = data.secure_url;
+            // --- 2. UPLOAD FOUNDER IMAGE ---
+            if (state.founderImageFile) {
+                const seoName = 'founder-amin-maghfuri-mesin-kasir-solo';
+                const fileToUpload = renameFile(state.founderImageFile, seoName);
+
+                if (CONFIG.CLOUDINARY_CLOUD_NAME) {
+                    // Option A: Cloudinary
+                    const formData = new FormData();
+                    formData.append('file', fileToUpload);
+                    formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (data.secure_url) finalFounderImage = data.secure_url;
+                } else {
+                    // Option B: Supabase Storage (Fallback)
+                    const { url } = await uploadToSupabase(fileToUpload, 'settings', 'images');
+                    finalFounderImage = url;
+                }
             }
 
             setConfig({ ...config, aboutImage: finalAboutImage, founderPortrait: finalFounderImage });
 
             // MAPPING DATA: Frontend (Camel) -> Database (Snake Case)
-            // Ini format PASTI untuk Supabase. Jangan diubah lagi.
             const dbData = {
                 id: 1,
                 hero_title: config.heroTitle,
@@ -142,7 +161,7 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                 throw new Error(error.message);
             }
             
-            alert("Pengaturan berhasil disimpan!");
+            alert("Pengaturan berhasil disimpan! Gambar aman.");
             setState(p => ({ ...p, aboutImageFile: null, founderImageFile: null }));
         } catch (e: any) {
             alert("Gagal menyimpan: " + e.message);
