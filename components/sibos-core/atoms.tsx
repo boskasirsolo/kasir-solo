@@ -2,18 +2,26 @@
 import React from 'react';
 import { MessageSquare, X, Send, Bot, User as UserIcon, ExternalLink, Image as ImageIcon } from 'lucide-react';
 
-// --- HELPER: INLINE TEXT PARSER (Bold, Links) ---
+// --- HELPER: INLINE TEXT PARSER (Bold, Italic, Links) ---
 const parseCellContent = (text: string) => {
-  const parts = text.split(/(\*\*.*?\*\*)/g);
+  // Split by double asterisks (Bold) OR single asterisks (Italic)
+  // Regex explanation: Match **...** OR *...*
+  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+  
   return (
     <>
       {parts.map((part, partIdx) => {
-        // Handle Bold
-        if (part.startsWith('**') && part.endsWith('**')) {
+        // 1. Handle Bold (**text**)
+        if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
           return <strong key={partIdx} className="font-bold text-brand-orange">{part.slice(2, -2)}</strong>;
         }
 
-        // Handle URLs inside normal text
+        // 2. Handle Italic (*text*) -> Render as orange italic for emphasis
+        if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+          return <em key={partIdx} className="italic text-brand-orange/90 font-medium">{part.slice(1, -1)}</em>;
+        }
+
+        // 3. Handle URLs inside normal text
         const urlRegex = /((?:https?:\/\/|www\.)[^\s]+)/g;
         const subParts = part.split(urlRegex);
 

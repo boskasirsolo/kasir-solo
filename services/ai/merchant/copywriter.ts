@@ -11,7 +11,7 @@ export const Copywriter = {
     generateProductName: async (keywords: string, category: string) => {
         const prompt = `
         ${SALES_PERSONA}
-        Task: Create a short, punchy, high-converting Product Name.
+        Task: Create a short, punchy Product Name.
         Context: Keywords: "${keywords}". Category: "${category}".
         Rule: Max 5-7 words. Must sound professional but catchy.
         Output: JUST the name text.
@@ -27,15 +27,14 @@ export const Copywriter = {
         const prompt = `
         ${SALES_PERSONA}
         Task: Write a persuasive product description for "${productName}".
-        Features/Keywords to highlight: "${features}".
+        Features: "${features}".
         
         ${COPYWRITING_RULES}
 
-        Structure:
-        1. Hook (Problem awareness - pake bahasa "Gue/Lo").
-        2. Solution (How this product fixes it).
-        3. Benefit (Not just features, but business impact/profit).
-        4. Closing (Urgency).
+        STRICT RULES:
+        1. Keep it SHORT. Max 2-3 short paragraphs.
+        2. Focus on "Problem -> Solution -> Benefit".
+        3. No long intros. Start immediately with the hook.
         
         Example tone: "Lo capek dicolong karyawan? Pake alat ini, tidur lo nyenyak."
         `;
@@ -49,9 +48,9 @@ export const Copywriter = {
     generateWhyBuy: async (productName: string) => {
         const prompt = `
         ${SALES_PERSONA}
-        Task: Write 3-5 strong reasons "Why Buy This" for "${productName}".
-        Focus: Business safety, speed, or profit.
-        Output Format: One reason per line. Short sentences. Use "Gue/Lo" style if possible to sound authentic.
+        Task: Write 3 strong reasons "Why Buy This" for "${productName}".
+        Focus: Safety, Speed, or Profit.
+        Output Format: One reason per line. Short sentences (Max 10 words). Use "Gue/Lo" style.
         `;
         const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
         return res.text?.trim() || "";
