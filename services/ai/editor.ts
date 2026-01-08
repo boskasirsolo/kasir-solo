@@ -54,6 +54,13 @@ Gunakan format Markdown: [Anchor Text](/path).
 6. Konsultasi -> [Hubungi Founder](/contact)
 `;
 
+// Categories Definition for AI Context
+const EXISTING_CATEGORIES = `
+1. "Strategi Cuan (Biz)" (Contains: Bisnis Tips, Manajemen, Keuangan, HR, Franchise)
+2. "Bedah Alat (Tech)" (Contains: Hardware Review, Android POS, Windows POS, Teknologi, Tutorial)
+3. "Marketing Jalanan" (Contains: Digital Marketing, Branding, Loyalty Program, Promosi)
+`;
+
 export const EditorAI = {
     // 1. MARKET RESEARCH
     researchTopics: async (type: 'pillar' | 'cluster', topic?: string) => {
@@ -87,13 +94,23 @@ export const EditorAI = {
         return JSON.parse(res.text || '[]');
     },
 
-    // 3. CATEGORY GENERATOR
+    // 3. CATEGORY GENERATOR (ENHANCED)
     suggestCategories: async (context: string) => {
         const prompt = `
-        Role: SEO Specialist for "Kasir Solo".
-        Task: Analyze the context below and generate 5 Article Categories/Tags.
+        Role: SEO & Information Architect for "Kasir Solo".
+        Task: Analyze the content below and suggest 3-5 Hierarchical Categories.
+        
+        [EXISTING CATEGORY TREE]:
+        ${EXISTING_CATEGORIES}
+
+        [RULES]
+        1. **MANDATORY FORMAT**: "Parent Category > Child Category" (e.g. "Marketing Jalanan > Google Ads").
+        2. **Intelligence**: 
+           - If the topic fits an EXISTING Parent (Biz/Tech/Marketing), use that Parent.
+           - If the topic is NEW/TRENDING (e.g. Cyber Security, AI, Import Laws) and doesn't fit, **CREATE A NEW PARENT** that makes sense (e.g. "Regulasi & Hukum > Pajak").
+        3. Output: Just the comma-separated list. No explanations.
+
         Context: "${context}"
-        Output: JUST the comma-separated text.
         `;
         const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
         return res.text?.trim().replace(/['"]/g, '') || "";
@@ -105,7 +122,7 @@ export const EditorAI = {
         Role: Senior SEO Strategist for PT Mesin Kasir Solo.
         Task: Generate metadata for the article "${title}".
         Context Snippet: "${content.substring(0, 1000)}..."
-        Output JSON: { "excerpt": "persuasive meta description max 150 chars", "category": "Specific Niche Category" }
+        Output JSON: { "excerpt": "persuasive meta description max 150 chars", "category": "Parent > Child" }
         `;
         const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
         return JSON.parse(res.text || '{}');
