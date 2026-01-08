@@ -33,7 +33,8 @@ serve(async (req) => {
     // @ts-ignore
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     // @ts-ignore
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    // PENTING: Pake SERVICE_ROLE_KEY biar bisa baca semua data (bypass RLS)
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // 2. Fetch Config & Products
@@ -49,7 +50,7 @@ serve(async (req) => {
     const { data: settings } = await supabase.from('site_settings').select('*').single()
     
     // CONFIGURATION (FIXED DOMAIN)
-    const SITE_URL = 'https://kasirsolo.my.id' // SESUAI REQUEST USER
+    const SITE_URL = 'https://kasirsolo.my.id' 
     const SITE_TITLE = settings?.hero_title || 'PT Mesin Kasir Solo'
     const SITE_DESC = settings?.hero_subtitle || 'Pusat Mesin Kasir Terlengkap'
 
