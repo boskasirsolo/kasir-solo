@@ -42,21 +42,73 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
               const fileMatch = p.match(/^\[FILE: (.*?)\]\((.*?)\)$/); if (fileMatch) { return <FileDownloadCard key={idx} label={fileMatch[1]} url={fileMatch[2]} />; }
               const projectMatch = p.match(/^\[PROJECT: (.*?) \| (.*?) \| (.*?) \| (.*?)\]$/); if (projectMatch) { return <ProjectEmbedCard key={idx} title={projectMatch[1]} url={projectMatch[2]} image={projectMatch[3]} desc={projectMatch[4]} />; }
               
-              // --- HEADINGS (UPDATED: Strip Formatting for IDs & Support H3) ---
-              if (p.startsWith('# ')) { 
-                  const content = p.replace(/^#\s+/, ''); 
+              // --- HEADINGS (VISUAL UPGRADE H1-H10) ---
+              
+              // Helper to clean content
+              const getCleanContent = (prefix: string) => {
+                  const content = p.replace(new RegExp(`^${prefix}\\s+`), '');
                   const cleanText = content.replace(/\*\*/g, '');
-                  return <h1 id={cleanId(cleanText)} key={idx} className="scroll-mt-32 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-600 mt-12 mb-6 pb-4 border-b border-white/10 heading-observer">{renderFormattedText(content)}</h1>; 
+                  return { content, cleanText, id: cleanId(cleanText) };
+              };
+
+              // H10: Tech Spec Mono
+              if (p.startsWith('########## ')) {
+                  const { content, id } = getCleanContent('##########');
+                  return <div id={id} key={idx} className="deep-heading scroll-mt-32 text-xs font-mono font-bold text-gray-600 bg-black/20 p-2 rounded border border-white/5 mt-4 mb-2 heading-observer">{renderFormattedText(content)}</div>;
               }
-              if (p.startsWith('## ')) { 
-                  const content = p.replace(/^##\s+/, ''); 
-                  const cleanText = content.replace(/\*\*/g, '');
-                  return <h2 id={cleanId(cleanText)} key={idx} className="scroll-mt-32 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-600 mt-10 mb-4 border-l-4 border-brand-orange pl-4 heading-observer">{renderFormattedText(content)}</h2>; 
+
+              // H9: Dotted Underline
+              if (p.startsWith('######### ')) {
+                  const { content, id } = getCleanContent('#########');
+                  return <div id={id} key={idx} className="deep-heading scroll-mt-32 text-xs font-bold text-gray-500 underline decoration-dotted underline-offset-4 mt-4 mb-2 heading-observer">{renderFormattedText(content)}</div>;
               }
+
+              // H8: Left Border Thin
+              if (p.startsWith('######## ')) {
+                  const { content, id } = getCleanContent('########');
+                  return <div id={id} key={idx} className="deep-heading scroll-mt-32 text-sm font-bold text-gray-400 border-l-2 border-gray-700 pl-3 italic mt-5 mb-2 heading-observer">{renderFormattedText(content)}</div>;
+              }
+
+              // H7: Mini Label (Micro Heading)
+              if (p.startsWith('####### ')) {
+                  const { content, id } = getCleanContent('#######');
+                  return <div id={id} key={idx} className="deep-heading scroll-mt-32 text-[10px] font-bold text-brand-orange uppercase tracking-[0.2em] border border-brand-orange/30 px-2 py-1 rounded-md w-fit mt-6 mb-2 heading-observer">{renderFormattedText(content)}</div>;
+              }
+
+              // H6: Caption Style (Small, Gray, Italic)
+              if (p.startsWith('###### ')) {
+                  const { content, id } = getCleanContent('######');
+                  return <h6 id={id} key={idx} className="scroll-mt-32 text-sm font-bold text-gray-500 italic border-b border-white/5 pb-1 inline-block mt-6 mb-2 heading-observer">{renderFormattedText(content)}</h6>;
+              }
+
+              // H5: Label Style (Uppercase, Orange, Tracking)
+              if (p.startsWith('##### ')) {
+                  const { content, id } = getCleanContent('#####');
+                  return <h5 id={id} key={idx} className="scroll-mt-32 text-sm font-bold text-brand-orange uppercase tracking-widest mt-8 mb-3 heading-observer flex items-center gap-2"><span className="w-1 h-3 bg-brand-orange rounded-full"></span>{renderFormattedText(content)}</h5>;
+              }
+
+              // H4: Sub-section (White, Bold, Simple)
+              if (p.startsWith('#### ')) {
+                  const { content, id } = getCleanContent('####');
+                  return <h4 id={id} key={idx} className="scroll-mt-32 text-lg font-bold text-gray-200 mt-8 mb-2 heading-observer">{renderFormattedText(content)}</h4>;
+              }
+
+              // H3: Point (Bullet Dot, Medium Size)
               if (p.startsWith('### ')) { 
-                  const content = p.replace(/^###\s+/, '');
-                  const cleanText = content.replace(/\*\*/g, '');
-                  return <h3 id={cleanId(cleanText)} key={idx} className="scroll-mt-32 text-xl font-bold text-white mt-8 mb-3 heading-observer flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-brand-orange"></span>{renderFormattedText(content)}</h3>; 
+                  const { content, id } = getCleanContent('###');
+                  return <h3 id={id} key={idx} className="scroll-mt-32 text-xl font-bold text-white mt-10 mb-3 heading-observer flex items-center gap-3"><span className="w-2 h-2 rounded-full bg-brand-orange shrink-0"></span>{renderFormattedText(content)}</h3>; 
+              }
+
+              // H2: Major Section (Border Left, Large)
+              if (p.startsWith('## ')) { 
+                  const { content, id } = getCleanContent('##');
+                  return <h2 id={id} key={idx} className="scroll-mt-32 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-600 mt-12 mb-6 border-l-4 border-brand-orange pl-4 heading-observer">{renderFormattedText(content)}</h2>; 
+              }
+
+              // H1: Main Title (Bottom Border, Very Large)
+              if (p.startsWith('# ')) { 
+                  const { content, id } = getCleanContent('#');
+                  return <h1 id={id} key={idx} className="scroll-mt-32 text-3xl md:text-4xl font-display font-bold text-white mt-16 mb-8 pb-4 border-b border-white/10 heading-observer">{renderFormattedText(content)}</h1>; 
               }
               
               if (p.startsWith('> ')) return <blockquote key={idx} className="border-l-4 border-gray-600 bg-white/5 p-6 italic text-gray-300 my-8 rounded-r-xl">{renderFormattedText(p.replace('> ', ''))}</blockquote>;
@@ -271,7 +323,30 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
                       {/* LEFT SIDEBAR: TOC & SHARE */}
                       <div className="hidden lg:block lg:col-span-3">
                           <div className="sticky top-28 space-y-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                              <div className="border-l border-white/10 pl-5 py-2 mb-10"><h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2"><Hash size={14}/> Daftar Isi</h4><ul className="space-y-4 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">{headings.length === 0 && <li className="text-xs text-gray-500 italic">Tidak ada sub-judul.</li>}{headings.map((h: any, idx: number) => (<li key={idx}><button onClick={() => handleToCClick(h)} className={`text-left text-sm transition-all duration-300 block w-full relative ${h.id === activeHeadingId ? 'text-brand-orange font-bold translate-x-2' : 'text-gray-500 hover:text-gray-300 hover:translate-x-1'} ${h.level > 1 ? 'pl-4' : ''}`}>{h.id === activeHeadingId && (<span className="absolute -left-4 top-1.5 w-1.5 h-1.5 rounded-full bg-brand-orange shadow-neon"></span>)}{h.text}</button></li>))}</ul></div>
+                              <div className="border-l border-white/10 pl-5 py-2 mb-10">
+                                <h4 className="text-brand-orange font-bold text-xs uppercase tracking-widest mb-6 flex items-center gap-2"><Hash size={14}/> Daftar Isi</h4>
+                                <ul className="space-y-4 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
+                                    {headings.length === 0 && <li className="text-xs text-gray-500 italic">Tidak ada sub-judul.</li>}
+                                    {headings.map((h: any, idx: number) => {
+                                        // Dynamic padding based on level (1-10)
+                                        // Cap at level 6 visual indent to prevent breaking layout
+                                        const visualLevel = Math.min(h.level, 6);
+                                        const paddingLeft = (visualLevel - 1) * 12; 
+                                        
+                                        return (
+                                            <li key={idx} style={{ paddingLeft: `${paddingLeft}px` }}>
+                                                <button 
+                                                    onClick={() => handleToCClick(h)} 
+                                                    className={`text-left text-sm transition-all duration-300 block w-full relative ${h.id === activeHeadingId ? 'text-brand-orange font-bold translate-x-2' : 'text-gray-500 hover:text-gray-300 hover:translate-x-1'}`}
+                                                >
+                                                    {h.id === activeHeadingId && (<span className="absolute -left-4 top-1.5 w-1.5 h-1.5 rounded-full bg-brand-orange shadow-neon"></span>)}
+                                                    {h.text}
+                                                </button>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                              </div>
                               <div className="border-l border-white/5 pl-5 pt-2 mb-10"><h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Share2 size={12}/> Bagikan</h5><div className="grid grid-cols-4 gap-2 mb-6"><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1877F2] transition-all"><Facebook size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1DA1F2] transition-all"><Twitter size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#0A66C2] transition-all"><Linkedin size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><LinkIcon size={16} /></button></div></div>
                           </div>
                       </div>

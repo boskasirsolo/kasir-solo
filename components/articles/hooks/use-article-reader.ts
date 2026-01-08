@@ -75,13 +75,14 @@ export const useArticleReader = (content: string) => {
   const totalReaderPages = Math.ceil(allBlocks.length / READER_ITEMS_PER_PAGE);
   const currentBlocks = allBlocks.slice((currentReaderPage - 1) * READER_ITEMS_PER_PAGE, currentReaderPage * READER_ITEMS_PER_PAGE);
 
-  // Intersection Observer for Active Heading (Added H3)
+  // Intersection Observer for Active Heading (H1-H10)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     
     const timeout = setTimeout(() => {
-      const headings = container.querySelectorAll('h1, h2, h3'); // UPDATED to include H3
+      // UPDATED: Watch standard H tags AND our custom .deep-heading class
+      const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6, .deep-heading'); 
       const observer = new IntersectionObserver((entries) => { 
           entries.forEach((entry) => { 
               if (entry.isIntersecting) { setActiveHeadingId(entry.target.id); } 

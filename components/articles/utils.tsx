@@ -41,9 +41,9 @@ export const extractHeadings = (content: string) => {
         if (trimmed === '') return; // Skip empty
     }
 
-    // 3. Detect Headings (H1, H2, H3)
-    // Support bold inside header e.g. "## **Judul**"
-    const match = trimmed.match(/^(#{1,3})\s+(.*)$/);
+    // 3. Detect Headings (H1 - H10)
+    // Updated Regex: #{1,10} captures up to 10 hashes
+    const match = trimmed.match(/^(#{1,10})\s+(.*)$/);
     if (match) {
         const level = match[1].length;
         const rawText = match[2];
