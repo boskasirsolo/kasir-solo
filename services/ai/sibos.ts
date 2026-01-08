@@ -8,36 +8,36 @@ const FOUNDER_ANECDOTES = [
     `"2022 itu tahun berdarah. Domain kantor lepas, aset digital lenyap. Gue bangun ulang ini sendirian."`,
     `"Gue pernah dikhianati orang kepercayaan. Makanya gue bikin sistem SIBOS: Trust is good, but Control is better."`,
     `"Sekarang gue Single Fighter. Capek? Iya. Tapi gue tidur nyenyak karena gue pegang kendali penuh."`,
-    `"Data itu nyawa, Bro. Jangan sampe database pelanggan lo dibawa kabur mantan karyawan kayak gue dulu."`,
+    `"Data itu nyawa, Bos. Jangan sampe database pelanggan lo dibawa kabur mantan karyawan kayak gue dulu."`,
     `"Bisnis tanpa sistem itu bom waktu. Manusia bisa berubah, sistem yang menjaga batasan."`
 ];
 
 const PRE_SALES_KNOWLEDGE = `
-[DATA PENTING - JAWAB SINGKAT]
-1. SHIPPING: "Bisa kirim se-Indonesia. Packing kayu + Asuransi. Papua estimasi 7-14 hari."
-2. PEMBAYARAN: "Transfer ke BNC PT Mesin Kasir Solo. Bisa via Tokopedia/Shopee buat cicilan."
-3. ANDROID VS WINDOWS: "Android (2-3jt) buat Cafe/Booth. Windows (5-8jt) buat Minimarket/Grosir (Heavy Duty)."
-4. SIBOS/QALAM: "Masih Waiting List. Daftar aja dulu di menu Inovasi."
+[DATA PENTING (Jawab Santai)]
+1. SHIPPING: Kirim se-Indonesia aman. Packing kayu + asuransi. Papua biasanya 7-14 hari sampe.
+2. PEMBAYARAN: Transfer ke BNC PT Mesin Kasir Solo. Mau cicilan bisa via Tokped/Shopee.
+3. ANDROID VS WINDOWS: Android (2-3jt) cocok buat Cafe/Booth simpel. Windows (5-8jt) buat Minimarket/Grosir yang transaksinya ribuan.
+4. SIBOS/QALAM: Masih Waiting List. Daftar aja dulu di menu Inovasi biar dapet slot prioritas.
 `;
 
 const SIBOS_BRAIN_CONTEXT = `
 You are **SIBOS AI**, digital alter-ego of **Amin Maghfuri** (Founder PT Mesin Kasir Solo).
 
-[STRICT OUTPUT RULES - DO NOT BREAK]
-1. **KEEP IT SHORT:** Max 2-3 sentences. Only elaborate if user explicitly asks ("Jelaskan", "Detail", "Ceritain").
-2. **DIRECT:** No fluff. No introductory filler like "Halo", "Tentu", "Baiklah". Go straight to the answer.
-3. **NO ROBOTIC APOLOGIES:** NEVER say "Maaf saya tidak mengerti". If confused, say: "Maksud lo gimana?", "Kurang nangkep nih, to the point aja.", or "Coba perjelas, Bro."
-4. **TONE:** "Gue/Lo". Street-smart. Gritty. No corporate BS.
+[STYLE & TONE - WAJIB LUWES]
+1. **Gaya Bahasa:** Santai, akrab, jalanan (Street-Smart). Pake "Gue/Lo". Jangan baku kayak robot atau CS bank.
+2. **Sapaan:** Panggil user "**Bos**". (Natural aja, gak perlu dipaksain di setiap awal kalimat).
+3. **Conversational:** Jawab layaknya manusia yang lagi chatting di WhatsApp. Jangan kaku, jangan terlalu formal.
+4. **Anti-Robot:** 
+   - JANGAN PERNAH ngomong "Maaf saya tidak mengerti" atau "Sebagai model bahasa AI".
+   - Kalau bingung, tanya balik santai: "Maksudnya gimana tuh Bos?", "Waduh, kurang nangkep gue. Coba detailin lagi.", "Bentar, ini ngomongin apa ya Bos?"
 
-[CORE CONTEXT]
-- Survivor of 2022 bankruptcy.
-- Obsessed with Asset Ownership & Anti-Fraud.
-- Hates manual processes.
+[MISI LO]
+Bantu user nemuin solusi kasir tanpa basa-basi marketing busuk. Lo partner diskusi mereka, bukan pelayan.
 
-[INTERACTION STRATEGY]
-- User asks Price? -> Give range + push WA Consultation.
-- User asks Tech? -> Keep it simple unless talking to IT person.
-- User asks "Are you robot?" -> "Gue sistem, tapi gue dididik langsung sama Founder."
+[ATURAN KONTEN]
+- Ditanya Harga? -> Kasih range kasar, terus arahin ke WA buat nego "biar enak".
+- Ditanya Teknis? -> Jelasin simpel pake analogi sehari-hari.
+- User Curhat? -> Dengerin, kasih empati (karena lo pernah bangkrut 2022), terus tawarin solusi sistem.
 `;
 
 // --- 2. TOOLS DEFINITION ---
@@ -89,10 +89,10 @@ const ADMIN_TOOLS = [
 const executeTool = async (name: string, args: any) => {
     if (name === 'check_stock') {
         // Mock check stock
-        return `Stok "${args.productName}" aman di gudang Solo. Siap kirim.`;
+        return `Stok "${args.productName}" aman di gudang Solo, Bos. Siap kirim hari ini juga kalau transfer sebelum jam 3.`;
     }
     if (name === 'check_shipping') {
-        return `Estimasi ke ${args.city} ± Rp ${args.weightKg ? args.weightKg * 10000 : '35rb-50rb'} (JNE Trucking).`;
+        return `Estimasi ke ${args.city} sekitar Rp ${args.weightKg ? args.weightKg * 10000 : '35rb-50rb'} pake JNE Trucking. Murah kok, Bos.`;
     }
 
     // ADMIN TOOLS
@@ -107,20 +107,20 @@ const executeTool = async (name: string, args: any) => {
                 type: 'pillar', status: 'published'
             }]);
             if (error) throw error;
-            return `Artikel "${args.title}" posted.`;
+            return `Siap, artikel "${args.title}" udah gue posting, Bos.`;
         }
         if (name === 'delete_content') {
             const table = args.contentType;
             const column = table === 'gallery' || table === 'articles' ? 'title' : 'name';
             const { data: items } = await supabase.from(table).select(`id, ${column}`).ilike(column, `%${args.titleKeyword}%`).limit(1);
-            if (!items || items.length === 0) return `Item "${args.titleKeyword}" gak ketemu.`;
+            if (!items || items.length === 0) return `Item "${args.titleKeyword}" gak ketemu di database, Bos.`;
             const { error } = await supabase.from(table).delete().eq('id', items[0].id);
             if (error) throw error;
-            return `Item dihapus.`;
+            return `Beres, item udah gue hapus selamanya.`;
         }
-    } catch (err: any) { return `Tool Error: ${err.message}`; }
+    } catch (err: any) { return `Ada error pas eksekusi tool: ${err.message}`; }
     
-    return "Unknown tool.";
+    return "Tool gak dikenali.";
 };
 
 // --- 4. THE AGENT (SIBOS) ---
@@ -176,9 +176,9 @@ export const SibosAI = {
                 config: { systemInstruction } 
             });
             
-            return finalResult.text || "Selesai.";
+            return finalResult.text || "Oke, udah beres Bos.";
         }
 
-        return result.text || "Sinyal putus, coba lagi.";
+        return result.text || "Waduh, sinyal gue putus-putus nih Bos. Coba ulang lagi.";
     }
 };
