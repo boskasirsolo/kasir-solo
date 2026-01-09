@@ -1,13 +1,31 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Quote } from 'lucide-react';
 import { SiteConfig } from '../../../types';
 import { optimizeImage } from '../../../utils';
 
 export const AboutStory = ({ config }: { config?: SiteConfig }) => {
-    // Fallback image if database is empty/null
-    const defaultImage = "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800";
-    const imageUrl = config?.founderPortrait || defaultImage;
+    // Default fallback image
+    const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800";
+    
+    const [imgSrc, setImgSrc] = useState(DEFAULT_IMAGE);
+
+    useEffect(() => {
+        // If config has a founder portrait, try to use it.
+        // If it's empty/null, use default.
+        if (config?.founderPortrait && config.founderPortrait.length > 5) {
+            setImgSrc(config.founderPortrait);
+        } else {
+            setImgSrc(DEFAULT_IMAGE);
+        }
+    }, [config?.founderPortrait]);
+
+    const handleImgError = () => {
+        // If the current image fails (broken link from DB), revert to default
+        if (imgSrc !== DEFAULT_IMAGE) {
+            setImgSrc(DEFAULT_IMAGE);
+        }
+    };
 
     return (
         <section className="py-20 bg-brand-black relative">
@@ -19,10 +37,11 @@ export const AboutStory = ({ config }: { config?: SiteConfig }) => {
                         <div className="md:col-span-4 relative group">
                             <div className="aspect-[3/4] w-full rounded-2xl overflow-hidden border border-white/10 bg-brand-dark relative grayscale group-hover:grayscale-0 transition-all duration-700 shadow-2xl">
                                 <img 
-                                    src={optimizeImage(imageUrl, 600)} 
+                                    src={optimizeImage(imgSrc, 600)} 
                                     alt="Amin Maghfuri - Founder" 
                                     className="w-full h-full object-cover"
                                     loading="eager"
+                                    onError={handleImgError}
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                             </div>

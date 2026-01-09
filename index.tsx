@@ -80,7 +80,7 @@ const AppContent = () => {
   const [jobs, setJobs] = useState<JobOpening[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Config State (Initial defaults)
+  // Config State (with Fallbacks)
   const [config, setConfig] = useState<SiteConfig>({
     heroTitle: "MESIN KASIR SOLO",
     heroSubtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM.",
@@ -129,47 +129,44 @@ const AppContent = () => {
             const { data: settingsData } = await supabase.from('site_settings').select('*').limit(1).maybeSingle();
             
             if (settingsData) {
-                setConfig(prev => {
-                    // Check logic priority: DB > Prev > Default
-                    const dbFounder = settingsData.founder_portrait;
-                    // Only use dbFounder if it's a non-empty string.
-                    const finalFounder = (dbFounder && dbFounder.length > 5) ? dbFounder : prev.founderPortrait;
-
-                    return {
-                        ...prev,
-                        heroTitle: settingsData.hero_title || prev.heroTitle,
-                        heroSubtitle: settingsData.hero_subtitle || prev.heroSubtitle,
-                        aboutImage: settingsData.about_image || prev.aboutImage,
-                        founderPortrait: finalFounder, // Strict assignment
-                        sibosUrl: settingsData.sibos_url || prev.sibosUrl,
-                        qalamUrl: settingsData.qalam_url || prev.qalamUrl,
-                        companyLegalName: settingsData.company_legal_name || prev.companyLegalName,
-                        nibNumber: settingsData.nib_number || prev.nibNumber,
-                        ahuNumber: settingsData.ahu_number || prev.ahuNumber,
-                        npwpNumber: settingsData.npwp_number || prev.npwpNumber,
-                        whatsappNumber: settingsData.whatsapp_number || prev.whatsappNumber,
-                        emailAddress: settingsData.email_address || prev.emailAddress,
-                        addressSolo: settingsData.address_solo || prev.addressSolo,
-                        addressBlora: settingsData.address_blora || prev.addressBlora,
-                        mapSoloLink: settingsData.map_solo_link || prev.mapSoloLink,
-                        mapBloraLink: settingsData.map_blora_link || prev.mapBloraLink,
-                        mapSoloEmbed: settingsData.map_solo_embed || prev.mapSoloEmbed,
-                        mapBloraEmbed: settingsData.map_blora_embed || prev.mapBloraEmbed,
-                        instagramUrl: settingsData.instagram_url || prev.instagramUrl,
-                        facebookUrl: settingsData.facebook_url || prev.facebookUrl,
-                        youtubeUrl: settingsData.youtube_url || prev.youtubeUrl,
-                        tiktokUrl: settingsData.tiktok_url || prev.tiktokUrl,
-                        linkedinUrl: settingsData.linkedin_url || prev.linkedinUrl,
-                        googleAnalyticsId: settingsData.google_analytics_id || prev.googleAnalyticsId,
-                        googleSearchConsoleCode: settingsData.google_search_console_code || prev.googleSearchConsoleCode,
-                        googleMerchantId: settingsData.google_merchant_id || prev.googleMerchantId,
-                        timezone: settingsData.timezone || prev.timezone,
-                        quotaOnsiteMax: settingsData.quota_onsite_max ?? prev.quotaOnsiteMax,
-                        quotaOnsiteUsed: settingsData.quota_onsite_used ?? prev.quotaOnsiteUsed,
-                        quotaDigitalMax: settingsData.quota_digital_max ?? prev.quotaDigitalMax,
-                        quotaDigitalUsed: settingsData.quota_digital_used ?? prev.quotaDigitalUsed
-                    };
-                });
+                setConfig(prev => ({
+                    ...prev,
+                    heroTitle: settingsData.hero_title || prev.heroTitle,
+                    heroSubtitle: settingsData.hero_subtitle || prev.heroSubtitle,
+                    aboutImage: settingsData.about_image || prev.aboutImage,
+                    // Direct Mapping: If DB has it, use it. Else fall back to default string (not prev state which might be stale)
+                    founderPortrait: settingsData.founder_portrait && settingsData.founder_portrait.length > 5 
+                        ? settingsData.founder_portrait 
+                        : "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800",
+                    
+                    sibosUrl: settingsData.sibos_url || prev.sibosUrl,
+                    qalamUrl: settingsData.qalam_url || prev.qalamUrl,
+                    companyLegalName: settingsData.company_legal_name || prev.companyLegalName,
+                    nibNumber: settingsData.nib_number || prev.nibNumber,
+                    ahuNumber: settingsData.ahu_number || prev.ahuNumber,
+                    npwpNumber: settingsData.npwp_number || prev.npwpNumber,
+                    whatsappNumber: settingsData.whatsapp_number || prev.whatsappNumber,
+                    emailAddress: settingsData.email_address || prev.emailAddress,
+                    addressSolo: settingsData.address_solo || prev.addressSolo,
+                    addressBlora: settingsData.address_blora || prev.addressBlora,
+                    mapSoloLink: settingsData.map_solo_link || prev.mapSoloLink,
+                    mapBloraLink: settingsData.map_blora_link || prev.mapBloraLink,
+                    mapSoloEmbed: settingsData.map_solo_embed || prev.mapSoloEmbed,
+                    mapBloraEmbed: settingsData.map_blora_embed || prev.mapBloraEmbed,
+                    instagramUrl: settingsData.instagram_url || prev.instagramUrl,
+                    facebookUrl: settingsData.facebook_url || prev.facebookUrl,
+                    youtubeUrl: settingsData.youtube_url || prev.youtubeUrl,
+                    tiktokUrl: settingsData.tiktok_url || prev.tiktokUrl,
+                    linkedinUrl: settingsData.linkedin_url || prev.linkedinUrl,
+                    googleAnalyticsId: settingsData.google_analytics_id || prev.googleAnalyticsId,
+                    googleSearchConsoleCode: settingsData.google_search_console_code || prev.googleSearchConsoleCode,
+                    googleMerchantId: settingsData.google_merchant_id || prev.googleMerchantId,
+                    timezone: settingsData.timezone || prev.timezone,
+                    quotaOnsiteMax: settingsData.quota_onsite_max ?? prev.quotaOnsiteMax,
+                    quotaOnsiteUsed: settingsData.quota_onsite_used ?? prev.quotaOnsiteUsed,
+                    quotaDigitalMax: settingsData.quota_digital_max ?? prev.quotaDigitalMax,
+                    quotaDigitalUsed: settingsData.quota_digital_used ?? prev.quotaDigitalUsed
+                }));
                 injectGoogleTags(settingsData.google_analytics_id, settingsData.google_search_console_code);
             }
         } catch (e) {
