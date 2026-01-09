@@ -48,9 +48,9 @@ export const SEOHelmet = ({
             <meta name="twitter:image" content={finalImage} />
             
             {/* Schema Itemprops (Google+) */}
-            <meta itemprop="name" content={finalTitle} />
-            <meta itemprop="description" content={finalDesc} />
-            <meta itemprop="image" content={finalImage} />
+            <meta itemProp="name" content={finalTitle} />
+            <meta itemProp="description" content={finalDesc} />
+            <meta itemProp="image" content={finalImage} />
         </Helmet>
     );
 };
