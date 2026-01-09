@@ -1,5 +1,6 @@
+
 import React, { useRef } from 'react';
-import { UploadCloud, Image as ImageIcon, Sparkles, Loader2 } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, Sparkles, Loader2, FolderOpen } from 'lucide-react';
 import { Input, Button } from '../ui';
 
 export const SettingsSection = ({ title, desc, children }: { title: string, desc?: string, children?: React.ReactNode }) => (
@@ -16,12 +17,14 @@ export const ImageUploader = ({
     label, 
     previewUrl, 
     onSelect, 
+    onGalleryPick, // NEW PROP
     aspect = 'landscape',
     helperText 
 }: { 
     label: string, 
     previewUrl: string, 
     onSelect: (f: File) => void,
+    onGalleryPick?: () => void, // Optional
     aspect?: 'landscape' | 'portrait',
     helperText?: string
 }) => {
@@ -32,23 +35,46 @@ export const ImageUploader = ({
         <div>
             <h3 className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-2"><ImageIcon size={14}/> {label}</h3>
             <div className="flex gap-4 items-start">
-                <div className={`${hClass} bg-black rounded-lg overflow-hidden border border-white/10 shrink-0`}>
+                <div className={`${hClass} bg-black rounded-lg overflow-hidden border border-white/10 shrink-0 relative group`}>
                     <img src={previewUrl || "https://via.placeholder.com/150"} className="w-full h-full object-cover" />
+                    {/* Hover Actions in Image */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                        <button onClick={() => inputRef.current?.click()} className="p-1 bg-white/20 hover:bg-white/40 rounded text-white" title="Upload Baru">
+                            <UploadCloud size={14} />
+                        </button>
+                        {onGalleryPick && (
+                            <button onClick={onGalleryPick} className="p-1 bg-brand-orange/20 hover:bg-brand-orange/40 rounded text-brand-orange border border-brand-orange/50" title="Pilih dari Galeri">
+                                <FolderOpen size={14} />
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <div className="flex-1">
-                    <div 
-                        onClick={() => inputRef.current?.click()}
-                        className="border border-dashed border-white/20 rounded-lg p-3 text-center hover:border-brand-orange/50 transition-colors cursor-pointer bg-white/5 flex flex-col items-center justify-center gap-1 group"
-                    >
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            ref={inputRef}
-                            onChange={(e) => e.target.files?.[0] && onSelect(e.target.files[0])} 
-                            className="hidden" 
-                        />
-                        <UploadCloud size={16} className="text-gray-500 group-hover:text-brand-orange" />
-                        <span className="text-gray-400 font-bold text-[10px] group-hover:text-white">Upload File</span>
+                    <div className="flex gap-2 mb-2">
+                        <button 
+                            onClick={() => inputRef.current?.click()}
+                            className="flex-1 border border-dashed border-white/20 rounded-lg p-2 text-center hover:border-brand-orange/50 transition-colors cursor-pointer bg-white/5 flex flex-col items-center justify-center gap-1 group"
+                        >
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                ref={inputRef}
+                                onChange={(e) => e.target.files?.[0] && onSelect(e.target.files[0])} 
+                                className="hidden" 
+                            />
+                            <UploadCloud size={14} className="text-gray-500 group-hover:text-brand-orange" />
+                            <span className="text-gray-400 font-bold text-[9px] group-hover:text-white">Upload</span>
+                        </button>
+                        
+                        {onGalleryPick && (
+                            <button 
+                                onClick={onGalleryPick}
+                                className="flex-1 border border-dashed border-brand-orange/20 rounded-lg p-2 text-center hover:bg-brand-orange/10 transition-colors cursor-pointer bg-brand-orange/5 flex flex-col items-center justify-center gap-1 group"
+                            >
+                                <FolderOpen size={14} className="text-brand-orange opacity-70 group-hover:opacity-100" />
+                                <span className="text-brand-orange font-bold text-[9px]">Galeri</span>
+                            </button>
+                        )}
                     </div>
                     {helperText && <p className="text-[9px] text-gray-600 mt-1">{helperText}</p>}
                 </div>

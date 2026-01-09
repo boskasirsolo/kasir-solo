@@ -1,13 +1,33 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TabProps } from './types';
 import { SettingsSection, ImageUploader, AIGeneratorBox } from './ui-atoms';
 import { Input, TextArea } from '../ui';
-import { ShieldCheck } from 'lucide-react';
+import { MediaLibraryModal } from '../admin/media-library';
 
 export const TabGeneral = ({ config, setConfig, state, actions }: TabProps) => {
+    const [showMediaLib, setShowMediaLib] = useState(false);
+    const [targetField, setTargetField] = useState<'about' | 'founder'>('about');
+
+    const openMediaLib = (target: 'about' | 'founder') => {
+        setTargetField(target);
+        setShowMediaLib(true);
+    };
+
+    const handleMediaSelect = (url: string) => {
+        actions.handleUrlSelect(targetField, url);
+        setShowMediaLib(false);
+    };
+
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-8 animate-fade-in relative">
+            {showMediaLib && (
+                <MediaLibraryModal 
+                    onSelect={handleMediaSelect} 
+                    onClose={() => setShowMediaLib(false)} 
+                />
+            )}
+
             {/* HERO SECTION */}
             <SettingsSection title="Tampilan Utama (Hero)" desc="Konten yang muncul paling depan di website.">
                 <AIGeneratorBox 
@@ -35,12 +55,14 @@ export const TabGeneral = ({ config, setConfig, state, actions }: TabProps) => {
                         label="Foto Kantor (Landscape)" 
                         previewUrl={state.aboutImagePreview} 
                         onSelect={(f) => actions.handleImageSelect('about', f)}
+                        onGalleryPick={() => openMediaLib('about')}
                         helperText="Muncul di halaman About & Contact."
                     />
                     <ImageUploader 
                         label="Foto Founder (Portrait)" 
                         previewUrl={state.founderImagePreview} 
                         onSelect={(f) => actions.handleImageSelect('founder', f)}
+                        onGalleryPick={() => openMediaLib('founder')}
                         aspect="portrait"
                         helperText="Muncul di section 'Jujur-jujuran'."
                     />

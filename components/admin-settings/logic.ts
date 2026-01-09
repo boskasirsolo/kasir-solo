@@ -28,12 +28,22 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
     const setActiveTab = (id: SettingsTabId) => setState(p => ({ ...p, activeTab: id }));
     const setMagicContext = (val: string) => setState(p => ({ ...p, magicContext: val }));
 
+    // Handle File Upload (New File)
     const handleImageSelect = (target: 'about' | 'founder', file: File) => {
         const preview = URL.createObjectURL(file);
         if (target === 'about') {
             setState(p => ({ ...p, aboutImageFile: file, aboutImagePreview: preview }));
         } else {
             setState(p => ({ ...p, founderImageFile: file, founderImagePreview: preview }));
+        }
+    };
+
+    // Handle Gallery Selection (Existing URL)
+    const handleUrlSelect = (target: 'about' | 'founder', url: string) => {
+        if (target === 'about') {
+            setState(p => ({ ...p, aboutImageFile: null, aboutImagePreview: url }));
+        } else {
+            setState(p => ({ ...p, founderImageFile: null, founderImagePreview: url }));
         }
     };
 
@@ -75,13 +85,12 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
             let finalAboutImage = state.aboutImagePreview;
             let finalFounderImage = state.founderImagePreview;
 
-            // --- 1. UPLOAD ABOUT IMAGE ---
+            // --- 1. UPLOAD ABOUT IMAGE (IF NEW FILE) ---
             if (state.aboutImageFile) {
                 const seoName = 'kantor-mesin-kasir-solo-hq';
                 const fileToUpload = renameFile(state.aboutImageFile, seoName);
 
                 if (CONFIG.CLOUDINARY_CLOUD_NAME) {
-                    // Option A: Cloudinary
                     const formData = new FormData();
                     formData.append('file', fileToUpload);
                     formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
@@ -89,20 +98,17 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                     const data = await res.json();
                     if (data.secure_url) finalAboutImage = data.secure_url;
                 } else {
-                    // Option B: Supabase Storage (Fallback)
-                    // Note: Ensure 'images' bucket is public
                     const { url } = await uploadToSupabase(fileToUpload, 'settings', 'images');
                     finalAboutImage = url;
                 }
             }
 
-            // --- 2. UPLOAD FOUNDER IMAGE ---
+            // --- 2. UPLOAD FOUNDER IMAGE (IF NEW FILE) ---
             if (state.founderImageFile) {
                 const seoName = 'founder-amin-maghfuri-mesin-kasir-solo';
                 const fileToUpload = renameFile(state.founderImageFile, seoName);
 
                 if (CONFIG.CLOUDINARY_CLOUD_NAME) {
-                    // Option A: Cloudinary
                     const formData = new FormData();
                     formData.append('file', fileToUpload);
                     formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
@@ -110,7 +116,6 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                     const data = await res.json();
                     if (data.secure_url) finalFounderImage = data.secure_url;
                 } else {
-                    // Option B: Supabase Storage (Fallback)
                     const { url } = await uploadToSupabase(fileToUpload, 'settings', 'images');
                     finalFounderImage = url;
                 }
@@ -161,7 +166,7 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                 throw new Error(error.message);
             }
             
-            alert("Pengaturan berhasil disimpan! Gambar aman.");
+            alert("Pengaturan berhasil disimpan!");
             setState(p => ({ ...p, aboutImageFile: null, founderImageFile: null }));
         } catch (e: any) {
             alert("Gagal menyimpan: " + e.message);
@@ -170,5 +175,5 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
         }
     };
 
-    return { state, actions: { setActiveTab, setMagicContext, handleImageSelect, saveSettings, generateHeroContent } };
+    return { state, actions: { setActiveTab, setMagicContext, handleImageSelect, handleUrlSelect, saveSettings, generateHeroContent } };
 };

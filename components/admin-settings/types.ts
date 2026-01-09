@@ -19,6 +19,7 @@ export interface SettingsActions {
     setActiveTab: (id: SettingsTabId) => void;
     setMagicContext: (val: string) => void;
     handleImageSelect: (target: 'about' | 'founder', file: File) => void;
+    handleUrlSelect: (target: 'about' | 'founder', url: string) => void; // NEW ACTION
     saveSettings: () => Promise<void>;
     generateHeroContent: () => Promise<void>;
 }
