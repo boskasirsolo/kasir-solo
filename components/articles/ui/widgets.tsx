@@ -96,7 +96,7 @@ export const CategorySidebar = ({
       return tree;
   }, [articles]);
 
-  // Effect: Auto-expand/collapse based on selection
+  // Effect: Auto-expand based on selection (One-way sync)
   useEffect(() => {
     if (selectedFilter.type === 'parent') {
        setExpandedParents([selectedFilter.value]);
@@ -105,10 +105,9 @@ export const CategorySidebar = ({
        if (parent) {
            setExpandedParents([parent.id]);
        }
-    } else {
-       // Collapse all when 'Reset' or 'All' is clicked
-       setExpandedParents([]);
-    }
+    } 
+    // FIX: Removed 'else' block that auto-collapsed everything on re-render.
+    // Collapse is now handled explicitly by the Reset button.
   }, [selectedFilter, mergedTree]);
 
   // Toggle Logic: Accordion style (one open at a time)
@@ -139,7 +138,12 @@ export const CategorySidebar = ({
           <h4 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
               <Filter size={14} className="text-brand-orange"/> Arsip Taktis
           </h4>
-          <button onClick={() => onSelect('all', '')} className={`text-[10px] px-2 py-1 rounded transition-colors ${selectedFilter.type === 'all' ? 'bg-brand-orange text-white' : 'text-gray-500 hover:text-white'}`}>RESET</button>
+          <button 
+            onClick={() => { onSelect('all', ''); setExpandedParents([]); }} 
+            className={`text-[10px] px-2 py-1 rounded transition-colors ${selectedFilter.type === 'all' ? 'bg-brand-orange text-white' : 'text-gray-500 hover:text-white'}`}
+          >
+            RESET
+          </button>
        </div>
        
        {/* SCROLLABLE AREA START */}
