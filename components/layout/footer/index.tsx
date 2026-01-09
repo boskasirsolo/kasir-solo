@@ -91,7 +91,6 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
       <FooterBottom 
         year={new Date().getFullYear()} 
         onLegalClick={setPage}
-        onAdminClick={() => setPage('admin')}
       />
     </FooterContainer>
   );

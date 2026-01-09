@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BadgeCheck, Lock } from 'lucide-react';
+import { BadgeCheck } from 'lucide-react';
 import { SiteConfig } from '../../types';
 import { SocialButton } from './atoms';
 
@@ -59,12 +59,10 @@ export const BrandColumn = ({
 
 export const FooterBottom = ({ 
   year, 
-  onLegalClick, 
-  onAdminClick 
+  onLegalClick
 }: { 
   year: number, 
-  onLegalClick: (page: string) => void, 
-  onAdminClick: () => void 
+  onLegalClick: (page: string) => void
 }) => (
   <div className="border-t border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-4">
     <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-center md:text-left">
@@ -77,12 +75,6 @@ export const FooterBottom = ({
         <button onClick={() => onLegalClick('legal/privacy')} className="text-xs text-gray-400 hover:text-brand-orange transition-colors font-medium">Privasi</button>
         <button onClick={() => onLegalClick('legal/terms')} className="text-xs text-gray-400 hover:text-brand-orange transition-colors font-medium">Syarat & Ketentuan</button>
       </div>
-    </div>
-
-    <div className="flex items-center gap-4">
-      <button onClick={onAdminClick} className="text-gray-600 hover:text-brand-orange transition-colors p-2" title="Admin Login">
-        <Lock size={12} />
-      </button>
     </div>
   </div>
 );
