@@ -1,5 +1,6 @@
+
 import React, { useRef, useState } from 'react';
-import { Calendar, ChevronRight, ShoppingCart, Star, Plus, Check, MessageCircle } from 'lucide-react';
+import { Calendar, ChevronRight, ShoppingCart, Star, Plus, Check, MessageCircle, Eye } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Article, Product } from '../../types';
 import { optimizeImage, formatRupiah } from '../../../utils';
@@ -12,8 +13,8 @@ const getPureCategory = (category: string) => {
   return category.split(',').map(c => c.split('>').pop()?.trim()).filter(Boolean).join(', ');
 };
 
-export const ArticleGridCard = ({ article, onClick }: { article: Article, onClick: () => void }) => (
-  <div onClick={onClick} className="bg-brand-card border border-white/5 rounded-2xl overflow-hidden hover:border-brand-orange transition-all duration-300 hover:shadow-neon hover:-translate-y-2 cursor-pointer flex flex-col group h-full">
+export const ArticleGridCard = ({ article, onClick, viewCount }: { article: Article, onClick: () => void, viewCount?: number }) => (
+  <div onClick={onClick} className="bg-brand-card border border-white/5 rounded-2xl overflow-hidden hover:border-brand-orange transition-all duration-300 hover:shadow-neon hover:-translate-y-2 cursor-pointer flex flex-col group h-full relative">
     <div className="relative h-56 overflow-hidden">
       <img 
         src={optimizeImage(article.image, 500)} 
@@ -22,6 +23,13 @@ export const ArticleGridCard = ({ article, onClick }: { article: Article, onClic
         loading="lazy" 
       />
       <div className="absolute top-4 left-4"><span className="px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold rounded border border-white/10">{getPureCategory(article.category)}</span></div>
+      
+      {/* GOD MODE BADGE: Only visible if viewCount is provided (Admin) */}
+      {typeof viewCount === 'number' && (
+        <div className="absolute top-4 right-4 z-20 bg-black/60 backdrop-blur-md border border-purple-500/50 text-purple-300 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-neon animate-fade-in">
+            <Eye size={12} /> {viewCount > 1000 ? (viewCount / 1000).toFixed(1) + 'k' : viewCount}
+        </div>
+      )}
     </div>
     <div className="p-6 flex flex-col flex-grow">
       <div className="flex items-center gap-3 text-xs text-gray-500 mb-3"><span className="flex items-center gap-1"><Calendar size={12}/> {article.date}</span><span>•</span><span className="text-brand-orange font-bold">{article.readTime || '3 min'}</span></div>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Filter, X, Zap, ChevronLeft, ChevronRight, Skull } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Article, Product, SiteConfig } from '../../types';
@@ -7,7 +7,7 @@ import { ArticleGridCard, InFeedProductCard } from '../ui/cards';
 import { ArticleSearchWidget, CategorySidebar, TagCloudWidget, ProductSidebarWidget } from '../ui/widgets';
 import { FeaturedArticleHero } from './hero';
 import { Button, SectionHeader } from '../../ui';
-import { slugify } from '../../../utils';
+import { slugify, supabase } from '../../../utils';
 import { useArticleList } from '../hooks/use-article-list';
 import { ArticleListProps } from '../types';
 
@@ -31,6 +31,39 @@ export const ArticleListView = ({ articles, products, config }: ExtendedListProp
     hasResults,
     resetFilters
   } = useArticleList(articles);
+
+  // --- GOD MODE ANALYTICS ---
+  const [adminViewCounts, setAdminViewCounts] = useState<Record<number, number>>({});
+
+  useEffect(() => {
+    const fetchStats = async () => {
+        // 1. Check if Supabase & Session exists (Admin Check)
+        if (!supabase) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return; // Not admin, do nothing
+
+        // 2. Batch fetch for current page items only
+        const counts: Record<number, number> = {};
+        
+        await Promise.all(paginatedArticles.map(async (article) => {
+            const slug = slugify(article.title);
+            // Count rows in analytics_logs where page_path contains the slug
+            const { count } = await supabase
+                .from('analytics_logs')
+                .select('*', { count: 'exact', head: true })
+                .eq('event_type', 'page_view')
+                .ilike('page_path', `%/articles/${slug}%`);
+            
+            counts[article.id] = count || 0;
+        }));
+
+        setAdminViewCounts(prev => ({...prev, ...counts}));
+    };
+
+    if (paginatedArticles.length > 0) {
+        fetchStats();
+    }
+  }, [paginatedArticles]); // Re-run when page changes
 
   const handleArticleClick = (article: Article) => {
     navigate(`/articles/${slugify(article.title)}`);
@@ -84,6 +117,7 @@ export const ArticleListView = ({ articles, products, config }: ExtendedListProp
                     <ArticleGridCard 
                       article={article}
                       onClick={() => handleArticleClick(article)}
+                      viewCount={adminViewCounts[article.id]} // PASS VIEW COUNT IF AVAILABLE
                     />
                     
                     {/* IN-FEED PRODUCT INJECTION LOGIC */}
