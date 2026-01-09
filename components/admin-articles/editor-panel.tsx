@@ -93,8 +93,8 @@ export const EditorPanel = ({
     // STEP 0: INITIAL START (Pre-Research)
     if (aiState.step === 0 && !form.id) {
         return (
-            <div className="flex flex-col h-full bg-brand-dark p-4 items-center justify-center text-center">
-                <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+            <div className="flex flex-col h-full bg-brand-dark p-4 items-center justify-center text-center overflow-y-auto custom-scrollbar">
+                <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)] shrink-0">
                     <Search size={32} className="text-blue-400" />
                 </div>
                 
@@ -103,7 +103,7 @@ export const EditorPanel = ({
                     Tentukan jenis artikel, lalu AI akan mencari topik dengan volume pencarian tertinggi.
                 </p>
 
-                {/* INSERTED: Manual Topic Input */}
+                {/* 1. INPUT TOPIK UTAMA */}
                 <div className="w-full max-w-[250px] mb-4 text-left">
                     <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
                         <Target size={10} /> Topik Spesifik (Opsional)
@@ -117,7 +117,20 @@ export const EditorPanel = ({
                     />
                 </div>
 
-                {/* INSERTED: Strategy Switcher for Pre-Research Context */}
+                {/* 2. INPUT KONTEKS TAMBAHAN (MOVED HERE) */}
+                <div className="w-full max-w-[250px] mb-4 text-left">
+                    <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
+                        <MessageSquare size={10} /> Konteks Tambahan (Penting)
+                    </label>
+                    <textarea
+                        value={form.generationContext}
+                        onChange={(e) => setForm((p:any) => ({...p, generationContext: e.target.value}))}
+                        placeholder="Contoh: Fokus ke keyword 'jual scanner', jangan sebut harga, tone lebih agresif..."
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white focus:outline-none focus:border-brand-orange placeholder-gray-600 resize-none h-16 custom-scrollbar"
+                    />
+                </div>
+
+                {/* 3. PILIH STRATEGI */}
                 <div className="w-full max-w-[250px] mb-6 text-left">
                     <StrategySwitcher 
                         type={form.type} 
@@ -127,6 +140,7 @@ export const EditorPanel = ({
                     />
                 </div>
 
+                {/* 4. BUTTON RISET */}
                 <Button 
                     onClick={() => actions.runResearch(researchTopicInput)} // PASS INPUT VALUE
                     disabled={loading.researching}
@@ -251,15 +265,15 @@ export const EditorPanel = ({
                     </div>
                 )}
 
-                {/* 2.5 EXTRA CONTEXT (NEW) */}
+                {/* 2.5 EXTRA CONTEXT (STILL HERE FOR EDITING) */}
                 <div className="bg-white/5 p-3 rounded-lg border border-white/10">
                     <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
-                        <MessageSquare size={10} /> Konteks Tambahan (Opsional)
+                        <MessageSquare size={10} /> Edit Konteks Tambahan
                     </label>
                     <textarea
                         value={form.generationContext}
                         onChange={(e) => setForm((p:any) => ({...p, generationContext: e.target.value}))}
-                        placeholder="Contoh: Fokus ke keyword 'jual scanner barcode', jangan sebut harga, tone lebih agresif..."
+                        placeholder="Contoh: Fokus ke keyword 'jual scanner barcode', jangan sebut harga..."
                         className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white focus:outline-none focus:border-brand-orange placeholder-gray-600 resize-none h-20 custom-scrollbar"
                     />
                 </div>
