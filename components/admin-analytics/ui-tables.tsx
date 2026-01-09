@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { LogOut, Zap, Activity, Eye, MousePointerClick, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LogOut, Zap, Activity, Eye, MousePointerClick, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { AnalyticsStats } from './types';
 
 // --- TABLE 1: Top Pages ---
@@ -8,10 +8,11 @@ export const TopPagesTable = ({
     pages, 
     onPageClick 
 }: { 
-    pages: [string, number][], 
+    pages: { path: string; hits: number; avgTime: string }[], 
     onPageClick: (path: string) => void 
 }) => {
-    const ITEMS_PER_PAGE = 10;
+    // UPDATED: Limit to 6 items per page
+    const ITEMS_PER_PAGE = 6;
     const [currentPage, setCurrentPage] = useState(1);
 
     const totalPages = Math.ceil(pages.length / ITEMS_PER_PAGE);
@@ -26,7 +27,11 @@ export const TopPagesTable = ({
             </div>
             
             <div className="space-y-2 flex-grow">
-                {currentData.map(([page, count], idx) => {
+                {currentData.map((item, idx) => {
+                    const page = item.path;
+                    const count = item.hits;
+                    const avgTime = item.avgTime;
+
                     const isProduct = page.includes('/shop/');
                     const isArticle = page.includes('/articles/');
                     const typeLabel = isProduct ? 'PRODUK' : isArticle ? 'ARTIKEL' : 'HALAMAN';
@@ -39,20 +44,29 @@ export const TopPagesTable = ({
                             onClick={() => onPageClick(page)}
                             className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5 hover:border-brand-orange hover:bg-brand-orange/5 transition-all group cursor-pointer relative overflow-hidden"
                         >
-                            <div className="flex items-center gap-3 overflow-hidden relative z-10">
+                            <div className="flex items-center gap-3 overflow-hidden relative z-10 flex-1">
                                 <span className="w-6 h-6 rounded bg-black/50 text-gray-500 flex items-center justify-center text-[10px] font-bold shrink-0 border border-white/5 group-hover:text-brand-orange group-hover:border-brand-orange/50 transition-colors">
                                     {rank}
                                 </span>
-                                <div className="flex flex-col min-w-0">
+                                <div className="flex flex-col min-w-0 flex-1">
                                     <span className="text-xs text-white font-medium truncate max-w-[200px] md:max-w-sm group-hover:text-brand-orange transition-colors">{page}</span>
                                     <span className={`text-[9px] px-1.5 py-0.5 rounded w-fit mt-0.5 font-bold border ${typeColor}`}>{typeLabel}</span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3 relative z-10">
-                                <div className="flex items-center gap-1 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 duration-300">
+                            
+                            <div className="flex items-center gap-4 relative z-10 shrink-0">
+                                {/* AVG TIME INDICATOR */}
+                                {avgTime !== '-' && (
+                                    <div className="hidden sm:flex items-center gap-1.5 text-gray-500 bg-black/20 px-2 py-1 rounded border border-white/5" title="Rata-rata Durasi Baca">
+                                        <Clock size={10} className="text-blue-400"/>
+                                        <span className="text-[10px] font-mono font-bold text-gray-300">{avgTime}</span>
+                                    </div>
+                                )}
+
+                                <div className="flex items-center gap-1 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 duration-300 hidden sm:flex">
                                     <MousePointerClick size={12}/> Detail
                                 </div>
-                                <span className="text-sm font-bold text-white shrink-0 bg-black/40 px-3 py-1 rounded border border-white/10 shadow-sm group-hover:border-brand-orange/30 group-hover:text-brand-orange transition-colors">
+                                <span className="text-sm font-bold text-white bg-black/40 px-3 py-1 rounded border border-white/10 shadow-sm group-hover:border-brand-orange/30 group-hover:text-brand-orange transition-colors min-w-[70px] text-center">
                                     {count} Hits
                                 </span>
                             </div>

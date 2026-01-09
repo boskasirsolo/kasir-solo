@@ -5,7 +5,8 @@ export interface AnalyticsStats {
     totalActions: number;
     conversionRate: string;
     trafficByDate: Record<string, number>;
-    sortedPages: [string, number][];
+    // Updated: sortedPages now carries rich object instead of just tuple
+    sortedPages: { path: string; hits: number; avgTime: string }[]; 
     devices: { mobile: number; desktop: number; tablet: number };
     sortedReferrers: [string, number][];
     hours: number[];
@@ -14,6 +15,7 @@ export interface AnalyticsStats {
     bounceRate: number;
     avgPagesPerSession: string;
     sortedExitPages: [string, number][];
+    avgEngagementTime: string; // New Global Metric
 }
 
 export interface AnalyticsState {

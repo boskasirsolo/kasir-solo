@@ -4,6 +4,14 @@ import { supabase } from '../../utils';
 import { AnalyticsLog } from '../../types';
 import { AnalyticsStats } from './types';
 
+// Helper: Format seconds to "1m 30s" or "45s"
+const formatDuration = (seconds: number) => {
+    if (seconds < 60) return `${Math.round(seconds)}s`;
+    const m = Math.floor(seconds / 60);
+    const s = Math.round(seconds % 60);
+    return `${m}m ${s}s`;
+};
+
 export const useAnalyticsData = () => {
   const [logs, setLogs] = useState<AnalyticsLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +33,7 @@ export const useAnalyticsData = () => {
       .from('analytics_logs')
       .select('*')
       .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true }); // Penting: Ascending untuk urutan waktu
 
     if (!error && data) {
       setLogs(data);
@@ -39,10 +47,54 @@ export const useAnalyticsData = () => {
     const totalActions = logs.filter(l => l.event_type !== 'page_view').length; 
     const conversionRate = totalViews > 0 ? ((totalActions / totalViews) * 100).toFixed(1) : '0';
     
-    // 1. Traffic by Date
+    // Data Structures
     const trafficByDate: Record<string, number> = {};
-    const today = new Date();
+    const pageViews: Record<string, number> = {};
+    const devices = { mobile: 0, desktop: 0, tablet: 0 };
+    const referrers: Record<string, number> = {};
+    const hours: number[] = new Array(24).fill(0);
     
+    // Session & Duration Logic
+    const visitorSessions: Record<string, AnalyticsLog[]> = {};
+    const pageDurations: Record<string, number[]> = {}; // path -> array of seconds
+    let totalEngagementSeconds = 0;
+    let engagementCount = 0;
+
+    // 1. Group Logs by Visitor for Duration Calculation
+    logs.forEach(log => {
+        if (!visitorSessions[log.visitor_id]) visitorSessions[log.visitor_id] = [];
+        visitorSessions[log.visitor_id].push(log);
+    });
+
+    // 2. Process Durations per Visitor Session
+    Object.values(visitorSessions).forEach(sessionLogs => {
+        // Sort by time just in case
+        sessionLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
+
+        for (let i = 0; i < sessionLogs.length - 1; i++) {
+            const current = sessionLogs[i];
+            const next = sessionLogs[i+1];
+
+            if (current.event_type === 'page_view') {
+                const startTime = new Date(current.created_at!).getTime();
+                const endTime = new Date(next.created_at!).getTime();
+                const diffSeconds = (endTime - startTime) / 1000;
+
+                // Validasi: Jika selisih > 30 menit, anggap sesi baru/idle (timeout), jangan dihitung
+                if (diffSeconds < 1800 && diffSeconds > 0) {
+                    const path = current.page_path.split('?')[0];
+                    if (!pageDurations[path]) pageDurations[path] = [];
+                    pageDurations[path].push(diffSeconds);
+                    
+                    totalEngagementSeconds += diffSeconds;
+                    engagementCount++;
+                }
+            }
+        }
+    });
+
+    // 3. General Aggregation
+    const today = new Date();
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(today.getDate() - i);
@@ -50,15 +102,10 @@ export const useAnalyticsData = () => {
         trafficByDate[key] = 0;
     }
 
-    // 2. Aggregators
-    const pageViews: Record<string, number> = {};
-    const devices = { mobile: 0, desktop: 0, tablet: 0 };
-    const referrers: Record<string, number> = {};
-    const hours: number[] = new Array(24).fill(0);
     const visitorHistory: Record<string, string[]> = {}; 
 
     logs.forEach(log => {
-      // Basic Date Map
+      // Date Map
       const d = new Date(log.created_at!);
       const dateKey = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
       if (trafficByDate.hasOwnProperty(dateKey) && log.event_type === 'page_view') {
@@ -103,7 +150,7 @@ export const useAnalyticsData = () => {
       }
     });
 
-    // 3. Advanced Metrics
+    // 4. Advanced Metrics
     let newVisitors = 0;
     let returningVisitors = 0;
     let singlePageVisits = 0;
@@ -122,9 +169,25 @@ export const useAnalyticsData = () => {
 
     const bounceRate = uniqueVisitors > 0 ? Math.round((singlePageVisits / uniqueVisitors) * 100) : 0;
     const avgPagesPerSession = uniqueVisitors > 0 ? (totalViews / uniqueVisitors).toFixed(1) : "0";
+    
+    const avgEngagementTime = engagementCount > 0 
+        ? formatDuration(totalEngagementSeconds / engagementCount) 
+        : "0s";
 
-    // UPDATED: No limit slice here, handled by UI pagination
-    const sortedPages = Object.entries(pageViews).sort(([,a], [,b]) => b - a);
+    // 5. Final Sorting for Top Pages (With Duration)
+    const sortedPages = Object.entries(pageViews)
+        .map(([path, hits]) => {
+            const durations = pageDurations[path] || [];
+            const avgSec = durations.length > 0 
+                ? durations.reduce((a, b) => a + b, 0) / durations.length 
+                : 0;
+            return {
+                path,
+                hits,
+                avgTime: avgSec > 0 ? formatDuration(avgSec) : '-'
+            };
+        })
+        .sort((a, b) => b.hits - a.hits); // Tetap sort by hits
     
     const sortedReferrers = Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 5);
     const sortedExitPages = Object.entries(exitPages).sort(([,a], [,b]) => b - a).slice(0, 5);
@@ -132,7 +195,8 @@ export const useAnalyticsData = () => {
     return { 
         totalViews, uniqueVisitors, totalActions, conversionRate,
         trafficByDate, sortedPages, devices, sortedReferrers, hours,
-        newVisitors, returningVisitors, bounceRate, avgPagesPerSession, sortedExitPages
+        newVisitors, returningVisitors, bounceRate, avgPagesPerSession, sortedExitPages,
+        avgEngagementTime
     };
   }, [logs, period]);
 
