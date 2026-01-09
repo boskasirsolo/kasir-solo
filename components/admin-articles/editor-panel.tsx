@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle, FileType } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle, FileType, MessageSquare } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, LoadingSpinner } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
@@ -250,6 +250,19 @@ export const EditorPanel = ({
                         </select>
                     </div>
                 )}
+
+                {/* 2.5 EXTRA CONTEXT (NEW) */}
+                <div className="bg-white/5 p-3 rounded-lg border border-white/10">
+                    <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2">
+                        <MessageSquare size={10} /> Konteks Tambahan (Opsional)
+                    </label>
+                    <textarea
+                        value={form.generationContext}
+                        onChange={(e) => setForm((p:any) => ({...p, generationContext: e.target.value}))}
+                        placeholder="Contoh: Fokus ke keyword 'jual scanner barcode', jangan sebut harga, tone lebih agresif..."
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white focus:outline-none focus:border-brand-orange placeholder-gray-600 resize-none h-20 custom-scrollbar"
+                    />
+                </div>
 
                 {/* RESTORED: EXCERPT FIELD */}
                 <div className="bg-white/5 p-3 rounded-lg border border-white/10">

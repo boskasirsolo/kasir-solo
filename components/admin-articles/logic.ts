@@ -129,7 +129,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
         date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
         targetWordCount: 1000,
-        related_pillars: []
+        related_pillars: [],
+        generationContext: ''
     });
 
     const [aiStep, setAiStep] = useState(0);
@@ -147,7 +148,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
             date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
             targetWordCount: 1000,
-            related_pillars: []
+            related_pillars: [],
+            generationContext: ''
         });
         setSocialCaption(''); 
         setAiStep(0); setSelectedPresets([]); setSelectedTones(['gritty']);
@@ -174,7 +176,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             type: item.type || 'cluster', pillar_id: item.pillar_id || 0, cluster_ideas: item.cluster_ideas || [], scheduleStart: '',
             date: item.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
             targetWordCount: estimatedCount,
-            related_pillars: item.related_pillars || []
+            related_pillars: item.related_pillars || [],
+            generationContext: (item as any).generation_context || ''
         });
         setSocialCaption(''); 
         setAiStep(2);
@@ -245,7 +248,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
                 cluster_ideas: form.cluster_ideas, 
                 date: dateStr, 
-                related_pillars: form.related_pillars 
+                related_pillars: form.related_pillars,
+                generation_context: form.generationContext
             };
 
             let savedId = form.id;
@@ -319,7 +323,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 cluster_ideas: [], scheduleStart: '',
                 date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
                 targetWordCount: 1000,
-                related_pillars: []
+                related_pillars: [],
+                generationContext: ''
             });
             setAiStep(1); 
             await aiLogic.generateClusterIdeas(pillar); 
@@ -361,7 +366,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
             const content = await EditorAI.writeArticle(
                 form.title, selectedTones, form.type, form.author, form.targetWordCount,
-                pillarContext, relatedPillarsData, galleryContextString
+                pillarContext, relatedPillarsData, galleryContextString, form.generationContext
             );
             
             const meta = await EditorAI.generateMeta(form.title, content);

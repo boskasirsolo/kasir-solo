@@ -49,7 +49,7 @@ Gunakan format Markdown: [Anchor Text](/path).
 3. Aplikasi -> [Layanan Web App](/services/webapp)
 4. SIBOS -> [Daftar Waiting List SIBOS](/innovation)
 5. Portfolio -> [Lihat Portfolio Kami](/gallery)
-6. Konsultasi -> [Hubungi Founder](/contact)
+6. Konsultasi -> [Hubungi Gue](/contact)
 `;
 
 export const EXISTING_CATEGORIES = `

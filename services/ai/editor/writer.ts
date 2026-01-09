@@ -52,10 +52,13 @@ export const Writer = {
         wordCount: number,
         pillarContext?: { title: string, slug: string },
         relatedPillarsData?: { title: string, slug: string }[],
-        galleryContextString?: string
+        galleryContextString?: string,
+        userContext?: string // NEW ARGUMENT
     ) => {
         const pov = buildPersona(authorName);
         const linking = buildLinkingInstructions(type, pillarContext, relatedPillarsData, galleryContextString);
+        
+        const userNotes = userContext ? `\n[ADDITIONAL CONTEXT FROM USER - STRICTLY FOLLOW]:\n"${userContext}"\n` : "";
 
         // MODE 1: SHORT FORM (< 2000 Words) - Single Shot
         if (wordCount < 2000) {
@@ -70,6 +73,7 @@ export const Writer = {
             Brand Context: ${BRAND_CONTEXT}
             ${GOV_CRITIQUE_RULE}
             ${INTERNAL_LINKING_RULES}
+            ${userNotes}
             `;
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
             return res.text || '';
@@ -88,6 +92,7 @@ export const Writer = {
             Role: Expert Writer. Task: Write Section ${i + 1}: ${sectionTitle} for "${title}".
             Target: 1000 words. POV: ${pov}.
             Context: ${BRAND_CONTEXT}
+            ${userNotes}
             ${INTERNAL_LINKING_RULES}
             ${i === 0 ? "Start with a hook." : `Connect to previous: "...${previousContext.slice(-200)}..."`}
             ${linking}

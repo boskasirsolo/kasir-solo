@@ -75,6 +75,8 @@ export interface ArticleFormState {
     related_pillars: number[]; 
     scheduleStart: string;
     uploadAuthorFile: File | null;
+    // NEW: User specific context for AI generation
+    generationContext: string;
 }
 
 // Preset Topics for Research Context
