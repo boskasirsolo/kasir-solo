@@ -191,7 +191,7 @@ export interface OrderItem {
 export interface AnalyticsLog {
   id?: number;
   visitor_id: string;
-  event_type: 'page_view' | 'click_action' | 'contact_wa';
+  event_type: 'page_view' | 'click_action' | 'contact_wa' | 'page_leave';
   page_path: string;
   device_type: 'mobile' | 'desktop' | 'tablet';
   referrer: string;

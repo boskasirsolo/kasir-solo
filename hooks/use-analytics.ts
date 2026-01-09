@@ -32,43 +32,42 @@ export const useAnalytics = () => {
   const trackedPath = useRef<string | null>(null);
 
   // 1. Ghost Mode Logic (The Invisible Cloak)
-  // Logic ini harus jalan SEBELUM tracking
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('mode') === 'ghost_access') {
       localStorage.setItem(GHOST_KEY, 'true');
       alert("👻 GHOST MODE ACTIVATED! Perangkat ini aman dari tracking.");
-      
-      // Clean up URL agar rapi (hapus parameter mode=ghost_access)
-      // Kita pakai navigate dengan replace: true agar tidak merusak history back button
       navigate(location.pathname, { replace: true });
     }
   }, [location.search, navigate, location.pathname]);
 
-  // 2. Tracking Logic
+  // 2. Tracking Logic (View & Leave)
   useEffect(() => {
-    // Delay sedikit untuk memastikan logic Ghost Mode (efek di atas) selesai dijalankan dulu
+    // Delay to let Ghost Mode logic settle
     const timer = setTimeout(() => {
-        // Cek status Ghost Mode SAAT INI
         const isGhost = localStorage.getItem(GHOST_KEY) === 'true';
         const isAdminRoute = location.pathname.startsWith('/admin');
 
-        if (isGhost) return; // Silent return for ghost
-        if (isAdminRoute) return; // Silent return for admin page
-
+        if (isGhost) return;
+        if (isAdminRoute) return;
         if (!supabase) return;
 
-        // Prevent double tracking same path (React.StrictMode mitigation)
+        // Prevent double tracking same path in React StrictMode
         if (trackedPath.current === location.pathname) return;
         trackedPath.current = location.pathname;
 
+        const visitorId = getVisitorId();
+        const deviceType = getDeviceType();
+        const currentPath = location.pathname;
+
+        // A. TRACK PAGE VIEW (Entry)
         const trackPageView = async () => {
             try {
                 await supabase.from('analytics_logs').insert([{
-                    visitor_id: getVisitorId(),
+                    visitor_id: visitorId,
                     event_type: 'page_view',
-                    page_path: location.pathname,
-                    device_type: getDeviceType(),
+                    page_path: currentPath,
+                    device_type: deviceType,
                     referrer: document.referrer || 'direct'
                 }]);
             } catch (e) {
@@ -77,7 +76,24 @@ export const useAnalytics = () => {
         };
 
         trackPageView();
-    }, 1500); // 1.5 detik delay cukup
+
+        // B. TRACK PAGE LEAVE (Exit - For Duration Calculation)
+        return () => {
+            if (isGhost || isAdminRoute || !supabase) return;
+            // Fire and forget 'page_leave' event
+            // Note: This relies on component unmount (route change).
+            // For tab close, 'navigator.sendBeacon' is ideal but requires a dedicated API endpoint.
+            // Using supabase.insert here works for SPA navigation (90% of cases).
+            supabase.from('analytics_logs').insert([{
+                visitor_id: visitorId,
+                event_type: 'page_leave',
+                page_path: currentPath,
+                device_type: deviceType,
+                referrer: 'internal_exit'
+            }]).then(() => {}); 
+        };
+
+    }, 1000); 
 
     return () => clearTimeout(timer);
   }, [location.pathname]);

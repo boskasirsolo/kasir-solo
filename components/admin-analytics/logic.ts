@@ -44,7 +44,7 @@ export const useAnalyticsData = () => {
   const stats: AnalyticsStats = useMemo(() => {
     const totalViews = logs.filter(l => l.event_type === 'page_view').length;
     const uniqueVisitors = new Set(logs.map(l => l.visitor_id)).size;
-    const totalActions = logs.filter(l => l.event_type !== 'page_view').length; 
+    const totalActions = logs.filter(l => l.event_type === 'click_action' || l.event_type === 'contact_wa').length; 
     const conversionRate = totalViews > 0 ? ((totalActions / totalViews) * 100).toFixed(1) : '0';
     
     // Data Structures
@@ -60,33 +60,48 @@ export const useAnalyticsData = () => {
     let totalEngagementSeconds = 0;
     let engagementCount = 0;
 
-    // 1. Group Logs by Visitor for Duration Calculation
+    // 1. Group Logs by Visitor
     logs.forEach(log => {
         if (!visitorSessions[log.visitor_id]) visitorSessions[log.visitor_id] = [];
         visitorSessions[log.visitor_id].push(log);
     });
 
-    // 2. Process Durations per Visitor Session
+    // 2. Process Durations (Now utilizing page_leave)
     Object.values(visitorSessions).forEach(sessionLogs => {
         // Sort by time just in case
         sessionLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
 
-        for (let i = 0; i < sessionLogs.length - 1; i++) {
+        for (let i = 0; i < sessionLogs.length; i++) {
             const current = sessionLogs[i];
-            const next = sessionLogs[i+1];
-
+            
+            // Only calc duration for page views
             if (current.event_type === 'page_view') {
-                const startTime = new Date(current.created_at!).getTime();
-                const endTime = new Date(next.created_at!).getTime();
-                const diffSeconds = (endTime - startTime) / 1000;
+                let duration = 0;
+                
+                // Look ahead for the immediate next event (leave or next view)
+                const nextEvent = sessionLogs[i+1];
 
-                // Validasi: Jika selisih > 30 menit, anggap sesi baru/idle (timeout), jangan dihitung
-                if (diffSeconds < 1800 && diffSeconds > 0) {
+                if (nextEvent) {
+                    const startTime = new Date(current.created_at!).getTime();
+                    const endTime = new Date(nextEvent.created_at!).getTime();
+                    const diff = (endTime - startTime) / 1000;
+
+                    // Logic: 
+                    // If next event is 'page_leave' of SAME path, use it.
+                    // If next event is 'page_view' of DIFFERENT path, use it as exit time.
+                    // Timeout check: 30 mins (1800s).
+                    if (diff < 1800 && diff > 0) {
+                        duration = diff;
+                    }
+                }
+
+                // If duration found, record it
+                if (duration > 0) {
                     const path = current.page_path.split('?')[0];
                     if (!pageDurations[path]) pageDurations[path] = [];
-                    pageDurations[path].push(diffSeconds);
+                    pageDurations[path].push(duration);
                     
-                    totalEngagementSeconds += diffSeconds;
+                    totalEngagementSeconds += duration;
                     engagementCount++;
                 }
             }

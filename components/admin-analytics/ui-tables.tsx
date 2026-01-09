@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { LogOut, Zap, Activity, Eye, MousePointerClick, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { LogOut, Zap, Activity, Eye, MousePointerClick, ChevronLeft, ChevronRight, Clock, ShoppingBag, Image as ImageIcon, FileText, Layout } from 'lucide-react';
 import { AnalyticsStats } from './types';
 
 // --- TABLE 1: Top Pages ---
@@ -19,6 +19,15 @@ export const TopPagesTable = ({
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const currentData = pages.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
+    // Helper to get Icon and Label
+    const getPageContext = (path: string) => {
+        if (path.includes('/shop/')) return { icon: ShoppingBag, label: 'PRODUK', color: 'text-green-400 bg-green-500/10 border-green-500/20' };
+        if (path.includes('/gallery/')) return { icon: ImageIcon, label: 'PROYEK', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' };
+        if (path.includes('/articles/')) return { icon: FileText, label: 'ARTIKEL', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' };
+        if (path.includes('/services/')) return { icon: Zap, label: 'JASA', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' };
+        return { icon: Layout, label: 'HALAMAN', color: 'text-gray-400 bg-gray-500/10 border-gray-500/20' };
+    };
+
     return (
         <div className="lg:col-span-2 bg-brand-dark border border-white/5 rounded-xl p-6 flex flex-col h-full">
             <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2 shrink-0">
@@ -31,18 +40,15 @@ export const TopPagesTable = ({
                     const page = item.path;
                     const count = item.hits;
                     const avgTime = item.avgTime;
-
-                    const isProduct = page.includes('/shop/');
-                    const isArticle = page.includes('/articles/');
-                    const typeLabel = isProduct ? 'PRODUK' : isArticle ? 'ARTIKEL' : 'HALAMAN';
-                    const typeColor = isProduct ? 'text-green-400 bg-green-500/10 border-green-500/20' : isArticle ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' : 'text-gray-400 bg-gray-500/10 border-gray-500/20';
                     const rank = startIndex + idx + 1;
+                    
+                    const { icon: Icon, label, color } = getPageContext(page);
 
                     return (
                         <div 
                             key={idx} 
                             onClick={() => onPageClick(page)}
-                            className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5 hover:border-brand-orange hover:bg-brand-orange/5 transition-all group cursor-pointer relative overflow-hidden"
+                            className="flex justify-between items-center p-2.5 bg-white/5 rounded-lg border border-white/5 hover:border-brand-orange hover:bg-brand-orange/5 transition-all group cursor-pointer relative overflow-hidden"
                         >
                             <div className="flex items-center gap-3 overflow-hidden relative z-10 flex-1">
                                 <span className="w-6 h-6 rounded bg-black/50 text-gray-500 flex items-center justify-center text-[10px] font-bold shrink-0 border border-white/5 group-hover:text-brand-orange group-hover:border-brand-orange/50 transition-colors">
@@ -50,21 +56,23 @@ export const TopPagesTable = ({
                                 </span>
                                 <div className="flex flex-col min-w-0 flex-1">
                                     <span className="text-xs text-white font-medium truncate max-w-[200px] md:max-w-sm group-hover:text-brand-orange transition-colors">{page}</span>
-                                    <span className={`text-[9px] px-1.5 py-0.5 rounded w-fit mt-0.5 font-bold border ${typeColor}`}>{typeLabel}</span>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className={`text-[9px] px-1.5 py-0.5 rounded w-fit font-bold border flex items-center gap-1 ${color}`}>
+                                            <Icon size={8} /> {label}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <div className="flex items-center gap-4 relative z-10 shrink-0">
+                            <div className="flex items-center gap-3 relative z-10 shrink-0">
                                 {/* AVG TIME INDICATOR */}
-                                {avgTime !== '-' && (
-                                    <div className="hidden sm:flex items-center gap-1.5 text-gray-500 bg-black/20 px-2 py-1 rounded border border-white/5" title="Rata-rata Durasi Baca">
-                                        <Clock size={10} className="text-blue-400"/>
-                                        <span className="text-[10px] font-mono font-bold text-gray-300">{avgTime}</span>
-                                    </div>
-                                )}
+                                <div className={`hidden sm:flex items-center gap-1.5 px-2 py-1 rounded border ${avgTime !== '-' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-white/5 border-white/5 text-gray-600'}`} title="Rata-rata Durasi Baca">
+                                    <Clock size={10} />
+                                    <span className="text-[10px] font-mono font-bold">{avgTime}</span>
+                                </div>
 
                                 <div className="flex items-center gap-1 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 duration-300 hidden sm:flex">
-                                    <MousePointerClick size={12}/> Detail
+                                    <MousePointerClick size={12}/>
                                 </div>
                                 <span className="text-sm font-bold text-white bg-black/40 px-3 py-1 rounded border border-white/10 shadow-sm group-hover:border-brand-orange/30 group-hover:text-brand-orange transition-colors min-w-[70px] text-center">
                                     {count} Hits
