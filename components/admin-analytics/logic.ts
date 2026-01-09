@@ -123,7 +123,9 @@ export const useAnalyticsData = () => {
     const bounceRate = uniqueVisitors > 0 ? Math.round((singlePageVisits / uniqueVisitors) * 100) : 0;
     const avgPagesPerSession = uniqueVisitors > 0 ? (totalViews / uniqueVisitors).toFixed(1) : "0";
 
-    const sortedPages = Object.entries(pageViews).sort(([,a], [,b]) => b - a).slice(0, 6);
+    // UPDATED: No limit slice here, handled by UI pagination
+    const sortedPages = Object.entries(pageViews).sort(([,a], [,b]) => b - a);
+    
     const sortedReferrers = Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 5);
     const sortedExitPages = Object.entries(exitPages).sort(([,a], [,b]) => b - a).slice(0, 5);
 
