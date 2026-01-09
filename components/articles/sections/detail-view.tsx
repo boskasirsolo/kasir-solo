@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { X, Calendar, Clock, Quote, Briefcase, ChevronLeft, ChevronRight, Hash, Share2, Facebook, Twitter, Linkedin, MessageCircle, Link as LinkIcon, Network, Target, TrendingUp, Send, Globe, Loader2 } from 'lucide-react';
+import { X, Calendar, Clock, Quote, Briefcase, ChevronLeft, ChevronRight, Hash, Share2, Facebook, Twitter, Linkedin, MessageCircle, Link as LinkIcon, Network, Target, TrendingUp, Send, Globe, Loader2, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Article, Product, SiteConfig } from '../../types';
 import { ArticleDetailProps } from '../types';
@@ -16,7 +17,7 @@ const getPureCategory = (category: string) => {
   return category.split(',').map(c => c.split('>').pop()?.trim()).filter(Boolean).join(', ');
 };
 
-const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, onClose, onWheelProxy }: any) => {
+const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, onClose, onWheelProxy, adminStats }: any) => {
     const expandRatio = Math.max(0, (currentHeight - minHeight) / (maxHeight - minHeight));
     const collapseRatio = 1 - expandRatio;
     return (
@@ -27,7 +28,18 @@ const ReaderHeader = ({ article, progress, currentHeight, maxHeight, minHeight, 
           <div className="container mx-auto px-4 h-full relative z-10 max-w-7xl pointer-events-none">
               <div className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 flex items-center" style={{ opacity: collapseRatio, pointerEvents: collapseRatio > 0.5 ? 'auto' : 'none' }}><h2 className="text-lg md:text-xl font-bold text-white line-clamp-1 max-w-xl drop-shadow-md">{article.title}</h2></div>
               <div className="absolute bottom-10 left-4 md:left-8 origin-bottom-left" style={{ opacity: expandRatio, transform: `scale(${0.9 + (expandRatio * 0.1)}) translateY(${collapseRatio * 20}px)`, pointerEvents: expandRatio > 0.5 ? 'auto' : 'none' }}>
-                  <div className="flex flex-wrap gap-3 mb-4"><span className="px-3 py-1 bg-brand-orange text-white text-xs font-bold rounded-full shadow-neon">{getPureCategory(article.category)}</span><span className="flex items-center gap-2 text-gray-200 text-xs font-bold bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10"><Calendar size={12} /> {article.date}</span><span className="flex items-center gap-2 text-gray-200 text-xs font-bold bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10"><Clock size={12} /> {article.readTime}</span></div>
+                  <div className="flex flex-wrap gap-3 mb-4">
+                      <span className="px-3 py-1 bg-brand-orange text-white text-xs font-bold rounded-full shadow-neon">{getPureCategory(article.category)}</span>
+                      <span className="flex items-center gap-2 text-gray-200 text-xs font-bold bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10"><Calendar size={12} /> {article.date}</span>
+                      <span className="flex items-center gap-2 text-gray-200 text-xs font-bold bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10"><Clock size={12} /> {article.readTime}</span>
+                      
+                      {/* GOD MODE BADGE (ONLY VISIBLE TO ADMIN) */}
+                      {adminStats !== null && (
+                          <span className="flex items-center gap-2 text-purple-300 text-xs font-bold bg-purple-900/60 px-3 py-1 rounded-full backdrop-blur-md border border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.5)] animate-pulse">
+                              <Eye size={12} className="text-purple-300" /> {adminStats} Views
+                          </span>
+                      )}
+                  </div>
                   <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-white leading-tight drop-shadow-lg max-w-4xl">{article.title}</h1>
               </div>
           </div>
@@ -294,7 +306,31 @@ interface ExtendedDetailProps extends ArticleDetailProps {
 export const ArticleReaderView = ({ article, onClose, products, allArticles, config }: ExtendedDetailProps) => {
   const { progress, scrollPos, containerRef, currentBlocks, currentReaderPage, totalReaderPages, handlePageChange, activeHeadingId, handleToCClick } = useArticleReader(article.content);
   const waNumber = config?.whatsappNumber || "6282325103336";
+  const [adminStats, setAdminStats] = React.useState<number | null>(null);
   
+  // GOD MODE LOGIC: Check session and fetch stats
+  React.useEffect(() => {
+      const checkStats = async () => {
+          // 1. Check Auth (Is Admin?)
+          if (!supabase) return;
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session) {
+              // Admin Detected, Fetch Stats
+              const slugPath = `/articles/${slugify(article.title)}`;
+              // Note: Using ILIKE to match variations like /articles/slug?param=1
+              const { count } = await supabase
+                  .from('analytics_logs')
+                  .select('*', { count: 'exact', head: true })
+                  .ilike('page_path', `%${slugPath}%`)
+                  .eq('event_type', 'page_view');
+              
+              setAdminStats(count || 0);
+          }
+      };
+      checkStats();
+  }, [article.title]);
+
   const MAX_HEIGHT = 500; const MIN_HEIGHT = 80; 
   const currentHeaderHeight = Math.max(MIN_HEIGHT, MAX_HEIGHT - scrollPos);
   
@@ -316,7 +352,17 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
         type="article"
       />
       <div className="fixed inset-0 z-[9999] bg-brand-black" aria-modal="true" role="dialog">
-        <ReaderHeader article={article} progress={progress} currentHeight={currentHeaderHeight} maxHeight={MAX_HEIGHT} minHeight={MIN_HEIGHT} onClose={onClose} onWheelProxy={(e:any) => { if(containerRef.current) containerRef.current.scrollTop += e.deltaY; }} />
+        {/* Pass adminStats to Header */}
+        <ReaderHeader 
+            article={article} 
+            progress={progress} 
+            currentHeight={currentHeaderHeight} 
+            maxHeight={MAX_HEIGHT} 
+            minHeight={MIN_HEIGHT} 
+            onClose={onClose} 
+            onWheelProxy={(e:any) => { if(containerRef.current) containerRef.current.scrollTop += e.deltaY; }} 
+            adminStats={adminStats}
+        />
         {/* Removed direct onScroll prop, handled by ref inside hook */}
         <div ref={containerRef} className="h-full w-full overflow-y-auto custom-scrollbar relative bg-brand-black">
           <div style={{ height: `${MAX_HEIGHT}px` }} className="w-full bg-transparent pointer-events-none"></div>
