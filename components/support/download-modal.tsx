@@ -137,8 +137,20 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
 
                 {/* RIGHT COLUMN: DETAILS & ACTION (FIXED LAYOUT) */}
                 <div className="w-full md:w-4/12 bg-brand-card flex flex-col h-[60vh] md:h-full relative z-40 overflow-hidden">
-                    {/* 1. Header (Close Button Only on Desktop) */}
-                    <div className="hidden md:flex p-4 border-b border-white/10 justify-end items-center shrink-0 bg-brand-card z-10">
+                    {/* 1. Header (Updated: Download Button on Left, Close on Right) */}
+                    <div className="flex p-4 border-b border-white/10 justify-between items-center shrink-0 bg-brand-card z-10">
+                        {isUnlocked ? (
+                             <a 
+                                href={targetUrl} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="flex items-center gap-2 bg-brand-orange hover:bg-brand-action text-white px-4 py-2 rounded-lg font-bold text-xs shadow-neon transition-all"
+                            >
+                                <Download size={16} /> DOWNLOAD FILE
+                            </a>
+                        ) : (
+                             <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Detail File</span>
+                        )}
                         <button onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors bg-white/5 rounded-full hover:bg-red-500">
                             <X size={20} />
                         </button>
@@ -176,10 +188,9 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
                         </div>
                     </div>
 
-                    {/* 3. Sticky Footer (Action) */}
-                    <div className="p-6 border-t border-white/10 bg-brand-dark shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50">
-                        {!isUnlocked ? (
-                            // LOCKED STATE
+                    {/* 3. Sticky Footer (Only for Locked State) */}
+                    {!isUnlocked && (
+                        <div className="p-6 border-t border-white/10 bg-brand-dark shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50">
                             <div className="space-y-3">
                                 <div className="relative">
                                     <Key size={16} className={`absolute left-3 top-3 ${error ? 'text-red-500' : 'text-gray-500'}`} />
@@ -201,18 +212,8 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
                                     {loading ? <LoadingSpinner size={16}/> : <><Lock size={16}/> BUKA KUNCI</>}
                                 </Button>
                             </div>
-                        ) : (
-                            // UNLOCKED STATE
-                            <a 
-                                href={targetUrl} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="w-full flex items-center justify-center gap-2 bg-brand-gradient hover:bg-brand-gradient-hover text-white py-4 rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong transform hover:-translate-y-1"
-                            >
-                                <Download size={20} /> DOWNLOAD FILE
-                            </a>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
 
             </div>
