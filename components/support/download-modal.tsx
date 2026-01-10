@@ -136,16 +136,16 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
                 </div>
 
                 {/* RIGHT COLUMN: DETAILS & ACTION (FIXED LAYOUT) */}
-                <div className="w-full md:w-4/12 bg-brand-card flex flex-col h-[60vh] md:h-full relative z-40">
+                <div className="w-full md:w-4/12 bg-brand-card flex flex-col h-[60vh] md:h-full relative z-40 overflow-hidden">
                     {/* 1. Header (Close Button Only on Desktop) */}
-                    <div className="hidden md:flex p-4 border-b border-white/10 justify-end items-center shrink-0 bg-brand-card">
+                    <div className="hidden md:flex p-4 border-b border-white/10 justify-end items-center shrink-0 bg-brand-card z-10">
                         <button onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors bg-white/5 rounded-full hover:bg-red-500">
                             <X size={20} />
                         </button>
                     </div>
 
                     {/* 2. Scrollable Content (Description) */}
-                    <div className="p-6 flex-grow overflow-y-auto custom-scrollbar bg-brand-card">
+                    <div className="p-6 flex-1 overflow-y-auto custom-scrollbar bg-brand-card min-h-0">
                         {/* Metadata Grid */}
                         <div className="grid grid-cols-2 gap-3 mb-6">
                             <div className="bg-black/40 px-3 py-2 rounded-lg border border-white/5">

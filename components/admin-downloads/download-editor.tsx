@@ -10,9 +10,9 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     return (
-        <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden shadow-2xl">
-            {/* HEADER (Sticky) */}
-            <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0 bg-brand-dark z-10">
+        <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden shadow-2xl relative">
+            {/* HEADER (Sticky / Fixed Top) */}
+            <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0 bg-brand-dark z-20 relative">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     {form.id ? <Edit size={16} className="text-brand-orange"/> : <Plus size={16} className="text-brand-orange"/>} 
                     {form.id ? 'Edit File' : 'Upload File Baru'}
@@ -24,20 +24,20 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                 )}
             </div>
             
-            {/* SCROLLABLE FORM CONTENT - Added min-h-0 to fix flex scrolling */}
-            <div className="flex-grow overflow-y-auto custom-scrollbar p-6 space-y-5 min-h-0">
+            {/* SCROLLABLE FORM CONTENT - Using flex-1 and min-h-0 to ensure proper scroll containment */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5 min-h-0">
                 
                 {/* Step 1: Type & Context */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                     <div className="mb-4">
                         <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">1. Jenis File</label>
-                        {/* Changed to grid-cols-4 for single row */}
+                        {/* Grid cols 4 forces single row. whitespace-nowrap prevents text break */}
                         <div className="grid grid-cols-4 gap-2">
                             {DOWNLOAD_CATEGORIES.map(cat => (
                                 <button
                                     key={cat.id}
                                     onClick={() => setForm((p:any) => ({...p, category: cat.id}))}
-                                    className={`${getCategoryColor(cat.id, form.category === cat.id)} justify-center px-1`}
+                                    className={`${getCategoryColor(cat.id, form.category === cat.id)} justify-center px-1 text-[9px] whitespace-nowrap overflow-hidden text-ellipsis`}
                                 >
                                     {cat.label}
                                 </button>
