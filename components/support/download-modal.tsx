@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Monitor, AlertTriangle, Download, Lock, Key, FileText, Image as ImageIcon, Box, Eye } from 'lucide-react';
+import { X, Monitor, AlertTriangle, Download, Lock, Key, FileText, Image as ImageIcon, Box, Eye, CheckCircle2 } from 'lucide-react';
 import { DownloadItem } from '../../types';
 import { getCategoryColor } from './ui-cards';
 import { supabase } from '../../utils';
@@ -18,20 +18,20 @@ const getFileType = (url: string) => {
 const FilePreview = ({ url, type }: { url: string, type: 'image' | 'pdf' | 'other' }) => {
     if (type === 'image') {
         return (
-            <div className="w-full h-[60vh] md:h-full bg-black/50 overflow-hidden flex items-start justify-center">
-                <img src={url} alt="Preview" className="w-full h-auto object-contain object-top" />
+            <div className="w-full h-full bg-black/50 overflow-hidden flex items-center justify-center">
+                <img src={url} alt="Preview" className="w-full h-auto max-h-full object-contain" />
             </div>
         );
     }
     if (type === 'pdf') {
         return (
-            <div className="w-full h-[60vh] md:h-full bg-white overflow-hidden">
+            <div className="w-full h-full bg-white overflow-hidden">
                 <iframe src={`${url}#toolbar=0&view=FitH`} className="w-full h-full" title="PDF Preview"></iframe>
             </div>
         );
     }
     return (
-        <div className="w-full h-[60vh] md:h-full bg-brand-dark/50 border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-gray-500">
+        <div className="w-full h-full bg-brand-dark/50 border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-gray-500">
             <Box size={64} className="mb-4 opacity-50" />
             <p className="text-sm">Preview tidak tersedia untuk format ini.</p>
             <p className="text-xs mt-1">Silakan download untuk membuka.</p>
@@ -88,90 +88,85 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/90 backdrop-blur-md transition-opacity" onClick={onClose}></div>
             
-            <div className="relative w-full max-w-5xl bg-brand-dark border border-white/10 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-fade-in max-h-[90vh]">
+            <div className="relative w-full max-w-5xl h-[85vh] bg-brand-dark border border-white/10 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-fade-in">
                 
-                {/* LEFT COLUMN: PREVIEW AREA */}
-                <div className="w-full md:w-8/12 bg-black/40 relative border-b md:border-b-0 md:border-r border-white/5 flex flex-col h-[400px] md:h-auto">
-                    {/* Header Mobile Only */}
+                {/* LEFT COLUMN: PREVIEW AREA & TITLE */}
+                <div className="w-full md:w-8/12 bg-black/40 relative border-b md:border-b-0 md:border-r border-white/5 flex flex-col h-[40vh] md:h-full group">
+                    {/* Header Mobile Only (Close Btn) */}
                     <div className="md:hidden absolute top-4 right-4 z-50">
                         <button onClick={onClose} className="bg-black/50 text-white p-2 rounded-full backdrop-blur-sm"><X size={20}/></button>
                     </div>
 
-                    {/* Preview Container */}
+                    {/* Preview Content */}
                     <div className="relative w-full h-full overflow-hidden">
-                        {/* THE PREVIEW */}
                         <FilePreview url={targetUrl} type={fileType} />
 
-                        {/* LOCKED OVERLAY (The Blur & Gate) */}
+                        {/* LOCKED OVERLAY */}
                         {!isUnlocked && (
                             <div className="absolute inset-0 z-20 select-none">
-                                {/* Interaction Blocker (Transparent) - Prevents scrolling the iframe/image */}
                                 <div className="absolute inset-0 bg-transparent" />
-                                
-                                {/* Visual Gradient Mask */}
-                                <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-brand-dark via-brand-dark/95 to-transparent backdrop-blur-[1px] flex flex-col items-center justify-end pb-20 md:pb-32 text-center p-6">
+                                <div className="absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-brand-dark via-brand-dark/95 to-transparent backdrop-blur-[2px] flex flex-col items-center justify-end pb-32 text-center p-6">
                                     <div className="transform translate-y-4">
                                         <div className="w-16 h-16 bg-red-600/20 border border-red-500/50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 shadow-[0_0_30px_rgba(220,38,38,0.4)] animate-pulse">
                                             <Lock size={32} />
                                         </div>
                                         <h3 className="text-2xl font-bold text-white mb-2 font-display">Preview Terbatas</h3>
                                         <p className="text-sm text-gray-400 max-w-[250px] mx-auto leading-relaxed">
-                                            Halaman selanjutnya dikunci. Masukkan PIN Akses di panel samping untuk melihat dokumen utuh.
+                                            Dokumen ini dikunci. Masukkan PIN di panel samping untuk membuka full preview & download.
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         )}
                         
-                        {/* File Meta overlay on preview (Only visible if unlocked) */}
-                        {isUnlocked && (
-                            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white/50 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 pointer-events-none">
-                                <span className="flex items-center gap-2"><Eye size={14}/> Full Preview Mode</span>
-                                <span className="uppercase font-mono tracking-wider">{fileType}</span>
+                        {/* TITLE OVERLAY (MOVED TO LEFT) */}
+                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/80 to-transparent pt-20 z-30 pointer-events-none">
+                            <div className="pointer-events-auto">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded border ${getCategoryColor(item.category)}`}>
+                                        {item.category}
+                                    </span>
+                                    {isLocked && !isUnlocked && <span className="text-[9px] bg-red-600 text-white px-2 py-0.5 rounded font-bold flex items-center gap-1 border border-red-400"><Lock size={8}/> LOCKED</span>}
+                                    {isUnlocked && isLocked && <span className="text-[9px] bg-green-600 text-white px-2 py-0.5 rounded font-bold flex items-center gap-1 border border-green-400"><CheckCircle2 size={8}/> UNLOCKED</span>}
+                                </div>
+                                <h3 className="text-xl md:text-2xl font-bold text-white leading-tight drop-shadow-md">{item.title}</h3>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN: DETAILS & ACTION */}
-                <div className="w-full md:w-4/12 bg-brand-card flex flex-col h-full">
-                    {/* Header Desktop */}
-                    <div className="hidden md:flex p-6 border-b border-white/10 justify-between items-start shrink-0">
-                        <div>
-                            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded border mb-2 inline-block ${getCategoryColor(item.category)}`}>
-                                {item.category}
-                            </span>
-                            <h3 className="text-xl font-bold text-white leading-tight">{item.title}</h3>
-                        </div>
-                        <button onClick={onClose} className="p-1 text-gray-500 hover:text-white transition-colors">
+                {/* RIGHT COLUMN: DETAILS & ACTION (FIXED LAYOUT) */}
+                <div className="w-full md:w-4/12 bg-brand-card flex flex-col h-[60vh] md:h-full relative z-40">
+                    {/* 1. Header (Close Button Only on Desktop) */}
+                    <div className="hidden md:flex p-4 border-b border-white/10 justify-end items-center shrink-0 bg-brand-card">
+                        <button onClick={onClose} className="p-2 text-gray-500 hover:text-white transition-colors bg-white/5 rounded-full hover:bg-red-500">
                             <X size={20} />
                         </button>
                     </div>
 
-                    {/* Scrollable Content */}
-                    <div className="p-6 flex-grow overflow-y-auto custom-scrollbar">
-                        {/* Mobile Title (Since header is hidden) */}
-                        <div className="md:hidden mb-6">
-                            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded border mb-2 inline-block ${getCategoryColor(item.category)}`}>
-                                {item.category}
-                            </span>
-                            <h3 className="text-xl font-bold text-white leading-tight">{item.title}</h3>
+                    {/* 2. Scrollable Content (Description) */}
+                    <div className="p-6 flex-grow overflow-y-auto custom-scrollbar bg-brand-card">
+                        {/* Metadata Grid */}
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                            <div className="bg-black/40 px-3 py-2 rounded-lg border border-white/5">
+                                <span className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Versi</span>
+                                <span className="text-xs text-white font-mono">{item.version}</span>
+                            </div>
+                            <div className="bg-black/40 px-3 py-2 rounded-lg border border-white/5">
+                                <span className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Ukuran</span>
+                                <span className="text-xs text-brand-orange font-bold">{item.file_size}</span>
+                            </div>
+                            <div className="col-span-2 bg-black/40 px-3 py-2 rounded-lg border border-white/5 flex items-center gap-2">
+                                <Monitor size={14} className="text-blue-400" />
+                                <div>
+                                    <span className="text-[9px] text-gray-500 uppercase font-bold block">Support OS</span>
+                                    <span className="text-xs text-white">{item.os_support}</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-2 mb-6">
-                            <div className="bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 text-[10px] text-gray-300 flex items-center gap-2">
-                                <Monitor size={12} className="text-blue-400"/> {item.os_support}
-                            </div>
-                            <div className="bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 text-[10px] text-gray-300 flex items-center gap-2">
-                                <FileText size={12} className="text-brand-orange"/> {item.file_size}
-                            </div>
-                            <div className="bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 text-[10px] text-gray-300 font-mono">
-                                v{item.version}
-                            </div>
-                        </div>
-
-                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Keterangan File</h4>
-                        <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-line mb-6 bg-black/20 p-3 rounded-lg border border-white/5">
+                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Keterangan File</h4>
+                        <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-line mb-6">
                             {item.description || "Tidak ada deskripsi detail."}
                         </div>
 
@@ -181,8 +176,8 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
                         </div>
                     </div>
 
-                    {/* Footer / Action Area */}
-                    <div className="p-6 border-t border-white/10 bg-brand-dark/50 mt-auto shrink-0">
+                    {/* 3. Sticky Footer (Action) */}
+                    <div className="p-6 border-t border-white/10 bg-brand-dark shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50">
                         {!isUnlocked ? (
                             // LOCKED STATE
                             <div className="space-y-3">
@@ -197,13 +192,13 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
                                         onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
                                     />
                                 </div>
-                                {error && <p className="text-red-400 text-xs font-bold animate-pulse text-center">{error}</p>}
+                                {error && <p className="text-red-400 text-xs font-bold animate-pulse text-center bg-red-500/10 p-1 rounded border border-red-500/20">{error}</p>}
                                 <Button 
                                     onClick={handleUnlock} 
                                     disabled={loading}
-                                    className="w-full bg-red-600 hover:bg-red-500 border-none text-white py-3 shadow-lg"
+                                    className="w-full bg-red-600 hover:bg-red-500 border-none text-white py-3 shadow-lg font-bold"
                                 >
-                                    {loading ? <LoadingSpinner size={16}/> : <><Lock size={16}/> BUKA KUNCI FULL</>}
+                                    {loading ? <LoadingSpinner size={16}/> : <><Lock size={16}/> BUKA KUNCI</>}
                                 </Button>
                             </div>
                         ) : (
@@ -214,7 +209,7 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
                                 rel="noreferrer"
                                 className="w-full flex items-center justify-center gap-2 bg-brand-gradient hover:bg-brand-gradient-hover text-white py-4 rounded-xl font-bold transition-all shadow-neon hover:shadow-neon-strong transform hover:-translate-y-1"
                             >
-                                <Download size={20} /> DOWNLOAD FILE SEKARANG
+                                <Download size={20} /> DOWNLOAD FILE
                             </a>
                         )}
                     </div>
