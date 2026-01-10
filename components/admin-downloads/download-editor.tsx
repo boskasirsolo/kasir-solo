@@ -1,6 +1,6 @@
 
 import React, { useRef } from 'react';
-import { Edit, Plus, UploadCloud, Sparkles, Wand2, Save, X, Lock } from 'lucide-react';
+import { Edit, Plus, UploadCloud, Sparkles, Wand2, Save, X, Lock, FileDigit } from 'lucide-react';
 import { Button, Input, TextArea, LoadingSpinner } from '../ui';
 import { DOWNLOAD_CATEGORIES } from './types';
 import { getCategoryColor } from './utils';
@@ -12,64 +12,43 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
     return (
         <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden shadow-2xl relative">
             {/* HEADER (Fixed) */}
-            <div className="flex justify-between items-center p-5 border-b border-white/10 shrink-0 bg-brand-dark z-20">
+            <div className="flex justify-between items-center p-4 border-b border-white/10 shrink-0 bg-brand-dark z-20">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     {form.id ? <Edit size={16} className="text-brand-orange"/> : <Plus size={16} className="text-brand-orange"/>} 
-                    {form.id ? 'Edit File' : 'Upload File Baru'}
+                    {form.id ? 'Edit File' : 'Upload Baru'}
                 </h3>
-                {form.id && (
-                    <button onClick={actions.resetForm} className="text-[10px] text-gray-500 hover:text-white flex items-center gap-1 border border-white/10 px-2 py-1 rounded bg-white/5 transition-colors">
-                        <X size={12}/> Batal
-                    </button>
-                )}
+                <div className="flex items-center gap-2">
+                    {form.id && (
+                        <button onClick={actions.resetForm} className="text-gray-500 hover:text-white p-2 rounded hover:bg-white/5 transition-colors" title="Batal">
+                            <X size={16}/>
+                        </button>
+                    )}
+                    <Button onClick={actions.handleSubmit} disabled={loading} className="py-1.5 px-4 text-xs h-9 shadow-neon font-bold">
+                        {loading ? <LoadingSpinner size={14}/> : <><Save size={14}/> SIMPAN</>}
+                    </Button>
+                </div>
             </div>
             
             {/* BODY (Scrollable) */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5 min-h-0 relative">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6 min-h-0 relative">
                 
-                {/* Step 1: Type & Context */}
-                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                    <div className="mb-4">
-                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">1. Jenis File</label>
-                        {/* Grid cols 4 forces single row. whitespace-nowrap prevents text break */}
-                        <div className="grid grid-cols-4 gap-2">
-                            {DOWNLOAD_CATEGORIES.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => setForm((p:any) => ({...p, category: cat.id}))}
-                                    className={`${getCategoryColor(cat.id, form.category === cat.id)} justify-center px-1 text-[9px] whitespace-nowrap overflow-hidden text-ellipsis`}
-                                >
-                                    {cat.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block flex justify-between">
-                            <span>2. Konteks Produk</span>
-                            <span className="text-brand-orange flex items-center gap-1 opacity-80"><Sparkles size={8}/> AI Assist</span>
-                        </label>
-                        <div className="flex gap-2">
-                            <Input 
-                                value={contextInput} 
-                                onChange={(e) => setContextInput(e.target.value)} 
-                                placeholder="Contoh: Driver Eppos RPP02..." 
-                                className="text-xs h-10 flex-1"
-                            />
-                            <button 
-                                onClick={actions.researchTitles} 
-                                disabled={aiLoading.research} 
-                                className="shrink-0 h-10 w-10 bg-brand-orange text-white rounded-lg font-bold hover:bg-brand-action transition-all disabled:opacity-50 flex items-center justify-center shadow-neon border border-white/10" 
-                                title="Riset Judul Otomatis"
+                {/* Section 1: Jenis File */}
+                <div className="bg-white/5 rounded-xl border border-white/5 p-4">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Jenis File</label>
+                    <div className="grid grid-cols-4 gap-2">
+                        {DOWNLOAD_CATEGORIES.map(cat => (
+                            <button
+                                key={cat.id}
+                                onClick={() => setForm((p:any) => ({...p, category: cat.id}))}
+                                className={`${getCategoryColor(cat.id, form.category === cat.id)} justify-center px-1 text-[9px] whitespace-nowrap overflow-hidden text-ellipsis`}
                             >
-                                {aiLoading.research ? <LoadingSpinner size={16}/> : <Sparkles size={18}/>}
+                                {cat.label}
                             </button>
-                        </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* Step 2: Magic Titles (Optional) */}
+                {/* Section 2: Magic Titles Results (Optional) */}
                 {generatedTitles.length > 0 && (
                     <div className="p-3 bg-brand-orange/5 border border-brand-orange/20 rounded-lg animate-fade-in">
                         <label className="text-[10px] text-brand-orange font-bold uppercase mb-2 block flex items-center gap-2"><Sparkles size={10}/> Hasil Riset Judul</label>
@@ -91,9 +70,9 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                     </div>
                 )}
 
-                {/* Step 3: File Upload & Meta Data (Merged) */}
-                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">3. File & Atribut</label>
+                {/* Section 3: File & Atribut */}
+                <div className="bg-white/5 rounded-xl border border-white/5 p-4">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">File & Atribut</label>
                     
                     <div className="grid grid-cols-12 gap-4 mb-3">
                         {/* Left: Compact Upload (Full Height of Row) */}
@@ -121,17 +100,35 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                         </div>
 
                         {/* Right: Meta Fields (Stacked) */}
-                        <div className="col-span-7 space-y-3">
+                        <div className="col-span-7 space-y-2">
+                            {/* Konteks (Moved Here) */}
                             <div>
-                                <label className="text-[9px] text-gray-500 font-bold uppercase mb-1 block">Versi</label>
-                                <Input value={form.version || ''} onChange={e => setForm((p:any) => ({...p, version: e.target.value}))} placeholder="v1.0" className="text-xs h-8"/>
+                                <label className="text-[9px] text-gray-500 font-bold uppercase mb-1 block">Konteks Produk</label>
+                                <Input 
+                                    value={contextInput} 
+                                    onChange={(e) => setContextInput(e.target.value)} 
+                                    placeholder="Contoh: Driver Eppos..." 
+                                    className="text-xs h-8 w-full bg-black/20"
+                                />
                             </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="text-[9px] text-gray-500 font-bold uppercase mb-1 block">Versi</label>
+                                    <Input value={form.version || ''} onChange={e => setForm((p:any) => ({...p, version: e.target.value}))} placeholder="v1.0" className="text-xs h-8 bg-black/20"/>
+                                </div>
+                                <div>
+                                    <label className="text-[9px] text-gray-500 font-bold uppercase mb-1 block">Ukuran</label>
+                                    <Input value={form.file_size || ''} onChange={e => setForm((p:any) => ({...p, file_size: e.target.value}))} placeholder="15 MB" className="text-xs h-8 bg-black/20"/>
+                                </div>
+                            </div>
+                            
                             <div>
                                 <label className="text-[9px] text-gray-500 font-bold uppercase mb-1 block">OS Support</label>
                                 <select 
                                     value={form.os_support || 'Windows'} 
                                     onChange={e => setForm((p:any) => ({...p, os_support: e.target.value}))} 
-                                    className="w-full bg-brand-card border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:border-brand-orange outline-none h-8"
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:border-brand-orange outline-none h-8"
                                 >
                                     <option>Windows</option>
                                     <option>Android</option>
@@ -149,7 +146,7 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                                     value={form.access_key || ''} 
                                     onChange={e => setForm((p:any) => ({...p, access_key: e.target.value}))} 
                                     placeholder="123456..." 
-                                    className="text-xs font-bold bg-black/40 border-red-500/20 focus:border-red-500 text-white placeholder-gray-600 tracking-widest h-8"
+                                    className="text-xs font-bold bg-black/20 border-red-500/20 focus:border-red-500 text-white placeholder-gray-600 tracking-widest h-8"
                                 />
                             </div>
                         </div>
@@ -161,16 +158,31 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                             value={form.file_url || ''} 
                             onChange={e => setForm((p:any) => ({...p, file_url: e.target.value}))} 
                             placeholder="Atau paste Link URL Eksternal (G-Drive / Mediafire)..." 
-                            className="text-[10px] bg-black/40 h-9"
+                            className="text-[10px] bg-black/20 h-9"
                         />
                     </div>
                 </div>
 
-                {/* Step 4: Final Info */}
+                {/* Section 4: Judul & Deskripsi */}
                 <div className="space-y-4">
                     <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-1.5 block">4. Judul & Deskripsi</label>
-                        <Input value={form.title || ''} onChange={e => setForm((p:any) => ({...p, title: e.target.value}))} placeholder="Judul File Lengkap..." className="text-sm font-bold mb-3"/>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-1.5 block">Judul & Deskripsi</label>
+                        <div className="flex gap-2 mb-3">
+                            <Input 
+                                value={form.title || ''} 
+                                onChange={e => setForm((p:any) => ({...p, title: e.target.value}))} 
+                                placeholder="Judul File Lengkap..." 
+                                className="text-sm font-bold flex-1"
+                            />
+                            <button 
+                                onClick={actions.researchTitles} 
+                                disabled={aiLoading.research} 
+                                className="shrink-0 h-11 w-11 bg-brand-orange text-white rounded-lg font-bold hover:bg-brand-action transition-all disabled:opacity-50 flex items-center justify-center shadow-neon border border-white/10" 
+                                title="Generate Judul Otomatis"
+                            >
+                                {aiLoading.research ? <LoadingSpinner size={18}/> : <Sparkles size={20}/>}
+                            </button>
+                        </div>
                         
                         <div className="relative">
                             <TextArea value={form.description || ''} onChange={e => setForm((p:any) => ({...p, description: e.target.value}))} placeholder="Deskripsi file, cara install singkat..." className="h-24 text-xs leading-relaxed"/>
@@ -184,13 +196,6 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* FOOTER (Fixed) */}
-            <div className="p-4 border-t border-white/10 bg-brand-dark shrink-0 z-20">
-                <Button onClick={actions.handleSubmit} disabled={loading} className="w-full text-xs py-3 shadow-neon font-bold">
-                    {loading ? <><LoadingSpinner size={14}/> MEMPROSES...</> : <><Save size={14}/> SIMPAN & TERBITKAN</>}
-                </Button>
             </div>
         </div>
     );

@@ -50,14 +50,24 @@ export const useDownloadLogic = () => {
         if (window.innerWidth < 1024) window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // REFACTORED: Use SupportAI
+    // REFACTORED: Use SupportAI with Aggregated Context
     const researchTitles = async () => {
-        if (!contextInput) return alert("Isi 'Konteks Produk' dulu.");
+        // Construct richer context from all available inputs
+        const aggregatedContext = [
+            contextInput ? `Context: ${contextInput}` : '',
+            form.version ? `Ver: ${form.version}` : '',
+            form.file_size ? `Size: ${form.file_size}` : '',
+            form.os_support ? `OS: ${form.os_support}` : '',
+            uploadFile ? `File: ${uploadFile.name}` : ''
+        ].filter(Boolean).join(', ');
+
+        if (!aggregatedContext) return alert("Isi 'Konteks Produk' atau detail file dulu.");
+        
         setAiLoading(p => ({...p, research: true}));
         setGeneratedTitles([]);
 
         try {
-            const rawTitles: ResearchResult[] = await SupportAI.researchDownloadKeywords(contextInput, form.category);
+            const rawTitles: ResearchResult[] = await SupportAI.researchDownloadKeywords(aggregatedContext, form.category);
             const sortedTitles = rawTitles.sort((a, b) => parseVolume(b.volume) - parseVolume(a.volume));
             setGeneratedTitles(sortedTitles);
         } catch (e) { alert("Gagal riset judul."); } 
@@ -89,8 +99,11 @@ export const useDownloadLogic = () => {
                 const fileToUpload = renameFile(uploadFile, safeName);
                 const { url } = await uploadToSupabase(fileToUpload, 'files', 'downloads');
                 finalFileUrl = url;
-                const sizeInMB = (uploadFile.size / (1024 * 1024)).toFixed(1);
-                finalFileSize = `${sizeInMB} MB`;
+                // Update file size if not manually set
+                if (!finalFileSize) {
+                    const sizeInMB = (uploadFile.size / (1024 * 1024)).toFixed(1);
+                    finalFileSize = `${sizeInMB} MB`;
+                }
             }
 
             const dbData: any = {
