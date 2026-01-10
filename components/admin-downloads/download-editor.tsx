@@ -91,90 +91,93 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                     </div>
                 )}
 
-                {/* Step 3: File Upload */}
+                {/* Step 3: File Upload & Meta Data (Merged) */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">3. File Sumber</label>
-                    <div 
-                        className="border-2 border-dashed border-white/10 p-6 rounded-xl text-center mb-3 hover:border-brand-orange/50 hover:bg-brand-orange/5 transition-all cursor-pointer relative group"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <input 
-                            type="file" 
-                            ref={fileInputRef}
-                            onChange={e => e.target.files?.[0] && setUploadFile(e.target.files[0])} 
-                            className="hidden"
-                        />
-                        <div className="flex flex-col items-center gap-2 pointer-events-none">
-                            <div className="p-3 rounded-full bg-black/40 border border-white/10 group-hover:border-brand-orange/30 transition-colors">
-                                <UploadCloud size={20} className={uploadFile ? "text-brand-orange" : "text-gray-500"}/>
+                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">3. File & Atribut</label>
+                    <div className="grid grid-cols-12 gap-4">
+                        
+                        {/* Left: Compact Upload */}
+                        <div className="col-span-5 flex flex-col gap-2">
+                            <div 
+                                className="border-2 border-dashed border-white/10 rounded-xl text-center hover:border-brand-orange/50 hover:bg-brand-orange/5 transition-all cursor-pointer relative group flex flex-col items-center justify-center flex-1 min-h-[140px] p-2"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef}
+                                    onChange={e => e.target.files?.[0] && setUploadFile(e.target.files[0])} 
+                                    className="hidden"
+                                />
+                                <div className="flex flex-col items-center gap-2 pointer-events-none">
+                                    <div className="p-2 rounded-full bg-black/40 border border-white/10 group-hover:border-brand-orange/30 transition-colors">
+                                        <UploadCloud size={18} className={uploadFile ? "text-brand-orange" : "text-gray-500"}/>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-gray-300 leading-tight px-1 break-words w-full">
+                                        {uploadFile ? uploadFile.name : "Klik Upload"}
+                                    </span>
+                                    {!uploadFile && <span className="text-[8px] text-gray-500">Max 100MB</span>}
+                                </div>
                             </div>
-                            <span className="text-xs font-bold text-gray-300">{uploadFile ? uploadFile.name : "Klik Upload File Local"}</span>
-                            {!uploadFile && <span className="text-[9px] text-gray-500">Maksimal 100MB</span>}
+                            <Input 
+                                value={form.file_url || ''} 
+                                onChange={e => setForm((p:any) => ({...p, file_url: e.target.value}))} 
+                                placeholder="Link URL..." 
+                                className="text-[10px] bg-black/40 h-8"
+                            />
+                        </div>
+
+                        {/* Right: Meta Fields (Stacked) */}
+                        <div className="col-span-7 space-y-3">
+                            <div>
+                                <label className="text-[9px] text-gray-500 font-bold uppercase mb-1 block">Versi</label>
+                                <Input value={form.version || ''} onChange={e => setForm((p:any) => ({...p, version: e.target.value}))} placeholder="v1.0" className="text-xs h-8"/>
+                            </div>
+                            <div>
+                                <label className="text-[9px] text-gray-500 font-bold uppercase mb-1 block">OS Support</label>
+                                <select 
+                                    value={form.os_support || 'Windows'} 
+                                    onChange={e => setForm((p:any) => ({...p, os_support: e.target.value}))} 
+                                    className="w-full bg-brand-card border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:border-brand-orange outline-none h-8"
+                                >
+                                    <option>Windows</option>
+                                    <option>Android</option>
+                                    <option>iOS</option>
+                                    <option>MacOS</option>
+                                    <option>Linux</option>
+                                    <option>All</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-[9px] text-red-400 font-bold uppercase mb-1 block flex items-center gap-1">
+                                    <Lock size={10}/> PIN (Opsional)
+                                </label>
+                                <Input 
+                                    value={form.access_key || ''} 
+                                    onChange={e => setForm((p:any) => ({...p, access_key: e.target.value}))} 
+                                    placeholder="123456..." 
+                                    className="text-xs font-bold bg-black/40 border-red-500/20 focus:border-red-500 text-white placeholder-gray-600 tracking-widest h-8"
+                                />
+                            </div>
                         </div>
                     </div>
-                    <Input 
-                        value={form.file_url || ''} 
-                        onChange={e => setForm((p:any) => ({...p, file_url: e.target.value}))} 
-                        placeholder="Atau paste URL Eksternal (G-Drive / Mediafire)..." 
-                        className="text-[10px] bg-black/40 h-9"
-                    />
                 </div>
 
                 {/* Step 4: Final Info */}
                 <div className="space-y-4">
                     <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-1.5 block">4. Judul Final</label>
-                        <Input value={form.title || ''} onChange={e => setForm((p:any) => ({...p, title: e.target.value}))} placeholder="Judul File Lengkap..." className="text-sm font-bold"/>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Versi</label>
-                            <Input value={form.version || ''} onChange={e => setForm((p:any) => ({...p, version: e.target.value}))} placeholder="v1.0" className="text-xs"/>
-                        </div>
-                        <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">OS Support</label>
-                            <select 
-                                value={form.os_support || 'Windows'} 
-                                onChange={e => setForm((p:any) => ({...p, os_support: e.target.value}))} 
-                                className="w-full bg-brand-card border border-white/10 rounded-lg px-3 py-2.5 text-xs text-white focus:border-brand-orange outline-none"
+                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-1.5 block">4. Judul & Deskripsi</label>
+                        <Input value={form.title || ''} onChange={e => setForm((p:any) => ({...p, title: e.target.value}))} placeholder="Judul File Lengkap..." className="text-sm font-bold mb-3"/>
+                        
+                        <div className="relative">
+                            <TextArea value={form.description || ''} onChange={e => setForm((p:any) => ({...p, description: e.target.value}))} placeholder="Deskripsi file, cara install singkat..." className="h-24 text-xs leading-relaxed"/>
+                            <button 
+                                onClick={actions.generateDescription} 
+                                disabled={aiLoading.desc} 
+                                className="absolute bottom-2 right-2 text-[10px] text-blue-400 hover:text-white flex items-center gap-1 bg-black/50 px-2 py-1 rounded backdrop-blur-sm border border-blue-500/30 shadow-lg"
                             >
-                                <option>Windows</option>
-                                <option>Android</option>
-                                <option>iOS</option>
-                                <option>MacOS</option>
-                                <option>Linux</option>
-                                <option>All</option>
-                            </select>
+                                {aiLoading.desc ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Desc</>}
+                            </button>
                         </div>
-                    </div>
-
-                    <div className="relative">
-                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-1.5 block">Deskripsi</label>
-                        <TextArea value={form.description || ''} onChange={e => setForm((p:any) => ({...p, description: e.target.value}))} placeholder="Deskripsi file, cara install singkat..." className="h-24 text-xs leading-relaxed"/>
-                        <button 
-                            onClick={actions.generateDescription} 
-                            disabled={aiLoading.desc} 
-                            className="absolute bottom-2 right-2 text-[10px] text-blue-400 hover:text-white flex items-center gap-1 bg-black/50 px-2 py-1 rounded backdrop-blur-sm border border-blue-500/30 shadow-lg"
-                        >
-                            {aiLoading.desc ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Desc</>}
-                        </button>
-                    </div>
-                    
-                    {/* ACCESS KEY */}
-                    <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/30">
-                        <label className="text-[10px] text-red-400 font-bold uppercase mb-2 block flex items-center gap-1">
-                            <Lock size={12}/> PIN Akses (Proteksi)
-                        </label>
-                        <Input 
-                            value={form.access_key || ''} 
-                            onChange={e => setForm((p:any) => ({...p, access_key: e.target.value}))} 
-                            placeholder="Buat PIN (Contoh: 123456)..." 
-                            className="text-sm font-bold bg-black/40 border-red-500/20 focus:border-red-500 text-white placeholder-gray-600 tracking-widest"
-                        />
-                        <p className="text-[10px] text-gray-500 mt-2 italic leading-relaxed">
-                            *Jika diisi, user <strong>WAJIB</strong> masukkan PIN ini untuk download. Biarkan kosong jika file ini Publik (Gratis).
-                        </p>
                     </div>
                 </div>
             </div>
