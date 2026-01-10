@@ -1,6 +1,6 @@
 
 import React, { useRef } from 'react';
-import { Edit, Plus, UploadCloud, Sparkles, Wand2, Save, X } from 'lucide-react';
+import { Edit, Plus, UploadCloud, Sparkles, Wand2, Save, X, Lock } from 'lucide-react';
 import { Button, Input, TextArea, LoadingSpinner } from '../ui';
 import { DOWNLOAD_CATEGORIES } from './types';
 import { getCategoryColor } from './utils';
@@ -112,7 +112,7 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                 <div>
                     <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">4. Detail Final</label>
                     <Input value={form.title || ''} onChange={e => setForm((p:any) => ({...p, title: e.target.value}))} placeholder="Judul Final..." className="text-xs mb-2 font-bold"/>
-                    <div className="relative">
+                    <div className="relative mb-2">
                         <TextArea value={form.description || ''} onChange={e => setForm((p:any) => ({...p, description: e.target.value}))} placeholder="Deskripsi file..." className="h-20 text-xs leading-relaxed"/>
                         <button 
                             onClick={actions.generateDescription} 
@@ -121,6 +121,22 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                         >
                             {aiLoading.desc ? <LoadingSpinner size={10}/> : <><Wand2 size={10}/> Auto-Desc</>}
                         </button>
+                    </div>
+                    
+                    {/* ACCESS KEY (SECURE GATE) */}
+                    <div className="bg-red-500/10 p-3 rounded-lg border border-red-500/30 mb-2">
+                        <label className="text-[10px] text-red-400 font-bold uppercase mb-1 block flex items-center gap-1">
+                            <Lock size={10}/> PIN Akses (Opsional)
+                        </label>
+                        <Input 
+                            value={form.access_key || ''} 
+                            onChange={e => setForm((p:any) => ({...p, access_key: e.target.value}))} 
+                            placeholder="Kosongkan jika file Publik..." 
+                            className="text-xs h-9 bg-black/40 border-red-500/20 focus:border-red-500 text-white placeholder-gray-600"
+                        />
+                        <p className="text-[9px] text-gray-500 mt-1 italic">
+                            *Jika diisi, user wajib masukkan PIN untuk download.
+                        </p>
                     </div>
                 </div>
 

@@ -16,6 +16,7 @@ export interface DownloadFormState {
     version: string;
     file_size: string;
     os_support: 'Windows' | 'Android' | 'iOS' | 'All';
+    access_key: string; // NEW: PIN
 }
 
 export interface DownloadAiLoading {

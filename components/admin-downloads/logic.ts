@@ -11,7 +11,7 @@ export const useDownloadLogic = () => {
     const [downloads, setDownloads] = useState<DownloadItem[]>([]);
     
     const [form, setForm] = useState<DownloadFormState>({
-        id: '', title: '', category: 'driver', description: '', file_url: '', version: '', file_size: '', os_support: 'Windows'
+        id: '', title: '', category: 'driver', description: '', file_url: '', version: '', file_size: '', os_support: 'Windows', access_key: ''
     });
     
     const [contextInput, setContextInput] = useState('');
@@ -34,14 +34,17 @@ export const useDownloadLogic = () => {
     };
 
     const resetForm = () => {
-        setForm({ id: '', title: '', category: 'driver', description: '', file_url: '', version: '', file_size: '', os_support: 'Windows' });
+        setForm({ id: '', title: '', category: 'driver', description: '', file_url: '', version: '', file_size: '', os_support: 'Windows', access_key: '' });
         setUploadFile(null);
         setContextInput('');
         setGeneratedTitles([]);
     };
 
     const handleEditClick = (item: DownloadItem) => { 
-        setForm(item as unknown as DownloadFormState); 
+        setForm({
+            ...item,
+            access_key: item.access_key || '' // Map existing key or empty
+        } as unknown as DownloadFormState); 
         setContextInput(item.title);
         setGeneratedTitles([]);
         if (window.innerWidth < 1024) window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -98,6 +101,7 @@ export const useDownloadLogic = () => {
                 file_size: finalFileSize || 'Unknown',
                 version: form.version || 'Latest',
                 os_support: form.os_support || 'Windows',
+                access_key: form.access_key || null, // HANDLE PIN
                 updated_at: new Date().toISOString()
             };
 

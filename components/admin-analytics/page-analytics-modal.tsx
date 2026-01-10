@@ -168,7 +168,7 @@ export const PageAnalyticsModal = ({ pagePath, onClose }: { pagePath: string, on
                                         </div>
                                         
                                         {Object.entries(stats.trend).map(([date, count], idx) => {
-                                            const heightPercent = (count / maxTrendValue) * 100;
+                                            const heightPercent = ((count as number) / maxTrendValue) * 100;
                                             return (
                                                 <div key={idx} className="flex-1 flex flex-col items-center group relative z-10 h-full justify-end">
                                                     <div className="absolute -top-8 bg-white text-black text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">

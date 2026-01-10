@@ -101,6 +101,7 @@ export interface DownloadItem {
   version?: string;
   os_support?: 'Windows' | 'Android' | 'iOS' | 'All';
   updated_at: string;
+  access_key?: string; // NEW: PIN for Secure Gate
 }
 
 export interface Tutorial {
