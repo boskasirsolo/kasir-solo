@@ -11,21 +11,21 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
 
     return (
         <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden shadow-2xl relative">
-            {/* HEADER (Sticky / Fixed Top) */}
-            <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0 bg-brand-dark z-20 relative">
+            {/* HEADER (Fixed) */}
+            <div className="flex justify-between items-center p-5 border-b border-white/10 shrink-0 bg-brand-dark z-20">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     {form.id ? <Edit size={16} className="text-brand-orange"/> : <Plus size={16} className="text-brand-orange"/>} 
                     {form.id ? 'Edit File' : 'Upload File Baru'}
                 </h3>
                 {form.id && (
-                    <button onClick={actions.resetForm} className="text-xs text-gray-500 hover:text-white flex items-center gap-1 border border-white/10 px-2 py-1 rounded bg-white/5 transition-colors">
+                    <button onClick={actions.resetForm} className="text-[10px] text-gray-500 hover:text-white flex items-center gap-1 border border-white/10 px-2 py-1 rounded bg-white/5 transition-colors">
                         <X size={12}/> Batal
                     </button>
                 )}
             </div>
             
-            {/* SCROLLABLE FORM CONTENT - Using flex-1 and min-h-0 to ensure proper scroll containment */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5 min-h-0">
+            {/* BODY (Scrollable) */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5 min-h-0 relative">
                 
                 {/* Step 1: Type & Context */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5">
@@ -161,7 +161,7 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                         </button>
                     </div>
                     
-                    {/* ACCESS KEY (SECURE GATE) - FIXED VISIBILITY */}
+                    {/* ACCESS KEY */}
                     <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/30">
                         <label className="text-[10px] text-red-400 font-bold uppercase mb-2 block flex items-center gap-1">
                             <Lock size={12}/> PIN Akses (Proteksi)
@@ -177,12 +177,13 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                         </p>
                     </div>
                 </div>
+            </div>
 
-                <div className="pt-2 pb-4">
-                    <Button onClick={actions.handleSubmit} disabled={loading} className="w-full text-xs py-3 shadow-neon font-bold">
-                        {loading ? <><LoadingSpinner size={14}/> MEMPROSES...</> : <><Save size={14}/> SIMPAN & TERBITKAN</>}
-                    </Button>
-                </div>
+            {/* FOOTER (Fixed) */}
+            <div className="p-4 border-t border-white/10 bg-brand-dark shrink-0 z-20">
+                <Button onClick={actions.handleSubmit} disabled={loading} className="w-full text-xs py-3 shadow-neon font-bold">
+                    {loading ? <><LoadingSpinner size={14}/> MEMPROSES...</> : <><Save size={14}/> SIMPAN & TERBITKAN</>}
+                </Button>
             </div>
         </div>
     );

@@ -14,7 +14,7 @@ export const AdminDownloads = () => {
     return (
         <div className="h-[650px] flex flex-col">
             {/* TAB NAV - Scrollable on mobile */}
-            <div className="flex gap-2 mb-6 border-b border-white/10 pb-1 overflow-x-auto custom-scrollbar">
+            <div className="flex gap-2 mb-6 border-b border-white/10 pb-1 overflow-x-auto custom-scrollbar shrink-0">
                 {[
                     { id: 'files', label: 'File Download', icon: HardDrive },
                     { id: 'tutorials', label: 'Video Tutorial', icon: PlayCircle },
@@ -31,10 +31,10 @@ export const AdminDownloads = () => {
             </div>
 
             {/* CONTENT - Added overflow-y-auto to allow mobile scrolling */}
-            <div className="flex-grow overflow-y-auto lg:overflow-hidden">
+            <div className="flex-1 overflow-y-auto lg:overflow-hidden min-h-0">
                 {activeTab === 'files' && (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
-                        <div className="lg:col-span-7 h-full">
+                        <div className="lg:col-span-7 h-full overflow-hidden">
                             <DownloadList 
                                 state={dlLogic.listState} 
                                 onEdit={dlLogic.actions.handleEditClick} 
@@ -42,11 +42,11 @@ export const AdminDownloads = () => {
                                 onReset={dlLogic.actions.resetForm}
                             />
                         </div>
-                        <div className="hidden lg:block lg:col-span-5 h-full">
+                        <div className="hidden lg:block lg:col-span-5 h-full overflow-hidden">
                             <DownloadEditor logic={dlLogic} />
                         </div>
                         {/* Mobile Editor Logic - Fixed Height to enable internal scroll in Editor */}
-                        <div className="block lg:hidden mt-6 h-[500px] pb-20">
+                        <div className="block lg:hidden mt-6 h-[550px] pb-10">
                              <div className="mb-4 text-xs font-bold text-gray-500 uppercase">Editor / Upload</div>
                              <DownloadEditor logic={dlLogic} />
                         </div>
