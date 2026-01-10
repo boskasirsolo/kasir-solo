@@ -30,8 +30,8 @@ export const AdminDownloads = () => {
                 ))}
             </div>
 
-            {/* CONTENT */}
-            <div className="flex-grow overflow-hidden">
+            {/* CONTENT - Added overflow-y-auto to allow mobile scrolling */}
+            <div className="flex-grow overflow-y-auto lg:overflow-hidden">
                 {activeTab === 'files' && (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
                         <div className="lg:col-span-7 h-full">
@@ -45,10 +45,8 @@ export const AdminDownloads = () => {
                         <div className="hidden lg:block lg:col-span-5 h-full">
                             <DownloadEditor logic={dlLogic} />
                         </div>
-                        {/* Mobile Editor Logic: Render editor as modal/overlay if needed, or simply stack it. 
-                            For simplicity in this fix, we keep 2-col on desktop. On mobile, user scrolls down to see editor 
-                            or we can use conditional rendering. Here we stack them on mobile order-2 */}
-                        <div className="block lg:hidden mt-6 h-fit pb-20">
+                        {/* Mobile Editor Logic - Fixed Height to enable internal scroll in Editor */}
+                        <div className="block lg:hidden mt-6 h-[500px] pb-20">
                              <div className="mb-4 text-xs font-bold text-gray-500 uppercase">Editor / Upload</div>
                              <DownloadEditor logic={dlLogic} />
                         </div>
