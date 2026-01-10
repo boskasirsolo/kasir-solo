@@ -24,19 +24,20 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                 )}
             </div>
             
-            {/* SCROLLABLE FORM CONTENT */}
-            <div className="flex-grow overflow-y-auto custom-scrollbar p-6 space-y-5">
+            {/* SCROLLABLE FORM CONTENT - Added min-h-0 to fix flex scrolling */}
+            <div className="flex-grow overflow-y-auto custom-scrollbar p-6 space-y-5 min-h-0">
                 
                 {/* Step 1: Type & Context */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                     <div className="mb-4">
                         <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">1. Jenis File</label>
-                        <div className="grid grid-cols-2 gap-2">
+                        {/* Changed to grid-cols-4 for single row */}
+                        <div className="grid grid-cols-4 gap-2">
                             {DOWNLOAD_CATEGORIES.map(cat => (
                                 <button
                                     key={cat.id}
                                     onClick={() => setForm((p:any) => ({...p, category: cat.id}))}
-                                    className={getCategoryColor(cat.id, form.category === cat.id)}
+                                    className={`${getCategoryColor(cat.id, form.category === cat.id)} justify-center px-1`}
                                 >
                                     {cat.label}
                                 </button>
