@@ -94,12 +94,12 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                 {/* Step 3: File Upload & Meta Data (Merged) */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                     <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">3. File & Atribut</label>
-                    <div className="grid grid-cols-12 gap-4">
-                        
-                        {/* Left: Compact Upload */}
-                        <div className="col-span-5 flex flex-col gap-2">
+                    
+                    <div className="grid grid-cols-12 gap-4 mb-3">
+                        {/* Left: Compact Upload (Full Height of Row) */}
+                        <div className="col-span-5">
                             <div 
-                                className="border-2 border-dashed border-white/10 rounded-xl text-center hover:border-brand-orange/50 hover:bg-brand-orange/5 transition-all cursor-pointer relative group flex flex-col items-center justify-center flex-1 min-h-[140px] p-2"
+                                className="border-2 border-dashed border-white/10 rounded-xl text-center hover:border-brand-orange/50 hover:bg-brand-orange/5 transition-all cursor-pointer relative group flex flex-col items-center justify-center h-full p-2 min-h-[140px]"
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 <input 
@@ -109,8 +109,8 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                                     className="hidden"
                                 />
                                 <div className="flex flex-col items-center gap-2 pointer-events-none">
-                                    <div className="p-2 rounded-full bg-black/40 border border-white/10 group-hover:border-brand-orange/30 transition-colors">
-                                        <UploadCloud size={18} className={uploadFile ? "text-brand-orange" : "text-gray-500"}/>
+                                    <div className="p-3 rounded-full bg-black/40 border border-white/10 group-hover:border-brand-orange/30 transition-colors">
+                                        <UploadCloud size={20} className={uploadFile ? "text-brand-orange" : "text-gray-500"}/>
                                     </div>
                                     <span className="text-[10px] font-bold text-gray-300 leading-tight px-1 break-words w-full">
                                         {uploadFile ? uploadFile.name : "Klik Upload"}
@@ -118,12 +118,6 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                                     {!uploadFile && <span className="text-[8px] text-gray-500">Max 100MB</span>}
                                 </div>
                             </div>
-                            <Input 
-                                value={form.file_url || ''} 
-                                onChange={e => setForm((p:any) => ({...p, file_url: e.target.value}))} 
-                                placeholder="Link URL..." 
-                                className="text-[10px] bg-black/40 h-8"
-                            />
                         </div>
 
                         {/* Right: Meta Fields (Stacked) */}
@@ -159,6 +153,16 @@ export const DownloadEditor = ({ logic }: { logic: any }) => {
                                 />
                             </div>
                         </div>
+                    </div>
+
+                    {/* Bottom: URL Input (Full Width) */}
+                    <div>
+                        <Input 
+                            value={form.file_url || ''} 
+                            onChange={e => setForm((p:any) => ({...p, file_url: e.target.value}))} 
+                            placeholder="Atau paste Link URL Eksternal (G-Drive / Mediafire)..." 
+                            className="text-[10px] bg-black/40 h-9"
+                        />
                     </div>
                 </div>
 
