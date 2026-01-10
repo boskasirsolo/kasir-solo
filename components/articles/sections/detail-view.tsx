@@ -58,6 +58,31 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
               const fileMatch = p.match(/^\[FILE: (.*?)\]\((.*?)\)$/); if (fileMatch) { return <FileDownloadCard key={idx} label={fileMatch[1]} url={fileMatch[2]} />; }
               const projectMatch = p.match(/^\[PROJECT: (.*?) \| (.*?) \| (.*?) \| (.*?)\]$/); if (projectMatch) { return <ProjectEmbedCard key={idx} title={projectMatch[1]} url={projectMatch[2]} image={projectMatch[3]} desc={projectMatch[4]} />; }
               
+              // --- IMAGE HANDLING ---
+              const imgMatch = p.match(/^!\[(.*?)\]\((.*?)\)$/);
+              if (imgMatch) {
+                  return (
+                      <div key={idx} className="my-8 rounded-xl overflow-hidden border border-white/10 bg-black/20">
+                          <img 
+                              src={optimizeImage(imgMatch[2], 800)} 
+                              alt={imgMatch[1]} 
+                              className="w-full h-auto object-cover"
+                              loading="lazy" 
+                          />
+                          {imgMatch[1] && imgMatch[1] !== 'image' && (
+                              <p className="text-center text-sm text-gray-500 py-2 italic bg-black/40 m-0">{imgMatch[1]}</p>
+                          )}
+                      </div>
+                  );
+              }
+
+              // --- VIDEO HANDLING (IFRAME) ---
+              if (p.startsWith('<iframe') && p.endsWith('></iframe>')) {
+                  return (
+                      <div key={idx} className="my-8 aspect-video rounded-xl overflow-hidden border border-white/10 bg-black" dangerouslySetInnerHTML={{ __html: p }} />
+                  );
+              }
+
               // --- HEADINGS (VISUAL UPGRADE H1-H10) ---
               
               // Helper to clean content

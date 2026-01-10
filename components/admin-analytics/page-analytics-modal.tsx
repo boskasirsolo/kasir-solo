@@ -80,7 +80,7 @@ export const PageAnalyticsModal = ({ pagePath, onClose }: { pagePath: string, on
     }, [pagePath]);
 
     const stats = useMemo(() => processPageData(data), [data]);
-    const maxTrendValue = Math.max(...Object.values(stats.trend), 1);
+    const maxTrendValue = Math.max(...(Object.values(stats.trend) as number[]), 1);
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-10 animate-fade-in">
@@ -192,7 +192,7 @@ export const PageAnalyticsModal = ({ pagePath, onClose }: { pagePath: string, on
                                     </h4>
                                     <div className="space-y-3">
                                         {stats.sortedSources.map(([source, count], idx) => {
-                                            const percentage = (count / stats.totalViews) * 100;
+                                            const percentage = ((count as number) / stats.totalViews) * 100;
                                             return (
                                                 <div key={idx}>
                                                     <div className="flex justify-between text-xs mb-1">
