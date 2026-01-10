@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HardDrive, FileText, Smartphone, Wrench, Package, Monitor, PlayCircle, Lock, Download } from 'lucide-react';
+import { HardDrive, FileText, Smartphone, Wrench, Package, Monitor, PlayCircle, Lock, Eye } from 'lucide-react';
 import { DownloadItem, Tutorial } from '../../types';
 
 // --- HELPER: Category Colors ---
@@ -31,7 +31,7 @@ export const DownloadCard: React.FC<{ item: DownloadItem, onClick: () => void }>
     <div onClick={onClick} className="bg-brand-card border border-white/5 rounded-xl p-4 hover:border-brand-orange/50 transition-all group flex flex-col h-full shadow-lg cursor-pointer hover:-translate-y-1 relative overflow-hidden">
       {isLocked && (
           <div className="absolute top-0 right-0 bg-red-600 text-white text-[9px] font-bold px-2 py-1 rounded-bl-lg shadow-md z-10 flex items-center gap-1">
-              <Lock size={10} /> PROTECTED
+              <Lock size={10} /> VIP
           </div>
       )}
       
@@ -54,8 +54,8 @@ export const DownloadCard: React.FC<{ item: DownloadItem, onClick: () => void }>
            <span>{item.file_size}</span>
         </div>
         <button className={`w-full flex items-center justify-center gap-2 border py-2 rounded text-[10px] font-bold transition-all shadow-[0_0_10px_rgba(255,95,31,0.15)] ${isLocked ? 'border-red-500 text-red-500 hover:bg-red-500 hover:text-white' : 'border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white'}`}>
-          {isLocked ? <Lock size={12}/> : <Download size={12}/>}
-          {isLocked ? 'Buka Kunci' : 'Lihat Detail'}
+          {isLocked ? <Lock size={12}/> : <Eye size={12}/>}
+          {isLocked ? 'Buka Kunci' : 'Preview & Download'}
         </button>
       </div>
     </div>
