@@ -61,10 +61,10 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
         {/* 3. Perusahaan Section */}
         <FooterColumn title="Perusahaan & Support" links={companyLinks} />
 
-        {/* 4. Contact Section */}
-        <div className="col-span-1 md:col-span-1 lg:col-span-1">
+        {/* 4. Contact Section - Set to full width on mobile/tablet (md:col-span-2) */}
+        <div className="col-span-1 md:col-span-2 lg:col-span-1">
           <SectionTitle>Hubungi Kami</SectionTitle>
-          <ul className="space-y-5">
+          <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-6 md:gap-4 lg:gap-5">
             <ContactItem 
               icon={MapPin}
               label="KANTOR LEGAL"
