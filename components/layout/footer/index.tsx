@@ -45,8 +45,8 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
 
   return (
     <FooterContainer>
-      {/* Optimized Grid Gap for Tablet */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-x-4 md:gap-y-8 lg:gap-8">
+      {/* Outer Grid: 1 col on mobile, 2 cols on tablet, 4 cols on desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-x-8 md:gap-y-16 lg:gap-8">
         
         {/* 1. Brand Section */}
         <BrandColumn 
@@ -61,10 +61,10 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
         {/* 3. Perusahaan Section */}
         <FooterColumn title="Perusahaan & Support" links={companyLinks} />
 
-        {/* 4. Contact Section - Set to full width on mobile/tablet (md:col-span-2) */}
+        {/* 4. Contact Section - Set to full width (col-span-2) on tablet (md) */}
         <div className="col-span-1 md:col-span-2 lg:col-span-1">
           <SectionTitle>Hubungi Kami</SectionTitle>
-          <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-6 md:gap-4 lg:gap-5">
+          <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-8 md:gap-4 lg:gap-5">
             <ContactItem 
               icon={MapPin}
               label="KANTOR LEGAL"
