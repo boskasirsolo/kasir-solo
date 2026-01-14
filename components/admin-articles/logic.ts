@@ -108,6 +108,9 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const filterLogic = useArticleFilter(articles, 7);
     const aiLogic = useAIGenerator();
     const [cities, setCities] = useState<CityTarget[]>([]);
+    
+    // NEW: State untuk navigasi mobile
+    const [activeMobilePane, setActiveMobilePane] = useState<'LIST' | 'CONFIG' | 'WRITE'>('LIST');
 
     useEffect(() => {
         const fetchCities = async () => {
@@ -165,6 +168,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         });
         setSocialCaption(''); 
         setAiStep(0); setSelectedPresets([]); setSelectedTones(['gritty']);
+        setActiveMobilePane('CONFIG'); // Langsung ke setting pas buat baru
     };
 
     const handleEditClick = (item: Article) => {
@@ -194,6 +198,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         });
         setSocialCaption(''); 
         setAiStep(2);
+        setActiveMobilePane('WRITE'); // Langsung ke editor pas edit
     };
 
     const updatePersonaAvatar = async (file: File) => {
@@ -268,6 +273,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                     });
             }
             resetForm();
+            setActiveMobilePane('LIST'); // Balik ke list abis save
         } catch(e: any) { alert("Error: " + e.message); } 
         finally { aiLogic.setLoading(p => ({ ...p, uploading: false, progressMessage: '' })); }
     };
@@ -335,6 +341,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
             setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: p.category.length > 2 ? p.category : meta.category, readTime: `${Math.ceil(wordCount / 200)} min read` })); 
             setAiStep(2); 
+            setActiveMobilePane('WRITE'); // Auto pindah ke editor abis AI nulis
         } catch(e: any) { alert(e.message); }
         finally { aiLogic.setLoading(p => ({ ...p, generatingText: false, progressMessage: '' })); }
     };
@@ -351,6 +358,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
     return {
         form, setForm, filterLogic, aiLogic, personas, activePersonaId, setActivePersonaId, updatePersonaAvatar,
+        activeMobilePane, setActiveMobilePane, // EXPORT BARU
         socialState: { socialCaption, setSocialCaption, selectedPlatforms, setSelectedPlatforms, socialLoading },
         aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, trendingTopics: aiLogic.trendingTopics, keywords: aiLogic.keywords, selectedTones, setSelectedTones, cities },
         actions: { 
