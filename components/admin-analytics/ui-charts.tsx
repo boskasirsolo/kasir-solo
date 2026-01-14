@@ -150,7 +150,7 @@ export const RetentionChart = ({ newUsers, returningUsers }: { newUsers: number,
                 </div>
             </div>
             <p className="text-[10px] text-gray-500 mt-6 text-center italic">
-                *Returning = Pengunjung >1 kali.
+                *Returning = Pengunjung &gt;1 kali.
             </p>
         </div>
     );
