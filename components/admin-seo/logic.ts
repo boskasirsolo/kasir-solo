@@ -8,6 +8,9 @@ export const useSEOLogic = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
+  // NEW: State untuk handle halaman detail di HP
+  const [showMobileEditor, setShowMobileEditor] = useState(false);
+
   const [form, setForm] = useState<SEOFormState>({
     id: null,
     name: '',
@@ -45,12 +48,10 @@ export const useSEOLogic = () => {
       };
 
       if (form.id) {
-        // Edit Mode
         const { error } = await supabase.from('target_cities').update(payload).eq('id', form.id);
         if (error) throw error;
         setCities(prev => prev.map(c => c.id === form.id ? { ...c, ...payload } : c));
       } else {
-        // Create Mode
         const { data, error } = await supabase.from('target_cities').insert([payload]).select().single();
         if (error) throw error;
         if (data) setCities(prev => [data, ...prev]);
@@ -79,10 +80,17 @@ export const useSEOLogic = () => {
 
   const handleEdit = (city: CityTarget) => {
       setForm({ id: city.id, name: city.name, type: city.type });
+      setShowMobileEditor(true); // Open mobile page
+  };
+
+  const openNewCity = () => {
+      resetForm();
+      setShowMobileEditor(true);
   };
 
   const resetForm = () => {
     setForm({ id: null, name: '', type: 'Ekspansi' });
+    setShowMobileEditor(false); // Close mobile page
   };
 
   const filteredCities = useMemo(() => {
@@ -90,8 +98,8 @@ export const useSEOLogic = () => {
   }, [cities, searchTerm]);
 
   return {
-    state: { cities, filteredCities, loading, searchTerm, form },
-    setters: { setSearchTerm, setForm },
-    actions: { handleSubmit, handleDelete, handleEdit, resetForm }
+    state: { cities, filteredCities, loading, searchTerm, form, showMobileEditor },
+    setters: { setSearchTerm, setForm, setShowMobileEditor },
+    actions: { handleSubmit, handleDelete, handleEdit, resetForm, openNewCity }
   };
 };
