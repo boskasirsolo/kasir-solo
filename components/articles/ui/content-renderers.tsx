@@ -17,20 +17,33 @@ export const FileDownloadCard: React.FC<{ label: string, url: string }> = ({ lab
 
 export const ProjectEmbedCard: React.FC<{ title: string, url: string, image: string, desc: string }> = ({ title, url, image, desc }) => {
     return (
-        <div className="my-10 bg-brand-dark rounded-2xl border border-white/5 overflow-hidden group hover:border-brand-orange/30 transition-all shadow-lg">
-            <div className="flex flex-col md:flex-row h-full">
-                <div className="w-full md:w-56 h-48 md:h-auto relative bg-black shrink-0">
-                    <img 
-                        src={optimizeImage(image, 400)} 
-                        alt={title} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                        loading="lazy" 
-                    />
-                    <div className="absolute top-3 left-3 bg-brand-orange text-white text-[10px] font-bold px-2 py-1 rounded shadow-neon">STUDI KASUS</div>
+        <div className="my-10 bg-brand-dark rounded-2xl border border-white/5 overflow-hidden group hover:border-brand-orange/30 transition-all shadow-lg flex flex-col md:flex-row">
+            {/* Image Container:
+                - Mobile: h-48 fixed.
+                - Desktop: w-64 fixed width, height stretches to match text content (flex), min-h-[250px] to ensure size.
+                - Image: absolute inset-0 to fill container without forcing aspect ratio.
+            */}
+            <div className="w-full md:w-64 h-48 md:h-auto md:min-h-[250px] relative bg-black shrink-0 overflow-hidden">
+                <img 
+                    src={optimizeImage(image, 600)} 
+                    alt={title} 
+                    className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" 
+                    loading="lazy" 
+                />
+                <div className="absolute top-3 left-3 bg-brand-orange text-white text-[10px] font-bold px-2 py-1 rounded shadow-neon z-10">STUDI KASUS</div>
+                {/* Gradient overlay for text readability if needed, or just aesthetic */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50 md:opacity-0 transition-opacity"></div>
+            </div>
+            
+            <div className="p-6 flex flex-col justify-between flex-1">
+                <div>
+                    <h4 className="text-xl font-bold text-white mb-3 leading-tight group-hover:text-brand-orange transition-colors">{title}</h4>
+                    <p className="text-sm text-gray-400 leading-relaxed line-clamp-4 mb-4">{desc}</p>
                 </div>
-                <div className="p-6 flex flex-col justify-between flex-1">
-                    <div><h4 className="text-xl font-bold text-white mb-2 leading-tight">{title}</h4><p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-4">{desc}</p></div>
-                    <div className="flex justify-end pt-4 border-t border-white/5"><Link to={url} className="inline-flex items-center gap-2 text-brand-orange font-bold text-sm uppercase tracking-widest hover:gap-3 transition-all">Lihat Detail <ArrowRight size={16} /></Link></div>
+                <div className="flex justify-end pt-4 border-t border-white/5">
+                    <Link to={url} className="inline-flex items-center gap-2 text-brand-orange font-bold text-xs uppercase tracking-widest hover:gap-3 transition-all">
+                        Lihat Detail <ArrowRight size={16} />
+                    </Link>
                 </div>
             </div>
         </div>
