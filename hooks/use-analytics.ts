@@ -60,6 +60,18 @@ export const useAnalytics = () => {
         const deviceType = getDeviceType();
         const currentPath = location.pathname;
 
+        // DETECT SOURCE FROM URL (UTM OR MANUAL SOURCE)
+        // Priority: UTM Source > Source Param > Document Referrer > Direct
+        const params = new URLSearchParams(location.search);
+        const urlSource = params.get('utm_source') || params.get('source') || params.get('ref');
+        
+        let finalReferrer = document.referrer;
+        if (urlSource) {
+            finalReferrer = urlSource; // Override referrer if URL param exists (e.g. ?source=whatsapp)
+        } else if (!finalReferrer) {
+            finalReferrer = 'direct';
+        }
+
         // A. TRACK PAGE VIEW (Entry)
         const trackPageView = async () => {
             try {
@@ -68,7 +80,7 @@ export const useAnalytics = () => {
                     event_type: 'page_view',
                     page_path: currentPath,
                     device_type: deviceType,
-                    referrer: document.referrer || 'direct'
+                    referrer: finalReferrer
                 }]);
             } catch (e) {
                 console.error("Analytics Error", e);
@@ -81,9 +93,6 @@ export const useAnalytics = () => {
         return () => {
             if (isGhost || isAdminRoute || !supabase) return;
             // Fire and forget 'page_leave' event
-            // Note: This relies on component unmount (route change).
-            // For tab close, 'navigator.sendBeacon' is ideal but requires a dedicated API endpoint.
-            // Using supabase.insert here works for SPA navigation (90% of cases).
             supabase.from('analytics_logs').insert([{
                 visitor_id: visitorId,
                 event_type: 'page_leave',
