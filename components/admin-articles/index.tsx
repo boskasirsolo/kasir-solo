@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Article, GalleryItem, SiteConfig } from '../../types';
-import { Image as ImageIcon, Sparkles, Loader2, UploadCloud, Save, List, Settings, PenTool } from 'lucide-react';
+import { Image as ImageIcon, Sparkles, Loader2, UploadCloud, Save, List, Settings, PenTool, Wand2 } from 'lucide-react';
 import { useArticleManager } from './logic';
 import { ListPanel } from './list-panel';
 import { EditorPanel } from './editor-panel';
@@ -90,6 +90,16 @@ export const AdminArticles = ({
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {/* NEW: AI IMAGE BUTTON */}
+                    <button 
+                        onClick={manager.actions.runImage}
+                        disabled={aiLogic.loading.generatingImage || !form.title}
+                        className={`p-2 h-9 rounded-lg transition-all border flex items-center justify-center ${aiLogic.loading.generatingImage ? 'bg-orange-500/20 border-orange-500 text-orange-500' : 'bg-white/5 border-white/10 text-gray-400 hover:text-brand-orange hover:border-brand-orange/50'}`}
+                        title="Generate AI Cover"
+                    >
+                        {aiLogic.loading.generatingImage ? <Loader2 size={18} className="animate-spin"/> : <ImageIcon size={18} />}
+                    </button>
+
                     {form.content.length > 50 && (
                         <button 
                             onClick={manager.actions.runWrite} 
@@ -114,11 +124,14 @@ export const AdminArticles = ({
                 onRegenerate={manager.actions.runWrite}
                 isGenerating={aiLogic.loading.generatingText}
             />
-            {aiLogic.loading.generatingText && (
+            {(aiLogic.loading.generatingText || aiLogic.loading.generatingImage) && (
                 <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-50 animate-fade-in backdrop-blur-md">
-                    <Loader2 size={48} className="text-brand-orange animate-spin mb-4"/>
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-brand-orange blur-xl opacity-20 animate-pulse"></div>
+                        <Loader2 size={48} className="text-brand-orange animate-spin mb-4 relative"/>
+                    </div>
                     <p className="text-white font-bold text-lg animate-pulse text-center px-6 leading-relaxed">
-                        {aiLogic.loading.progressMessage || 'Gemini lagi mikir strategi narasi...'}
+                        {aiLogic.loading.progressMessage || 'Gemini lagi mikir...'}
                     </p>
                 </div>
             )}
@@ -130,10 +143,17 @@ export const AdminArticles = ({
                 <span className="font-mono">{form.content.split(/\s+/).length} Kata</span>
                 <span className="bg-white/5 px-2 rounded">{form.status.toUpperCase()}</span>
             </div>
-            <label className="text-brand-orange flex items-center gap-1 cursor-pointer hover:text-white">
-                <ImageIcon size={14}/> Cover
-                <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
-            </label>
+            <div className="flex items-center gap-4">
+                {form.imagePreview && (
+                    <div className="w-8 h-8 rounded border border-white/10 overflow-hidden bg-black shrink-0">
+                        <img src={form.imagePreview} className="w-full h-full object-cover" />
+                    </div>
+                )}
+                <label className="text-brand-orange flex items-center gap-1 cursor-pointer hover:text-white">
+                    <ImageIcon size={14}/> Cover
+                    <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+                </label>
+            </div>
          </div>
       </div>
 

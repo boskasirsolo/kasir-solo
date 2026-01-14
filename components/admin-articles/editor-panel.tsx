@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle, FileType, MessageSquare, MapPin } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle, FileType, MessageSquare, MapPin, Image as ImageIcon } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, LoadingSpinner } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
@@ -212,6 +212,38 @@ export const EditorPanel = ({
             </div>
 
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-5 pb-32">
+                
+                {/* COVER IMAGE SECTION */}
+                <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                    <div className="flex justify-between items-center mb-3">
+                         <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2"><ImageIcon size={10}/> Aset Visual (Cover)</label>
+                         <button 
+                            onClick={actions.runImage}
+                            disabled={loading.generatingImage || !form.title}
+                            className="text-[9px] text-brand-orange hover:text-white flex items-center gap-1 disabled:opacity-30"
+                         >
+                            {loading.generatingImage ? <Loader2 size={10} className="animate-spin"/> : <><Sparkles size={10}/> AI Generate</>}
+                         </button>
+                    </div>
+                    <div className="aspect-video bg-black rounded-lg border border-white/5 overflow-hidden relative group">
+                        {form.imagePreview ? (
+                            <img src={form.imagePreview} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-700 text-[10px]">
+                                <ImageIcon size={24} className="mb-1 opacity-20"/>
+                                Belum Ada Cover
+                            </div>
+                        )}
+                        <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                            <span className="text-[10px] text-white font-bold">GANTI MANUAL</span>
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                const file = e.target.files ? e.target.files[0] : null;
+                                if (file) setForm((prev:any) => ({...prev, uploadFile: file, imagePreview: URL.createObjectURL(file)}));
+                            }} />
+                        </label>
+                    </div>
+                </div>
+
                 <StrategySwitcher type={form.type} onChange={(t) => setForm((p:any) => ({...p, type: t}))} />
 
                 {/* LOCAL SEO INDICATOR */}
