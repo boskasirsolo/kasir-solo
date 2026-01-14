@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles, Map, Loader2 } from 'lucide-react';
 import { useSEOLogic } from './logic';
 import { CityListPanel } from './city-list';
 import { CityEditorPanel } from './city-editor';
+import { AISuggestionsPanel } from './ai-suggestions';
 
 export const AdminSEO = () => {
   const { state, setters, actions } = useSEOLogic();
@@ -42,12 +43,54 @@ export const AdminSEO = () => {
   );
 
   return (
-    <div className="relative">
+    <div className="relative space-y-8">
       
-      {/* 1. LIST PANEL (Selalu muncul di Desktop, muncul saat Editor tutup di Mobile) */}
+      {/* 1. MAGIC GENERATOR PANEL */}
+      <div className="bg-brand-card border border-white/5 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+              <Sparkles size={120} className="text-brand-orange" />
+          </div>
+          <div className="relative z-10">
+              <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2">
+                  <Sparkles size={20} className="text-brand-orange"/> Magic Bulk Page Generator
+              </h3>
+              <p className="text-gray-400 text-sm mb-6 max-w-2xl leading-relaxed">
+                  Capek input satu-satu? Biar AI yang riset. Ketik nama provinsi atau area (cth: "Jawa Barat"), AI bakal nyari kota potensial dan bikin strateginya buat lo.
+              </p>
+              
+              <div className="flex flex-col md:flex-row gap-4">
+                  <div className="relative flex-1">
+                      <Map className="absolute left-4 top-3.5 text-gray-500" size={18} />
+                      <input 
+                          value={state.regionInput}
+                          onChange={(e) => setters.setRegionInput(e.target.value)}
+                          placeholder="Masukkan wilayah (Cth: Jawa Tengah / Pantura / Soloraya)"
+                          className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 text-sm text-white focus:outline-none focus:border-brand-orange transition-all"
+                      />
+                  </div>
+                  <button 
+                    onClick={actions.generateAITargets}
+                    disabled={state.genLoading}
+                    className="bg-brand-gradient hover:bg-brand-gradient-hover text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-neon flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  >
+                      {state.genLoading ? <Loader2 size={18} className="animate-spin"/> : <Sparkles size={18}/>}
+                      {state.genLoading ? 'MENGANALISA...' : 'RISET WILAYAH'}
+                  </button>
+              </div>
+          </div>
+
+          <AISuggestionsPanel 
+            suggestions={state.suggestions}
+            onPublish={actions.publishAllSuggestions}
+            onClear={() => setters.setRegionInput('')}
+            loading={state.loading}
+          />
+      </div>
+
+      {/* 2. LIST PANEL & MANUAL EDITOR */}
       <div className={`w-full lg:grid lg:grid-cols-12 gap-8 items-start ${state.showMobileEditor ? 'hidden lg:grid' : 'block'}`}>
         
-        {/* LEFT: LIST KOTA */}
+        {/* LEFT: LIST KOTA (Daftar Halaman SEO) */}
         <div className="lg:col-span-8 h-auto lg:h-[800px]">
           <CityListPanel 
               state={state}
@@ -58,7 +101,7 @@ export const AdminSEO = () => {
           />
         </div>
 
-        {/* RIGHT: FORM INPUT (Desktop Only) */}
+        {/* RIGHT: FORM INPUT (Manual Editor) */}
         <div className="hidden lg:block lg:col-span-4">
            <CityEditorPanel 
               form={state.form}
@@ -71,7 +114,7 @@ export const AdminSEO = () => {
 
       </div>
 
-      {/* 2. MOBILE EDITOR PAGE (Portal to Body) */}
+      {/* MOBILE EDITOR PAGE (Portal to Body) */}
       {state.showMobileEditor && createPortal(<MobileEditorOverlay />, document.body)}
 
     </div>

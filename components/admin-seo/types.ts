@@ -15,6 +15,13 @@ export interface SEOFormState {
   type: CityType;
 }
 
+export interface AITargetSuggestion {
+  name: string;
+  slug: string;
+  type: CityType;
+  reason: string;
+}
+
 export interface SEOLogicState {
   cities: CityTarget[];
   filteredCities: CityTarget[];
