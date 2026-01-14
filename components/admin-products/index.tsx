@@ -16,15 +16,15 @@ export const AdminProducts = ({
   const { form, setForm, loading, useWatermark, setUseWatermark, listState, actions, aiActions } = useProductLogic(products, setProducts);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start h-auto lg:h-[850px]">
+    <div className="flex flex-col xl:grid xl:grid-cols-10 gap-6 items-start">
       
-      {/* COLUMN 1: LIST (40%) */}
-      <div className="lg:col-span-4 h-[500px] lg:h-full">
+      {/* COLUMN 1: LIST (Dikasih height fix di desktop biar scrollable) */}
+      <div className="w-full xl:col-span-4 h-auto xl:h-[800px]">
          <ListPanel state={listState} actions={actions} />
       </div>
       
-      {/* COLUMN 2: BASIC EDITOR (30%) */}
-      <div className="lg:col-span-3 h-auto lg:h-full">
+      {/* COLUMN 2: BASIC EDITOR */}
+      <div className="w-full xl:col-span-3">
          <EditorBasic 
             form={form} 
             setForm={setForm} 
@@ -36,8 +36,8 @@ export const AdminProducts = ({
          />
       </div>
 
-      {/* COLUMN 3: DETAIL EDITOR (30%) */}
-      <div className="lg:col-span-3 h-auto lg:h-full">
+      {/* COLUMN 3: DETAIL EDITOR */}
+      <div className="w-full xl:col-span-3">
          <EditorDetail 
             form={form}
             setForm={setForm}
