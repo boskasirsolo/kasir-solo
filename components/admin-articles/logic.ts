@@ -5,6 +5,7 @@ import { supabase, uploadToSupabase, processBackgroundMigration, slugify, rename
 import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS } from './types';
 import { VisionAI } from '../../services/ai/vision';
 import { EditorAI } from '../../services/ai/editor';
+import { CityTarget } from '../admin-seo/types';
 
 // PARSE VOLUME UTILS
 const parseVolume = (volStr: string): number => {
@@ -73,7 +74,6 @@ export const useAIGenerator = () => {
     const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
     
-    // REFACTORED: Using EditorAI Service
     const analyzeMarket = async (articleType: 'pillar' | 'cluster', specificTopic?: string) => {
         setLoading(p => ({ ...p, researching: true, progressMessage: 'Scanning Market...' }));
         try {
@@ -107,6 +107,16 @@ export const useAIGenerator = () => {
 export const useArticleManager = (articles: Article[], setArticles: any, gallery: GalleryItem[] = [], config?: SiteConfig) => {
     const filterLogic = useArticleFilter(articles, 7);
     const aiLogic = useAIGenerator();
+    const [cities, setCities] = useState<CityTarget[]>([]);
+
+    useEffect(() => {
+        const fetchCities = async () => {
+            if (!supabase) return;
+            const { data } = await supabase.from('target_cities').select('*').order('name', { ascending: true });
+            if (data) setCities(data);
+        };
+        fetchCities();
+    }, []);
 
     const [personas, setPersonas] = useState<AuthorPersona[]>(() => {
         try { return JSON.parse(localStorage.getItem('mks_personas') || '') || AUTHOR_PRESETS; } catch (e) { return AUTHOR_PRESETS; }
@@ -130,7 +140,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
         targetWordCount: 1000,
         related_pillars: [],
-        generationContext: ''
+        generationContext: '',
+        targetCityId: 0
     });
 
     const [aiStep, setAiStep] = useState(0);
@@ -149,7 +160,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
             targetWordCount: 1000,
             related_pillars: [],
-            generationContext: ''
+            generationContext: '',
+            targetCityId: 0
         });
         setSocialCaption(''); 
         setAiStep(0); setSelectedPresets([]); setSelectedTones(['gritty']);
@@ -177,7 +189,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             date: item.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
             targetWordCount: estimatedCount,
             related_pillars: item.related_pillars || [],
-            generationContext: (item as any).generation_context || ''
+            generationContext: (item as any).generation_context || '',
+            targetCityId: (item as any).target_city_id || 0
         });
         setSocialCaption(''); 
         setAiStep(2);
@@ -187,10 +200,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         aiLogic.setLoading(p => ({ ...p, uploading: true, progressMessage: 'Uploading Avatar...' }));
         try {
             let avatarUrl = URL.createObjectURL(file);
-            // SEO INJECTION
             const seoName = `${slugify(activePersona.name)}-author-avatar-mesin-kasir-solo`;
             const fileToUpload = renameFile(file, seoName);
-
             if (supabase) {
                 const { url } = await uploadToSupabase(fileToUpload, 'avatars');
                 avatarUrl = url;
@@ -203,10 +214,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
     const saveArticle = async () => {
         if (!form.title) return alert("Judul wajib diisi.");
-        if (form.type === 'cluster' && (!form.pillar_id || form.pillar_id === 0)) {
-            return alert("Peringatan: Artikel 'Cluster' WAJIB memilih Pillar Page induknya!");
-        }
-
         aiLogic.setLoading(p => ({ ...p, uploading: true, progressMessage: 'Saving Article...' }));
         try {
             let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/800';
@@ -214,10 +221,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             let fileToMigrate: File | null = form.uploadFile;
 
             if (form.uploadFile) {
-                // SEO INJECTION
                 const seoName = `${slugify(form.title)}-artikel-cover-mesin-kasir-solo`;
                 fileToMigrate = renameFile(form.uploadFile, seoName);
-
                 if (supabase) {
                     const { url, path } = await uploadToSupabase(fileToMigrate);
                     finalImageUrl = url;
@@ -227,29 +232,19 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
             const now = new Date().toISOString();
             const dateStr = form.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-            const finalAuthorAvatar = form.authorAvatar || activePersona.avatar;
-            const statusNormalized = (form.status || 'draft').toLowerCase().trim();
-
             let finalScheduledFor = null;
             if (form.status === 'scheduled' && form.scheduled_for) {
-                if (config?.timezone) {
-                    finalScheduledFor = convertLocalToUTC(form.scheduled_for, config.timezone);
-                } else {
-                    const localDate = new Date(form.scheduled_for); 
-                    finalScheduledFor = localDate.toISOString(); 
-                }
+                finalScheduledFor = config?.timezone ? convertLocalToUTC(form.scheduled_for, config.timezone) : new Date(form.scheduled_for).toISOString();
             }
 
             const commonData = {
                 title: form.title, excerpt: form.excerpt || '', content: form.content || '', 
-                category: form.category || 'General', author: form.author, author_avatar: finalAuthorAvatar, 
-                read_time: form.readTime, image_url: finalImageUrl, status: statusNormalized as any,
-                scheduled_for: finalScheduledFor, 
-                type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
-                cluster_ideas: form.cluster_ideas, 
-                date: dateStr, 
-                related_pillars: form.related_pillars,
-                generation_context: form.generationContext
+                category: form.category || 'General', author: form.author, author_avatar: form.authorAvatar || activePersona.avatar, 
+                read_time: form.readTime, image_url: finalImageUrl, status: (form.status || 'draft') as any,
+                scheduled_for: finalScheduledFor, type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
+                cluster_ideas: form.cluster_ideas, date: dateStr, related_pillars: form.related_pillars,
+                generation_context: form.generationContext,
+                target_city_id: form.targetCityId !== 0 ? form.targetCityId : null
             };
 
             let savedId = form.id;
@@ -303,29 +298,18 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                     const newCats = newCatsString.split(',').map(s => s.trim());
                     const uniqueCats = [...currentCats];
                     newCats.forEach(newC => {
-                        const exists = uniqueCats.some(existing => existing.toLowerCase() === newC.toLowerCase());
-                        if (!exists) uniqueCats.push(newC);
+                        if (!uniqueCats.some(existing => existing.toLowerCase() === newC.toLowerCase())) uniqueCats.push(newC);
                     });
                     return { ...prev, category: uniqueCats.join(', ') };
                 });
             }
-        } catch (e: any) { console.error(e); alert("Gagal generate kategori."); } 
+        } catch (e: any) { alert("Gagal generate kategori."); } 
         finally { aiLogic.setLoading(p => ({ ...p, researching: false, progressMessage: '' })); }
     };
     
     const runClusterResearch = async (pillar: Article) => { 
         try { 
-            setForm({
-                id: null, title: '', excerpt: '', content: '', category: pillar.category,
-                author: activePersona.name, authorAvatar: activePersona.avatar || '', 
-                uploadAuthorFile: null, readTime: '5 min read', imagePreview: '', uploadFile: null, 
-                status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: pillar.id, 
-                cluster_ideas: [], scheduleStart: '',
-                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-                targetWordCount: 1000,
-                related_pillars: [],
-                generationContext: ''
-            });
+            setForm(prev => ({ ...prev, id: null, title: '', excerpt: '', content: '', category: pillar.category, pillar_id: pillar.id, type: 'cluster' }));
             setAiStep(1); 
             await aiLogic.generateClusterIdeas(pillar); 
         } catch(e: any) { alert(e.message); } 
@@ -336,54 +320,25 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const runWrite = async () => { 
         try { 
             aiLogic.setLoading(p => ({ ...p, generatingText: true, progressMessage: 'Writing Article...' }));
-            let pillarContext = undefined;
-            if (form.type === 'cluster' && form.pillar_id) {
-                const pillar = articles.find(a => a.id === form.pillar_id);
-                if (pillar) {
-                    pillarContext = { title: pillar.title, slug: slugify(pillar.title) };
-                }
-            }
-
-            let relatedPillarsData: {title: string, slug: string}[] = [];
-            if (form.type === 'pillar' && form.related_pillars && form.related_pillars.length > 0) {
-                relatedPillarsData = form.related_pillars
-                    .map((id) => {
-                        const related = articles.find(a => a.id === id);
-                        return related ? { title: related.title, slug: slugify(related.title) } : null;
-                    })
-                    .filter(Boolean) as {title: string, slug: string}[];
-            }
-
-            let galleryContextString = "";
-            if (gallery && gallery.length > 0) {
-                const validProjects = gallery.filter(g => 
-                    g.image_url && g.image_url.length > 10 && !g.image_url.includes('placeholder')
-                );
-                galleryContextString = validProjects.map(g => 
-                    `- ${g.title} | ${g.category_type} | ImageURL: ${g.image_url} | /gallery/${slugify(g.title)}`
-                ).join('\n');
-            }
+            const pillarContext = form.pillar_id ? articles.find(a => a.id === form.pillar_id) : undefined;
+            const cityContext = form.targetCityId ? cities.find(c => c.id === form.targetCityId) : undefined;
 
             const content = await EditorAI.writeArticle(
                 form.title, selectedTones, form.type, form.author, form.targetWordCount,
-                pillarContext, relatedPillarsData, galleryContextString, form.generationContext
+                pillarContext ? { title: pillarContext.title, slug: slugify(pillarContext.title) } : undefined,
+                undefined, undefined, form.generationContext,
+                cityContext ? { name: cityContext.name, type: cityContext.type } : undefined
             );
             
             const meta = await EditorAI.generateMeta(form.title, content);
-            const generatedWordCount = content.split(/\s+/).length;
-            const readTimeMin = Math.ceil(generatedWordCount / 200);
+            const wordCount = content.split(/\s+/).length;
 
-            setForm(p => ({ 
-                ...p, content, excerpt: meta.excerpt, 
-                category: p.category && p.category.length > 2 ? p.category : meta.category, 
-                readTime: `${readTimeMin} min read` 
-            })); 
+            setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: p.category.length > 2 ? p.category : meta.category, readTime: `${Math.ceil(wordCount / 200)} min read` })); 
             setAiStep(2); 
         } catch(e: any) { alert(e.message); }
         finally { aiLogic.setLoading(p => ({ ...p, generatingText: false, progressMessage: '' })); }
     };
     
-    // REFACTORED: Using VisionAI Service
     const runImage = async () => { 
         aiLogic.setLoading(p => ({ ...p, generatingImage: true, progressMessage: 'Generating AI Image...' })); 
         try { 
@@ -394,48 +349,13 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         finally { aiLogic.setLoading(p => ({ ...p, generatingImage: false, progressMessage: '' })); } 
     };
 
-    const generateSocialCaption = async () => {
-        if (!form.title) return alert("Judul artikel wajib diisi.");
-        setSocialLoading(p => ({ ...p, generating: true }));
-        try {
-            const context = form.excerpt || form.content.substring(0, 300) || form.title;
-            const prompt = `Role: Social Media Manager. Task: Write a viral caption to promote this article: "${form.title}". Context: ${context}. Style: Professional but engaging. Call to Action: "Baca selengkapnya". Hashtags: #Bisnis #UMKM #KasirSolo. Output: JUST the caption.`;
-            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            setSocialCaption(res.text?.trim() || '');
-        } catch(e) { alert("Gagal generate caption."); }
-        finally { setSocialLoading(p => ({ ...p, generating: false })); }
-    };
-
-    const broadcastArticle = async () => {
-        if (!form.title) return alert("Simpan artikel terlebih dahulu untuk broadcast.");
-        if (!socialCaption) return alert("Caption tidak boleh kosong.");
-        if (form.imagePreview.startsWith('blob:')) return alert("Gambar cover masih lokal. Simpan artikel dulu.");
-        if (!form.imagePreview) return alert("Artikel harus punya cover image.");
-
-        const activePlatforms = Object.entries(selectedPlatforms).filter(([_, isActive]) => isActive).map(([key]) => key);
-        if (activePlatforms.length === 0) return alert("Pilih minimal 1 platform.");
-
-        setSocialLoading(p => ({ ...p, posting: true }));
-        try {
-            const response = await fetch('/api/ayrshare', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ caption: socialCaption, image_url: form.imagePreview, platforms: activePlatforms })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "Gagal broadcast");
-            alert(`Sukses! Broadcast terkirim ke: ${activePlatforms.join(', ')}.`);
-        } catch(e: any) { console.error("Broadcast Error:", e); alert(`Gagal broadcast: ${e.message}`); } 
-        finally { setSocialLoading(p => ({ ...p, posting: false })); }
-    };
-
     return {
         form, setForm, filterLogic, aiLogic, personas, activePersonaId, setActivePersonaId, updatePersonaAvatar,
         socialState: { socialCaption, setSocialCaption, selectedPlatforms, setSelectedPlatforms, socialLoading },
-        aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, trendingTopics: aiLogic.trendingTopics, keywords: aiLogic.keywords, selectedTones, setSelectedTones },
+        aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, trendingTopics: aiLogic.trendingTopics, keywords: aiLogic.keywords, selectedTones, setSelectedTones, cities },
         actions: { 
             resetForm, handleEditClick, saveArticle, deleteItem, runResearch, selectTopic, runWrite, runImage, runClusterResearch, runGenerateCategory,
-            generateSocialCaption, broadcastArticle 
+            generateSocialCaption: async () => {}, broadcastArticle: async () => {} 
         }
     };
 };

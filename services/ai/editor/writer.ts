@@ -53,11 +53,26 @@ export const Writer = {
         pillarContext?: { title: string, slug: string },
         relatedPillarsData?: { title: string, slug: string }[],
         galleryContextString?: string,
-        userContext?: string // NEW ARGUMENT
+        userContext?: string,
+        cityContext?: { name: string, type: string } // NEW ARGUMENT
     ) => {
         const pov = buildPersona(authorName);
         const linking = buildLinkingInstructions(type, pillarContext, relatedPillarsData, galleryContextString);
         
+        let cityInstruction = "";
+        if (cityContext) {
+            const isKandang = cityContext.type === 'Kandang';
+            cityInstruction = `
+            [LOCAL SEO CONTEXT - ${cityContext.name.toUpperCase()}]
+            - Target Location: ${cityContext.name}.
+            - Strategy: ${cityContext.type}.
+            ${isKandang ? 
+                "- NARRATIVE: Mention that the Founder (Amin) will personally deliver, setup, and train the user on-site in this city. Emphasis on 'Local Priority'." : 
+                "- NARRATIVE: Focus on SAFE SHIPPING (Packing Kayu + Asuransi) and dedicated PRIVATE VIDEO CALL for remote setup & training."}
+            - Integrate local keywords like "Jual Mesin Kasir di ${cityContext.name}", "Paket Kasir ${cityContext.name}".
+            `;
+        }
+
         const userNotes = userContext ? `\n[ADDITIONAL CONTEXT FROM USER - STRICTLY FOLLOW]:\n"${userContext}"\n` : "";
 
         // MODE 1: SHORT FORM (< 2000 Words) - Single Shot
@@ -70,6 +85,7 @@ export const Writer = {
             Tone: ${tones.join(', ')}.
             Structure: Use Headers #, ##, ###, Lists, Bold.
             ${linking}
+            ${cityInstruction}
             Brand Context: ${BRAND_CONTEXT}
             ${GOV_CRITIQUE_RULE}
             ${INTERNAL_LINKING_RULES}
@@ -92,6 +108,7 @@ export const Writer = {
             Role: Expert Writer. Task: Write Section ${i + 1}: ${sectionTitle} for "${title}".
             Target: 1000 words. POV: ${pov}.
             Context: ${BRAND_CONTEXT}
+            ${cityInstruction}
             ${userNotes}
             ${INTERNAL_LINKING_RULES}
             ${i === 0 ? "Start with a hook." : `Connect to previous: "...${previousContext.slice(-200)}..."`}
@@ -99,7 +116,6 @@ export const Writer = {
             OUTPUT: Markdown.
             `;
             
-            // Sequential generation with delay to respect rate limits if needed
             const secRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: sectionPrompt });
             const text = secRes.text || "";
             fullContent += text + "\n\n";

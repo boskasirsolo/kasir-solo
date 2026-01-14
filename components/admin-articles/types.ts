@@ -59,11 +59,11 @@ export interface ArticleFormState {
     excerpt: string;
     content: string;
     category: string;
-    author: string; // Added author to form state for per-article override
+    author: string; 
     authorAvatar: string;
     readTime: string;
-    date: string; // Added editable date field
-    targetWordCount: number; // New field for Word Count Control
+    date: string; 
+    targetWordCount: number; 
     imagePreview: string;
     uploadFile: File | null;
     status: 'published' | 'draft' | 'scheduled';
@@ -71,12 +71,11 @@ export interface ArticleFormState {
     type: 'pillar' | 'cluster';
     pillar_id: number;
     cluster_ideas: string[];
-    // NEW: Related Pillars for Pillar-to-Pillar linking
     related_pillars: number[]; 
     scheduleStart: string;
     uploadAuthorFile: File | null;
-    // NEW: User specific context for AI generation
     generationContext: string;
+    targetCityId: number; // NEW: Untuk simpan kaitan ke kota mana
 }
 
 // Preset Topics for Research Context
