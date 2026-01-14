@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, ChevronLeft, ChevronRight, Trash2, Package } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Trash2, Package, Plus } from 'lucide-react';
 import { Product } from '../../types';
 import { formatRupiah } from '../../utils';
 import { PRODUCT_CATEGORIES } from './types';
@@ -20,7 +20,16 @@ export const ListPanel = ({
                     <h3 className="text-white font-bold text-sm flex items-center gap-2">
                         <Package size={18} className="text-brand-orange" /> Inventory Produk
                     </h3>
-                    <span className="text-[10px] text-gray-500 font-mono bg-white/5 px-2 py-1 rounded">Total: {state.totalItems}</span>
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] text-gray-500 font-mono bg-white/5 px-2 py-1 rounded hidden sm:inline">Total: {state.totalItems}</span>
+                        <button 
+                            onClick={actions.openNewProduct}
+                            className="p-1.5 bg-brand-orange text-white rounded-lg shadow-neon hover:bg-brand-action transition-all xl:hidden"
+                            title="Tambah Produk Baru"
+                        >
+                            <Plus size={18} />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="relative">
@@ -54,7 +63,7 @@ export const ListPanel = ({
             </div>
 
             {/* List Content */}
-            <div className="flex-grow overflow-y-auto p-4 md:p-6 custom-scrollbar space-y-3 bg-black/10">
+            <div className="flex-grow overflow-y-auto p-4 md:p-6 custom-scrollbar space-y-3 bg-black/10 min-h-[500px] xl:min-h-0">
                 {state.paginatedProducts.length === 0 ? (
                     <div className="text-center py-20 text-gray-600 text-sm italic">
                         Belum ada produk yang cocok.

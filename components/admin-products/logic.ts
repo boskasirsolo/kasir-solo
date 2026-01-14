@@ -24,8 +24,8 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         galleryImages: [],
         newGalleryFiles: [],
         videoUrl: '',
-        affiliateLink: '',
-        ctaText: 'Beli Sekarang'
+        affiliate_link: '',
+        cta_text: 'Beli Sekarang'
     });
 
     const [loading, setLoading] = useState<LoadingState>({
@@ -43,6 +43,9 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [page, setPage] = useState(1);
+    
+    // NEW: State untuk handle halaman detail di HP
+    const [showMobileEditor, setShowMobileEditor] = useState(false);
 
     // Reset pagination when filter changes
     useEffect(() => { setPage(1); }, [searchTerm, selectedCategory]);
@@ -54,9 +57,10 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             id: null, name: '', category: PRODUCT_CATEGORIES[0], price: '', desc: '', shortDesc: '',
             specsStr: '', includesStr: '', whyBuyStr: '', imagePreview: '', uploadFile: null,
             galleryImages: [], newGalleryFiles: [], videoUrl: '',
-            affiliateLink: '', ctaText: 'Beli Sekarang'
+            affiliate_link: '', cta_text: 'Beli Sekarang'
         });
         setUseWatermark(true);
+        setShowMobileEditor(false); // Close mobile page
     };
 
     const handleEditClick = (p: Product) => {
@@ -70,7 +74,7 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             category: p.category || PRODUCT_CATEGORIES[0],
             price: formatNumberInput(p.price),
             desc: p.description,
-            shortDesc: '', // Reset keyword on edit
+            shortDesc: '', 
             specsStr: specsString,
             includesStr: includesString,
             whyBuyStr: whyBuyString,
@@ -79,9 +83,15 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             galleryImages: p.gallery_images || [],
             newGalleryFiles: [],
             videoUrl: p.video_url || '',
-            affiliateLink: p.affiliate_link || '',
-            ctaText: p.cta_text || 'Beli Sekarang'
+            affiliate_link: p.affiliate_link || '',
+            cta_text: p.cta_text || 'Beli Sekarang'
         });
+        setShowMobileEditor(true); // Open mobile page
+    };
+
+    const openNewProduct = () => {
+        resetForm();
+        setShowMobileEditor(true);
     };
 
     const deleteProduct = async (id: number) => {
@@ -91,7 +101,7 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         if (form.id === id) resetForm();
     };
 
-    // --- AI GENERATORS (REFACTORED TO USE MERCHANT AI) ---
+    // --- AI GENERATORS ---
 
     const generateAI = async (target: keyof LoadingState, generator: () => Promise<string>, onSuccess: (text: string) => void) => {
         setLoading(p => ({ ...p, [target]: true }));
@@ -145,7 +155,6 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         );
     };
 
-    // Uses VisionAI now
     const generateImage = async () => {
         if (!form.name) return alert("Isi Nama Produk dulu.");
         setLoading(p => ({ ...p, generatingImage: true }));
@@ -166,7 +175,6 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         setLoading(p => ({ ...p, uploading: true }));
 
         try {
-            // 1. Handle Main Image
             let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/400';
             let supabasePath = '';
             let fileToMigrate = form.uploadFile;
@@ -179,7 +187,6 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 }
 
                 if (supabase && fileToMigrate) {
-                    // SEO INJECTION: Add 'mesin-kasir-solo'
                     const seoName = `${slugify(form.name)}-mesin-kasir-solo`;
                     const renamedFile = renameFile(fileToMigrate, seoName);
                     const { url, path } = await uploadToSupabase(renamedFile, 'products');
@@ -188,7 +195,6 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 }
             }
 
-            // 2. Handle Gallery Images (Multiple)
             const newGalleryUrls: string[] = [];
             if (form.newGalleryFiles.length > 0) {
                 if (useWatermark) setLoading(p => ({ ...p, processingImage: true }));
@@ -196,7 +202,6 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 const uploadPromises = form.newGalleryFiles.map(async (file, idx) => {
                     let f = file;
                     if (useWatermark) f = await addWatermarkToFile(f);
-                    // SEO INJECTION: Add 'mesin-kasir-solo'
                     const seoName = `${slugify(form.name)}-mesin-kasir-solo-gallery-${idx+1}`;
                     const renamed = renameFile(f, seoName);
                     if (supabase) {
@@ -212,7 +217,6 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             }
             const finalGallery = [...form.galleryImages, ...newGalleryUrls];
 
-            // 3. Parse text areas
             const specsObj: Record<string, string> = {};
             if (form.specsStr) {
                 form.specsStr.split('\n').forEach(line => {
@@ -223,7 +227,6 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             const includesArr = form.includesStr ? form.includesStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
             const whyBuyArr = form.whyBuyStr ? form.whyBuyStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
 
-            // 4. Construct DB Data
             const dbData = {
                 name: form.name,
                 price: cleanNumberInput(form.price),
@@ -235,8 +238,8 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 specs: specsObj,
                 package_includes: includesArr,
                 why_buy: whyBuyArr,
-                affiliate_link: form.affiliateLink,
-                cta_text: form.ctaText
+                affiliate_link: form.affiliate_link,
+                cta_text: form.cta_text
             };
 
             let savedId = form.id;
@@ -253,13 +256,12 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 }
             }
 
-            // Background Migration to Cloudinary (Cover Only for now to save bandwidth)
             if (supabasePath && fileToMigrate && savedId) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'products', savedId, 'image_url');
             }
 
             alert("Produk berhasil disimpan!");
-            // Optional: resetForm();
+            setShowMobileEditor(false); // Tutup halaman di HP setelah sukses
         } catch (e: any) {
             alert("Gagal simpan: " + e.message);
         } finally {
@@ -267,7 +269,6 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         }
     };
 
-    // --- FILTERING ---
     const filteredProducts = useMemo(() => {
         return products.filter(p => {
             const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -283,8 +284,9 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         form, setForm,
         loading,
         useWatermark, setUseWatermark,
+        showMobileEditor, setShowMobileEditor,
         listState: { searchTerm, setSearchTerm, selectedCategory, setSelectedCategory, page, setPage, totalPages, paginatedProducts, totalItems: filteredProducts.length },
-        actions: { resetForm, handleEditClick, deleteProduct, handleSubmit },
+        actions: { resetForm, handleEditClick, openNewProduct, deleteProduct, handleSubmit },
         aiActions: { generateTitle, generateDesc, generateSpecs, generateIncludes, generateWhyBuy, generateImage }
     };
 };
