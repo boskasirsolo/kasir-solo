@@ -6,9 +6,9 @@ export const DashboardHeader = ({ period, setPeriod }: { period: number, setPeri
     const isGhostMode = typeof window !== 'undefined' && localStorage.getItem('mks_ghost_mode') === 'true';
 
     return (
-        <div className="flex flex-col md:flex-row justify-between items-center bg-brand-card/30 p-4 rounded-xl border border-white/5 gap-4 mb-6">
-            <div className="flex items-center gap-3">
-                <div className="bg-brand-orange/10 p-2 rounded-lg text-brand-orange">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-brand-card/30 p-4 rounded-xl border border-white/5 gap-4 mb-6">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="bg-brand-orange/10 p-2 rounded-lg text-brand-orange shrink-0">
                     <BarChart3 size={20} />
                 </div>
                 <div>
@@ -17,18 +17,18 @@ export const DashboardHeader = ({ period, setPeriod }: { period: number, setPeri
                 </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full md:w-auto">
                 {isGhostMode && (
-                    <span className="text-[10px] font-bold text-green-500 flex items-center gap-1 bg-green-900/20 px-3 py-1.5 rounded-full border border-green-500/30 animate-pulse">
-                        <ShieldCheck size={12}/> Ghost Mode Active
+                    <span className="text-[10px] font-bold text-green-500 flex items-center gap-1 bg-green-900/20 px-3 py-1.5 rounded-full border border-green-500/30 animate-pulse whitespace-nowrap">
+                        <ShieldCheck size={12}/> Ghost Mode
                     </span>
                 )}
-                <div className="bg-black/40 rounded-lg p-1 border border-white/10 flex">
+                <div className="bg-black/40 rounded-lg p-1 border border-white/10 flex w-full md:w-auto">
                     {[7, 30].map(d => (
                         <button 
                             key={d}
                             onClick={() => setPeriod(d)}
-                            className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${period === d ? 'bg-brand-orange text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
+                            className={`flex-1 md:flex-none px-4 py-1.5 text-xs font-bold rounded-md transition-all ${period === d ? 'bg-brand-orange text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
                         >
                             {d} Hari
                         </button>

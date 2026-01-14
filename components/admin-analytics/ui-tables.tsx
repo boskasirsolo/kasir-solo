@@ -25,11 +25,11 @@ export const TopPagesTable = ({
         if (path.includes('/gallery/')) return { icon: ImageIcon, label: 'PROYEK', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' };
         if (path.includes('/articles/')) return { icon: FileText, label: 'ARTIKEL', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' };
         if (path.includes('/services/')) return { icon: Zap, label: 'JASA', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' };
-        return { icon: Layout, label: 'HALAMAN', color: 'text-gray-400 bg-gray-500/10 border-gray-500/20' };
+        return { icon: Layout, label: 'PAGE', color: 'text-gray-400 bg-gray-500/10 border-gray-500/20' };
     };
 
     return (
-        <div className="lg:col-span-2 bg-brand-dark border border-white/5 rounded-xl p-6 flex flex-col h-full">
+        <div className="lg:col-span-2 bg-brand-dark border border-white/5 rounded-xl p-4 md:p-6 flex flex-col h-full">
             <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2 shrink-0">
                 <h4 className="text-white font-bold text-sm uppercase tracking-widest">Konten Terlaris</h4>
                 <span className="text-[10px] text-gray-500 bg-white/5 px-2 py-1 rounded">Total: {pages.length}</span>
@@ -48,33 +48,30 @@ export const TopPagesTable = ({
                         <div 
                             key={idx} 
                             onClick={() => onPageClick(page)}
-                            className="flex justify-between items-center p-2.5 bg-white/5 rounded-lg border border-white/5 hover:border-brand-orange hover:bg-brand-orange/5 transition-all group cursor-pointer relative overflow-hidden"
+                            className="flex justify-between items-center p-2 md:p-2.5 bg-white/5 rounded-lg border border-white/5 hover:border-brand-orange hover:bg-brand-orange/5 transition-all group cursor-pointer relative overflow-hidden"
                         >
-                            <div className="flex items-center gap-3 overflow-hidden relative z-10 flex-1">
-                                <span className="w-6 h-6 rounded bg-black/50 text-gray-500 flex items-center justify-center text-[10px] font-bold shrink-0 border border-white/5 group-hover:text-brand-orange group-hover:border-brand-orange/50 transition-colors">
+                            <div className="flex items-center gap-2 md:gap-3 overflow-hidden relative z-10 flex-1">
+                                <span className="w-5 h-5 md:w-6 md:h-6 rounded bg-black/50 text-gray-500 flex items-center justify-center text-[9px] md:text-[10px] font-bold shrink-0 border border-white/5 group-hover:text-brand-orange group-hover:border-brand-orange/50 transition-colors">
                                     {rank}
                                 </span>
                                 <div className="flex flex-col min-w-0 flex-1">
-                                    <span className="text-xs text-white font-medium truncate max-w-[200px] md:max-w-sm group-hover:text-brand-orange transition-colors">{page}</span>
+                                    <span className="text-[10px] md:text-xs text-white font-medium truncate w-full group-hover:text-brand-orange transition-colors">{page}</span>
                                     <div className="flex items-center gap-2 mt-0.5">
-                                        <span className={`text-[9px] px-1.5 py-0.5 rounded w-fit font-bold border flex items-center gap-1 ${color}`}>
+                                        <span className={`text-[8px] md:text-[9px] px-1.5 py-0.5 rounded w-fit font-bold border flex items-center gap-1 ${color}`}>
                                             <Icon size={8} /> {label}
                                         </span>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div className="flex items-center gap-3 relative z-10 shrink-0">
-                                {/* AVG TIME INDICATOR */}
+                            <div className="flex items-center gap-2 md:gap-3 relative z-10 shrink-0">
+                                {/* AVG TIME INDICATOR (Hidden on Mobile) */}
                                 <div className={`hidden sm:flex items-center gap-1.5 px-2 py-1 rounded border ${avgTime !== '-' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-white/5 border-white/5 text-gray-600'}`} title="Rata-rata Durasi Baca">
                                     <Clock size={10} />
                                     <span className="text-[10px] font-mono font-bold">{avgTime}</span>
                                 </div>
 
-                                <div className="flex items-center gap-1 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 duration-300 hidden sm:flex">
-                                    <MousePointerClick size={12}/>
-                                </div>
-                                <span className="text-sm font-bold text-white bg-black/40 px-3 py-1 rounded border border-white/10 shadow-sm group-hover:border-brand-orange/30 group-hover:text-brand-orange transition-colors min-w-[70px] text-center">
+                                <span className="text-xs md:text-sm font-bold text-white bg-black/40 px-2 py-1 md:px-3 md:py-1 rounded border border-white/10 shadow-sm group-hover:border-brand-orange/30 group-hover:text-brand-orange transition-colors min-w-[50px] md:min-w-[70px] text-center">
                                     {count} Hits
                                 </span>
                             </div>
@@ -95,7 +92,7 @@ export const TopPagesTable = ({
                         <ChevronLeft size={16} />
                     </button>
                     <span className="text-xs font-bold text-gray-400">
-                        Halaman <span className="text-brand-orange">{currentPage}</span> / {totalPages}
+                        <span className="text-brand-orange">{currentPage}</span> / {totalPages}
                     </span>
                     <button 
                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
@@ -112,15 +109,15 @@ export const TopPagesTable = ({
 
 // --- TABLE 2: Exit Pages ---
 export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-xl p-6">
+    <div className="bg-brand-dark border border-white/5 rounded-xl p-5 md:p-6">
         <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
             <LogOut size={16} className="text-red-400"/> Top Exit Pages
         </h4>
-        <p className="text-[10px] text-gray-500 mb-4">Halaman terakhir yang dilihat user sebelum pergi.</p>
+        <p className="text-[10px] text-gray-500 mb-4">Halaman terakhir dilihat user.</p>
         <div className="space-y-2">
             {pages.map(([page, count], idx) => (
                 <div key={idx} className="flex justify-between items-center text-xs border-b border-white/5 pb-2 last:border-0 hover:bg-white/5 p-1 rounded transition-colors">
-                    <span className="text-gray-300 truncate max-w-[180px]">{page}</span>
+                    <span className="text-gray-300 truncate max-w-[150px] md:max-w-[180px]">{page}</span>
                     <span className="text-red-400 font-bold">{count} Exit</span>
                 </div>
             ))}
@@ -131,7 +128,7 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => (
 
 // --- PANEL: Quality Score ---
 export const QualityScorePanel = ({ bounceRate, avgPages }: { bounceRate: number, avgPages: string }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-xl p-6 flex flex-col justify-between">
+    <div className="bg-brand-dark border border-white/5 rounded-xl p-5 md:p-6 flex flex-col justify-between">
         <div>
             <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
                 <Zap size={16} className="text-yellow-400"/> Quality Score
