@@ -50,10 +50,8 @@ export const AdminSEO = () => {
         {/* LEFT: LIST KOTA */}
         <div className="lg:col-span-8 h-auto lg:h-[800px]">
           <CityListPanel 
-              cities={state.filteredCities}
-              loading={state.loading}
-              searchTerm={state.searchTerm}
-              setSearchTerm={setters.setSearchTerm}
+              state={state}
+              setters={setters}
               onEdit={actions.handleEdit}
               onDelete={actions.handleDelete}
               onAdd={actions.openNewCity}

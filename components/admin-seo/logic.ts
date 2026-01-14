@@ -3,12 +3,15 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase, slugify } from '../../utils';
 import { CityTarget, SEOFormState, CityType } from './types';
 
+const ITEMS_PER_PAGE = 10;
+
 export const useSEOLogic = () => {
   const [cities, setCities] = useState<CityTarget[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<'All' | CityType>('All');
+  const [page, setPage] = useState(1);
   
-  // NEW: State untuk handle halaman detail di HP
   const [showMobileEditor, setShowMobileEditor] = useState(false);
 
   const [form, setForm] = useState<SEOFormState>({
@@ -20,6 +23,11 @@ export const useSEOLogic = () => {
   useEffect(() => {
     fetchCities();
   }, []);
+
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, activeTab]);
 
   const fetchCities = async () => {
     if (!supabase) return;
@@ -80,7 +88,7 @@ export const useSEOLogic = () => {
 
   const handleEdit = (city: CityTarget) => {
       setForm({ id: city.id, name: city.name, type: city.type });
-      setShowMobileEditor(true); // Open mobile page
+      setShowMobileEditor(true);
   };
 
   const openNewCity = () => {
@@ -90,16 +98,35 @@ export const useSEOLogic = () => {
 
   const resetForm = () => {
     setForm({ id: null, name: '', type: 'Ekspansi' });
-    setShowMobileEditor(false); // Close mobile page
+    setShowMobileEditor(false);
   };
 
+  // --- FILTERING & PAGINATION LOGIC ---
   const filteredCities = useMemo(() => {
-      return cities.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [cities, searchTerm]);
+      return cities.filter(c => {
+          const matchSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
+          const matchTab = activeTab === 'All' || c.type === activeTab;
+          return matchSearch && matchTab;
+      });
+  }, [cities, searchTerm, activeTab]);
+
+  const totalPages = Math.ceil(filteredCities.length / ITEMS_PER_PAGE);
+  const paginatedCities = filteredCities.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   return {
-    state: { cities, filteredCities, loading, searchTerm, form, showMobileEditor },
-    setters: { setSearchTerm, setForm, setShowMobileEditor },
+    state: { 
+        cities, 
+        filteredCities: paginatedCities, 
+        loading, 
+        searchTerm, 
+        form, 
+        showMobileEditor,
+        activeTab,
+        page,
+        totalPages,
+        totalCount: filteredCities.length
+    },
+    setters: { setSearchTerm, setForm, setShowMobileEditor, setActiveTab, setPage },
     actions: { handleSubmit, handleDelete, handleEdit, resetForm, openNewCity }
   };
 };
