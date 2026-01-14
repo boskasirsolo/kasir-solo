@@ -32,10 +32,13 @@ const processPageData = (logs: AnalyticsLog[]) => {
 
             // Source
             let ref = log.referrer || 'Direct';
-            if (ref.includes('google')) ref = 'Google';
-            else if (ref.includes('facebook') || ref.includes('fb')) ref = 'Facebook';
-            else if (ref.includes('instagram')) ref = 'Instagram';
-            else if (ref.includes('direct') || ref === '') ref = 'Direct / WA';
+            const lowerRef = ref.toLowerCase();
+
+            if (lowerRef.includes('google')) ref = 'Google';
+            else if (lowerRef.includes('facebook') || lowerRef.includes('fb')) ref = 'Facebook';
+            else if (lowerRef.includes('instagram')) ref = 'Instagram';
+            else if (lowerRef.includes('whatsapp') || lowerRef.includes('wa.me')) ref = 'WhatsApp'; // Separate WA
+            else if (lowerRef.includes('direct') || ref === '') ref = 'Direct Traffic'; // Separate Direct
             else {
                 try { ref = new URL(ref).hostname.replace('www.', ''); } catch(e) {}
             }

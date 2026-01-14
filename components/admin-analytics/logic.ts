@@ -136,15 +136,17 @@ export const useAnalyticsData = () => {
         else if (log.device_type === 'desktop') devices.desktop++;
         else devices.tablet++;
 
-        // Referrer
+        // Referrer Logic
         let ref = log.referrer || 'Direct';
         const lowerRef = ref.toLowerCase();
+        
         if (lowerRef.includes('google')) ref = 'Google Search';
         else if (lowerRef.includes('facebook') || lowerRef.includes('fb')) ref = 'Facebook';
         else if (lowerRef.includes('instagram')) ref = 'Instagram';
         else if (lowerRef.includes('t.co') || lowerRef.includes('twitter')) ref = 'Twitter/X';
         else if (lowerRef.includes('tiktok')) ref = 'TikTok';
-        else if (lowerRef === 'direct' || lowerRef === '') ref = 'Direct / WA';
+        else if (lowerRef.includes('whatsapp') || lowerRef.includes('wa.me')) ref = 'WhatsApp'; // Separate WA
+        else if (lowerRef === 'direct' || lowerRef === '') ref = 'Direct Traffic'; // Separate Direct
         else {
             try {
                 const url = new URL(ref);
