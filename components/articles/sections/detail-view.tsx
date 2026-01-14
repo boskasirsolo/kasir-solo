@@ -62,15 +62,16 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
               const imgMatch = p.match(/^!\[(.*?)\]\((.*?)\)$/);
               if (imgMatch) {
                   return (
-                      <div key={idx} className="my-8 rounded-xl overflow-hidden border border-white/10 bg-black/20">
+                      <div key={idx} className="my-8 rounded-xl overflow-hidden border border-white/10 bg-black flex flex-col items-center">
                           <img 
-                              src={optimizeImage(imgMatch[2], 800)} 
+                              src={optimizeImage(imgMatch[2], 1200)} 
                               alt={imgMatch[1]} 
-                              className="w-full h-auto object-cover"
+                              // UPDATED: Limit height to 600px and use object-contain to fit long screenshots nicely
+                              className="w-full h-auto max-h-[600px] object-contain"
                               loading="lazy" 
                           />
                           {imgMatch[1] && imgMatch[1] !== 'image' && (
-                              <p className="text-center text-sm text-gray-500 py-2 italic bg-black/40 m-0">{imgMatch[1]}</p>
+                              <p className="text-center text-sm text-gray-500 py-2 italic w-full bg-brand-card/50 border-t border-white/5 m-0">{imgMatch[1]}</p>
                           )}
                       </div>
                   );
