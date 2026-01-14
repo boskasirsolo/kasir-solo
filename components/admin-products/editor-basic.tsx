@@ -14,7 +14,8 @@ export const EditorBasic = ({
     useWatermark, 
     setUseWatermark, 
     aiActions,
-    actions 
+    actions,
+    hideHeader = false // NEW PROP
 }: any) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -35,33 +36,29 @@ export const EditorBasic = ({
         setShowMediaLib(false);
     };
 
-    const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            setForm((p: any) => ({ ...p, newGalleryFiles: [...p.newGalleryFiles, ...Array.from(e.target.files!)] }));
-        }
-    };
-
     return (
-        <div className="bg-brand-dark rounded-2xl border border-white/5 shadow-2xl flex flex-col h-full overflow-hidden relative">
+        <div className={`bg-brand-dark flex flex-col h-full overflow-hidden relative ${hideHeader ? '' : 'rounded-2xl border border-white/5 shadow-2xl'}`}>
             
             {showMediaLib && <MediaLibraryModal onSelect={handleMediaSelect} onClose={() => setShowMediaLib(false)} />}
 
-            <div className="p-5 border-b border-white/10 shrink-0 flex justify-between items-center bg-black/20">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    {form.id ? <Edit size={18} className="text-brand-orange"/> : <Tag size={18} className="text-brand-orange"/>}
-                    {form.id ? "EDIT INFO" : "INFO BARU"}
-                </h3>
-                {form.id && (
-                    <button 
-                        onClick={actions.resetForm} 
-                        className="text-[10px] text-red-400 font-bold hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-3 py-1.5 rounded-lg transition-colors border border-red-500/20"
-                    >
-                        <XIcon size={12}/> BATAL
-                    </button>
-                )}
-            </div>
+            {!hideHeader && (
+                <div className="p-5 border-b border-white/10 shrink-0 flex justify-between items-center bg-black/20">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        {form.id ? <Edit size={18} className="text-brand-orange"/> : <Tag size={18} className="text-brand-orange"/>}
+                        {form.id ? "EDIT INFO" : "INFO BARU"}
+                    </h3>
+                    {form.id && (
+                        <button 
+                            onClick={actions.resetForm} 
+                            className="text-[10px] text-red-400 font-bold hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-3 py-1.5 rounded-lg transition-colors border border-red-500/20"
+                        >
+                            <XIcon size={12}/> BATAL
+                        </button>
+                    )}
+                </div>
+            )}
 
-            <div className="flex-grow overflow-y-auto p-5 md:p-6 custom-scrollbar space-y-6">
+            <div className={`flex-grow overflow-y-auto custom-scrollbar space-y-6 ${hideHeader ? 'p-0' : 'p-5 md:p-6'}`}>
                 
                 {/* 1. MEDIA VISUAL */}
                 <div className="space-y-3">

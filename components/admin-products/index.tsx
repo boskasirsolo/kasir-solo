@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Product } from '../../types';
 import { useProductLogic } from './logic';
@@ -26,6 +27,50 @@ export const AdminProducts = ({
     actions, 
     aiActions 
   } = useProductLogic(products, setProducts);
+
+  const MobileEditorOverlay = () => (
+    <div className="fixed inset-0 z-[9999] bg-brand-black flex flex-col animate-fade-in overflow-hidden lg:hidden">
+      {/* Header Kontrol Mobile */}
+      <div className="p-4 bg-brand-card border-b border-white/10 flex items-center justify-between shrink-0 shadow-lg relative z-20">
+         <button 
+            onClick={() => setShowMobileEditor(false)}
+            className="flex items-center gap-2 text-brand-orange font-bold text-sm"
+         >
+            <ArrowLeft size={20} /> Kembali
+         </button>
+         <h3 className="text-white font-bold text-sm truncate max-w-[200px]">
+            {form.id ? 'Edit Produk' : 'Produk Baru'}
+         </h3>
+         <div className="w-10"></div>
+      </div>
+
+      {/* Scrollable Content (Editors tanpa redundant headers) */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-10 custom-scrollbar pb-20">
+          <div className="animate-fade-in">
+            <EditorBasic 
+                form={form} 
+                setForm={setForm} 
+                loading={loading}
+                useWatermark={useWatermark}
+                setUseWatermark={setUseWatermark}
+                aiActions={aiActions}
+                actions={actions}
+                hideHeader={true}
+            />
+          </div>
+          <div className="animate-fade-in border-t border-white/10 pt-8" style={{ animationDelay: '0.1s' }}>
+            <EditorDetail 
+                form={form}
+                setForm={setForm}
+                loading={loading}
+                aiActions={aiActions}
+                actions={actions}
+                hideHeader={true}
+            />
+          </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="relative">
@@ -62,49 +107,8 @@ export const AdminProducts = ({
         </div>
       </div>
 
-      {/* 2. MOBILE EDITOR PAGE (Fullscreen Overlay) */}
-      {showMobileEditor && (
-        <div className="xl:hidden fixed inset-0 z-[100] bg-brand-black flex flex-col animate-fade-in overflow-hidden">
-          
-          {/* Header Kontrol Mobile */}
-          <div className="p-4 bg-brand-card border-b border-white/10 flex items-center justify-between shrink-0">
-             <button 
-                onClick={() => setShowMobileEditor(false)}
-                className="flex items-center gap-2 text-brand-orange font-bold text-sm"
-             >
-                <ArrowLeft size={20} /> Kembali
-             </button>
-             <h3 className="text-white font-bold text-sm truncate max-w-[200px]">
-                {form.id ? 'Edit Produk' : 'Produk Baru'}
-             </h3>
-             <div className="w-10"></div> {/* Spacer balance */}
-          </div>
-
-          {/* Scrollable Content (Editors) */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar pb-10">
-              <div className="shadow-2xl">
-                <EditorBasic 
-                    form={form} 
-                    setForm={setForm} 
-                    loading={loading}
-                    useWatermark={useWatermark}
-                    setUseWatermark={setUseWatermark}
-                    aiActions={aiActions}
-                    actions={actions}
-                />
-              </div>
-              <div className="shadow-2xl">
-                <EditorDetail 
-                    form={form}
-                    setForm={setForm}
-                    loading={loading}
-                    aiActions={aiActions}
-                    actions={actions}
-                />
-              </div>
-          </div>
-        </div>
-      )}
+      {/* 2. MOBILE EDITOR PAGE (Portal to Body) */}
+      {showMobileEditor && createPortal(<MobileEditorOverlay />, document.body)}
 
     </div>
   );

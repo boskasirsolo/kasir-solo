@@ -9,18 +9,21 @@ export const EditorDetail = ({
     setForm, 
     loading, 
     aiActions,
-    actions
+    actions,
+    hideHeader = false // NEW PROP
 }: any) => {
     return (
-        <div className="bg-brand-dark rounded-xl border border-white/5 shadow-2xl flex flex-col h-full overflow-hidden">
-            <div className="p-4 border-b border-white/5 shrink-0">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <List size={16} className="text-brand-orange"/>
-                    DETAIL LENGKAP
-                </h3>
-            </div>
+        <div className={`bg-brand-dark flex flex-col h-full overflow-hidden ${hideHeader ? '' : 'rounded-xl border border-white/5 shadow-2xl'}`}>
+            {!hideHeader && (
+                <div className="p-4 border-b border-white/5 shrink-0">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <List size={16} className="text-brand-orange"/>
+                        DETAIL LENGKAP
+                    </h3>
+                </div>
+            )}
 
-            <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-6">
+            <div className={`flex-grow overflow-y-auto custom-scrollbar space-y-6 ${hideHeader ? 'p-0' : 'p-4'}`}>
                 
                 {/* 1. SPECS */}
                 <div>
@@ -64,7 +67,7 @@ export const EditorDetail = ({
                     </div>
                 </div>
 
-                {/* 4. DESCRIPTION (MOVED TO BOTTOM AS REQUESTED) */}
+                {/* 4. DESCRIPTION */}
                 <div>
                     <FieldHeader label="Deskripsi (Sales Copy)" onAI={aiActions.generateDesc} loading={loading.generatingDesc} />
                     <TextArea 
