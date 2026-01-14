@@ -60,19 +60,30 @@ const DeviceBar = ({ label, count, total, icon: Icon, color }: any) => (
     </div>
 );
 
-// --- MOLECULE: Referrer List ---
-export const ReferrerList = ({ referrers }: { referrers: [string, number][] }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-xl p-5 md:p-6">
+// --- MOLECULE: Referrer List (Updated with Detail) ---
+export const ReferrerList = ({ referrers, totalViews }: { referrers: [string, number][], totalViews: number }) => (
+    <div className="bg-brand-dark border border-white/5 rounded-xl p-5 md:p-6 flex flex-col h-full">
         <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-            <Globe size={16} className="text-blue-400"/> Sumber Trafik (Top 5)
+            <Globe size={16} className="text-blue-400"/> Sumber Trafik (Top 10)
         </h4>
-        <div className="space-y-2">
-            {referrers.map(([ref, count], idx) => (
-                <div key={idx} className="flex justify-between items-center text-xs p-2 bg-white/5 rounded border border-white/5">
-                    <span className="text-gray-300 truncate max-w-[150px]">{ref}</span>
-                    <span className="font-bold text-white">{count}</span>
-                </div>
-            ))}
+        <div className="space-y-2 overflow-y-auto custom-scrollbar max-h-[300px] pr-2">
+            {referrers.map(([ref, count], idx) => {
+                const percent = totalViews > 0 ? ((count / totalViews) * 100).toFixed(1) : "0";
+                return (
+                    <div key={idx} className="flex justify-between items-center text-xs p-2 bg-white/5 rounded border border-white/5 hover:border-brand-orange/30 transition-colors group">
+                        <div className="flex flex-col min-w-0 flex-1 mr-2">
+                             <span className="text-gray-300 truncate font-medium group-hover:text-white transition-colors">{ref}</span>
+                             <div className="w-full bg-black/40 h-1 rounded-full mt-1.5 overflow-hidden">
+                                <div className="bg-blue-500 h-full rounded-full" style={{ width: `${percent}%` }}></div>
+                             </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                            <span className="font-bold text-white block">{count}</span>
+                            <span className="text-[9px] text-gray-500">{percent}%</span>
+                        </div>
+                    </div>
+                );
+            })}
             {referrers.length === 0 && <p className="text-[10px] text-gray-500 italic">Belum ada data referer.</p>}
         </div>
     </div>

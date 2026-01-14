@@ -36,7 +36,8 @@ export const AnalyticsDashboard = () => {
          {/* Device & Referrer (1 Col) */}
          <div className="space-y-6">
              <DeviceStats devices={stats.devices} totalViews={stats.totalViews} />
-             <ReferrerList referrers={stats.sortedReferrers} />
+             {/* UPDATED: Pass totalViews for percentage calculation */}
+             <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} />
          </div>
       </div>
 

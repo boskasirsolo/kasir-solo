@@ -204,7 +204,8 @@ export const useAnalyticsData = () => {
         })
         .sort((a, b) => b.hits - a.hits); // Tetap sort by hits
     
-    const sortedReferrers = Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 5);
+    // UPDATED: Show Top 10 Referrers instead of 5
+    const sortedReferrers = Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 10);
     const sortedExitPages = Object.entries(exitPages).sort(([,a], [,b]) => b - a).slice(0, 5);
 
     return { 
