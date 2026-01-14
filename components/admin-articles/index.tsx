@@ -31,10 +31,11 @@ export const AdminArticles = ({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-auto lg:h-[850px] border-t border-white/5 bg-brand-black overflow-hidden lg:rounded-xl border-b shadow-2xl relative">
+    /* FIX: Ganti h-auto menjadi h-[calc(100vh-220px)] untuk mobile agar scroll aktif */
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-220px)] lg:h-[850px] border-t border-white/5 bg-brand-black overflow-hidden lg:rounded-xl border-b shadow-2xl relative">
       
       {/* 1. LEFT PANEL: List (25%) */}
-      <div className={`w-full lg:w-[25%] lg:block border-r-0 lg:border-r border-white/5 min-w-[280px] ${activeMobilePane === 'LIST' ? 'block' : 'hidden'}`}>
+      <div className={`w-full lg:w-[25%] lg:block border-r-0 lg:border-r border-white/5 min-w-[280px] h-full ${activeMobilePane === 'LIST' ? 'block' : 'hidden'}`}>
          <ListPanel 
             articles={articles}
             logic={{ ...filterLogic, actions: { 
@@ -49,7 +50,7 @@ export const AdminArticles = ({
       </div>
 
       {/* 2. MIDDLE PANEL: Config (25%) */}
-      <div className={`w-full lg:w-[25%] lg:block border-r-0 lg:border-r border-white/5 min-w-[300px] ${activeMobilePane === 'CONFIG' ? 'block' : 'hidden'}`}>
+      <div className={`w-full lg:w-[25%] lg:block border-r-0 lg:border-r border-white/5 min-w-[300px] h-full ${activeMobilePane === 'CONFIG' ? 'block' : 'hidden'}`}>
          <EditorPanel 
             form={form}
             setForm={manager.setForm}
@@ -67,7 +68,7 @@ export const AdminArticles = ({
       </div>
 
       {/* 3. RIGHT PANEL: Canvas (50%) */}
-      <div className={`w-full lg:w-[50%] lg:flex h-[80vh] lg:h-full bg-black flex-col relative overflow-hidden ${activeMobilePane === 'WRITE' ? 'flex' : 'hidden'}`}>
+      <div className={`w-full lg:w-[50%] lg:flex h-full bg-black flex-col relative overflow-hidden ${activeMobilePane === 'WRITE' ? 'flex' : 'hidden'}`}>
          
          {/* Top Bar Editor */}
          <div className="p-4 md:p-6 border-b border-white/10 bg-brand-dark/50 backdrop-blur-sm z-10 sticky top-0 flex flex-col gap-4 md:gap-6 shrink-0">
@@ -123,8 +124,8 @@ export const AdminArticles = ({
             )}
          </div>
 
-         {/* Meta Bar Mobile Bottom */}
-         <div className="p-3 bg-brand-dark border-t border-white/5 flex justify-between items-center text-[10px] text-gray-500 px-4 shrink-0 lg:mb-0 mb-16">
+         {/* Meta Bar Bottom */}
+         <div className="p-3 bg-brand-dark border-t border-white/5 flex justify-between items-center text-[10px] text-gray-500 px-4 shrink-0">
             <div className="flex gap-4">
                 <span className="font-mono">{form.content.split(/\s+/).length} Kata</span>
                 <span className="bg-white/5 px-2 rounded">{form.status.toUpperCase()}</span>
