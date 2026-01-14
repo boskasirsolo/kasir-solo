@@ -31,8 +31,8 @@ export const AdminArticles = ({
   };
 
   return (
-    /* FIX: Ganti h-auto menjadi h-[calc(100vh-220px)] untuk mobile agar scroll aktif */
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-220px)] lg:h-[850px] border-t border-white/5 bg-brand-black overflow-hidden lg:rounded-xl border-b shadow-2xl relative">
+    /* FIX: Gunakan tinggi tetap (max-height) yang lebih bersahabat di mobile agar child panel bisa mengaktifkan overflow scroll */
+    <div className="flex flex-col lg:flex-row h-[75vh] lg:h-[850px] border-t border-white/5 bg-brand-black overflow-hidden lg:rounded-xl border-b shadow-2xl relative">
       
       {/* 1. LEFT PANEL: List (25%) */}
       <div className={`w-full lg:w-[25%] lg:block border-r-0 lg:border-r border-white/5 min-w-[280px] h-full ${activeMobilePane === 'LIST' ? 'block' : 'hidden'}`}>
@@ -107,7 +107,7 @@ export const AdminArticles = ({
             </div>
          </div>
          
-         <div className="flex-grow overflow-y-auto custom-scrollbar p-4 md:p-8 relative bg-black">
+         <div className="flex-grow overflow-y-auto custom-scrollbar p-4 md:p-8 relative bg-black pb-24 lg:pb-8">
             <LiveEditor 
                 content={form.content} 
                 onChange={(newContent) => manager.setForm((prev: any) => ({ ...prev, content: newContent }))}

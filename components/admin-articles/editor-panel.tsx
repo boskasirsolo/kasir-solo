@@ -96,7 +96,7 @@ export const EditorPanel = ({
     // STEP 0: INITIAL START
     if (aiState.step === 0 && !form.id) {
         return (
-            <div className="flex flex-col h-full bg-brand-dark p-4 items-center justify-center text-center overflow-y-auto custom-scrollbar">
+            <div className="flex flex-col h-full bg-brand-dark p-4 items-center justify-center text-center overflow-y-auto custom-scrollbar pb-32">
                 <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)] shrink-0">
                     <Search size={32} className="text-blue-400" />
                 </div>
@@ -188,7 +188,7 @@ export const EditorPanel = ({
                     <button onClick={() => aiState.setStep(0)} className="p-1 hover:bg-white/10 rounded"><ArrowLeft size={16} className="text-gray-400 hover:text-white"/></button>
                     <h3 className="text-white font-bold text-sm">Hasil Riset</h3>
                 </div>
-                <div className="flex-grow overflow-y-auto custom-scrollbar space-y-2">
+                <div className="flex-grow overflow-y-auto custom-scrollbar space-y-2 pb-32">
                     {aiState.keywords.map((k: any, i: number) => (
                         <div key={i} onClick={() => actions.selectTopic(k)} className="p-3 rounded-lg bg-white/5 border border-white/5 hover:border-brand-orange hover:bg-brand-orange/5 cursor-pointer group transition-all">
                             <h4 className="text-xs font-bold text-white mb-2 group-hover:text-brand-orange leading-snug">{k.keyword}</h4>
@@ -211,7 +211,7 @@ export const EditorPanel = ({
                 <button onClick={actions.resetForm} className="text-[10px] text-red-400 hover:text-red-300 border border-red-500/20 px-2 py-1 rounded bg-red-500/10"><RefreshCw size={10} /> Reset</button>
             </div>
 
-            <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-5">
+            <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-5 pb-32">
                 <StrategySwitcher type={form.type} onChange={(t) => setForm((p:any) => ({...p, type: t}))} />
 
                 {/* LOCAL SEO INDICATOR */}
