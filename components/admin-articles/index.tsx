@@ -20,7 +20,7 @@ export const AdminArticles = ({
     config: SiteConfig
 }) => {
   const manager = useArticleManager(articles, setArticles, gallery, config);
-  const { form, filterLogic, aiLogic, aiState, actions, personas, activePersonaId, setActivePersonaId, updatePersonaAvatar, activeMobilePane, setActiveMobilePane } = manager;
+  const { form, filterLogic, aiLogic, aiState, actions, activeMobilePane, setActiveMobilePane } = manager;
   const availablePillars = articles.filter(a => a.type === 'pillar');
 
   const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,7 +51,6 @@ export const AdminArticles = ({
                 runClusterResearch: actions.runClusterResearch 
             } }}
             onReset={actions.resetForm}
-            personaState={{ personas, activePersonaId, setActivePersonaId, updatePersonaAvatar }}
             form={form} 
          />
       </div>

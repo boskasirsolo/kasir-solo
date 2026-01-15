@@ -2,7 +2,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Article, GalleryItem, SiteConfig } from '../../types';
 import { supabase, uploadToSupabase, processBackgroundMigration, slugify, renameFile, convertLocalToUTC, convertUTCToLocal, callGeminiWithRotation } from '../../utils';
-import { KeywordData, GenConfig, ArticleFormState, FilterType, AuthorPersona, AUTHOR_PRESETS } from './types';
+import { KeywordData, GenConfig, ArticleFormState, FilterType } from './types';
 import { VisionAI } from '../../services/ai/vision';
 import { EditorAI } from '../../services/ai/editor';
 import { CityTarget } from '../admin-seo/types';
@@ -121,23 +121,20 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         fetchCities();
     }, []);
 
-    const [personas, setPersonas] = useState<AuthorPersona[]>(() => {
-        try { return JSON.parse(localStorage.getItem('mks_personas') || '') || AUTHOR_PRESETS; } catch (e) { return AUTHOR_PRESETS; }
-    });
-    const [activePersonaId, setActivePersonaId] = useState<string>('personal');
-    const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
     const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']); 
 
     const [socialCaption, setSocialCaption] = useState('');
     const [selectedPlatforms, setSelectedPlatforms] = useState({ instagram: true, facebook: true, linkedin: false });
     const [socialLoading, setSocialLoading] = useState({ generating: false, posting: false });
 
-    useEffect(() => { try { localStorage.setItem('mks_personas', JSON.stringify(personas)); } catch (e) {} }, [personas]);
+    // FIXED AUTHOR: Amin Maghfuri (Founder)
+    const founderName = "Amin Maghfuri";
+    const founderAvatar = config?.founderPortrait || "";
 
     const [form, setForm] = useState<ArticleFormState>({
         id: null, title: '', excerpt: '', content: '', category: '',
         readTime: '5 min read', imagePreview: '', uploadFile: null, 
-        author: activePersona.name, authorAvatar: activePersona.avatar || '',
+        author: founderName, authorAvatar: founderAvatar,
         uploadAuthorFile: null, status: 'draft', scheduled_for: '',
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
         date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -150,14 +147,10 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const [aiStep, setAiStep] = useState(0);
     const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
 
-    useEffect(() => {
-        setForm(prev => ({ ...prev, author: activePersona.name, authorAvatar: activePersona.avatar || '' }));
-    }, [activePersonaId, personas]);
-
     const resetForm = () => {
         setForm({
             id: null, title: '', excerpt: '', content: '', category: '',
-            author: activePersona.name, authorAvatar: activePersona.avatar || '', 
+            author: founderName, authorAvatar: config?.founderPortrait || '', 
             uploadAuthorFile: null, readTime: '5 min read', imagePreview: '', uploadFile: null, 
             status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
             date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -172,8 +165,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     };
 
     const handleEditClick = (item: Article) => {
-        const matchedPersona = personas.find(p => item.author.includes(p.name));
-        if (matchedPersona) setActivePersonaId(matchedPersona.id);
         const estimatedCount = item.content ? item.content.split(/\s+/).length : 1000;
 
         let formattedSchedule = '';
@@ -185,7 +176,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
         setForm({
             id: item.id, title: item.title, excerpt: item.excerpt, content: item.content,
-            category: item.category, author: item.author, authorAvatar: item.author_avatar || activePersona.avatar || '', 
+            category: item.category, author: item.author, authorAvatar: item.author_avatar || config?.founderPortrait || '', 
             uploadAuthorFile: null, readTime: item.readTime, imagePreview: item.image, uploadFile: null,
             status: item.status || 'draft', 
             scheduled_for: formattedSchedule, 
@@ -199,22 +190,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         setSocialCaption(''); 
         setAiStep(2);
         setActiveMobilePane('WRITE'); // Langsung ke editor pas edit
-    };
-
-    const updatePersonaAvatar = async (file: File) => {
-        aiLogic.setLoading(p => ({ ...p, uploading: true, progressMessage: 'Uploading Avatar...' }));
-        try {
-            let avatarUrl = URL.createObjectURL(file);
-            const seoName = `${slugify(activePersona.name)}-author-avatar-mesin-kasir-solo`;
-            const fileToUpload = renameFile(file, seoName);
-            if (supabase) {
-                const { url } = await uploadToSupabase(fileToUpload, 'avatars');
-                avatarUrl = url;
-            }
-            setPersonas(prev => prev.map(p => p.id === activePersonaId ? { ...p, avatar: avatarUrl } : p));
-            setForm(prev => ({ ...prev, authorAvatar: avatarUrl }));
-        } catch (e) { alert("Gagal upload avatar"); } 
-        finally { aiLogic.setLoading(p => ({ ...p, uploading: false, progressMessage: '' })); }
     };
 
     const saveArticle = async () => {
@@ -250,8 +225,8 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 excerpt: form.excerpt || '', 
                 content: form.content || '', 
                 category: form.category || 'General', 
-                author: form.author, 
-                author_avatar: form.authorAvatar || activePersona.avatar, 
+                author: founderName, // ALWAYS FOUNDER
+                author_avatar: config?.founderPortrait || null, // ALWAYS FOUNDER PIC
                 read_time: form.readTime, 
                 image_url: finalImageUrl, 
                 status: (form.status || 'draft').toLowerCase() as any,
@@ -391,7 +366,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const runImage = async () => { 
         aiLogic.setLoading(p => ({ ...p, generatingImage: true, progressMessage: 'Generating AI Image...' })); 
         try { 
-            const style = activePersona.mode === 'personal' ? 'cinematic' : 'corporate'; 
+            const style = 'corporate'; // Always use corporate style for auto mode now
             const { url, file } = await VisionAI.generate(form.title, form.category, style); 
             setForm(p => ({ ...p, imagePreview: url, uploadFile: file })); 
         } catch(e) { console.error(e); } 
@@ -399,7 +374,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     };
 
     return {
-        form, setForm, filterLogic, aiLogic, personas, activePersonaId, setActivePersonaId, updatePersonaAvatar,
+        form, setForm, filterLogic, aiLogic,
         activeMobilePane, setActiveMobilePane, // EXPORT BARU
         socialState: { socialCaption, setSocialCaption, selectedPlatforms, setSelectedPlatforms, socialLoading },
         aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, trendingTopics: aiLogic.trendingTopics, keywords: aiLogic.keywords, selectedTones, setSelectedTones, cities },

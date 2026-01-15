@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera, Sparkles, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Article } from '../../types';
-import { FilterType, AuthorPersona } from './types';
+import { FilterType } from './types';
 
 // --- ATOM: Filter Tab ---
 interface FilterTabProps {
@@ -29,66 +29,6 @@ const FilterTab: React.FC<FilterTabProps> = ({
         {label || type}
     </button>
 );
-
-// --- ATOM: Persona Switcher ---
-const PersonaSwitcher = ({ 
-    personas, 
-    activePersonaId,
-    setActivePersonaId,
-    onAvatarUpload 
-}: { 
-    personas: AuthorPersona[], 
-    activePersonaId: string,
-    setActivePersonaId: (id: string) => void,
-    onAvatarUpload: (file: File) => void
-}) => {
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const activePersona = personas.find(p => p.id === activePersonaId) || personas[0];
-
-    return (
-        <div className="mb-4 bg-brand-dark/50 border border-white/5 rounded-xl p-3">
-            <div className="flex items-center gap-3 mb-3">
-                <div 
-                    className="relative w-10 h-10 rounded-full border border-white/10 cursor-pointer group overflow-hidden bg-black flex-shrink-0"
-                    onClick={() => fileInputRef.current?.click()}
-                >
-                    {activePersona.avatar ? (
-                        <img src={activePersona.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500 bg-white/5">
-                            <User size={16}/>
-                        </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <Camera size={12} className="text-white"/>
-                    </div>
-                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => e.target.files?.[0] && onAvatarUpload(e.target.files[0])} />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-white font-bold truncate">{activePersona.name}</p>
-                    <p className="text-[9px] text-gray-500 uppercase tracking-tighter">{activePersona.role}</p>
-                </div>
-            </div>
-
-            <div className="flex gap-1.5">
-                {personas.map((preset) => (
-                    <button 
-                        key={preset.id}
-                        onClick={() => setActivePersonaId(preset.id)}
-                        className={`flex-1 py-1.5 rounded text-[9px] font-bold border transition-all ${
-                            activePersonaId === preset.id 
-                            ? 'bg-brand-orange/20 text-brand-orange border-brand-orange'
-                            : 'bg-black/40 text-gray-600 border-white/5 hover:border-white/20'
-                        }`}
-                    >
-                        {preset.name.split(' ')[0]}
-                    </button>
-                ))}
-            </div>
-        </div>
-    );
-};
 
 // --- MOLECULE: Article Card ---
 const ArticleCard = ({ article, activeId, expandedId, onExpand, onEdit, onDelete, canExpand, linkedClusters, onAddCluster }: any) => {
@@ -140,7 +80,7 @@ const ArticleCard = ({ article, activeId, expandedId, onExpand, onEdit, onDelete
     );
 };
 
-export const ListPanel = ({ articles, logic, onReset, personaState, form }: any) => {
+export const ListPanel = ({ articles, logic, onReset, form }: any) => {
     return (
         <div className="flex flex-col h-full bg-brand-black">
             <div className="p-4 border-b border-white/10 space-y-4 bg-brand-card/50">
@@ -149,8 +89,6 @@ export const ListPanel = ({ articles, logic, onReset, personaState, form }: any)
                     <button onClick={onReset} className="bg-brand-orange text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-neon flex items-center gap-1 transition-all active:scale-95"><Plus size={12} /> BARU</button>
                 </div>
 
-                <PersonaSwitcher {...personaState} />
-                
                 <div className="flex flex-col gap-2">
                     <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide">
                         {(['all', 'pillar', 'cluster'] as FilterType[]).map((type) => (

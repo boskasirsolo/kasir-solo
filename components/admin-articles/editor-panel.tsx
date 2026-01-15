@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle, FileType, MessageSquare, MapPin, Image as ImageIcon, Send, Clock } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, LoadingSpinner } from '../ui';
-import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
+import { ARTICLE_CATEGORIES, NARRATIVE_TONES } from './types';
 
 // --- ATOM: Strategy Switcher ---
 const StrategySwitcher = ({ type, onChange }: { type: string, onChange: (t: 'pillar' | 'cluster') => void }) => (

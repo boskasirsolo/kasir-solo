@@ -18,31 +18,6 @@ export interface GenConfig {
     narrative: 'narsis' | 'umum'; 
 }
 
-export interface AuthorPersona {
-    id: string;
-    name: string;
-    role: string; // 'Founder' | 'Editor'
-    mode: 'personal' | 'team';
-    avatar: string; // New field for profile picture
-}
-
-export const AUTHOR_PRESETS: AuthorPersona[] = [
-    {
-        id: 'personal',
-        name: 'Amin Maghfuri',
-        role: 'Founder, CEO',
-        mode: 'personal',
-        avatar: '' // Will use upload or placeholder
-    },
-    {
-        id: 'team',
-        name: 'Tim Redaksi',
-        role: 'Content Team',
-        mode: 'team',
-        avatar: ''
-    }
-];
-
 export const NARRATIVE_TONES = [
     { id: 'gritty', label: 'Gritty & Raw (Jujur Brutal)', desc: 'Cerita kegagalan tanpa filter, emosional, "Gue" banget.' },
     { id: 'visionary', label: 'Visionary (Comeback)', desc: 'Fokus pada kebangkitan, masa depan, dan inovasi.' },
@@ -75,7 +50,7 @@ export interface ArticleFormState {
     scheduleStart: string;
     uploadAuthorFile: File | null;
     generationContext: string;
-    targetCityId: number; // NEW: Untuk simpan kaitan ke kota mana
+    targetCityId: number; 
 }
 
 // Preset Topics for Research Context
