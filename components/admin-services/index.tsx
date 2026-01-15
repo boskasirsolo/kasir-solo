@@ -174,7 +174,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                                 <TextArea value={opt.desc} onChange={(e: any) => {
                                                     const newOpts = [...data!.calc_data.baseOptions];
                                                     newOpts[i].desc = e.target.value;
-                                                    setData({...data!.calc_data, baseOptions: newOpts}});
+                                                    setData({...data!, calc_data: {...data!.calc_data, baseOptions: newOpts}});
                                                 }} placeholder="Deskripsi singkat..." className="text-[10px] h-16 bg-brand-dark/50" />
                                             </div>
                                             <div className="md:col-span-5">
