@@ -1,382 +1,415 @@
-
 import React, { useState, useEffect } from 'react';
-import { Globe, Layers, LineChart, ShieldCheck, Save, Plus, Trash2, List, Calculator, Sparkles, Wand2, Coffee } from 'lucide-react';
-import { ServicePageData, SiteConfig } from '../../types';
+import { 
+    Globe, Layers, LineChart, ShieldCheck, Save, Plus, 
+    Trash2, Calculator, Sparkles, Wand2, Coffee, 
+    CheckSquare, Square, Search, Edit3, RefreshCw,
+    Box, Zap, LayoutList
+} from 'lucide-react';
+import { SiteConfig, ServicePageData } from '../../types';
+import { CalcOption } from '../shared/calculator/types';
 import { supabase, formatNumberInput, cleanNumberInput, callGeminiWithRotation } from '../../utils';
 import { LoadingSpinner, Button, Input, TextArea } from '../ui';
 
-// Import existing data for initialization from public constants
-import { 
-    WEBSITE_DATA, WEBSITE_CALC, 
-    WEBAPP_DATA, WEBAPP_CALC, 
-    SEO_DATA, SEO_CALC, 
-    MAINTENANCE_DATA, MAINTENANCE_CALC 
-} from '../services/data';
-
-const SERVICE_OPTIONS = [
-    { id: 'website', label: 'Website', icon: Globe, defaultData: WEBSITE_DATA, defaultCalc: WEBSITE_CALC },
-    { id: 'webapp', label: 'Custom App', icon: Layers, defaultData: WEBAPP_DATA, defaultCalc: WEBAPP_CALC },
-    { id: 'seo', label: 'SEO Traffic', icon: LineChart, defaultData: SEO_DATA, defaultCalc: SEO_CALC },
-    { id: 'maintenance', label: 'Maintenance', icon: ShieldCheck, defaultData: MAINTENANCE_DATA, defaultCalc: MAINTENANCE_CALC }
+const SERVICE_TARGETS = [
+    { id: 'website', label: 'Website', icon: Globe },
+    { id: 'webapp', label: 'Custom App', icon: Layers },
+    { id: 'seo', label: 'SEO Traffic', icon: LineChart },
+    { id: 'maintenance', label: 'Maintenance', icon: ShieldCheck }
 ];
 
 export const AdminServices = ({ config }: { config: SiteConfig }) => {
-    const [activeSlug, setActiveSlug] = useState('website');
-    const [data, setData] = useState<ServicePageData | null>(null);
+    // --- STATE: EDITOR ---
+    const [itemForm, setItemForm] = useState<CalcOption & { targets: string[], role: 'base' | 'addon' }>({
+        id: '',
+        label: '',
+        price: 0,
+        desc: '',
+        longDesc: '',
+        founderNote: '',
+        targets: [], // ID Layanan (website, webapp, etc)
+        role: 'addon'
+    });
+
+    // --- STATE: DATA MANAGEMENT ---
+    const [allServices, setAllServices] = useState<ServicePageData[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [aiGenerating, setAiGenerating] = useState<string | null>(null);
+    
+    // --- STATE: LIST FILTER ---
+    const [filterSlug, setFilterSlug] = useState('website');
 
-    useEffect(() => { fetchService(); }, [activeSlug]);
+    useEffect(() => { fetchAllServices(); }, []);
 
-    const fetchService = async () => {
+    const fetchAllServices = async () => {
         if (!supabase) return;
         setLoading(true);
         try {
-            const { data: res } = await supabase.from('services').select('*').eq('slug', activeSlug).maybeSingle();
-            
-            const selectedOpt = SERVICE_OPTIONS.find(o => o.id === activeSlug);
-
-            if (res) {
-                setData(res);
-            } else {
-                setData({
-                    id: 0,
-                    slug: activeSlug,
-                    title: selectedOpt?.id === 'website' ? 'Web Itu' : selectedOpt?.id === 'webapp' ? 'Stop Jadi' : selectedOpt?.id === 'seo' ? 'Berhenti Membakar' : 'Punya Toko,',
-                    highlight: selectedOpt?.id === 'website' ? 'Ruko Digital.' : selectedOpt?.id === 'webapp' ? 'Budak Excel.' : selectedOpt?.id === 'seo' ? 'Uang Iklan.' : 'Gak Ada Satpam?',
-                    subtitle: '', 
-                    icon_name: activeSlug === 'website' ? 'Globe' : activeSlug === 'webapp' ? 'Layers' : activeSlug === 'seo' ? 'LineChart' : 'ShieldCheck',
-                    features: selectedOpt?.defaultData.features.map((f: any) => ({ 
-                        title: f.title, 
-                        desc: f.desc, 
-                        icon: 'Zap' 
-                    })) || [],
-                    steps: selectedOpt?.defaultData.steps || [],
-                    calc_data: selectedOpt?.defaultCalc || { baseLabel: '', baseOptions: [], addonLabel: '', addons: [] }
-                });
-            }
+            const { data: res } = await supabase.from('services').select('*');
+            if (res) setAllServices(res);
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
 
-    const handleSave = async () => {
-        if (!supabase || !data) return;
+    const resetForm = () => {
+        setItemForm({
+            id: '', label: '', price: 0, desc: '', longDesc: '', founderNote: '',
+            targets: [], role: 'addon'
+        });
+    };
+
+    // --- HANDLERS: AI ---
+    const generateAiContent = async (targetField: 'longDesc' | 'founderNote') => {
+        if (!itemForm.label) return alert("Isi Label Item dulu Bos.");
+        setAiGenerating(targetField);
+        try {
+            const isNote = targetField === 'founderNote';
+            const prompt = isNote 
+                ? `Role: Founder Amin Maghfuri. Task: Write a short, gritty "Founder Note" (1-2 sentences) using 'Gue/Lo' for item: "${itemForm.label}". Focus on why this avoids pain for the business owner.`
+                : `Role: Street-smart copywriter. Task: Write a persuasive detail (Markdown, 2 paragraphs) using 'Gue/Lo' for item: "${itemForm.label}". Use bold for emphasis.`;
+            
+            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+            setItemForm(prev => ({ ...prev, [targetField]: res.text?.trim() || "" }));
+        } catch (e) {
+            alert("Gemini lagi pusing. Coba lagi.");
+        } finally { setAiGenerating(null); }
+    };
+
+    // --- HANDLERS: SAVE (SYNC ENGINE) ---
+    const handleBroadcastSave = async () => {
+        if (!itemForm.label || itemForm.targets.length === 0) {
+            return alert("Nama Item dan Minimal 1 Target Layanan wajib diisi!");
+        }
+
         setSaving(true);
         try {
-            const { error } = await supabase.from('services').upsert({
-                slug: data.slug,
-                features: data.features,
-                steps: data.steps,
-                calc_data: data.calc_data,
-                title: data.title,
-                highlight: data.highlight,
-                subtitle: data.subtitle,
-                icon_name: data.icon_name
-            }, { onConflict: 'slug' });
-            
-            if (error) throw error;
-            alert("Data Layanan & Harga berhasil diupdate!");
-        } catch (e: any) { 
-            alert("Gagal simpan: " + e.message); 
+            const itemId = itemForm.id || `item_${Date.now()}`;
+
+            // Loop through all selected services to inject the item
+            const updatePromises = itemForm.targets.map(async (slug) => {
+                const service = allServices.find(s => s.slug === slug);
+                if (!service) return;
+
+                const calcData = { ...service.calc_data };
+                const listKey = itemForm.role === 'base' ? 'baseOptions' : 'addons';
+                
+                // Ensure array exists
+                if (!calcData[listKey]) calcData[listKey] = [];
+
+                // Upsert item into the specific service's JSON
+                const existingIdx = calcData[listKey].findIndex((o: any) => o.id === itemId);
+                const itemPayload = {
+                    id: itemId,
+                    label: itemForm.label,
+                    price: itemForm.price,
+                    desc: itemForm.desc,
+                    longDesc: itemForm.longDesc,
+                    founderNote: itemForm.founderNote
+                };
+
+                if (existingIdx > -1) {
+                    calcData[listKey][existingIdx] = itemPayload;
+                } else {
+                    calcData[listKey].push(itemPayload);
+                }
+
+                // Update Supabase
+                return supabase!.from('services').update({ calc_data: calcData }).eq('slug', slug);
+            });
+
+            await Promise.all(updatePromises);
+            alert(`Item "${itemForm.label}" berhasil disebar ke ${itemForm.targets.length} layanan!`);
+            await fetchAllServices(); // Refresh list
+            resetForm();
+        } catch (e: any) {
+            alert("Gagal broadcast: " + e.message);
         } finally { setSaving(false); }
     };
 
-    const generateHasutan = async (type: 'base' | 'addon', index: number) => {
-        if (!data) return;
-        const item = type === 'base' ? data.calc_data.baseOptions[index] : data.calc_data.addons[index];
-        const id = `${type}-${index}`;
+    const deleteItemFromService = async (serviceSlug: string, itemId: string, role: 'base' | 'addon') => {
+        if (!confirm("Hapus item ini dari layanan ini?")) return;
         
-        setAiGenerating(id);
-        try {
-            const prompt = `
-            Role: Street-smart copywriter for PT Mesin Kasir Solo.
-            Task: Write a "Persuasive Secret Detail" for service item: "${item.label}".
-            Context Service: ${activeSlug.toUpperCase()} Service.
-            Format: Markdown (2-3 paragraphs).
-            Tone: Honest, Gritty, using 'Gue/Lo', explaining why this is crucial for the owner. 
-            Rules: Be punchy. No long intros. Use bold for emphasis. NO corporate speak.
-            `;
-            
-            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            const result = res.text?.trim() || "";
+        const service = allServices.find(s => s.slug === slugify(serviceSlug));
+        if (!service) return;
 
-            const newData = { ...data };
-            if (type === 'base') newData.calc_data.baseOptions[index].longDesc = result;
-            else newData.calc_data.addons[index].longDesc = result;
-            
-            setData(newData);
-        } catch (e) {
-            alert("AI capek, Bos. Coba lagi nanti.");
-        } finally {
-            setAiGenerating(null);
-        }
+        const calcData = { ...service.calc_data };
+        const listKey = role === 'base' ? 'baseOptions' : 'addons';
+        calcData[listKey] = calcData[listKey].filter((o: any) => o.id !== itemId);
+
+        try {
+            await supabase!.from('services').update({ calc_data: calcData }).eq('slug', serviceSlug);
+            await fetchAllServices();
+        } catch (e) { alert("Gagal hapus."); }
     };
 
-    const generateNote = async (type: 'base' | 'addon', index: number) => {
-        if (!data) return;
-        const item = type === 'base' ? data.calc_data.baseOptions[index] : data.calc_data.addons[index];
-        const id = `${type}-note-${index}`;
-        
-        setAiGenerating(id);
-        try {
-            const prompt = `
-            Role: Founder Amin Maghfuri (PT Mesin Kasir Solo).
-            Task: Write a short "Founder's Note" (1-2 sentences) for item: "${item.label}".
-            Context: This is an option in the ${activeSlug.toUpperCase()} calculator.
-            Tone: Honest, gritty, street-smart. Use "Gue" and "Lo".
-            Rule: Explain the REAL risk of NOT having this or the REAL peace of mind lo give with this. NO FLUFF.
-            Example: "Gue ngeliat banyak ruko tutup cuma gara-gara manajemen stok ghaib. Gue bikin modul ini biar lo tidur nyenyak."
-            `;
-            
-            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            const result = res.text?.trim() || "";
-
-            const newData = { ...data };
-            if (type === 'base') newData.calc_data.baseOptions[index].founderNote = result;
-            else newData.calc_data.addons[index].founderNote = result;
-            
-            setData(newData);
-        } catch (e) {
-            alert("Gemini lagi ngopi, Bos.");
-        } finally {
-            setAiGenerating(null);
-        }
+    const editItemFromList = (serviceSlug: string, item: any, role: 'base' | 'addon') => {
+        setItemForm({
+            ...item,
+            targets: [serviceSlug],
+            role: role
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     if (loading) return <div className="flex justify-center p-20"><LoadingSpinner size={32}/></div>;
 
     return (
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 h-full">
-            <div className="w-full lg:w-64 shrink-0 flex flex-col">
-                <div className="p-3 bg-brand-orange/10 border border-brand-orange/20 rounded-xl mb-3 hidden lg:block">
-                    <h3 className="text-white font-bold text-xs uppercase tracking-widest text-center">Pilih Layanan</h3>
+        <div className="space-y-10 animate-fade-in pb-20">
+            
+            {/* --- TOP: THE UNIVERSAL EDITOR --- */}
+            <div className="bg-brand-dark/80 border border-brand-orange/20 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12 pointer-events-none">
+                    <Sparkles size={120} className="text-brand-orange" />
                 </div>
-                <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-3 lg:pb-0 custom-scrollbar-hide -mx-1 px-1">
-                    {SERVICE_OPTIONS.map(opt => (
-                        <button
-                            key={opt.id}
-                            onClick={() => setActiveSlug(opt.id)}
-                            className={`flex-1 lg:flex-none flex items-center justify-center lg:justify-start gap-2 px-4 py-3 lg:py-3.5 rounded-xl text-[11px] lg:text-xs font-bold transition-all border whitespace-nowrap ${
-                                activeSlug === opt.id 
-                                ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text' 
-                                : 'bg-brand-dark text-gray-500 border-white/5 hover:border-white/20'
-                            }`}
-                        >
-                            <opt.icon size={16} /> {opt.label.toUpperCase()}
+
+                <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+                    <div>
+                        <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                            <Zap size={20} className="text-brand-orange" /> Editor Item Layanan
+                        </h3>
+                        <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Input Sekali, Sebarkan ke Mana Saja</p>
+                    </div>
+                    {itemForm.id && (
+                        <button onClick={resetForm} className="text-[10px] text-red-400 font-bold hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20">
+                            BATAL EDIT
                         </button>
-                    ))}
+                    )}
+                </div>
+
+                <div className="grid lg:grid-cols-12 gap-8">
+                    
+                    {/* Column A: Core Info */}
+                    <div className="lg:col-span-7 space-y-6">
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-1.5 block">Nama Item (Label)</label>
+                                <Input 
+                                    value={itemForm.label} 
+                                    onChange={(e: any) => setItemForm({...itemForm, label: e.target.value})} 
+                                    placeholder="Cth: Landing Page Premium / Domain .com"
+                                    className="bg-black/40 font-bold"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-1.5 block">Harga (IDR)</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-3 text-brand-orange font-bold text-xs">RP</span>
+                                    <Input 
+                                        value={formatNumberInput(itemForm.price)} 
+                                        onChange={(e: any) => setItemForm({...itemForm, price: cleanNumberInput(e.target.value)})} 
+                                        className="pl-9 bg-black/40 font-bold text-brand-orange"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-1.5 block">Deskripsi Singkat (Tooltip)</label>
+                            <TextArea 
+                                value={itemForm.desc || ''} 
+                                onChange={(e: any) => setItemForm({...itemForm, desc: e.target.value})} 
+                                placeholder="Jelasin dikit pas user hover..."
+                                className="h-16 bg-black/20"
+                            />
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[10px] text-gray-500 font-bold uppercase">Hasutan Detail (Markdown)</label>
+                                    <button onClick={() => generateAiContent('longDesc')} disabled={aiGenerating==='longDesc'} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1">
+                                        {aiGenerating==='longDesc' ? <LoadingSpinner size={10}/> : <><Sparkles size={10}/> AI Magic</>}
+                                    </button>
+                                </div>
+                                <TextArea 
+                                    value={itemForm.longDesc || ''} 
+                                    onChange={(e: any) => setItemForm({...itemForm, longDesc: e.target.value})} 
+                                    placeholder="Muncul di side-drawer..."
+                                    className="h-32 text-xs bg-black/40"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[10px] text-brand-orange font-bold uppercase flex items-center gap-1"><Coffee size={10}/> Founder Note</label>
+                                    <button onClick={() => generateAiContent('founderNote')} disabled={aiGenerating==='founderNote'} className="text-[9px] text-brand-orange/70 hover:text-brand-orange flex items-center gap-1">
+                                        {aiGenerating==='founderNote' ? <LoadingSpinner size={10}/> : <Wand2 size={10}/>}
+                                    </button>
+                                </div>
+                                <TextArea 
+                                    value={itemForm.founderNote || ''} 
+                                    onChange={(e: any) => setItemForm({...itemForm, founderNote: e.target.value})} 
+                                    placeholder="Pesan pribadi Mas Amin..."
+                                    className="h-32 text-xs bg-brand-orange/5 border-brand-orange/10"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Column B: SYNC CONTROLS */}
+                    <div className="lg:col-span-5 bg-black/30 rounded-2xl p-6 border border-white/5 flex flex-col">
+                        <h4 className="text-white font-bold text-sm mb-4 border-b border-white/10 pb-3 flex items-center gap-2">
+                            <LayoutList size={16} className="text-brand-orange"/> Target Broadcast
+                        </h4>
+
+                        <div className="space-y-6 flex-grow">
+                            {/* Type Picker */}
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Sebagai Apa?</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button 
+                                        onClick={() => setItemForm({...itemForm, role: 'base'})}
+                                        className={`py-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${itemForm.role === 'base' ? 'bg-brand-orange border-brand-orange text-white shadow-neon' : 'bg-brand-dark border-white/10 text-gray-500'}`}
+                                    >
+                                        <Box size={14}/> Paket Utama
+                                    </button>
+                                    <button 
+                                        onClick={() => setItemForm({...itemForm, role: 'addon'})}
+                                        className={`py-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${itemForm.role === 'addon' ? 'bg-blue-600 border-blue-600 text-white shadow-neon' : 'bg-brand-dark border-white/10 text-gray-500'}`}
+                                    >
+                                        <Zap size={14}/> Add-on / Modul
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Service Selection */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Terapkan Ke Layanan (Multi-select):</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {SERVICE_TARGETS.map(svc => {
+                                        const isSelected = itemForm.targets.includes(svc.id);
+                                        return (
+                                            <button 
+                                                key={svc.id}
+                                                onClick={() => {
+                                                    const newTargets = isSelected 
+                                                        ? itemForm.targets.filter(t => t !== svc.id) 
+                                                        : [...itemForm.targets, svc.id];
+                                                    setItemForm({...itemForm, targets: newTargets});
+                                                }}
+                                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${isSelected ? 'bg-brand-orange/20 border-brand-orange text-white shadow-neon-text' : 'bg-black/20 border-white/5 text-gray-500 hover:border-white/20'}`}
+                                            >
+                                                {isSelected ? <CheckSquare size={18} className="text-brand-orange" /> : <Square size={18} />}
+                                                <div>
+                                                    <p className="text-xs font-bold">{svc.label}</p>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-8">
+                            <Button 
+                                onClick={handleBroadcastSave} 
+                                disabled={saving} 
+                                className="w-full py-4 shadow-neon font-bold text-sm bg-brand-gradient"
+                            >
+                                {saving ? <LoadingSpinner /> : <><Save size={18}/> SYNC KE SEMUA LAYANAN TERPILIH</>}
+                            </Button>
+                            <p className="text-[9px] text-gray-600 text-center mt-3 uppercase font-bold tracking-tighter">*Data lama akan di-update jika ID item sama</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex-1 bg-brand-dark/50 border border-white/5 rounded-2xl p-4 md:p-8 space-y-8 lg:space-y-12 max-h-[70vh] lg:max-h-[800px] overflow-y-auto custom-scrollbar">
-                
-                {/* 1. FITUR */}
-                <div className="space-y-4">
-                    <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                        <h4 className="text-white font-bold text-sm lg:text-base flex items-center gap-2 uppercase tracking-widest">
-                            <List size={16} className="text-brand-orange"/> Fitur & Keunggulan
-                        </h4>
-                        <button 
-                            onClick={() => setData({...data!, features: [...data!.features, { title: '', desc: '', icon: 'Zap' }]})} 
-                            className="text-[9px] bg-brand-orange/20 text-brand-orange px-3 py-1.5 rounded border border-brand-orange/30 font-bold"
-                        >
-                            + TAMBAH
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
-                        {data?.features.map((f, i) => (
-                            <div key={i} className="p-4 bg-black/40 rounded-xl border border-white/5 space-y-3 relative group">
-                                <button onClick={() => setData({...data!, features: data!.features.filter((_, idx) => idx !== i)})} className="absolute top-3 right-3 text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"><Trash2 size={14}/></button>
-                                <Input value={f.title} onChange={(e: any) => {
-                                    const newF = [...data!.features];
-                                    newF[i].title = e.target.value;
-                                    setData({...data!, features: newF});
-                                }} placeholder="Judul Fitur" className="text-xs font-bold bg-brand-dark/50" />
-                                <TextArea value={f.desc} onChange={(e: any) => {
-                                    const newF = [...data!.features];
-                                    newF[i].desc = e.target.value;
-                                    setData({...data!, features: newF});
-                                }} placeholder="Deskripsi singkat..." className="text-[10px] h-20 bg-brand-dark/50" />
-                            </div>
+            {/* --- BOTTOM: FILTERED LIST --- */}
+            <div className="space-y-6">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h4 className="text-white font-bold text-lg flex items-center gap-2">
+                        <LayoutList size={20} className="text-brand-orange"/> Inventori Item Per Layanan
+                    </h4>
+                    
+                    <div className="flex bg-brand-dark p-1 rounded-xl border border-white/5 overflow-x-auto custom-scrollbar-hide w-full md:w-auto">
+                        {SERVICE_TARGETS.map(svc => (
+                            <button
+                                key={svc.id}
+                                onClick={() => setFilterSlug(svc.id)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filterSlug === svc.id ? 'bg-brand-orange text-white shadow-neon' : 'text-gray-500 hover:text-white'}`}
+                            >
+                                <svc.icon size={14} /> {svc.label}
+                            </button>
                         ))}
                     </div>
                 </div>
 
-                {/* 2. HARGA & HASUTAN */}
-                <div className="space-y-6">
-                    <h4 className="text-white font-bold text-sm lg:text-base flex items-center gap-2 border-b border-white/10 pb-3 uppercase tracking-widest">
-                        <Calculator size={16} className="text-brand-orange"/> Harga & Detail Hasutan
-                    </h4>
-                    
-                    <div className="bg-brand-orange/5 p-4 lg:p-6 rounded-2xl border border-brand-orange/20 space-y-8">
+                <div className="bg-brand-dark/30 border border-white/5 rounded-3xl overflow-hidden">
+                    <div className="grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-white/5">
                         
-                        {/* PAKET UTAMA */}
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                                <span className="text-[10px] font-bold text-white uppercase tracking-wider">📦 PAKET UTAMA</span>
-                                <button onClick={() => setData({...data!, calc_data: {...data!.calc_data, baseOptions: [...data!.calc_data.baseOptions, { id: Date.now().toString(), label: '', price: 0, desc: '', longDesc: '', founderNote: '' }]}})} className="text-[9px] bg-brand-orange/20 text-brand-orange px-2 py-1.5 rounded border border-brand-orange/30 font-bold">+ PAKET</button>
-                            </div>
-                            <div className="space-y-6">
-                                {data?.calc_data?.baseOptions?.map((opt: any, i: number) => (
-                                    <div key={opt.id} className="bg-black/40 p-5 rounded-xl border border-white/5 space-y-4 relative group">
-                                        <button onClick={() => setData({...data!, calc_data: {...data!.calc_data, baseOptions: data!.calc_data.baseOptions.filter((_:any, idx:number) => idx !== i)}})} className="absolute top-4 right-4 text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"><Trash2 size={16}/></button>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-3">
-                                                <Input value={opt.label} onChange={(e: any) => {
-                                                    const newOpts = [...data!.calc_data.baseOptions];
-                                                    newOpts[i].label = e.target.value;
-                                                    setData({...data!, calc_data: {...data!.calc_data, baseOptions: newOpts}});
-                                                }} placeholder="Nama Paket" className="text-xs font-bold" />
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-2.5 text-[10px] text-brand-orange font-bold">RP</span>
-                                                    <Input type="text" value={formatNumberInput(opt.price)} onChange={(e: any) => {
-                                                        const numericValue = cleanNumberInput(e.target.value);
-                                                        const newOpts = [...data!.calc_data.baseOptions];
-                                                        newOpts[i].price = numericValue;
-                                                        setData({ ...data!, calc_data: { ...data!.calc_data, baseOptions: newOpts } });
-                                                    }} className="pl-8 text-xs font-bold text-brand-orange" />
-                                                </div>
-                                                <TextArea value={opt.desc} onChange={(e: any) => {
-                                                    const newOpts = [...data!.calc_data.baseOptions];
-                                                    newOpts[i].desc = e.target.value;
-                                                    setData({...data!, calc_data: {...data!.calc_data, baseOptions: newOpts}});
-                                                }} placeholder="Tooltip singkat..." className="text-[10px] h-16" />
-                                            </div>
-                                            <div className="space-y-4">
-                                                <div className="space-y-2">
-                                                    <div className="flex justify-between items-center">
-                                                        <label className="text-[9px] text-gray-500 font-bold uppercase">Hasutan Detail (Markdown)</label>
-                                                        <button 
-                                                            onClick={() => generateHasutan('base', i)}
-                                                            disabled={aiGenerating === `base-${i}`}
-                                                            className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1"
-                                                        >
-                                                            {aiGenerating === `base-${i}` ? <LoadingSpinner size={10}/> : <><Sparkles size={10}/> AI MAGIC</>}
-                                                        </button>
-                                                    </div>
-                                                    <TextArea 
-                                                        value={opt.longDesc || ''} 
-                                                        onChange={(e: any) => {
-                                                            const newOpts = [...data!.calc_data.baseOptions];
-                                                            newOpts[i].longDesc = e.target.value;
-                                                            setData({...data!, calc_data: {...data!.calc_data, baseOptions: newOpts}});
-                                                        }} 
-                                                        placeholder="Jelasin kenapa paket ini paling 'worth it'..." 
-                                                        className="text-[10px] h-24 bg-brand-dark/50" 
-                                                    />
-                                                </div>
-                                                
-                                                <div className="space-y-2">
-                                                    <div className="flex justify-between items-center">
-                                                        <label className="text-[9px] text-brand-orange font-bold uppercase flex items-center gap-1"><Coffee size={10}/> Founder Note</label>
-                                                        <button 
-                                                            onClick={() => generateNote('base', i)}
-                                                            disabled={aiGenerating === `base-note-${i}`}
-                                                            className="text-[9px] text-brand-orange/70 hover:text-brand-orange flex items-center gap-1"
-                                                        >
-                                                            {aiGenerating === `base-note-${i}` ? <LoadingSpinner size={10}/> : <Wand2 size={10}/>}
-                                                        </button>
-                                                    </div>
-                                                    <Input 
-                                                        value={opt.founderNote || ''} 
-                                                        onChange={(e: any) => {
-                                                            const newOpts = [...data!.calc_data.baseOptions];
-                                                            newOpts[i].founderNote = e.target.value;
-                                                            setData({...data!, calc_data: {...data!.calc_data, baseOptions: newOpts}});
-                                                        }} 
-                                                        placeholder="Pesan pribadi ala Mas Amin..." 
-                                                        className="text-[10px] bg-brand-orange/5 border-brand-orange/10" 
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                        {/* PAKET UTAMA LIST */}
+                        <div className="p-6 space-y-4">
+                            <h5 className="text-[11px] font-bold text-brand-orange uppercase tracking-widest flex items-center gap-2 border-b border-brand-orange/20 pb-2">
+                                <Box size={14}/> Paket Utama ({allServices.find(s => s.slug === filterSlug)?.calc_data?.baseOptions?.length || 0})
+                            </h5>
+                            <div className="space-y-2">
+                                {allServices.find(s => s.slug === filterSlug)?.calc_data?.baseOptions?.map((item: any) => (
+                                    <ItemRow 
+                                        key={item.id} 
+                                        item={item} 
+                                        role="base" 
+                                        onEdit={() => editItemFromList(filterSlug, item, 'base')}
+                                        onDelete={() => deleteItemFromService(filterSlug, item.id, 'base')}
+                                    />
                                 ))}
+                                {(!allServices.find(s => s.slug === filterSlug)?.calc_data?.baseOptions?.length) && <p className="text-xs text-gray-600 italic p-4 text-center">Belum ada paket utama.</p>}
                             </div>
                         </div>
 
-                        {/* ADDONS */}
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                                <span className="text-[10px] font-bold text-white uppercase tracking-wider">🚀 ADD-ONS</span>
-                                <button onClick={() => setData({...data!, calc_data: {...data!.calc_data, addons: [...data!.calc_data.addons, { id: Date.now().toString(), label: '', price: 0, longDesc: '', founderNote: '' }]}})} className="text-[9px] bg-brand-orange/20 text-brand-orange px-2 py-1.5 rounded border border-brand-orange/30 font-bold">+ ADD-ON</button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {data?.calc_data?.addons?.map((opt: any, i: number) => (
-                                    <div key={opt.id} className="bg-black/40 p-4 rounded-xl border border-white/5 space-y-3 relative group">
-                                        <button onClick={() => setData({...data!, calc_data: {...data!.calc_data, addons: data!.calc_data.addons.filter((_:any, idx:number) => idx !== i)}})} className="absolute top-2 right-2 text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"><Trash2 size={12}/></button>
-                                        <Input value={opt.label} onChange={(e: any) => {
-                                            const newOpts = [...data!.calc_data.addons];
-                                            newOpts[i].label = e.target.value;
-                                            setData({...data!, calc_data: {...data!.calc_data, addons: newOpts}});
-                                        }} placeholder="Nama Add-on" className="text-[11px] font-bold" />
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[9px] text-gray-500 font-bold">RP</span>
-                                            <Input type="text" value={formatNumberInput(opt.price)} onChange={(e: any) => {
-                                                const numericValue = cleanNumberInput(e.target.value);
-                                                const newOpts = [...data!.calc_data.addons];
-                                                newOpts[i].price = numericValue;
-                                                setData({ ...data!, calc_data: { ...data!.calc_data, addons: newOpts } });
-                                            }} className="h-8 text-xs font-bold text-brand-orange" />
-                                        </div>
-                                        <div className="pt-2 border-t border-white/5 space-y-3">
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between items-center">
-                                                    <label className="text-[8px] text-gray-500 font-bold uppercase">Detail Hasutan</label>
-                                                    <button 
-                                                        onClick={() => generateHasutan('addon', i)}
-                                                        disabled={aiGenerating === `addon-${i}`}
-                                                        className="text-[8px] text-blue-400 hover:text-white flex items-center gap-1"
-                                                    >
-                                                        {aiGenerating === `addon-${i}` ? <LoadingSpinner size={8}/> : <Wand2 size={8}/>}
-                                                    </button>
-                                                </div>
-                                                <TextArea 
-                                                    value={opt.longDesc || ''} 
-                                                    onChange={(e: any) => {
-                                                        const newOpts = [...data!.calc_data.addons];
-                                                        newOpts[i].longDesc = e.target.value;
-                                                        setData({...data!, calc_data: {...data!.calc_data, addons: newOpts}});
-                                                    }} 
-                                                    placeholder="Hasutan add-on..." 
-                                                    className="text-[9px] h-16" 
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between items-center">
-                                                    <label className="text-[8px] text-brand-orange font-bold uppercase flex items-center gap-1"><Coffee size={8}/> Founder Note</label>
-                                                    <button 
-                                                        onClick={() => generateNote('addon', i)}
-                                                        disabled={aiGenerating === `addon-note-${i}`}
-                                                        className="text-[8px] text-brand-orange/70 hover:text-brand-orange flex items-center gap-1"
-                                                    >
-                                                        {aiGenerating === `addon-note-${i}` ? <LoadingSpinner size={8}/> : <Wand2 size={8}/>}
-                                                    </button>
-                                                </div>
-                                                <Input 
-                                                    value={opt.founderNote || ''} 
-                                                    onChange={(e: any) => {
-                                                        const newOpts = [...data!.calc_data.addons];
-                                                        newOpts[i].founderNote = e.target.value;
-                                                        setData({...data!, calc_data: {...data!.calc_data, addons: newOpts}});
-                                                    }} 
-                                                    placeholder="Pesan Founder..." 
-                                                    className="h-8 text-[9px] bg-brand-orange/5" 
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+                        {/* ADDONS LIST */}
+                        <div className="p-6 space-y-4">
+                            <h5 className="text-[11px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2 border-b border-blue-500/20 pb-2">
+                                <Zap size={14}/> Add-ons ({allServices.find(s => s.slug === filterSlug)?.calc_data?.addons?.length || 0})
+                            </h5>
+                            <div className="space-y-2">
+                                {allServices.find(s => s.slug === filterSlug)?.calc_data?.addons?.map((item: any) => (
+                                    <ItemRow 
+                                        key={item.id} 
+                                        item={item} 
+                                        role="addon" 
+                                        onEdit={() => editItemFromList(filterSlug, item, 'addon')}
+                                        onDelete={() => deleteItemFromService(filterSlug, item.id, 'addon')}
+                                    />
                                 ))}
+                                {(!allServices.find(s => s.slug === filterSlug)?.calc_data?.addons?.length) && <p className="text-xs text-gray-600 italic p-4 text-center">Belum ada add-ons.</p>}
                             </div>
                         </div>
+
                     </div>
                 </div>
+            </div>
+        </div>
+    );
+};
 
-                <div className="sticky bottom-0 bg-brand-dark py-4 border-t border-white/10 z-20">
-                    <Button onClick={handleSave} disabled={saving} className="w-full py-4 shadow-neon font-bold text-xs lg:text-sm">
-                        {saving ? <LoadingSpinner /> : <><Save size={18}/> UPDATE DATA {activeSlug.toUpperCase()}</>}
-                    </Button>
+// --- HELPER COMPONENT: ITEM ROW ---
+/**
+ * FIX: Added React.FC type definition and updated onDelete type to allow void | Promise<void>.
+ * This resolves the TypeScript errors regarding the 'key' prop and async callback assignability.
+ */
+const ItemRow: React.FC<{ 
+    item: any; 
+    onEdit: () => void; 
+    onDelete: () => void | Promise<void>; 
+    role: string; 
+}> = ({ item, onEdit, onDelete, role }) => {
+    const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price);
+    
+    return (
+        <div className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-xl group hover:border-brand-orange/30 transition-all">
+            <div className="flex-1 min-w-0 pr-4">
+                <h6 className="text-sm font-bold text-white truncate">{item.label}</h6>
+                <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] text-brand-orange font-bold font-mono">{formattedPrice}</span>
+                    {(item.longDesc || item.founderNote) && (
+                        <div className="flex gap-1">
+                            {item.longDesc && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" title="Ada Detail Hasutan"></span>}
+                            {item.founderNote && <span className="w-1.5 h-1.5 rounded-full bg-brand-orange" title="Ada Founder Note"></span>}
+                        </div>
+                    )}
                 </div>
+            </div>
+            <div className="flex gap-2 shrink-0">
+                <button onClick={onEdit} className="p-2 bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition-all" title="Edit Item"><Edit3 size={14}/></button>
+                <button onClick={onDelete} className="p-2 bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white rounded-lg transition-all" title="Hapus dari Layanan ini"><Trash2 size={14}/></button>
             </div>
         </div>
     );
