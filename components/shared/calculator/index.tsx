@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { CalculatorProps } from './types';
 import { useCalculator } from './logic';
 import { CalcHeader, BaseOptionItem, AddonOptionItem, ResultCard } from './ui-parts';
+import { SideDrawer } from './side-drawer';
 import { Input } from '../../ui';
 import { User, Phone } from 'lucide-react';
 
@@ -17,7 +18,9 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
       selectedAddons, toggleAddon, 
       calculation, 
       handleConsultation,
-      isCapturing
+      isCapturing,
+      activeDetailItem,
+      setActiveDetailItem
   } = useCalculator(data, serviceName, waNumber, serviceSlug);
 
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '' });
@@ -37,7 +40,7 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
          {/* LEFT: OPTIONS */}
          <div className="lg:col-span-7 p-6 md:p-10 space-y-8 border-b lg:border-b-0 lg:border-r border-white/5">
             
-            {/* USER INFO (NEW) */}
+            {/* USER INFO */}
             <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
                 <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                    <User size={16} className="text-brand-orange"/> Siapa Nama Juragan?
@@ -62,7 +65,6 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
                         />
                     </div>
                 </div>
-                <p className="text-[9px] text-gray-500 mt-3 italic">*Data ini buat gue hubungi balik kalau WA lo gak aktif. Tenang, privasi aman.</p>
             </div>
 
             {/* STEP 1: BASE */}
@@ -77,7 +79,8 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
                         key={opt.id} 
                         option={opt} 
                         isSelected={selectedBase === opt.id} 
-                        onSelect={() => setSelectedBase(opt.id)} 
+                        onSelect={() => setSelectedBase(opt.id)}
+                        onDetail={() => setActiveDetailItem(opt)} 
                      />
                   ))}
                </div>
@@ -95,7 +98,8 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
                         key={opt.id} 
                         option={opt} 
                         isSelected={selectedAddons.includes(opt.id)} 
-                        onToggle={() => toggleAddon(opt.id)} 
+                        onToggle={() => toggleAddon(opt.id)}
+                        onDetail={() => setActiveDetailItem(opt)} 
                      />
                   ))}
                </div>
@@ -112,6 +116,16 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
          />
 
       </div>
+
+      {/* Side Detail Drawer */}
+      {activeDetailItem && (
+          <SideDrawer 
+            item={activeDetailItem} 
+            onClose={() => setActiveDetailItem(null)}
+            serviceName={serviceName}
+            waNumber={waNumber} 
+          />
+      )}
     </div>
   );
 };

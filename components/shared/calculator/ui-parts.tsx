@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Calculator, ArrowRight, Loader2 } from 'lucide-react';
+import { Check, Calculator, ArrowRight, Loader2, Info } from 'lucide-react';
 import { formatRupiah } from '../../../utils';
 import { Button } from '../../ui';
 import { CalcOption } from './types';
@@ -18,11 +18,13 @@ export const CalcHeader = ({ title, subtitle }: { title: string, subtitle: strin
 export const BaseOptionItem: React.FC<{ 
     option: CalcOption, 
     isSelected: boolean, 
-    onSelect: () => void 
+    onSelect: () => void,
+    onDetail: () => void 
 }> = ({ 
     option, 
     isSelected, 
-    onSelect 
+    onSelect,
+    onDetail
 }) => (
     <div 
         onClick={onSelect}
@@ -32,11 +34,19 @@ export const BaseOptionItem: React.FC<{
             : 'bg-white/5 border-white/5 hover:border-white/20'
         }`}
     >
-        <div>
-            <h5 className={`font-bold ${isSelected ? 'text-white' : 'text-gray-300'}`}>{option.label}</h5>
-            {option.desc && <p className="text-xs text-gray-500 mt-1">{option.desc}</p>}
+        <div className="flex-1 min-w-0 pr-4">
+            <div className="flex items-center gap-2 mb-1">
+                <h5 className={`font-bold truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>{option.label}</h5>
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onDetail(); }}
+                    className="p-1 text-gray-500 hover:text-brand-orange transition-colors"
+                >
+                    <Info size={14} />
+                </button>
+            </div>
+            {option.desc && <p className="text-xs text-gray-500 truncate">{option.desc}</p>}
         </div>
-        <div className="text-right">
+        <div className="text-right shrink-0">
             <span className={`text-sm font-bold ${isSelected ? 'text-brand-orange' : 'text-gray-500'}`}>
                 {formatRupiah(option.price)}
             </span>
@@ -47,11 +57,13 @@ export const BaseOptionItem: React.FC<{
 export const AddonOptionItem: React.FC<{ 
     option: CalcOption, 
     isSelected: boolean, 
-    onToggle: () => void 
+    onToggle: () => void,
+    onDetail: () => void 
 }> = ({ 
     option, 
     isSelected, 
-    onToggle 
+    onToggle,
+    onDetail
 }) => (
     <div 
         onClick={onToggle}
@@ -61,13 +73,21 @@ export const AddonOptionItem: React.FC<{
             : 'bg-white/5 border-white/5 hover:border-white/20'
         }`}
     >
-        <div className={`w-5 h-5 rounded flex items-center justify-center border ${
+        <div className={`w-5 h-5 rounded flex items-center justify-center border shrink-0 ${
             isSelected ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-600 bg-black'
         }`}>
             {isSelected && <Check size={12} />}
         </div>
-        <div className="flex-1">
-            <h5 className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-gray-300'}`}>{option.label}</h5>
+        <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+                <h5 className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>{option.label}</h5>
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onDetail(); }}
+                    className="p-0.5 text-gray-600 hover:text-brand-orange transition-colors"
+                >
+                    <Info size={12} />
+                </button>
+            </div>
             <p className="text-[10px] text-gray-500">{formatRupiah(option.price)}</p>
         </div>
     </div>

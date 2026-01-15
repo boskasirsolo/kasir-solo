@@ -1,12 +1,13 @@
 
 import { useState, useMemo } from 'react';
-import { CalcData } from './types';
+import { CalcData, CalcOption } from './types';
 import { formatRupiah, supabase } from '../../../utils';
 
 export const useCalculator = (data: CalcData, serviceName: string, waNumber?: string, serviceSlug?: string) => {
   const [selectedBase, setSelectedBase] = useState<string | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [activeDetailItem, setActiveDetailItem] = useState<CalcOption | null>(null);
 
   const toggleAddon = (id: string) => {
     if (selectedAddons.includes(id)) {
@@ -49,7 +50,6 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
         .map(a => `- ${a.label}`)
         .join('\n');
 
-    // 1. CAPTURE TO DATABASE (OPTIONAL STEP BEFORE WA)
     if (supabase && (customerName || customerPhone)) {
         setIsCapturing(true);
         try {
@@ -66,13 +66,12 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
                 status: 'new'
             }]);
         } catch (e) {
-            console.warn("DB Capture failed, proceeding to WA anyway", e);
+            console.warn("DB Capture failed", e);
         } finally {
             setIsCapturing(false);
         }
     }
 
-    // 2. REDIRECT TO WA
     let estimateText = "";
     if (calculation.total.min > 0) estimateText += `Estimasi Investasi Awal: ${formatRupiah(calculation.total.min)} - ${formatRupiah(calculation.total.max)}%0A`;
 
@@ -91,6 +90,8 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
       selectedAddons, toggleAddon,
       calculation,
       handleConsultation,
-      isCapturing
+      isCapturing,
+      activeDetailItem,
+      setActiveDetailItem
   };
 };

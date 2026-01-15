@@ -4,6 +4,7 @@ export interface CalcOption {
   label: string;
   price: number;
   desc?: string;
+  longDesc?: string; // Teks hasutan/edukasi detail (Markdown)
 }
 
 export interface CalcData {
