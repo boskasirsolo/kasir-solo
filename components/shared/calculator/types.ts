@@ -4,7 +4,8 @@ export interface CalcOption {
   label: string;
   price: number;
   desc?: string;
-  longDesc?: string; // Field baru untuk narasi persuasif (Markdown)
+  longDesc?: string; 
+  founderNote?: string; // Teks pesan pribadi founder (Amin)
 }
 
 export interface CalcData {

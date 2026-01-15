@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Calculator, ArrowRight, Loader2, Info } from 'lucide-react';
+import { Check, Calculator, ArrowRight, Loader2 } from 'lucide-react';
 import { formatRupiah } from '../../../utils';
 import { Button } from '../../ui';
 import { CalcOption } from './types';
@@ -35,14 +35,13 @@ export const BaseOptionItem: React.FC<{
         }`}
     >
         <div className="flex-1 min-w-0 pr-4">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-3 mb-1">
                 <h5 className={`font-bold truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>{option.label}</h5>
                 <button 
                     onClick={(e) => { e.stopPropagation(); onDetail(); }}
-                    className="p-1 text-gray-500 hover:text-brand-orange transition-colors"
-                    title="Bongkar Rahasia Paket"
+                    className="text-[10px] font-bold text-brand-orange hover:text-white underline decoration-brand-orange/30 underline-offset-2 transition-colors shrink-0"
                 >
-                    <Info size={14} />
+                    pelajari detail
                 </button>
             </div>
             {option.desc && <p className="text-xs text-gray-500 truncate">{option.desc}</p>}
@@ -80,14 +79,13 @@ export const AddonOptionItem: React.FC<{
             {isSelected && <Check size={12} />}
         </div>
         <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
                 <h5 className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>{option.label}</h5>
                 <button 
                     onClick={(e) => { e.stopPropagation(); onDetail(); }}
-                    className="p-0.5 text-gray-600 hover:text-brand-orange transition-colors"
-                    title="Kenapa lo butuh ini?"
+                    className="text-[9px] font-bold text-brand-orange hover:text-white underline decoration-brand-orange/30 underline-offset-2 transition-colors shrink-0"
                 >
-                    <Info size={12} />
+                    detail
                 </button>
             </div>
             <p className="text-[10px] text-gray-500">{formatRupiah(option.price)}</p>

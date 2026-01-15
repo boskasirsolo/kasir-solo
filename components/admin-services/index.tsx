@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Globe, Layers, LineChart, ShieldCheck, Save, Plus, Trash2, List, Calculator, Sparkles, Wand2 } from 'lucide-react';
+import { Globe, Layers, LineChart, ShieldCheck, Save, Plus, Trash2, List, Calculator, Sparkles, Wand2, Coffee } from 'lucide-react';
 import { ServicePageData, SiteConfig } from '../../types';
 import { supabase, formatNumberInput, cleanNumberInput, callGeminiWithRotation } from '../../utils';
 import { LoadingSpinner, Button, Input, TextArea } from '../ui';
@@ -112,6 +112,37 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         }
     };
 
+    const generateNote = async (type: 'base' | 'addon', index: number) => {
+        if (!data) return;
+        const item = type === 'base' ? data.calc_data.baseOptions[index] : data.calc_data.addons[index];
+        const id = `${type}-note-${index}`;
+        
+        setAiGenerating(id);
+        try {
+            const prompt = `
+            Role: Founder Amin Maghfuri (PT Mesin Kasir Solo).
+            Task: Write a short "Founder's Note" (1-2 sentences) for item: "${item.label}".
+            Context: This is an option in the ${activeSlug.toUpperCase()} calculator.
+            Tone: Honest, gritty, street-smart. Use "Gue" and "Lo".
+            Rule: Explain the REAL risk of NOT having this or the REAL peace of mind lo give with this. NO FLUFF.
+            Example: "Gue ngeliat banyak ruko tutup cuma gara-gara manajemen stok ghaib. Gue bikin modul ini biar lo tidur nyenyak."
+            `;
+            
+            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+            const result = res.text?.trim() || "";
+
+            const newData = { ...data };
+            if (type === 'base') newData.calc_data.baseOptions[index].founderNote = result;
+            else newData.calc_data.addons[index].founderNote = result;
+            
+            setData(newData);
+        } catch (e) {
+            alert("Gemini lagi ngopi, Bos.");
+        } finally {
+            setAiGenerating(null);
+        }
+    };
+
     if (loading) return <div className="flex justify-center p-20"><LoadingSpinner size={32}/></div>;
 
     return (
@@ -183,7 +214,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center border-b border-white/5 pb-2">
                                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">📦 PAKET UTAMA</span>
-                                <button onClick={() => setData({...data!, calc_data: {...data!.calc_data, baseOptions: [...data!.calc_data.baseOptions, { id: Date.now().toString(), label: '', price: 0, desc: '', longDesc: '' }]}})} className="text-[9px] bg-brand-orange/20 text-brand-orange px-2 py-1.5 rounded border border-brand-orange/30 font-bold">+ PAKET</button>
+                                <button onClick={() => setData({...data!, calc_data: {...data!.calc_data, baseOptions: [...data!.calc_data.baseOptions, { id: Date.now().toString(), label: '', price: 0, desc: '', longDesc: '', founderNote: '' }]}})} className="text-[9px] bg-brand-orange/20 text-brand-orange px-2 py-1.5 rounded border border-brand-orange/30 font-bold">+ PAKET</button>
                             </div>
                             <div className="space-y-6">
                                 {data?.calc_data?.baseOptions?.map((opt: any, i: number) => (
@@ -211,27 +242,52 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                                     setData({...data!, calc_data: {...data!.calc_data, baseOptions: newOpts}});
                                                 }} placeholder="Tooltip singkat..." className="text-[10px] h-16" />
                                             </div>
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between items-center">
-                                                    <label className="text-[9px] text-gray-500 font-bold uppercase">Hasutan Detail (Markdown)</label>
-                                                    <button 
-                                                        onClick={() => generateHasutan('base', i)}
-                                                        disabled={aiGenerating === `base-${i}`}
-                                                        className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1"
-                                                    >
-                                                        {aiGenerating === `base-${i}` ? <LoadingSpinner size={10}/> : <><Sparkles size={10}/> AI MAGIC</>}
-                                                    </button>
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between items-center">
+                                                        <label className="text-[9px] text-gray-500 font-bold uppercase">Hasutan Detail (Markdown)</label>
+                                                        <button 
+                                                            onClick={() => generateHasutan('base', i)}
+                                                            disabled={aiGenerating === `base-${i}`}
+                                                            className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1"
+                                                        >
+                                                            {aiGenerating === `base-${i}` ? <LoadingSpinner size={10}/> : <><Sparkles size={10}/> AI MAGIC</>}
+                                                        </button>
+                                                    </div>
+                                                    <TextArea 
+                                                        value={opt.longDesc || ''} 
+                                                        onChange={(e: any) => {
+                                                            const newOpts = [...data!.calc_data.baseOptions];
+                                                            newOpts[i].longDesc = e.target.value;
+                                                            setData({...data!, calc_data: {...data!.calc_data, baseOptions: newOpts}});
+                                                        }} 
+                                                        placeholder="Jelasin kenapa paket ini paling 'worth it'..." 
+                                                        className="text-[10px] h-24 bg-brand-dark/50" 
+                                                    />
                                                 </div>
-                                                <TextArea 
-                                                    value={opt.longDesc || ''} 
-                                                    onChange={(e: any) => {
-                                                        const newOpts = [...data!.calc_data.baseOptions];
-                                                        newOpts[i].longDesc = e.target.value;
-                                                        setData({...data!, calc_data: {...data!.calc_data, baseOptions: newOpts}});
-                                                    }} 
-                                                    placeholder="Jelasin kenapa paket ini paling 'worth it'..." 
-                                                    className="text-[10px] h-32 bg-brand-dark/50" 
-                                                />
+                                                
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between items-center">
+                                                        <label className="text-[9px] text-brand-orange font-bold uppercase flex items-center gap-1"><Coffee size={10}/> Founder Note</label>
+                                                        <button 
+                                                            onClick={() => generateNote('base', i)}
+                                                            disabled={aiGenerating === `base-note-${i}`}
+                                                            className="text-[9px] text-brand-orange/70 hover:text-brand-orange flex items-center gap-1"
+                                                        >
+                                                            {aiGenerating === `base-note-${i}` ? <LoadingSpinner size={10}/> : <Wand2 size={10}/>}
+                                                        </button>
+                                                    </div>
+                                                    <Input 
+                                                        value={opt.founderNote || ''} 
+                                                        onChange={(e: any) => {
+                                                            const newOpts = [...data!.calc_data.baseOptions];
+                                                            newOpts[i].founderNote = e.target.value;
+                                                            setData({...data!, calc_data: {...data!.calc_data, baseOptions: newOpts}});
+                                                        }} 
+                                                        placeholder="Pesan pribadi ala Mas Amin..." 
+                                                        className="text-[10px] bg-brand-orange/5 border-brand-orange/10" 
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -243,7 +299,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center border-b border-white/5 pb-2">
                                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">🚀 ADD-ONS</span>
-                                <button onClick={() => setData({...data!, calc_data: {...data!.calc_data, addons: [...data!.calc_data.addons, { id: Date.now().toString(), label: '', price: 0, longDesc: '' }]}})} className="text-[9px] bg-brand-orange/20 text-brand-orange px-2 py-1.5 rounded border border-brand-orange/30 font-bold">+ ADD-ON</button>
+                                <button onClick={() => setData({...data!, calc_data: {...data!.calc_data, addons: [...data!.calc_data.addons, { id: Date.now().toString(), label: '', price: 0, longDesc: '', founderNote: '' }]}})} className="text-[9px] bg-brand-orange/20 text-brand-orange px-2 py-1.5 rounded border border-brand-orange/30 font-bold">+ ADD-ON</button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {data?.calc_data?.addons?.map((opt: any, i: number) => (
@@ -263,27 +319,51 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                                 setData({ ...data!, calc_data: { ...data!.calc_data, addons: newOpts } });
                                             }} className="h-8 text-xs font-bold text-brand-orange" />
                                         </div>
-                                        <div className="pt-2 border-t border-white/5">
-                                            <div className="flex justify-between items-center mb-1">
-                                                <label className="text-[8px] text-gray-500 font-bold uppercase">Detail Hasutan</label>
-                                                <button 
-                                                    onClick={() => generateHasutan('addon', i)}
-                                                    disabled={aiGenerating === `addon-${i}`}
-                                                    className="text-[8px] text-blue-400 hover:text-white flex items-center gap-1"
-                                                >
-                                                    {aiGenerating === `addon-${i}` ? <LoadingSpinner size={8}/> : <Wand2 size={8}/>}
-                                                </button>
+                                        <div className="pt-2 border-t border-white/5 space-y-3">
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-[8px] text-gray-500 font-bold uppercase">Detail Hasutan</label>
+                                                    <button 
+                                                        onClick={() => generateHasutan('addon', i)}
+                                                        disabled={aiGenerating === `addon-${i}`}
+                                                        className="text-[8px] text-blue-400 hover:text-white flex items-center gap-1"
+                                                    >
+                                                        {aiGenerating === `addon-${i}` ? <LoadingSpinner size={8}/> : <Wand2 size={8}/>}
+                                                    </button>
+                                                </div>
+                                                <TextArea 
+                                                    value={opt.longDesc || ''} 
+                                                    onChange={(e: any) => {
+                                                        const newOpts = [...data!.calc_data.addons];
+                                                        newOpts[i].longDesc = e.target.value;
+                                                        setData({...data!, calc_data: {...data!.calc_data, addons: newOpts}});
+                                                    }} 
+                                                    placeholder="Hasutan add-on..." 
+                                                    className="text-[9px] h-16" 
+                                                />
                                             </div>
-                                            <TextArea 
-                                                value={opt.longDesc || ''} 
-                                                onChange={(e: any) => {
-                                                    const newOpts = [...data!.calc_data.addons];
-                                                    newOpts[i].longDesc = e.target.value;
-                                                    setData({...data!, calc_data: {...data!.calc_data, addons: newOpts}});
-                                                }} 
-                                                placeholder="Hasutan add-on..." 
-                                                className="text-[9px] h-20" 
-                                            />
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-[8px] text-brand-orange font-bold uppercase flex items-center gap-1"><Coffee size={8}/> Founder Note</label>
+                                                    <button 
+                                                        onClick={() => generateNote('addon', i)}
+                                                        disabled={aiGenerating === `addon-note-${i}`}
+                                                        className="text-[8px] text-brand-orange/70 hover:text-brand-orange flex items-center gap-1"
+                                                    >
+                                                        {aiGenerating === `addon-note-${i}` ? <LoadingSpinner size={8}/> : <Wand2 size={8}/>}
+                                                    </button>
+                                                </div>
+                                                <Input 
+                                                    value={opt.founderNote || ''} 
+                                                    onChange={(e: any) => {
+                                                        const newOpts = [...data!.calc_data.addons];
+                                                        newOpts[i].founderNote = e.target.value;
+                                                        setData({...data!, calc_data: {...data!.calc_data, addons: newOpts}});
+                                                    }} 
+                                                    placeholder="Pesan Founder..." 
+                                                    className="h-8 text-[9px] bg-brand-orange/5" 
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

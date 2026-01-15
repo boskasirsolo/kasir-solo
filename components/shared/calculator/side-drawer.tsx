@@ -56,13 +56,13 @@ export const SideDrawer = ({
                         </div>
                     )}
 
-                    {/* Bottom Fact */}
+                    {/* Bottom Founder Note (Dynamic) */}
                     <div className="p-5 bg-brand-orange/5 border border-brand-orange/20 rounded-2xl mt-10">
                         <h5 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
                             <Coffee size={16} className="text-brand-orange"/> Founder's Note
                         </h5>
                         <p className="text-gray-400 text-xs leading-relaxed italic">
-                            "Gue nggak nambahin fitur cuma buat keren-kerenan. Item ini ada di sini karena gue tau persis rasanya boncos kalo nggak ada kontrol di bagian ini."
+                            {item.founderNote || `"Gue nggak nambahin fitur cuma buat keren-kerenan. Item ini ada di sini karena gue tau persis rasanya boncos kalo nggak ada kontrol di bagian ini."`}
                         </p>
                     </div>
                 </div>
