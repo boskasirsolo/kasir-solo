@@ -93,7 +93,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
             Task: Write a "Persuasive Secret Detail" for service item: "${item.label}".
             Context Service: ${activeSlug.toUpperCase()} Service.
             Format: Markdown (2-3 paragraphs).
-            Tone: Honest, Gritty, using 'Gue/Lo', explaining the PAIN if not choosing this and GAIN if choosing it. 
+            Tone: Honest, Gritty, using 'Gue/Lo', explaining why this is crucial for the owner. 
             Rules: Be punchy. No long intros. Use bold for emphasis. NO corporate speak.
             `;
             

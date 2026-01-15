@@ -40,6 +40,7 @@ export const BaseOptionItem: React.FC<{
                 <button 
                     onClick={(e) => { e.stopPropagation(); onDetail(); }}
                     className="p-1 text-gray-500 hover:text-brand-orange transition-colors"
+                    title="Bongkar Rahasia Paket"
                 >
                     <Info size={14} />
                 </button>
@@ -84,6 +85,7 @@ export const AddonOptionItem: React.FC<{
                 <button 
                     onClick={(e) => { e.stopPropagation(); onDetail(); }}
                     className="p-0.5 text-gray-600 hover:text-brand-orange transition-colors"
+                    title="Kenapa lo butuh ini?"
                 >
                     <Info size={12} />
                 </button>

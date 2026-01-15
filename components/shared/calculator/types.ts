@@ -4,7 +4,7 @@ export interface CalcOption {
   label: string;
   price: number;
   desc?: string;
-  longDesc?: string; // Teks hasutan/edukasi detail (Markdown)
+  longDesc?: string; // Field baru untuk narasi persuasif (Markdown)
 }
 
 export interface CalcData {
