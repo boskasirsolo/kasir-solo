@@ -15,6 +15,7 @@ interface ServicePageTemplateProps {
     calcServiceName: string;
     steps: any[];
     waNumber?: string;
+    serviceSlug?: string;
 }
 
 export const ServicePageTemplate = ({
@@ -23,7 +24,8 @@ export const ServicePageTemplate = ({
     features,
     calcData, calcServiceName,
     steps,
-    waNumber
+    waNumber,
+    serviceSlug
 }: ServicePageTemplateProps) => {
     return (
         <div className="animate-fade-in">
@@ -47,6 +49,7 @@ export const ServicePageTemplate = ({
                         data={calcData} 
                         serviceName={calcServiceName} 
                         waNumber={waNumber}
+                        serviceSlug={serviceSlug}
                     />
                 </div>
             </section>

@@ -1,20 +1,30 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { CalculatorProps } from './types';
 import { useCalculator } from './logic';
 import { CalcHeader, BaseOptionItem, AddonOptionItem, ResultCard } from './ui-parts';
+import { Input } from '../../ui';
+import { User, Phone } from 'lucide-react';
 
 interface ExtendedCalculatorProps extends CalculatorProps {
     waNumber?: string;
+    serviceSlug?: string;
 }
 
-export const InvestmentSimulator = ({ data, serviceName, waNumber }: ExtendedCalculatorProps) => {
+export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }: ExtendedCalculatorProps) => {
   const { 
       selectedBase, setSelectedBase, 
       selectedAddons, toggleAddon, 
       calculation, 
-      handleConsultation 
-  } = useCalculator(data, serviceName, waNumber);
+      handleConsultation,
+      isCapturing
+  } = useCalculator(data, serviceName, waNumber, serviceSlug);
+
+  const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '' });
+
+  const onConsult = () => {
+      handleConsultation(customerInfo.name, customerInfo.phone);
+  };
 
   return (
     <div className="bg-brand-dark border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
@@ -27,6 +37,34 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber }: ExtendedCal
          {/* LEFT: OPTIONS */}
          <div className="lg:col-span-7 p-6 md:p-10 space-y-8 border-b lg:border-b-0 lg:border-r border-white/5">
             
+            {/* USER INFO (NEW) */}
+            <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
+                <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                   <User size={16} className="text-brand-orange"/> Siapa Nama Juragan?
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                    <div className="relative">
+                        <User className="absolute left-3 top-3 text-gray-500" size={16} />
+                        <Input 
+                            value={customerInfo.name} 
+                            onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
+                            placeholder="Nama Lengkap" 
+                            className="pl-10 text-xs"
+                        />
+                    </div>
+                    <div className="relative">
+                        <Phone className="absolute left-3 top-3 text-gray-500" size={16} />
+                        <Input 
+                            value={customerInfo.phone} 
+                            onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                            placeholder="Nomor WA Aktif" 
+                            className="pl-10 text-xs"
+                        />
+                    </div>
+                </div>
+                <p className="text-[9px] text-gray-500 mt-3 italic">*Data ini buat gue hubungi balik kalau WA lo gak aktif. Tenang, privasi aman.</p>
+            </div>
+
             {/* STEP 1: BASE */}
             <div>
                <h4 className="text-sm font-bold text-brand-orange uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -68,8 +106,9 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber }: ExtendedCal
          {/* RIGHT: TOTAL & CTA */}
          <ResultCard 
             calculation={calculation} 
-            onConsultation={handleConsultation} 
+            onConsultation={onConsult} 
             hasBaseSelection={calculation.hasSelection} 
+            isCapturing={isCapturing}
          />
 
       </div>

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Calculator, ArrowRight } from 'lucide-react';
+import { Check, Calculator, ArrowRight, Loader2 } from 'lucide-react';
 import { formatRupiah } from '../../../utils';
 import { Button } from '../../ui';
 import { CalcOption } from './types';
@@ -76,11 +76,13 @@ export const AddonOptionItem: React.FC<{
 export const ResultCard = ({ 
     calculation, 
     onConsultation, 
-    hasBaseSelection 
+    hasBaseSelection,
+    isCapturing = false
 }: { 
     calculation: any, 
     onConsultation: () => void, 
-    hasBaseSelection: boolean 
+    hasBaseSelection: boolean,
+    isCapturing?: boolean
 }) => (
     <div className="lg:col-span-5 p-6 md:p-10 bg-black/40 flex flex-col justify-center">
         <div className="bg-brand-card border border-white/10 rounded-2xl p-6 relative overflow-hidden">
@@ -104,7 +106,7 @@ export const ResultCard = ({
 
                     <div className="mt-4 h-px bg-white/10"></div>
                     <p className="text-[10px] text-gray-400 italic leading-relaxed">
-                        *Angka ini adalah estimasi kasar setup awal berdasarkan pilihan Anda. Harga final & detail maintenance (jika ada) ditentukan setelah sesi konsultasi teknis.
+                        *Angka ini adalah estimasi kasar setup awal berdasarkan pilihan Anda. Harga final ditentukan setelah sesi konsultasi teknis.
                     </p>
                 </div>
             ) : (
@@ -117,10 +119,10 @@ export const ResultCard = ({
             <div className="mt-8">
                 <Button 
                     onClick={onConsultation}
-                    disabled={!hasBaseSelection}
+                    disabled={!hasBaseSelection || isCapturing}
                     className="w-full py-4 text-sm font-bold shadow-neon hover:shadow-neon-strong"
                 >
-                    KIRIM HASIL KE WHATSAPP <ArrowRight size={16} />
+                    {isCapturing ? <Loader2 className="animate-spin" /> : <><ArrowRight size={16} className="mr-2" /> KIRIM HASIL KE WHATSAPP</>}
                 </Button>
             </div>
         </div>

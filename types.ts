@@ -6,19 +6,14 @@ export interface Product {
   category: string;
   description: string;
   image: string;
-  // NEW: Multiple Images & Video
   gallery_images?: string[]; 
   video_url?: string;
-  // NEW: Affiliate / External Link Support
   affiliate_link?: string;
-  cta_text?: string; // Custom button text e.g., "Beli di Shopee"
-  // NEW: Technical Specifications for Comparison
+  cta_text?: string;
   specs?: {
-    [key: string]: string; // Flexible key-value pairs (e.g., "RAM": "4GB")
+    [key: string]: string;
   };
-  // NEW: Package Includes list
   package_includes?: string[];
-  // NEW: Reasons to Buy (Selling Points)
   why_buy?: string[];
 }
 
@@ -31,35 +26,30 @@ export interface Article {
   image: string;
   category: string; 
   author: string;   
-  author_avatar?: string; // New field for author profile picture
+  author_avatar?: string;
   readTime: string; 
   tags?: string[];
   status?: 'published' | 'draft' | 'scheduled';
   scheduled_for?: string;
-  // SEO Strategy Fields
   type?: 'pillar' | 'cluster'; 
   pillar_id?: number; 
-  // NEW: Stored AI suggestions for pillar pages
   cluster_ideas?: string[]; 
-  // NEW: Manual links to other Pillar Pages (Inter-linking)
   related_pillars?: number[];
-  created_at?: string; // Added to fix admin logic sorting
+  created_at?: string;
 }
 
 export interface GalleryItem {
   id: number;
   title: string;
-  image_url: string; // Cover Image
-  gallery_images?: string[]; // NEW: Array of additional images
+  image_url: string;
+  gallery_images?: string[];
   description?: string;     
   type?: 'image' | 'video'; 
   video_url?: string;
-  
-  // --- NEW PORTFOLIO FIELDS ---
-  category_type: 'physical' | 'digital'; // Pemisah utama
-  platform?: 'web' | 'mobile' | 'desktop'; // Khusus digital
-  client_url?: string; // Link ke live site
-  tech_stack?: string[]; // e.g., ['React', 'Supabase']
+  category_type: 'physical' | 'digital';
+  platform?: 'web' | 'mobile' | 'desktop';
+  client_url?: string;
+  tech_stack?: string[];
   case_study?: {
     challenge: string;
     solution: string;
@@ -85,12 +75,11 @@ export interface JobOpening {
   type: 'Full-time' | 'Part-time' | 'Internship' | 'Freelance';
   location: string;
   description: string;
-  requirements: string; // Markdown/Text formatting
+  requirements: string;
   is_active: boolean;
   created_at?: string;
 }
 
-// --- SUPPORT CENTER TYPES ---
 export interface DownloadItem {
   id: string;
   title: string;
@@ -101,7 +90,7 @@ export interface DownloadItem {
   version?: string;
   os_support?: 'Windows' | 'Android' | 'iOS' | 'All';
   updated_at: string;
-  access_key?: string; // NEW: PIN for Secure Gate
+  access_key?: string;
 }
 
 export interface Tutorial {
@@ -122,15 +111,13 @@ export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
   aboutImage?: string; 
-  founderPortrait?: string; // NEW: Founder Portrait Image
+  founderPortrait?: string;
   sibosUrl?: string; 
   qalamUrl?: string; 
-  // Legalitas
   companyLegalName?: string;
   nibNumber?: string;
   ahuNumber?: string;
   npwpNumber?: string;
-  // Contact & Footer Config
   whatsappNumber?: string;
   emailAddress?: string; 
   addressSolo?: string;
@@ -144,22 +131,46 @@ export interface SiteConfig {
   youtubeUrl?: string;
   tiktokUrl?: string;
   linkedinUrl?: string;
-  // Google Integration
-  googleAnalyticsId?: string; // G-XXXXXXXXXX
-  googleSearchConsoleCode?: string; // Verification meta content
-  googleMerchantId?: string; // NEW: Merchant Center ID
-  // Global Settings
-  timezone?: string; // 'Asia/Jakarta' | 'Asia/Makassar' | 'Asia/Jayapura'
-  
-  // NEW: QUOTA MANAGEMENT
+  googleAnalyticsId?: string;
+  googleSearchConsoleCode?: string;
+  googleMerchantId?: string;
+  timezone?: string;
   quotaOnsiteMax?: number;
   quotaOnsiteUsed?: number;
   quotaDigitalMax?: number;
   quotaDigitalUsed?: number;
 }
 
-// --- E-Commerce Types ---
+// --- NEW SERVICE TYPES ---
 
+export interface ServicePageData {
+  id: number;
+  slug: string;
+  title: string;
+  highlight: string;
+  subtitle: string;
+  icon_name: string;
+  features: { title: string; desc: string; icon: string }[];
+  steps: { step: string; title: string; desc: string }[];
+  calc_data: any; // CalcData interface
+}
+
+export interface ServiceSimulation {
+  id: number;
+  created_at: string;
+  customer_name: string;
+  customer_phone: string;
+  service_slug: string;
+  service_name: string;
+  base_option_label: string;
+  base_option_price: number;
+  selected_addons: { label: string; price: number }[];
+  total_min: number;
+  total_max: number;
+  status: 'new' | 'contacted' | 'proposed' | 'closed';
+}
+
+// --- E-Commerce Types ---
 export interface CartItem extends Product {
   quantity: number;
 }
@@ -174,7 +185,6 @@ export interface Order {
   total_amount: number;
   status: 'pending' | 'paid' | 'processed' | 'completed' | 'cancelled';
   payment_method: string;
-  // NEW: Shipping Info
   tracking_number?: string;
   courier?: string;
 }
@@ -188,7 +198,6 @@ export interface OrderItem {
   price: number;
 }
 
-// --- ANALYTICS TYPES ---
 export interface AnalyticsLog {
   id?: number;
   visitor_id: string;
@@ -199,22 +208,20 @@ export interface AnalyticsLog {
   created_at?: string;
 }
 
-// --- SHADOW LEAD TYPES ---
 export interface Lead {
   id: number;
   created_at: string;
   name: string;
   phone: string;
-  source: string; // 'checkout', 'contact'
+  source: string;
   interest: string;
   status: 'new' | 'followup' | 'converted' | 'junk';
   notes?: string;
 }
 
-// --- SOCIAL AUTOMATION TYPES ---
 export interface ScheduledPost {
-  day: string; // e.g. "Senin"
-  theme: string; // e.g. "Edukasi"
+  day: string;
+  theme: string;
   hook: string;
   caption: string;
   image_idea: string;
