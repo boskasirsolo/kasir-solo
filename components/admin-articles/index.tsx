@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Article, GalleryItem, SiteConfig } from '../../types';
-import { Image as ImageIcon, Sparkles, Loader2, UploadCloud, Save, List, Settings, PenTool, Wand2 } from 'lucide-react';
+import { Image as ImageIcon, Sparkles, Loader2, UploadCloud, Save, List, Settings, PenTool, Wand2, Clock } from 'lucide-react';
 import { useArticleManager } from './logic';
 import { ListPanel } from './list-panel';
 import { EditorPanel } from './editor-panel';
@@ -28,6 +28,13 @@ export const AdminArticles = ({
       if (file) {
           manager.setForm((prev: any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
       }
+  };
+
+  // Quick Status Cycle Handler
+  const cycleStatus = () => {
+    const sequence: ('draft' | 'published' | 'scheduled')[] = ['draft', 'published', 'scheduled'];
+    const nextIndex = (sequence.indexOf(form.status) + 1) % sequence.length;
+    manager.setForm((p:any) => ({...p, status: sequence[nextIndex]}));
   };
 
   return (
@@ -90,7 +97,6 @@ export const AdminArticles = ({
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* NEW: AI IMAGE BUTTON */}
                     <button 
                         onClick={manager.actions.runImage}
                         disabled={aiLogic.loading.generatingImage || !form.title}
@@ -139,9 +145,23 @@ export const AdminArticles = ({
 
          {/* Meta Bar Bottom */}
          <div className="p-3 bg-brand-dark border-t border-white/5 flex justify-between items-center text-[10px] text-gray-500 px-4 shrink-0">
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
                 <span className="font-mono">{form.content.split(/\s+/).length} Kata</span>
-                <span className="bg-white/5 px-2 rounded">{form.status.toUpperCase()}</span>
+                <button 
+                    onClick={cycleStatus}
+                    className={`px-2 py-0.5 rounded font-bold uppercase transition-all border ${
+                        form.status === 'published' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                        form.status === 'scheduled' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                        'bg-white/10 text-gray-400 border-white/10'
+                    }`}
+                >
+                    {form.status}
+                </button>
+                {form.status === 'scheduled' && form.scheduled_for && (
+                    <span className="text-blue-400 flex items-center gap-1">
+                        <Clock size={10}/> {new Date(form.scheduled_for).toLocaleDateString('id-ID', {day: 'numeric', month: 'short'})}
+                    </span>
+                )}
             </div>
             <div className="flex items-center gap-4">
                 {form.imagePreview && (

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle, FileType, MessageSquare, MapPin, Image as ImageIcon } from 'lucide-react';
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle, FileType, MessageSquare, MapPin, Image as ImageIcon, Send, Clock } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, LoadingSpinner } from '../ui';
 import { ARTICLE_CATEGORIES, AUTHOR_PRESETS, NARRATIVE_TONES } from './types';
@@ -213,6 +213,38 @@ export const EditorPanel = ({
 
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-5 pb-32">
                 
+                {/* STATUS PENERBITAN (NEW) */}
+                <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                    <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2 mb-3">
+                        <Send size={10} className="text-blue-400"/> Status Penerbitan
+                    </label>
+                    <div className="flex gap-1 bg-black/40 p-1 rounded-lg border border-white/5">
+                        {['draft', 'published', 'scheduled'].map((s: any) => (
+                            <button
+                                key={s}
+                                onClick={() => setForm((p:any) => ({...p, status: s}))}
+                                className={`flex-1 py-2 rounded text-[9px] font-bold uppercase transition-all ${form.status === s ? 'bg-brand-orange text-white shadow-neon-text' : 'text-gray-500 hover:text-gray-300'}`}
+                            >
+                                {s}
+                            </button>
+                        ))}
+                    </div>
+                    {form.status === 'scheduled' && (
+                        <div className="mt-4 animate-fade-in space-y-2">
+                             <label className="text-[9px] text-brand-orange font-bold uppercase flex items-center gap-1">
+                                <Clock size={10}/> Atur Jadwal Tayang
+                             </label>
+                             <input 
+                                type="datetime-local" 
+                                value={form.scheduled_for}
+                                onChange={(e) => setForm((p:any) => ({...p, scheduled_for: e.target.value}))}
+                                className="w-full bg-black/60 border border-brand-orange/30 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-orange"
+                             />
+                             <p className="text-[8px] text-gray-500 italic">*Wajib isi tanggal & jam untuk mode scheduled.</p>
+                        </div>
+                    )}
+                </div>
+
                 {/* COVER IMAGE SECTION */}
                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                     <div className="flex justify-between items-center mb-3">
