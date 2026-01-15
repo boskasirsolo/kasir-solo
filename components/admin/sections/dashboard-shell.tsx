@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, FileText, Home, Briefcase, BarChart, Download, Share2, Globe, Zap } from 'lucide-react';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, FileText, Home, Briefcase, BarChart, Download, Share2, Globe, Zap, Cpu } from 'lucide-react';
 import { DashboardProps } from '../types';
 import { useAdminDashboard } from '../logic';
 import { TabButton, HeaderActionBtn, StoreSubTabBtn } from '../ui-parts';
@@ -17,6 +17,7 @@ import { AdminDownloads } from '../../admin-downloads/index';
 import { AdminSocialStudio } from '../../admin-social/index'; 
 import { AdminSEO } from '../../admin-seo/index'; 
 import { AnalyticsDashboard } from '../../admin-analytics/index';
+import { AdminServices } from '../../admin-services/index';
 
 export const DashboardShell = (props: DashboardProps) => {
     const navigate = useNavigate();
@@ -42,6 +43,7 @@ export const DashboardShell = (props: DashboardProps) => {
                     <div className="flex overflow-x-auto pb-2 xl:pb-0 gap-1.5 custom-scrollbar w-full xl:w-auto xl:justify-end">
                         <TabButton id="analytics" label="TRAFFIC" icon={BarChart} isActive={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
                         <TabButton id="store" label="TOKO" icon={ShoppingBag} isActive={activeTab === 'store'} onClick={() => setActiveTab('store')} />
+                        <TabButton id="services" label="LAYANAN" icon={Cpu} isActive={activeTab === 'services'} onClick={() => setActiveTab('services')} />
                         <TabButton id="seo" label="SEO" icon={Globe} isActive={activeTab === 'seo'} onClick={() => setActiveTab('seo')} />
                         <TabButton id="gallery" label="GALERI" icon={Image} isActive={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} />
                         <TabButton id="articles" label="ARTIKEL" icon={FileText} isActive={activeTab === 'articles'} onClick={() => setActiveTab('articles')} />
@@ -93,14 +95,21 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 3. SEO */}
+                {/* 3. SERVICES (NEW) */}
+                {activeTab === 'services' && (
+                    <div className="animate-fade-in relative z-10 p-3 md:p-6">
+                        <AdminServices config={props.config} />
+                    </div>
+                )}
+
+                {/* 4. SEO */}
                 {activeTab === 'seo' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminSEO />
                     </div>
                 )}
 
-                {/* 4. GALLERY */}
+                {/* 5. GALLERY */}
                 {activeTab === 'gallery' && (
                     <div className="animate-fade-in relative z-10 h-full">
                         <AdminGallery 
@@ -110,7 +119,7 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 5. ARTICLES */}
+                {/* 6. ARTICLES */}
                 {activeTab === 'articles' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminArticles 
@@ -120,21 +129,21 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 6. CAREER */}
+                {/* 7. CAREER */}
                 {activeTab === 'career' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminCareer jobs={props.jobs} setJobs={props.setJobs} />
                     </div>
                 )}
 
-                {/* 7. DOWNLOADS */}
+                {/* 8. DOWNLOADS */}
                 {activeTab === 'downloads' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminDownloads />
                     </div>
                 )}
 
-                {/* 8. SOCIAL STUDIO */}
+                {/* 9. SOCIAL STUDIO */}
                 {activeTab === 'social' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminSocialStudio 
@@ -145,7 +154,7 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 9. SETTINGS */}
+                {/* 10. SETTINGS */}
                 {activeTab === 'settings' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminSettings config={props.config} setConfig={props.setConfig} />
