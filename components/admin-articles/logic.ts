@@ -219,22 +219,25 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
     const saveArticle = async () => {
         if (!form.title) return alert("Judul wajib diisi.");
+        if (!supabase) return alert("Database tidak terkoneksi.");
+
         aiLogic.setLoading(p => ({ ...p, uploading: true, progressMessage: 'Saving Article...' }));
+        
         try {
             let finalImageUrl = form.imagePreview || 'https://via.placeholder.com/800';
             let supabasePath = '';
             let fileToMigrate: File | null = form.uploadFile;
 
+            // 1. Handle Image Upload First
             if (form.uploadFile) {
                 const seoName = `${slugify(form.title)}-artikel-cover-mesin-kasir-solo`;
                 fileToMigrate = renameFile(form.uploadFile, seoName);
-                if (supabase) {
-                    const { url, path } = await uploadToSupabase(fileToMigrate);
-                    finalImageUrl = url;
-                    supabasePath = path;
-                }
+                const { url, path } = await uploadToSupabase(fileToMigrate);
+                finalImageUrl = url;
+                supabasePath = path;
             }
 
+            // 2. Prepare Data
             const now = new Date().toISOString();
             const dateStr = form.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
             let finalScheduledFor = null;
@@ -243,39 +246,78 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             }
 
             const commonData = {
-                title: form.title, excerpt: form.excerpt || '', content: form.content || '', 
-                category: form.category || 'General', author: form.author, author_avatar: form.authorAvatar || activePersona.avatar, 
-                read_time: form.readTime, image_url: finalImageUrl, status: (form.status || 'draft') as any,
-                scheduled_for: finalScheduledFor, type: form.type, pillar_id: form.type === 'cluster' ? form.pillar_id : null,
-                cluster_ideas: form.cluster_ideas, date: dateStr, related_pillars: form.related_pillars,
+                title: form.title, 
+                excerpt: form.excerpt || '', 
+                content: form.content || '', 
+                category: form.category || 'General', 
+                author: form.author, 
+                author_avatar: form.authorAvatar || activePersona.avatar, 
+                read_time: form.readTime, 
+                image_url: finalImageUrl, 
+                status: (form.status || 'draft').toLowerCase() as any,
+                scheduled_for: finalScheduledFor, 
+                type: form.type, 
+                pillar_id: form.type === 'cluster' ? form.pillar_id : null,
+                cluster_ideas: form.cluster_ideas, 
+                date: dateStr, 
+                related_pillars: form.related_pillars,
                 generation_context: form.generationContext,
                 target_city_id: form.targetCityId !== 0 ? form.targetCityId : null
             };
 
-            let savedId = form.id;
+            let savedId: number | null = form.id;
+
+            // 3. Database Operation (CRITICAL FIX: Await Response)
             if (form.id) {
-                setArticles((prev: Article[]) => prev.map(a => a.id === form.id ? { ...a, ...commonData, image: finalImageUrl } : a));
-                if (supabase) await supabase.from('articles').update(commonData).eq('id', form.id);
+                // UPDATE
+                const { data, error } = await supabase
+                    .from('articles')
+                    .update(commonData)
+                    .eq('id', form.id)
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                if (data) {
+                    // Update Local State with REAL DB Data
+                    setArticles((prev: Article[]) => prev.map(a => a.id === form.id ? { ...a, ...data, image: data.image_url } : a));
+                }
             } else {
+                // INSERT
                 const insertData = { ...commonData, created_at: now };
-                const tempId = Date.now();
-                setArticles((prev: Article[]) => [{ ...insertData, id: tempId, image: finalImageUrl } as any, ...prev]);
-                if (supabase) {
-                    const { data } = await supabase.from('articles').insert([insertData]).select().single();
-                    if (data) savedId = data.id;
+                const { data, error } = await supabase
+                    .from('articles')
+                    .insert([insertData])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                
+                if (data) {
+                    savedId = data.id;
+                    // Update Local State with REAL DB Data (Not Temp ID)
+                    setArticles((prev: Article[]) => [{ ...data, image: data.image_url } as Article, ...prev]);
                 }
             }
 
+            // 4. Background Migration (Cloudinary)
             if (supabasePath && fileToMigrate && savedId) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'articles', savedId, 'image_url')
                     .then((cloudUrl) => {
                         if (cloudUrl) setArticles((prev: any[]) => prev.map(a => a.id === savedId ? { ...a, image: cloudUrl } : a));
                     });
             }
+
+            alert(`Artikel berhasil disimpan! Status: ${form.status}`);
             resetForm();
-            setActiveMobilePane('LIST'); // Balik ke list abis save
-        } catch(e: any) { alert("Error: " + e.message); } 
-        finally { aiLogic.setLoading(p => ({ ...p, uploading: false, progressMessage: '' })); }
+            setActiveMobilePane('LIST');
+
+        } catch(e: any) { 
+            console.error(e);
+            alert("Gagal menyimpan artikel: " + e.message); 
+        } finally { 
+            aiLogic.setLoading(p => ({ ...p, uploading: false, progressMessage: '' })); 
+        }
     };
 
     const deleteItem = async (id: number) => {

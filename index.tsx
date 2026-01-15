@@ -113,6 +113,22 @@ const AppContent = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // INIT AUTH LISTENER
+  useEffect(() => {
+    if (supabase) {
+        // Get initial session
+        supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+        
+        // Listen for changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+            setSession(session);
+        });
+        return () => subscription.unsubscribe();
+    }
+  }, []);
+
+  // DATA FETCHING (Triggered on mount AND when session changes)
+  // Ini penting agar saat user login (Admin), data di-fetch ulang dengan hak akses penuh (Draft dll).
   useEffect(() => {
     const loadAppData = async () => {
         if (!supabase) {
@@ -126,6 +142,7 @@ const AppContent = () => {
         }
 
         try {
+            // 1. Config First
             const { data: settingsData } = await supabase.from('site_settings').select('*').limit(1).maybeSingle();
             
             if (settingsData) {
@@ -134,11 +151,9 @@ const AppContent = () => {
                     heroTitle: settingsData.hero_title || prev.heroTitle,
                     heroSubtitle: settingsData.hero_subtitle || prev.heroSubtitle,
                     aboutImage: settingsData.about_image || prev.aboutImage,
-                    // Direct Mapping: If DB has it, use it. Else fall back to default string (not prev state which might be stale)
                     founderPortrait: settingsData.founder_portrait && settingsData.founder_portrait.length > 5 
                         ? settingsData.founder_portrait 
                         : "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800",
-                    
                     sibosUrl: settingsData.sibos_url || prev.sibosUrl,
                     qalamUrl: settingsData.qalam_url || prev.qalamUrl,
                     companyLegalName: settingsData.company_legal_name || prev.companyLegalName,
@@ -169,19 +184,15 @@ const AppContent = () => {
                 }));
                 injectGoogleTags(settingsData.google_analytics_id, settingsData.google_search_console_code);
             }
-        } catch (e) {
-            console.warn("Config fetch failed", e);
-        } finally {
-            setIsInitializing(false);
-        }
 
-        try {
+            // 2. Content Data (Products, Articles, etc.)
+            // Promise.allSettled allows some to fail without breaking everything
             const results = await Promise.allSettled([
                 supabase.from('products').select('*').order('id', { ascending: true }),
                 supabase.from('gallery').select('*').order('id', { ascending: false }),
                 supabase.from('testimonials').select('*').order('created_at', { ascending: false }),
                 supabase.from('jobs').select('*').order('created_at', { ascending: false }),
-                supabase.from('articles').select('*')
+                supabase.from('articles').select('*') // If Admin, this returns drafts too. If Anon, only published.
             ]);
 
             if (results[0].status === 'fulfilled' && results[0].value.data) {
@@ -208,17 +219,13 @@ const AppContent = () => {
 
         } catch (e) {
             console.error("Background data fetch error:", e);
+        } finally {
+            setIsInitializing(false);
         }
     };
 
     loadAppData();
-
-    if (supabase) {
-        supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setSession(session));
-        return () => subscription.unsubscribe();
-    }
-  }, []);
+  }, [session]); // Depend on session to re-fetch when user logs in/out
 
   const publishedArticles = articles.filter(a => {
       if (a.status === 'published') return true;
