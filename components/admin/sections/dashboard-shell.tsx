@@ -43,7 +43,6 @@ export const DashboardShell = (props: DashboardProps) => {
                     <div className="flex overflow-x-auto pb-2 xl:pb-0 gap-1.5 custom-scrollbar w-full xl:w-auto xl:justify-end">
                         <TabButton id="analytics" label="TRAFFIC" icon={BarChart} isActive={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
                         <TabButton id="store" label="TOKO" icon={ShoppingBag} isActive={activeTab === 'store'} onClick={() => setActiveTab('store')} />
-                        <TabButton id="services" label="LAYANAN" icon={Cpu} isActive={activeTab === 'services'} onClick={() => setActiveTab('services')} />
                         <TabButton id="seo" label="SEO" icon={Globe} isActive={activeTab === 'seo'} onClick={() => setActiveTab('seo')} />
                         <TabButton id="gallery" label="GALERI" icon={Image} isActive={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} />
                         <TabButton id="articles" label="ARTIKEL" icon={FileText} isActive={activeTab === 'articles'} onClick={() => setActiveTab('articles')} />
@@ -73,43 +72,42 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 2. STORE (Orders & Products) */}
+                {/* 2. STORE (Orders, Products, & Services) */}
                 {activeTab === 'store' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/5">
                             <div className="bg-brand-dark p-1 rounded-lg inline-flex border border-white/10 w-full md:w-auto">
                                 <div className="flex-1 md:flex-none"><StoreSubTabBtn active={storeSubTab === 'orders'} onClick={() => setStoreSubTab('orders')} icon={Package} label="Pesanan" /></div>
                                 <div className="flex-1 md:flex-none"><StoreSubTabBtn active={storeSubTab === 'catalog'} onClick={() => setStoreSubTab('catalog')} icon={LayoutGrid} label="Produk" /></div>
+                                <div className="flex-1 md:flex-none"><StoreSubTabBtn active={storeSubTab === 'services'} onClick={() => setStoreSubTab('services')} icon={Cpu} label="Layanan" /></div>
                             </div>
                             <div className="text-gray-500 text-xs flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-full border border-white/5 hidden md:flex">
                                 <Layers size={12} className="text-brand-orange"/>
-                                Mode Aktif: <span className="text-gray-300 font-bold">{storeSubTab === 'orders' ? 'Manajemen Pesanan' : 'Editor Produk'}</span>
+                                Mode Aktif: <span className="text-gray-300 font-bold">
+                                    {storeSubTab === 'orders' ? 'Manajemen Pesanan' : 
+                                     storeSubTab === 'catalog' ? 'Editor Produk' : 'Editor Konten Layanan'}
+                                </span>
                             </div>
                         </div>
 
                         {storeSubTab === 'orders' ? (
                             <AdminOrders config={props.config} /> 
-                        ) : (
+                        ) : storeSubTab === 'catalog' ? (
                             <AdminProducts products={props.products} setProducts={props.setProducts} />
+                        ) : (
+                            <AdminServices config={props.config} />
                         )}
                     </div>
                 )}
 
-                {/* 3. SERVICES (NEW) */}
-                {activeTab === 'services' && (
-                    <div className="animate-fade-in relative z-10 p-3 md:p-6">
-                        <AdminServices config={props.config} />
-                    </div>
-                )}
-
-                {/* 4. SEO */}
+                {/* 3. SEO */}
                 {activeTab === 'seo' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminSEO />
                     </div>
                 )}
 
-                {/* 5. GALLERY */}
+                {/* 4. GALLERY */}
                 {activeTab === 'gallery' && (
                     <div className="animate-fade-in relative z-10 h-full">
                         <AdminGallery 
@@ -119,7 +117,7 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 6. ARTICLES */}
+                {/* 5. ARTICLES */}
                 {activeTab === 'articles' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminArticles 
@@ -129,21 +127,21 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 7. CAREER */}
+                {/* 6. CAREER */}
                 {activeTab === 'career' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminCareer jobs={props.jobs} setJobs={props.setJobs} />
                     </div>
                 )}
 
-                {/* 8. DOWNLOADS */}
+                {/* 7. DOWNLOADS */}
                 {activeTab === 'downloads' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminDownloads />
                     </div>
                 )}
 
-                {/* 9. SOCIAL STUDIO */}
+                {/* 8. SOCIAL STUDIO */}
                 {activeTab === 'social' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminSocialStudio 
@@ -154,7 +152,7 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 10. SETTINGS */}
+                {/* 9. SETTINGS */}
                 {activeTab === 'settings' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminSettings config={props.config} setConfig={props.setConfig} />

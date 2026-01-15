@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../utils';
 import { activateGhostMode } from '../../hooks/use-analytics';
@@ -50,7 +51,7 @@ export const useAdminLogin = () => {
 // --- HOOK: DASHBOARD LOGIC ---
 export const useAdminDashboard = () => {
     const [activeTab, setActiveTab] = useState<AdminTabId>('analytics');
-    const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog'>('orders');
+    const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog' | 'services'>('orders');
     const [showConnectAI, setShowConnectAI] = useState(false);
 
     useEffect(() => {
