@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Globe, Layers, LineChart, ShieldCheck, Save, Plus, Trash2, List, Calculator } from 'lucide-react';
 import { ServicePageData, SiteConfig } from '../../types';
-import { supabase } from '../../utils';
+import { supabase, formatNumberInput, cleanNumberInput } from '../../utils';
 import { LoadingSpinner, Button, Input, TextArea } from '../ui';
 
 // Import existing data for initialization from public constants
@@ -181,11 +181,18 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                                 <label className="text-[8px] text-gray-500 font-bold uppercase mb-1 block">Harga Jual (IDR)</label>
                                                 <div className="relative">
                                                     <span className="absolute left-3 top-2.5 text-[10px] text-brand-orange font-bold">RP</span>
-                                                    <Input type="number" value={opt.price} onChange={(e: any) => {
-                                                        const newOpts = [...data!.calc_data.baseOptions];
-                                                        newOpts[i].price = parseInt(e.target.value) || 0;
-                                                        setData({...data!, calc_data: {...data!.calc_data, baseOptions: newOpts}});
-                                                    }} placeholder="Harga" className="text-xs font-bold text-brand-orange bg-brand-dark/50 h-10 pl-8" />
+                                                    <Input 
+                                                        type="text" 
+                                                        value={formatNumberInput(opt.price)} 
+                                                        onChange={(e: any) => {
+                                                            const numericValue = cleanNumberInput(e.target.value);
+                                                            const newOpts = [...data!.calc_data.baseOptions];
+                                                            newOpts[i].price = numericValue;
+                                                            setData({ ...data!, calc_data: { ...data!.calc_data, baseOptions: newOpts } });
+                                                        }} 
+                                                        placeholder="Harga" 
+                                                        className="text-xs font-bold text-brand-orange bg-brand-dark/50 h-10 pl-8" 
+                                                    />
                                                 </div>
                                             </div>
                                             <div className="hidden md:block md:col-span-1 text-right pt-6">
@@ -214,11 +221,18 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                         }} placeholder="Nama Add-on" className="text-[10px] h-8 bg-brand-dark/50" />
                                         <div className="flex items-center gap-2">
                                             <span className="text-[9px] text-gray-500 font-bold">RP</span>
-                                            <Input type="number" value={opt.price} onChange={(e: any) => {
-                                                const newOpts = [...data!.calc_data.addons];
-                                                newOpts[i].price = parseInt(e.target.value) || 0;
-                                                setData({...data!, calc_data: {...data!.calc_data, addons: newOpts}});
-                                            }} placeholder="Harga" className="text-[10px] h-8 bg-brand-dark/50 font-bold text-brand-orange" />
+                                            <Input 
+                                                type="text" 
+                                                value={formatNumberInput(opt.price)} 
+                                                onChange={(e: any) => {
+                                                    const numericValue = cleanNumberInput(e.target.value);
+                                                    const newOpts = [...data!.calc_data.addons];
+                                                    newOpts[i].price = numericValue;
+                                                    setData({ ...data!, calc_data: { ...data!.calc_data, addons: newOpts } });
+                                                }} 
+                                                placeholder="Harga" 
+                                                className="text-[10px] h-8 bg-brand-dark/50 font-bold text-brand-orange" 
+                                            />
                                         </div>
                                     </div>
                                 ))}
