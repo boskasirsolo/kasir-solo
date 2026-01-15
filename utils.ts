@@ -8,7 +8,7 @@ export { getEnv, CONFIG } from './config/env';
 export { supabase } from './lib/supabase-client';
 
 // Core Libs
-export { formatRupiah, formatNumberInput, cleanNumberInput, slugify, renameFile, normalizePhone } from './lib/formatters';
+export { formatRupiah, formatNumberInput, cleanNumberInput, slugify, renameFile, normalizePhone, generateUtmUrl } from './lib/formatters';
 export { optimizeImage, addWatermarkToFile } from './lib/image-processing';
 export { injectGoogleTags } from './lib/dom-utils';
 export { getTimezoneOffset, convertLocalToUTC, convertUTCToLocal } from './lib/date-utils';
@@ -26,7 +26,7 @@ export {
     INITIAL_ARTICLES, 
     INITIAL_GALLERY, 
     INITIAL_TESTIMONIALS, 
-    INITIAL_JOBS,
+    INITIAL_JOBS, 
     INITIAL_DOWNLOADS,
     INITIAL_TUTORIALS,
     INITIAL_FAQS 

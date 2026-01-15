@@ -4,7 +4,7 @@ import { X, Calendar, Clock, Quote, Briefcase, ChevronLeft, ChevronRight, Hash, 
 import { Link } from 'react-router-dom';
 import { Article, Product, SiteConfig } from '../../types';
 import { ArticleDetailProps } from '../types';
-import { optimizeImage, formatRupiah, slugify, supabase } from '../../../utils';
+import { optimizeImage, formatRupiah, slugify, supabase, generateUtmUrl } from '../../../utils';
 import { useArticleReader } from '../hooks/use-article-reader';
 import { cleanId, renderFormattedText, extractHeadings } from '../utils';
 import { MarkdownTable, FileDownloadCard, ProjectEmbedCard } from '../ui/content-renderers';
@@ -344,7 +344,6 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
           if (session) {
               // Admin Detected, Fetch Stats
               const slugPath = `/articles/${slugify(article.title)}`;
-              // Note: Using ILIKE to match variations like /articles/slug?param=1
               const { count } = await supabase
                   .from('analytics_logs')
                   .select('*', { count: 'exact', head: true })
@@ -368,6 +367,41 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
   if (recommendedProducts.length === 0) { recommendedProducts = products.slice(0, 3); recTitle = "Senjata Andalan"; RecIcon = TrendingUp; } else { recommendedProducts = recommendedProducts.slice(0, 3); }
   let relatedArticles: Article[] = []; let relatedTitle = "Baca Juga";
   if (article.type === 'pillar' && article.related_pillars && article.related_pillars.length > 0) { relatedArticles = allArticles.filter(a => article.related_pillars?.includes(a.id)); relatedTitle = "Topik Utama Terkait"; } else { relatedArticles = allArticles.filter(a => a.id !== article.id).slice(0, 4); }
+
+  // --- SOCIAL SHARE LOGIC (UTM ENABLED) ---
+  const handleShare = (platform: 'facebook' | 'twitter' | 'linkedin' | 'whatsapp' | 'copy') => {
+      const currentUrl = window.location.href;
+      // Gunakan URL Helper dari utils (meskipun di sini kita bisa construct manual, tapi better pake standard)
+      // Note: Karena ini di client side, kita bisa pake window.location.origin juga.
+      
+      if (platform === 'copy') {
+          navigator.clipboard.writeText(currentUrl);
+          alert("Link artikel disalin!");
+          return;
+      }
+
+      let shareUrl = "";
+      // Gunakan generateUtmUrl dari utils (tapi fungsi ini ada di level admin/utils, kita perlu import atau recreate)
+      // Karena keterbatasan import cycle di refactor ini, kita buat logic simple di sini:
+      const utmUrl = generateUtmUrl(currentUrl, platform, 'social_share', 'article_viral');
+
+      switch (platform) {
+          case 'facebook':
+              shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(utmUrl)}`;
+              break;
+          case 'twitter':
+              shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(utmUrl)}&text=${encodeURIComponent(article.title)}`;
+              break;
+          case 'linkedin':
+              shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(utmUrl)}`;
+              break;
+          case 'whatsapp':
+              shareUrl = `https://wa.me/?text=${encodeURIComponent(article.title + " " + utmUrl)}`;
+              break;
+      }
+      
+      if (shareUrl) window.open(shareUrl, '_blank', 'width=600,height=400');
+  };
 
   return (
     <>
@@ -404,8 +438,6 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
                                 <ul className="space-y-4 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
                                     {headings.length === 0 && <li className="text-xs text-gray-500 italic">Tidak ada sub-judul.</li>}
                                     {headings.map((h: any, idx: number) => {
-                                        // Dynamic padding based on level (1-10)
-                                        // Cap at level 6 visual indent to prevent breaking layout
                                         const visualLevel = Math.min(h.level, 6);
                                         const paddingLeft = (visualLevel - 1) * 12; 
                                         
@@ -423,7 +455,15 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
                                     })}
                                 </ul>
                               </div>
-                              <div className="border-l border-white/5 pl-5 pt-2 mb-10"><h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Share2 size={12}/> Bagikan</h5><div className="grid grid-cols-4 gap-2 mb-6"><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1877F2] transition-all"><Facebook size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1DA1F2] transition-all"><Twitter size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#0A66C2] transition-all"><Linkedin size={16} /></button><button className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><LinkIcon size={16} /></button></div></div>
+                              <div className="border-l border-white/5 pl-5 pt-2 mb-10">
+                                  <h5 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2"><Share2 size={12}/> Bagikan</h5>
+                                  <div className="grid grid-cols-4 gap-2 mb-6">
+                                      <button onClick={() => handleShare('facebook')} className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1877F2] transition-all"><Facebook size={16} /></button>
+                                      <button onClick={() => handleShare('twitter')} className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1DA1F2] transition-all"><Twitter size={16} /></button>
+                                      <button onClick={() => handleShare('linkedin')} className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#0A66C2] transition-all"><Linkedin size={16} /></button>
+                                      <button onClick={() => handleShare('copy')} className="h-10 rounded-lg bg-brand-card border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-all"><LinkIcon size={16} /></button>
+                                  </div>
+                              </div>
                           </div>
                       </div>
 
@@ -445,7 +485,7 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
                               )}
                               <div>
                                   <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4"><RecIcon size={16} className="text-brand-orange" /><h5 className="text-xs font-bold text-white uppercase tracking-widest">{recTitle}</h5></div>
-                                  <div className="space-y-4">{recommendedProducts.map((p: Product) => (<React.Fragment key={p.id}><SidebarProductCard product={p} onDetail={() => window.open(`https://wa.me/${waNumber}?text=Tanya produk ${p.name}`, '_blank')} waNumber={waNumber} /></React.Fragment>))}</div>
+                                  <div className="space-y-4">{recommendedProducts.map((p: Product) => (<React.Fragment key={p.id}><SidebarProductCard product={p} onDetail={() => window.open(`https://wa.me/${waNumber}?text=Halo, saya tertarik dengan produk ${p.name} yang ada di artikel ${window.location.href}`, '_blank')} waNumber={waNumber} /></React.Fragment>))}</div>
                               </div>
                           </div>
                       </div>

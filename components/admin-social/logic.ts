@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { slugify, uploadToCloudinary } from '../../utils';
+import { slugify, uploadToCloudinary, generateUtmUrl } from '../../utils';
 import { Product, Article, GalleryItem } from '../../types';
 import { SocialContentItem, PlatformState, CaptionState, ActiveTab, SOCIAL_TONES } from './types';
 import { SERVICE_CATALOG } from './data';
@@ -166,8 +166,28 @@ export const useSocialStudio = (
             if (activePlatforms.length === 0) throw new Error("Pilih minimal 1 platform.");
 
             const promises = activePlatforms.map(async (plat) => {
-                const caption = captions[plat as keyof CaptionState] || captions.master;
+                let caption = captions[plat as keyof CaptionState] || captions.master;
                 
+                // UTM INJECTION MAGIC
+                // 1. Generate Platform-Specific URL
+                const utmUrl = generateUtmUrl(
+                    selectedItem.url, 
+                    plat, // source = platform name (instagram, facebook)
+                    'social_studio', // medium
+                    `broadcast_${slugify(selectedItem.title)}` // campaign
+                );
+
+                // 2. Replace the plain URL in the text with the UTM URL
+                // Note: This logic assumes the plain URL exists in the caption. 
+                // If the user deleted the URL from the caption, this won't insert it (which is safer than forcing it randomly).
+                if (caption.includes(selectedItem.url)) {
+                    caption = caption.replace(selectedItem.url, utmUrl);
+                } else {
+                    // Option: Append URL if missing? For now let's respect user edit, 
+                    // but usually AI generator includes it.
+                    // If manually edited and link removed, we assume user knows what they are doing.
+                }
+
                 return fetch('/api/ayrshare', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

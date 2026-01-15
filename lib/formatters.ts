@@ -69,3 +69,17 @@ export const normalizePhone = (phone: string): string | null => {
 
   return cleaned;
 };
+
+// NEW: UTM URL Generator
+export const generateUtmUrl = (baseUrl: string, source: string, medium: string = 'social', campaign: string = 'broadcast'): string => {
+  try {
+    const url = new URL(baseUrl);
+    url.searchParams.set('utm_source', source);
+    url.searchParams.set('utm_medium', medium);
+    url.searchParams.set('utm_campaign', campaign);
+    return url.toString();
+  } catch (e) {
+    // Fallback if URL is invalid (e.g. relative path)
+    return `${baseUrl}?utm_source=${source}&utm_medium=${medium}&utm_campaign=${campaign}`;
+  }
+};
