@@ -24,8 +24,8 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         galleryImages: [],
         newGalleryFiles: [],
         videoUrl: '',
-        affiliate_link: '',
-        cta_text: 'Beli Sekarang'
+        affiliateLink: '',
+        ctaText: 'Beli Sekarang'
     });
 
     const [loading, setLoading] = useState<LoadingState>({
@@ -57,7 +57,7 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             id: null, name: '', category: PRODUCT_CATEGORIES[0], price: '', desc: '', shortDesc: '',
             specsStr: '', includesStr: '', whyBuyStr: '', imagePreview: '', uploadFile: null,
             galleryImages: [], newGalleryFiles: [], videoUrl: '',
-            affiliate_link: '', cta_text: 'Beli Sekarang'
+            affiliateLink: '', ctaText: 'Beli Sekarang'
         });
         setUseWatermark(true);
         setShowMobileEditor(false); // Close mobile page
@@ -83,8 +83,8 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             galleryImages: p.gallery_images || [],
             newGalleryFiles: [],
             videoUrl: p.video_url || '',
-            affiliate_link: p.affiliate_link || '',
-            cta_text: p.cta_text || 'Beli Sekarang'
+            affiliateLink: p.affiliate_link || '',
+            ctaText: p.cta_text || 'Beli Sekarang'
         });
         setShowMobileEditor(true); // Open mobile page
     };
@@ -238,8 +238,8 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 specs: specsObj,
                 package_includes: includesArr,
                 why_buy: whyBuyArr,
-                affiliate_link: form.affiliate_link,
-                cta_text: form.cta_text
+                affiliate_link: form.affiliateLink,
+                cta_text: form.ctaText
             };
 
             let savedId = form.id;

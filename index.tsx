@@ -90,7 +90,7 @@ const AppContent = () => {
     qalamUrl: "https://qalam.id",
     companyLegalName: "PT MESIN KASIR SOLO",
     whatsappNumber: "6282325103336",
-    emailAddress: "admin@kasirsolo.com",
+    emailAddress: "master@mail.com",
     addressSolo: "Perum Graha Tiara 2 B1, Kartasura",
     addressBlora: "Gumiring 04/04, Banjarejo",
     mapSoloLink: "https://maps.google.com/?q=Perum+Graha+Tiara+2+B1+Kartasura",
