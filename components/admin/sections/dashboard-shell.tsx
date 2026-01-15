@@ -39,7 +39,6 @@ export const DashboardShell = (props: DashboardProps) => {
                 </div>
                 
                 <div className="flex flex-col w-full xl:w-auto gap-3">
-                    {/* SCROLLABLE TABS FOR MOBILE */}
                     <div className="flex overflow-x-auto pb-2 xl:pb-0 gap-1.5 custom-scrollbar w-full xl:w-auto xl:justify-end">
                         <TabButton id="analytics" label="TRAFFIC" icon={BarChart} isActive={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
                         <TabButton id="store" label="TOKO" icon={ShoppingBag} isActive={activeTab === 'store'} onClick={() => setActiveTab('store')} />
@@ -65,14 +64,12 @@ export const DashboardShell = (props: DashboardProps) => {
             {/* --- CONTENT AREA --- */}
             <div className="bg-brand-card border border-white/10 rounded-xl min-h-[600px] shadow-2xl relative overflow-hidden">
                 
-                {/* 1. ANALYTICS */}
                 {activeTab === 'analytics' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AnalyticsDashboard />
                     </div>
                 )}
 
-                {/* 2. STORE (Orders, Products, & Services) */}
                 {activeTab === 'store' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/5">
@@ -100,14 +97,12 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 3. SEO */}
                 {activeTab === 'seo' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminSEO />
                     </div>
                 )}
 
-                {/* 4. GALLERY */}
                 {activeTab === 'gallery' && (
                     <div className="animate-fade-in relative z-10 h-full">
                         <AdminGallery 
@@ -117,7 +112,6 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 5. ARTICLES */}
                 {activeTab === 'articles' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminArticles 
@@ -127,21 +121,18 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 6. CAREER */}
                 {activeTab === 'career' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminCareer jobs={props.jobs} setJobs={props.setJobs} />
                     </div>
                 )}
 
-                {/* 7. DOWNLOADS */}
                 {activeTab === 'downloads' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminDownloads />
                     </div>
                 )}
 
-                {/* 8. SOCIAL STUDIO */}
                 {activeTab === 'social' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminSocialStudio 
@@ -152,7 +143,6 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                 )}
 
-                {/* 9. SETTINGS */}
                 {activeTab === 'settings' && (
                     <div className="animate-fade-in relative z-10 p-3 md:p-6">
                         <AdminSettings config={props.config} setConfig={props.setConfig} />
