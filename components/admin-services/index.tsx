@@ -59,14 +59,18 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
     };
 
     // --- HANDLERS: AI ---
-    const generateAiContent = async (targetField: 'longDesc' | 'founderNote') => {
+    const generateAiContent = async (targetField: 'desc' | 'longDesc' | 'founderNote') => {
         if (!itemForm.label) return alert("Isi Label Item dulu Bos.");
         setAiGenerating(targetField);
         try {
-            const isNote = targetField === 'founderNote';
-            const prompt = isNote 
-                ? `Role: Founder Amin Maghfuri. Task: Write a short, gritty "Founder Note" (1-2 sentences) using 'Gue/Lo' for item: "${itemForm.label}". Focus on why this avoids pain for the business owner.`
-                : `Role: Street-smart copywriter. Task: Write a persuasive detail (Markdown, 2 paragraphs) using 'Gue/Lo' for item: "${itemForm.label}". Use bold for emphasis.`;
+            let prompt = "";
+            if (targetField === 'desc') {
+                prompt = `Role: UX Copywriter. Task: Write a very short, punchy teaser/tooltip (max 12 words) for a service item named: "${itemForm.label}". Focus on the immediate benefit. Use 'Gue/Lo' style if possible but keep it professional. Indonesian language.`;
+            } else if (targetField === 'founderNote') {
+                prompt = `Role: Founder Amin Maghfuri. Task: Write a short, gritty "Founder Note" (1-2 sentences) using 'Gue/Lo' for item: "${itemForm.label}". Focus on why this avoids pain for the business owner.`;
+            } else {
+                prompt = `Role: Street-smart copywriter. Task: Write a persuasive detail (Markdown, 2 paragraphs) using 'Gue/Lo' for item: "${itemForm.label}". Use bold for emphasis.`;
+            }
             
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
             setItemForm(prev => ({ ...prev, [targetField]: res.text?.trim() || "" }));
@@ -204,7 +208,12 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         </div>
 
                         <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-1.5 block">Deskripsi Singkat (Tooltip)</label>
+                            <div className="flex justify-between items-center mb-1.5">
+                                <label className="text-[10px] text-gray-500 font-bold uppercase block">Deskripsi Singkat (Tooltip)</label>
+                                <button onClick={() => generateAiContent('desc')} disabled={aiGenerating==='desc'} className="text-[9px] text-blue-400 hover:text-white flex items-center gap-1">
+                                    {aiGenerating==='desc' ? <LoadingSpinner size={10}/> : <><Sparkles size={10}/> AI Magic</>}
+                                </button>
+                            </div>
                             <TextArea 
                                 value={itemForm.desc || ''} 
                                 onChange={(e: any) => setItemForm({...itemForm, desc: e.target.value})} 
