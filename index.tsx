@@ -116,10 +116,7 @@ const AppContent = () => {
   // INIT AUTH LISTENER
   useEffect(() => {
     if (supabase) {
-        // Get initial session
         supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-        
-        // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
             setSession(session);
         });
@@ -127,8 +124,7 @@ const AppContent = () => {
     }
   }, []);
 
-  // DATA FETCHING (Triggered on mount AND when session changes)
-  // Ini penting agar saat user login (Admin), data di-fetch ulang dengan hak akses penuh (Draft dll).
+  // DATA FETCHING
   useEffect(() => {
     const loadAppData = async () => {
         if (!supabase) {
@@ -142,7 +138,6 @@ const AppContent = () => {
         }
 
         try {
-            // 1. Config First
             const { data: settingsData } = await supabase.from('site_settings').select('*').limit(1).maybeSingle();
             
             if (settingsData) {
@@ -185,14 +180,18 @@ const AppContent = () => {
                 injectGoogleTags(settingsData.google_analytics_id, settingsData.google_search_console_code);
             }
 
-            // 2. Content Data (Products, Articles, etc.)
-            // Promise.allSettled allows some to fail without breaking everything
+            // SECURITY FIX: Explicitly filter articles by status for non-admin sessions
+            let articleQuery = supabase.from('articles').select('*');
+            if (!session) {
+                articleQuery = articleQuery.eq('status', 'published');
+            }
+
             const results = await Promise.allSettled([
                 supabase.from('products').select('*').order('id', { ascending: true }),
                 supabase.from('gallery').select('*').order('id', { ascending: false }),
                 supabase.from('testimonials').select('*').order('created_at', { ascending: false }),
                 supabase.from('jobs').select('*').order('created_at', { ascending: false }),
-                supabase.from('articles').select('*') // If Admin, this returns drafts too. If Anon, only published.
+                articleQuery
             ]);
 
             if (results[0].status === 'fulfilled' && results[0].value.data) {
@@ -225,7 +224,7 @@ const AppContent = () => {
     };
 
     loadAppData();
-  }, [session]); // Depend on session to re-fetch when user logs in/out
+  }, [session]);
 
   const publishedArticles = articles.filter(a => {
       if (a.status === 'published') return true;

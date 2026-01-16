@@ -41,7 +41,12 @@ export const MapEmbed = ({ embedCode, title, fallbackImage }: { embedCode?: stri
         return <img src={fallbackImage} className="w-full h-full object-cover opacity-40 group-hover:opacity-30 transition-opacity" alt={title} />;
     }
 
-    // Apply sanitization to the raw embed code before cleaning styles
+    // SECURITY: Strictly filter the embed code. 
+    // We only allow iframes that point to google.com/maps
+    if (!embedCode.includes('google.com/maps')) {
+        return <div className="w-full h-full flex items-center justify-center bg-red-900/20 text-red-500 text-[10px] font-bold p-4 text-center">INVALID MAP SOURCE</div>;
+    }
+
     const safeEmbed = sanitizeHtml(embedCode);
 
     const cleanEmbed = safeEmbed

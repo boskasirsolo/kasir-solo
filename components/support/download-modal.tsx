@@ -8,6 +8,7 @@ import { Button, LoadingSpinner } from '../ui';
 
 // --- HELPER: File Type Detector ---
 const getFileType = (url: string) => {
+    if (!url) return 'other';
     const extension = url.split('.').pop()?.toLowerCase();
     if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(extension || '')) return 'image';
     if (['pdf'].includes(extension || '')) return 'pdf';
@@ -16,6 +17,13 @@ const getFileType = (url: string) => {
 
 // --- COMPONENT: File Previewer ---
 const FilePreview = ({ url, type }: { url: string, type: 'image' | 'pdf' | 'other' }) => {
+    if (!url) return (
+        <div className="w-full h-full bg-brand-dark/50 flex flex-col items-center justify-center text-gray-700">
+            <Lock size={48} className="mb-4 opacity-20" />
+            <p className="text-xs uppercase tracking-widest font-bold">Content Restricted</p>
+        </div>
+    );
+
     if (type === 'image') {
         return (
             <div className="w-full h-full bg-black/50 overflow-hidden flex items-center justify-center">
@@ -47,11 +55,11 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [secureUrl, setSecureUrl] = useState('');
-    const [isUnlocked, setIsUnlocked] = useState(!isLocked); // Default true if not locked
+    const [isUnlocked, setIsUnlocked] = useState(!isLocked);
 
-    // Determine Preview Type
-    // Use secureUrl if available, otherwise item.file_url (but only if unlocked)
-    const targetUrl = secureUrl || item.file_url;
+    // SECURITY FIX: Only use original URL if the file is NOT locked.
+    // If locked, we MUST wait for secureUrl from RPC.
+    const targetUrl = isUnlocked ? (secureUrl || item.file_url) : '';
     const fileType = getFileType(targetUrl);
 
     const handleUnlock = async () => {
@@ -71,14 +79,13 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
 
             if (data) {
                 setSecureUrl(data);
-                setIsUnlocked(true); // UNLOCK THE PREVIEW
+                setIsUnlocked(true);
             } else {
                 setError("PIN Salah! Akses ditolak.");
             }
         } catch (e: any) {
             console.error("Unlock error:", e);
-            const msg = e.message || "PIN Salah atau Server Error.";
-            setError(msg.includes("PIN Salah") ? "PIN Salah, Juragan!" : msg);
+            setError("PIN Salah, Juragan!");
         } finally {
             setLoading(false);
         }
@@ -88,38 +95,32 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-black/90 backdrop-blur-md transition-opacity" onClick={onClose}></div>
             
-            <div className="relative w-full max-w-5xl h-[85vh] bg-brand-dark border border-white/10 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-fade-in">
+            <div className="relative w-full max-max-5xl h-[85vh] bg-brand-dark border border-white/10 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-fade-in">
                 
-                {/* LEFT COLUMN: PREVIEW AREA & TITLE */}
                 <div className="w-full md:w-8/12 bg-black/40 relative border-b md:border-b-0 md:border-r border-white/5 flex flex-col h-[40vh] md:h-full group">
-                    {/* Header Mobile Only (Close Btn) */}
                     <div className="md:hidden absolute top-4 right-4 z-50">
                         <button onClick={onClose} className="bg-black/50 text-white p-2 rounded-full backdrop-blur-sm"><X size={20}/></button>
                     </div>
 
-                    {/* Preview Content */}
                     <div className="relative w-full h-full overflow-hidden">
                         <FilePreview url={targetUrl} type={fileType} />
 
-                        {/* LOCKED OVERLAY */}
                         {!isUnlocked && (
                             <div className="absolute inset-0 z-20 select-none">
-                                <div className="absolute inset-0 bg-transparent" />
                                 <div className="absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-brand-dark via-brand-dark/95 to-transparent backdrop-blur-[2px] flex flex-col items-center justify-end pb-32 text-center p-6">
                                     <div className="transform translate-y-4">
                                         <div className="w-16 h-16 bg-red-600/20 border border-red-500/50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 shadow-[0_0_30px_rgba(220,38,38,0.4)] animate-pulse">
                                             <Lock size={32} />
                                         </div>
-                                        <h3 className="text-2xl font-bold text-white mb-2 font-display">Preview Terbatas</h3>
+                                        <h3 className="text-2xl font-bold text-white mb-2 font-display">Isi Dokumen Terkunci</h3>
                                         <p className="text-sm text-gray-400 max-w-[250px] mx-auto leading-relaxed">
-                                            Dokumen ini dikunci. Masukkan PIN di panel samping untuk membuka full preview & download.
+                                            File ini khusus mitra resmi. Masukkan PIN untuk membuka pratinjau.
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         )}
                         
-                        {/* TITLE OVERLAY (MOVED TO LEFT) */}
                         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/80 to-transparent pt-20 z-30 pointer-events-none">
                             <div className="pointer-events-auto">
                                 <div className="flex items-center gap-2 mb-2">
@@ -135,9 +136,7 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN: DETAILS & ACTION (FIXED LAYOUT) */}
                 <div className="w-full md:w-4/12 bg-brand-card flex flex-col h-[60vh] md:h-full relative z-40 overflow-hidden">
-                    {/* 1. Header (Updated: Download Button on Left, Close on Right) */}
                     <div className="flex p-4 border-b border-white/10 justify-between items-center shrink-0 bg-brand-card z-10">
                         {isUnlocked ? (
                              <a 
@@ -156,9 +155,7 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
                         </button>
                     </div>
 
-                    {/* 2. Scrollable Content (Description) */}
                     <div className="p-6 flex-1 overflow-y-auto custom-scrollbar bg-brand-card min-h-0">
-                        {/* Metadata Grid */}
                         <div className="grid grid-cols-2 gap-3 mb-6">
                             <div className="bg-black/40 px-3 py-2 rounded-lg border border-white/5">
                                 <span className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Versi</span>
@@ -188,7 +185,6 @@ export const DownloadDetailModal = ({ item, onClose }: { item: DownloadItem, onC
                         </div>
                     </div>
 
-                    {/* 3. Sticky Footer (Only for Locked State) */}
                     {!isUnlocked && (
                         <div className="p-6 border-t border-white/10 bg-brand-dark shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50">
                             <div className="space-y-3">
