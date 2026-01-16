@@ -1,18 +1,35 @@
 
 export default async function handler(req: any, res: any) {
-  // 1. Setup CORS (Biar browser gak rewel)
+  const ALLOWED_ORIGINS = [
+    'http://localhost:5173', 
+    'http://localhost:3000', 
+    'https://kasirsolo.my.id', 
+    'https://www.kasirsolo.my.id'
+  ];
+
+  const origin = req.headers.origin;
+  
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'https://kasirsolo.my.id');
+  }
+
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all for now to support dynamic preview URLs
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
 
-  // Handle Preflight Request
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
+  }
+
+  // Layer 2 Security check
+  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+     return res.status(403).json({ error: 'Forbidden: Unauthorized access to Social API.' });
   }
 
   if (req.method !== 'POST') {
@@ -22,22 +39,17 @@ export default async function handler(req: any, res: any) {
   try {
     const { caption, image_url, platforms } = req.body;
 
-    // 2. Validasi Input
-    if (!caption) throw new Error('Caption wajib diisi');
-    if (!image_url) throw new Error('Image URL wajib ada');
-    if (!platforms || platforms.length === 0) throw new Error('Pilih minimal satu platform');
+    if (!caption || !image_url || !platforms || platforms.length === 0) {
+        return res.status(400).json({ error: 'Missing required parameters.' });
+    }
 
-    // 3. Ambil API Key dari Vercel Environment Variables (Server Side Only)
     const AYRSHARE_API_KEY = process.env.AYRSHARE_API_KEY;
 
     if (!AYRSHARE_API_KEY) {
-      console.error("Critical: AYRSHARE_API_KEY is missing in Vercel Env Vars.");
-      throw new Error('Server Config Error: Kunci API belum disetting.');
+      console.error("Critical: AYRSHARE_API_KEY is missing.");
+      throw new Error('Server Config Error.');
     }
 
-    console.log(`[Vercel API] Posting to ${platforms.join(', ')}...`);
-
-    // 4. Kirim ke Ayrshare
     const response = await fetch('https://app.ayrshare.com/api/post', {
       method: 'POST',
       headers: {
@@ -55,14 +67,13 @@ export default async function handler(req: any, res: any) {
     const data = await response.json();
 
     if (data.status === 'error') {
-      throw new Error(data.message || 'Gagal posting ke Ayrshare');
+      throw new Error(data.message || 'Gagal posting.');
     }
 
-    // 5. Sukses
     return res.status(200).json({ success: true, data });
 
   } catch (error: any) {
-    console.error('[Vercel API Error]', error.message);
-    return res.status(500).json({ error: error.message });
+    console.error('[Broadcaster Error]', error.message);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 }

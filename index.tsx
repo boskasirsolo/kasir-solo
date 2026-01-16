@@ -235,6 +235,15 @@ const AppContent = () => {
       return false;
   });
 
+  const handleLogout = async () => {
+    if (supabase) {
+        await supabase.auth.signOut();
+        // SECURITY: Clear all sensitive local keys on logout
+        localStorage.removeItem('mks_ghost_mode');
+        window.location.href = '/'; // Refresh to clear states
+    }
+  };
+
   if (isInitializing) return <SkeletonHome />;
 
   return (
@@ -266,7 +275,7 @@ const AppContent = () => {
             <Route path="/contact" element={<ContactPage config={config} />} /> 
             <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} config={config} />} />
             <Route path="/innovation" element={<InnovationPage config={config} />} />
-            <Route path="/admin" element={session ? <AdminDashboard products={products} setProducts={setProducts} gallery={gallery} setGallery={setGallery} testimonials={testimonials} setTestimonials={setTestimonials} articles={articles} setArticles={setArticles} jobs={jobs} setJobs={setJobs} config={config} setConfig={setConfig} onLogout={() => supabase?.auth.signOut()} /> : <AdminLogin />} />
+            <Route path="/admin" element={session ? <AdminDashboard products={products} setProducts={setProducts} gallery={gallery} setGallery={setGallery} testimonials={testimonials} setTestimonials={setTestimonials} articles={articles} setArticles={setArticles} jobs={jobs} setJobs={setJobs} config={config} setConfig={setConfig} onLogout={handleLogout} /> : <AdminLogin />} />
             <Route path="*" element={<NotFoundPage setPage={handleNavigation} />} />
           </Routes>
         </Suspense>
