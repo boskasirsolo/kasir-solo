@@ -51,6 +51,7 @@ export const useGalleryLogic = (
     const [useWatermark, setUseWatermark] = useState(true);
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showMobileEditor, setShowMobileEditor] = useState(false);
 
     // --- ACTIONS ---
 
@@ -64,6 +65,7 @@ export const useGalleryLogic = (
             id: null, client_name: '', content: '', rating: 5, imagePreview: '', uploadFile: null, hasTestimonial: false
         });
         setUseWatermark(true);
+        setShowMobileEditor(false);
     };
 
     const handleEditClick = (item: GalleryItem) => {
@@ -106,6 +108,7 @@ export const useGalleryLogic = (
                 id: null, client_name: '', content: '', rating: 5, imagePreview: '', uploadFile: null, hasTestimonial: false
             });
         }
+        setShowMobileEditor(true);
     };
 
     const deleteItem = async (id: number) => {
@@ -277,6 +280,7 @@ export const useGalleryLogic = (
         testiForm, setTestiForm,
         loading,
         useWatermark, setUseWatermark,
+        showMobileEditor, setShowMobileEditor,
         listState: { paginated, totalPages, page, setPage, searchTerm, setSearchTerm },
         actions: { resetForm, handleEditClick, deleteItem, handleSubmit, generateAINarrative, generateSpecificPoint, handleTypeChange, getCurrentType }
     };

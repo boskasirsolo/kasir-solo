@@ -7,7 +7,8 @@ export const EditorPanel = ({
     form, setForm, 
     testiForm, setTestiForm, 
     loading, useWatermark, setUseWatermark, 
-    actions 
+    actions,
+    hideHeader = false
 }: any) => {
     
     // Multi Image Handlers
@@ -18,11 +19,13 @@ export const EditorPanel = ({
     };
 
     return (
-        <div className="flex flex-col h-full bg-brand-dark overflow-hidden">
+        <div className={`flex flex-col h-full bg-brand-dark overflow-hidden ${hideHeader ? '' : 'border border-white/5 rounded-xl shadow-xl'}`}>
             <div className="flex-grow overflow-y-auto p-6 custom-scrollbar">
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-white/10 pb-2">
-                    <Edit size={12}/> Project Details
-                </h4>
+                {!hideHeader && (
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-white/10 pb-2">
+                        <Edit size={12}/> Project Details
+                    </h4>
+                )}
 
                 <div className="space-y-6">
                     
