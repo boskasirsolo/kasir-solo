@@ -1,4 +1,6 @@
 
+import DOMPurify from 'dompurify';
+
 // --- DOM UTILITIES ---
 export const injectGoogleTags = (gaId?: string, gscCode?: string) => {
   if (typeof window === 'undefined') return;
@@ -27,4 +29,12 @@ export const injectGoogleTags = (gaId?: string, gscCode?: string) => {
     meta.content = gscCode;
     document.head.appendChild(meta);
   }
+};
+
+// NEW: XSS Protection
+export const sanitizeHtml = (html: string) => {
+  return DOMPurify.sanitize(html, {
+    ADD_TAGS: ['iframe'], // Allow iframes for Youtube/Maps
+    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'target'] // Allow essential attributes
+  });
 };

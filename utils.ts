@@ -10,7 +10,7 @@ export { supabase } from './lib/supabase-client';
 // Core Libs
 export { formatRupiah, formatNumberInput, cleanNumberInput, slugify, renameFile, normalizePhone, generateUtmUrl } from './lib/formatters';
 export { optimizeImage, addWatermarkToFile } from './lib/image-processing';
-export { injectGoogleTags } from './lib/dom-utils';
+export { injectGoogleTags, sanitizeHtml } from './lib/dom-utils'; // Updated
 export { getTimezoneOffset, convertLocalToUTC, convertUTCToLocal } from './lib/date-utils';
 export { getCityData } from './lib/geo-utils';
 

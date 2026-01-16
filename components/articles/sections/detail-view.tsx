@@ -4,7 +4,7 @@ import { X, Calendar, Clock, Quote, Briefcase, ChevronLeft, ChevronRight, Hash, 
 import { Link } from 'react-router-dom';
 import { Article, Product, SiteConfig } from '../../types';
 import { ArticleDetailProps } from '../types';
-import { optimizeImage, formatRupiah, slugify, supabase, generateUtmUrl } from '../../../utils';
+import { optimizeImage, formatRupiah, slugify, supabase, generateUtmUrl, sanitizeHtml } from '../../../utils';
 import { useArticleReader } from '../hooks/use-article-reader';
 import { cleanId, renderFormattedText, extractHeadings } from '../utils';
 import { MarkdownTable, FileDownloadCard, ProjectEmbedCard } from '../ui/content-renderers';
@@ -77,10 +77,14 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
                   );
               }
 
-              // --- VIDEO HANDLING (IFRAME) ---
+              // --- VIDEO HANDLING (IFRAME) - SANITIZED ---
               if (p.startsWith('<iframe') && p.endsWith('></iframe>')) {
                   return (
-                      <div key={idx} className="my-8 aspect-video rounded-xl overflow-hidden border border-white/10 bg-black" dangerouslySetInnerHTML={{ __html: p }} />
+                      <div 
+                        key={idx} 
+                        className="my-8 aspect-video rounded-xl overflow-hidden border border-white/10 bg-black" 
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(p) }} 
+                      />
                   );
               }
 
@@ -371,8 +375,6 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
   // --- SOCIAL SHARE LOGIC (UTM ENABLED) ---
   const handleShare = (platform: 'facebook' | 'twitter' | 'linkedin' | 'whatsapp' | 'copy') => {
       const currentUrl = window.location.href;
-      // Gunakan URL Helper dari utils (meskipun di sini kita bisa construct manual, tapi better pake standard)
-      // Note: Karena ini di client side, kita bisa pake window.location.origin juga.
       
       if (platform === 'copy') {
           navigator.clipboard.writeText(currentUrl);
@@ -380,11 +382,9 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
           return;
       }
 
-      let shareUrl = "";
-      // Gunakan generateUtmUrl dari utils (tapi fungsi ini ada di level admin/utils, kita perlu import atau recreate)
-      // Karena keterbatasan import cycle di refactor ini, kita buat logic simple di sini:
       const utmUrl = generateUtmUrl(currentUrl, platform, 'social_share', 'article_viral');
 
+      let shareUrl = "";
       switch (platform) {
           case 'facebook':
               shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(utmUrl)}`;

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { sanitizeHtml } from '../../utils';
 
 export const ContactItem = ({ icon: Icon, title, value, sub, action }: { icon: any, title: string, value: string, sub?: string, action?: () => void }) => (
   <div onClick={action} className={`flex items-start gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all ${action ? 'cursor-pointer group hover:border-brand-orange/30' : ''}`}>
@@ -40,7 +41,10 @@ export const MapEmbed = ({ embedCode, title, fallbackImage }: { embedCode?: stri
         return <img src={fallbackImage} className="w-full h-full object-cover opacity-40 group-hover:opacity-30 transition-opacity" alt={title} />;
     }
 
-    const cleanEmbed = embedCode
+    // Apply sanitization to the raw embed code before cleaning styles
+    const safeEmbed = sanitizeHtml(embedCode);
+
+    const cleanEmbed = safeEmbed
         .replace(/width="[^"]*"/g, 'width="100%"')
         .replace(/height="[^"]*"/g, 'height="100%"')
         .replace(/style="[^"]*"/g, 'style="border:0;"');
