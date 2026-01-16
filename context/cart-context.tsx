@@ -2,6 +2,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, CartItem } from '../types';
 
+interface DiscountInfo {
+    code: string;
+    type: 'fixed' | 'percentage';
+    value: number;
+    amount: number;
+}
+
 interface CartContextType {
   cart: CartItem[];
   addToCart: (product: Product) => void;
@@ -9,6 +16,9 @@ interface CartContextType {
   updateQuantity: (productId: number, delta: number) => void;
   clearCart: () => void;
   totalItems: number;
+  subtotalPrice: number;
+  discount: DiscountInfo | null;
+  setDiscount: (d: DiscountInfo | null) => void;
   totalPrice: number;
 }
 
@@ -16,26 +26,19 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [discount, setDiscount] = useState<DiscountInfo | null>(null);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     try {
       const savedCart = localStorage.getItem('mks_cart');
-      if (savedCart) {
-        setCart(JSON.parse(savedCart));
-      }
-    } catch (e) {
-      // Silent fail for preview environments (restricted storage access)
-    }
+      if (savedCart) setCart(JSON.parse(savedCart));
+    } catch (e) {}
   }, []);
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     try {
       localStorage.setItem('mks_cart', JSON.stringify(cart));
-    } catch (e) {
-      // Silent fail for preview environments
-    }
+    } catch (e) {}
   }, [cart]);
 
   const addToCart = (product: Product) => {
@@ -66,13 +69,26 @@ export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
     });
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+      setCart([]);
+      setDiscount(null);
+  };
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const subtotalPrice = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  
+  // Hitung Total Akhir (Subtotal - Diskon)
+  const discountAmount = discount ? 
+    (discount.type === 'percentage' ? (subtotalPrice * discount.value / 100) : discount.value) 
+    : 0;
+  
+  const totalPrice = Math.max(0, subtotalPrice - discountAmount);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider value={{ 
+        cart, addToCart, removeFromCart, updateQuantity, clearCart, 
+        totalItems, subtotalPrice, discount, setDiscount, totalPrice 
+    }}>
       {children}
     </CartContext.Provider>
   );

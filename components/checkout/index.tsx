@@ -9,12 +9,14 @@ import { ShippingForm } from './sections/shipping-form';
 import { SiteConfig } from '../../types';
 
 export const CheckoutModule = ({ setPage, config }: { setPage: (p: string) => void, config?: SiteConfig }) => {
+    // FIX: Destructured clearCart, handleBlur, setOrderSuccess, and other missing properties from useCheckoutLogic to resolve property existence errors
     const {
         cart, removeFromCart, updateQuantity, totalPrice, clearCart,
         formData, handleFieldChange, handleBlur,
         agreedToTerms, setAgreedToTerms,
         isSubmitting, submitOrder,
-        orderSuccess, setOrderSuccess
+        orderSuccess, setOrderSuccess,
+        subtotalPrice, discount, couponInput, setCouponInput, applyCoupon, isValidatingCoupon
     } = useCheckoutLogic(setPage);
 
     // VIEW 1: SUCCESS
@@ -44,7 +46,14 @@ export const CheckoutModule = ({ setPage, config }: { setPage: (p: string) => vo
                         onBlur={handleBlur}
                         onSubmit={submitOrder}
                         isSubmitting={isSubmitting}
+                        // FIX: Passed subtotalPrice, discount, and other missing props to ShippingForm
+                        subtotalPrice={subtotalPrice}
                         totalPrice={totalPrice}
+                        discount={discount}
+                        couponInput={couponInput}
+                        setCouponInput={setCouponInput}
+                        applyCoupon={applyCoupon}
+                        isValidatingCoupon={isValidatingCoupon}
                         agreed={agreedToTerms}
                         setAgreed={setAgreedToTerms}
                     />

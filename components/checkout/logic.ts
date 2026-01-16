@@ -1,161 +1,143 @@
+
 import React, { useState, useRef } from 'react';
 import { useCart } from '../../context/cart-context';
 import { supabase, normalizePhone } from '../../utils';
 import { CheckoutFormData, OrderSuccessState } from './types';
 
-// --- HELPER: ID GENERATOR ---
-const generateOrderId = () => {
-    const min = 100000000000;
-    const max = 999999999999;
-    return Math.floor(min + Math.random() * (max - min + 1));
-};
+const generateOrderId = () => Math.floor(100000000000 + Math.random() * 900000000000);
 
-// --- HELPER: SAFE INSERT (RECURSIVE) ---
-const createOrderSafe = async (payload: any, maxRetries = 5): Promise<any> => {
-    for (let i = 0; i < maxRetries; i++) {
-        const newId = generateOrderId();
-        const { data, error } = await supabase!
-            .from('orders')
-            .insert([{ ...payload, id: newId }])
-            .select()
-            .single();
+export const useCheckoutLogic = (setPage: (p: string) => void) => {
+    const { cart, removeFromCart, updateQuantity, subtotalPrice, totalPrice, clearCart, discount, setDiscount } = useCart();
+    const [formData, setFormData] = useState<CheckoutFormData>({ name: '', phone: '', address: '', note: '' });
+    const [couponInput, setCouponInput] = useState('');
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+    const [orderSuccess, setOrderSuccess] = useState<OrderSuccessState | null>(null);
 
-        if (!error) return data;
-        if (error.code !== '23505') throw error; // If error is NOT unique violation, throw it
-        console.warn(`Order ID Collision ${newId}. Retrying... (${i + 1}/${maxRetries})`);
-    }
-    throw new Error("Gagal membuat Order ID unik. Silakan coba lagi.");
-};
-
-// --- HOOK: SHADOW LEAD CAPTURE ---
-export const useShadowLead = () => {
+    // --- SHADOW LEAD CAPTURE ---
     const lastCapturedPhone = useRef<string>('');
-
-    const capture = async (name: string, phone: string, cartItems: any[]) => {
-        if (!name || !phone || phone.length < 9) return;
+    // handleBlur added to fix the error in components/checkout/index.tsx
+    const handleBlur = async () => {
+        if (!formData.name || !formData.phone || formData.phone.length < 9) return;
         
-        const cleanPhone = normalizePhone(phone);
+        const cleanPhone = normalizePhone(formData.phone);
         if (!cleanPhone || cleanPhone === lastCapturedPhone.current) return;
 
         if (!supabase) return;
 
         try {
-            const interestStr = cartItems.map(c => `${c.quantity}x ${c.name}`).join(', ');
             await supabase.from('leads').insert([{
-                name: name,
+                name: formData.name,
                 phone: cleanPhone,
                 source: 'checkout_page',
-                interest: interestStr || 'Browsing Cart',
+                interest: 'Checkout Intent',
+                notes: `Checkout total: ${totalPrice}`,
                 status: 'new'
             }]);
             lastCapturedPhone.current = cleanPhone;
-            console.log("Shadow Lead Captured 🥷");
         } catch (e) {
-            console.error("Shadow capture failed", e);
+            console.error("Checkout shadow capture failed", e);
         }
     };
 
-    return { capture };
-};
+    const applyCoupon = async () => {
+        if (!couponInput.trim()) return;
+        setIsValidatingCoupon(true);
+        try {
+            if (!supabase) throw new Error("Database offline");
 
-// --- MAIN HOOK: CHECKOUT LOGIC ---
-export const useCheckoutLogic = (setPage: (p: string) => void) => {
-    const { cart, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
-    const { capture: captureLead } = useShadowLead();
-    
-    const [formData, setFormData] = useState<CheckoutFormData>({
-        name: '', phone: '', address: '', note: ''
-    });
-    
-    const [agreedToTerms, setAgreedToTerms] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [orderSuccess, setOrderSuccess] = useState<OrderSuccessState | null>(null);
+            const { data: coupon, error } = await supabase
+                .from('coupons')
+                .select('*')
+                .eq('code', couponInput.toUpperCase())
+                .eq('is_active', true)
+                .maybeSingle();
 
-    const handleFieldChange = (field: keyof CheckoutFormData, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
+            if (error) throw error;
+            if (!coupon) throw new Error("Kode promo ghaib atau sudah hangus.");
 
-    const handleBlur = () => {
-        captureLead(formData.name, formData.phone, cart);
+            if (subtotalPrice < coupon.min_purchase) {
+                throw new Error(`Minimal belanja Rp ${new Intl.NumberFormat('id-ID').format(coupon.min_purchase)} buat pake kode ini.`);
+            }
+
+            // Hitung nilai diskon
+            let amount = coupon.discount_value;
+            if (coupon.discount_type === 'percentage') {
+                amount = (subtotalPrice * coupon.discount_value) / 100;
+                if (coupon.max_discount && amount > coupon.max_discount) amount = coupon.max_discount;
+            }
+
+            setDiscount({
+                code: coupon.code,
+                type: coupon.discount_type,
+                value: coupon.discount_value,
+                amount: amount
+            });
+            alert("🔥 PROMO DIAKTIFKAN! Cek total belanja lo.");
+        } catch (e: any) {
+            alert(e.message);
+            setDiscount(null);
+        } finally {
+            setIsValidatingCoupon(false);
+        }
     };
 
     const submitOrder = async (e: React.FormEvent) => {
         e.preventDefault();
         if (cart.length === 0) return;
-        
-        if (!formData.name || !formData.phone || !formData.address) {
-            return alert("Mohon lengkapi Nama, No. HP, dan Alamat.");
-        }
-        if (!agreedToTerms) {
-            return alert("Mohon setujui Syarat & Ketentuan.");
-        }
+        if (!formData.name || !formData.phone || !formData.address) return alert("Lengkapi data pengiriman.");
+        if (!agreedToTerms) return alert("Setujui syarat & ketentuan.");
 
         const cleanPhone = normalizePhone(formData.phone);
-        if (!cleanPhone) {
-            return alert("Format Nomor WhatsApp tidak valid. Gunakan 08xx atau 628xx.");
-        }
+        if (!cleanPhone) return alert("Format WA salah.");
 
         setIsSubmitting(true);
-
         try {
-            if (!supabase) {
-                // DEMO MODE
-                await new Promise(r => setTimeout(r, 1500));
-                setOrderSuccess({ id: generateOrderId(), total: totalPrice });
-                clearCart();
-                return;
-            }
-
             const orderPayload = {
                 customer_name: formData.name,
                 customer_phone: cleanPhone,
                 customer_address: formData.address,
                 customer_note: formData.note,
                 total_amount: totalPrice,
+                discount_code: discount?.code || null,
+                discount_amount: discount?.amount || 0,
                 status: 'pending',
                 payment_method: 'transfer_bnc'
             };
 
-            const orderData = await createOrderSafe(orderPayload);
+            const { data: order, error } = await supabase!.from('orders').insert([orderPayload]).select().single();
+            if (error) throw error;
 
             const orderItems = cart.map(item => ({
-                order_id: orderData.id,
+                order_id: order.id,
                 product_id: item.id,
                 product_name: item.name,
                 quantity: item.quantity,
                 price: item.price
             }));
 
-            const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-
-            if (itemsError) {
-                // Rollback order head if items fail
-                await supabase.from('orders').delete().eq('id', orderData.id);
-                throw itemsError;
+            await supabase!.from('order_items').insert(orderItems);
+            
+            // Update usage count kupon
+            if (discount) {
+                await supabase!.rpc('increment_coupon_usage', { coupon_code: discount.code });
             }
 
-            setOrderSuccess({ id: orderData.id, total: totalPrice });
+            setOrderSuccess({ id: order.id, total: totalPrice });
             clearCart();
-
         } catch (error: any) {
-            console.error(error);
-            if (error.code === '23503') { // Foreign key violation
-                alert("Sistem mendeteksi perubahan data produk. Keranjang diperbarui.");
-                clearCart();
-                setPage('shop');
-            } else {
-                alert(`Gagal membuat pesanan: ${error.message}`);
-            }
-        } finally {
-            setIsSubmitting(false);
-        }
+            alert(`Gagal: ${error.message}`);
+        } finally { setIsSubmitting(false); }
     };
 
+    // Return object updated with missing clearCart, handleBlur, and setOrderSuccess
     return {
-        cart, removeFromCart, updateQuantity, totalPrice, clearCart,
-        formData, handleFieldChange, handleBlur,
-        agreedToTerms, setAgreedToTerms,
-        isSubmitting, submitOrder,
-        orderSuccess, setOrderSuccess
+        cart, removeFromCart, updateQuantity, subtotalPrice, totalPrice, discount, setDiscount,
+        formData, handleFieldChange: (f: any, v: any) => setFormData(p => ({...p, [f]: v})),
+        handleBlur,
+        couponInput, setCouponInput, isValidatingCoupon, applyCoupon,
+        agreedToTerms, setAgreedToTerms, isSubmitting, submitOrder, 
+        orderSuccess, setOrderSuccess, clearCart
     };
 };

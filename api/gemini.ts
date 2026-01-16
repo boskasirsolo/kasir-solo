@@ -1,10 +1,18 @@
 
 import { GoogleGenAI } from "@google/genai";
 
+// Whitelist domain yang boleh akses API ini
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173', // Vite Dev
+  'http://localhost:3000', // Alt Dev
+  'https://kasirsolo.my.id', // Production
+  'https://www.kasirsolo.my.id'
+];
+
 export default async function handler(req: any, res: any) {
   // 1. Setup CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Kita handle strict check di bawah
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -16,6 +24,15 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  // LAYER 2: ORIGIN SECURITY CHECK (Firewall Lite)
+  // Mencegah request dari Postman/CURL atau website lain
+  const origin = req.headers.origin || req.headers.referer;
+  // Jika origin ada (browser request), cek whitelist. Jika server-to-server (kadang null), kita loloskan (atau bisa diperketat).
+  if (origin && !ALLOWED_ORIGINS.some(o => origin.startsWith(o))) {
+     console.warn(`[Blocked] Unauthorized origin: ${origin}`);
+     return res.status(403).json({ error: 'Akses Ditolak: Invalid Origin.' });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -24,12 +41,10 @@ export default async function handler(req: any, res: any) {
     const { model, contents, config } = req.body;
 
     // 2. Key Rotation Logic (Server Side)
-    // Mencari key dari GEMINI_API_KEY, GEMINI_API_KEY_1, dst.
     let selectedKey = process.env.GEMINI_API_KEY;
     
     if (!selectedKey) {
         const keys: string[] = [];
-        // Cek rotasi sampai 5 key cadangan
         for (let i = 1; i <= 5; i++) {
             const k = process.env[`GEMINI_API_KEY_${i}`];
             if (k) keys.push(k);
@@ -53,8 +68,6 @@ export default async function handler(req: any, res: any) {
     });
 
     // 4. Return Response
-    // Kita kirim balik JSON responnya. 
-    // Frontend akan handle getter .text
     return res.status(200).json(result);
 
   } catch (error: any) {

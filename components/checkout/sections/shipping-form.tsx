@@ -1,118 +1,70 @@
 
 import React from 'react';
-import { Zap, ShieldCheck, Check } from 'lucide-react';
+import { Zap, ShieldCheck, Check, Ticket, Loader2 } from 'lucide-react';
 import { Input, TextArea, Button, LoadingSpinner } from '../../ui';
 import { CheckoutFormData } from '../types';
 import { formatRupiah } from '../../../utils';
 
-interface ShippingFormProps {
-    formData: CheckoutFormData;
-    onChange: (field: keyof CheckoutFormData, val: string) => void;
-    onBlur: () => void;
-    onSubmit: (e: React.FormEvent) => void;
-    isSubmitting: boolean;
-    totalPrice: number;
-    agreed: boolean;
-    setAgreed: (v: boolean) => void;
-}
-
 export const ShippingForm = ({ 
-    formData, onChange, onBlur, onSubmit, isSubmitting, totalPrice, agreed, setAgreed 
-}: ShippingFormProps) => {
+    formData, onChange, onBlur, onSubmit, isSubmitting, subtotalPrice, totalPrice, discount, 
+    couponInput, setCouponInput, applyCoupon, isValidatingCoupon, agreed, setAgreed 
+}: any) => {
     return (
         <div className="lg:col-span-5">
             <div className="bg-brand-dark border border-white/10 rounded-2xl p-6 md:p-8 sticky top-24 shadow-2xl">
-                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
-                    Info Pengiriman
-                </h3>
+                <h3 className="text-xl font-bold text-white mb-6 border-b border-white/10 pb-4">Info Pengiriman</h3>
                 
                 <form onSubmit={onSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Lengkap</label>
-                        <Input 
-                            value={formData.name} 
-                            onChange={e => onChange('name', e.target.value)} 
-                            onBlur={onBlur}
-                            placeholder="Nama Penerima" 
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex justify-between">
-                            <span>WhatsApp (Wajib)</span>
-                            <span className="text-[9px] text-brand-orange flex items-center gap-1 bg-brand-orange/10 px-1.5 rounded"><Zap size={8}/> Auto-Save</span>
-                        </label>
-                        <Input 
-                            value={formData.phone} 
-                            onChange={e => onChange('phone', e.target.value)} 
-                            onBlur={onBlur}
-                            placeholder="Contoh: 081234567890" 
-                            type="tel" 
-                        />
-                        <p className="text-[10px] text-gray-500 mt-1">Format: 08xx atau 628xx (Min 10 digit)</p>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alamat Lengkap</label>
-                        <TextArea 
-                            value={formData.address} 
-                            onChange={e => onChange('address', e.target.value)} 
-                            placeholder="Jalan, No Rumah, Kelurahan, Kecamatan..." 
-                            className="h-24" 
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Catatan (Opsional)</label>
-                        <Input 
-                            value={formData.note} 
-                            onChange={e => onChange('note', e.target.value)} 
-                            placeholder="Patokan lokasi, warna, dll" 
-                        />
+                    <Input value={formData.name} onChange={e => onChange('name', e.target.value)} onBlur={onBlur} placeholder="Nama Penerima" />
+                    <Input value={formData.phone} onChange={e => onChange('phone', e.target.value)} onBlur={onBlur} placeholder="WA: 0812..." type="tel" />
+                    <TextArea value={formData.address} onChange={e => onChange('address', e.target.value)} placeholder="Alamat Lengkap..." className="h-20" />
+
+                    {/* KUPON SECTION */}
+                    <div className="pt-4 border-t border-white/5">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-2">Punya Kode Promo?</label>
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Ticket className="absolute left-3 top-2.5 text-gray-600" size={14} />
+                                <input 
+                                    value={couponInput} 
+                                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                                    placeholder="KASIRSOLO2025"
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:border-brand-orange outline-none"
+                                />
+                            </div>
+                            <button 
+                                type="button"
+                                onClick={applyCoupon}
+                                disabled={isValidatingCoupon || !couponInput}
+                                className="px-4 bg-brand-orange/10 border border-brand-orange/30 text-brand-orange rounded-lg text-xs font-bold hover:bg-brand-orange hover:text-white transition-all disabled:opacity-30"
+                            >
+                                {isValidatingCoupon ? <Loader2 size={14} className="animate-spin"/> : "CEK"}
+                            </button>
+                        </div>
                     </div>
 
-                    {/* TERMS CHECKBOX */}
                     <div className="mt-6 p-4 bg-brand-orange/5 border border-brand-orange/20 rounded-xl">
                         <label className="flex items-start gap-3 cursor-pointer select-none">
-                            <div className="relative flex items-center mt-0.5 shrink-0">
-                                <input 
-                                    type="checkbox" 
-                                    className="peer sr-only"
-                                    checked={agreed} 
-                                    onChange={(e) => setAgreed(e.target.checked)}
-                                />
-                                <div className={`w-5 h-5 border-2 rounded transition-all flex items-center justify-center ${agreed ? 'bg-brand-orange border-brand-orange' : 'border-gray-500 bg-transparent hover:border-gray-300'}`}>
-                                    {agreed && <Check size={14} className="text-white" />}
-                                </div>
-                            </div>
-                            <p className="text-xs text-gray-400 leading-relaxed">
-                                Saya menyetujui <button type="button" onClick={() => window.open('/legal/terms', '_blank')} className="text-brand-orange font-bold hover:underline">Syarat & Ketentuan</button>. Data pengiriman sudah benar.
-                            </p>
+                            <input type="checkbox" className="mt-1" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}/>
+                            <p className="text-[10px] text-gray-400">Saya menyetujui S&K. Data sudah benar.</p>
                         </label>
                     </div>
 
-                    {/* SUMMARY & SUBMIT */}
-                    <div className="pt-6 border-t border-white/10 mt-6">
-                        <div className="flex justify-between items-center mb-2">
-                            <span className="text-gray-400 text-sm">Subtotal Produk</span>
-                            <span className="text-white font-bold">{formatRupiah(totalPrice)}</span>
+                    <div className="pt-6 border-t border-white/10 space-y-2">
+                        <div className="flex justify-between text-xs"><span className="text-gray-500">Subtotal</span><span className="text-white">{formatRupiah(subtotalPrice)}</span></div>
+                        {discount && (
+                            <div className="flex justify-between text-xs text-green-400 font-bold">
+                                <span>Promo ({discount.code})</span>
+                                <span>-{formatRupiah(discount.amount)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between text-lg font-bold pt-2">
+                            <span className="text-white">TOTAL</span>
+                            <span className="text-brand-orange font-display">{formatRupiah(totalPrice)}</span>
                         </div>
-                        <div className="flex justify-between items-center mb-6">
-                            <span className="text-gray-400 text-sm">Ongkos Kirim</span>
-                            <span className="text-green-400 text-xs font-bold italic bg-green-500/10 px-2 py-1 rounded">Cek via WA Admin</span>
-                        </div>
-                        <div className="flex justify-between items-center mb-8">
-                            <span className="text-lg text-white font-bold">Total Estimasi</span>
-                            <span className="text-2xl text-brand-orange font-bold font-display">{formatRupiah(totalPrice)}</span>
-                        </div>
-
-                        <Button 
-                            type="submit" 
-                            className="w-full py-4 text-lg shadow-neon" 
-                            disabled={isSubmitting || !agreed}
-                        >
-                            {isSubmitting ? <LoadingSpinner /> : "BUAT PESANAN SEKARANG"}
+                        <Button type="submit" className="w-full py-4 shadow-neon" disabled={isSubmitting || !agreed}>
+                            {isSubmitting ? <LoadingSpinner /> : "BAYAR SEKARANG"}
                         </Button>
-                        <p className="text-center text-xs text-gray-600 mt-4 flex items-center justify-center gap-1">
-                            <ShieldCheck size={12} /> Transaksi aman & terdata di sistem kami.
-                        </p>
                     </div>
                 </form>
             </div>

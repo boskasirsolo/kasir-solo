@@ -1,4 +1,31 @@
 
+// --- RATE LIMITER CONFIG ---
+const RATE_LIMIT_KEY = 'mks_ai_throttle';
+const LIMIT_COUNT = 15; // Maksimal 15 request
+const LIMIT_WINDOW = 60 * 1000; // Per 1 menit
+
+const checkClientRateLimit = () => {
+  if (typeof window === 'undefined') return; // Server-side guard
+
+  const now = Date.now();
+  const raw = localStorage.getItem(RATE_LIMIT_KEY);
+  let history: number[] = raw ? JSON.parse(raw) : [];
+
+  // 1. Bersihkan timestamp lama (di luar window 1 menit)
+  history = history.filter(t => now - t < LIMIT_WINDOW);
+
+  // 2. Cek apakah melebihi batas
+  if (history.length >= LIMIT_COUNT) {
+    const oldest = history[0];
+    const waitTime = Math.ceil((LIMIT_WINDOW - (now - oldest)) / 1000);
+    throw new Error(`🚦 Eits, pelan-pelan Bos! Server lagi ngos-ngosan. Tunggu ${waitTime} detik lagi ya.`);
+  }
+
+  // 3. Catat request baru
+  history.push(now);
+  localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(history));
+};
+
 // --- API KEY MANAGEMENT ---
 export const ensureAPIKey = async () => {
   try {
@@ -25,12 +52,14 @@ export const callGeminiWithRotation = async (params: {
   config?: any
 }, retries = 3) => {
   
+  // LAYER 1: CLIENT RATE LIMIT CHECK
+  checkClientRateLimit();
+
   // 1. Cek Google IDX / AI Studio (Development Mode)
-  // Jika jalan di IDX, kita tetap pake Client-Side SDK karena key-nya injeksi dari browser.
   // @ts-ignore
   if (typeof window !== 'undefined' && window.aistudio) {
       await ensureAPIKey();
-      const apiKey = process.env.API_KEY || ''; // IDX injects this automatically
+      const apiKey = process.env.API_KEY || ''; 
       
       const { GoogleGenAI } = await import("@google/genai");
       const ai = new GoogleGenAI({ apiKey });
@@ -43,8 +72,6 @@ export const callGeminiWithRotation = async (params: {
   }
 
   // 2. Production Mode (Vercel)
-  // Panggil endpoint /api/gemini yang kita buat.
-  // Tidak ada key yang terekspos di sini.
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const response = await fetch('/api/gemini', {
@@ -56,16 +83,17 @@ export const callGeminiWithRotation = async (params: {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle specific errors
+        if (response.status === 429) {
+           throw new Error("Server sibuk (Rate Limit). Coba lagi nanti.");
+        }
         throw new Error(data.error || `Server Error: ${response.status}`);
       }
 
       // 3. Polyfill Response Structure
-      // Karena JSON tidak bisa bawa getter/method, kita bikin ulang properti 'text'
-      // agar kompatibel dengan kode frontend yang pake `response.text`
       return {
         ...data,
         get text() {
-          // Fallback logic untuk ekstrak teks dari struktur JSON Gemini
           return data.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('') || '';
         }
       };
@@ -75,7 +103,8 @@ export const callGeminiWithRotation = async (params: {
       console.warn(`API Call Failed (${attempt + 1}/${retries}):`, error.message);
       
       if (!isLastAttempt) {
-        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1))); // Exponential backoff
+        // Exponential backoff: 2s, 4s, 6s...
+        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1))); 
         continue;
       }
       throw error;
