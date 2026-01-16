@@ -44,7 +44,7 @@ export const useSocialStudio = (
 
     // --- DATA AGGREGATION (DYNAMIC DOMAIN) ---
     const allItems = useMemo(() => {
-        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://kasirsolo.com';
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://kasirsolo.my.id';
 
         const mappedProducts: SocialContentItem[] = products.map(p => ({
             id: p.id, type: 'product', title: p.name, description: p.description, 

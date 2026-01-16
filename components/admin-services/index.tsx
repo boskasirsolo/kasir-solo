@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
     Globe, Layers, LineChart, ShieldCheck, Save, Plus, 
@@ -7,7 +8,7 @@ import {
 } from 'lucide-react';
 import { SiteConfig, ServicePageData } from '../../types';
 import { CalcOption } from '../shared/calculator/types';
-import { supabase, formatNumberInput, cleanNumberInput, callGeminiWithRotation } from '../../utils';
+import { supabase, formatNumberInput, cleanNumberInput, callGeminiWithRotation, slugify } from '../../utils';
 import { LoadingSpinner, Button, Input, TextArea } from '../ui';
 
 const SERVICE_TARGETS = [
