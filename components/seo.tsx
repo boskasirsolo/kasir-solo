@@ -21,7 +21,6 @@ export const SEOHelmet = ({
     const finalDesc = description || "Pusat penjualan mesin kasir modern (POS), jasa pembuatan website SEO, dan aplikasi kasir online/offline terlengkap.";
     const finalImage = image || "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=1200&h=630";
     
-    // Pastikan URL selalu absolut untuk Canonical
     const currentPath = window.location.pathname;
     const finalUrl = url || `https://kasirsolo.my.id${currentPath}`;
 
@@ -36,19 +35,30 @@ export const SEOHelmet = ({
             <meta property="og:title" content={finalTitle} />
             <meta property="og:description" content={finalDesc} />
             <meta property="og:image" content={finalImage} />
-            <meta property="og:image:width" content="1200" />
-            <meta property="og:image:height" content="630" />
             <meta property="og:site_name" content="Mesin Kasir Solo" />
 
             <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:url" content={finalUrl} />
             <meta name="twitter:title" content={finalTitle} />
             <meta name="twitter:description" content={finalDesc} />
             <meta name="twitter:image" content={finalImage} />
-            
-            <meta itemProp="name" content={finalTitle} />
-            <meta itemProp="description" content={finalDesc} />
-            <meta itemProp="image" content={finalImage} />
+        </Helmet>
+    );
+};
+
+export const BreadcrumbSchema = ({ paths }: { paths: { name: string, item: string }[] }) => {
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": paths.map((p, i) => ({
+            "@type": "ListItem",
+            "position": i + 1,
+            "name": p.name,
+            "item": `https://kasirsolo.my.id${p.item}`
+        }))
+    };
+    return (
+        <Helmet>
+            <script type="application/ld+json">{JSON.stringify(schema)}</script>
         </Helmet>
     );
 };
@@ -59,7 +69,7 @@ export const ProductSchema = ({ product }: { product: Product }) => {
     "@type": "Product",
     "name": product.name,
     "image": [product.image],
-    "description": product.description || `Jual ${product.name} termurah dan bergaransi.`,
+    "description": product.description?.substring(0, 200) || `Jual ${product.name} termurah dan bergaransi.`,
     "sku": `MKS-${product.id}`,
     "brand": { "@type": "Brand", "name": "Mesin Kasir Solo" },
     "offers": {
@@ -67,11 +77,10 @@ export const ProductSchema = ({ product }: { product: Product }) => {
       "url": window.location.href,
       "priceCurrency": "IDR",
       "price": product.price,
-      "priceValidUntil": "2025-12-31",
+      "itemCondition": "https://schema.org/NewCondition",
       "availability": "https://schema.org/InStock",
-      "itemCondition": "https://schema.org/NewCondition"
-    },
-    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "reviewCount": "128" }
+      "seller": { "@type": "Organization", "name": "PT Mesin Kasir Solo" }
+    }
   };
   return (
     <Helmet>
@@ -83,12 +92,13 @@ export const ProductSchema = ({ product }: { product: Product }) => {
 export const LocalBusinessSchema = ({ city }: { city: string }) => {
     const schema = {
         "@context": "https://schema.org",
-        "@type": "ComputerStore",
-        "name": `Mesin Kasir Solo - Area ${city}`,
+        "@type": "LocalBusiness",
+        "name": `PT Mesin Kasir Solo - Cabang ${city}`,
         "image": "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800",
+        "@id": `https://kasirsolo.my.id/jual-mesin-kasir-di/${city.toLowerCase()}`,
         "url": window.location.href,
         "telephone": "+6282325103336",
-        "priceRange": "$$",
+        "priceRange": "IDR 2.000.000 - IDR 15.000.000",
         "address": {
             "@type": "PostalAddress",
             "streetAddress": "Perum Graha Tiara 2 B1",
@@ -97,14 +107,21 @@ export const LocalBusinessSchema = ({ city }: { city: string }) => {
             "postalCode": "57169",
             "addressCountry": "ID"
         },
-        "geo": { "@type": "GeoCoordinates", "latitude": -7.55, "longitude": 110.75 },
-        "areaServed": { "@type": "City", "name": city },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": -7.5515,
+            "longitude": 110.7534
+        },
         "openingHoursSpecification": {
             "@type": "OpeningHoursSpecification",
             "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
             "opens": "08:00",
             "closes": "17:00"
-        }
+        },
+        "sameAs": [
+            "https://www.facebook.com/mesinkasirsolo",
+            "https://www.instagram.com/mesinkasirsolo"
+        ]
     };
     return (
         <Helmet>

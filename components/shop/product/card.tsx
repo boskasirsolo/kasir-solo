@@ -12,8 +12,8 @@ import { ProductCardProps } from '../types';
 const ProductImage = ({ image, name, category }: { image: string, name: string, category: string }) => (
   <div className="relative h-56 overflow-hidden bg-black">
     <img 
-      src={optimizeImage(image, 500)} // OPTIMIZED
-      alt={name} 
+      src={optimizeImage(image, 500)} 
+      alt={`Jual ${name} - Paket Mesin Kasir ${category} Solo`} 
       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
       loading="lazy"
       decoding="async"
@@ -35,7 +35,6 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: ProductCar
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation(); 
     
-    // External Link Handling
     if (product.affiliate_link) {
         window.open(product.affiliate_link, '_blank');
         return;
@@ -66,16 +65,14 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: ProductCar
     <>
       {flyData && createPortal(<FlyingParticle src={product.image} startRect={flyData.start} targetRect={flyData.target} onFinish={() => {}} />, document.body)}
       <div className="grid grid-cols-4 gap-2">
-        {/* Compare Button: Icon + Text (col-span-2) */}
         <button 
             onClick={(e) => { e.stopPropagation(); onCompare(product); }} 
             className={`col-span-2 py-2 rounded-lg border flex items-center justify-center gap-1.5 transition-all text-[10px] font-bold uppercase ${isSelected ? 'bg-brand-orange text-white border-brand-orange shadow-neon' : 'border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5'}`} 
-            title="Bandingkan Produk"
+            title={`Bandingkan ${product.name}`}
         >
             <Scale size={14} /> ADU SPEK
         </button>
 
-        {/* Detail Button: Text Only (col-span-1) */}
         <button 
             onClick={(e) => { e.stopPropagation(); onDetail(product); }} 
             className="col-span-1 py-2 rounded-lg border border-brand-orange/50 text-brand-orange hover:text-white hover:bg-brand-orange font-bold text-[10px] transition-all hover:shadow-neon flex items-center justify-center"
@@ -83,7 +80,6 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: ProductCar
             BEDAH
         </button>
 
-        {/* Buy Button: Icon Only (col-span-1) */}
         <button 
             ref={buttonRef} 
             onClick={handleAddToCart} 
@@ -94,7 +90,7 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: ProductCar
                     ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg'
                     : 'bg-brand-gradient text-white hover:bg-brand-gradient-hover hover:shadow-action'
             }`}
-            title={isExternal ? `Buka Link: ${buyButtonLabel}` : "Angkut Barang Ini"}
+            title={isExternal ? `Beli ${product.name} di Marketplace` : `Tambah ${product.name} ke Keranjang`}
         >
             {isAdded ? <Check size={16} /> : (
                 isExternal 
