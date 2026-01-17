@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-// Added MousePointer2 to imports
 import { Target, Phone, MessageCircle, Building, Package, Clock, Trash2, Cpu, ChevronDown, ChevronUp, User, MapPin, Tag, BarChart3, Zap, ShoppingBag, MousePointer2 } from 'lucide-react';
 import { LoadingSpinner } from '../ui';
 import { useLeadLogic } from './logic';
@@ -129,8 +128,10 @@ export const LeadsPanel = () => {
 
     if (state.loading) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
 
-    const hardwareLeads = state.leads.filter(l => l.source.includes('checkout'));
-    const serviceLeads = state.leads.filter(l => l.source.includes('sim_shadow'));
+    // Filter leads dengan pengecekan safety untuk source yang null/undefined
+    const hardwareLeads = state.leads.filter(l => (l.source || '').includes('checkout'));
+    const serviceLeads = state.leads.filter(l => (l.source || '').includes('sim_shadow'));
+    const contactLeads = state.leads.filter(l => (l.source || '').includes('contact_form'));
 
     return (
         <div className="space-y-8 animate-fade-in pb-20">
@@ -157,6 +158,33 @@ export const LeadsPanel = () => {
                     }
                 </div>
             </div>
+
+            {/* BARIS EXTRA: CONTACT FORM LEADS */}
+            {contactLeads.length > 0 && (
+                <div className="pt-8 border-t border-white/10">
+                    <div className="flex items-center gap-2 mb-4 px-2">
+                        <MessageCircle size={16} className="text-green-500"/>
+                        <h3 className="text-xs font-black text-white uppercase tracking-widest">Pesan Dari Form Kontak</h3>
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-4">
+                        {contactLeads.map(l => (
+                            <div key={l.id} className="bg-brand-card p-4 rounded-xl border border-white/5 relative group">
+                                <button onClick={() => deleteLead(l.id)} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-500 transition-all"><Trash2 size={12}/></button>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 text-xs font-bold">{l.name.charAt(0)}</div>
+                                    <div>
+                                        <h5 className="text-xs font-bold text-white">{l.name}</h5>
+                                        <p className="text-[9px] text-gray-500">{l.phone}</p>
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-gray-400 line-clamp-2 italic">"{l.notes}"</p>
+                                <a href={`https://wa.me/${l.phone}`} target="_blank" className="mt-3 block text-center py-2 bg-green-600/10 text-green-500 rounded-lg text-[9px] font-bold uppercase hover:bg-green-600 hover:text-white transition-all">Balas Pesan</a>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="bg-white/5 p-4 rounded-2xl border border-white/10 text-center">
                 <p className="text-[10px] text-gray-500 flex items-center justify-center gap-2 uppercase tracking-[0.2em] font-bold"><Target size={12} className="text-brand-orange animate-pulse"/> Surveillance System Aktif: Menangkap Abandoned Data & Simulations</p>
             </div>

@@ -41,31 +41,33 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
     };
   }, [selectedBase, selectedAddons, data]);
 
-  // CAPTURE SERVICE LEADS (SHADOW)
+  // --- SHADOW CAPTURE SYSTEM (SURVEILLANCE) ---
   const handleShadowCapture = async (customerData: any) => {
+    // Validasi minimal: Nama & Phone harus ada
     if (!customerData.name || !customerData.phone || customerData.phone.length < 9) return;
     
     const cleanPhone = normalizePhone(customerData.phone);
     if (!cleanPhone) return;
     if (!supabase) return;
 
+    // Cegah spam kirim data yang sama berulang kali dalam satu sesi
     const addonsText = data.addons
         .filter(a => selectedAddons.includes(a.id))
         .map(a => `${a.label} (${a.tier || 'basic'})`)
         .join(', ');
 
-    // Format data terstruktur untuk parser admin
+    // Format data terstruktur untuk parser dashboard admin
     const report = 
         `🏢USAHA: ${customerData.company || '-'}\n` +
         `⚖️SKALA: ${customerData.scale || '-'}\n` +
         `🏷️KATEGORI: ${customerData.category || '-'}\n` +
         `📍ALAMAT: ${customerData.address || '-'}\n` +
-        `📦PAKET: ${calculation.baseLabel || '(Pilih Paket Utama)'}\n` +
+        `📦PAKET: ${calculation.baseLabel || '(Belum Pilih)'}\n` +
         `🚀ADDONS: ${addonsText || '(Tanpa Addon)'}\n` +
         `💰ESTIMASI: ${formatRupiah(calculation.total.min)}`;
 
     try {
-        await supabase.from('leads').upsert([{
+        const { error } = await supabase.from('leads').upsert([{
             phone: cleanPhone,
             name: customerData.name,
             source: `sim_shadow_${serviceSlug || 'service'}`,
@@ -74,9 +76,10 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
             status: 'new'
         }], { onConflict: 'phone' });
         
+        if (error) throw error;
         lastCapturedPhone.current = cleanPhone;
     } catch (e) {
-        console.warn("Shadow capture service failed", e);
+        console.warn("Shadow capture failed:", e);
     }
   };
 
@@ -90,7 +93,6 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
   }) => {
     if (!selectedBase) return alert("Pilih paket dasar terlebih dahulu.");
 
-    // INCLUDE TIER IN SAVED DATA
     const activeAddons = data.addons
         .filter(a => selectedAddons.includes(a.id))
         .map(a => ({ label: a.label, price: a.price, tier: a.tier || 'basic' }));
@@ -109,7 +111,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
                 service_name: serviceName,
                 base_option_label: calculation.baseLabel,
                 base_option_price: calculation.basePrice,
-                selected_addons: activeAddons, // Now has tier info
+                selected_addons: activeAddons,
                 total_min: calculation.total.min,
                 total_max: calculation.total.max,
                 status: 'new',
@@ -117,10 +119,10 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
                 address: customerData.address || '-',
                 business_category: customerData.category || '-',
                 business_scale: customerData.scale || '-',
-                notes: `Log Simulasi: ${serviceName}`
+                notes: `Finalized Simulation: ${serviceName}`
             }]);
         } catch (e) {
-            console.warn("DB Capture failed", e);
+            console.warn("DB Simulation save failed", e);
         } finally {
             setIsCapturing(false);
         }
