@@ -45,6 +45,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         if (!supabase) return;
         setLoading(true);
         try {
+            // Force refresh with no-cache behavior via query param
             const { data: res } = await supabase.from('services').select('*');
             if (res) setAllServices(res);
         } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -55,6 +56,27 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
             id: '', label: '', price: 0, desc: '', longDesc: '', founderNote: '',
             targets: [filterSlug], role: 'addon'
         });
+    };
+
+    // --- SMART EDIT: Cari item ini ada di mana aja ---
+    const startEditing = (item: any, role: 'base' | 'addon') => {
+        // Cari slug mana aja yang punya item dengan ID ini
+        const activeTargets = allServices.filter(svc => {
+            const list = role === 'base' ? svc.calc_data?.baseOptions : svc.calc_data?.addons;
+            return list?.some((it: any) => it.id === item.id);
+        }).map(svc => svc.slug);
+
+        setItemForm({
+            ...item,
+            targets: activeTargets.length > 0 ? activeTargets : [filterSlug],
+            role: role
+        });
+        
+        // Scroll ke editor kalau di mobile
+        if (window.innerWidth < 1024) {
+            const editor = document.getElementById('arsenal-editor');
+            editor?.scrollIntoView({ behavior: 'smooth' });
+        }
     };
 
     // --- AI LOGIC ---
@@ -86,33 +108,56 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         try {
             const itemId = itemForm.id || `item_${Date.now()}`;
             
-            const updatePromises = itemForm.targets.map(async (slug) => {
+            // CRITICAL FIX: Await each supabase update call inside map
+            const updateResults = await Promise.all(itemForm.targets.map(async (slug) => {
                 const service = allServices.find(s => s.slug === slug);
-                if (!service) return;
+                if (!service) return { success: false, slug };
 
-                const calcData = { ...service.calc_data };
+                // DEEP CLONE JSON to avoid reference issues
+                const calcData = JSON.parse(JSON.stringify(service.calc_data || { baseOptions: [], addons: [] }));
                 const listKey = itemForm.role === 'base' ? 'baseOptions' : 'addons';
                 
                 if (!calcData[listKey]) calcData[listKey] = [];
 
                 const existingIdx = calcData[listKey].findIndex((o: any) => o.id === itemId);
                 const itemPayload = {
-                    id: itemId, label: itemForm.label, price: itemForm.price,
-                    desc: itemForm.desc, longDesc: itemForm.longDesc, founderNote: itemForm.founderNote
+                    id: itemId, 
+                    label: itemForm.label, 
+                    price: itemForm.price,
+                    desc: itemForm.desc, 
+                    longDesc: itemForm.longDesc, 
+                    founderNote: itemForm.founderNote
                 };
 
-                if (existingIdx > -1) calcData[listKey][existingIdx] = itemPayload;
-                else calcData[listKey].push(itemPayload);
+                if (existingIdx > -1) {
+                    calcData[listKey][existingIdx] = itemPayload;
+                } else {
+                    calcData[listKey].push(itemPayload);
+                }
 
-                return supabase!.from('services').update({ calc_data: calcData }).eq('slug', slug);
-            });
+                const { error } = await supabase!
+                    .from('services')
+                    .update({ calc_data: calcData })
+                    .eq('slug', slug)
+                    .select(); // Select makes it wait for the result
 
-            await Promise.all(updatePromises);
+                if (error) throw error;
+                return { success: true, slug };
+            }));
+
+            // Pastikan semua sukses
+            const failed = updateResults.filter(r => !r.success);
+            if (failed.length > 0) {
+                console.warn("Some targets failed to update:", failed);
+            }
+
             alert("Item berhasil disinkronkan ke semua target!");
+            // Refresh data setelah update DB
             await fetchAllServices();
             resetForm();
         } catch (e: any) {
-            alert("Gagal simpan: " + e.message);
+            console.error("Save Error:", e);
+            alert("Gagal simpan: " + (e.message || "Server Error"));
         } finally { setSaving(false); }
     };
 
@@ -121,12 +166,13 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         const service = allServices.find(s => s.slug === serviceSlug);
         if (!service) return;
         
-        const calcData = { ...service.calc_data };
+        const calcData = JSON.parse(JSON.stringify(service.calc_data));
         const listKey = role === 'base' ? 'baseOptions' : 'addons';
         calcData[listKey] = calcData[listKey].filter((o: any) => o.id !== itemId);
         
         try {
-            await supabase!.from('services').update({ calc_data: calcData }).eq('slug', serviceSlug);
+            const { error } = await supabase!.from('services').update({ calc_data: calcData }).eq('slug', serviceSlug);
+            if (error) throw error;
             await fetchAllServices();
         } catch (e) { alert("Gagal hapus."); }
     };
@@ -191,7 +237,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                             </div>
                             <div className="space-y-2">
                                 {filteredBase.map((item: any) => (
-                                    <ItemCard key={item.id} item={item} role="base" onEdit={() => setItemForm({...item, targets: [filterSlug], role: 'base'})} onDelete={() => deleteItem(filterSlug, item.id, 'base')} />
+                                    <ItemCard key={item.id} item={item} role="base" onEdit={() => startEditing(item, 'base')} onDelete={() => deleteItem(filterSlug, item.id, 'base')} />
                                 ))}
                                 {filteredBase.length === 0 && <p className="text-[10px] text-gray-700 italic text-center py-4">Paket utama kosong.</p>}
                             </div>
@@ -205,7 +251,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                             </div>
                             <div className="space-y-2">
                                 {filteredAddons.map((item: any) => (
-                                    <ItemCard key={item.id} item={item} role="addon" onEdit={() => setItemForm({...item, targets: [filterSlug], role: 'addon'})} onDelete={() => deleteItem(filterSlug, item.id, 'addon')} />
+                                    <ItemCard key={item.id} item={item} role="addon" onEdit={() => startEditing(item, 'addon')} onDelete={() => deleteItem(filterSlug, item.id, 'addon')} />
                                 ))}
                                 {filteredAddons.length === 0 && <p className="text-[10px] text-gray-700 italic text-center py-4">Add-ons kosong.</p>}
                             </div>
@@ -215,7 +261,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
             </div>
 
             {/* COLUMN 2: EDITOR (RIGHT - STICKY) */}
-            <div className="lg:col-span-7 space-y-6 lg:sticky lg:top-6">
+            <div className="lg:col-span-7 space-y-6 lg:sticky lg:top-6" id="arsenal-editor">
                 <div className="bg-brand-card border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-5"><Edit3 size={100}/></div>
                     
