@@ -4,7 +4,7 @@ import {
     Globe, Layers, LineChart, ShieldCheck, Save, Plus, 
     Trash2, Calculator, Sparkles, Wand2, Coffee, 
     Edit3, RefreshCw, Box, Zap, LayoutList, ChevronRight,
-    Search, CheckSquare, Square
+    Search, CheckSquare, Square, ListChecks
 } from 'lucide-react';
 import { SiteConfig, ServicePageData } from '../../types';
 import { CalcOption } from '../shared/calculator/types';
@@ -28,13 +28,14 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
     const [itemSearchTerm, setItemSearchTerm] = useState('');
 
     // Editor Form State
-    const [itemForm, setItemForm] = useState<CalcOption & { targets: string[], role: 'base' | 'addon' }>({
+    const [itemForm, setItemForm] = useState<CalcOption & { targets: string[], role: 'base' | 'addon', includesStr: string }>({
         id: '',
         label: '',
         price: 0,
         desc: '',
         longDesc: '',
         founderNote: '',
+        includesStr: '',
         targets: ['website'], 
         role: 'addon'
     });
@@ -45,7 +46,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         if (!supabase) return;
         setLoading(true);
         try {
-            // Force refresh with no-cache behavior via query param
             const { data: res } = await supabase.from('services').select('*');
             if (res) setAllServices(res);
         } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -53,14 +53,12 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
 
     const resetForm = () => {
         setItemForm({
-            id: '', label: '', price: 0, desc: '', longDesc: '', founderNote: '',
+            id: '', label: '', price: 0, desc: '', longDesc: '', founderNote: '', includesStr: '',
             targets: [filterSlug], role: 'addon'
         });
     };
 
-    // --- SMART EDIT: Cari item ini ada di mana aja ---
     const startEditing = (item: any, role: 'base' | 'addon') => {
-        // Cari slug mana aja yang punya item dengan ID ini
         const activeTargets = allServices.filter(svc => {
             const list = role === 'base' ? svc.calc_data?.baseOptions : svc.calc_data?.addons;
             return list?.some((it: any) => it.id === item.id);
@@ -68,11 +66,11 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
 
         setItemForm({
             ...item,
+            includesStr: item.includes ? item.includes.join('\n') : '',
             targets: activeTargets.length > 0 ? activeTargets : [filterSlug],
             role: role
         });
         
-        // Scroll ke editor kalau di mobile
         if (window.innerWidth < 1024) {
             const editor = document.getElementById('arsenal-editor');
             editor?.scrollIntoView({ behavior: 'smooth' });
@@ -80,7 +78,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
     };
 
     // --- AI LOGIC ---
-    const generateAiContent = async (targetField: 'desc' | 'longDesc' | 'founderNote') => {
+    const generateAiContent = async (targetField: 'desc' | 'longDesc' | 'founderNote' | 'includes') => {
         if (!itemForm.label) return alert("Isi Label Item dulu Bos.");
         setAiGenerating(targetField);
         try {
@@ -89,31 +87,36 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                 prompt = `Role: UX Copywriter. Task: Write ONE very short tooltip (max 10 words) for service: "${itemForm.label}". Use 'Gue/Lo' style. Indonesian. NO INTRO.`;
             } else if (targetField === 'founderNote') {
                 prompt = `Role: Founder PT Mesin Kasir Solo. Task: Write a short, personal 'Founder Note' (1-2 sentences) about Kenapa item "${itemForm.label}" itu krusial buat bisnis UMKM. Use 'Gue/Lo'. NO INTRO.`;
+            } else if (targetField === 'includes') {
+                prompt = `Role: Product Specialist. Task: List 5 essential items/features included in service package: "${itemForm.label}". Format: One item per line. Tone: Professional. NO INTRO.`;
             } else {
                 prompt = `Role: Persuasive copywriter. Task: Write a detailed value proposition (Markdown, 2 paragraphs) for service: "${itemForm.label}". Focus on ROI and solving problems. Use 'Gue/Lo'. NO INTRO.`;
             }
             
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            setItemForm(prev => ({ ...prev, [targetField]: res.text?.trim() || "" }));
+            if (targetField === 'includes') {
+                setItemForm(prev => ({ ...prev, includesStr: res.text?.trim() || "" }));
+            } else {
+                setItemForm(prev => ({ ...prev, [targetField]: res.text?.trim() || "" }));
+            }
         } catch (e) {
             alert("Gemini lagi pusing.");
         } finally { setAiGenerating(null); }
     };
 
-    // --- SAVE LOGIC (BROADCAST SYSTEM) ---
+    // --- SAVE LOGIC ---
     const handleSyncSave = async () => {
         if (!itemForm.label || itemForm.targets.length === 0) return alert("Lengkapi data dan pilih minimal 1 target layanan.");
         
         setSaving(true);
         try {
             const itemId = itemForm.id || `item_${Date.now()}`;
+            const includesArr = itemForm.includesStr ? itemForm.includesStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
             
-            // CRITICAL FIX: Await each supabase update call inside map
             const updateResults = await Promise.all(itemForm.targets.map(async (slug) => {
                 const service = allServices.find(s => s.slug === slug);
                 if (!service) return { success: false, slug };
 
-                // DEEP CLONE JSON to avoid reference issues
                 const calcData = JSON.parse(JSON.stringify(service.calc_data || { baseOptions: [], addons: [] }));
                 const listKey = itemForm.role === 'base' ? 'baseOptions' : 'addons';
                 
@@ -126,7 +129,8 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                     price: itemForm.price,
                     desc: itemForm.desc, 
                     longDesc: itemForm.longDesc, 
-                    founderNote: itemForm.founderNote
+                    founderNote: itemForm.founderNote,
+                    includes: includesArr
                 };
 
                 if (existingIdx > -1) {
@@ -139,24 +143,16 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                     .from('services')
                     .update({ calc_data: calcData })
                     .eq('slug', slug)
-                    .select(); // Select makes it wait for the result
+                    .select();
 
                 if (error) throw error;
                 return { success: true, slug };
             }));
 
-            // Pastikan semua sukses
-            const failed = updateResults.filter(r => !r.success);
-            if (failed.length > 0) {
-                console.warn("Some targets failed to update:", failed);
-            }
-
             alert("Item berhasil disinkronkan ke semua target!");
-            // Refresh data setelah update DB
             await fetchAllServices();
             resetForm();
         } catch (e: any) {
-            console.error("Save Error:", e);
             alert("Gagal simpan: " + (e.message || "Server Error"));
         } finally { setSaving(false); }
     };
@@ -204,7 +200,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         <LayoutList size={18} className="text-brand-orange"/> Inventori Layanan
                     </h4>
                     
-                    {/* TAB HEADER */}
                     <div className="flex bg-brand-dark p-1 rounded-xl border border-white/10 overflow-x-auto custom-scrollbar-hide mb-4">
                         {SERVICE_TARGETS.map(svc => (
                             <button
@@ -217,7 +212,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         ))}
                     </div>
 
-                    {/* ITEM SEARCH */}
                     <div className="relative mb-6">
                         <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
                         <input 
@@ -229,7 +223,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                     </div>
 
                     <div className="space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
-                        {/* PAKET UTAMA */}
                         <div>
                             <div className="flex justify-between items-center mb-3">
                                 <span className="text-[10px] font-bold text-brand-orange uppercase tracking-widest flex items-center gap-2"><Box size={14}/> Paket Utama</span>
@@ -243,7 +236,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                             </div>
                         </div>
 
-                        {/* ADDONS */}
                         <div>
                             <div className="flex justify-between items-center mb-3">
                                 <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><Zap size={14}/> Add-ons</span>
@@ -299,6 +291,24 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                             </div>
                             <Input value={itemForm.desc || ''} onChange={e => setItemForm({...itemForm, desc: e.target.value})} placeholder="Teaser 1 kalimat untuk tooltip..." className="bg-black/20 text-xs" />
                         </div>
+
+                        {/* NEW: INCLUSIONS AREA (Only for Base Packages) */}
+                        {itemForm.role === 'base' && (
+                            <div className="animate-fade-in">
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="text-[10px] text-brand-orange font-bold uppercase flex items-center gap-1"><ListChecks size={12}/> Standar Inclusions (Apa yang didapat?)</label>
+                                    <button onClick={() => generateAiContent('includes')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1">
+                                        {aiGenerating === 'includes' ? <LoadingSpinner size={8}/> : <><Wand2 size={10}/> AI List</>}
+                                    </button>
+                                </div>
+                                <TextArea 
+                                    value={itemForm.includesStr || ''} 
+                                    onChange={e => setItemForm({...itemForm, includesStr: e.target.value})} 
+                                    className="h-24 text-[10px] bg-black/40 leading-relaxed font-mono" 
+                                    placeholder="Satu item per baris...&#10;Contoh:&#10;Setup DNS & Hosting&#10;SSL Certificate Pro&#10;Integrasi WhatsApp API" 
+                                />
+                            </div>
+                        )}
 
                         <div className="grid md:grid-cols-2 gap-4">
                             <div>

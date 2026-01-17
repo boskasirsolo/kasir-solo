@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ArrowRight, MessageCircle, AlertTriangle, Coffee } from 'lucide-react';
+import { X, ArrowRight, MessageCircle, AlertTriangle, Coffee, CheckCircle2 } from 'lucide-react';
 import { CalcOption } from './types';
 import { SimpleMarkdown } from '../../admin-articles/markdown';
 
@@ -34,7 +34,7 @@ export const SideDrawer = ({
                 {/* Header */}
                 <div className="p-6 border-b border-white/5 flex justify-between items-center bg-brand-card shrink-0">
                     <div>
-                        <h4 className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-1">Kenapa lo butuh ini?</h4>
+                        <h4 className="text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-1">Analisa Kebutuhan</h4>
                         <h3 className="text-white font-bold text-xl leading-tight">{item.label}</h3>
                     </div>
                     <button onClick={onClose} className="p-2 bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded-full transition-all">
@@ -44,8 +44,32 @@ export const SideDrawer = ({
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-8">
+                    
+                    {/* NEW SECTION: STANDARD INCLUSIONS */}
+                    {item.includes && item.includes.length > 0 && (
+                        <div className="animate-fade-in bg-white/5 rounded-2xl p-6 border border-white/5">
+                            <h5 className="text-white font-bold text-sm mb-4 uppercase tracking-widest flex items-center gap-2">
+                                <CheckCircle2 size={16} className="text-brand-orange"/> Standar Perang (Includes)
+                            </h5>
+                            <ul className="space-y-3">
+                                {item.includes.map((inc, i) => (
+                                    <li key={i} className="flex items-start gap-3 text-sm text-gray-300">
+                                        <div className="w-5 h-5 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center shrink-0 mt-0.5">
+                                            <CheckCircle2 size={12}/>
+                                        </div>
+                                        <span>{inc}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <p className="mt-4 text-[10px] text-gray-500 italic border-t border-white/5 pt-3">
+                                *Item di atas adalah standar minimal yang lo dapet di paket ini.
+                            </p>
+                        </div>
+                    )}
+
                     {item.longDesc ? (
                         <div className="animate-fade-in">
+                            <h5 className="text-gray-500 font-bold text-[10px] uppercase tracking-widest mb-4">Detail Strategi & ROI</h5>
                             <SimpleMarkdown content={item.longDesc} />
                         </div>
                     ) : (

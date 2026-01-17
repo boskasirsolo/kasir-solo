@@ -6,6 +6,7 @@ export interface CalcOption {
   desc?: string;
   longDesc?: string; 
   founderNote?: string; // Teks pesan pribadi founder (Amin)
+  includes?: string[]; // Item standar yang didapatkan (Baru)
 }
 
 export interface CalcData {
