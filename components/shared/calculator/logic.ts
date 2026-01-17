@@ -1,13 +1,15 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { CalcData, CalcOption } from './types';
-import { formatRupiah, supabase } from '../../../utils';
+import { formatRupiah, supabase, normalizePhone } from '../../../utils';
 
 export const useCalculator = (data: CalcData, serviceName: string, waNumber?: string, serviceSlug?: string) => {
   const [selectedBase, setSelectedBase] = useState<string | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [isCapturing, setIsCapturing] = useState(false);
   const [activeDetailItem, setActiveDetailItem] = useState<CalcOption | null>(null);
+  
+  const lastCapturedPhone = useRef<string>('');
 
   const toggleAddon = (id: string) => {
     if (selectedAddons.includes(id)) {
@@ -38,6 +40,32 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
         hasSelection: !!base
     };
   }, [selectedBase, selectedAddons, data]);
+
+  // NEW: Shadow Lead Capture
+  const handleShadowCapture = async (customerData: any) => {
+    if (!customerData.name || !customerData.phone || customerData.phone.length < 9) return;
+    
+    const cleanPhone = normalizePhone(customerData.phone);
+    if (!cleanPhone || cleanPhone === lastCapturedPhone.current) return;
+
+    if (!supabase) return;
+
+    try {
+        // Masuk ke tabel leads (Shadow Leads)
+        await supabase.from('leads').insert([{
+            name: customerData.name,
+            phone: cleanPhone,
+            source: `simulation_shadow_${serviceSlug || 'general'}`,
+            interest: `Simulasi: ${serviceName} (${calculation.baseLabel || 'Belum pilih paket'})`,
+            notes: `Perusahaan: ${customerData.company || '-'}\nAlamat: ${customerData.address || '-'}\nKategori: ${customerData.category || '-'}`,
+            status: 'new'
+        }]);
+        lastCapturedPhone.current = cleanPhone;
+        console.log("Shadow lead captured");
+    } catch (e) {
+        console.warn("Shadow capture failed", e);
+    }
+  };
 
   const handleConsultation = async (customerData: {
       name: string;
@@ -70,7 +98,6 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
                 total_min: calculation.total.min,
                 total_max: calculation.total.max,
                 status: 'new',
-                // New Column Mappings
                 company_name: customerData.company || '-',
                 address: customerData.address || '-',
                 business_category: customerData.category || '-',
@@ -107,6 +134,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
       selectedAddons, toggleAddon,
       calculation,
       handleConsultation,
+      handleShadowCapture,
       isCapturing,
       activeDetailItem,
       setActiveDetailItem

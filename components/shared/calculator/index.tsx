@@ -16,6 +16,7 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
       selectedAddons, toggleAddon, 
       calculation, 
       handleConsultation,
+      handleShadowCapture,
       isCapturing,
       activeDetailItem,
       setActiveDetailItem
@@ -43,6 +44,10 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
           address: customerInfo.address,
           category: finalCategory
       });
+  };
+
+  const onShadow = () => {
+      handleShadowCapture(customerInfo);
   };
 
   return (
@@ -101,7 +106,8 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
             calculation={calculation} 
             customerInfo={customerInfo}
             setCustomerInfo={setCustomerInfo}
-            onConsultation={onConsult} 
+            onConsultation={onConsult}
+            onShadowCapture={onShadow}
             hasBaseSelection={calculation.hasSelection} 
             isCapturing={isCapturing}
          />

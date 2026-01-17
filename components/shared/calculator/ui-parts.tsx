@@ -99,127 +99,140 @@ export const ResultCard = ({
     calculation, 
     customerInfo,
     setCustomerInfo,
-    onConsultation, 
+    onConsultation,
+    onShadowCapture,
     hasBaseSelection,
     isCapturing = false
 }: { 
     calculation: any, 
     customerInfo: any,
     setCustomerInfo: any,
-    onConsultation: () => void, 
+    onConsultation: () => void,
+    onShadowCapture: () => void,
     hasBaseSelection: boolean,
     isCapturing?: boolean
-}) => (
-    <div className="lg:col-span-5 p-6 md:p-10 bg-black/40 flex flex-col h-full">
-        <div className="bg-brand-card border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-2xl flex flex-col h-full">
-            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                <Calculator size={120} />
-            </div>
-            
-            {/* LEAD FORM SECTION */}
-            <div className="relative z-10 mb-8 space-y-4">
-                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2 mb-4">
-                    <User size={14} className="text-brand-orange"/> Identitas Juragan
-                </h4>
+}) => {
+    // Validasi form identitas
+    const isFormIncomplete = !customerInfo.name || !customerInfo.phone || !customerInfo.company || !customerInfo.address || !customerInfo.category || (customerInfo.category === 'Lainnya' && !customerInfo.customCategory);
+
+    return (
+        <div className="lg:col-span-5 p-6 md:p-10 bg-black/40 flex flex-col h-full">
+            <div className="bg-brand-card border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-2xl flex flex-col h-full">
+                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                    <Calculator size={120} />
+                </div>
                 
-                <div className="grid gap-3">
-                    <div className="relative">
-                        <User className="absolute left-3 top-3 text-gray-600" size={14} />
-                        <Input 
-                            value={customerInfo.name}
-                            onChange={e => setCustomerInfo({...customerInfo, name: e.target.value})}
-                            placeholder="Nama Lengkap" 
-                            className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
-                        />
-                    </div>
-                    <div className="relative">
-                        <Phone className="absolute left-3 top-3 text-gray-600" size={14} />
-                        <Input 
-                            value={customerInfo.phone}
-                            onChange={e => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                            placeholder="Nomor WhatsApp" 
-                            className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
-                        />
-                    </div>
-                    <div className="relative">
-                        <Building className="absolute left-3 top-3 text-gray-600" size={14} />
-                        <Input 
-                            value={customerInfo.company}
-                            onChange={e => setCustomerInfo({...customerInfo, company: e.target.value})}
-                            placeholder="Nama Usaha / Perusahaan" 
-                            className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
-                        />
-                    </div>
-                    <div className="relative">
-                        <MapPin className="absolute left-3 top-3 text-gray-600" size={14} />
-                        <Input 
-                            value={customerInfo.address}
-                            onChange={e => setCustomerInfo({...customerInfo, address: e.target.value})}
-                            placeholder="Alamat / Kota" 
-                            className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
-                        />
-                    </div>
-                    <div className="relative">
-                        <Tag className="absolute left-3 top-3 text-gray-600" size={14} />
-                        <select 
-                            value={customerInfo.category}
-                            onChange={e => setCustomerInfo({...customerInfo, category: e.target.value})}
-                            className="w-full bg-black/40 border border-white/5 rounded-lg pl-10 pr-10 py-2.5 text-xs text-white outline-none focus:border-brand-orange transition-all appearance-none cursor-pointer"
-                        >
-                            <option value="">-- Pilih Kategori Bisnis --</option>
-                            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-3 text-gray-600 pointer-events-none" size={14} />
-                    </div>
-                    {customerInfo.category === 'Lainnya' && (
-                        <div className="animate-fade-in">
+                {/* LEAD FORM SECTION */}
+                <div className="relative z-10 mb-8 space-y-4">
+                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2 mb-4">
+                        <User size={14} className="text-brand-orange"/> Identitas Juragan
+                    </h4>
+                    
+                    <div className="grid gap-3">
+                        <div className="relative">
+                            <User className="absolute left-3 top-3 text-gray-600" size={14} />
                             <Input 
-                                value={customerInfo.customCategory}
-                                onChange={e => setCustomerInfo({...customerInfo, customCategory: e.target.value})}
-                                placeholder="Tulis Kategori Bisnis Lo..." 
-                                className="py-2.5 text-xs bg-black/40 border-brand-orange/30"
+                                value={customerInfo.name}
+                                onChange={e => setCustomerInfo({...customerInfo, name: e.target.value})}
+                                onBlur={onShadowCapture}
+                                placeholder="Nama Lengkap" 
+                                className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
                             />
                         </div>
-                    )}
-                </div>
-            </div>
-
-            {/* ESTIMATION SECTION */}
-            <div className="relative z-10 border-t border-white/10 pt-6 mt-auto">
-                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4">Estimasi Investasi Awal</p>
-                
-                {hasBaseSelection ? (
-                    <div className="space-y-6 animate-fade-in">
-                        <div>
-                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Total Estimasi</p>
-                            <p className="text-4xl font-display font-bold text-white tracking-tight">
-                                {formatRupiah(calculation.total.min)}
-                            </p>
-                            <p className="text-[10px] text-gray-500 mt-1">
-                                s/d {formatRupiah(calculation.total.max)}
-                            </p>
+                        <div className="relative">
+                            <Phone className="absolute left-3 top-3 text-gray-600" size={14} />
+                            <Input 
+                                value={customerInfo.phone}
+                                onChange={e => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                                onBlur={onShadowCapture}
+                                placeholder="Nomor WhatsApp" 
+                                className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
+                            />
                         </div>
+                        <div className="relative">
+                            <Building className="absolute left-3 top-3 text-gray-600" size={14} />
+                            <Input 
+                                value={customerInfo.company}
+                                onChange={e => setCustomerInfo({...customerInfo, company: e.target.value})}
+                                onBlur={onShadowCapture}
+                                placeholder="Nama Usaha / Perusahaan" 
+                                className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
+                            />
+                        </div>
+                        <div className="relative">
+                            <MapPin className="absolute left-3 top-3 text-gray-600" size={14} />
+                            <Input 
+                                value={customerInfo.address}
+                                onChange={e => setCustomerInfo({...customerInfo, address: e.target.value})}
+                                onBlur={onShadowCapture}
+                                placeholder="Alamat / Kota" 
+                                className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
+                            />
+                        </div>
+                        <div className="relative">
+                            <Tag className="absolute left-3 top-3 text-gray-600" size={14} />
+                            <select 
+                                value={customerInfo.category}
+                                onChange={e => setCustomerInfo({...customerInfo, category: e.target.value})}
+                                onBlur={onShadowCapture}
+                                className="w-full bg-black/40 border border-white/5 rounded-lg pl-10 pr-10 py-2.5 text-xs text-white outline-none focus:border-brand-orange transition-all appearance-none cursor-pointer"
+                            >
+                                <option value="">-- Pilih Kategori Bisnis --</option>
+                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-3 text-gray-600 pointer-events-none" size={14} />
+                        </div>
+                        {customerInfo.category === 'Lainnya' && (
+                            <div className="animate-fade-in">
+                                <Input 
+                                    value={customerInfo.customCategory}
+                                    onChange={e => setCustomerInfo({...customerInfo, customCategory: e.target.value})}
+                                    onBlur={onShadowCapture}
+                                    placeholder="Tulis Kategori Bisnis Lo..." 
+                                    className="py-2.5 text-xs bg-black/40 border-brand-orange/30"
+                                />
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <div className="py-4 text-center opacity-50">
-                        <p className="text-xl font-bold text-gray-600">-- IDR --</p>
-                        <p className="text-[10px] text-gray-500 mt-2">Pilih paket di kiri dulu</p>
-                    </div>
-                )}
+                </div>
 
-                <div className="mt-8">
-                    <Button 
-                        onClick={onConsultation}
-                        disabled={!hasBaseSelection || isCapturing}
-                        className="w-full py-4 text-sm font-bold shadow-neon hover:shadow-neon-strong bg-brand-gradient"
-                    >
-                        {isCapturing ? <Loader2 className="animate-spin" /> : <><ArrowRight size={16} className="mr-2" /> KONSULTASI SEKARANG</>}
-                    </Button>
-                    <p className="text-[9px] text-gray-600 text-center mt-3 italic">
-                        *Harga final ditentukan setelah sesi konsultasi teknis.
-                    </p>
+                {/* ESTIMATION SECTION */}
+                <div className="relative z-10 border-t border-white/10 pt-6 mt-auto">
+                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4">Estimasi Investasi Awal</p>
+                    
+                    {hasBaseSelection ? (
+                        <div className="space-y-6 animate-fade-in">
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Total Estimasi</p>
+                                <p className="text-4xl font-display font-bold text-white tracking-tight">
+                                    {formatRupiah(calculation.total.min)}
+                                </p>
+                                <p className="text-[10px] text-gray-500 mt-1">
+                                    s/d {formatRupiah(calculation.total.max)}
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="py-4 text-center opacity-50">
+                            <p className="text-xl font-bold text-gray-600">-- IDR --</p>
+                            <p className="text-[10px] text-gray-500 mt-2">Pilih paket di kiri dulu</p>
+                        </div>
+                    )}
+
+                    <div className="mt-8">
+                        <Button 
+                            onClick={onConsultation}
+                            disabled={!hasBaseSelection || isCapturing || isFormIncomplete}
+                            className="w-full py-4 text-sm font-bold shadow-neon hover:shadow-neon-strong bg-brand-gradient"
+                        >
+                            {isCapturing ? <Loader2 className="animate-spin" /> : <><ArrowRight size={16} className="mr-2" /> KONSULTASI SEKARANG</>}
+                        </Button>
+                        <p className="text-[9px] text-gray-600 text-center mt-3 italic">
+                            {isFormIncomplete ? '*Lengkapi identitas untuk membuka tombol.' : '*Harga final ditentukan setelah sesi konsultasi teknis.'}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
