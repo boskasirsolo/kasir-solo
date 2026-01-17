@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
     Globe, Layers, LineChart, ShieldCheck, Save, Plus, 
     Trash2, Calculator, Sparkles, Wand2, Coffee, 
@@ -25,6 +25,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
     const [saving, setSaving] = useState(false);
     const [aiGenerating, setAiGenerating] = useState<string | null>(null);
     const [filterSlug, setFilterSlug] = useState('website');
+    const [itemSearchTerm, setItemSearchTerm] = useState('');
 
     // Editor Form State
     const [itemForm, setItemForm] = useState<CalcOption & { targets: string[], role: 'base' | 'addon' }>({
@@ -45,9 +46,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         setLoading(true);
         try {
             const { data: res } = await supabase.from('services').select('*');
-            if (res) {
-                setAllServices(res);
-            }
+            if (res) setAllServices(res);
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
 
@@ -67,9 +66,9 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
             if (targetField === 'desc') {
                 prompt = `Role: UX Copywriter. Task: Write ONE very short tooltip (max 10 words) for service: "${itemForm.label}". Use 'Gue/Lo' style. Indonesian. NO INTRO.`;
             } else if (targetField === 'founderNote') {
-                prompt = `Role: Founder PT Mesin Kasir Solo. Task: Write a short, personal 'Founder Note' (1-2 sentences) about why "${itemForm.label}" is important for a business. Use 'Gue/Lo'. NO INTRO.`;
+                prompt = `Role: Founder PT Mesin Kasir Solo. Task: Write a short, personal 'Founder Note' (1-2 sentences) about Kenapa item "${itemForm.label}" itu krusial buat bisnis UMKM. Use 'Gue/Lo'. NO INTRO.`;
             } else {
-                prompt = `Role: Persuasive copywriter. Task: Write a detailed benefit (Markdown, 2 paragraphs) for service: "${itemForm.label}". Focus on ROI. Use 'Gue/Lo'. NO INTRO.`;
+                prompt = `Role: Persuasive copywriter. Task: Write a detailed value proposition (Markdown, 2 paragraphs) for service: "${itemForm.label}". Focus on ROI and solving problems. Use 'Gue/Lo'. NO INTRO.`;
             }
             
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
@@ -87,7 +86,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         try {
             const itemId = itemForm.id || `item_${Date.now()}`;
             
-            // Loop semua target layanan (Broadcast)
             const updatePromises = itemForm.targets.map(async (slug) => {
                 const service = allServices.find(s => s.slug === slug);
                 if (!service) return;
@@ -97,7 +95,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                 
                 if (!calcData[listKey]) calcData[listKey] = [];
 
-                // Cek apakah item sudah ada di list ini
                 const existingIdx = calcData[listKey].findIndex((o: any) => o.id === itemId);
                 const itemPayload = {
                     id: itemId, label: itemForm.label, price: itemForm.price,
@@ -134,9 +131,22 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         } catch (e) { alert("Gagal hapus."); }
     };
 
-    if (loading) return <div className="flex justify-center p-20"><LoadingSpinner size={32}/></div>;
-
+    // --- FILTERED VIEW ---
     const currentService = allServices.find(s => s.slug === filterSlug);
+    
+    const filteredBase = useMemo(() => {
+        return (currentService?.calc_data?.baseOptions || []).filter((it: any) => 
+            it.label.toLowerCase().includes(itemSearchTerm.toLowerCase())
+        );
+    }, [currentService, itemSearchTerm]);
+
+    const filteredAddons = useMemo(() => {
+        return (currentService?.calc_data?.addons || []).filter((it: any) => 
+            it.label.toLowerCase().includes(itemSearchTerm.toLowerCase())
+        );
+    }, [currentService, itemSearchTerm]);
+
+    if (loading) return <div className="flex justify-center p-20"><LoadingSpinner size={32}/></div>;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in pb-20">
@@ -147,7 +157,9 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                     <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
                         <LayoutList size={18} className="text-brand-orange"/> Inventori Layanan
                     </h4>
-                    <div className="flex bg-brand-dark p-1 rounded-xl border border-white/10 overflow-x-auto custom-scrollbar-hide mb-6">
+                    
+                    {/* TAB HEADER */}
+                    <div className="flex bg-brand-dark p-1 rounded-xl border border-white/10 overflow-x-auto custom-scrollbar-hide mb-4">
                         {SERVICE_TARGETS.map(svc => (
                             <button
                                 key={svc.id}
@@ -159,18 +171,29 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         ))}
                     </div>
 
-                    <div className="space-y-6">
+                    {/* ITEM SEARCH */}
+                    <div className="relative mb-6">
+                        <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
+                        <input 
+                            value={itemSearchTerm}
+                            onChange={(e) => setItemSearchTerm(e.target.value)}
+                            placeholder="Cari item di layanan ini..."
+                            className="w-full bg-brand-card border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:border-brand-orange outline-none"
+                        />
+                    </div>
+
+                    <div className="space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
                         {/* PAKET UTAMA */}
                         <div>
                             <div className="flex justify-between items-center mb-3">
                                 <span className="text-[10px] font-bold text-brand-orange uppercase tracking-widest flex items-center gap-2"><Box size={14}/> Paket Utama</span>
-                                <span className="text-[9px] text-gray-600 font-mono">Count: {currentService?.calc_data?.baseOptions?.length || 0}</span>
+                                <span className="text-[9px] text-gray-600 font-mono">Hits: {filteredBase.length}</span>
                             </div>
                             <div className="space-y-2">
-                                {currentService?.calc_data?.baseOptions?.map((item: any) => (
+                                {filteredBase.map((item: any) => (
                                     <ItemCard key={item.id} item={item} role="base" onEdit={() => setItemForm({...item, targets: [filterSlug], role: 'base'})} onDelete={() => deleteItem(filterSlug, item.id, 'base')} />
                                 ))}
-                                {(!currentService?.calc_data?.baseOptions?.length) && <p className="text-[10px] text-gray-700 italic text-center py-4">Data kosong di database.</p>}
+                                {filteredBase.length === 0 && <p className="text-[10px] text-gray-700 italic text-center py-4">Paket utama kosong.</p>}
                             </div>
                         </div>
 
@@ -178,13 +201,13 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         <div>
                             <div className="flex justify-between items-center mb-3">
                                 <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><Zap size={14}/> Add-ons</span>
-                                <span className="text-[9px] text-gray-600 font-mono">Count: {currentService?.calc_data?.addons?.length || 0}</span>
+                                <span className="text-[9px] text-gray-600 font-mono">Hits: {filteredAddons.length}</span>
                             </div>
                             <div className="space-y-2">
-                                {currentService?.calc_data?.addons?.map((item: any) => (
+                                {filteredAddons.map((item: any) => (
                                     <ItemCard key={item.id} item={item} role="addon" onEdit={() => setItemForm({...item, targets: [filterSlug], role: 'addon'})} onDelete={() => deleteItem(filterSlug, item.id, 'addon')} />
                                 ))}
-                                {(!currentService?.calc_data?.addons?.length) && <p className="text-[10px] text-gray-700 italic text-center py-4">Data kosong di database.</p>}
+                                {filteredAddons.length === 0 && <p className="text-[10px] text-gray-700 italic text-center py-4">Add-ons kosong.</p>}
                             </div>
                         </div>
                     </div>
@@ -197,11 +220,16 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                     <div className="absolute top-0 right-0 p-4 opacity-5"><Edit3 size={100}/></div>
                     
                     <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
-                        <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                            <Sparkles size={20} className="text-brand-orange" /> 
-                            {itemForm.id ? 'Mode Edit Item' : 'Tambah Item Baru'}
-                        </h3>
-                        <button onClick={resetForm} className="text-gray-500 hover:text-white transition-colors"><RefreshCw size={18}/></button>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center text-brand-orange">
+                                <Sparkles size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-bold text-lg leading-none">{itemForm.id ? 'Mode Edit Item' : 'Tambah Item Baru'}</h3>
+                                <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Kalkulator Editor</p>
+                            </div>
+                        </div>
+                        <button onClick={resetForm} className="text-gray-500 hover:text-white transition-colors" title="Bersihkan Form"><RefreshCw size={18}/></button>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -223,7 +251,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                     {aiGenerating === 'desc' ? <LoadingSpinner size={8}/> : <><Sparkles size={10}/> AI Gen</>}
                                 </button>
                             </div>
-                            <Input value={itemForm.desc || ''} onChange={e => setItemForm({...itemForm, desc: e.target.value})} placeholder="Teaser 1 kalimat..." className="bg-black/20 text-xs" />
+                            <Input value={itemForm.desc || ''} onChange={e => setItemForm({...itemForm, desc: e.target.value})} placeholder="Teaser 1 kalimat untuk tooltip..." className="bg-black/20 text-xs" />
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-4">
@@ -234,7 +262,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                         {aiGenerating === 'longDesc' ? <LoadingSpinner size={8}/> : <><Sparkles size={10}/> AI Gen</>}
                                     </button>
                                 </div>
-                                <TextArea value={itemForm.longDesc || ''} onChange={e => setItemForm({...itemForm, longDesc: e.target.value})} className="h-32 text-[10px] bg-black/40" placeholder="Penerangan detail..." />
+                                <TextArea value={itemForm.longDesc || ''} onChange={e => setItemForm({...itemForm, longDesc: e.target.value})} className="h-40 text-[10px] bg-black/40 leading-relaxed" placeholder="Penjelasan mendalam yang muncul di side drawer..." />
                             </div>
                             <div>
                                 <div className="flex justify-between items-center mb-2">
@@ -243,7 +271,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                         {aiGenerating === 'founderNote' ? <LoadingSpinner size={8}/> : <><Wand2 size={10}/> AI Gen</>}
                                     </button>
                                 </div>
-                                <TextArea value={itemForm.founderNote || ''} onChange={e => setItemForm({...itemForm, founderNote: e.target.value})} className="h-32 text-[10px] bg-brand-orange/5 border-brand-orange/10 italic" placeholder="Pesan pribadi Mas Amin..." />
+                                <TextArea value={itemForm.founderNote || ''} onChange={e => setItemForm({...itemForm, founderNote: e.target.value})} className="h-40 text-[10px] bg-brand-orange/5 border-brand-orange/10 italic leading-relaxed" placeholder="Pesan pribadi Mas Amin tentang item ini..." />
                             </div>
                         </div>
                     </div>
@@ -251,7 +279,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                     {/* BROADCAST SECTION */}
                     <div className="mt-8 pt-8 border-t border-white/5">
                         <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-                            <Zap size={16} className="text-blue-400" /> Broadcast & Role
+                            <Zap size={16} className="text-blue-400" /> Broadcast & Role Settings
                         </h4>
                         
                         <div className="grid md:grid-cols-2 gap-6">
@@ -263,7 +291,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                 </div>
                             </div>
                             <div>
-                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Terapkan Ke:</label>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Terapkan Ke Layanan:</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {SERVICE_TARGETS.map(svc => {
                                         const isSelected = itemForm.targets.includes(svc.id);
@@ -286,7 +314,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         </div>
 
                         <Button onClick={handleSyncSave} disabled={saving} className="w-full mt-8 py-4 shadow-neon font-bold text-sm bg-brand-gradient">
-                            {saving ? <LoadingSpinner /> : <><Save size={18}/> SIMPAN & BROADCAST ITEM</>}
+                            {saving ? <LoadingSpinner /> : <><Save size={18}/> SIMPAN & BROADCAST KE LAYANAN</>}
                         </Button>
                     </div>
                 </div>
