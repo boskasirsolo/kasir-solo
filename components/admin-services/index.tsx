@@ -19,7 +19,6 @@ const SERVICE_TARGETS = [
 ];
 
 export const AdminServices = ({ config }: { config: SiteConfig }) => {
-    // --- STATE ---
     const [allServices, setAllServices] = useState<ServicePageData[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -27,7 +26,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
     const [filterSlug, setFilterSlug] = useState('website');
     const [itemSearchTerm, setItemSearchTerm] = useState('');
 
-    // Editor Form State
     const [itemForm, setItemForm] = useState<CalcOption & { targets: string[], role: 'base' | 'addon', includesStr: string }>({
         id: '',
         label: '',
@@ -37,7 +35,8 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         founderNote: '',
         includesStr: '',
         targets: ['website'], 
-        role: 'addon'
+        role: 'addon',
+        tier: 'basic' // NEW
     });
 
     useEffect(() => { fetchAllServices(); }, []);
@@ -54,7 +53,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
     const resetForm = () => {
         setItemForm({
             id: '', label: '', price: 0, desc: '', longDesc: '', founderNote: '', includesStr: '',
-            targets: [filterSlug], role: 'addon'
+            targets: [filterSlug], role: 'addon', tier: 'basic'
         });
     };
 
@@ -68,7 +67,8 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
             ...item,
             includesStr: item.includes ? item.includes.join('\n') : '',
             targets: activeTargets.length > 0 ? activeTargets : [filterSlug],
-            role: role
+            role: role,
+            tier: item.tier || 'basic'
         });
         
         if (window.innerWidth < 1024) {
@@ -77,7 +77,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         }
     };
 
-    // --- AI LOGIC ---
     const generateAiContent = async (targetField: 'desc' | 'longDesc' | 'founderNote' | 'includes') => {
         if (!itemForm.label) return alert("Isi Label Item dulu Bos.");
         setAiGenerating(targetField);
@@ -104,7 +103,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         } finally { setAiGenerating(null); }
     };
 
-    // --- SAVE LOGIC ---
     const handleSyncSave = async () => {
         if (!itemForm.label || itemForm.targets.length === 0) return alert("Lengkapi data dan pilih minimal 1 target layanan.");
         
@@ -130,7 +128,8 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                     desc: itemForm.desc, 
                     longDesc: itemForm.longDesc, 
                     founderNote: itemForm.founderNote,
-                    includes: includesArr
+                    includes: includesArr,
+                    tier: itemForm.role === 'addon' ? itemForm.tier : undefined // NEW
                 };
 
                 if (existingIdx > -1) {
@@ -173,7 +172,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         } catch (e) { alert("Gagal hapus."); }
     };
 
-    // --- FILTERED VIEW ---
     const currentService = allServices.find(s => s.slug === filterSlug);
     
     const filteredBase = useMemo(() => {
@@ -192,8 +190,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in pb-20">
-            
-            {/* COLUMN 1: LIST ARSENAL (LEFT) */}
             <div className="lg:col-span-5 space-y-6">
                 <div className="bg-black/40 p-4 rounded-2xl border border-white/5">
                     <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
@@ -252,7 +248,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                 </div>
             </div>
 
-            {/* COLUMN 2: EDITOR (RIGHT - STICKY) */}
             <div className="lg:col-span-7 space-y-6 lg:sticky lg:top-6" id="arsenal-editor">
                 <div className="bg-brand-card border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-5"><Edit3 size={100}/></div>
@@ -270,10 +265,9 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         <button onClick={resetForm} className="text-gray-500 hover:text-white transition-colors" title="Bersihkan Form"><RefreshCw size={18}/></button>
                     </div>
 
-                    {/* MOVED: SETTINGS SECTION (NOW AT THE TOP) */}
                     <div className="mb-10 pb-10 border-b border-white/5">
                         <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-                            <Zap size={16} className="text-blue-400" /> Broadcast & Role Settings
+                            <Zap size={16} className="text-blue-400" /> Broadcast & Tier Settings
                         </h4>
                         
                         <div className="grid md:grid-cols-2 gap-6">
@@ -284,31 +278,42 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                     <button onClick={() => setItemForm({...itemForm, role: 'addon'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'addon' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>ADD-ON</button>
                                 </div>
                             </div>
-                            <div>
-                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Terapkan Ke Layanan:</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {SERVICE_TARGETS.map(svc => {
-                                        const isSelected = itemForm.targets.includes(svc.id);
-                                        return (
-                                            <button 
-                                                key={svc.id} 
-                                                onClick={() => {
-                                                    const newTargets = isSelected ? itemForm.targets.filter(t => t !== svc.id) : [...itemForm.targets, svc.id];
-                                                    setItemForm({...itemForm, targets: newTargets});
-                                                }}
-                                                className={`flex items-center gap-2 p-2 rounded-lg border transition-all text-[9px] font-bold ${isSelected ? 'bg-brand-orange/20 border-brand-orange text-white' : 'bg-black/40 border-white/5 text-gray-600'}`}
-                                            >
-                                                {isSelected ? <CheckSquare size={12}/> : <Square size={12}/>}
-                                                {svc.label}
-                                            </button>
-                                        );
-                                    })}
+                            
+                            {/* NEW TIER SELECTOR */}
+                            {itemForm.role === 'addon' && (
+                                <div className="animate-fade-in">
+                                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Kategori Addon (Tier):</label>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setItemForm({...itemForm, tier: 'basic'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.tier === 'basic' ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'bg-black/20 border-white/5 text-gray-500'}`}>STANDAR (BASIC)</button>
+                                        <button onClick={() => setItemForm({...itemForm, tier: 'advanced'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.tier === 'advanced' ? 'bg-brand-orange/20 border-brand-orange text-brand-orange' : 'bg-black/20 border-white/5 text-gray-500'}`}>BOOSTER (PRO)</button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* INPUTS SECTION (MIDDLE) */}
+                    <div className="mb-6">
+                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Terapkan Ke Layanan:</label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {SERVICE_TARGETS.map(svc => {
+                                const isSelected = itemForm.targets.includes(svc.id);
+                                return (
+                                    <button 
+                                        key={svc.id} 
+                                        onClick={() => {
+                                            const newTargets = isSelected ? itemForm.targets.filter(t => t !== svc.id) : [...itemForm.targets, svc.id];
+                                            setItemForm({...itemForm, targets: newTargets});
+                                        }}
+                                        className={`flex items-center gap-2 p-2 rounded-lg border transition-all text-[9px] font-bold ${isSelected ? 'bg-brand-orange/20 border-brand-orange text-white' : 'bg-black/40 border-white/5 text-gray-600'}`}
+                                    >
+                                        {isSelected ? <CheckSquare size={12}/> : <Square size={12}/>}
+                                        {svc.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
                     <div className="grid md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Label Item</label>
@@ -331,7 +336,6 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                             <Input value={itemForm.desc || ''} onChange={e => setItemForm({...itemForm, desc: e.target.value})} placeholder="Teaser 1 kalimat untuk tooltip..." className="bg-black/20 text-xs" />
                         </div>
 
-                        {/* INCLUSIONS AREA (Only for Base Packages) */}
                         {itemForm.role === 'base' && (
                             <div className="animate-fade-in">
                                 <div className="flex justify-between items-center mb-2">
@@ -344,7 +348,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                     value={itemForm.includesStr || ''} 
                                     onChange={e => setItemForm({...itemForm, includesStr: e.target.value})} 
                                     className="h-24 text-[10px] bg-black/40 leading-relaxed font-mono" 
-                                    placeholder="Satu item per baris...&#10;Contoh:&#10;Setup DNS & Hosting&#10;SSL Certificate Pro&#10;Integrasi WhatsApp API" 
+                                    placeholder="Satu item per baris..." 
                                 />
                             </div>
                         )}
@@ -357,7 +361,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                         {aiGenerating === 'longDesc' ? <LoadingSpinner size={8}/> : <><Sparkles size={10}/> AI Gen</>}
                                     </button>
                                 </div>
-                                <TextArea value={itemForm.longDesc || ''} onChange={e => setItemForm({...itemForm, longDesc: e.target.value})} className="h-40 text-[10px] bg-black/40 leading-relaxed" placeholder="Penjelasan mendalam yang muncul di side drawer..." />
+                                <TextArea value={itemForm.longDesc || ''} onChange={e => setItemForm({...itemForm, longDesc: e.target.value})} className="h-40 text-[10px] bg-black/40 leading-relaxed" placeholder="Penjelasan mendalam..." />
                             </div>
                             <div>
                                 <div className="flex justify-between items-center mb-2">
@@ -366,12 +370,11 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                         {aiGenerating === 'founderNote' ? <LoadingSpinner size={8}/> : <><Wand2 size={10}/> AI Gen</>}
                                     </button>
                                 </div>
-                                <TextArea value={itemForm.founderNote || ''} onChange={e => setItemForm({...itemForm, founderNote: e.target.value})} className="h-40 text-[10px] bg-brand-orange/5 border-brand-orange/10 italic leading-relaxed" placeholder="Pesan pribadi Mas Amin tentang item ini..." />
+                                <TextArea value={itemForm.founderNote || ''} onChange={e => setItemForm({...itemForm, founderNote: e.target.value})} className="h-40 text-[10px] bg-brand-orange/5 border-brand-orange/10 italic leading-relaxed" placeholder="Pesan pribadi Mas Amin..." />
                             </div>
                         </div>
                     </div>
 
-                    {/* SAVE BUTTON (FIXED AT THE BOTTOM) */}
                     <div className="mt-8 pt-8 border-t border-white/5">
                         <Button onClick={handleSyncSave} disabled={saving} className="w-full py-4 shadow-neon font-bold text-sm bg-brand-gradient">
                             {saving ? <LoadingSpinner /> : <><Save size={18}/> SIMPAN & BROADCAST KE LAYANAN</>}
@@ -386,7 +389,10 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
 const ItemCard = ({ item, onEdit, onDelete, role }: any) => (
     <div className="flex items-center justify-between p-3 bg-brand-card/60 border border-white/5 rounded-xl group hover:border-brand-orange/30 transition-all cursor-pointer" onClick={onEdit}>
         <div className="flex-1 min-w-0 pr-4">
-            <h6 className="text-xs font-bold text-white truncate group-hover:text-brand-orange">{item.label}</h6>
+            <div className="flex items-center gap-2 mb-0.5">
+                <h6 className="text-xs font-bold text-white truncate group-hover:text-brand-orange">{item.label}</h6>
+                {item.tier === 'advanced' && <Zap size={10} className="text-brand-orange animate-pulse" />}
+            </div>
             <p className={`text-[10px] font-bold font-mono ${role === 'base' ? 'text-brand-orange' : 'text-blue-400'}`}>
                 {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price)}
             </p>

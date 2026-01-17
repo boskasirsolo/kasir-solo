@@ -28,14 +28,14 @@ export const WEBSITE_CALC: CalcData = {
     { id: 'compro', label: 'Company Profile (Kantor)', price: 3500000, desc: 'Branding perusahaan lengkap. Buat yang mau main tender/B2B.' },
     { id: 'toko', label: 'Toko Online (Minimarket)', price: 6500000, desc: 'Ada keranjang belanja, katalog banyak, itung ongkir otomatis.' }
   ],
-  addonLabel: "Senjata Tambahan (Opsional)",
+  addonLabel: "Senjata Tambahan",
   addons: [
-    { id: 'domain', label: 'Domain .COM / .ID (Sertifikat)', price: 300000 },
-    { id: 'gbp_web', label: 'Verifikasi Google Bisnis', price: 750000, desc: 'Biar muncul di Peta.' },
-    { id: 'copy', label: 'Copywriting (Sales Letter)', price: 750000, desc: 'Kata-kata yang nge-hipnotis pembeli.' },
-    { id: 'seo_basic', label: 'SEO Setup Basic', price: 500000 },
-    { id: 'wa_rotator', label: 'Rotator WhatsApp', price: 1200000, desc: 'Kalau CS lo banyak, chat dibagi rata.' },
-    { id: 'ai_chat', label: 'Chatbot AI Sederhana', price: 3000000, desc: 'Jawab pertanyaan umum otomatis.' }
+    { id: 'domain', label: 'Domain .COM / .ID', price: 300000, tier: 'basic' },
+    { id: 'seo_basic', label: 'SEO Setup Basic', price: 500000, tier: 'basic' },
+    { id: 'gbp_web', label: 'Verifikasi G-Maps', price: 750000, tier: 'basic' },
+    { id: 'copy', label: 'Copywriting Persuasif', price: 750000, tier: 'advanced', desc: 'Hipnotis pembeli lewat kata-kata.' },
+    { id: 'wa_rotator', label: 'Rotator WhatsApp CS', price: 1200000, tier: 'advanced', desc: 'Bagi chat rata ke banyak admin.' },
+    { id: 'ai_chat', label: 'Chatbot AI Auto-Reply', price: 3000000, tier: 'advanced', desc: 'Balas chat 24 jam non-stop.' }
   ]
 };
 
@@ -67,11 +67,11 @@ export const WEBAPP_CALC: CalcData = {
   ],
   addonLabel: "Modul Canggih",
   addons: [
-    { id: 'server', label: 'Cloud Server Setup (VPS)', price: 1500000, desc: 'Rumah buat sistem lo.' },
-    { id: 'wa_notif', label: 'Bot WhatsApp Notif', price: 1500000, desc: 'Laporan omzet masuk ke WA lo tiap tutup toko.' },
-    { id: 'payment', label: 'Payment Gateway', price: 2000000, desc: 'Terima QRIS/Virtual Account otomatis lunas.' },
-    { id: 'mobile', label: 'Android App Wrapper', price: 2500000, desc: 'Biar staff bisa install di HP kayak aplikasi biasa.' },
-    { id: 'ai_insight', label: 'AI Analisa Data', price: 5000000, desc: 'Prediksi stok habis & tren penjualan.' }
+    { id: 'server', label: 'Cloud VPS Setup', price: 1500000, tier: 'basic', desc: 'Rumah online buat sistem lo.' },
+    { id: 'wa_notif', label: 'Bot WhatsApp Notif', price: 1500000, tier: 'basic', desc: 'Laporan harian otomatis ke WA.' },
+    { id: 'payment', label: 'Payment Gateway (QRIS)', price: 2000000, tier: 'advanced', desc: 'Terima pembayaran otomatis.' },
+    { id: 'mobile', label: 'Android App Wrapper', price: 2500000, tier: 'advanced', desc: 'Jadikan aplikasi mobile.' },
+    { id: 'ai_insight', label: 'AI Analisa Data', price: 5000000, tier: 'advanced', desc: 'Prediksi stok & tren bisnis.' }
   ]
 };
 
@@ -103,9 +103,9 @@ export const SEO_CALC: CalcData = {
   ],
   addonLabel: "Booster Power",
   addons: [
-    { id: 'backlink', label: 'Backlink Media Nasional', price: 1500000, desc: 'Suntik power dari portal berita besar.' },
-    { id: 'content', label: 'Paket Artikel Bulanan (10x)', price: 750000, desc: 'Konten pilar & cluster rutin.' },
-    { id: 'gmb', label: 'Optimasi Google Maps Ekstrem', price: 1000000, desc: 'Review & sitasi lokal masif.' }
+    { id: 'content', label: 'Konten 10 Artikel/Bln', price: 750000, tier: 'basic' },
+    { id: 'gmb', label: 'Optimasi Google Maps', price: 1000000, tier: 'basic' },
+    { id: 'backlink', label: 'Backlink Media Nasional', price: 1500000, tier: 'advanced', desc: 'Suntik power dari portal besar.' }
   ]
 };
 
@@ -132,13 +132,13 @@ export const MAINTENANCE_CALC: CalcData = {
   baseLabel: "Paket Penjagaan",
   baseOptions: [
     { id: 'basic', label: 'Pos Ronda (Basic)', price: 500000, desc: 'Update plugin & backup bulanan.' },
-    { id: 'pro', label: 'Satpam Komplek (Pro)', price: 1500000, desc: 'Uptime monitor 24/7, daily backup, firewall.' },
-    { id: 'vip', label: 'Bodyguard (VIP)', price: 3500000, desc: 'Prioritas support, perbaikan error coding, speed optimization.' }
+    { id: 'pro', label: 'Satpam Komplek (Pro)', price: 1500000, desc: 'Uptime monitor, daily backup, firewall.' },
+    { id: 'vip', label: 'Bodyguard (VIP)', price: 3500000, desc: 'Prioritas support & speed optimization.' }
   ],
   addonLabel: "Extra Shield",
   addons: [
-    { id: 'cdn', label: 'CDN Enterprise', price: 500000, desc: 'Biar web ngebut diakses dari luar negeri.' },
-    { id: 'audit', label: 'Audit Keamanan Tahunan', price: 2500000, desc: 'Penetration testing simulasi hack.' },
-    { id: 'content_upload', label: 'Jasa Upload Konten', price: 500000, desc: 'Lo kirim materi, kita yang posting.' }
+    { id: 'cdn', label: 'CDN Enterprise', price: 500000, tier: 'basic', desc: 'Biar web kenceng di luar negeri.' },
+    { id: 'content_upload', label: 'Jasa Upload Konten', price: 500000, tier: 'basic', desc: 'Kita yang posting konten lo.' },
+    { id: 'audit', label: 'Audit Keamanan Tahunan', price: 2500000, tier: 'advanced', desc: 'Simulasi hack mendalam.' }
   ]
 };

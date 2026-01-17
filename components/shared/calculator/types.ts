@@ -5,8 +5,9 @@ export interface CalcOption {
   price: number;
   desc?: string;
   longDesc?: string; 
-  founderNote?: string; // Teks pesan pribadi founder (Amin)
-  includes?: string[]; // Item standar yang didapatkan (Baru)
+  founderNote?: string; 
+  includes?: string[]; 
+  tier?: 'basic' | 'advanced'; // NEW: Untuk pengelompokan UI
 }
 
 export interface CalcData {

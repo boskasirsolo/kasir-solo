@@ -4,6 +4,7 @@ import { CalculatorProps } from './types';
 import { useCalculator } from './logic';
 import { CalcHeader, BaseOptionItem, AddonOptionItem, ResultCard } from './ui-parts';
 import { SideDrawer } from './side-drawer';
+import { Zap, ShieldCheck } from 'lucide-react';
 
 interface ExtendedCalculatorProps extends CalculatorProps {
     waNumber?: string;
@@ -22,7 +23,6 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
       setActiveDetailItem
   } = useCalculator(data, serviceName, waNumber, serviceSlug);
 
-  // Expanded Form State with Scale
   const [customerInfo, setCustomerInfo] = useState({ 
       name: '', 
       phone: '',
@@ -64,6 +64,10 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
       });
   };
 
+  // Grouping Addons Logic
+  const basicAddons = data.addons.filter(a => !a.tier || a.tier === 'basic');
+  const advancedAddons = data.addons.filter(a => a.tier === 'advanced');
+
   return (
     <div className="bg-brand-dark border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
       <div className="absolute top-0 right-0 w-64 h-64 bg-brand-orange/5 rounded-full blur-[80px] pointer-events-none"></div>
@@ -94,23 +98,52 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
                </div>
             </div>
 
-            {/* STEP 2: ADDONS */}
-            <div>
+            {/* STEP 2: GROUPED ADDONS */}
+            <div className="space-y-8">
                <h4 className="text-sm font-bold text-brand-orange uppercase tracking-widest mb-4 flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-brand-orange text-white flex items-center justify-center text-[10px] font-bold">2</span>
                   {data.addonLabel}
                </h4>
-               <div className="grid md:grid-cols-2 gap-3">
-                  {data.addons.map(opt => (
-                     <AddonOptionItem 
-                        key={opt.id} 
-                        option={opt} 
-                        isSelected={selectedAddons.includes(opt.id)} 
-                        onToggle={() => toggleAddon(opt.id)}
-                        onDetail={() => setActiveDetailItem(opt)} 
-                     />
-                  ))}
-               </div>
+
+               {/* BASIC ADDONS */}
+               {basicAddons.length > 0 && (
+                  <div className="space-y-4">
+                     <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                        <ShieldCheck size={14} className="text-blue-400" /> Basic Support
+                     </p>
+                     <div className="grid md:grid-cols-2 gap-3">
+                        {basicAddons.map(opt => (
+                           <AddonOptionItem 
+                              key={opt.id} 
+                              option={opt} 
+                              isSelected={selectedAddons.includes(opt.id)} 
+                              onToggle={() => toggleAddon(opt.id)}
+                              onDetail={() => setActiveDetailItem(opt)} 
+                           />
+                        ))}
+                     </div>
+                  </div>
+               )}
+
+               {/* ADVANCED ADDONS */}
+               {advancedAddons.length > 0 && (
+                  <div className="space-y-4">
+                     <p className="text-[10px] text-brand-orange font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                        <Zap size={14} className="text-brand-orange" /> Advanced Power-Ups
+                     </p>
+                     <div className="grid md:grid-cols-2 gap-3">
+                        {advancedAddons.map(opt => (
+                           <AddonOptionItem 
+                              key={opt.id} 
+                              option={opt} 
+                              isSelected={selectedAddons.includes(opt.id)} 
+                              onToggle={() => toggleAddon(opt.id)}
+                              onDetail={() => setActiveDetailItem(opt)} 
+                           />
+                        ))}
+                     </div>
+                  </div>
+               )}
             </div>
 
          </div>
@@ -128,7 +161,6 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
 
       </div>
 
-      {/* Side Detail Drawer */}
       {activeDetailItem && (
           <SideDrawer 
             item={activeDetailItem} 
