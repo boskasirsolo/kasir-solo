@@ -8,6 +8,42 @@ export interface DocItem {
 
 export const DOCUMENTATION_CONTENT: DocItem[] = [
     {
+        id: 'crm-war-room',
+        category: 'Arsenal Penjualan',
+        title: 'War Room CRM (Identitas Tunggal)',
+        content: `
+# Sales War Room: Ubah Penanya Jadi Pembeli
+
+Modul CRM ini adalah pusat komando untuk mengelola hubungan dengan calon mitra (Leads) dan pelanggan setia (Loyal Customer).
+
+### 1. Filosofi Identitas Tunggal 🆔
+Setiap nomor WhatsApp dianggap sebagai **Satu Identitas Unik**. 
+- Jika seseorang mengisi form kontak, lalu besoknya mencoba simulasi budget, datanya akan bergabung di profil yang sama.
+- Kita bisa melihat "perjalanan" mereka di website kita dari awal sampai akhir.
+
+### 2. Memahami Lead Temperature (Suhu) 🌡️
+AI otomatis menentukan seberapa besar niat beli mereka:
+- 🔥 **HOT:** Berasal dari Shadow Leads (orang yang sudah sampai halaman checkout tapi batal) atau pembeli lama. Prioritas utama untuk disapa!
+- 🟠 **WARM:** Berasal dari simulasi budget layanan. Mereka punya uang, tapi sedang menimbang opsi.
+- 🔵 **COLD:** Baru sekadar mengisi form kontak atau tanya-tanya umum.
+
+### 3. Pipeline Kanban 📋
+Gunakan papan Kanban untuk memantau proses negosiasi:
+- **New:** Baru mendarat.
+- **Needs Analysis:** Sedang lo tanya-tanya kebutuhannya.
+- **Proposal Sent:** Udah lo kirimin penawaran (PDF).
+- **Deal:** Udah transfer dan jadi mitra.
+
+### 4. SIBOS AI Follow-up 🤖
+Gunakan tombol **"Sapa AI"** di setiap kartu pelanggan.
+- SIBOS akan membaca data mereka (misal: "tadi lihat paket POS Android").
+- SIBOS membuatkan draf chat WhatsApp yang sangat personal.
+- Klik tombol tersebut, dan WhatsApp Web akan terbuka dengan pesan otomatis siap kirim.
+
+> **Tips Intelijen:** SIBOS AI di chat admin bisa ditanya soal CRM. Coba ketik: *"Siapa leads paling hot hari ini?"*
+        `
+    },
+    {
         id: 'intel-analytics',
         category: 'Intelligence & Analytics',
         title: 'Traffic Command Center (Radar Bisnis)',

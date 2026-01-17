@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useCRMLogic } from './logic';
-// Fix: Added LeadStatus to the import list to resolve "Cannot find name 'LeadStatus'" errors.
 import { PIPELINE_STAGES, Customer, LeadStatus } from './types';
 import { Search, RefreshCw, LayoutGrid, List, MessageCircle, Phone, MapPin, Building, Clock, Flame, Loader2, Sparkles, User, ArrowRight } from 'lucide-react';
 import { formatRupiah } from '../../utils';
@@ -130,9 +129,17 @@ export const AdminCRM = ({ config }: { config: any }) => {
     );
 };
 
-// Fix: Updated prop types to use 'any' return for functions and utilize imported LeadStatus. 
-// This resolves the type mismatch on line 60 and "Cannot find name 'LeadStatus'" errors.
-const LeadCard = ({ customer, onStatusUpdate, onAIScript, isGenerating }: { customer: Customer, onStatusUpdate: (id: string, s: LeadStatus) => any, onAIScript: () => any, isGenerating: boolean }) => {
+// --- SUB-COMPONENTS ---
+
+interface LeadCardProps {
+    customer: Customer;
+    onStatusUpdate: (id: string, s: LeadStatus) => any;
+    onAIScript: () => any;
+    isGenerating: boolean;
+}
+
+// Fix: Use React.FC<LeadCardProps> to correctly handle React component props (like 'key') and resolve the type mismatch in parent map.
+const LeadCard: React.FC<LeadCardProps> = ({ customer, onStatusUpdate, onAIScript, isGenerating }) => {
     return (
         <div className={`bg-brand-card p-4 rounded-xl border-l-4 transition-all hover:border-brand-orange hover:shadow-neon-text/5 group ${customer.lead_temperature === 'hot' ? 'border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.1)]' : customer.lead_temperature === 'warm' ? 'border-orange-500' : 'border-blue-500'}`}>
             <div className="flex justify-between items-start mb-3">

@@ -24,20 +24,13 @@ const SIBOS_BRAIN_CONTEXT = `
 You are **SIBOS AI**, digital alter-ego of **Amin Maghfuri** (Founder PT Mesin Kasir Solo).
 
 [STYLE & TONE - WAJIB LUWES]
-1. **Gaya Bahasa:** Santai, akrab, jalanan (Street-Smart). Pake "Gue/Lo". Jangan baku kayak robot atau CS bank.
-2. **Sapaan:** Panggil user "**Bos**". (Natural aja, gak perlu dipaksain di setiap awal kalimat).
-3. **Conversational:** Jawab layaknya manusia yang lagi chatting di WhatsApp. Jangan kaku, jangan terlalu formal.
-4. **Anti-Robot:** 
-   - JANGAN PERNAH ngomong "Maaf saya tidak mengerti" atau "Sebagai model bahasa AI".
-   - Kalau bingung, tanya balik santai: "Maksudnya gimana tuh Bos?", "Waduh, kurang nangkep gue. Coba detailin lagi.", "Bentar, ini ngomongin apa ya Bos?"
+1. **Gaya Bahasa:** Santai, akrab, jalanan (Street-Smart). Pake "Gue/Lo". Jangan kaku kayak robot atau CS bank.
+2. **Sapaan:** Panggil user "**Bos**".
+3. **Conversational:** Jawab layaknya manusia yang lagi chatting di WhatsApp.
 
-[MISI LO]
-Bantu user nemuin solusi kasir tanpa basa-basi marketing busuk. Lo partner diskusi mereka, bukan pelayan.
-
-[ATURAN KONTEN]
-- Ditanya Harga? -> Kasih range kasar, terus arahin ke WA buat nego "biar enak".
-- Ditanya Teknis? -> Jelasin simpel pake analogi sehari-hari.
-- User Curhat? -> Dengerin, kasih empati (karena lo pernah bangkrut 2022), terus tawarin solusi sistem.
+[CRM INTELLIGENCE MODE]
+Saat berada di Dashboard Admin, lo punya akses ke data pelanggan (CRM). 
+Tugas lo: Bantu Founder menganalisa siapa prospek yang harus disapa (Hot Leads) dan apa strategi sapaan yang cocok berdasarkan histori mereka.
 `;
 
 // --- 2. TOOLS DEFINITION ---
@@ -71,16 +64,20 @@ const ADMIN_TOOLS = [
         } 
     },
     {
-        name: 'delete_content',
-        description: 'Menghapus konten database.',
+        name: 'get_crm_insights',
+        description: 'Mendapatkan ringkasan leads terbaru dan customer paling hot.',
+        parameters: { type: 'OBJECT', properties: { limit: { type: 'NUMBER' } } }
+    },
+    {
+        name: 'search_customer_history',
+        description: 'Mencari riwayat interaksi pelanggan spesifik berdasarkan nama atau nomor telepon.',
         parameters: { 
             type: 'OBJECT', 
             properties: { 
-                contentType: { type: 'STRING', enum: ['products', 'articles', 'gallery'] }, 
-                titleKeyword: { type: 'STRING' } 
+                query: { type: 'STRING', description: 'Nama atau nomor WhatsApp pelanggan' } 
             }, 
-            required: ['contentType', 'titleKeyword'] 
-        } 
+            required: ['query'] 
+        }
     }
 ];
 
@@ -88,14 +85,12 @@ const ADMIN_TOOLS = [
 
 const executeTool = async (name: string, args: any) => {
     if (name === 'check_stock') {
-        // Mock check stock
         return `Stok "${args.productName}" aman di gudang Solo, Bos. Siap kirim hari ini juga kalau transfer sebelum jam 3.`;
     }
     if (name === 'check_shipping') {
         return `Estimasi ke ${args.city} sekitar Rp ${args.weightKg ? args.weightKg * 10000 : '35rb-50rb'} pake JNE Trucking. Murah kok, Bos.`;
     }
 
-    // ADMIN TOOLS
     if (!supabase) return "Error: Database connection missing.";
     
     try {
@@ -109,14 +104,32 @@ const executeTool = async (name: string, args: any) => {
             if (error) throw error;
             return `Siap, artikel "${args.title}" udah gue posting, Bos.`;
         }
-        if (name === 'delete_content') {
-            const table = args.contentType;
-            const column = table === 'gallery' || table === 'articles' ? 'title' : 'name';
-            const { data: items } = await supabase.from(table).select(`id, ${column}`).ilike(column, `%${args.titleKeyword}%`).limit(1);
-            if (!items || items.length === 0) return `Item "${args.titleKeyword}" gak ketemu di database, Bos.`;
-            const { error } = await supabase.from(table).delete().eq('id', items[0].id);
-            if (error) throw error;
-            return `Beres, item udah gue hapus selamanya.`;
+
+        if (name === 'get_crm_insights') {
+            const { data: hotLeads } = await supabase.from('customers').select('*').eq('lead_temperature', 'hot').order('last_interaction', { ascending: false }).limit(5);
+            if (!hotLeads || hotLeads.length === 0) return "Belum ada leads yang berstatus HOT hari ini, Bos. Tetap pantau traffic!";
+            
+            let summary = "Ini 5 Juragan paling HOT yang baru aja interaksi:\n";
+            hotLeads.forEach((l: any) => {
+                summary += `- **${l.name}** (${l.phone}): Sumber dari ${l.source}. Status: ${l.lead_status}. Terakhir aktif: ${new Date(l.last_interaction).toLocaleTimeString()}\n`;
+            });
+            summary += "\nMau gue bikinin skrip sapaan buat salah satu dari mereka?";
+            return summary;
+        }
+
+        if (name === 'search_customer_history') {
+            const { data: customer } = await supabase.from('customers').select('*').or(`name.ilike.%${args.query}%,phone.ilike.%${args.query}%`).maybeSingle();
+            if (!customer) return `Waduh, data Juragan "${args.query}" gak ketemu di database CRM gue, Bos.`;
+            
+            return `
+            **DATA INTEL JURAGAN:**
+            - Nama: ${customer.name}
+            - WhatsApp: ${customer.phone}
+            - Suhu: ${customer.lead_temperature === 'hot' ? '🔥 HOT' : '❄️ COLD'}
+            - Total Belanja: Rp ${customer.total_spent.toLocaleString('id-ID')}
+            - Catatan Intel: ${customer.notes || 'Belum ada catatan.'}
+            - Terakhir Sapa: ${new Date(customer.last_interaction).toLocaleDateString()}
+            `;
         }
     } catch (err: any) { return `Ada error pas eksekusi tool: ${err.message}`; }
     
@@ -131,7 +144,6 @@ export const SibosAI = {
         userMessage: string, 
         isAdmin: boolean
     ) => {
-        // --- 0. DYNAMIC MEMORY FETCH ---
         let dynamicKnowledge = "";
         if (supabase) {
             try {
@@ -141,7 +153,7 @@ export const SibosAI = {
                     .eq('is_active', true);
                 
                 if (data && data.length > 0) {
-                    dynamicKnowledge = "\n[UPDATE HAFALAN DARI MAS AMIN (Gunakan data ini jika relevan)]\n";
+                    dynamicKnowledge = "\n[UPDATE HAFALAN DARI MAS AMIN]\n";
                     data.forEach(item => {
                         dynamicKnowledge += `- KATEGORI [${item.category.toUpperCase()}]: ${item.title} -> ${item.content}\n`;
                     });
@@ -149,8 +161,6 @@ export const SibosAI = {
             } catch (e) { console.warn("Failed to fetch dynamic brain", e); }
         }
 
-        // 1. Dynamic Injection
-        // Only inject anecdote if user asks about background/story to save tokens and keep it short
         const isPersonalQuestion = /cerita|kisah|kenapa|siapa/i.test(userMessage);
         const selectedAnecdote = isPersonalQuestion ? FOUNDER_ANECDOTES[Math.floor(Math.random() * FOUNDER_ANECDOTES.length)] : "";
         
@@ -158,17 +168,13 @@ export const SibosAI = {
             ${SIBOS_BRAIN_CONTEXT}
             ${PRE_SALES_KNOWLEDGE}
             ${dynamicKnowledge}
-            
-            [DYNAMIC MEMORY]
-            ${selectedAnecdote ? `Relevant Anecdote: ${selectedAnecdote}` : ""}
+            [DYNAMIC MEMORY] ${selectedAnecdote}
         `;
 
-        // 2. Prepare Tools
         const tools = isAdmin 
             ? [{ functionDeclarations: [...PUBLIC_TOOLS, ...ADMIN_TOOLS] }] 
             : [{ functionDeclarations: PUBLIC_TOOLS }];
 
-        // 3. First Call (Thinking)
         const contents = [...history, { role: 'user', parts: [{ text: userMessage }] }];
         
         let result = await callGeminiWithRotation({
@@ -180,7 +186,6 @@ export const SibosAI = {
         const responseContent = result.candidates?.[0]?.content;
         const functionCalls = responseContent?.parts?.filter((p: any) => p.functionCall).map((p: any) => p.functionCall);
 
-        // 4. Function Execution Loop (Multi-turn)
         if (functionCalls && functionCalls.length > 0) {
             contents.push({ role: 'model', parts: responseContent.parts });
 
