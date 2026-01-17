@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Calculator, ArrowRight, Loader2, User, Phone, Building, MapPin, Tag, ChevronDown } from 'lucide-react';
+import { Check, Calculator, ArrowRight, Loader2, User, Phone, Building, MapPin, Tag, ChevronDown, BarChart3 } from 'lucide-react';
 import { formatRupiah } from '../../../utils';
 import { Button, Input } from '../../ui';
 import { CalcOption } from './types';
@@ -94,6 +94,7 @@ export const AddonOptionItem: React.FC<{
 );
 
 const CATEGORIES = ["Cafe / Resto", "Retail / Toko", "Fashion / Butik", "Laundry", "Minimarket", "Lainnya"];
+const SCALES = ["Mikro (Gerobakan/Rumahan)", "Kecil (Toko Tunggal)", "Menengah (2-5 Cabang)", "Gede (Grosir/Distributor)", "Enterprise (Rantai Nasional)", "Lainnya"];
 
 export const ResultCard = ({ 
     calculation, 
@@ -112,8 +113,10 @@ export const ResultCard = ({
     hasBaseSelection: boolean,
     isCapturing?: boolean
 }) => {
-    // Validasi form identitas
-    const isFormIncomplete = !customerInfo.name || !customerInfo.phone || !customerInfo.company || !customerInfo.address || !customerInfo.category || (customerInfo.category === 'Lainnya' && !customerInfo.customCategory);
+    // Validasi form identitas lengkap
+    const isFormIncomplete = !customerInfo.name || !customerInfo.phone || !customerInfo.company || !customerInfo.address || 
+                             !customerInfo.category || (customerInfo.category === 'Lainnya' && !customerInfo.customCategory) ||
+                             !customerInfo.scale || (customerInfo.scale === 'Lainnya' && !customerInfo.customScale);
 
     return (
         <div className="lg:col-span-5 p-6 md:p-10 bg-black/40 flex flex-col h-full">
@@ -159,6 +162,33 @@ export const ResultCard = ({
                                 className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
                             />
                         </div>
+                        
+                        {/* SKALA BISNIS */}
+                        <div className="relative">
+                            <BarChart3 className="absolute left-3 top-3 text-gray-600" size={14} />
+                            <select 
+                                value={customerInfo.scale}
+                                onChange={e => setCustomerInfo({...customerInfo, scale: e.target.value})}
+                                onBlur={onShadowCapture}
+                                className="w-full bg-black/40 border border-white/5 rounded-lg pl-10 pr-10 py-2.5 text-xs text-white outline-none focus:border-brand-orange transition-all appearance-none cursor-pointer"
+                            >
+                                <option value="">-- Pilih Skala Bisnis --</option>
+                                {SCALES.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-3 text-gray-600 pointer-events-none" size={14} />
+                        </div>
+                        {customerInfo.scale === 'Lainnya' && (
+                            <div className="animate-fade-in">
+                                <Input 
+                                    value={customerInfo.customScale}
+                                    onChange={e => setCustomerInfo({...customerInfo, customScale: e.target.value})}
+                                    onBlur={onShadowCapture}
+                                    placeholder="Tulis Skala Bisnis Lo (Cth: Pabrik)..." 
+                                    className="py-2.5 text-xs bg-black/40 border-brand-orange/30"
+                                />
+                            </div>
+                        )}
+
                         <div className="relative">
                             <MapPin className="absolute left-3 top-3 text-gray-600" size={14} />
                             <Input 
@@ -182,17 +212,6 @@ export const ResultCard = ({
                             </select>
                             <ChevronDown className="absolute right-3 top-3 text-gray-600 pointer-events-none" size={14} />
                         </div>
-                        {customerInfo.category === 'Lainnya' && (
-                            <div className="animate-fade-in">
-                                <Input 
-                                    value={customerInfo.customCategory}
-                                    onChange={e => setCustomerInfo({...customerInfo, customCategory: e.target.value})}
-                                    onBlur={onShadowCapture}
-                                    placeholder="Tulis Kategori Bisnis Lo..." 
-                                    className="py-2.5 text-xs bg-black/40 border-brand-orange/30"
-                                />
-                            </div>
-                        )}
                     </div>
                 </div>
 

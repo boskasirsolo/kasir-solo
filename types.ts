@@ -163,6 +163,7 @@ export interface ServiceSimulation {
   company_name?: string;
   address?: string;
   business_category?: string;
+  business_scale?: string; // NEW COLUMN
   service_slug: string;
   service_name: string;
   base_option_label: string;

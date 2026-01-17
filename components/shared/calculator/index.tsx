@@ -22,32 +22,46 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
       setActiveDetailItem
   } = useCalculator(data, serviceName, waNumber, serviceSlug);
 
-  // Expanded Form State
+  // Expanded Form State with Scale
   const [customerInfo, setCustomerInfo] = useState({ 
       name: '', 
       phone: '',
       company: '',
       address: '',
       category: '',
-      customCategory: ''
+      customCategory: '',
+      scale: '',
+      customScale: ''
   });
 
   const onConsult = () => {
       const finalCategory = customerInfo.category === 'Lainnya' 
         ? customerInfo.customCategory 
         : customerInfo.category;
+      
+      const finalScale = customerInfo.scale === 'Lainnya'
+        ? customerInfo.customScale
+        : customerInfo.scale;
 
       handleConsultation({
           name: customerInfo.name,
           phone: customerInfo.phone,
           company: customerInfo.company,
           address: customerInfo.address,
-          category: finalCategory
+          category: finalCategory,
+          scale: finalScale
       });
   };
 
   const onShadow = () => {
-      handleShadowCapture(customerInfo);
+      const finalScale = customerInfo.scale === 'Lainnya'
+        ? customerInfo.customScale
+        : customerInfo.scale;
+
+      handleShadowCapture({
+          ...customerInfo,
+          scale: finalScale
+      });
   };
 
   return (

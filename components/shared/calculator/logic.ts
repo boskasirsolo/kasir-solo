@@ -41,27 +41,44 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
     };
   }, [selectedBase, selectedAddons, data]);
 
-  // NEW: Shadow Lead Capture
+  // NEW: Full Detail Shadow Lead Capture
   const handleShadowCapture = async (customerData: any) => {
     if (!customerData.name || !customerData.phone || customerData.phone.length < 9) return;
     
     const cleanPhone = normalizePhone(customerData.phone);
-    if (!cleanPhone || cleanPhone === lastCapturedPhone.current) return;
+    if (!cleanPhone) return;
 
     if (!supabase) return;
 
+    // Get Addons Labels for the report
+    const activeAddonsLabels = data.addons
+        .filter(a => selectedAddons.includes(a.id))
+        .map(a => a.label)
+        .join(', ');
+
+    // Structured Report for "Notes" Column
+    const fullDetailReport = 
+        `🏢USAHA: ${customerData.company || '-'}\n` +
+        `⚖️SKALA: ${customerData.scale || '-'}\n` +
+        `📍ALAMAT: ${customerData.address || '-'}\n` +
+        `📦PAKET: ${calculation.baseLabel || '(Belum pilih)'}\n` +
+        `🚀ADDONS: ${activeAddonsLabels || '(Tidak ada)'}\n` +
+        `💰ESTIMASI: ${formatRupiah(calculation.total.min)}`;
+
     try {
-        // Masuk ke tabel leads (Shadow Leads)
-        await supabase.from('leads').insert([{
-            name: customerData.name,
+        // Upsert based on phone to prevent duplicates in shadow list
+        await supabase.from('leads').upsert([{
             phone: cleanPhone,
-            source: `simulation_shadow_${serviceSlug || 'general'}`,
-            interest: `Simulasi: ${serviceName} (${calculation.baseLabel || 'Belum pilih paket'})`,
-            notes: `Perusahaan: ${customerData.company || '-'}\nAlamat: ${customerData.address || '-'}\nKategori: ${customerData.category || '-'}`,
+            name: customerData.name,
+            source: `sim_shadow_${serviceSlug || 'general'}`,
+            interest: `Simulasi: ${serviceName}`,
+            notes: fullDetailReport,
+            business_scale: customerData.scale, // Sync to specific column if created
             status: 'new'
-        }]);
+        }], { onConflict: 'phone' });
+        
         lastCapturedPhone.current = cleanPhone;
-        console.log("Shadow lead captured");
+        console.log("Full shadow lead context captured");
     } catch (e) {
         console.warn("Shadow capture failed", e);
     }
@@ -73,6 +90,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
       company?: string;
       address?: string;
       category?: string;
+      scale?: string;
   }) => {
     if (!selectedBase) return alert("Pilih paket dasar terlebih dahulu.");
 
@@ -101,6 +119,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
                 company_name: customerData.company || '-',
                 address: customerData.address || '-',
                 business_category: customerData.category || '-',
+                business_scale: customerData.scale || '-',
                 notes: `Log Simulasi: ${serviceName}`
             }]);
         } catch (e) {
@@ -117,6 +136,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
                     `👤 *Nama:* ${customerData.name}%0A` +
                     `📱 *WA:* ${customerData.phone}%0A` +
                     `🏢 *Usaha:* ${customerData.company || '-'}%0A` +
+                    `⚖️ *Skala:* ${customerData.scale || '-'}%0A` +
                     `📍 *Lokasi:* ${customerData.address || '-'}%0A` +
                     `🏷️ *Kategori:* ${customerData.category || '-'}%0A%0A` +
                     `🛠️ *Layanan:* ${serviceName}%0A` +
