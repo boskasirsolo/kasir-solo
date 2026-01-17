@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
     Globe, Layers, LineChart, ShieldCheck, Save, Plus, 
     Trash2, Calculator, Sparkles, Wand2, Coffee, 
     Edit3, RefreshCw, Box, Zap, LayoutList, ChevronRight,
-    Search, CheckSquare, Square, ListChecks
+    Search, CheckSquare, Square, ListChecks, ArrowLeft
 } from 'lucide-react';
 import { SiteConfig, ServicePageData } from '../../types';
 import { CalcOption } from '../shared/calculator/types';
@@ -25,6 +26,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
     const [aiGenerating, setAiGenerating] = useState<string | null>(null);
     const [filterSlug, setFilterSlug] = useState('website');
     const [itemSearchTerm, setItemSearchTerm] = useState('');
+    const [showMobileEditor, setShowMobileEditor] = useState(false);
 
     const [itemForm, setItemForm] = useState<CalcOption & { targets: string[], role: 'base' | 'addon', includesStr: string }>({
         id: '',
@@ -36,7 +38,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         includesStr: '',
         targets: ['website'], 
         role: 'addon',
-        tier: 'basic' // NEW
+        tier: 'basic'
     });
 
     useEffect(() => { fetchAllServices(); }, []);
@@ -55,6 +57,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
             id: '', label: '', price: 0, desc: '', longDesc: '', founderNote: '', includesStr: '',
             targets: [filterSlug], role: 'addon', tier: 'basic'
         });
+        setShowMobileEditor(false);
     };
 
     const startEditing = (item: any, role: 'base' | 'addon') => {
@@ -71,10 +74,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
             tier: item.tier || 'basic'
         });
         
-        if (window.innerWidth < 1024) {
-            const editor = document.getElementById('arsenal-editor');
-            editor?.scrollIntoView({ behavior: 'smooth' });
-        }
+        setShowMobileEditor(true);
     };
 
     const generateAiContent = async (targetField: 'desc' | 'longDesc' | 'founderNote' | 'includes') => {
@@ -111,7 +111,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
             const itemId = itemForm.id || `item_${Date.now()}`;
             const includesArr = itemForm.includesStr ? itemForm.includesStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
             
-            const updateResults = await Promise.all(itemForm.targets.map(async (slug) => {
+            await Promise.all(itemForm.targets.map(async (slug) => {
                 const service = allServices.find(s => s.slug === slug);
                 if (!service) return { success: false, slug };
 
@@ -129,7 +129,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                     longDesc: itemForm.longDesc, 
                     founderNote: itemForm.founderNote,
                     includes: includesArr,
-                    tier: itemForm.role === 'addon' ? itemForm.tier : undefined // NEW
+                    tier: itemForm.role === 'addon' ? itemForm.tier : undefined
                 };
 
                 if (existingIdx > -1) {
@@ -141,8 +141,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                 const { error } = await supabase!
                     .from('services')
                     .update({ calc_data: calcData })
-                    .eq('slug', slug)
-                    .select();
+                    .eq('slug', slug);
 
                 if (error) throw error;
                 return { success: true, slug };
@@ -186,174 +185,111 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         );
     }, [currentService, itemSearchTerm]);
 
-    if (loading) return <div className="flex justify-center p-20"><LoadingSpinner size={32}/></div>;
-
-    return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in pb-20">
-            <div className="lg:col-span-5 space-y-6">
-                <div className="bg-black/40 p-4 rounded-2xl border border-white/5">
-                    <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-                        <LayoutList size={18} className="text-brand-orange"/> Inventori Layanan
-                    </h4>
-                    
-                    <div className="flex bg-brand-dark p-1 rounded-xl border border-white/10 overflow-x-auto custom-scrollbar-hide mb-4">
-                        {SERVICE_TARGETS.map(svc => (
-                            <button
-                                key={svc.id}
-                                onClick={() => setFilterSlug(svc.id)}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${filterSlug === svc.id ? 'bg-brand-orange text-white shadow-neon' : 'text-gray-500 hover:text-white'}`}
-                            >
-                                <svc.icon size={14} /> {svc.label}
-                            </button>
-                        ))}
+    const EditorContent = ({ hideHeader = false }: { hideHeader?: boolean }) => (
+        <div className={`bg-brand-card border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden h-full ${hideHeader ? 'border-none shadow-none bg-transparent' : ''}`}>
+            {!hideHeader && <div className="absolute top-0 right-0 p-4 opacity-5"><Edit3 size={100}/></div>}
+            
+            <div className={`flex justify-between items-center mb-8 border-b border-white/5 pb-4 ${hideHeader ? 'hidden' : ''}`}>
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center text-brand-orange">
+                        <Sparkles size={20} />
                     </div>
-
-                    <div className="relative mb-6">
-                        <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
-                        <input 
-                            value={itemSearchTerm}
-                            onChange={(e) => setItemSearchTerm(e.target.value)}
-                            placeholder="Cari item di layanan ini..."
-                            className="w-full bg-brand-card border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:border-brand-orange outline-none"
-                        />
-                    </div>
-
-                    <div className="space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
-                        <div>
-                            <div className="flex justify-between items-center mb-3">
-                                <span className="text-[10px] font-bold text-brand-orange uppercase tracking-widest flex items-center gap-2"><Box size={14}/> Paket Utama</span>
-                                <span className="text-[9px] text-gray-600 font-mono">Hits: {filteredBase.length}</span>
-                            </div>
-                            <div className="space-y-2">
-                                {filteredBase.map((item: any) => (
-                                    <ItemCard key={item.id} item={item} role="base" onEdit={() => startEditing(item, 'base')} onDelete={() => deleteItem(filterSlug, item.id, 'base')} />
-                                ))}
-                                {filteredBase.length === 0 && <p className="text-[10px] text-gray-700 italic text-center py-4">Paket utama kosong.</p>}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between items-center mb-3">
-                                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><Zap size={14}/> Add-ons</span>
-                                <span className="text-[9px] text-gray-600 font-mono">Hits: {filteredAddons.length}</span>
-                            </div>
-                            <div className="space-y-2">
-                                {filteredAddons.map((item: any) => (
-                                    <ItemCard key={item.id} item={item} role="addon" onEdit={() => startEditing(item, 'addon')} onDelete={() => deleteItem(filterSlug, item.id, 'addon')} />
-                                ))}
-                                {filteredAddons.length === 0 && <p className="text-[10px] text-gray-700 italic text-center py-4">Add-ons kosong.</p>}
-                            </div>
-                        </div>
+                    <div>
+                        <h3 className="text-white font-bold text-lg leading-none">{itemForm.id ? 'Mode Edit Item' : 'Tambah Item Baru'}</h3>
+                        <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Kalkulator Editor</p>
                     </div>
                 </div>
+                <button onClick={resetForm} className="text-gray-500 hover:text-white transition-colors" title="Bersihkan Form"><RefreshCw size={18}/></button>
             </div>
 
-            <div className="lg:col-span-7 space-y-6 lg:sticky lg:top-6" id="arsenal-editor">
-                <div className="bg-brand-card border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-5"><Edit3 size={100}/></div>
-                    
-                    <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center text-brand-orange">
-                                <Sparkles size={20} />
-                            </div>
-                            <div>
-                                <h3 className="text-white font-bold text-lg leading-none">{itemForm.id ? 'Mode Edit Item' : 'Tambah Item Baru'}</h3>
-                                <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Kalkulator Editor</p>
-                            </div>
-                        </div>
-                        <button onClick={resetForm} className="text-gray-500 hover:text-white transition-colors" title="Bersihkan Form"><RefreshCw size={18}/></button>
-                    </div>
-
-                    <div className="mb-10 pb-10 border-b border-white/5">
-                        <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-                            <Zap size={16} className="text-blue-400" /> Broadcast & Tier Settings
-                        </h4>
-                        
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Jenis Item:</label>
-                                <div className="flex gap-2">
-                                    <button onClick={() => setItemForm({...itemForm, role: 'base'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'base' ? 'bg-brand-orange border-brand-orange text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>PAKET UTAMA</button>
-                                    <button onClick={() => setItemForm({...itemForm, role: 'addon'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'addon' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>ADD-ON</button>
-                                </div>
-                            </div>
-                            
-                            {/* NEW TIER SELECTOR */}
-                            {itemForm.role === 'addon' && (
-                                <div className="animate-fade-in">
-                                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Kategori Addon (Tier):</label>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => setItemForm({...itemForm, tier: 'basic'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.tier === 'basic' ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'bg-black/20 border-white/5 text-gray-500'}`}>STANDAR (BASIC)</button>
-                                        <button onClick={() => setItemForm({...itemForm, tier: 'advanced'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.tier === 'advanced' ? 'bg-brand-orange/20 border-brand-orange text-brand-orange' : 'bg-black/20 border-white/5 text-gray-500'}`}>BOOSTER (PRO)</button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Terapkan Ke Layanan:</label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                            {SERVICE_TARGETS.map(svc => {
-                                const isSelected = itemForm.targets.includes(svc.id);
-                                return (
-                                    <button 
-                                        key={svc.id} 
-                                        onClick={() => {
-                                            const newTargets = isSelected ? itemForm.targets.filter(t => t !== svc.id) : [...itemForm.targets, svc.id];
-                                            setItemForm({...itemForm, targets: newTargets});
-                                        }}
-                                        className={`flex items-center gap-2 p-2 rounded-lg border transition-all text-[9px] font-bold ${isSelected ? 'bg-brand-orange/20 border-brand-orange text-white' : 'bg-black/40 border-white/5 text-gray-600'}`}
-                                    >
-                                        {isSelected ? <CheckSquare size={12}/> : <Square size={12}/>}
-                                        {svc.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6">
+                <div className="mb-6 pb-6 border-b border-white/5">
+                    <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+                        <Zap size={16} className="text-blue-400" /> Broadcast & Tier Settings
+                    </h4>
+                    <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Label Item</label>
-                            <Input value={itemForm.label} onChange={e => setItemForm({...itemForm, label: e.target.value})} placeholder="Cth: Starter Pack" className="bg-black/40"/>
-                        </div>
-                        <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Harga Mahar (IDR)</label>
-                            <Input value={formatNumberInput(itemForm.price)} onChange={e => setItemForm({...itemForm, price: cleanNumberInput(e.target.value)})} className="bg-black/40 text-brand-orange font-bold font-mono"/>
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="text-[10px] text-gray-500 font-bold uppercase">Tooltip Singkat</label>
-                                <button onClick={() => generateAiContent('desc')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1 hover:text-white transition-colors">
-                                    {aiGenerating === 'desc' ? <LoadingSpinner size={8}/> : <><Sparkles size={10}/> AI Gen</>}
-                                </button>
+                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Jenis Item:</label>
+                            <div className="flex gap-2">
+                                <button onClick={() => setItemForm({...itemForm, role: 'base'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'base' ? 'bg-brand-orange border-brand-orange text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>PAKET UTAMA</button>
+                                <button onClick={() => setItemForm({...itemForm, role: 'addon'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'addon' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>ADD-ON</button>
                             </div>
-                            <Input value={itemForm.desc || ''} onChange={e => setItemForm({...itemForm, desc: e.target.value})} placeholder="Teaser 1 kalimat untuk tooltip..." className="bg-black/20 text-xs" />
                         </div>
-
-                        {itemForm.role === 'base' && (
+                        {itemForm.role === 'addon' && (
                             <div className="animate-fade-in">
-                                <div className="flex justify-between items-center mb-2">
-                                    <label className="text-[10px] text-brand-orange font-bold uppercase flex items-center gap-1"><ListChecks size={12}/> Standar Inclusions (Apa yang didapat?)</label>
-                                    <button onClick={() => generateAiContent('includes')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1">
-                                        {aiGenerating === 'includes' ? <LoadingSpinner size={8}/> : <><Wand2 size={10}/> AI List</>}
-                                    </button>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Kategori Addon (Tier):</label>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setItemForm({...itemForm, tier: 'basic'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.tier === 'basic' ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'bg-black/20 border-white/5 text-gray-500'}`}>STANDAR (BASIC)</button>
+                                    <button onClick={() => setItemForm({...itemForm, tier: 'advanced'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.tier === 'advanced' ? 'bg-brand-orange/20 border-brand-orange text-brand-orange' : 'bg-black/20 border-white/5 text-gray-500'}`}>BOOSTER (PRO)</button>
                                 </div>
-                                <TextArea 
-                                    value={itemForm.includesStr || ''} 
-                                    onChange={e => setItemForm({...itemForm, includesStr: e.target.value})} 
-                                    className="h-24 text-[10px] bg-black/40 leading-relaxed font-mono" 
-                                    placeholder="Satu item per baris..." 
-                                />
                             </div>
                         )}
+                    </div>
+                </div>
 
-                        <div className="grid md:grid-cols-2 gap-4">
+                <div className="mb-6">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Terapkan Ke Layanan:</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {SERVICE_TARGETS.map(svc => {
+                            const isSelected = itemForm.targets.includes(svc.id);
+                            return (
+                                <button 
+                                    key={svc.id} 
+                                    onClick={() => {
+                                        const newTargets = isSelected ? itemForm.targets.filter(t => t !== svc.id) : [...itemForm.targets, svc.id];
+                                        setItemForm({...itemForm, targets: newTargets});
+                                    }}
+                                    className={`flex items-center gap-2 p-2 rounded-lg border transition-all text-[9px] font-bold ${isSelected ? 'bg-brand-orange/20 border-brand-orange text-white' : 'bg-black/40 border-white/5 text-gray-600'}`}
+                                >
+                                    {isSelected ? <CheckSquare size={12}/> : <Square size={12}/>}
+                                    {svc.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Label Item</label>
+                        <Input value={itemForm.label} onChange={e => setItemForm({...itemForm, label: e.target.value})} placeholder="Cth: Starter Pack" className="bg-black/40"/>
+                    </div>
+                    <div>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Harga Mahar (IDR)</label>
+                        <Input value={formatNumberInput(itemForm.price)} onChange={e => setItemForm({...itemForm, price: cleanNumberInput(e.target.value)})} className="bg-black/40 text-brand-orange font-bold font-mono"/>
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <div>
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-[10px] text-gray-500 font-bold uppercase">Tooltip Singkat</label>
+                            <button onClick={() => generateAiContent('desc')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1 hover:text-white transition-colors">
+                                {aiGenerating === 'desc' ? <LoadingSpinner size={8}/> : <><Sparkles size={10}/> AI Gen</>}
+                            </button>
+                        </div>
+                        <Input value={itemForm.desc || ''} onChange={e => setItemForm({...itemForm, desc: e.target.value})} placeholder="Teaser 1 kalimat untuk tooltip..." className="bg-black/20 text-xs" />
+                    </div>
+
+                    {itemForm.role === 'base' && (
+                        <div className="animate-fade-in">
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="text-[10px] text-brand-orange font-bold uppercase flex items-center gap-1"><ListChecks size={12}/> Standar Inclusions (Apa yang didapat?)</label>
+                                <button onClick={() => generateAiContent('includes')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1">
+                                    {aiGenerating === 'includes' ? <LoadingSpinner size={8}/> : <><Wand2 size={10}/> AI List</>}
+                                </button>
+                            </div>
+                            <TextArea 
+                                value={itemForm.includesStr || ''} 
+                                onChange={e => setItemForm({...itemForm, includesStr: e.target.value})} 
+                                className="h-24 text-[10px] bg-black/40 leading-relaxed font-mono" 
+                                placeholder="Satu item per baris..." 
+                            />
+                        </div>
+                    )}
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-4">
                             <div>
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="text-[10px] text-gray-500 font-bold uppercase">Detail Strategi (Markdown)</label>
@@ -363,6 +299,8 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                 </div>
                                 <TextArea value={itemForm.longDesc || ''} onChange={e => setItemForm({...itemForm, longDesc: e.target.value})} className="h-40 text-[10px] bg-black/40 leading-relaxed" placeholder="Penjelasan mendalam..." />
                             </div>
+                        </div>
+                        <div className="space-y-4">
                             <div>
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="text-[10px] text-brand-orange font-bold uppercase flex items-center gap-1"><Coffee size={10}/> Founder Note</label>
@@ -374,14 +312,109 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="mt-8 pt-8 border-t border-white/5">
-                        <Button onClick={handleSyncSave} disabled={saving} className="w-full py-4 shadow-neon font-bold text-sm bg-brand-gradient">
-                            {saving ? <LoadingSpinner /> : <><Save size={18}/> SIMPAN & BROADCAST KE LAYANAN</>}
-                        </Button>
-                    </div>
+                <div className="mt-8 pt-8 border-t border-white/5">
+                    <Button onClick={handleSyncSave} disabled={saving} className="w-full py-4 shadow-neon font-bold text-sm bg-brand-gradient">
+                        {saving ? <LoadingSpinner /> : <><Save size={18}/> SIMPAN & BROADCAST</>}
+                    </Button>
                 </div>
             </div>
+        </div>
+    );
+
+    const MobileEditorOverlay = () => (
+        <div className="fixed inset-0 z-[9999] bg-brand-black flex flex-col animate-fade-in overflow-hidden lg:hidden">
+            <div className="p-4 bg-brand-card border-b border-white/10 flex items-center justify-between shrink-0 shadow-lg relative z-20">
+                <button onClick={resetForm} className="flex items-center gap-2 text-brand-orange font-bold text-sm">
+                    <ArrowLeft size={20} /> Kembali
+                </button>
+                <h3 className="text-white font-bold text-sm truncate max-w-[200px]">
+                    {itemForm.id ? 'Edit Item' : 'Item Baru'}
+                </h3>
+                <div className="w-10"></div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar pb-20">
+                <EditorContent hideHeader={true} />
+            </div>
+        </div>
+    );
+
+    if (loading) return <div className="flex justify-center p-20"><LoadingSpinner size={32}/></div>;
+
+    return (
+        <div className="relative">
+            <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in pb-20 ${showMobileEditor ? 'hidden lg:grid' : 'grid'}`}>
+                <div className="lg:col-span-5 space-y-6">
+                    <div className="bg-black/40 p-4 rounded-2xl border border-white/5">
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-white font-bold text-sm flex items-center gap-2">
+                                <LayoutList size={18} className="text-brand-orange"/> Inventori Layanan
+                            </h4>
+                            <button 
+                                onClick={resetForm} 
+                                className="p-2 bg-brand-orange text-white rounded-lg shadow-neon lg:hidden"
+                                title="Tambah Item Baru"
+                            >
+                                <Plus size={18} />
+                            </button>
+                        </div>
+                        
+                        <div className="flex bg-brand-dark p-1 rounded-xl border border-white/10 overflow-x-auto custom-scrollbar-hide mb-4">
+                            {SERVICE_TARGETS.map(svc => (
+                                <button
+                                    key={svc.id}
+                                    onClick={() => setFilterSlug(svc.id)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${filterSlug === svc.id ? 'bg-brand-orange text-white shadow-neon' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    <svc.icon size={14} /> {svc.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="relative mb-6">
+                            <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
+                            <input 
+                                value={itemSearchTerm}
+                                onChange={(e) => setItemSearchTerm(e.target.value)}
+                                placeholder="Cari item di layanan ini..."
+                                className="w-full bg-brand-card border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:border-brand-orange outline-none"
+                            />
+                        </div>
+
+                        <div className="space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+                            <div>
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-[10px] font-bold text-brand-orange uppercase tracking-widest flex items-center gap-2"><Box size={14}/> Paket Utama</span>
+                                    <span className="text-[9px] text-gray-600 font-mono">Hits: {filteredBase.length}</span>
+                                </div>
+                                <div className="space-y-2">
+                                    {filteredBase.map((item: any) => (
+                                        <ItemCard key={item.id} item={item} role="base" onEdit={() => startEditing(item, 'base')} onDelete={() => deleteItem(filterSlug, item.id, 'base')} />
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><Zap size={14}/> Add-ons</span>
+                                    <span className="text-[9px] text-gray-600 font-mono">Hits: {filteredAddons.length}</span>
+                                </div>
+                                <div className="space-y-2">
+                                    {filteredAddons.map((item: any) => (
+                                        <ItemCard key={item.id} item={item} role="addon" onEdit={() => startEditing(item, 'addon')} onDelete={() => deleteItem(filterSlug, item.id, 'addon')} />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="hidden lg:block lg:col-span-7 space-y-6 lg:sticky lg:top-6">
+                    <EditorContent />
+                </div>
+            </div>
+
+            {showMobileEditor && createPortal(<MobileEditorOverlay />, document.body)}
         </div>
     );
 };
