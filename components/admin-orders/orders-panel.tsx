@@ -1,13 +1,20 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Package } from 'lucide-react';
 import { LoadingSpinner } from '../ui';
 import { useOrderLogic } from './logic';
 import { OrderCard } from './order-card';
 import { SiteConfig } from '../../types';
 
-export const OrdersPanel = ({ config }: { config: SiteConfig }) => {
-    const { state, updateStatus, updateShipping, toggleExpand } = useOrderLogic();
+export const OrdersPanel = ({ config, refreshKey }: { config: SiteConfig, refreshKey?: number }) => {
+    const { state, fetchOrders, updateStatus, updateShipping, toggleExpand } = useOrderLogic();
+
+    // Sinyal Refresh dari Parent
+    useEffect(() => {
+        if (refreshKey !== undefined && refreshKey > 0) {
+            fetchOrders();
+        }
+    }, [refreshKey]);
 
     if (state.loading) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
 

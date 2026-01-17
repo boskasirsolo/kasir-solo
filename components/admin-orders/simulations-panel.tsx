@@ -133,12 +133,19 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
     printWindow.document.close();
 };
 
-export const SimulationsPanel = ({ config }: { config: SiteConfig }) => {
+export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, refreshKey?: number }) => {
     const [sims, setSims] = useState<ServiceSimulation[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => { fetchSims(); }, []);
+
+    // Sinyal Refresh dari Parent
+    useEffect(() => {
+        if (refreshKey !== undefined && refreshKey > 0) {
+            fetchSims();
+        }
+    }, [refreshKey]);
 
     const fetchSims = async () => {
         if (!supabase) return;
@@ -182,7 +189,7 @@ export const SimulationsPanel = ({ config }: { config: SiteConfig }) => {
                         className="w-full bg-brand-dark border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white focus:border-brand-orange"
                     />
                 </div>
-                <button onClick={fetchSims} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg border border-white/5">
+                <button onClick={fetchSims} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg border border-white/5 transition-all">
                     <RefreshCw size={18} />
                 </button>
             </div>

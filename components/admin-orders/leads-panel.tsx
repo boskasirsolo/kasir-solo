@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Target, Phone, MessageCircle, Building, Package, Clock, Trash2, Cpu, ChevronDown, ChevronUp, User, MapPin, Tag, BarChart3, Zap, ShoppingBag, MousePointer2 } from 'lucide-react';
 import { LoadingSpinner } from '../ui';
 import { useLeadLogic } from './logic';
@@ -122,9 +122,16 @@ const ServiceLeadCard: React.FC<{
     );
 };
 
-export const LeadsPanel = () => {
-    const { state, deleteLead } = useLeadLogic();
+export const LeadsPanel = ({ refreshKey }: { refreshKey?: number }) => {
+    const { state, fetchLeads, deleteLead } = useLeadLogic();
     const [expandedId, setExpandedId] = useState<number | null>(null);
+
+    // Sinyal Refresh dari Parent
+    useEffect(() => {
+        if (refreshKey !== undefined && refreshKey > 0) {
+            fetchLeads();
+        }
+    }, [refreshKey]);
 
     if (state.loading) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
 
