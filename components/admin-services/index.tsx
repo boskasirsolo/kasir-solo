@@ -186,7 +186,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
     }, [currentService, itemSearchTerm]);
 
     const EditorContent = ({ hideHeader = false }: { hideHeader?: boolean }) => (
-        <div className={`bg-brand-card border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden h-full ${hideHeader ? 'border-none shadow-none bg-transparent' : ''}`}>
+        <div className={`bg-brand-card border border-white/10 rounded-2xl shadow-2xl relative overflow-hidden ${hideHeader ? 'border-none shadow-none bg-transparent h-auto' : 'p-6 h-full flex flex-col'}`}>
             {!hideHeader && <div className="absolute top-0 right-0 p-4 opacity-5"><Edit3 size={100}/></div>}
             
             <div className={`flex justify-between items-center mb-8 border-b border-white/5 pb-4 ${hideHeader ? 'hidden' : ''}`}>
@@ -202,7 +202,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                 <button onClick={resetForm} className="text-gray-500 hover:text-white transition-colors" title="Bersihkan Form"><RefreshCw size={18}/></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6">
+            <div className={`${hideHeader ? 'h-auto' : 'flex-1 overflow-y-auto custom-scrollbar'} space-y-6`}>
                 <div className="mb-6 pb-6 border-b border-white/5">
                     <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
                         <Zap size={16} className="text-blue-400" /> Broadcast & Tier Settings
@@ -314,7 +314,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                     </div>
                 </div>
 
-                <div className="mt-8 pt-8 border-t border-white/5">
+                <div className="mt-8 pt-8 border-t border-white/5 pb-12">
                     <Button onClick={handleSyncSave} disabled={saving} className="w-full py-4 shadow-neon font-bold text-sm bg-brand-gradient">
                         {saving ? <LoadingSpinner /> : <><Save size={18}/> SIMPAN & BROADCAST</>}
                     </Button>
@@ -334,7 +334,8 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                 </h3>
                 <div className="w-10"></div>
             </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar pb-20">
+            {/* Scroll Container Utama Mobile */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar pb-32">
                 <EditorContent hideHeader={true} />
             </div>
         </div>
