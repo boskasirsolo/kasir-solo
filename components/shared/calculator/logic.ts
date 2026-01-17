@@ -51,7 +51,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
 
     const addonsText = data.addons
         .filter(a => selectedAddons.includes(a.id))
-        .map(a => a.label)
+        .map(a => `${a.label} (${a.tier || 'basic'})`)
         .join(', ');
 
     // Format data terstruktur untuk parser admin
@@ -90,12 +90,13 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
   }) => {
     if (!selectedBase) return alert("Pilih paket dasar terlebih dahulu.");
 
+    // INCLUDE TIER IN SAVED DATA
     const activeAddons = data.addons
         .filter(a => selectedAddons.includes(a.id))
-        .map(a => ({ label: a.label, price: a.price }));
+        .map(a => ({ label: a.label, price: a.price, tier: a.tier || 'basic' }));
 
     const addonsLabels = activeAddons
-        .map(a => `- ${a.label}`)
+        .map(a => `- ${a.label} [${a.tier?.toUpperCase()}]`)
         .join('\n');
 
     if (supabase) {
@@ -108,7 +109,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
                 service_name: serviceName,
                 base_option_label: calculation.baseLabel,
                 base_option_price: calculation.basePrice,
-                selected_addons: activeAddons,
+                selected_addons: activeAddons, // Now has tier info
                 total_min: calculation.total.min,
                 total_max: calculation.total.max,
                 status: 'new',

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Phone, Calendar, Search, Filter, Trash2, Printer, Download, Eye, ArrowRight, User, BadgeCheck, ExternalLink, RefreshCw } from 'lucide-react';
+import { FileText, Phone, Calendar, Search, Filter, Trash2, Printer, Download, Eye, ArrowRight, User, BadgeCheck, ExternalLink, RefreshCw, Zap, ShieldCheck } from 'lucide-react';
 import { ServiceSimulation, SiteConfig } from '../../types';
 import { supabase, formatRupiah } from '../../utils';
 import { LoadingSpinner, Button } from '../ui';
@@ -13,6 +13,10 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
     const companyName = config.companyLegalName || "PT MESIN KASIR SOLO";
     const dateStr = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
     
+    // Grouping for PDF
+    const basicAddons = sim.selected_addons?.filter((a: any) => !a.tier || a.tier === 'basic') || [];
+    const advancedAddons = sim.selected_addons?.filter((a: any) => a.tier === 'advanced') || [];
+
     const html = `
     <!DOCTYPE html>
     <html>
@@ -72,7 +76,7 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
                         <tr>
                             <td class="p-3 border">
                                 <p class="font-bold text-xs">${addon.label}</p>
-                                <p class="text-[10px] text-gray-400">Modul Tambahan (Add-on)</p>
+                                <p class="text-[10px] text-gray-400">${addon.tier === 'advanced' ? '🚀 Advanced Module' : '🛠️ Basic Support'}</p>
                             </td>
                             <td class="p-3 border text-right font-mono text-xs">${formatRupiah(addon.price)}</td>
                         </tr>
@@ -189,98 +193,133 @@ export const SimulationsPanel = ({ config }: { config: SiteConfig }) => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
-                    {filtered.map(sim => (
-                        <div key={sim.id} className="bg-brand-card/50 border border-white/5 rounded-2xl p-6 hover:border-brand-orange transition-all group shadow-xl">
-                            <div className="flex flex-col lg:flex-row justify-between gap-6">
-                                {/* LEFT: USER INFO */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                                            sim.service_slug === 'website' ? 'text-blue-400 border-blue-500/20 bg-blue-500/10' :
-                                            sim.service_slug === 'webapp' ? 'text-purple-400 border-purple-500/20 bg-purple-500/10' :
-                                            'text-brand-orange border-brand-orange/20 bg-brand-orange/10'
-                                        }`}>
-                                            {sim.service_name.toUpperCase()}
-                                        </span>
-                                        <span className="text-[10px] text-gray-500 flex items-center gap-1"><Calendar size={10}/> {new Date(sim.created_at).toLocaleString('id-ID')}</span>
-                                    </div>
-                                    <h4 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-                                        <User size={16} className="text-gray-500"/> {sim.customer_name}
-                                    </h4>
-                                    <div className="flex items-center gap-3 text-xs text-gray-400">
-                                        <Phone size={14} className="text-green-500"/> 
-                                        <a href={`https://wa.me/${sim.customer_phone}`} target="_blank" className="hover:text-brand-orange font-mono">{sim.customer_phone}</a>
-                                    </div>
-                                    
-                                    <div className="mt-4 p-4 bg-black/40 rounded-xl border border-white/5">
-                                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/5">
-                                            <span className="text-[10px] text-gray-500 uppercase font-bold">Solusi Utama</span>
-                                            <span className="text-white font-bold text-sm">{sim.base_option_label}</span>
+                    {filtered.map(sim => {
+                        // GROUPING ADDONS FOR UI
+                        const basicAddons = sim.selected_addons?.filter((a: any) => !a.tier || a.tier === 'basic') || [];
+                        const advancedAddons = sim.selected_addons?.filter((a: any) => a.tier === 'advanced') || [];
+
+                        return (
+                            <div key={sim.id} className="bg-brand-card/50 border border-white/5 rounded-2xl p-6 hover:border-brand-orange transition-all group shadow-xl">
+                                <div className="flex flex-col lg:flex-row justify-between gap-6">
+                                    {/* LEFT: USER INFO */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                                                sim.service_slug === 'website' ? 'text-blue-400 border-blue-500/20 bg-blue-500/10' :
+                                                sim.service_slug === 'webapp' ? 'text-purple-400 border-purple-500/20 bg-purple-500/10' :
+                                                'text-brand-orange border-brand-orange/20 bg-brand-orange/10'
+                                            }`}>
+                                                {sim.service_name.toUpperCase()}
+                                            </span>
+                                            <span className="text-[10px] text-gray-500 flex items-center gap-1"><Calendar size={10}/> {new Date(sim.created_at).toLocaleString('id-ID')}</span>
                                         </div>
-                                        <div className="space-y-1">
-                                            <span className="text-[10px] text-gray-500 uppercase font-bold block mb-1">Add-ons:</span>
-                                            {sim.selected_addons?.length > 0 ? sim.selected_addons.map((a: any, i: number) => (
-                                                <div key={i} className="flex justify-between items-center text-[10px]">
-                                                    <span className="text-gray-400">{a.label}</span>
-                                                    <span className="text-gray-500">{formatRupiah(a.price)}</span>
-                                                </div>
-                                            )) : <span className="text-[10px] text-gray-600 italic">Tanpa Add-on</span>}
+                                        <h4 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                                            <User size={16} className="text-gray-500"/> {sim.customer_name}
+                                        </h4>
+                                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                                            <Phone size={14} className="text-green-500"/> 
+                                            <a href={`https://wa.me/${sim.customer_phone}`} target="_blank" className="hover:text-brand-orange font-mono">{sim.customer_phone}</a>
+                                        </div>
+                                        
+                                        <div className="mt-4 p-4 bg-black/40 rounded-xl border border-white/5">
+                                            <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
+                                                <span className="text-[10px] text-gray-500 uppercase font-bold">Solusi Utama</span>
+                                                <span className="text-white font-bold text-sm">{sim.base_option_label}</span>
+                                            </div>
+                                            
+                                            <div className="space-y-4">
+                                                {/* BASIC GROUP */}
+                                                {basicAddons.length > 0 && (
+                                                    <div>
+                                                        <span className="text-[9px] text-blue-400 font-black uppercase tracking-widest flex items-center gap-1 mb-2">
+                                                            <ShieldCheck size={10}/> Basic Support
+                                                        </span>
+                                                        <div className="space-y-1">
+                                                            {basicAddons.map((a: any, i: number) => (
+                                                                <div key={i} className="flex justify-between items-center text-[10px]">
+                                                                    <span className="text-gray-400">{a.label}</span>
+                                                                    <span className="text-gray-500">{formatRupiah(a.price)}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* ADVANCED GROUP */}
+                                                {advancedAddons.length > 0 && (
+                                                    <div>
+                                                        <span className="text-[9px] text-brand-orange font-black uppercase tracking-widest flex items-center gap-1 mb-2">
+                                                            <Zap size={10}/> Advanced Power-Ups
+                                                        </span>
+                                                        <div className="space-y-1">
+                                                            {advancedAddons.map((a: any, i: number) => (
+                                                                <div key={i} className="flex justify-between items-center text-[10px]">
+                                                                    <span className="text-gray-400">{a.label}</span>
+                                                                    <span className="text-gray-500">{formatRupiah(a.price)}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {!sim.selected_addons?.length && <span className="text-[10px] text-gray-600 italic">Tanpa Add-on</span>}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* RIGHT: TOTAL & ACTIONS */}
-                                <div className="lg:w-64 shrink-0 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-6">
-                                    <div className="text-right">
-                                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Estimasi Budget</p>
-                                        <p className="text-2xl font-display font-bold text-brand-orange leading-tight">{formatRupiah(sim.total_min)}</p>
-                                        <p className="text-[10px] text-gray-400">s/d {formatRupiah(sim.total_max)}</p>
-                                    </div>
+                                    {/* RIGHT: TOTAL & ACTIONS */}
+                                    <div className="lg:w-64 shrink-0 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-6">
+                                        <div className="text-right">
+                                            <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Estimasi Budget</p>
+                                            <p className="text-2xl font-display font-bold text-brand-orange leading-tight">{formatRupiah(sim.total_min)}</p>
+                                            <p className="text-[10px] text-gray-400">s/d {formatRupiah(sim.total_max)}</p>
+                                        </div>
 
-                                    <div className="space-y-2 mt-6">
-                                        <select 
-                                            value={sim.status || 'new'}
-                                            onChange={(e) => updateStatus(sim.id, e.target.value)}
-                                            className={`w-full text-[10px] font-bold uppercase p-2 rounded-lg outline-none border transition-all ${
-                                                sim.status === 'new' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                                sim.status === 'contacted' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
-                                                sim.status === 'proposed' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                                                'bg-green-500/10 text-green-500 border-green-500/20'
-                                            }`}
-                                        >
-                                            <option value="new">🆕 BARU</option>
-                                            <option value="contacted">📞 SUDAH DISAPA</option>
-                                            <option value="proposed">📑 PROPOSAL TERKIRIM</option>
-                                            <option value="closed">🤝 DEAL / CLOSED</option>
-                                        </select>
-
-                                        <button 
-                                            onClick={() => generateProposalPDF(sim, config)}
-                                            className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[10px] font-bold border border-white/10 flex items-center justify-center gap-2 transition-all"
-                                        >
-                                            <Printer size={14} className="text-brand-orange"/> GENERATE PROPOSAL (PDF)
-                                        </button>
-
-                                        <div className="flex gap-2">
-                                            <a 
-                                                href={`https://wa.me/${sim.customer_phone}?text=Halo Juragan ${sim.customer_name}, gue dapet notifikasi lo baru aja simulasi budget buat *${sim.service_name}* paket *${sim.base_option_label}*. Mau lanjut diskusi atau mau gue kirimin PDF Proposal resminya?`}
-                                                target="_blank"
-                                                className="flex-1 py-2 bg-green-600/10 hover:bg-green-600 text-green-500 hover:text-white rounded-lg text-[10px] font-bold flex items-center justify-center gap-2 border border-green-500/20 transition-all"
+                                        <div className="space-y-2 mt-6">
+                                            <select 
+                                                value={sim.status || 'new'}
+                                                onChange={(e) => updateStatus(sim.id, e.target.value)}
+                                                className={`w-full text-[10px] font-bold uppercase p-2 rounded-lg outline-none border transition-all ${
+                                                    sim.status === 'new' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                                    sim.status === 'contacted' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
+                                                    sim.status === 'proposed' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                                                    'bg-green-500/10 text-green-400 border-green-500/20'
+                                                }`}
                                             >
-                                                SAPA WA
-                                            </a>
+                                                <option value="new">🆕 BARU</option>
+                                                <option value="contacted">📞 SUDAH DISAPA</option>
+                                                <option value="proposed">📑 PROPOSAL TERKIRIM</option>
+                                                <option value="closed">🤝 DEAL / CLOSED</option>
+                                            </select>
+
                                             <button 
-                                                onClick={() => deleteSim(sim.id)}
-                                                className="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all border border-red-500/20"
+                                                onClick={() => generateProposalPDF(sim, config)}
+                                                className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[10px] font-bold border border-white/10 flex items-center justify-center gap-2 transition-all"
                                             >
-                                                <Trash2 size={14}/>
+                                                <Printer size={14} className="text-brand-orange"/> GENERATE PROPOSAL (PDF)
                                             </button>
+
+                                            <div className="flex gap-2">
+                                                <a 
+                                                    href={`https://wa.me/${sim.customer_phone}?text=Halo Juragan ${sim.customer_name}, gue dapet notifikasi lo baru aja simulasi budget buat *${sim.service_name}* paket *${sim.base_option_label}*. Mau lanjut diskusi atau mau gue kirimin PDF Proposal resminya?`}
+                                                    target="_blank"
+                                                    className="flex-1 py-2 bg-green-600/10 hover:bg-green-600 text-green-500 hover:text-white rounded-lg text-[10px] font-bold flex items-center justify-center gap-2 border border-green-500/20 transition-all"
+                                                >
+                                                    SAPA WA
+                                                </a>
+                                                <button 
+                                                    onClick={() => deleteSim(sim.id)}
+                                                    className="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all border border-red-500/20"
+                                                >
+                                                    <Trash2 size={14}/>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>
