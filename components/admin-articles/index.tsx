@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Article, GalleryItem, SiteConfig } from '../../types';
+import { Article, GalleryItem, SiteConfig, Product } from '../../types';
 import { Image as ImageIcon, Sparkles, Loader2, UploadCloud, Save, List, Settings, PenTool, Wand2, Clock } from 'lucide-react';
 import { useArticleManager } from './logic';
 import { ListPanel } from './list-panel';
@@ -12,14 +12,17 @@ export const AdminArticles = ({
     articles, 
     setArticles,
     gallery,
-    config
+    config,
+    products // ADDED THIS
 }: { 
     articles: Article[], 
     setArticles: (a: Article[]) => void,
     gallery: GalleryItem[],
-    config: SiteConfig
+    config: SiteConfig,
+    products: Product[] // ADDED THIS
 }) => {
-  const manager = useArticleManager(articles, setArticles, gallery, config);
+  // Pass products here
+  const manager = useArticleManager(articles, setArticles, gallery, config, products);
   const { form, filterLogic, aiLogic, aiState, actions, activeMobilePane, setActiveMobilePane } = manager;
   const availablePillars = articles.filter(a => a.type === 'pillar');
 
@@ -38,7 +41,6 @@ export const AdminArticles = ({
   };
 
   return (
-    /* FIX: Gunakan tinggi tetap (max-height) yang lebih bersahabat di mobile agar child panel bisa mengaktifkan overflow scroll */
     <div className="flex flex-col lg:flex-row h-[75vh] lg:h-[850px] border-t border-white/5 bg-brand-black overflow-hidden lg:rounded-xl border-b shadow-2xl relative">
       
       {/* 1. LEFT PANEL: List (25%) */}

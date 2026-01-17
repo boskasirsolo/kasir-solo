@@ -1,6 +1,6 @@
 
 import { useState, useMemo, useEffect } from 'react';
-import { Article, GalleryItem, SiteConfig } from '../../types';
+import { Article, GalleryItem, SiteConfig, Product } from '../../types';
 import { supabase, uploadToSupabase, processBackgroundMigration, slugify, renameFile, convertLocalToUTC, convertUTCToLocal } from '../../utils';
 import { KeywordData, ArticleFormState, FilterType } from './types';
 import { VisionAI } from '../../services/ai/vision';
@@ -43,7 +43,7 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
     return { searchTerm, setSearchTerm, filterType, setFilterType, page, setPage, totalPages: Math.ceil(sortedList.length / itemsPerPage), paginatedList: sortedList.slice((page - 1) * itemsPerPage, page * itemsPerPage), expandedPillarId, setExpandedPillarId };
 };
 
-export const useArticleManager = (articles: Article[], setArticles: any, gallery: GalleryItem[] = [], config?: SiteConfig) => {
+export const useArticleManager = (articles: Article[], setArticles: any, gallery: GalleryItem[] = [], config?: SiteConfig, products: Product[] = []) => {
     const filterLogic = useArticleFilter(articles, 7);
     const [loading, setLoading] = useState({ researching: false, generatingText: false, generatingImage: false, uploading: false, progressMessage: '' });
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
@@ -95,7 +95,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 ? (config?.timezone ? convertLocalToUTC(form.scheduled_for, config.timezone) : new Date(form.scheduled_for).toISOString()) 
                 : null;
 
-            // FIX: Benerin bug Foreign Key. pillar_id harus null kalo valuenya 0 atau falsy.
             const dbData = {
                 title: form.title, excerpt: form.excerpt || '', content: form.content || '', category: form.category || 'General', 
                 author: "Amin Maghfuri", author_avatar: config?.founderPortrait || null, read_time: form.readTime, 
@@ -129,26 +128,41 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
     return {
         form, setForm, filterLogic, activeMobilePane, setActiveMobilePane, 
-        // Added aiLogic to satisfy index.tsx destructuring
         aiLogic: { loading, keywords },
         aiState: { step: aiStep, setStep: setAiStep, keywords, selectedTones, setSelectedTones, cities },
         actions: { 
             resetForm, handleEditClick, saveArticle, 
             deleteItem: async (id: number) => { if(confirm("Hapus?")) { await supabase!.from('articles').delete().eq('id', id); setArticles((p: Article[]) => p.filter(a => a.id !== id)); } },
             runResearch: async (topic?: string) => { setLoading(p => ({...p, researching: true})); try { const raw = await EditorAI.researchTopics(form.type as any, topic); setKeywords(raw); setAiStep(1); } finally { setLoading(p => ({...p, researching: false})); } },
-            runWrite: async () => { setLoading(p => ({ ...p, generatingText: true, progressMessage: 'Writing Article...' })); try { const content = await EditorAI.writeArticle(form.title, selectedTones, form.type, form.author, form.targetWordCount, form.pillar_id ? articles.find(a => a.id === form.pillar_id) : undefined as any, undefined, undefined, form.generationContext, form.targetCityId ? cities.find(c => c.id === form.targetCityId) : undefined as any); const meta = await EditorAI.generateMeta(form.title, content); setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: p.category.length > 2 ? p.category : meta.category, readTime: `${Math.ceil(content.split(/\s+/).length / 200)} min` })); setActiveMobilePane('WRITE'); } finally { setLoading(p => ({ ...p, generatingText: false })); } },
+            runWrite: async () => { 
+                setLoading(p => ({ ...p, generatingText: true, progressMessage: 'Writing Article...' })); 
+                try { 
+                    // Prepare Context for AI
+                    const galleryCtx = gallery.map(g => `[PROYEK: ${g.title} | SLUG: ${slugify(g.title)} | IMAGE: ${g.image_url} | DESC: ${g.description || ''}]`).join('\n');
+                    const productCtx = products.map(p => `[PRODUK: ${p.name} | HARGA: ${p.price} | IMAGE: ${p.image} | DESC: ${p.description}]`).join('\n');
+                    
+                    const content = await EditorAI.writeArticle(
+                        form.title, 
+                        selectedTones, 
+                        form.type, 
+                        form.author, 
+                        form.targetWordCount, 
+                        form.pillar_id ? articles.find(a => a.id === form.pillar_id) : undefined as any, 
+                        undefined, 
+                        galleryCtx, 
+                        form.generationContext, 
+                        form.targetCityId ? cities.find(c => c.id === form.targetCityId) : undefined as any,
+                        productCtx
+                    ); 
+                    const meta = await EditorAI.generateMeta(form.title, content); 
+                    setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: p.category.length > 2 ? p.category : meta.category, readTime: `${Math.ceil(content.split(/\s+/).length / 200)} min` })); 
+                    setActiveMobilePane('WRITE'); 
+                } finally { setLoading(p => ({ ...p, generatingText: false })); } 
+            },
             runImage: async () => { setLoading(p => ({ ...p, generatingImage: true })); try { const { url, file } = await VisionAI.generate(form.title, form.category, 'corporate'); setForm(p => ({ ...p, imagePreview: url, uploadFile: file })); } finally { setLoading(p => ({ ...p, generatingImage: false })); } },
             selectTopic: (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); },
-            // Implemented runClusterResearch which was missing in index.tsx call
             runClusterResearch: async (pillar: Article) => {
-                setForm(p => ({ 
-                    ...p, 
-                    id: null,
-                    title: '',
-                    content: '',
-                    type: 'cluster', 
-                    pillar_id: pillar.id 
-                }));
+                setForm(p => ({ ...p, id: null, title: '', content: '', type: 'cluster', pillar_id: pillar.id }));
                 setAiStep(0);
                 setActiveMobilePane('CONFIG');
             }

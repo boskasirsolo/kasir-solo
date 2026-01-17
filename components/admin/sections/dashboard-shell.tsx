@@ -101,7 +101,8 @@ export const DashboardShell = (props: DashboardProps) => {
             case 'siboy': return <SibosTrainer />;
             case 'seo': return <AdminSEO />;
             case 'gallery': return <AdminGallery gallery={props.gallery} setGallery={props.setGallery} testimonials={props.testimonials} setTestimonials={props.setTestimonials} />;
-            case 'articles': return <AdminArticles articles={props.articles} setArticles={props.setArticles} gallery={props.gallery} config={props.config} />;
+            // Added products={props.products} to AdminArticles component
+            case 'articles': return <AdminArticles articles={props.articles} setArticles={props.setArticles} gallery={props.gallery} config={props.config} products={props.products} />;
             case 'career': return <AdminCareer jobs={props.jobs} setJobs={props.setJobs} />;
             case 'downloads': return <AdminDownloads />;
             case 'social': return <AdminSocialStudio products={props.products} articles={props.articles} gallery={props.gallery} />;

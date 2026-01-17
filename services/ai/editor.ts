@@ -17,5 +17,19 @@ export const EditorAI = {
     suggestCategories: Taxonomy.suggestCategories,
 
     // Writer Module
-    writeArticle: Writer.writeArticle
+    writeArticle: (
+        title: string,
+        tones: string[],
+        type: string,
+        authorName: string,
+        wordCount: number,
+        pillarContext?: any,
+        relatedPillarsData?: any,
+        galleryContextString?: string,
+        userContext?: string,
+        cityContext?: any,
+        productContextString?: string
+    ) => Writer.writeArticle(
+        title, tones, type, authorName, wordCount, pillarContext, relatedPillarsData, galleryContextString, userContext, cityContext, productContextString
+    )
 };

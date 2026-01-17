@@ -21,7 +21,8 @@ const buildLinkingInstructions = (
     type: string, 
     pillarContext?: { title: string, slug: string },
     relatedPillarsData?: { title: string, slug: string }[],
-    galleryContextString?: string
+    galleryContextString?: string,
+    productContextString?: string
 ) => {
     let instructions = "";
     
@@ -34,8 +35,14 @@ const buildLinkingInstructions = (
     }
 
     if (galleryContextString) {
-        instructions += `[PORTFOLIO SHOWCASE STRATEGY]\nAvailable Projects:\n${galleryContextString}\nIF MATCH FOUND: Insert a "Project Card" shortcode: [PROJECT: Name | /gallery/slug | ImageURL | Desc]\n`;
+        instructions += `\n[PORTFOLIO SHOWCASE STRATEGY]\nAvailable Projects:\n${galleryContextString}\nIF A PROJECT IS RELEVANT to a section: Insert a "Project Card" shortcode: [PROJECT: Name | /gallery/slug | ImageURL | Desc]\n`;
     }
+
+    if (productContextString) {
+        instructions += `\n[PRODUCT PLACEMENT STRATEGY]\nAvailable Products:\n${productContextString}\nIF A PRODUCT IS RELEVANT to the context: Insert a "Product Card" shortcode: [PRODUCT: Name | Price | ImageURL | Desc]\n`;
+    }
+
+    instructions += `\n[SERVICE LINKS]\nAvailable Services:\n- Website: /services/website\n- WebApp: /services/webapp\n- SEO: /services/seo\n- Maintenance: /services/maintenance\nIF RELEVANT: Use Service Card shortcode: [SERVICE: ServiceName | /services/slug | Desc]\n`;
 
     return instructions;
 };
@@ -54,10 +61,11 @@ export const Writer = {
         relatedPillarsData?: { title: string, slug: string }[],
         galleryContextString?: string,
         userContext?: string,
-        cityContext?: { name: string, type: string } // NEW ARGUMENT
+        cityContext?: { name: string, type: string },
+        productContextString?: string
     ) => {
         const pov = buildPersona(authorName);
-        const linking = buildLinkingInstructions(type, pillarContext, relatedPillarsData, galleryContextString);
+        const linking = buildLinkingInstructions(type, pillarContext, relatedPillarsData, galleryContextString, productContextString);
         
         let cityInstruction = "";
         if (cityContext) {
@@ -84,12 +92,19 @@ export const Writer = {
             POV: ${pov}
             Tone: ${tones.join(', ')}.
             Structure: Use Headers #, ##, ###, Lists, Bold.
+            
             ${linking}
+            
             ${cityInstruction}
             Brand Context: ${BRAND_CONTEXT}
             ${GOV_CRITIQUE_RULE}
             ${INTERNAL_LINKING_RULES}
             ${userNotes}
+            
+            CRITICAL RULES:
+            - WEAVE THE SHORTCODES (PRODUCT/PROJECT/SERVICE) NATURALLY INTO THE FLOW. 
+            - DO NOT JUST DUMP THEM AT THE END.
+            - Ensure headers are engaging.
             `;
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
             return res.text || '';
@@ -112,8 +127,10 @@ export const Writer = {
             ${userNotes}
             ${INTERNAL_LINKING_RULES}
             ${i === 0 ? "Start with a hook." : `Connect to previous: "...${previousContext.slice(-200)}..."`}
+            
             ${linking}
-            OUTPUT: Markdown.
+            
+            OUTPUT: Markdown. Use shortcodes for relevant products/projects mentioned in this section.
             `;
             
             const secRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: sectionPrompt });
