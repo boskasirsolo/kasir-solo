@@ -28,18 +28,14 @@ export const useOrderLogic = () => {
     };
 
     const fetchOrderItems = async (orderId: number) => {
-        // Toggle if already loaded and clicked again
         if (state.orderItems[orderId]) {
             setState(p => ({ ...p, expandedOrderId: p.expandedOrderId === orderId ? null : orderId }));
             return;
         }
-
         if (!supabase) return;
-
         try {
             const { data: items, error } = await supabase.from('order_items').select('*').eq('order_id', orderId);
             if (error) throw error;
-
             if (items && items.length > 0) {
                 const productIds = items.map((i: any) => i.product_id).filter(Boolean);
                 if (productIds.length > 0) {
@@ -52,7 +48,6 @@ export const useOrderLogic = () => {
                     }
                 }
             }
-
             setState(p => ({
                 ...p,
                 orderItems: { ...p.orderItems, [orderId]: items || [] },
@@ -79,7 +74,6 @@ export const useOrderLogic = () => {
             const status = trackingNumber ? 'completed' : 'processed';
             const { error } = await supabase.from('orders').update({ courier, tracking_number: trackingNumber, status }).eq('id', orderId);
             if(error) throw error;
-            
             setState(p => ({
                 ...p,
                 orders: p.orders.map(o => o.id === orderId ? { ...o, courier, tracking_number: trackingNumber, status: status as any } : o)
@@ -89,7 +83,6 @@ export const useOrderLogic = () => {
     };
 
     const toggleExpand = (orderId: number) => fetchOrderItems(orderId);
-
     return { state, fetchOrders, fetchOrderItems, updateStatus, updateShipping, toggleExpand };
 };
 
@@ -114,5 +107,16 @@ export const useLeadLogic = () => {
         }));
     };
 
-    return { state, fetchLeads, updateLeadStatus };
+    const deleteLead = async (id: number) => {
+        if (!confirm("Hapus lead ini selamanya?")) return;
+        if (!supabase) return;
+        try {
+            await supabase.from('leads').delete().eq('id', id);
+            setState(p => ({ ...p, leads: p.leads.filter(l => l.id !== id) }));
+        } catch (e) {
+            alert("Gagal hapus lead.");
+        }
+    };
+
+    return { state, fetchLeads, updateLeadStatus, deleteLead };
 };
