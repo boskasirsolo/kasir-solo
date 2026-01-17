@@ -160,6 +160,9 @@ export interface ServiceSimulation {
   created_at: string;
   customer_name: string;
   customer_phone: string;
+  company_name?: string;
+  address?: string;
+  business_category?: string;
   service_slug: string;
   service_name: string;
   base_option_label: string;
@@ -168,6 +171,7 @@ export interface ServiceSimulation {
   total_min: number;
   total_max: number;
   status: 'new' | 'contacted' | 'proposed' | 'closed';
+  notes?: string;
 }
 
 // --- E-Commerce Types ---

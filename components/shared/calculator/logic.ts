@@ -39,7 +39,13 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
     };
   }, [selectedBase, selectedAddons, data]);
 
-  const handleConsultation = async (customerName?: string, customerPhone?: string) => {
+  const handleConsultation = async (customerData: {
+      name: string;
+      phone: string;
+      company?: string;
+      address?: string;
+      category?: string;
+  }) => {
     if (!selectedBase) return alert("Pilih paket dasar terlebih dahulu.");
 
     const activeAddons = data.addons
@@ -50,12 +56,12 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
         .map(a => `- ${a.label}`)
         .join('\n');
 
-    if (supabase && (customerName || customerPhone)) {
+    if (supabase) {
         setIsCapturing(true);
         try {
             await supabase.from('service_simulations').insert([{
-                customer_name: customerName || 'User Website',
-                customer_phone: customerPhone || '-',
+                customer_name: customerData.name || 'User Website',
+                customer_phone: customerData.phone || '-',
                 service_slug: serviceSlug || 'general',
                 service_name: serviceName,
                 base_option_label: calculation.baseLabel,
@@ -63,7 +69,12 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
                 selected_addons: activeAddons,
                 total_min: calculation.total.min,
                 total_max: calculation.total.max,
-                status: 'new'
+                status: 'new',
+                // New Column Mappings
+                company_name: customerData.company || '-',
+                address: customerData.address || '-',
+                business_category: customerData.category || '-',
+                notes: `Log Simulasi: ${serviceName}`
             }]);
         } catch (e) {
             console.warn("DB Capture failed", e);
@@ -75,11 +86,17 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
     let estimateText = "";
     if (calculation.total.min > 0) estimateText += `Estimasi Investasi Awal: ${formatRupiah(calculation.total.min)} - ${formatRupiah(calculation.total.max)}%0A`;
 
-    const message = `Halo Mas Amin, saya sudah simulasi investasi untuk *${serviceName}*:%0A%0A` +
-                    `📦 *Base:* ${calculation.baseLabel}%0A` +
+    const message = `*KONSULTASI SOLUSI DIGITAL*%0A%0A` +
+                    `👤 *Nama:* ${customerData.name}%0A` +
+                    `📱 *WA:* ${customerData.phone}%0A` +
+                    `🏢 *Usaha:* ${customerData.company || '-'}%0A` +
+                    `📍 *Lokasi:* ${customerData.address || '-'}%0A` +
+                    `🏷️ *Kategori:* ${customerData.category || '-'}%0A%0A` +
+                    `🛠️ *Layanan:* ${serviceName}%0A` +
+                    `📦 *Paket:* ${calculation.baseLabel}%0A` +
                     `🚀 *Add-ons:*%0A${addonsLabels || '(Tidak ada)'}%0A%0A` +
                     `*${estimateText}*` +
-                    `Bisa diskusi detailnya?`;
+                    `Bisa diskusi detailnya Mas Amin?`;
 
     const targetWa = waNumber || "6282325103336";
     window.open(`https://wa.me/${targetWa}?text=${message}`, '_blank');

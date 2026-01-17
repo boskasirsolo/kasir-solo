@@ -4,8 +4,6 @@ import { CalculatorProps } from './types';
 import { useCalculator } from './logic';
 import { CalcHeader, BaseOptionItem, AddonOptionItem, ResultCard } from './ui-parts';
 import { SideDrawer } from './side-drawer';
-import { Input } from '../../ui';
-import { User, Phone } from 'lucide-react';
 
 interface ExtendedCalculatorProps extends CalculatorProps {
     waNumber?: string;
@@ -23,10 +21,28 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
       setActiveDetailItem
   } = useCalculator(data, serviceName, waNumber, serviceSlug);
 
-  const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '' });
+  // Expanded Form State
+  const [customerInfo, setCustomerInfo] = useState({ 
+      name: '', 
+      phone: '',
+      company: '',
+      address: '',
+      category: '',
+      customCategory: ''
+  });
 
   const onConsult = () => {
-      handleConsultation(customerInfo.name, customerInfo.phone);
+      const finalCategory = customerInfo.category === 'Lainnya' 
+        ? customerInfo.customCategory 
+        : customerInfo.category;
+
+      handleConsultation({
+          name: customerInfo.name,
+          phone: customerInfo.phone,
+          company: customerInfo.company,
+          address: customerInfo.address,
+          category: finalCategory
+      });
   };
 
   return (
@@ -34,35 +50,6 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
       <div className="absolute top-0 right-0 w-64 h-64 bg-brand-orange/5 rounded-full blur-[80px] pointer-events-none"></div>
       
       <CalcHeader title={data.title} subtitle={data.subtitle} />
-
-      {/* USER INFO - MOVED HERE (Full Width Section Above the Grid) */}
-      <div className="p-6 md:p-10 border-b border-white/5 bg-white/5 relative z-10">
-          <div className="max-w-4xl mx-auto">
-              <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <User size={16} className="text-brand-orange"/> SIAPA NAMA JURAGAN?
-              </h4>
-              <div className="grid md:grid-cols-2 gap-6">
-                  <div className="relative">
-                      <User className="absolute left-4 top-3.5 text-gray-500" size={18} />
-                      <Input 
-                          value={customerInfo.name} 
-                          onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
-                          placeholder="Nama Lengkap / Panggilan" 
-                          className="pl-12 py-3.5 text-sm bg-black/40 border-white/10 focus:border-brand-orange"
-                      />
-                  </div>
-                  <div className="relative">
-                      <Phone className="absolute left-4 top-3.5 text-gray-500" size={18} />
-                      <Input 
-                          value={customerInfo.phone} 
-                          onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                          placeholder="Nomor WA Aktif (Penting)" 
-                          className="pl-12 py-3.5 text-sm bg-black/40 border-white/10 focus:border-brand-orange"
-                      />
-                  </div>
-              </div>
-          </div>
-      </div>
 
       <div className="grid lg:grid-cols-12 relative z-10">
          
@@ -109,9 +96,11 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
 
          </div>
 
-         {/* RIGHT: TOTAL & CTA */}
+         {/* RIGHT: FORM, TOTAL & CTA */}
          <ResultCard 
             calculation={calculation} 
+            customerInfo={customerInfo}
+            setCustomerInfo={setCustomerInfo}
             onConsultation={onConsult} 
             hasBaseSelection={calculation.hasSelection} 
             isCapturing={isCapturing}
