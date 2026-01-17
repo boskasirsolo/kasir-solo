@@ -6,30 +6,34 @@
 @layer base {
   body {
     @apply bg-brand-black text-gray-200 font-sans;
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
   }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #0f0f0f; }
-::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #FF5F1F; }
+/* Custom Scrollbar (God Mode Dark) */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+::-webkit-scrollbar-thumb { background: rgba(255, 95, 31, 0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 95, 31, 0.4); }
 
-/* HIDE NUMBER INPUT SPINNERS (CHROME/SAFARI/EDGE) */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* HIDE NUMBER INPUT SPINNERS */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-/* HIDE NUMBER INPUT SPINNERS (FIREFOX) */
 input[type=number] {
   -moz-appearance: textfield;
 }
 
-/* ERROR SUPPRESSOR (Anti-Overlay) */
+/* ERROR SUPPRESSOR */
 iframe[style*="z-index: 2147483647"], 
 #webpack-dev-server-client-overlay-div, 
 .react-error-overlay { 
@@ -38,7 +42,26 @@ iframe[style*="z-index: 2147483647"],
   visibility: hidden !important;
 }
 
-/* Map Embed Container */
+/* Map & Media Effects */
 .iframe-map-container iframe {
-  filter: grayscale(100%) invert(100%) contrast(80%);
+  filter: grayscale(100%) invert(100%) contrast(85%) brightness(90%);
+}
+
+/* Animation Add-ons */
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Glass UI Helper */
+.glass-panel {
+  @apply bg-brand-card/40 backdrop-blur-2xl border border-white/5 shadow-2xl;
+}
+
+.neon-glow-orange {
+  box-shadow: 0 0 20px rgba(255, 95, 31, 0.15);
 }
