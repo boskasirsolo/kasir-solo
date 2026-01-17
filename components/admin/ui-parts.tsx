@@ -1,57 +1,47 @@
 
 import React from 'react';
 import { AdminTabId } from './types';
+import { ChevronRight } from 'lucide-react';
 
-// --- ATOM: Tab Button ---
-export const TabButton = ({ 
-    id, 
-    label, 
-    icon: Icon, 
-    isActive, 
-    onClick 
-}: { 
+// --- ATOM: Sidebar Tab Button ---
+/* FIX: Explicitly type as React.FC to handle 'key' prop correctly in TS when mapped in dashboard-shell.tsx */
+export const SidebarTabButton: React.FC<{ 
     id: AdminTabId, 
     label: string, 
     icon: any, 
     isActive: boolean, 
     onClick: () => void 
+}> = ({ 
+    id, 
+    label, 
+    icon: Icon, 
+    isActive, 
+    onClick 
 }) => (
     <button 
       onClick={onClick} 
-      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wide transition-all border ${
+      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all border group ${
         isActive 
-          ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text translate-y-[-1px]' 
-          : 'bg-brand-card text-gray-400 border-white/5 hover:text-white hover:bg-white/5'
+          ? 'bg-brand-orange text-white border-brand-orange shadow-neon-text/20 scale-[1.02]' 
+          : 'bg-transparent text-gray-500 border-transparent hover:bg-white/5 hover:text-gray-300'
       }`}
     >
-      <Icon size={14} />
-      {label}
+      <div className="flex items-center gap-3">
+        <Icon size={18} className={isActive ? 'text-white' : 'text-gray-600 group-hover:text-brand-orange transition-colors'} />
+        <span className="uppercase tracking-wider">{label}</span>
+      </div>
+      {isActive && <ChevronRight size={14} className="animate-pulse" />}
     </button>
 );
 
-// --- ATOM: Header Action Button ---
-export const HeaderActionBtn = ({ 
-    onClick, 
-    icon: Icon, 
-    variant = 'default',
-    title 
-}: { 
-    onClick: () => void, 
-    icon: any, 
-    variant?: 'default' | 'danger' | 'info',
-    title?: string
-}) => {
-    let baseClass = "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors border ";
-    if (variant === 'danger') baseClass += "bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white";
-    else if (variant === 'info') baseClass += "bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500 hover:text-white";
-    else baseClass += "bg-white/5 text-gray-300 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30";
-
-    return (
-        <button onClick={onClick} className={baseClass} title={title}>
-            <Icon size={14} />
-        </button>
-    );
-};
+// --- ATOM: Sidebar Group Header ---
+export const SidebarGroupHeader = ({ label }: { label: string }) => (
+    <div className="px-4 mt-6 mb-2">
+        <p className="text-[9px] font-black text-gray-600 uppercase tracking-[0.3em]">
+            {label}
+        </p>
+    </div>
+);
 
 // --- ATOM: Store Sub-Tab ---
 export const StoreSubTabBtn = ({ 
@@ -67,12 +57,36 @@ export const StoreSubTabBtn = ({
 }) => (
     <button 
         onClick={onClick}
-        className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold transition-all ${
+        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
         active
-        ? 'bg-brand-orange text-white shadow-lg'
-        : 'text-gray-400 hover:text-white'
+        ? 'bg-brand-orange text-white shadow-neon'
+        : 'text-gray-500 hover:text-white'
         }`}
     >
         <Icon size={14} /> {label}
+    </button>
+);
+
+// --- ATOM: Action Button Sidebar ---
+export const SidebarActionBtn = ({ 
+    onClick, 
+    icon: Icon, 
+    label,
+    variant = 'default' 
+}: { 
+    onClick: () => void, 
+    icon: any, 
+    label: string,
+    variant?: 'default' | 'danger'
+}) => (
+    <button 
+        onClick={onClick}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all ${
+            variant === 'danger' 
+            ? 'bg-red-500/5 text-red-500 border-red-500/10 hover:bg-red-500 hover:text-white' 
+            : 'bg-white/5 text-gray-400 border-white/5 hover:text-white hover:border-brand-orange/50'
+        }`}
+    >
+        <Icon size={16} /> {label}
     </button>
 );

@@ -3,6 +3,12 @@ import { Product, Article, GalleryItem, Testimonial, JobOpening, SiteConfig } fr
 
 export type AdminTabId = 'analytics' | 'store' | 'crm' | 'gallery' | 'articles' | 'seo' | 'career' | 'downloads' | 'social' | 'siboy' | 'settings' | 'documentation';
 
+export interface MenuCategory {
+    id: string;
+    label: string;
+    items: AdminTabId[];
+}
+
 export interface DashboardProps {
     products: Product[];
     setProducts: any;
