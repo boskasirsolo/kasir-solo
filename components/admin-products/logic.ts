@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Product } from '../../types';
 import { supabase, formatNumberInput, cleanNumberInput, slugify, renameFile, addWatermarkToFile, uploadToSupabase, processBackgroundMigration } from '../../utils';
 import { ProductFormState, LoadingState, PRODUCT_CATEGORIES } from './types';
@@ -8,7 +7,8 @@ import { VisionAI } from '../../services/ai/vision';
 
 const ITEMS_PER_PAGE = 8;
 
-export const useProductLogic = (products: Product[], setProducts: (p: Product[]) => void) => {
+// FIX: Added React.Dispatch<React.SetStateAction<Product[]>> type to setProducts to support functional updates and fix line 280 error
+export const useProductLogic = (products: Product[], setProducts: React.Dispatch<React.SetStateAction<Product[]>>) => {
     const [form, setForm] = useState<ProductFormState>({
         id: null,
         name: '',
@@ -43,14 +43,9 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [page, setPage] = useState(1);
-    
-    // NEW: State untuk handle halaman detail di HP
     const [showMobileEditor, setShowMobileEditor] = useState(false);
 
-    // Reset pagination when filter changes
     useEffect(() => { setPage(1); }, [searchTerm, selectedCategory]);
-
-    // --- ACTIONS ---
 
     const resetForm = () => {
         setForm({
@@ -60,7 +55,7 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             affiliateLink: '', ctaText: 'Beli Sekarang'
         });
         setUseWatermark(true);
-        setShowMobileEditor(false); // Close mobile page
+        setShowMobileEditor(false);
     };
 
     const handleEditClick = (p: Product) => {
@@ -84,9 +79,9 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             newGalleryFiles: [],
             videoUrl: p.video_url || '',
             affiliateLink: p.affiliate_link || '',
-            ctaText: p.cta_text || 'Beli Sekarang'
-        });
-        setShowMobileEditor(true); // Open mobile page
+            cta_text: p.cta_text || 'Beli Sekarang'
+        } as any);
+        setShowMobileEditor(true);
     };
 
     const openNewProduct = () => {
@@ -96,12 +91,17 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
 
     const deleteProduct = async (id: number) => {
         if(!confirm("Hapus produk ini?")) return;
-        setProducts(products.filter(p => p.id !== id));
-        if (supabase) await supabase.from('products').delete().eq('id', id);
-        if (form.id === id) resetForm();
+        try {
+            if (supabase) {
+                const { error } = await supabase.from('products').delete().eq('id', id);
+                if (error) throw error;
+            }
+            setProducts(products.filter(p => p.id !== id));
+            if (form.id === id) resetForm();
+        } catch (e: any) {
+            alert("Gagal hapus: " + e.message);
+        }
     };
-
-    // --- AI GENERATORS ---
 
     const generateAI = async (target: keyof LoadingState, generator: () => Promise<string>, onSuccess: (text: string) => void) => {
         setLoading(p => ({ ...p, [target]: true }));
@@ -168,10 +168,10 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
         }
     };
 
-    // --- SUBMIT HANDLER ---
-
     const handleSubmit = async () => {
-        if (!form.name || !form.price) return alert("Nama dan Harga wajib diisi");
+        if (!form.name || !form.price) return alert("Nama dan Harga wajib diisi Bos.");
+        if (!supabase) return alert("Koneksi Database tidak ditemukan.");
+
         setLoading(p => ({ ...p, uploading: true }));
 
         try {
@@ -179,6 +179,7 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             let supabasePath = '';
             let fileToMigrate = form.uploadFile;
 
+            // 1. Image Processing
             if (form.uploadFile) {
                 if (useWatermark) {
                     setLoading(p => ({ ...p, processingImage: true }));
@@ -186,15 +187,14 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                     setLoading(p => ({ ...p, processingImage: false }));
                 }
 
-                if (supabase && fileToMigrate) {
-                    const seoName = `${slugify(form.name)}-mesin-kasir-solo`;
-                    const renamedFile = renameFile(fileToMigrate, seoName);
-                    const { url, path } = await uploadToSupabase(renamedFile, 'products');
-                    finalImageUrl = url;
-                    supabasePath = path;
-                }
+                const seoName = `${slugify(form.name)}-mesin-kasir-solo`;
+                const renamedFile = renameFile(fileToMigrate!, seoName);
+                const { url, path } = await uploadToSupabase(renamedFile, 'products');
+                finalImageUrl = url;
+                supabasePath = path;
             }
 
+            // 2. Gallery Processing
             const newGalleryUrls: string[] = [];
             if (form.newGalleryFiles.length > 0) {
                 if (useWatermark) setLoading(p => ({ ...p, processingImage: true }));
@@ -204,11 +204,8 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                     if (useWatermark) f = await addWatermarkToFile(f);
                     const seoName = `${slugify(form.name)}-mesin-kasir-solo-gallery-${idx+1}`;
                     const renamed = renameFile(f, seoName);
-                    if (supabase) {
-                        const { url } = await uploadToSupabase(renamed, 'products');
-                        return url;
-                    }
-                    return null;
+                    const { url } = await uploadToSupabase(renamed, 'products');
+                    return url;
                 });
 
                 const results = await Promise.all(uploadPromises);
@@ -217,6 +214,7 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
             }
             const finalGallery = [...form.galleryImages, ...newGalleryUrls];
 
+            // 3. Data Parsing
             const specsObj: Record<string, string> = {};
             if (form.specsStr) {
                 form.specsStr.split('\n').forEach(line => {
@@ -242,26 +240,51 @@ export const useProductLogic = (products: Product[], setProducts: (p: Product[])
                 cta_text: form.ctaText
             };
 
-            let savedId = form.id;
+            let savedProduct: any = null;
 
+            // 4. SUPABASE SYNC
             if (form.id) {
-                setProducts(products.map(p => p.id === form.id ? { ...p, ...dbData, image: finalImageUrl } : p));
-                if (supabase) await supabase.from('products').update(dbData).eq('id', form.id);
+                // UPDATE
+                const { data, error } = await supabase
+                    .from('products')
+                    .update(dbData)
+                    .eq('id', form.id)
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                savedProduct = data;
+                
+                // Update local state dengan data terbaru dari DB
+                setProducts(products.map(p => p.id === form.id ? { ...p, ...data, image: data.image_url } : p));
             } else {
-                const newId = Date.now();
-                setProducts([{ ...dbData, id: newId, image: finalImageUrl }, ...products]);
-                if (supabase) {
-                    const { data } = await supabase.from('products').insert([dbData]).select().single();
-                    if(data) savedId = data.id;
-                }
+                // INSERT
+                const { data, error } = await supabase
+                    .from('products')
+                    .insert([dbData])
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                savedProduct = data;
+                
+                // Update local state dengan data + ID asli dari DB
+                setProducts([{ ...data, image: data.image_url }, ...products]);
             }
 
-            if (supabasePath && fileToMigrate && savedId) {
-                processBackgroundMigration(fileToMigrate, supabasePath, 'products', savedId, 'image_url');
+            // 5. Cloudinary Migration (Background)
+            if (supabasePath && fileToMigrate && savedProduct) {
+                processBackgroundMigration(fileToMigrate, supabasePath, 'products', savedProduct.id, 'image_url')
+                    .then((cloudUrl) => {
+                        if (cloudUrl) {
+                            // FIX: Corrected setProducts functional update to use Product[] type and resolve line 280 error
+                            setProducts((prev: Product[]) => prev.map(p => p.id === savedProduct.id ? { ...p, image: cloudUrl } : p));
+                        }
+                    });
             }
 
-            alert("Produk berhasil disimpan!");
-            setShowMobileEditor(false); // Tutup halaman di HP setelah sukses
+            alert("Produk Berhasil Disimpan!");
+            resetForm(); // Reset total buat bersihin buffer
         } catch (e: any) {
             alert("Gagal simpan: " + e.message);
         } finally {

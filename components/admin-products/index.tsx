@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -13,7 +12,8 @@ export const AdminProducts = ({
   setProducts 
 }: { 
   products: Product[], 
-  setProducts: (p: Product[]) => void 
+  // FIX: Updated setProducts type to React.Dispatch<React.SetStateAction<Product[]>> to support functional updates in logic hook
+  setProducts: React.Dispatch<React.SetStateAction<Product[]>> 
 }) => {
   const { 
     form, 
