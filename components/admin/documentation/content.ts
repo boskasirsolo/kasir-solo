@@ -8,6 +8,52 @@ export interface DocItem {
 
 export const DOCUMENTATION_CONTENT: DocItem[] = [
     {
+        id: 'arsenal-products',
+        category: 'Arsenal Penjualan',
+        title: 'Manajemen Produk (Inventory)',
+        content: `
+# Panduan Kelola Senjata (Produk)
+
+Halaman ini adalah tempat lo ngatur semua barang dagangan fisik lo. Lokasinya ada di **Tab Toko > Produk**.
+
+### 1. Riset Judul & Konteks (AI Brain)
+Jangan asal kasih nama produk. Gunakan kolom **"Keywords (Konteks AI)"**:
+- Masukkan spek kunci (misal: "i5, 8gb, printer 80mm").
+- Klik **"Auto-Gen"** di sebelah Nama Produk.
+- AI bakal ngeracik judul yang SEO friendly dan enak dibaca calon pembeli.
+
+### 2. Manajemen Visual (Cover & Gallery)
+- **Watermark Otomatis:** Setiap lo upload gambar baru, pastiin centang "Watermark" aktif. Sistem bakal nempel logo MKS biar foto lo gak dicomot kompetitor.
+- **AI Image Generator:** Gak punya foto produk bagus? Klik **"AI Generate"** di area cover. Sistem bakal bikin ilustrasi produk 3D profesional sesuai judul lo.
+- **Gallery:** Lo bisa nambahin banyak foto detail. Tips: Masukin foto asli unit biar buyer makin yakin.
+
+### 3. Detail Spek (The Technicals)
+Pake format khusus di kolom spek biar rapi di website:
+\`\`\`text
+Processor: Core i5 10th Gen
+RAM: 8GB DDR4
+Printer: 80mm Auto-Cutter
+\`\`\`
+Sistem bakal otomatis ngerubah teks itu jadi tabel spesifikasi yang cantik di halaman detail produk.
+
+### 4. Strategi Psikologi (Why Buy & Includes)
+Jangan cuma jualan fitur, jualan **SOLUSI**:
+- **Kenapa Harus Beli:** Isi poin-poin keuntungan (misal: "Garansi Ganti Baru", "Training Sampai Bisa").
+- **Isi Paket:** Jelasin apa aja yang didapet biar gak ditanyain terus di WA.
+
+### 5. Affiliate & Marketplace
+Kalau lo jualan di Shopee/Tokopedia juga:
+- Masukin link-nya di kolom **"Link Eksternal"**.
+- Atur **"Label Tombol"** (misal: "Beli di Tokopedia").
+- Kalau link diisi, sistem bakal prioritasin tombol marketplace dibanding checkout langsung di web (aman buat lo yang gak mau repot ngurus transferan manual).
+
+### 6. Simpan & Background Migration
+Pas lo klik **"SIMPAN"**, prosesnya ada dua:
+1. Data langsung masuk ke Supabase (Website lo langsung update).
+2. Di background, gambar lo dipindahin ke **Cloudinary** buat di-optimasi biar loading web makin ngebut. Lo tinggal tutup dashboard aja, sistem bakal beresin sendiri.
+        `
+    },
+    {
         id: 'infra-supabase',
         category: 'The Core Infrastructure',
         title: 'Supabase Engine & Database',
