@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Product } from '../../types';
 import { supabase, formatNumberInput, cleanNumberInput, slugify, renameFile, addWatermarkToFile, uploadToSupabase, processBackgroundMigration } from '../../utils';
@@ -7,7 +8,6 @@ import { VisionAI } from '../../services/ai/vision';
 
 const ITEMS_PER_PAGE = 8;
 
-// FIX: Added React.Dispatch<React.SetStateAction<Product[]>> type to setProducts to support functional updates and fix line 280 error
 export const useProductLogic = (products: Product[], setProducts: React.Dispatch<React.SetStateAction<Product[]>>) => {
     const [form, setForm] = useState<ProductFormState>({
         id: null,
@@ -79,7 +79,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             newGalleryFiles: [],
             videoUrl: p.video_url || '',
             affiliateLink: p.affiliate_link || '',
-            cta_text: p.cta_text || 'Beli Sekarang'
+            ctaText: p.cta_text || 'Beli Sekarang'
         } as any);
         setShowMobileEditor(true);
     };
@@ -96,7 +96,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
                 const { error } = await supabase.from('products').delete().eq('id', id);
                 if (error) throw error;
             }
-            setProducts(products.filter(p => p.id !== id));
+            setProducts(prev => prev.filter(p => p.id !== id));
             if (form.id === id) resetForm();
         } catch (e: any) {
             alert("Gagal hapus: " + e.message);
@@ -225,6 +225,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             const includesArr = form.includesStr ? form.includesStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
             const whyBuyArr = form.whyBuyStr ? form.whyBuyStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
 
+            // DB MAPPING: Pastikan field snake_case sesuai tabel Supabase
             const dbData = {
                 name: form.name,
                 price: cleanNumberInput(form.price),
@@ -244,7 +245,6 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
 
             // 4. SUPABASE SYNC
             if (form.id) {
-                // UPDATE
                 const { data, error } = await supabase
                     .from('products')
                     .update(dbData)
@@ -255,10 +255,8 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
                 if (error) throw error;
                 savedProduct = data;
                 
-                // Update local state dengan data terbaru dari DB
-                setProducts(products.map(p => p.id === form.id ? { ...p, ...data, image: data.image_url } : p));
+                setProducts(prev => prev.map(p => p.id === form.id ? { ...p, ...data, image: data.image_url } : p));
             } else {
-                // INSERT
                 const { data, error } = await supabase
                     .from('products')
                     .insert([dbData])
@@ -268,8 +266,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
                 if (error) throw error;
                 savedProduct = data;
                 
-                // Update local state dengan data + ID asli dari DB
-                setProducts([{ ...data, image: data.image_url }, ...products]);
+                setProducts(prev => [{ ...data, image: data.image_url }, ...prev]);
             }
 
             // 5. Cloudinary Migration (Background)
@@ -277,14 +274,13 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
                 processBackgroundMigration(fileToMigrate, supabasePath, 'products', savedProduct.id, 'image_url')
                     .then((cloudUrl) => {
                         if (cloudUrl) {
-                            // FIX: Corrected setProducts functional update to use Product[] type and resolve line 280 error
-                            setProducts((prev: Product[]) => prev.map(p => p.id === savedProduct.id ? { ...p, image: cloudUrl } : p));
+                            setProducts(prev => prev.map(p => p.id === savedProduct.id ? { ...p, image: cloudUrl } : p));
                         }
                     });
             }
 
             alert("Produk Berhasil Disimpan!");
-            resetForm(); // Reset total buat bersihin buffer
+            resetForm();
         } catch (e: any) {
             alert("Gagal simpan: " + e.message);
         } finally {
