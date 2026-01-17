@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, FileText, Home, Briefcase, BarChart, Download, Share2, Globe, Zap, Cpu, Bot } from 'lucide-react';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, FileText, Home, Briefcase, BarChart, Download, Share2, Globe, Zap, Cpu, Bot, BookOpen } from 'lucide-react';
 import { DashboardProps } from '../types';
 import { useAdminDashboard } from '../logic';
 import { TabButton, HeaderActionBtn, StoreSubTabBtn } from '../ui-parts';
@@ -19,6 +19,7 @@ import { AdminSEO } from '../../admin-seo/index';
 import { AnalyticsDashboard } from '../../admin-analytics/index';
 import { AdminServices } from '../../admin-services/index';
 import { SibosTrainer } from '../sibos-trainer/index';
+import { AdminDocumentation } from '../documentation/index';
 
 export const DashboardShell = (props: DashboardProps) => {
     const navigate = useNavigate();
@@ -50,6 +51,7 @@ export const DashboardShell = (props: DashboardProps) => {
                         <TabButton id="career" label="KARIR" icon={Briefcase} isActive={activeTab === 'career'} onClick={() => setActiveTab('career')} /> 
                         <TabButton id="downloads" label="FILE" icon={Download} isActive={activeTab === 'downloads'} onClick={() => setActiveTab('downloads')} />
                         <TabButton id="social" label="STUDIO" icon={Share2} isActive={activeTab === 'social'} onClick={() => setActiveTab('social')} />
+                        <TabButton id="documentation" label="DOKUMEN" icon={BookOpen} isActive={activeTab === 'documentation'} onClick={() => setActiveTab('documentation')} />
                         <TabButton id="settings" label="SETTING" icon={Settings} isActive={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
                     </div>
                 </div>
@@ -148,6 +150,12 @@ export const DashboardShell = (props: DashboardProps) => {
                             articles={props.articles} 
                             gallery={props.gallery} 
                         />
+                    </div>
+                )}
+
+                {activeTab === 'documentation' && (
+                    <div className="animate-fade-in relative z-10 p-3 md:p-6 h-full">
+                        <AdminDocumentation />
                     </div>
                 )}
 

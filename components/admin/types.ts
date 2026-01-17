@@ -1,7 +1,7 @@
 
 import { Product, GalleryItem, Testimonial, Article, JobOpening, SiteConfig } from '../../types';
 
-export type AdminTabId = 'analytics' | 'store' | 'gallery' | 'articles' | 'seo' | 'career' | 'downloads' | 'social' | 'siboy' | 'settings';
+export type AdminTabId = 'analytics' | 'store' | 'gallery' | 'articles' | 'seo' | 'career' | 'downloads' | 'social' | 'siboy' | 'settings' | 'documentation';
 
 export interface DashboardProps {
     products: Product[];
