@@ -8,6 +8,40 @@ export interface DocItem {
 
 export const DOCUMENTATION_CONTENT: DocItem[] = [
     {
+        id: 'intel-analytics',
+        category: 'Intelligence & Analytics',
+        title: 'Traffic Command Center (Radar Bisnis)',
+        content: `
+# Radar Bisnis: Siapa Yang Ngintip Ruko Lo?
+
+Tab **TRAFFIC** bukan cuma pajangan angka. Ini adalah radar buat tau apakah strategi marketing lo (SEO/Sosmed) beneran narik orang atau cuma narik bot.
+
+### 1. Mantra Ghost Mode 👻
+Gue tau lo sering buka web sendiri buat ngecek tampilan. Masalahnya, itu bakal ngerusak data (lo dihitung pengunjung).
+- **Cara Aktifin:** Begitu lo login Admin, sistem otomatis aktifin **Ghost Mode**.
+- **Efek:** Semua klik, view, dan gerak-gerik lo di web GAK AKAN masuk ke database analytics. Data lo tetep murni 100% user asli.
+- **Link Khusus:** Di bagian bawah tab Traffic ada "Ghost Access Link". Share itu ke tim lo biar mereka bisa buka web tanpa ngotorin data.
+
+### 2. Page Intel (God Mode Drill-down) 🔍
+Gak cuma liat total view satu web, lo bisa bedah performa **tiap halaman**.
+- Klik salah satu baris di tabel **"Konten Terlaris"**.
+- Bakal muncul popup detail buat halaman itu doang.
+- Lo bisa liat orang yang baca artikel itu rata-rata berapa menit? Datengnya dari mana? Pake HP apa?
+
+### 3. Memahami Quality Score
+- **Bounce Rate:** Kalau angkanya di atas 70%, berarti orang masuk terus langsung kabur. Tandanya? Copywriting lo kurang menarik atau web kelamaan loading.
+- **Avg. Engagement Time:** Kalau orang betah di atas 2 menit di halaman produk, berarti dia udah "anget" dan siap di-push lewat tombol WA.
+
+### 4. Referrer (Pintu Masuk)
+Sistem ini pinter. Dia bisa bedain:
+- **Google Search:** Berarti SEO lo jalan.
+- **WhatsApp:** Berarti broadcast/chat lo manjur.
+- **Instagram/TikTok:** Berarti konten sosmed lo viral.
+
+> **Strategi:** Fokusin tenaga lo di sumber yang kasih traffic paling banyak. Jangan buang waktu di platform yang gak kasih hasil.
+        `
+    },
+    {
         id: 'arsenal-products',
         category: 'Arsenal Penjualan',
         title: 'Manajemen Produk (Inventory)',
