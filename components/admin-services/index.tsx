@@ -270,6 +270,45 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         <button onClick={resetForm} className="text-gray-500 hover:text-white transition-colors" title="Bersihkan Form"><RefreshCw size={18}/></button>
                     </div>
 
+                    {/* MOVED: SETTINGS SECTION (NOW AT THE TOP) */}
+                    <div className="mb-10 pb-10 border-b border-white/5">
+                        <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+                            <Zap size={16} className="text-blue-400" /> Broadcast & Role Settings
+                        </h4>
+                        
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Jenis Item:</label>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setItemForm({...itemForm, role: 'base'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'base' ? 'bg-brand-orange border-brand-orange text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>PAKET UTAMA</button>
+                                    <button onClick={() => setItemForm({...itemForm, role: 'addon'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'addon' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>ADD-ON</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Terapkan Ke Layanan:</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {SERVICE_TARGETS.map(svc => {
+                                        const isSelected = itemForm.targets.includes(svc.id);
+                                        return (
+                                            <button 
+                                                key={svc.id} 
+                                                onClick={() => {
+                                                    const newTargets = isSelected ? itemForm.targets.filter(t => t !== svc.id) : [...itemForm.targets, svc.id];
+                                                    setItemForm({...itemForm, targets: newTargets});
+                                                }}
+                                                className={`flex items-center gap-2 p-2 rounded-lg border transition-all text-[9px] font-bold ${isSelected ? 'bg-brand-orange/20 border-brand-orange text-white' : 'bg-black/40 border-white/5 text-gray-600'}`}
+                                            >
+                                                {isSelected ? <CheckSquare size={12}/> : <Square size={12}/>}
+                                                {svc.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* INPUTS SECTION (MIDDLE) */}
                     <div className="grid md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Label Item</label>
@@ -292,7 +331,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                             <Input value={itemForm.desc || ''} onChange={e => setItemForm({...itemForm, desc: e.target.value})} placeholder="Teaser 1 kalimat untuk tooltip..." className="bg-black/20 text-xs" />
                         </div>
 
-                        {/* NEW: INCLUSIONS AREA (Only for Base Packages) */}
+                        {/* INCLUSIONS AREA (Only for Base Packages) */}
                         {itemForm.role === 'base' && (
                             <div className="animate-fade-in">
                                 <div className="flex justify-between items-center mb-2">
@@ -332,44 +371,9 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                         </div>
                     </div>
 
-                    {/* BROADCAST SECTION */}
+                    {/* SAVE BUTTON (FIXED AT THE BOTTOM) */}
                     <div className="mt-8 pt-8 border-t border-white/5">
-                        <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-                            <Zap size={16} className="text-blue-400" /> Broadcast & Role Settings
-                        </h4>
-                        
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Jenis Item:</label>
-                                <div className="flex gap-2">
-                                    <button onClick={() => setItemForm({...itemForm, role: 'base'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'base' ? 'bg-brand-orange border-brand-orange text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>PAKET UTAMA</button>
-                                    <button onClick={() => setItemForm({...itemForm, role: 'addon'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'addon' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>ADD-ON</button>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Terapkan Ke Layanan:</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {SERVICE_TARGETS.map(svc => {
-                                        const isSelected = itemForm.targets.includes(svc.id);
-                                        return (
-                                            <button 
-                                                key={svc.id} 
-                                                onClick={() => {
-                                                    const newTargets = isSelected ? itemForm.targets.filter(t => t !== svc.id) : [...itemForm.targets, svc.id];
-                                                    setItemForm({...itemForm, targets: newTargets});
-                                                }}
-                                                className={`flex items-center gap-2 p-2 rounded-lg border transition-all text-[9px] font-bold ${isSelected ? 'bg-brand-orange/20 border-brand-orange text-white' : 'bg-black/40 border-white/5 text-gray-600'}`}
-                                            >
-                                                {isSelected ? <CheckSquare size={12}/> : <Square size={12}/>}
-                                                {svc.label}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-
-                        <Button onClick={handleSyncSave} disabled={saving} className="w-full mt-8 py-4 shadow-neon font-bold text-sm bg-brand-gradient">
+                        <Button onClick={handleSyncSave} disabled={saving} className="w-full py-4 shadow-neon font-bold text-sm bg-brand-gradient">
                             {saving ? <LoadingSpinner /> : <><Save size={18}/> SIMPAN & BROADCAST KE LAYANAN</>}
                         </Button>
                     </div>
