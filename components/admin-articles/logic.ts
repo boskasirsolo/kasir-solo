@@ -109,7 +109,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const aiLogic = useAIGenerator();
     const [cities, setCities] = useState<CityTarget[]>([]);
     
-    // NEW: State untuk navigasi mobile
+    // State untuk navigasi mobile
     const [activeMobilePane, setActiveMobilePane] = useState<'LIST' | 'CONFIG' | 'WRITE'>('LIST');
 
     useEffect(() => {
@@ -184,9 +184,9 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             date: item.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
             targetWordCount: estimatedCount,
             related_pillars: item.related_pillars || [],
-            generationContext: (item as any).generation_context || '',
+            generation_context: (item as any).generation_context || '',
             targetCityId: (item as any).target_city_id || 0
-        });
+        } as any);
         setSocialCaption(''); 
         setAiStep(2);
         setActiveMobilePane('WRITE'); // Langsung ke editor pas edit
@@ -242,7 +242,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
             let savedId: number | null = form.id;
 
-            // 3. Database Operation (CRITICAL FIX: Await Response)
+            // 3. Database Operation
             if (form.id) {
                 // UPDATE
                 const { data, error } = await supabase
@@ -254,7 +254,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 
                 if (error) throw error;
                 if (data) {
-                    // Update Local State with REAL DB Data
                     setArticles((prev: Article[]) => prev.map(a => a.id === form.id ? { ...a, ...data, image: data.image_url } : a));
                 }
             } else {
@@ -270,7 +269,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 
                 if (data) {
                     savedId = data.id;
-                    // Update Local State with REAL DB Data (Not Temp ID)
                     setArticles((prev: Article[]) => [{ ...data, image: data.image_url } as Article, ...prev]);
                 }
             }
@@ -334,6 +332,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
         try { 
             setForm(prev => ({ ...prev, id: null, title: '', excerpt: '', content: '', category: pillar.category, pillar_id: pillar.id, type: 'cluster' }));
             setAiStep(1); 
+            setActiveMobilePane('CONFIG'); // OTOMATIS PINDAH KE PENGATURAN (CONFIG)
             await aiLogic.generateClusterIdeas(pillar); 
         } catch(e: any) { alert(e.message); } 
     };
@@ -375,7 +374,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
     return {
         form, setForm, filterLogic, aiLogic,
-        activeMobilePane, setActiveMobilePane, // EXPORT BARU
+        activeMobilePane, setActiveMobilePane, 
         socialState: { socialCaption, setSocialCaption, selectedPlatforms, setSelectedPlatforms, socialLoading },
         aiState: { step: aiStep, setStep: setAiStep, selectedPresets, setSelectedPresets, trendingTopics: aiLogic.trendingTopics, keywords: aiLogic.keywords, selectedTones, setSelectedTones, cities },
         actions: { 
