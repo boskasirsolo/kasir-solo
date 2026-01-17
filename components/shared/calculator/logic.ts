@@ -41,7 +41,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
     };
   }, [selectedBase, selectedAddons, data]);
 
-  // NEW: Full Detail Shadow Lead Capture
+  // NEW: Refined Shadow Lead Capture for Services
   const handleShadowCapture = async (customerData: any) => {
     if (!customerData.name || !customerData.phone || customerData.phone.length < 9) return;
     
@@ -50,35 +50,32 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
 
     if (!supabase) return;
 
-    // Get Addons Labels for the report
     const activeAddonsLabels = data.addons
         .filter(a => selectedAddons.includes(a.id))
         .map(a => a.label)
         .join(', ');
 
-    // Structured Report for "Notes" Column
-    const fullDetailReport = 
+    // STANDARDIZED INTEL FORMAT
+    const intelReport = 
         `🏢USAHA: ${customerData.company || '-'}\n` +
         `⚖️SKALA: ${customerData.scale || '-'}\n` +
+        `🏷️KATEGORI: ${customerData.category || '-'}\n` +
         `📍ALAMAT: ${customerData.address || '-'}\n` +
         `📦PAKET: ${calculation.baseLabel || '(Belum pilih)'}\n` +
         `🚀ADDONS: ${activeAddonsLabels || '(Tidak ada)'}\n` +
         `💰ESTIMASI: ${formatRupiah(calculation.total.min)}`;
 
     try {
-        // Upsert based on phone to prevent duplicates in shadow list
         await supabase.from('leads').upsert([{
             phone: cleanPhone,
             name: customerData.name,
             source: `sim_shadow_${serviceSlug || 'general'}`,
             interest: `Simulasi: ${serviceName}`,
-            notes: fullDetailReport,
-            business_scale: customerData.scale, // Sync to specific column if created
+            notes: intelReport,
             status: 'new'
         }], { onConflict: 'phone' });
         
         lastCapturedPhone.current = cleanPhone;
-        console.log("Full shadow lead context captured");
     } catch (e) {
         console.warn("Shadow capture failed", e);
     }
@@ -106,8 +103,8 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
         setIsCapturing(true);
         try {
             await supabase.from('service_simulations').insert([{
-                customer_name: customerData.name || 'User Website',
-                customer_phone: customerData.phone || '-',
+                customer_name: customerData.name,
+                customer_phone: customerData.phone,
                 service_slug: serviceSlug || 'general',
                 service_name: serviceName,
                 base_option_label: calculation.baseLabel,

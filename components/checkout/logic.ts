@@ -1,10 +1,8 @@
 
 import React, { useState, useRef } from 'react';
 import { useCart } from '../../context/cart-context';
-import { supabase, normalizePhone } from '../../utils';
+import { supabase, normalizePhone, formatRupiah } from '../../utils';
 import { CheckoutFormData, OrderSuccessState } from './types';
-
-const generateOrderId = () => Math.floor(100000000000 + Math.random() * 900000000000);
 
 export const useCheckoutLogic = (setPage: (p: string) => void) => {
     const { cart, removeFromCart, updateQuantity, subtotalPrice, totalPrice, clearCart, discount, setDiscount } = useCart();
@@ -15,26 +13,35 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState<OrderSuccessState | null>(null);
 
-    // --- SHADOW LEAD CAPTURE ---
     const lastCapturedPhone = useRef<string>('');
-    // handleBlur added to fix the error in components/checkout/index.tsx
+    
+    // REFINED: Shadow Lead Capture for Checkout (Hardware)
     const handleBlur = async () => {
         if (!formData.name || !formData.phone || formData.phone.length < 9) return;
         
         const cleanPhone = normalizePhone(formData.phone);
-        if (!cleanPhone || cleanPhone === lastCapturedPhone.current) return;
+        if (!cleanPhone) return;
 
         if (!supabase) return;
 
+        const cartItemsList = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
+
+        // STANDARDIZED INTEL FORMAT (Matching Parser)
+        const intelReport = 
+            `📦PAKET: ${cartItemsList || 'Isi Keranjang'}\n` +
+            `📍ALAMAT: ${formData.address || '-'}\n` +
+            `📝CATATAN: ${formData.note || '-'}\n` +
+            `💰ESTIMASI: ${formatRupiah(totalPrice)}`;
+
         try {
-            await supabase.from('leads').insert([{
+            await supabase.from('leads').upsert([{
                 name: formData.name,
                 phone: cleanPhone,
                 source: 'checkout_page',
-                interest: 'Checkout Intent',
-                notes: `Checkout total: ${totalPrice}`,
+                interest: 'Hardware Checkout Intent',
+                notes: intelReport,
                 status: 'new'
-            }]);
+            }], { onConflict: 'phone' });
             lastCapturedPhone.current = cleanPhone;
         } catch (e) {
             console.error("Checkout shadow capture failed", e);
@@ -46,7 +53,6 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
         setIsValidatingCoupon(true);
         try {
             if (!supabase) throw new Error("Database offline");
-
             const { data: coupon, error } = await supabase
                 .from('coupons')
                 .select('*')
@@ -56,31 +62,22 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
 
             if (error) throw error;
             if (!coupon) throw new Error("Kode promo ghaib atau sudah hangus.");
-
             if (subtotalPrice < coupon.min_purchase) {
                 throw new Error(`Minimal belanja Rp ${new Intl.NumberFormat('id-ID').format(coupon.min_purchase)} buat pake kode ini.`);
             }
 
-            // Hitung nilai diskon
             let amount = coupon.discount_value;
             if (coupon.discount_type === 'percentage') {
                 amount = (subtotalPrice * coupon.discount_value) / 100;
                 if (coupon.max_discount && amount > coupon.max_discount) amount = coupon.max_discount;
             }
 
-            setDiscount({
-                code: coupon.code,
-                type: coupon.discount_type,
-                value: coupon.discount_value,
-                amount: amount
-            });
-            alert("🔥 PROMO DIAKTIFKAN! Cek total belanja lo.");
+            setDiscount({ code: coupon.code, type: coupon.discount_type, value: coupon.discount_value, amount: amount });
+            alert("🔥 PROMO DIAKTIFKAN!");
         } catch (e: any) {
             alert(e.message);
             setDiscount(null);
-        } finally {
-            setIsValidatingCoupon(false);
-        }
+        } finally { setIsValidatingCoupon(false); }
     };
 
     const submitOrder = async (e: React.FormEvent) => {
@@ -118,11 +115,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             }));
 
             await supabase!.from('order_items').insert(orderItems);
-            
-            // Update usage count kupon
-            if (discount) {
-                await supabase!.rpc('increment_coupon_usage', { coupon_code: discount.code });
-            }
+            if (discount) await supabase!.rpc('increment_coupon_usage', { coupon_code: discount.code });
 
             setOrderSuccess({ id: order.id, total: totalPrice });
             clearCart();
@@ -131,7 +124,6 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
         } finally { setIsSubmitting(false); }
     };
 
-    // Return object updated with missing clearCart, handleBlur, and setOrderSuccess
     return {
         cart, removeFromCart, updateQuantity, subtotalPrice, totalPrice, discount, setDiscount,
         formData, handleFieldChange: (f: any, v: any) => setFormData(p => ({...p, [f]: v})),
