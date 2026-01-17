@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, FileText, Home, Briefcase, BarChart, Download, Share2, Globe, Zap, Cpu } from 'lucide-react';
+import { ShoppingBag, Package, LayoutGrid, Image, Settings, Layers, LogOut, FileText, Home, Briefcase, BarChart, Download, Share2, Globe, Zap, Cpu, Bot } from 'lucide-react';
 import { DashboardProps } from '../types';
 import { useAdminDashboard } from '../logic';
 import { TabButton, HeaderActionBtn, StoreSubTabBtn } from '../ui-parts';
@@ -18,6 +18,7 @@ import { AdminSocialStudio } from '../../admin-social/index';
 import { AdminSEO } from '../../admin-seo/index'; 
 import { AnalyticsDashboard } from '../../admin-analytics/index';
 import { AdminServices } from '../../admin-services/index';
+import { SibosTrainer } from '../sibos-trainer/index';
 
 export const DashboardShell = (props: DashboardProps) => {
     const navigate = useNavigate();
@@ -42,6 +43,7 @@ export const DashboardShell = (props: DashboardProps) => {
                     <div className="flex overflow-x-auto pb-2 xl:pb-0 gap-1.5 custom-scrollbar w-full xl:w-auto xl:justify-end">
                         <TabButton id="analytics" label="TRAFFIC" icon={BarChart} isActive={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
                         <TabButton id="store" label="TOKO" icon={ShoppingBag} isActive={activeTab === 'store'} onClick={() => setActiveTab('store')} />
+                        <TabButton id="siboy" label="SIBOY AI" icon={Bot} isActive={activeTab === 'siboy'} onClick={() => setActiveTab('siboy')} />
                         <TabButton id="seo" label="SEO" icon={Globe} isActive={activeTab === 'seo'} onClick={() => setActiveTab('seo')} />
                         <TabButton id="gallery" label="GALERI" icon={Image} isActive={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} />
                         <TabButton id="articles" label="ARTIKEL" icon={FileText} isActive={activeTab === 'articles'} onClick={() => setActiveTab('articles')} />
@@ -94,6 +96,12 @@ export const DashboardShell = (props: DashboardProps) => {
                         ) : (
                             <AdminServices config={props.config} />
                         )}
+                    </div>
+                )}
+
+                {activeTab === 'siboy' && (
+                    <div className="animate-fade-in relative z-10 p-3 md:p-6 h-full">
+                        <SibosTrainer />
                     </div>
                 )}
 

@@ -131,6 +131,24 @@ export const SibosAI = {
         userMessage: string, 
         isAdmin: boolean
     ) => {
+        // --- 0. DYNAMIC MEMORY FETCH ---
+        let dynamicKnowledge = "";
+        if (supabase) {
+            try {
+                const { data } = await supabase
+                    .from('ai_knowledge')
+                    .select('category, title, content')
+                    .eq('is_active', true);
+                
+                if (data && data.length > 0) {
+                    dynamicKnowledge = "\n[UPDATE HAFALAN DARI MAS AMIN (Gunakan data ini jika relevan)]\n";
+                    data.forEach(item => {
+                        dynamicKnowledge += `- KATEGORI [${item.category.toUpperCase()}]: ${item.title} -> ${item.content}\n`;
+                    });
+                }
+            } catch (e) { console.warn("Failed to fetch dynamic brain", e); }
+        }
+
         // 1. Dynamic Injection
         // Only inject anecdote if user asks about background/story to save tokens and keep it short
         const isPersonalQuestion = /cerita|kisah|kenapa|siapa/i.test(userMessage);
@@ -139,6 +157,7 @@ export const SibosAI = {
         const systemInstruction = `
             ${SIBOS_BRAIN_CONTEXT}
             ${PRE_SALES_KNOWLEDGE}
+            ${dynamicKnowledge}
             
             [DYNAMIC MEMORY]
             ${selectedAnecdote ? `Relevant Anecdote: ${selectedAnecdote}` : ""}
