@@ -45,7 +45,9 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         setLoading(true);
         try {
             const { data: res } = await supabase.from('services').select('*');
-            if (res) setAllServices(res);
+            if (res) {
+                setAllServices(res);
+            }
         } catch (e) { console.error(e); } finally { setLoading(false); }
     };
 
@@ -168,6 +170,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                 {currentService?.calc_data?.baseOptions?.map((item: any) => (
                                     <ItemCard key={item.id} item={item} role="base" onEdit={() => setItemForm({...item, targets: [filterSlug], role: 'base'})} onDelete={() => deleteItem(filterSlug, item.id, 'base')} />
                                 ))}
+                                {(!currentService?.calc_data?.baseOptions?.length) && <p className="text-[10px] text-gray-700 italic text-center py-4">Data kosong di database.</p>}
                             </div>
                         </div>
 
@@ -181,6 +184,7 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                                 {currentService?.calc_data?.addons?.map((item: any) => (
                                     <ItemCard key={item.id} item={item} role="addon" onEdit={() => setItemForm({...item, targets: [filterSlug], role: 'addon'})} onDelete={() => deleteItem(filterSlug, item.id, 'addon')} />
                                 ))}
+                                {(!currentService?.calc_data?.addons?.length) && <p className="text-[10px] text-gray-700 italic text-center py-4">Data kosong di database.</p>}
                             </div>
                         </div>
                     </div>
