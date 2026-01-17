@@ -17,7 +17,7 @@ export const ShippingForm = ({
                 <form onSubmit={onSubmit} className="space-y-4">
                     <Input value={formData.name} onChange={e => onChange('name', e.target.value)} onBlur={onBlur} placeholder="Nama Penerima" />
                     <Input value={formData.phone} onChange={e => onChange('phone', e.target.value)} onBlur={onBlur} placeholder="WA: 0812..." type="tel" />
-                    <TextArea value={formData.address} onChange={e => onChange('address', e.target.value)} placeholder="Alamat Lengkap..." className="h-20" />
+                    <TextArea value={formData.address} onChange={e => onChange('address', e.target.value)} onBlur={onBlur} placeholder="Alamat Lengkap..." className="h-20" />
 
                     {/* KUPON SECTION */}
                     <div className="pt-4 border-t border-white/5">

@@ -32,7 +32,7 @@ const HardwareLeadCard: React.FC<{
 }> = ({ lead, onDelete, isExpanded, onToggle }) => {
     const intel = parseIntel(lead.notes);
     return (
-        <div className={`bg-brand-card border-l-4 transition-all overflow-hidden rounded-r-xl mb-3 ${isExpanded ? 'border-brand-orange shadow-neon-strong' : 'border-brand-orange/40 border-y border-r border-white/5'}`}>
+        <div className={`bg-brand-card border-l-4 transition-all overflow-hidden rounded-r-xl mb-3 ${isExpanded ? 'border-brand-orange bg-brand-orange/5' : 'border-brand-orange/40 border-y border-r border-white/5'}`}>
             <div onClick={onToggle} className="p-4 flex items-center justify-between cursor-pointer hover:bg-brand-orange/5">
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-brand-orange/10 flex items-center justify-center text-brand-orange border border-brand-orange/20"><ShoppingBag size={20}/></div>
@@ -80,7 +80,7 @@ const ServiceLeadCard: React.FC<{
 }> = ({ lead, onDelete, isExpanded, onToggle }) => {
     const intel = parseIntel(lead.notes);
     return (
-        <div className={`bg-brand-dark transition-all overflow-hidden rounded-xl mb-3 border ${isExpanded ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'border-blue-500/20'}`}>
+        <div className={`bg-brand-dark transition-all overflow-hidden rounded-xl mb-3 border ${isExpanded ? 'border-blue-500 bg-blue-500/5' : 'border-blue-500/20'}`}>
             <div onClick={onToggle} className="p-4 flex items-center justify-between cursor-pointer hover:bg-blue-500/5">
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20"><Cpu size={20}/></div>

@@ -26,7 +26,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
     };
 
     return (
-        <div className={`bg-brand-dark/50 border transition-all rounded-2xl overflow-hidden mb-4 ${expanded ? 'border-brand-orange shadow-neon-strong translate-x-1' : 'border-white/5 hover:border-white/20'}`}>
+        <div className={`bg-brand-dark/50 border transition-all rounded-2xl overflow-hidden mb-4 ${expanded ? 'border-brand-orange bg-brand-orange/5 translate-x-1' : 'border-white/5 hover:border-white/20'}`}>
             <div className="p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer select-none" onClick={onToggle}>
                 <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-xl border flex items-center justify-center transition-all shadow-lg shrink-0 ${expanded ? 'bg-brand-orange text-white border-brand-orange' : 'bg-brand-card text-gray-600 border-white/10'}`}>
@@ -66,7 +66,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                     order={order} 
                     items={items} 
                     onStatusUpdate={onStatusUpdate} 
-                    // FIX: Menggunakan 'onShippingUpdate' dari props karena 'updateShipping' tidak didefinisikan di scope ini
                     onShippingUpdate={onShippingUpdate} 
                     config={config}
                 />
