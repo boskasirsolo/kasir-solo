@@ -19,6 +19,169 @@ const SERVICE_TARGETS = [
     { id: 'maintenance', label: 'Maintenance', icon: ShieldCheck }
 ];
 
+// --- SUB-COMPONENTS (Defined Outside to Prevent Flickering) ---
+
+const EditorContent = ({ 
+    itemForm, setItemForm, hideHeader, resetForm, generateAiContent, aiGenerating, handleSyncSave, saving 
+}: any) => (
+    <div className={`bg-brand-card border border-white/10 rounded-2xl shadow-2xl relative overflow-hidden ${hideHeader ? 'border-none shadow-none bg-transparent h-auto' : 'p-6 h-full flex flex-col'}`}>
+        {!hideHeader && <div className="absolute top-0 right-0 p-4 opacity-5"><Edit3 size={100}/></div>}
+        
+        {!hideHeader && (
+            <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center text-brand-orange">
+                        <Sparkles size={20} />
+                    </div>
+                    <div>
+                        <h3 className="text-white font-bold text-lg leading-none">{itemForm.id ? 'Mode Edit Item' : 'Tambah Item Baru'}</h3>
+                        <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Kalkulator Editor</p>
+                    </div>
+                </div>
+                <button onClick={resetForm} className="text-gray-500 hover:text-white transition-colors" title="Bersihkan Form"><RefreshCw size={18}/></button>
+            </div>
+        )}
+
+        <div className={`${hideHeader ? 'h-auto' : 'flex-1 overflow-y-auto custom-scrollbar'} space-y-6`}>
+            <div className="mb-6 pb-6 border-b border-white/5">
+                <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+                    <Zap size={16} className="text-blue-400" /> Broadcast & Tier Settings
+                </h4>
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Jenis Item:</label>
+                        <div className="flex gap-2">
+                            <button onClick={() => setItemForm({...itemForm, role: 'base'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'base' ? 'bg-brand-orange border-brand-orange text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>PAKET UTAMA</button>
+                            <button onClick={() => setItemForm({...itemForm, role: 'addon'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'addon' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>ADD-ON</button>
+                        </div>
+                    </div>
+                    {itemForm.role === 'addon' && (
+                        <div className="animate-fade-in">
+                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Kategori Addon (Tier):</label>
+                            <div className="flex gap-2">
+                                <button onClick={() => setItemForm({...itemForm, tier: 'basic'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.tier === 'basic' ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'bg-black/20 border-white/5 text-gray-500'}`}>STANDAR (BASIC)</button>
+                                <button onClick={() => setItemForm({...itemForm, tier: 'advanced'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.tier === 'advanced' ? 'bg-brand-orange/20 border-brand-orange text-brand-orange' : 'bg-black/20 border-white/5 text-gray-500'}`}>BOOSTER (PRO)</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="mb-6">
+                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Terapkan Ke Layanan:</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {SERVICE_TARGETS.map(svc => {
+                        const isSelected = itemForm.targets.includes(svc.id);
+                        return (
+                            <button 
+                                key={svc.id} 
+                                onClick={() => {
+                                    const newTargets = isSelected ? itemForm.targets.filter((t:string) => t !== svc.id) : [...itemForm.targets, svc.id];
+                                    setItemForm({...itemForm, targets: newTargets});
+                                }}
+                                className={`flex items-center gap-2 p-2 rounded-lg border transition-all text-[9px] font-bold ${isSelected ? 'bg-brand-orange/20 border-brand-orange text-white' : 'bg-black/40 border-white/5 text-gray-600'}`}
+                            >
+                                {isSelected ? <CheckSquare size={12}/> : <Square size={12}/>}
+                                {svc.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Label Item</label>
+                    <Input value={itemForm.label} onChange={(e:any) => setItemForm({...itemForm, label: e.target.value})} placeholder="Cth: Starter Pack" className="bg-black/40"/>
+                </div>
+                <div>
+                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Harga Mahar (IDR)</label>
+                    <Input value={formatNumberInput(itemForm.price)} onChange={(e:any) => setItemForm({...itemForm, price: cleanNumberInput(e.target.value)})} className="bg-black/40 text-brand-orange font-bold font-mono"/>
+                </div>
+            </div>
+
+            <div className="space-y-6">
+                <div>
+                    <div className="flex justify-between items-center mb-2">
+                        <label className="text-[10px] text-gray-500 font-bold uppercase">Tooltip Singkat</label>
+                        <button onClick={() => generateAiContent('desc')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1 hover:text-white transition-colors">
+                            {aiGenerating === 'desc' ? <LoadingSpinner size={8}/> : <><Sparkles size={10}/> AI Gen</>}
+                        </button>
+                    </div>
+                    <Input value={itemForm.desc || ''} onChange={(e:any) => setItemForm({...itemForm, desc: e.target.value})} placeholder="Teaser 1 kalimat untuk tooltip..." className="bg-black/20 text-xs" />
+                </div>
+
+                {itemForm.role === 'base' && (
+                    <div className="animate-fade-in">
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-[10px] text-brand-orange font-bold uppercase flex items-center gap-1"><ListChecks size={12}/> Standar Inclusions (Apa yang didapat?)</label>
+                            <button onClick={() => generateAiContent('includes')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1">
+                                {aiGenerating === 'includes' ? <LoadingSpinner size={8}/> : <><Wand2 size={10}/> AI List</>}
+                            </button>
+                        </div>
+                        <TextArea 
+                            value={itemForm.includesStr || ''} 
+                            onChange={(e:any) => setItemForm({...itemForm, includesStr: e.target.value})} 
+                            className="h-24 text-[10px] bg-black/40 leading-relaxed font-mono" 
+                            placeholder="Satu item per baris..." 
+                        />
+                    </div>
+                )}
+
+                <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="text-[10px] text-gray-500 font-bold uppercase">Detail Strategi (Markdown)</label>
+                                <button onClick={() => generateAiContent('longDesc')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1">
+                                    {aiGenerating === 'longDesc' ? <LoadingSpinner size={8}/> : <><Sparkles size={10}/> AI Gen</>}
+                                </button>
+                            </div>
+                            <TextArea value={itemForm.longDesc || ''} onChange={(e:any) => setItemForm({...itemForm, longDesc: e.target.value})} className="h-40 text-[10px] bg-black/40 leading-relaxed" placeholder="Penjelasan mendalam..." />
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="text-[10px] text-brand-orange font-bold uppercase flex items-center gap-1"><Coffee size={10}/> Founder Note</label>
+                                <button onClick={() => generateAiContent('founderNote')} disabled={!!aiGenerating} className="text-[9px] text-brand-orange/70 flex items-center gap-1">
+                                    {aiGenerating === 'founderNote' ? <LoadingSpinner size={8}/> : <><Wand2 size={10}/> AI Gen</>}
+                                </button>
+                            </div>
+                            <TextArea value={itemForm.founderNote || ''} onChange={(e:any) => setItemForm({...itemForm, founderNote: e.target.value})} className="h-40 text-[10px] bg-brand-orange/5 border-brand-orange/10 italic leading-relaxed" placeholder="Pesan pribadi Mas Amin..." />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-8 pt-8 border-t border-white/5 pb-12">
+                <Button onClick={handleSyncSave} disabled={saving} className="w-full py-4 shadow-neon font-bold text-sm bg-brand-gradient">
+                    {saving ? <LoadingSpinner /> : <><Save size={18}/> SIMPAN & BROADCAST</>}
+                </Button>
+            </div>
+        </div>
+    </div>
+);
+
+const MobileEditorOverlay = ({ itemForm, resetForm, children }: any) => (
+    <div className="fixed inset-0 z-[9999] bg-brand-black flex flex-col animate-fade-in overflow-hidden lg:hidden overscroll-behavior-contain h-[100dvh]">
+        <div className="p-4 bg-brand-card border-b border-white/10 flex items-center justify-between shrink-0 shadow-lg relative z-20">
+            <button onClick={resetForm} className="flex items-center gap-2 text-brand-orange font-bold text-sm">
+                <ArrowLeft size={20} /> Kembali
+            </button>
+            <h3 className="text-white font-bold text-sm truncate max-w-[200px]">
+                {itemForm.id ? 'Edit Item' : 'Item Baru'}
+            </h3>
+            <div className="w-10"></div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar pb-32">
+            {children}
+        </div>
+    </div>
+);
+
+// --- MAIN COMPONENT ---
+
 export const AdminServices = ({ config }: { config: SiteConfig }) => {
     const [allServices, setAllServices] = useState<ServicePageData[]>([]);
     const [loading, setLoading] = useState(true);
@@ -185,163 +348,11 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
         );
     }, [currentService, itemSearchTerm]);
 
-    const EditorContent = ({ hideHeader = false }: { hideHeader?: boolean }) => (
-        <div className={`bg-brand-card border border-white/10 rounded-2xl shadow-2xl relative overflow-hidden ${hideHeader ? 'border-none shadow-none bg-transparent h-auto' : 'p-6 h-full flex flex-col'}`}>
-            {!hideHeader && <div className="absolute top-0 right-0 p-4 opacity-5"><Edit3 size={100}/></div>}
-            
-            <div className={`flex justify-between items-center mb-8 border-b border-white/5 pb-4 ${hideHeader ? 'hidden' : ''}`}>
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center text-brand-orange">
-                        <Sparkles size={20} />
-                    </div>
-                    <div>
-                        <h3 className="text-white font-bold text-lg leading-none">{itemForm.id ? 'Mode Edit Item' : 'Tambah Item Baru'}</h3>
-                        <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Kalkulator Editor</p>
-                    </div>
-                </div>
-                <button onClick={resetForm} className="text-gray-500 hover:text-white transition-colors" title="Bersihkan Form"><RefreshCw size={18}/></button>
-            </div>
-
-            <div className={`${hideHeader ? 'h-auto' : 'flex-1 overflow-y-auto custom-scrollbar'} space-y-6`}>
-                <div className="mb-6 pb-6 border-b border-white/5">
-                    <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-                        <Zap size={16} className="text-blue-400" /> Broadcast & Tier Settings
-                    </h4>
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Jenis Item:</label>
-                            <div className="flex gap-2">
-                                <button onClick={() => setItemForm({...itemForm, role: 'base'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'base' ? 'bg-brand-orange border-brand-orange text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>PAKET UTAMA</button>
-                                <button onClick={() => setItemForm({...itemForm, role: 'addon'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.role === 'addon' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-black/20 border-white/5 text-gray-500'}`}>ADD-ON</button>
-                            </div>
-                        </div>
-                        {itemForm.role === 'addon' && (
-                            <div className="animate-fade-in">
-                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Kategori Addon (Tier):</label>
-                                <div className="flex gap-2">
-                                    <button onClick={() => setItemForm({...itemForm, tier: 'basic'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.tier === 'basic' ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'bg-black/20 border-white/5 text-gray-500'}`}>STANDAR (BASIC)</button>
-                                    <button onClick={() => setItemForm({...itemForm, tier: 'advanced'})} className={`flex-1 py-2 rounded-xl border text-[10px] font-bold transition-all ${itemForm.tier === 'advanced' ? 'bg-brand-orange/20 border-brand-orange text-brand-orange' : 'bg-black/20 border-white/5 text-gray-500'}`}>BOOSTER (PRO)</button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="mb-6">
-                    <label className="text-[10px] text-gray-500 font-bold uppercase mb-3 block">Terapkan Ke Layanan:</label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                        {SERVICE_TARGETS.map(svc => {
-                            const isSelected = itemForm.targets.includes(svc.id);
-                            return (
-                                <button 
-                                    key={svc.id} 
-                                    onClick={() => {
-                                        const newTargets = isSelected ? itemForm.targets.filter(t => t !== svc.id) : [...itemForm.targets, svc.id];
-                                        setItemForm({...itemForm, targets: newTargets});
-                                    }}
-                                    className={`flex items-center gap-2 p-2 rounded-lg border transition-all text-[9px] font-bold ${isSelected ? 'bg-brand-orange/20 border-brand-orange text-white' : 'bg-black/40 border-white/5 text-gray-600'}`}
-                                >
-                                    {isSelected ? <CheckSquare size={12}/> : <Square size={12}/>}
-                                    {svc.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Label Item</label>
-                        <Input value={itemForm.label} onChange={e => setItemForm({...itemForm, label: e.target.value})} placeholder="Cth: Starter Pack" className="bg-black/40"/>
-                    </div>
-                    <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Harga Mahar (IDR)</label>
-                        <Input value={formatNumberInput(itemForm.price)} onChange={e => setItemForm({...itemForm, price: cleanNumberInput(e.target.value)})} className="bg-black/40 text-brand-orange font-bold font-mono"/>
-                    </div>
-                </div>
-
-                <div className="space-y-6">
-                    <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <label className="text-[10px] text-gray-500 font-bold uppercase">Tooltip Singkat</label>
-                            <button onClick={() => generateAiContent('desc')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1 hover:text-white transition-colors">
-                                {aiGenerating === 'desc' ? <LoadingSpinner size={8}/> : <><Sparkles size={10}/> AI Gen</>}
-                            </button>
-                        </div>
-                        <Input value={itemForm.desc || ''} onChange={e => setItemForm({...itemForm, desc: e.target.value})} placeholder="Teaser 1 kalimat untuk tooltip..." className="bg-black/20 text-xs" />
-                    </div>
-
-                    {itemForm.role === 'base' && (
-                        <div className="animate-fade-in">
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="text-[10px] text-brand-orange font-bold uppercase flex items-center gap-1"><ListChecks size={12}/> Standar Inclusions (Apa yang didapat?)</label>
-                                <button onClick={() => generateAiContent('includes')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1">
-                                    {aiGenerating === 'includes' ? <LoadingSpinner size={8}/> : <><Wand2 size={10}/> AI List</>}
-                                </button>
-                            </div>
-                            <TextArea 
-                                value={itemForm.includesStr || ''} 
-                                onChange={e => setItemForm({...itemForm, includesStr: e.target.value})} 
-                                className="h-24 text-[10px] bg-black/40 leading-relaxed font-mono" 
-                                placeholder="Satu item per baris..." 
-                            />
-                        </div>
-                    )}
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-4">
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <label className="text-[10px] text-gray-500 font-bold uppercase">Detail Strategi (Markdown)</label>
-                                    <button onClick={() => generateAiContent('longDesc')} disabled={!!aiGenerating} className="text-[9px] text-blue-400 flex items-center gap-1">
-                                        {aiGenerating === 'longDesc' ? <LoadingSpinner size={8}/> : <><Sparkles size={10}/> AI Gen</>}
-                                    </button>
-                                </div>
-                                <TextArea value={itemForm.longDesc || ''} onChange={e => setItemForm({...itemForm, longDesc: e.target.value})} className="h-40 text-[10px] bg-black/40 leading-relaxed" placeholder="Penjelasan mendalam..." />
-                            </div>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <label className="text-[10px] text-brand-orange font-bold uppercase flex items-center gap-1"><Coffee size={10}/> Founder Note</label>
-                                    <button onClick={() => generateAiContent('founderNote')} disabled={!!aiGenerating} className="text-[9px] text-brand-orange/70 flex items-center gap-1">
-                                        {aiGenerating === 'founderNote' ? <LoadingSpinner size={8}/> : <><Wand2 size={10}/> AI Gen</>}
-                                    </button>
-                                </div>
-                                <TextArea value={itemForm.founderNote || ''} onChange={e => setItemForm({...itemForm, founderNote: e.target.value})} className="h-40 text-[10px] bg-brand-orange/5 border-brand-orange/10 italic leading-relaxed" placeholder="Pesan pribadi Mas Amin..." />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mt-8 pt-8 border-t border-white/5 pb-12">
-                    <Button onClick={handleSyncSave} disabled={saving} className="w-full py-4 shadow-neon font-bold text-sm bg-brand-gradient">
-                        {saving ? <LoadingSpinner /> : <><Save size={18}/> SIMPAN & BROADCAST</>}
-                    </Button>
-                </div>
-            </div>
-        </div>
-    );
-
-    const MobileEditorOverlay = () => (
-        <div className="fixed inset-0 z-[9999] bg-brand-black flex flex-col animate-fade-in overflow-hidden lg:hidden">
-            <div className="p-4 bg-brand-card border-b border-white/10 flex items-center justify-between shrink-0 shadow-lg relative z-20">
-                <button onClick={resetForm} className="flex items-center gap-2 text-brand-orange font-bold text-sm">
-                    <ArrowLeft size={20} /> Kembali
-                </button>
-                <h3 className="text-white font-bold text-sm truncate max-w-[200px]">
-                    {itemForm.id ? 'Edit Item' : 'Item Baru'}
-                </h3>
-                <div className="w-10"></div>
-            </div>
-            {/* Scroll Container Utama Mobile */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar pb-32">
-                <EditorContent hideHeader={true} />
-            </div>
-        </div>
-    );
-
     if (loading) return <div className="flex justify-center p-20"><LoadingSpinner size={32}/></div>;
+
+    const commonEditorProps = {
+        itemForm, setItemForm, resetForm, generateAiContent, aiGenerating, handleSyncSave, saving
+    };
 
     return (
         <div className="relative">
@@ -411,11 +422,16 @@ export const AdminServices = ({ config }: { config: SiteConfig }) => {
                 </div>
 
                 <div className="hidden lg:block lg:col-span-7 space-y-6 lg:sticky lg:top-6">
-                    <EditorContent />
+                    <EditorContent {...commonEditorProps} hideHeader={false} />
                 </div>
             </div>
 
-            {showMobileEditor && createPortal(<MobileEditorOverlay />, document.body)}
+            {showMobileEditor && createPortal(
+                <MobileEditorOverlay itemForm={itemForm} resetForm={resetForm}>
+                    <EditorContent {...commonEditorProps} hideHeader={true} />
+                </MobileEditorOverlay>, 
+                document.body
+            )}
         </div>
     );
 };
