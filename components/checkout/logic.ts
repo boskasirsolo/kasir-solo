@@ -15,20 +15,20 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
 
     const lastCapturedPhone = useRef<string>('');
     
-    // REFINED: Shadow Lead Capture for Checkout (Hardware)
+    // CAPTURE HARDWARE LEADS (SHADOW)
     const handleBlur = async () => {
         if (!formData.name || !formData.phone || formData.phone.length < 9) return;
         
         const cleanPhone = normalizePhone(formData.phone);
         if (!cleanPhone) return;
-
         if (!supabase) return;
 
-        const cartItemsList = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
+        // Build list barang dari keranjang
+        const itemsList = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
 
-        // STANDARDIZED INTEL FORMAT (Matching Parser)
-        const intelReport = 
-            `📦PAKET: ${cartItemsList || 'Isi Keranjang'}\n` +
+        // Format data terstruktur untuk parser admin
+        const report = 
+            `📦PAKET: ${itemsList || 'Keranjang Kosong'}\n` +
             `📍ALAMAT: ${formData.address || '-'}\n` +
             `📝CATATAN: ${formData.note || '-'}\n` +
             `💰ESTIMASI: ${formatRupiah(totalPrice)}`;
@@ -37,14 +37,14 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             await supabase.from('leads').upsert([{
                 name: formData.name,
                 phone: cleanPhone,
-                source: 'checkout_page',
-                interest: 'Hardware Checkout Intent',
-                notes: intelReport,
+                source: 'checkout_shadow',
+                interest: 'Hardware Order Intent',
+                notes: report,
                 status: 'new'
             }], { onConflict: 'phone' });
             lastCapturedPhone.current = cleanPhone;
         } catch (e) {
-            console.error("Checkout shadow capture failed", e);
+            console.error("Shadow capture hardware failed", e);
         }
     };
 
@@ -61,9 +61,9 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                 .maybeSingle();
 
             if (error) throw error;
-            if (!coupon) throw new Error("Kode promo ghaib atau sudah hangus.");
+            if (!coupon) throw new Error("Kode promo ghaib.");
             if (subtotalPrice < coupon.min_purchase) {
-                throw new Error(`Minimal belanja Rp ${new Intl.NumberFormat('id-ID').format(coupon.min_purchase)} buat pake kode ini.`);
+                throw new Error(`Minimal belanja Rp ${formatRupiah(coupon.min_purchase)}.`);
             }
 
             let amount = coupon.discount_value;
@@ -115,8 +115,6 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             }));
 
             await supabase!.from('order_items').insert(orderItems);
-            if (discount) await supabase!.rpc('increment_coupon_usage', { coupon_code: discount.code });
-
             setOrderSuccess({ id: order.id, total: totalPrice });
             clearCart();
         } catch (error: any) {

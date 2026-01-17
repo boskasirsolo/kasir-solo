@@ -41,43 +41,42 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
     };
   }, [selectedBase, selectedAddons, data]);
 
-  // NEW: Refined Shadow Lead Capture for Services
+  // CAPTURE SERVICE LEADS (SHADOW)
   const handleShadowCapture = async (customerData: any) => {
     if (!customerData.name || !customerData.phone || customerData.phone.length < 9) return;
     
     const cleanPhone = normalizePhone(customerData.phone);
     if (!cleanPhone) return;
-
     if (!supabase) return;
 
-    const activeAddonsLabels = data.addons
+    const addonsText = data.addons
         .filter(a => selectedAddons.includes(a.id))
         .map(a => a.label)
         .join(', ');
 
-    // STANDARDIZED INTEL FORMAT
-    const intelReport = 
+    // Format data terstruktur untuk parser admin
+    const report = 
         `🏢USAHA: ${customerData.company || '-'}\n` +
         `⚖️SKALA: ${customerData.scale || '-'}\n` +
         `🏷️KATEGORI: ${customerData.category || '-'}\n` +
         `📍ALAMAT: ${customerData.address || '-'}\n` +
-        `📦PAKET: ${calculation.baseLabel || '(Belum pilih)'}\n` +
-        `🚀ADDONS: ${activeAddonsLabels || '(Tidak ada)'}\n` +
+        `📦PAKET: ${calculation.baseLabel || '(Pilih Paket Utama)'}\n` +
+        `🚀ADDONS: ${addonsText || '(Tanpa Addon)'}\n` +
         `💰ESTIMASI: ${formatRupiah(calculation.total.min)}`;
 
     try {
         await supabase.from('leads').upsert([{
             phone: cleanPhone,
             name: customerData.name,
-            source: `sim_shadow_${serviceSlug || 'general'}`,
+            source: `sim_shadow_${serviceSlug || 'service'}`,
             interest: `Simulasi: ${serviceName}`,
-            notes: intelReport,
+            notes: report,
             status: 'new'
         }], { onConflict: 'phone' });
         
         lastCapturedPhone.current = cleanPhone;
     } catch (e) {
-        console.warn("Shadow capture failed", e);
+        console.warn("Shadow capture service failed", e);
     }
   };
 
