@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle, FileType, MessageSquare, MapPin, Image as ImageIcon, Send, Clock } from 'lucide-react';
+// FIX: Menambahkan import 'Plus' yang hilang dari lucide-react agar ikon bisa digunakan di komponen
+import { Sparkles, RefreshCw, Wand2, Loader2, Layout, Network, User, Search, CheckCircle2, ChevronRight, Tags, ArrowRight, X as XIcon, Users, ArrowLeft, BarChart, Save, FileText, Share2, Target, Instagram, Facebook, Linkedin, Rocket, AlertCircle, FileType, MessageSquare, MapPin, Image as ImageIcon, Send, Clock, Link2, Plus } from 'lucide-react';
 import { Article } from '../../types';
 import { Button, LoadingSpinner } from '../ui';
 import { ARTICLE_CATEGORIES, NARRATIVE_TONES } from './types';
@@ -50,6 +51,7 @@ export const EditorPanel = ({
     const [catInput, setCatInput] = useState('');
     const [researchTopicInput, setResearchTopicInput] = useState(''); 
     const [useCityTemplate, setUseCityTemplate] = useState(false);
+    const [pillarSearch, setPillarSearch] = useState('');
     
     const selectedCats = form.category ? form.category.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
 
@@ -86,10 +88,18 @@ export const EditorPanel = ({
                 targetCityId: cityId,
                 title: `Jual Paket Mesin Kasir di ${city.name} - Unit Lengkap & Garansi Resmi`
             }));
-            // Auto add category if relevant
             if (!selectedCats.includes('Area Layanan')) addCategory('Area Layanan');
         } else {
             setForm((p: any) => ({ ...p, targetCityId: 0 }));
+        }
+    };
+
+    const togglePillarLink = (id: number) => {
+        const current = form.related_pillars || [];
+        if (current.includes(id)) {
+            setForm((p:any) => ({ ...p, related_pillars: current.filter((pid: number) => pid !== id) }));
+        } else {
+            setForm((p:any) => ({ ...p, related_pillars: [...current, id] }));
         }
     };
 
@@ -204,6 +214,10 @@ export const EditorPanel = ({
     }
 
     // STEP 2: CONFIGURATION
+    const filteredPillars = availablePillars.filter(p => 
+        p.title.toLowerCase().includes(pillarSearch.toLowerCase()) && p.id !== form.id
+    );
+
     return (
         <div className="flex flex-col h-full bg-brand-dark overflow-hidden">
             <div className="p-4 border-b border-white/5 flex justify-between items-center shrink-0 bg-brand-dark z-20">
@@ -213,7 +227,7 @@ export const EditorPanel = ({
 
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-5 pb-32">
                 
-                {/* STATUS PENERBITAN (NEW) */}
+                {/* STATUS PENERBITAN */}
                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                     <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2 mb-3">
                         <Send size={10} className="text-blue-400"/> Status Penerbitan
@@ -240,7 +254,6 @@ export const EditorPanel = ({
                                 onChange={(e) => setForm((p:any) => ({...p, scheduled_for: e.target.value}))}
                                 className="w-full bg-black/60 border border-brand-orange/30 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-orange"
                              />
-                             <p className="text-[8px] text-gray-500 italic">*Wajib isi tanggal & jam untuk mode scheduled.</p>
                         </div>
                     )}
                 </div>
@@ -278,27 +291,51 @@ export const EditorPanel = ({
 
                 <StrategySwitcher type={form.type} onChange={(t) => setForm((p:any) => ({...p, type: t}))} />
 
-                {/* LOCAL SEO INDICATOR */}
-                {form.targetCityId > 0 && (
-                    <div className="bg-brand-orange/10 p-3 rounded-lg border border-brand-orange/30">
-                        <label className="text-[9px] text-brand-orange font-bold uppercase tracking-wider block mb-1 flex items-center gap-2">
-                            <MapPin size={10} /> Target Wilayah Aktif
-                        </label>
-                        <p className="text-[10px] text-white font-bold">
-                            {aiState.cities?.find((c:any) => c.id === form.targetCityId)?.name}
-                        </p>
+                {/* KONEKSI STRATEGIS (LINKING) - NEW FEATURE */}
+                <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
+                    <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2">
+                        <Link2 size={10} className="text-brand-orange"/> Koneksi Strategis (Linking)
+                    </label>
+                    
+                    {/* Search Pillbox */}
+                    <div className="relative">
+                        <Search size={10} className="absolute left-2 top-2.5 text-gray-500" />
+                        <input 
+                            value={pillarSearch}
+                            onChange={(e) => setPillarSearch(e.target.value)}
+                            placeholder="Cari pilar pendukung..."
+                            className="w-full bg-black/40 border border-white/5 rounded-lg pl-6 pr-2 py-1.5 text-[10px] text-white focus:border-brand-orange outline-none"
+                        />
                     </div>
-                )}
+
+                    <div className="max-h-32 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+                        {filteredPillars.map(p => {
+                            const isLinked = form.related_pillars?.includes(p.id);
+                            return (
+                                <button 
+                                    key={p.id}
+                                    onClick={() => togglePillarLink(p.id)}
+                                    className={`w-full text-left p-2 rounded text-[9px] border transition-all flex items-center justify-between group ${isLinked ? 'bg-brand-orange/20 border-brand-orange text-white' : 'bg-black/20 border-white/5 text-gray-500 hover:border-white/20'}`}
+                                >
+                                    <span className="truncate flex-1">{p.title}</span>
+                                    {isLinked ? <CheckCircle2 size={10} className="text-brand-orange shrink-0 ml-2" /> : <Plus size={10} className="opacity-0 group-hover:opacity-100 shrink-0 ml-2" />}
+                                </button>
+                            );
+                        })}
+                        {filteredPillars.length === 0 && <p className="text-[9px] text-gray-600 italic text-center py-2">Tidak ada pilar lain ditemukan.</p>}
+                    </div>
+                    <p className="text-[8px] text-gray-600 leading-tight">
+                        *Artikel yang lo pilih di sini bakal dikaitkan sama AI pas proses nulis konten (Internal Link Strategy).
+                    </p>
+                </div>
 
                 <div className="bg-white/5 p-3 rounded-lg border border-white/10">
-                    <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2"><MessageSquare size={10} /> Edit Konteks Tambahan</label>
+                    <label className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block mb-2 flex items-center gap-2"><MessageSquare size={10} /> Konteks Tambahan</label>
                     <textarea value={form.generationContext} onChange={(e) => setForm((p:any) => ({...p, generationContext: e.target.value}))} placeholder="Konteks AI..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white outline-none focus:border-brand-orange resize-none h-16" />
                 </div>
 
                 <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-[9px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-2"><Tags size={10}/> Kategori</label>
-                    </div>
+                    <label className="text-[9px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-2 mb-2"><Tags size={10}/> Kategori</label>
                     <div className="flex flex-wrap gap-1.5 mb-2">
                         {selectedCats.map((cat: string, i: number) => (
                             <span key={i} className="bg-brand-orange/20 text-brand-orange border border-brand-orange/30 rounded px-2 py-1 text-[9px] font-bold flex items-center gap-1">
