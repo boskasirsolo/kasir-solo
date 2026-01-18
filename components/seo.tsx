@@ -21,8 +21,14 @@ export const SEOHelmet = ({
     const finalDesc = description || "Pusat penjualan mesin kasir modern (POS), jasa pembuatan website SEO, dan aplikasi kasir online/offline terlengkap.";
     const finalImage = image || "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=1200&h=630";
     
+    // SEO FIX: Ensure canonical URL never has a trailing slash (unless root)
+    // This matches the 'trailingSlash: false' setting in vercel.json
     const currentPath = window.location.pathname;
-    const finalUrl = url || `https://kasirsolo.my.id${currentPath}`;
+    const cleanPath = currentPath !== '/' && currentPath.endsWith('/') 
+        ? currentPath.slice(0, -1) 
+        : currentPath;
+
+    const finalUrl = url || `https://kasirsolo.my.id${cleanPath}`;
 
     return (
         <Helmet>
