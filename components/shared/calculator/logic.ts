@@ -146,7 +146,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
                     `*${estimateText}*` +
                     `Bisa diskusi detailnya Mas Amin?`;
 
-    const targetWa = waNumber || "6282325103336";
+    const targetWa = waNumber || "6288816566935";
     window.open(`https://wa.me/${targetWa}?text=${message}`, '_blank');
   };
 
