@@ -129,20 +129,20 @@ export const ResultCard = ({
 
     return (
         <div className="lg:col-span-5 p-6 md:p-10 bg-black/40 flex flex-col h-full">
-            <div className="bg-brand-card border border-white/10 rounded-2xl relative overflow-hidden shadow-2xl flex flex-col h-full transition-all duration-500">
+            <div className="bg-brand-card border border-white/10 rounded-2xl relative overflow-hidden shadow-2xl flex flex-col transition-all duration-500 h-fit">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                     <Calculator size={120} />
                 </div>
                 
                 {/* STEP 1: SUMMARY / CART VIEW */}
                 {step === 1 && (
-                    <div className="flex flex-col h-full p-6 animate-fade-in">
+                    <div className="flex flex-col p-6 animate-fade-in">
                         <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
                             <div className="w-8 h-8 rounded-lg bg-brand-orange text-white flex items-center justify-center font-bold text-sm shadow-neon">1</div>
                             <h4 className="font-bold text-white text-sm uppercase tracking-widest">Rincian Investasi</h4>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                        <div className="overflow-y-auto custom-scrollbar pr-2 space-y-3 max-h-[50vh]">
                             {!hasBaseSelection ? (
                                 <div className="h-full flex flex-col items-center justify-center text-center py-10 opacity-50">
                                     <ShoppingBag size={40} className="mb-2"/>
@@ -181,7 +181,7 @@ export const ResultCard = ({
                         </div>
 
                         {/* TOTAL & ACTION */}
-                        <div className="mt-auto pt-6 border-t border-white/10">
+                        <div className="mt-6 pt-6 border-t border-white/10">
                             <div className="flex justify-between items-end mb-4">
                                 <span className="text-xs text-gray-400">Estimasi Total</span>
                                 <div className="text-right">
@@ -194,7 +194,7 @@ export const ResultCard = ({
                                 disabled={!hasBaseSelection} 
                                 className="w-full py-4 text-sm font-bold shadow-neon bg-brand-gradient hover:bg-brand-gradient-hover"
                             >
-                                LANJUT ISI DATA <ArrowRight size={16} className="ml-2"/>
+                                Konsultasi <ArrowRight size={16} className="ml-2"/>
                             </Button>
                         </div>
                     </div>
@@ -202,7 +202,7 @@ export const ResultCard = ({
 
                 {/* STEP 2: IDENTITY FORM */}
                 {step === 2 && (
-                    <div className="flex flex-col h-full p-6 animate-slide-in-right">
+                    <div className="flex flex-col p-6 animate-slide-in-right">
                         <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
                             <button onClick={() => setStep(1)} className="p-1 hover:bg-white/10 rounded-full transition-colors -ml-2">
                                 <ChevronLeft size={20} className="text-gray-400 hover:text-white"/>
@@ -211,7 +211,7 @@ export const ResultCard = ({
                             <h4 className="font-bold text-white text-sm uppercase tracking-widest">Identitas Juragan</h4>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                        <div className="overflow-y-auto custom-scrollbar pr-2 space-y-3 max-h-[50vh]">
                             <div className="relative">
                                 <User className="absolute left-3 top-3 text-gray-600" size={14} />
                                 <Input 
@@ -294,7 +294,7 @@ export const ResultCard = ({
                         </div>
 
                         {/* FINAL CTA */}
-                        <div className="mt-auto pt-6 border-t border-white/10">
+                        <div className="mt-6 pt-6 border-t border-white/10">
                             <Button 
                                 onClick={onConsultation}
                                 disabled={isCapturing || isFormIncomplete}
