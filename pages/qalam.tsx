@@ -1,0 +1,270 @@
+
+import React from 'react';
+import { 
+  Brain, Wallet, MessageCircle, ShieldCheck, Database, Printer, 
+  Smartphone, BookOpen, GraduationCap, Users, FileText, 
+  ArrowRight, CheckCircle2, Lock
+} from 'lucide-react';
+import { SiteConfig } from '../types';
+import { Button, SectionHeader } from '../components/ui';
+import { SEOHelmet, BreadcrumbSchema } from '../components/seo';
+
+// --- COMPONENTS ---
+
+const FeaturePillar = ({ 
+    icon: Icon, 
+    title, 
+    highlight,
+    desc, 
+    tags, 
+    align = 'left',
+    color = 'text-amber-500'
+}: { 
+    icon: any, 
+    title: string, 
+    highlight: string,
+    desc: string, 
+    tags: string[], 
+    align?: 'left' | 'right',
+    color?: string
+}) => (
+    <div className={`flex flex-col md:flex-row items-center gap-12 py-16 ${align === 'right' ? 'md:flex-row-reverse' : ''}`}>
+        {/* Content */}
+        <div className="flex-1 space-y-6">
+            <div className={`w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center ${color}`}>
+                <Icon size={32} />
+            </div>
+            <h3 className="text-3xl md:text-4xl font-display font-bold text-white leading-tight">
+                {title} <br/><span className={color}>{highlight}</span>
+            </h3>
+            <p className="text-gray-400 text-lg leading-relaxed">
+                {desc}
+            </p>
+            <div className="flex flex-wrap gap-2">
+                {tags.map((tag, idx) => (
+                    <span key={idx} className={`text-xs font-bold px-3 py-1.5 rounded-full border bg-white/5 ${color.replace('text-', 'border-').replace('500', '500/30')} text-gray-300`}>
+                        {tag}
+                    </span>
+                ))}
+            </div>
+        </div>
+
+        {/* Visual Mockup (Abstract) */}
+        <div className="flex-1 w-full">
+            <div className={`relative aspect-video rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-gray-900 to-black p-8 flex items-center justify-center group ${color.replace('text-', 'shadow-[0_0_50px_rgba(var(--color-rgb),0.1)]')}`}>
+                <div className={`absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/graphy.png')]`}></div>
+                
+                {/* Mockup Content Based on Icon */}
+                <div className="relative z-10 w-full max-w-sm bg-gray-800/80 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl transform group-hover:scale-105 transition-transform duration-500">
+                    <div className="flex items-center gap-3 mb-4 border-b border-white/5 pb-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-white/10 ${color}`}>
+                            <Icon size={16} />
+                        </div>
+                        <div className="h-2 w-24 bg-white/10 rounded-full"></div>
+                    </div>
+                    <div className="space-y-3">
+                        <div className="h-2 w-full bg-white/5 rounded-full"></div>
+                        <div className="h-2 w-3/4 bg-white/5 rounded-full"></div>
+                        <div className="h-2 w-1/2 bg-white/5 rounded-full"></div>
+                    </div>
+                    <div className={`mt-4 text-xs font-bold ${color} flex items-center gap-2`}>
+                        <CheckCircle2 size={12} /> System Active
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+const InfraCard = ({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) => (
+    <div className="bg-brand-card border border-white/5 p-6 rounded-2xl hover:border-amber-500/30 transition-all group">
+        <Icon size={32} className="text-amber-500 mb-4 group-hover:scale-110 transition-transform" />
+        <h4 className="text-white font-bold text-lg mb-2">{title}</h4>
+        <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+    </div>
+);
+
+export const QalamPage = ({ config }: { config: SiteConfig }) => {
+    const waLink = `https://wa.me/${config.whatsappNumber}?text=Assalamualaikum, saya tertarik untuk mencoba demo aplikasi QALAM untuk sekolah/pesantren saya.`;
+
+    return (
+        <div className="bg-[#050505] text-gray-200 font-sans selection:bg-amber-500 selection:text-black">
+             <SEOHelmet 
+                title="QALAM - Aplikasi Manajemen Sekolah & Pesantren"
+                description="Sistem pendidikan terintegrasi: Akademik AI, Keuangan Transparan, dan WhatsApp Gateway. Gratis untuk lembaga kecil."
+                image="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=1200"
+            />
+            <BreadcrumbSchema 
+                paths={[
+                    { name: 'Inovasi', item: '/inovasi' },
+                    { name: 'QALAM (Pendidikan)', item: '/inovasi/qalam' }
+                ]}
+            />
+
+            {/* HERO SECTION */}
+            <section className="relative pt-32 pb-20 overflow-hidden border-b border-white/5">
+                {/* Background Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[150px] pointer-events-none"></div>
+
+                <div className="container mx-auto px-4 relative z-10 text-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-bold uppercase tracking-widest mb-6">
+                        ALL-IN-ONE PLATFORM
+                    </div>
+                    
+                    <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight max-w-5xl mx-auto">
+                        Teknologi Pendidikan Elit,<br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600">Kini Milik Semua.</span>
+                    </h1>
+                    
+                    <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+                        Qalam menyatukan 3 pilar utama manajemen pendidikan: 
+                        <span className="text-white font-bold"> Akademik</span>, 
+                        <span className="text-white font-bold"> Keuangan</span>, dan 
+                        <span className="text-white font-bold"> Komunikasi</span> dalam satu dashboard terintegrasi.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row justify-center gap-4">
+                        <Button 
+                            onClick={() => window.open(waLink, '_blank')}
+                            className="bg-amber-600 hover:bg-amber-500 text-black px-8 py-4 shadow-[0_0_20px_rgba(245,158,11,0.3)] border-none font-bold"
+                        >
+                            <Smartphone size={18} className="mr-2"/> COBA LIVE DEMO APLIKASI
+                        </Button>
+                    </div>
+                </div>
+            </section>
+
+            {/* PILLARS SECTION */}
+            <section className="py-10 border-b border-white/5">
+                <div className="container mx-auto px-4">
+                    
+                    {/* 1. AKADEMIK & AI */}
+                    <FeaturePillar 
+                        icon={Brain}
+                        color="text-amber-500"
+                        title="Guru Fokus Mengajar,"
+                        highlight="AI yang Bikin Laporan."
+                        desc="Tidak ada lagi lembur mengisi rapor manual. Cukup input poin perilaku dan hafalan, AI (Gemini) kami akan merangkai narasi yang personal, menyentuh hati, dan profesional untuk setiap santri."
+                        tags={['Rapor Otomatis', 'Tracking Hafalan', 'Absensi Digital', 'Cetak Kartu Ujian']}
+                    />
+
+                    {/* 2. KEUANGAN (TEAL) */}
+                    <FeaturePillar 
+                        icon={Wallet}
+                        color="text-teal-400"
+                        align="right"
+                        title="Keuangan Transparan,"
+                        highlight="Cegah Kebocoran Dana."
+                        desc="Sistem pencatatan SPP dan donasi yang real-time. Wali santri bisa melihat tagihan dan riwayat pembayaran di HP mereka. Laporan arus kas otomatis terbit setiap bulan."
+                        tags={['Tagihan SPP', 'Laporan Arus Kas', 'Donasi In-App', 'Slip Gaji Guru']}
+                    />
+
+                    {/* 3. KOMUNIKASI (BLUE) */}
+                    <FeaturePillar 
+                        icon={MessageCircle}
+                        color="text-blue-400"
+                        title="WhatsApp Gateway,"
+                        highlight="Tanpa Biaya Langganan."
+                        desc="Kirim notifikasi kehadiran, tagihan SPP, dan pengumuman libur langsung ke WhatsApp orang tua secara otomatis. Membangun kedekatan emosional antara lembaga dan keluarga."
+                        tags={['Auto-Notifikasi WA', 'Broadcast Pengumuman', 'Jadwal Kegiatan', 'Konsultasi Ortu']}
+                    />
+
+                </div>
+            </section>
+
+            {/* INFRASTRUCTURE GRID */}
+            <section className="py-24 bg-[#0a0a0a]">
+                <div className="container mx-auto px-4">
+                    <SectionHeader title="Infrastruktur" highlight="Kelas Enterprise" subtitle="Kami tidak main-main soal keamanan data santri dan stabilitas sistem." />
+                    
+                    <div className="grid md:grid-cols-3 gap-6 mt-12">
+                        <InfraCard 
+                            icon={ShieldCheck}
+                            title="Bank-Grade Security"
+                            desc="Enkripsi SSL/TLS 256-bit untuk setiap transaksi data. Database terisolasi dan aman."
+                        />
+                        <InfraCard 
+                            icon={Database}
+                            title="Auto-Backup Harian"
+                            desc="Data Anda dicadangkan otomatis ke Google Cloud Storage setiap malam. Anti-hilang."
+                        />
+                        <InfraCard 
+                            icon={Printer}
+                            title="Cetak Dokumen Massal"
+                            desc="Cetak 500 Rapor atau Kartu Ujian dalam sekali klik. Format PDF siap cetak."
+                        />
+                    </div>
+                </div>
+            </section>
+
+            {/* MOBILE PREVIEW */}
+            <section className="py-24 relative overflow-hidden">
+                 <div className="absolute inset-0 bg-amber-900/5"></div>
+                 <div className="container mx-auto px-4 relative z-10 text-center">
+                    <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6">
+                        Tampilan Antarmuka <span className="text-amber-500">Mobile Friendly.</span>
+                    </h2>
+                    <p className="text-gray-400 mb-12 max-w-2xl mx-auto">
+                        Desain responsif yang nyaman digunakan di HP Wali Santri maupun Laptop Admin.
+                    </p>
+
+                    {/* Mockup Grid */}
+                    <div className="flex flex-wrap justify-center gap-4 md:gap-8 opacity-90">
+                        {['Admin', 'Wali Santri', 'Ustadz', 'Donatur'].map((role, i) => (
+                            <div key={i} className="w-40 md:w-56 aspect-[9/18] bg-black border-[4px] border-gray-800 rounded-[2rem] overflow-hidden relative shadow-2xl">
+                                <div className="absolute top-0 inset-x-0 h-6 bg-gray-800 z-20 flex justify-center">
+                                    <div className="w-16 h-3 bg-black rounded-b-lg"></div>
+                                </div>
+                                <div className="p-4 pt-10 h-full flex flex-col bg-gray-900">
+                                    <div className="w-8 h-8 rounded-full bg-white/10 mb-4"></div>
+                                    <div className="h-2 w-20 bg-white/10 rounded mb-2"></div>
+                                    <div className="h-2 w-12 bg-white/10 rounded mb-6"></div>
+                                    
+                                    <div className="flex-1 bg-white/5 rounded-xl border border-white/5 p-2 mb-2">
+                                        <div className="h-2 w-full bg-white/10 rounded mb-2"></div>
+                                        <div className="h-2 w-2/3 bg-white/10 rounded"></div>
+                                    </div>
+                                    <div className="h-12 w-full bg-amber-600/20 rounded-lg border border-amber-600/50 mt-auto flex items-center justify-center text-[10px] text-amber-500 font-bold">
+                                        Dashboard {role}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                 </div>
+            </section>
+
+            {/* ROADMAP CTA */}
+            <section className="py-20 border-t border-white/5">
+                <div className="container mx-auto px-4">
+                    <div className="bg-brand-card border border-white/10 rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px]"></div>
+                        
+                        <div className="relative z-10 max-w-xl">
+                            <div className="w-12 h-12 bg-amber-500/20 text-amber-500 rounded-xl flex items-center justify-center mb-4">
+                                <Lock size={24} />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-2">Butuh Fitur Lain?</h3>
+                            <p className="text-gray-400">Punya ide fitur spesifik untuk kebutuhan pondok/sekolah Anda? Sampaikan langsung kepada tim developer kami.</p>
+                        </div>
+                        
+                        <div className="relative z-10">
+                            <Button onClick={() => window.open(waLink, '_blank')} className="bg-amber-600 hover:bg-amber-500 text-black px-8 py-4 font-bold shadow-lg border-none">
+                                AJUKAN FITUR DI ROADMAP
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* FOOTER MINI */}
+            <div className="py-8 border-t border-white/10 text-center bg-black">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                    <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center text-black font-bold text-xs">Q</div>
+                    <span className="text-white font-bold">Qalam</span>
+                </div>
+                <p className="text-xs text-gray-500">Membangun peradaban digital Islam dari Solo untuk Dunia.</p>
+            </div>
+        </div>
+    );
+};
