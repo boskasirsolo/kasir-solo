@@ -96,17 +96,6 @@ export const FormStep = ({
                 )}
 
                 <div className="relative">
-                    <MapPin className="absolute left-3 top-3 text-gray-600" size={14} />
-                    <Input 
-                        value={customerInfo.address}
-                        onChange={e => setCustomerInfo({...customerInfo, address: e.target.value})}
-                        onBlur={onShadowCapture}
-                        placeholder="Alamat / Kota" 
-                        className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
-                    />
-                </div>
-
-                <div className="relative">
                     <BarChart3 className="absolute left-3 top-3 text-gray-600" size={14} />
                     <select 
                         value={customerInfo.scale}
@@ -130,6 +119,17 @@ export const FormStep = ({
                         />
                     </div>
                 )}
+
+                <div className="relative">
+                    <MapPin className="absolute left-3 top-3 text-gray-600" size={14} />
+                    <Input 
+                        value={customerInfo.address}
+                        onChange={e => setCustomerInfo({...customerInfo, address: e.target.value})}
+                        onBlur={onShadowCapture}
+                        placeholder="Alamat / Kota" 
+                        className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
+                    />
+                </div>
             </div>
 
             {/* FINAL CTA */}
