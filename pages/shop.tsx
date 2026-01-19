@@ -1,20 +1,21 @@
 
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Product, SiteConfig } from '../types';
+import { Product, SiteConfig, GalleryItem } from '../types';
 import { slugify } from '../utils';
 import { NotFoundPage } from './not-found';
 import { ShopModule, ProductDetailView } from '../components/shop';
 import { SEOHelmet } from '../components/seo';
 
-export const ShopPage = ({ products }: { products: Product[] }) => {
+export const ShopPage = ({ products, gallery }: { products: Product[], gallery?: GalleryItem[] }) => {
   return (
     <>
         <SEOHelmet 
             title="Katalog Mesin Kasir" 
             description="Daftar paket mesin kasir lengkap Android & Windows. Garansi resmi, siap kirim seluruh Indonesia."
         />
-        <ShopModule products={products} />
+        {/* Pass gallery to ShopModule */}
+        <ShopModule products={products} gallery={gallery} />
     </>
   );
 };

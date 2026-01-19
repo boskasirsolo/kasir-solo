@@ -252,7 +252,8 @@ const AppContent = () => {
           <Routes>
             <Route path="/" element={<HomePage setPage={handleNavigation} config={config} gallery={gallery} testimonials={testimonials} />} />
             <Route path="/home" element={<HomePage setPage={handleNavigation} config={config} gallery={gallery} testimonials={testimonials} />} />
-            <Route path="/shop" element={<ShopPage products={products} />} />
+            {/* UPDATED: Pass gallery to ShopPage */}
+            <Route path="/shop" element={<ShopPage products={products} gallery={gallery} />} />
             <Route path="/shop/:slug" element={<ProductDetailPage products={products} config={config} />} />
             <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
             <Route path="/gallery/:slug" element={<ProjectDetailPage gallery={gallery} testimonials={testimonials} />} />

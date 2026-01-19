@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Product } from '../../types';
+import { Product, GalleryItem } from '../../types';
 import { useShopLogic } from './logic';
 import { slugify } from '../../utils';
 
@@ -9,17 +9,25 @@ import { slugify } from '../../utils';
 import { ShopHero, SearchWidget, EmptyState, PaginationControl, QuickActions } from './ui/common';
 import { ProductCard, ProductGrid } from './product/card';
 import { ComparisonBar, ComparisonModal } from './comparison';
+import { PhysicalProjectCard } from '../gallery/ui-parts'; // Import Project Card
+import { SectionHeader, Button } from '../ui'; // Import SectionHeader & Button
+import { ArrowRight } from 'lucide-react';
 
 // Export Detail View for standalone usage (routes)
 export { ProductDetailView } from './product/detail';
 
-export const ShopModule = ({ products }: { products: Product[] }) => {
+export const ShopModule = ({ products, gallery = [] }: { products: Product[], gallery?: GalleryItem[] }) => {
   const navigate = useNavigate();
   const { state, actions } = useShopLogic(products);
 
   const handleProductClick = (product: Product) => {
     navigate(`/shop/${slugify(product.name)}`);
   };
+
+  // Filter 3 latest Hardware Projects
+  const hardwareProjects = gallery
+    .filter(item => item.category_type === 'physical')
+    .slice(0, 3);
 
   return (
     <div className="container mx-auto px-4 py-10 animate-fade-in relative">
@@ -63,6 +71,35 @@ export const ShopModule = ({ products }: { products: Product[] }) => {
         totalPages={state.totalPages} 
         setPage={actions.setPage} 
       />
+
+      {/* NEW SECTION: HARDWARE PROJECTS */}
+      {hardwareProjects.length > 0 && (
+        <section className="mt-24 pt-16 border-t border-white/5 relative">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-px bg-gradient-to-r from-transparent via-brand-orange to-transparent opacity-50"></div>
+            
+            <SectionHeader 
+                title="Bukti" 
+                highlight="Lapangan" 
+                subtitle="Foto asli pemasangan unit di lokasi klien. Bukan gambar comotan internet."
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {hardwareProjects.map(item => (
+                    <PhysicalProjectCard 
+                        key={item.id} 
+                        item={item} 
+                        onClick={() => navigate(`/gallery/${slugify(item.title)}`)}
+                    />
+                ))}
+            </div>
+
+            <div className="text-center">
+                <Button variant="outline" onClick={() => navigate('/gallery')} className="px-8 py-3">
+                    LIHAT SEMUA PORTOFOLIO <ArrowRight size={16} className="ml-2"/>
+                </Button>
+            </div>
+        </section>
+      )}
 
       {/* COMPARISON WIDGETS */}
       <ComparisonBar 
