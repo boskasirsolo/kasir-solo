@@ -26,7 +26,8 @@ const RegulationBadge = ({ text }: { text: string }) => (
 );
 
 export const DapurSppgPage = ({ config }: { config: SiteConfig }) => {
-    const waLink = `https://wa.me/${config.whatsappNumber}?text=Halo, saya tertarik dengan Sistem Dapur SPPG untuk manajemen MBG. Mohon info lebih lanjut.`;
+    // UPDATED: Use config.dapurSppgUrl if available, fallback to WA
+    const targetUrl = config.dapurSppgUrl || `https://wa.me/${config.whatsappNumber}?text=Halo, saya tertarik dengan Sistem Dapur SPPG.`;
 
     return (
         <div className="bg-black text-gray-200 animate-fade-in font-sans selection:bg-green-500 selection:text-black">
@@ -60,19 +61,12 @@ export const DapurSppgPage = ({ config }: { config: SiteConfig }) => {
                         Risiko keracunan massal, mark-up harga, hingga audit investigatif menghantui setiap sendok nasi yang Anda sajikan.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row justify-center gap-4">
+                    <div className="flex justify-center">
                         <Button 
-                            onClick={() => window.open(waLink, '_blank')}
+                            onClick={() => window.open(targetUrl, '_blank')}
                             className="bg-green-600 hover:bg-green-500 text-white px-8 py-4 shadow-[0_0_20px_rgba(22,163,74,0.4)] border-none font-bold"
                         >
                             LINDUNGI SPPG SAYA <ArrowRight size={18} className="ml-2"/>
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            onClick={() => document.getElementById('risiko')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="border-green-500/30 text-green-400 hover:bg-green-500/10 px-8 py-4"
-                        >
-                            PELAJARI VONIS RISIKO
                         </Button>
                     </div>
                 </div>
@@ -189,15 +183,12 @@ export const DapurSppgPage = ({ config }: { config: SiteConfig }) => {
                         
                         <div className="flex flex-col sm:flex-row justify-center gap-4">
                             <Button 
-                                onClick={() => window.open(waLink, '_blank')}
+                                onClick={() => window.open(targetUrl, '_blank')}
                                 className="bg-white text-black hover:bg-gray-200 px-10 py-4 font-bold shadow-lg"
                             >
                                 SAYA PILIH TIDUR NYENYAK
                             </Button>
                         </div>
-                        <p className="mt-8 text-xs text-gray-500 uppercase tracking-widest">
-                            PT Mesin Kasir Solo • Partner Digitalisasi Pemerintah
-                        </p>
                     </div>
                 </div>
             </section>

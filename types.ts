@@ -114,6 +114,7 @@ export interface SiteConfig {
   founderPortrait?: string;
   sibosUrl?: string; 
   qalamUrl?: string; 
+  dapurSppgUrl?: string; // NEW
   companyLegalName?: string;
   nibNumber?: string;
   ahuNumber?: string;

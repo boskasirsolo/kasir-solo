@@ -132,6 +132,7 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                 founder_portrait: finalFounderImage,
                 sibos_url: config.sibosUrl,
                 qalam_url: config.qalamUrl,
+                dapur_sppg_url: config.dapurSppgUrl, // NEW
                 company_legal_name: config.companyLegalName,
                 nib_number: config.nibNumber,
                 ahu_number: config.ahuNumber,

@@ -93,6 +93,7 @@ const AppContent = () => {
     founderPortrait: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800",
     sibosUrl: "https://sibos.id",
     qalamUrl: "https://qalam.id",
+    dapurSppgUrl: "https://dapursppg.id",
     companyLegalName: "PT MESIN KASIR SOLO",
     whatsappNumber: "6282325103336",
     emailAddress: "admin@kasirsolo.my.id",
@@ -156,6 +157,7 @@ const AppContent = () => {
                         : "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800",
                     sibosUrl: settingsData.sibos_url || prev.sibosUrl,
                     qalamUrl: settingsData.qalam_url || prev.qalamUrl,
+                    dapurSppgUrl: settingsData.dapur_sppg_url || prev.dapurSppgUrl, // Load new URL
                     companyLegalName: settingsData.company_legal_name || prev.companyLegalName,
                     nibNumber: settingsData.nib_number || prev.nibNumber,
                     ahuNumber: settingsData.ahu_number || prev.ahuNumber,

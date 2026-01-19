@@ -19,6 +19,10 @@ export const TabSocial = ({ config, setConfig }: TabProps) => {
                             <label className="text-[10px] text-gray-500 font-bold mb-1 block">Link QALAM (School)</label>
                             <Input value={config.qalamUrl || ''} onChange={(e) => setConfig({...config, qalamUrl: e.target.value})} />
                         </div>
+                        <div>
+                            <label className="text-[10px] text-gray-500 font-bold mb-1 block">Link Dapur SPPG (MBG)</label>
+                            <Input value={config.dapurSppgUrl || ''} onChange={(e) => setConfig({...config, dapurSppgUrl: e.target.value})} placeholder="https://..." />
+                        </div>
                     </div>
                 </div>
             </SettingsSection>
