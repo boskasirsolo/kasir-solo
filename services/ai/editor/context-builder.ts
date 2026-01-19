@@ -25,15 +25,19 @@ export const ContextBuilder = {
         let text = "";
         try {
             if (productsJson) {
-                const prods = JSON.parse(productsJson);
-                if (prods.length) text += `\n[RECOMMENDED PRODUCTS]\n` + prods.map((p:any) => `- ${p.name} (Rp ${p.price}) -> [PRODUCT: ${p.name} | ${p.price} | ${p.image} | ${p.desc}]`).join('\n');
+                // LIMIT TO 3 ITEMS to prevent cognitive load on AI and overcrowding
+                const prods = JSON.parse(productsJson).slice(0, 3);
+                if (prods.length) text += `\n[RECOMMENDED PRODUCTS (Select Max 1)]\n` + prods.map((p:any) => `- ${p.name} (Rp ${p.price}) -> [PRODUCT: ${p.name} | ${p.price} | ${p.image} | ${p.desc}]`).join('\n');
             }
             if (galleryJson) {
-                const projs = JSON.parse(galleryJson);
-                if (projs.length) text += `\n[PORTFOLIO REFERENCES]\n` + projs.map((p:any) => `- ${p.title} -> [PROJECT: ${p.title} | /gallery/${p.slug} | ${p.image} | ${p.desc}]`).join('\n');
+                // LIMIT TO 3 ITEMS
+                const projs = JSON.parse(galleryJson).slice(0, 3);
+                if (projs.length) text += `\n[PORTFOLIO REFERENCES (Select Max 1)]\n` + projs.map((p:any) => `- ${p.title} -> [PROJECT: ${p.title} | /gallery/${p.slug} | ${p.image} | ${p.desc}]`).join('\n');
             }
         } catch (e) { console.warn("Asset parse error", e); }
-        return text ? text + "\nRule: Insert these assets strictly where relevant." : "";
+        
+        // STRICT CONSTRAINT
+        return text ? text + "\n[CONSTRAINT] Insert MAXIMUM 1 Product OR Project Card in this generation. Do not force them if not relevant to the topic. Keep the content clean." : "";
     },
 
     getCrossLinking: (pillars?: { title: string; slug: string }[]) => {

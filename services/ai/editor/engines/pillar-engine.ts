@@ -10,28 +10,42 @@ export const PillarEngine = {
         const sectionsCount = Math.max(5, Math.ceil(config.wordCount / 700));
         const outline = await Taxonomy.createOutline(title, sectionsCount);
         
-        const contextBlock = `
+        // Base context without assets
+        const baseContext = `
             ${BRAND_CONTEXT}
             ${ContextBuilder.getPersona(config.authorName)}
             ${ContextBuilder.getLocalSEO(config.city)}
             ${ContextBuilder.getCrossLinking(config.relatedPillars)}
-            ${ContextBuilder.getAssetContext(config.productsJson, config.galleryJson)}
             ${GOV_CRITIQUE_RULE}
             ${config.userNotes ? `[USER NOTES]: ${config.userNotes}` : ""}
         `;
+
+        const assetContext = ContextBuilder.getAssetContext(config.productsJson, config.galleryJson);
 
         let fullContent = "";
         let prevSection = "";
 
         for (let i = 0; i < outline.length; i++) {
             const isLast = i === outline.length - 1;
+            
+            // STRATEGY: Only inject assets in specific sections (e.g. index 1 and 3)
+            // This prevents every section from having a product card.
+            // Index 1 = Section 2 (Early recommendation)
+            // Index 3 = Section 4 (Mid-article proof)
+            const shouldInjectAssets = (i === 1 || i === 3);
+
+            const currentContext = `
+                ${baseContext}
+                ${shouldInjectAssets ? assetContext : ""}
+            `;
+
             const prompt = `
             [MODE: PILLAR AUTHORITY WRITER]
             Article Title: "${title}"
             Current Section: "${outline[i]}" (${i + 1}/${outline.length})
             
             [CONTEXTUAL DATA]
-            ${contextBlock}
+            ${currentContext}
 
             [WRITING RULES]
             1. Focus ONLY on the current section "${outline[i]}".
