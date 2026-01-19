@@ -24,8 +24,8 @@ const AboutPage = lazy(() => import('./pages/about').then(module => ({ default: 
 const VisionPage = lazy(() => import('./pages/vision').then(module => ({ default: module.VisionPage })));
 const CareerPage = lazy(() => import('./pages/career').then(module => ({ default: module.CareerPage })));
 const ContactPage = lazy(() => import('./pages/contact').then(module => ({ default: module.ContactPage })));
-const AdminDashboard = lazy(() => import('./pages/admin').then(module => ({ default: module.AdminDashboard })));
-const AdminLogin = lazy(() => import('./pages/admin').then(module => ({ default: module.AdminLogin })));
+// UPDATED: Load the default export (AdminPage) which handles Auth logic internally
+const AdminPage = lazy(() => import('./pages/admin')); 
 const CheckoutPage = lazy(() => import('./pages/checkout').then(module => ({ default: module.CheckoutPage })));
 const InnovationPage = lazy(() => import('./pages/innovation').then(module => ({ default: module.InnovationPage })));
 const WebsiteServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.WebsiteServicePage })));
@@ -238,9 +238,8 @@ const AppContent = () => {
   const handleLogout = async () => {
     if (supabase) {
         await supabase.auth.signOut();
-        // SECURITY: Clear all sensitive local keys on logout
         localStorage.removeItem('mks_ghost_mode');
-        window.location.href = '/'; // Refresh to clear states
+        window.location.href = '/'; 
     }
   };
 
@@ -275,7 +274,17 @@ const AppContent = () => {
             <Route path="/contact" element={<ContactPage config={config} />} /> 
             <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} config={config} />} />
             <Route path="/innovation" element={<InnovationPage config={config} />} />
-            <Route path="/admin" element={session ? <AdminDashboard products={products} setProducts={setProducts} gallery={gallery} setGallery={setGallery} testimonials={testimonials} setTestimonials={setTestimonials} articles={articles} setArticles={setArticles} jobs={jobs} setJobs={setJobs} config={config} setConfig={setConfig} onLogout={handleLogout} /> : <AdminLogin />} />
+            <Route path="/admin" element={
+                <AdminPage 
+                    session={session}
+                    products={products} setProducts={setProducts}
+                    gallery={gallery} setGallery={setGallery}
+                    testimonials={testimonials} setTestimonials={setTestimonials}
+                    articles={articles} setArticles={setArticles}
+                    jobs={jobs} setJobs={setJobs}
+                    config={config} setConfig={setConfig}
+                />
+            } />
             <Route path="*" element={<NotFoundPage setPage={handleNavigation} />} />
           </Routes>
         </Suspense>
@@ -294,3 +303,4 @@ const App = () => (
 
 const root = createRoot(document.getElementById('root')!);
 root.render(<App />);
+    
