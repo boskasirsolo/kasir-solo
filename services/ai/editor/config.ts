@@ -57,3 +57,13 @@ export const EXISTING_CATEGORIES = `
 2. "Bedah Alat (Tech)" (Contains: Hardware Review, Android POS, Windows POS, Teknologi, Tutorial)
 3. "Marketing Jalanan" (Contains: Digital Marketing, Branding, Loyalty Program, Promosi)
 `;
+
+export const CLOSING_RULE = `
+[ATURAN PENUTUP (CLOSING) YANG TAJAM]
+1. HARAM hukumnya mengakhiri artikel dengan "Semoga bermanfaat", "Demikianlah", "Kesimpulan", atau kalimat penutup standar anak sekolahan.
+2. Gunakan gaya "MIC DROP". Rangkum masalah + solusi (produk kita) dalam 1-2 paragraf yang menonjok/provokatif.
+3. CTA (Call to Action) harus MENANTANG EGO pembaca.
+   - Contoh Salah: "Silakan hubungi kami jika berminat."
+   - Contoh Benar: "Lo mau nunggu toko lo dibobol karyawan dulu baru sadar? Amankan aset lo sekarang. Chat gue."
+4. Ingatkan kembali filosofi "Trust but Verify" atau urgensi menggunakan sistem.
+`;

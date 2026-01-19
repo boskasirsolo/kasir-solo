@@ -141,14 +141,22 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                     const galleryCtx = gallery.map(g => `[PROYEK: ${g.title} | SLUG: ${slugify(g.title)} | IMAGE: ${g.image_url} | DESC: ${g.description || ''}]`).join('\n');
                     const productCtx = products.map(p => `[PRODUK: ${p.name} | HARGA: ${p.price} | IMAGE: ${p.image} | DESC: ${p.description}]`).join('\n');
                     
+                    // PREPARE LINKING DATA (Fix: Send full objects, not just IDs)
+                    const parentPillar = form.pillar_id ? articles.find(a => a.id === form.pillar_id) : undefined;
+                    const parentPillarData = parentPillar ? { title: parentPillar.title, slug: slugify(parentPillar.title) } : undefined;
+
+                    const relatedPillarsObjects = form.related_pillars
+                        ? articles.filter(a => form.related_pillars?.includes(a.id)).map(a => ({ title: a.title, slug: slugify(a.title) }))
+                        : [];
+
                     const content = await EditorAI.writeArticle(
                         form.title, 
                         selectedTones, 
                         form.type, 
                         form.author, 
                         form.targetWordCount, 
-                        form.pillar_id ? articles.find(a => a.id === form.pillar_id) : undefined as any, 
-                        undefined, 
+                        parentPillarData, 
+                        relatedPillarsObjects, 
                         galleryCtx, 
                         form.generationContext, 
                         form.targetCityId ? cities.find(c => c.id === form.targetCityId) : undefined as any,

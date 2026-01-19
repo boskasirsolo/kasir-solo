@@ -1,6 +1,6 @@
 
 import { callGeminiWithRotation } from '../core';
-import { BRAND_CONTEXT, FOUNDER_ANECDOTES, GOV_CRITIQUE_RULE, INTERNAL_LINKING_RULES } from './config';
+import { BRAND_CONTEXT, FOUNDER_ANECDOTES, GOV_CRITIQUE_RULE, INTERNAL_LINKING_RULES, CLOSING_RULE } from './config';
 import { Taxonomy } from './taxonomy';
 
 // --- MODULE: WRITER (CONTENT GENERATION) ---
@@ -27,11 +27,15 @@ const buildLinkingInstructions = (
     let instructions = "";
     
     if (type === 'cluster' && pillarContext) {
-        instructions += `[SEO]: Link back to [${pillarContext.title}](/articles/${pillarContext.slug}) in first 3 paragraphs.\n`;
+        instructions += `\n[MANDATORY SEO REQUIREMENT]: You MUST mention the main topic "${pillarContext.title}" and link to it using this markdown format: [${pillarContext.title}](/articles/${pillarContext.slug}) within the first 2 paragraphs. This is CRITICAL for site structure.\n`;
     }
     
     if (relatedPillarsData && relatedPillarsData.length > 0) {
-        instructions += `[SEO]: Weave links to these related pillars naturally:\n${relatedPillarsData.map(p => `- [${p.title}](/articles/${p.slug})`).join('\n')}\n`;
+        instructions += `\n[MANDATORY CONTEXTUAL LINKING]: You MUST mention and link to the following related topics naturally within the content body:\n`;
+        relatedPillarsData.forEach(p => {
+            instructions += `- Topic: "${p.title}" -> Link: [${p.title}](/articles/${p.slug})\n`;
+        });
+        instructions += `Do not just list them at the end. Weave them into sentences where relevant.\n`;
     }
 
     if (galleryContextString) {
@@ -99,6 +103,7 @@ export const Writer = {
             Brand Context: ${BRAND_CONTEXT}
             ${GOV_CRITIQUE_RULE}
             ${INTERNAL_LINKING_RULES}
+            ${CLOSING_RULE}
             ${userNotes}
             
             CRITICAL RULES:
@@ -119,6 +124,7 @@ export const Writer = {
 
         for (let i = 0; i < sections.length; i++) {
             const sectionTitle = sections[i];
+            const isLastSection = i === sections.length - 1;
             const sectionPrompt = `
             Role: Expert Writer. Task: Write Section ${i + 1}: ${sectionTitle} for "${title}".
             Target: 1000 words. POV: ${pov}.
@@ -126,6 +132,7 @@ export const Writer = {
             ${cityInstruction}
             ${userNotes}
             ${INTERNAL_LINKING_RULES}
+            ${isLastSection ? CLOSING_RULE : ""}
             ${i === 0 ? "Start with a hook." : `Connect to previous: "...${previousContext.slice(-200)}..."`}
             
             ${linking}
