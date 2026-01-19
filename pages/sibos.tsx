@@ -70,7 +70,15 @@ const FEATURES = [
 
 // --- MAIN PAGE COMPONENT ---
 export const SibosPage = ({ config }: { config: SiteConfig }) => {
-    const waLink = `https://wa.me/${config.whatsappNumber}?text=Halo Mas Amin, saya gak mau cuma jadi penonton. Saya mau Amankan Posisi di SIBOS sekarang.`;
+    // Gunakan URL dari config (Dashboard Admin -> Sosial & Link -> Link SIBOS)
+    const targetUrl = config.sibosUrl || `https://wa.me/${config.whatsappNumber}`;
+
+    const scrollToFeatures = () => {
+        const element = document.getElementById('features-grid');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
 
     return (
         <div className="bg-[#050505] text-gray-200 font-sans selection:bg-red-600 selection:text-white pt-20">
@@ -107,12 +115,15 @@ export const SibosPage = ({ config }: { config: SiteConfig }) => {
                     {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
                         <button 
-                            onClick={() => window.open(waLink, '_blank')}
+                            onClick={() => window.open(targetUrl, '_blank')}
                             className="px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold rounded-lg shadow-[0_0_20px_rgba(220,38,38,0.5)] transition-all transform hover:-translate-y-1 flex items-center gap-2"
                         >
                             <Zap size={20} fill="white" /> GABUNG BARISAN
                         </button>
-                        <button className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-bold rounded-lg transition-all flex items-center gap-2">
+                        <button 
+                            onClick={scrollToFeatures}
+                            className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-bold rounded-lg transition-all flex items-center gap-2"
+                        >
                             <Target size={20} /> CEK SENJATA KAMI
                         </button>
                     </div>
@@ -140,7 +151,7 @@ export const SibosPage = ({ config }: { config: SiteConfig }) => {
             </section>
 
             {/* FEATURES GRID */}
-            <section className="py-24 bg-[#0a0a0a] border-t border-white/5">
+            <section id="features-grid" className="py-24 bg-[#0a0a0a] border-t border-white/5">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4">
@@ -188,7 +199,7 @@ export const SibosPage = ({ config }: { config: SiteConfig }) => {
                 </div>
             </section>
 
-            {/* JANJI DARAH SECTION (REPLACEMENT) */}
+            {/* JANJI DARAH SECTION */}
             <section className="py-32 relative overflow-hidden bg-[#050505]">
                 {/* Background Grid */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -223,8 +234,8 @@ export const SibosPage = ({ config }: { config: SiteConfig }) => {
 
                         {/* Action Button */}
                         <Button 
-                            onClick={() => window.open(waLink, '_blank')}
-                            className="px-10 py-5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold rounded-xl text-lg shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:shadow-[0_0_50px_rgba(220,38,38,0.6)] transition-all transform hover:-translate-y-1 uppercase tracking-widest"
+                            onClick={() => window.open(targetUrl, '_blank')}
+                            className="mx-auto px-10 py-5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold rounded-xl text-lg shadow-[0_0_30px_rgba(220,38,38,0.4)] hover:shadow-[0_0_50px_rgba(220,38,38,0.6)] transition-all transform hover:-translate-y-1 uppercase tracking-widest flex items-center justify-center"
                         >
                             <Target size={24} className="mr-3" /> AMANKAN POSISI LO
                         </Button>
