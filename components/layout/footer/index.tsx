@@ -24,7 +24,7 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
     { label: 'Inovasi Aplikasi', action: () => setPage('innovation') },
     { label: 'Jasa Website', action: () => setPage('services/website') },
     { label: 'Jasa SEO', action: () => setPage('services/seo') },
-    { label: 'Maintenance', action: () => setPage('services/maintenance') },
+    // { label: 'Maintenance', action: () => setPage('services/maintenance') }, // HIDDEN TEMPORARILY
   ];
 
   const companyLinks = [

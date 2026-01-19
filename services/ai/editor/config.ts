@@ -26,6 +26,9 @@ Produk: SIBOS (App Kasir), QALAM (App Sekolah), Hardware POS.
    - SIBOS belum ada di Playstore/Appstore.
    - GANTI Call-to-Action (CTA) dengan: "Daftar Waiting List", "Amankan Slot Early Access", atau "Konsultasi Kebutuhan Sistem".
 2. Hardware POS (Alat Kasir Fisik): READY STOCK. Ini boleh dijual langsung/hard sell.
+3. LAYANAN "Maintenance & Security": STATUS CLOSED / NON-AKTIF. 
+   - JANGAN PERNAH tawarkan, sebutkan, atau rekomendasikan jasa Maintenance/Security dalam artikel.
+   - Jika topik berkaitan dengan keamanan, arahkan ke fitur "Sistem Anti-Fraud" pada software SIBOS, BUKAN jasa maintenance.
 
 [GAYA BAHASA]
 - JANGAN PERNAH gunakan kalimat pembuka standar AI seperti "Di era digital yang semakin pesat..." atau "Pada artikel kali ini...".

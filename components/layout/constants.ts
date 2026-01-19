@@ -23,7 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
       { id: 'services/website', label: 'Jasa Pembuatan Website' },
       { id: 'services/webapp', label: 'Custom Web App' },
       { id: 'services/seo', label: 'Optimasi SEO & Traffic' },
-      { id: 'services/maintenance', label: 'Maintenance & Security' },
+      // { id: 'services/maintenance', label: 'Maintenance & Security' }, // HIDDEN TEMPORARILY
     ]
   },
   { 

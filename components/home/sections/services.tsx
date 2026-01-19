@@ -20,7 +20,8 @@ export const ServicesGrid = ({ setPage }: { setPage: (p: string) => void }) => (
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Grid updated to 3 cols on LG since Maintenance is hidden */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
         {[
           { 
             icon: Palette, 
@@ -46,14 +47,14 @@ export const ServicesGrid = ({ setPage }: { setPage: (p: string) => void }) => (
             link: "services/seo",
             color: "text-green-400"
           },
-          { 
-            icon: Settings, 
-            title: "Satpam Digital", 
-            subtitle: "Maintenance & Security",
-            desc: "Tidur nyenyak tanpa takut website di-hack, error, atau lemot. Backup rutin dan gue pantau keamanannya 24/7.", 
-            link: "services/maintenance",
-            color: "text-purple-400"
-          }
+          // { 
+          //   icon: Settings, 
+          //   title: "Satpam Digital", 
+          //   subtitle: "Maintenance & Security",
+          //   desc: "Tidur nyenyak tanpa takut website di-hack, error, atau lemot. Backup rutin dan gue pantau keamanannya 24/7.", 
+          //   link: "services/maintenance",
+          //   color: "text-purple-400"
+          // }
         ].map((service, idx) => (
           <div key={idx} onClick={() => setPage(service.link)} className="cursor-pointer h-full group">
             <Card className="p-8 flex flex-col h-full hover:bg-brand-card transition-all duration-300 border-white/5 hover:border-brand-orange/30 hover:-translate-y-2 relative overflow-hidden">

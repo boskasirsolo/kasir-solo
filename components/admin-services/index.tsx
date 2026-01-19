@@ -16,7 +16,7 @@ const SERVICE_TARGETS = [
     { id: 'website', label: 'Website', icon: Globe },
     { id: 'webapp', label: 'Custom App', icon: Layers },
     { id: 'seo', label: 'SEO Traffic', icon: LineChart },
-    { id: 'maintenance', label: 'Maintenance', icon: ShieldCheck }
+    // { id: 'maintenance', label: 'Maintenance', icon: ShieldCheck } // HIDDEN TEMPORARILY
 ];
 
 // --- SUB-COMPONENTS (Defined Outside to Prevent Flickering) ---
