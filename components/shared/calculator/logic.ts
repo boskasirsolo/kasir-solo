@@ -27,7 +27,10 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
         total += base.price;
     }
 
-    data.addons.filter(a => selectedAddons.includes(a.id)).forEach(addon => {
+    // Get full objects of selected addons
+    const activeAddonsList = data.addons.filter(a => selectedAddons.includes(a.id));
+
+    activeAddonsList.forEach(addon => {
         total += addon.price;
     });
 
@@ -37,7 +40,8 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
         total: getRange(total),
         baseLabel: base?.label || '',
         basePrice: base?.price || 0,
-        hasSelection: !!base
+        hasSelection: !!base,
+        activeAddons: activeAddonsList // Exposed for UI List
     };
   }, [selectedBase, selectedAddons, data]);
 
@@ -51,8 +55,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
     if (!supabase) return;
 
     // Cegah spam kirim data yang sama berulang kali dalam satu sesi
-    const addonsText = data.addons
-        .filter(a => selectedAddons.includes(a.id))
+    const addonsText = calculation.activeAddons
         .map(a => `${a.label} (${a.tier || 'basic'})`)
         .join(', ');
 
@@ -93,11 +96,10 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
   }) => {
     if (!selectedBase) return alert("Pilih paket dasar terlebih dahulu.");
 
-    const activeAddons = data.addons
-        .filter(a => selectedAddons.includes(a.id))
+    const activeAddonsForDB = calculation.activeAddons
         .map(a => ({ label: a.label, price: a.price, tier: a.tier || 'basic' }));
 
-    const addonsLabels = activeAddons
+    const addonsLabels = activeAddonsForDB
         .map(a => `- ${a.label} [${a.tier?.toUpperCase()}]`)
         .join('\n');
 
@@ -111,7 +113,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
                 service_name: serviceName,
                 base_option_label: calculation.baseLabel,
                 base_option_price: calculation.basePrice,
-                selected_addons: activeAddons,
+                selected_addons: activeAddonsForDB,
                 total_min: calculation.total.min,
                 total_max: calculation.total.max,
                 status: 'new',

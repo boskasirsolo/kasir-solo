@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Check, Calculator, ArrowRight, Loader2, User, Phone, Building, MapPin, Tag, ChevronDown, BarChart3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Check, Calculator, ArrowRight, Loader2, User, Phone, Building, MapPin, Tag, ChevronDown, BarChart3, ShoppingBag, ListChecks, ChevronLeft } from 'lucide-react';
 import { formatRupiah } from '../../../utils';
 import { Button, Input } from '../../ui';
 import { CalcOption } from './types';
@@ -113,144 +113,201 @@ export const ResultCard = ({
     hasBaseSelection: boolean,
     isCapturing?: boolean
 }) => {
-    // Validasi form identitas lengkap
+    // Wizard State
+    const [step, setStep] = useState(1);
+
+    // Validasi form identitas lengkap (For Step 2)
     const isFormIncomplete = !customerInfo.name || !customerInfo.phone || !customerInfo.company || !customerInfo.address || 
                              !customerInfo.category || (customerInfo.category === 'Lainnya' && !customerInfo.customCategory) ||
                              !customerInfo.scale || (customerInfo.scale === 'Lainnya' && !customerInfo.customScale);
 
+    // Go to step 2 check
+    const handleNextStep = () => {
+        if (!hasBaseSelection) return;
+        setStep(2);
+    };
+
     return (
         <div className="lg:col-span-5 p-6 md:p-10 bg-black/40 flex flex-col h-full">
-            <div className="bg-brand-card border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-2xl flex flex-col h-full">
+            <div className="bg-brand-card border border-white/10 rounded-2xl relative overflow-hidden shadow-2xl flex flex-col h-full transition-all duration-500">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                     <Calculator size={120} />
                 </div>
                 
-                {/* LEAD FORM SECTION */}
-                <div className="relative z-10 mb-8 space-y-4">
-                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2 mb-4">
-                        <User size={14} className="text-brand-orange"/> Identitas Juragan
-                    </h4>
-                    
-                    <div className="grid gap-3">
-                        <div className="relative">
-                            <User className="absolute left-3 top-3 text-gray-600" size={14} />
-                            <Input 
-                                value={customerInfo.name}
-                                onChange={e => setCustomerInfo({...customerInfo, name: e.target.value})}
-                                onBlur={onShadowCapture}
-                                placeholder="Nama Lengkap" 
-                                className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
-                            />
+                {/* STEP 1: SUMMARY / CART VIEW */}
+                {step === 1 && (
+                    <div className="flex flex-col h-full p-6 animate-fade-in">
+                        <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+                            <div className="w-8 h-8 rounded-lg bg-brand-orange text-white flex items-center justify-center font-bold text-sm shadow-neon">1</div>
+                            <h4 className="font-bold text-white text-sm uppercase tracking-widest">Rincian Investasi</h4>
                         </div>
-                        <div className="relative">
-                            <Phone className="absolute left-3 top-3 text-gray-600" size={14} />
-                            <Input 
-                                value={customerInfo.phone}
-                                onChange={e => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                                onBlur={onShadowCapture}
-                                placeholder="Nomor WhatsApp" 
-                                className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
-                            />
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                            {!hasBaseSelection ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center py-10 opacity-50">
+                                    <ShoppingBag size={40} className="mb-2"/>
+                                    <p className="text-sm font-bold">Keranjang Kosong</p>
+                                    <p className="text-xs">Pilih paket di sebelah kiri dulu.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* BASE ITEM */}
+                                    <div className="bg-brand-orange/10 border border-brand-orange/30 p-3 rounded-xl">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="text-[10px] text-brand-orange font-bold uppercase tracking-widest mb-1">Paket Utama</p>
+                                                <p className="text-sm font-bold text-white">{calculation.baseLabel}</p>
+                                            </div>
+                                            <p className="text-sm font-bold text-brand-orange font-mono">{formatRupiah(calculation.basePrice)}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* ADDONS LIST */}
+                                    {calculation.activeAddons.length > 0 && (
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2 flex items-center gap-1">
+                                                <ListChecks size={12}/> Item Tambahan
+                                            </p>
+                                            {calculation.activeAddons.map((addon: any) => (
+                                                <div key={addon.id} className="bg-blue-500/10 border border-blue-500/20 p-2.5 rounded-lg flex justify-between items-center">
+                                                    <span className="text-xs text-blue-200 font-medium">{addon.label}</span>
+                                                    <span className="text-xs text-blue-400 font-bold font-mono">{formatRupiah(addon.price)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
-                        <div className="relative">
-                            <Building className="absolute left-3 top-3 text-gray-600" size={14} />
-                            <Input 
-                                value={customerInfo.company}
-                                onChange={e => setCustomerInfo({...customerInfo, company: e.target.value})}
-                                onBlur={onShadowCapture}
-                                placeholder="Nama Usaha / Perusahaan" 
-                                className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
-                            />
-                        </div>
-                        
-                        {/* SKALA BISNIS */}
-                        <div className="relative">
-                            <BarChart3 className="absolute left-3 top-3 text-gray-600" size={14} />
-                            <select 
-                                value={customerInfo.scale}
-                                onChange={e => setCustomerInfo({...customerInfo, scale: e.target.value})}
-                                onBlur={onShadowCapture}
-                                className="w-full bg-black/40 border border-white/5 rounded-lg pl-10 pr-10 py-2.5 text-xs text-white outline-none focus:border-brand-orange transition-all appearance-none cursor-pointer"
+
+                        {/* TOTAL & ACTION */}
+                        <div className="mt-auto pt-6 border-t border-white/10">
+                            <div className="flex justify-between items-end mb-4">
+                                <span className="text-xs text-gray-400">Estimasi Total</span>
+                                <div className="text-right">
+                                    <span className="text-2xl font-display font-bold text-white block leading-none">{formatRupiah(calculation.total.min)}</span>
+                                    <span className="text-[10px] text-gray-500">s/d {formatRupiah(calculation.total.max)}</span>
+                                </div>
+                            </div>
+                            <Button 
+                                onClick={handleNextStep} 
+                                disabled={!hasBaseSelection} 
+                                className="w-full py-4 text-sm font-bold shadow-neon bg-brand-gradient hover:bg-brand-gradient-hover"
                             >
-                                <option value="">-- Pilih Skala Bisnis --</option>
-                                {SCALES.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-3 text-gray-600 pointer-events-none" size={14} />
+                                LANJUT ISI DATA <ArrowRight size={16} className="ml-2"/>
+                            </Button>
                         </div>
-                        {customerInfo.scale === 'Lainnya' && (
-                            <div className="animate-fade-in">
+                    </div>
+                )}
+
+                {/* STEP 2: IDENTITY FORM */}
+                {step === 2 && (
+                    <div className="flex flex-col h-full p-6 animate-slide-in-right">
+                        <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+                            <button onClick={() => setStep(1)} className="p-1 hover:bg-white/10 rounded-full transition-colors -ml-2">
+                                <ChevronLeft size={20} className="text-gray-400 hover:text-white"/>
+                            </button>
+                            <div className="w-8 h-8 rounded-lg bg-white text-brand-dark flex items-center justify-center font-bold text-sm">2</div>
+                            <h4 className="font-bold text-white text-sm uppercase tracking-widest">Identitas Juragan</h4>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                            <div className="relative">
+                                <User className="absolute left-3 top-3 text-gray-600" size={14} />
                                 <Input 
-                                    value={customerInfo.customScale}
-                                    onChange={e => setCustomerInfo({...customerInfo, customScale: e.target.value})}
+                                    value={customerInfo.name}
+                                    onChange={e => setCustomerInfo({...customerInfo, name: e.target.value})}
                                     onBlur={onShadowCapture}
-                                    placeholder="Tulis Skala Bisnis Lo (Cth: Pabrik)..." 
-                                    className="py-2.5 text-xs bg-black/40 border-brand-orange/30"
+                                    placeholder="Nama Lengkap" 
+                                    className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
                                 />
                             </div>
-                        )}
+                            <div className="relative">
+                                <Phone className="absolute left-3 top-3 text-gray-600" size={14} />
+                                <Input 
+                                    value={customerInfo.phone}
+                                    onChange={e => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                                    onBlur={onShadowCapture}
+                                    placeholder="Nomor WhatsApp" 
+                                    className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
+                                />
+                            </div>
+                            <div className="relative">
+                                <Building className="absolute left-3 top-3 text-gray-600" size={14} />
+                                <Input 
+                                    value={customerInfo.company}
+                                    onChange={e => setCustomerInfo({...customerInfo, company: e.target.value})}
+                                    onBlur={onShadowCapture}
+                                    placeholder="Nama Usaha / Perusahaan" 
+                                    className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
+                                />
+                            </div>
+                            
+                            <div className="relative">
+                                <BarChart3 className="absolute left-3 top-3 text-gray-600" size={14} />
+                                <select 
+                                    value={customerInfo.scale}
+                                    onChange={e => setCustomerInfo({...customerInfo, scale: e.target.value})}
+                                    onBlur={onShadowCapture}
+                                    className="w-full bg-black/40 border border-white/5 rounded-lg pl-10 pr-10 py-2.5 text-xs text-white outline-none focus:border-brand-orange transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value="">-- Pilih Skala Bisnis --</option>
+                                    {SCALES.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-3 text-gray-600 pointer-events-none" size={14} />
+                            </div>
+                            {customerInfo.scale === 'Lainnya' && (
+                                <div className="animate-fade-in">
+                                    <Input 
+                                        value={customerInfo.customScale}
+                                        onChange={e => setCustomerInfo({...customerInfo, customScale: e.target.value})}
+                                        onBlur={onShadowCapture}
+                                        placeholder="Tulis Skala Bisnis Lo (Cth: Pabrik)..." 
+                                        className="py-2.5 text-xs bg-black/40 border-brand-orange/30"
+                                    />
+                                </div>
+                            )}
 
-                        <div className="relative">
-                            <MapPin className="absolute left-3 top-3 text-gray-600" size={14} />
-                            <Input 
-                                value={customerInfo.address}
-                                onChange={e => setCustomerInfo({...customerInfo, address: e.target.value})}
-                                onBlur={onShadowCapture}
-                                placeholder="Alamat / Kota" 
-                                className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
-                            />
-                        </div>
-                        <div className="relative">
-                            <Tag className="absolute left-3 top-3 text-gray-600" size={14} />
-                            <select 
-                                value={customerInfo.category}
-                                onChange={e => setCustomerInfo({...customerInfo, category: e.target.value})}
-                                onBlur={onShadowCapture}
-                                className="w-full bg-black/40 border border-white/5 rounded-lg pl-10 pr-10 py-2.5 text-xs text-white outline-none focus:border-brand-orange transition-all appearance-none cursor-pointer"
-                            >
-                                <option value="">-- Pilih Kategori Bisnis --</option>
-                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-3 text-gray-600 pointer-events-none" size={14} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* ESTIMATION SECTION */}
-                <div className="relative z-10 border-t border-white/10 pt-6 mt-auto">
-                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4">Estimasi Investasi Awal</p>
-                    
-                    {hasBaseSelection ? (
-                        <div className="space-y-6 animate-fade-in">
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Total Estimasi</p>
-                                <p className="text-4xl font-display font-bold text-white tracking-tight">
-                                    {formatRupiah(calculation.total.min)}
-                                </p>
-                                <p className="text-[10px] text-gray-500 mt-1">
-                                    s/d {formatRupiah(calculation.total.max)}
-                                </p>
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-3 text-gray-600" size={14} />
+                                <Input 
+                                    value={customerInfo.address}
+                                    onChange={e => setCustomerInfo({...customerInfo, address: e.target.value})}
+                                    onBlur={onShadowCapture}
+                                    placeholder="Alamat / Kota" 
+                                    className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
+                                />
+                            </div>
+                            <div className="relative">
+                                <Tag className="absolute left-3 top-3 text-gray-600" size={14} />
+                                <select 
+                                    value={customerInfo.category}
+                                    onChange={e => setCustomerInfo({...customerInfo, category: e.target.value})}
+                                    onBlur={onShadowCapture}
+                                    className="w-full bg-black/40 border border-white/5 rounded-lg pl-10 pr-10 py-2.5 text-xs text-white outline-none focus:border-brand-orange transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value="">-- Pilih Kategori Bisnis --</option>
+                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-3 text-gray-600 pointer-events-none" size={14} />
                             </div>
                         </div>
-                    ) : (
-                        <div className="py-4 text-center opacity-50">
-                            <p className="text-xl font-bold text-gray-600">-- IDR --</p>
-                            <p className="text-[10px] text-gray-500 mt-2">Pilih paket di kiri dulu</p>
-                        </div>
-                    )}
 
-                    <div className="mt-8">
-                        <Button 
-                            onClick={onConsultation}
-                            disabled={!hasBaseSelection || isCapturing || isFormIncomplete}
-                            className="w-full py-4 text-sm font-bold shadow-neon hover:shadow-neon-strong bg-brand-gradient"
-                        >
-                            {isCapturing ? <Loader2 className="animate-spin" /> : <><ArrowRight size={16} className="mr-2" /> KONSULTASI SEKARANG</>}
-                        </Button>
-                        <p className="text-[9px] text-gray-600 text-center mt-3 italic">
-                            {isFormIncomplete ? '*Lengkapi identitas untuk membuka tombol.' : '*Harga final ditentukan setelah sesi konsultasi teknis.'}
-                        </p>
+                        {/* FINAL CTA */}
+                        <div className="mt-auto pt-6 border-t border-white/10">
+                            <Button 
+                                onClick={onConsultation}
+                                disabled={isCapturing || isFormIncomplete}
+                                className="w-full py-4 text-sm font-bold shadow-neon hover:shadow-neon-strong bg-green-600 hover:bg-green-500"
+                            >
+                                {isCapturing ? <Loader2 className="animate-spin" /> : <><ArrowRight size={16} className="mr-2" /> KONSULTASI SEKARANG</>}
+                            </Button>
+                            <p className="text-[9px] text-gray-600 text-center mt-3 italic">
+                                *Harga final ditentukan setelah sesi konsultasi teknis.
+                            </p>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );
