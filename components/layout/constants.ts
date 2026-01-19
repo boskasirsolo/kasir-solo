@@ -9,9 +9,10 @@ export const NAV_ITEMS: NavItem[] = [
     children: [
       { id: 'about', label: 'Profil Perusahaan' },
       { id: 'about/vision', label: 'Visi & Misi' }, 
-      { id: 'career', label: 'Karir' },
+      { id: 'innovation', label: 'Inovasi Aplikasi (SaaS)' },
+      { id: 'career', label: 'Rekrutmen' },
       { id: 'gallery', label: 'Klien & Portfolio' },
-      { id: 'contact', label: 'Hubungi' },
+      { id: 'contact', label: 'Hubungi Gue' },
     ]
   },
   { 
@@ -19,7 +20,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Solusi Bisnis',
     children: [
       { id: 'shop', label: 'Hardware Kasir (POS)' },
-      { id: 'innovation', label: 'Inovasi Aplikasi (SaaS)' },
       { id: 'services/website', label: 'Jasa Pembuatan Website' },
       { id: 'services/webapp', label: 'Custom Web App' },
       { id: 'services/seo', label: 'Optimasi SEO & Traffic' },
