@@ -35,11 +35,18 @@
     <meta name="theme-color" content="#FF5F1F" />
     <meta name="google-site-verification" content="BxyqIpf1OTcFQVtRHhklXTUuH-oZyCdHDvmqJ0d0LsE" />
 
-    <!-- FONTS & ICONS -->
+    <!-- FONTS & ICONS (OPTIMIZED LOADING) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23FF5F1F%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><rect x=%222%22 y=%223%22 width=%2220%22 height=%2214%22 rx=%222%22 ry=%222%22></rect><line x1=%228%22 y1=%2221%22 x2=%2216%22 y2=%2221%22></line><line x1=%2212%22 y1=%2217%22 x2=%2212%22 y2=%2221%22></line></svg>" type="image/svg+xml">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Non-blocking Font Loading Strategy -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    </noscript>
     
     <!-- CRITICAL CSS -->
     <style>
@@ -115,3 +122,4 @@
     </script>
   </body>
 </html>
+    
