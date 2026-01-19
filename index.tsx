@@ -258,8 +258,8 @@ const AppContent = () => {
             <Route path="/gallery/:slug" element={<ProjectDetailPage gallery={gallery} testimonials={testimonials} />} />
             <Route path="/articles" element={<ArticlesPage articles={publishedArticles} products={products} config={config} />} />
             <Route path="/articles/:slug" element={<ArticleDetailPage articles={publishedArticles} products={products} config={config} />} />
-            <Route path="/services/website" element={<WebsiteServicePage config={config} />} />
-            <Route path="/services/webapp" element={<WebAppServicePage config={config} />} />
+            <Route path="/services/website" element={<WebsiteServicePage config={config} gallery={gallery} />} />
+            <Route path="/services/webapp" element={<WebAppServicePage config={config} gallery={gallery} />} />
             <Route path="/services/seo" element={<SeoServicePage config={config} />} />
             <Route path="/services/maintenance" element={<MaintenanceServicePage config={config} />} />
             <Route path="/legal/:type" element={<LegalPage config={config} />} />

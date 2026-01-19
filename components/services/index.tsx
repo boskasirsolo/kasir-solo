@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Globe, Layers, LineChart, ShieldCheck, Store, ArrowRight, FileSpreadsheet, Database, CheckCircle2, Megaphone, Anchor, TrendingUp, TrendingDown, Skull, ShieldAlert, Activity, AlertTriangle } from 'lucide-react';
 import { ServicePageTemplate } from './template';
 import { WEBSITE_DATA, WEBSITE_CALC, WEBAPP_DATA, WEBAPP_CALC, SEO_DATA, SEO_CALC, MAINTENANCE_DATA, MAINTENANCE_CALC } from './data';
-import { SiteConfig, ServicePageData } from '../../types';
+import { SiteConfig, ServicePageData, GalleryItem } from '../../types';
 import { supabase } from '../../utils';
 import { LoadingSpinner } from '../ui';
 
@@ -26,8 +26,19 @@ const ServicePageWrapper = ({
     defaultTitle,
     defaultHighlight,
     defaultSubtitle,
-    config 
-}: any) => {
+    config,
+    gallery = [] // Default to empty array if not passed
+}: {
+    slug: string,
+    fallbackData: any,
+    fallbackCalc: any,
+    fallbackSteps: any,
+    defaultTitle: string,
+    defaultHighlight: string,
+    defaultSubtitle: string,
+    config?: SiteConfig,
+    gallery?: GalleryItem[]
+}) => {
     const [dbData, setDbData] = useState<ServicePageData | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -56,6 +67,21 @@ const ServicePageWrapper = ({
     const max = config?.quotaDigitalMax || 2;
     const used = config?.quotaDigitalUsed || 0;
     const remaining = Math.max(0, max - used);
+
+    // FILTER RELATED PROJECTS
+    const relatedProjects = gallery.filter(item => {
+        if (item.category_type !== 'digital') return false;
+        
+        // Specific filtering based on slug
+        if (slug === 'website') {
+            return item.platform === 'web' || item.platform === 'desktop';
+        }
+        if (slug === 'webapp') {
+            // Webapp can be web or mobile or desktop app
+            return true; 
+        }
+        return false;
+    }).slice(0, 3); // Take top 3 recent projects
 
     // Narrative logic specific to slug but can be overwritten by DB if we add narrative column (optional)
     const renderNarrative = () => {
@@ -167,11 +193,12 @@ const ServicePageWrapper = ({
             waNumber={config?.whatsappNumber}
             serviceSlug={slug}
             narrativeContent={renderNarrative()}
+            relatedProjects={relatedProjects} // Pass filtered projects
         />
     );
 };
 
-export const WebsiteServicePage = ({ config }: { config?: SiteConfig }) => (
+export const WebsiteServicePage = ({ config, gallery }: { config?: SiteConfig, gallery?: GalleryItem[] }) => (
     <ServicePagePageWrapper 
         slug="website"
         fallbackData={WEBSITE_DATA}
@@ -181,10 +208,11 @@ export const WebsiteServicePage = ({ config }: { config?: SiteConfig }) => (
         defaultHighlight="Ruko Digital."
         defaultSubtitle="Jangan cuma sewa lapak (Sosmed) doang. Bangun 'Sertifikat Hak Milik' (SHM) lo sendiri di internet."
         config={config}
+        gallery={gallery}
     />
 );
 
-export const WebAppServicePage = ({ config }: { config?: SiteConfig }) => (
+export const WebAppServicePage = ({ config, gallery }: { config?: SiteConfig, gallery?: GalleryItem[] }) => (
     <ServicePagePageWrapper 
         slug="webapp"
         fallbackData={WEBAPP_DATA}
@@ -194,6 +222,7 @@ export const WebAppServicePage = ({ config }: { config?: SiteConfig }) => (
         defaultHighlight="Budak Excel."
         defaultSubtitle="Lupain aplikasi langganan yang fiturnya 'nanggung'. Bangun sistem operasi bisnis yang lo miliki selamanya."
         config={config}
+        gallery={gallery}
     />
 );
 
