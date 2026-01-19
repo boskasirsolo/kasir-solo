@@ -71,14 +71,16 @@ export const ProjectEmbedCard: React.FC<{ title: string, url: string, image: str
     );
 };
 
-export const ProductEmbedCard = ({ name, price, image, desc }: { name: string, price: string, image: string, desc: string }) => {
+export const ProductEmbedCard = ({ name, price, image, desc, waNumber }: { name: string, price: string, image: string, desc: string, waNumber?: string }) => {
     // Handle price if it comes as number string or formatted string
     const rawPrice = parseInt(price.replace(/[^0-9]/g, '')) || 0;
     const displayPrice = rawPrice > 0 ? formatRupiah(rawPrice) : price; // Fallback to original string if NaN
+    
+    const targetWa = waNumber || "6282325103336";
 
     // Search URL for the product
     const searchUrl = `/shop?search=${encodeURIComponent(name)}`;
-    const waUrl = `https://wa.me/6282325103336?text=${encodeURIComponent(`Halo, saya tertarik dengan produk *${name}* yang saya lihat di artikel.`)}`;
+    const waUrl = `https://wa.me/${targetWa}?text=${encodeURIComponent(`Halo, saya tertarik dengan produk *${name}* yang saya lihat di artikel.`)}`;
 
     return (
         <div className="my-10 bg-black/40 border border-white/10 rounded-2xl overflow-hidden hover:border-brand-orange/50 transition-all shadow-lg flex flex-col md:flex-row group relative">

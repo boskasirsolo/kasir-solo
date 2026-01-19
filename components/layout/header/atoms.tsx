@@ -34,7 +34,7 @@ export const CTAButton = ({ onClick }: { onClick: () => void }) => (
     onClick={onClick}
     className="hidden lg:flex bg-brand-gradient hover:bg-brand-gradient-hover text-white text-xs font-bold px-6 py-3 rounded-full shadow-neon hover:shadow-neon-strong transition-all items-center gap-2 transform hover:-translate-y-0.5"
   >
-    <FileText size={16} /> MINTA PENAWARAN
+    <FileText size={16} /> HUBUNGI GUE
   </button>
 );
 

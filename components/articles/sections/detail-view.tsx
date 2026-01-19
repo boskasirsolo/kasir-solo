@@ -100,6 +100,7 @@ export const ArticleReaderView = ({ article, onClose, products, allArticles, con
                             totalPages={totalReaderPages} 
                             onPageChange={handlePageChange} 
                             article={article} 
+                            waNumber={waNumber}
                           />
                           <CommentSection articleId={article.id} />
                       </div>

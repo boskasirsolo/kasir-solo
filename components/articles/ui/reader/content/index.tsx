@@ -13,9 +13,10 @@ interface ReaderContentProps {
     article: {
         excerpt?: string;
     };
+    waNumber?: string;
 }
 
-export const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article }: ReaderContentProps) => {
+export const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article, waNumber }: ReaderContentProps) => {
     return (
       <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed space-y-6">
           {/* Excerpt on first page */}
@@ -30,7 +31,7 @@ export const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, a
 
               // 1. Custom Embeds ([FILE:], [PROJECT:], [PRODUCT:])
               if (p.includes('[FILE:') || p.includes('[PROJECT:') || p.includes('[PRODUCT:')) {
-                  return <CustomEmbedBlock key={idx} content={p} />;
+                  return <CustomEmbedBlock key={idx} content={p} waNumber={waNumber} />;
               }
               
               // 2. Images

@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Input, TextArea, Button } from '../ui';
 import { supabase } from '../../utils';
 
-export const RefundForm = () => {
+export const RefundForm = ({ waNumber }: { waNumber?: string }) => {
     // STATE: GATEKEEPER
     const [isAgreed, setIsAgreed] = useState(false);
     const [isLiabilityAgreed, setIsLiabilityAgreed] = useState(false);
@@ -29,6 +29,8 @@ export const RefundForm = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const sectionRef = useRef<HTMLDivElement>(null);
+
+    const targetWa = waNumber || "6282325103336";
 
     // EFFECT: Auto-Scroll if triggered from Shop
     useEffect(() => {
@@ -74,7 +76,7 @@ export const RefundForm = () => {
             setTicketId(data.id);
             // Auto WA Notif Logic Here (Optional Client Side)
             const text = `*TIKET KLAIM BARU #${data.id}*\n\nOrder ID: ${form.order_id}\nSN: ${form.serial_number}\nMasalah: ${form.issue_type}\n\nMohon segera diproses admin.`;
-            window.open(`https://wa.me/6282325103336?text=${encodeURIComponent(text)}`, '_blank');
+            window.open(`https://wa.me/${targetWa}?text=${encodeURIComponent(text)}`, '_blank');
 
         } catch (e: any) {
             alert("Gagal kirim tiket: " + e.message);

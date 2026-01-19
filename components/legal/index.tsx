@@ -4,10 +4,12 @@ import { RefreshCw, ShieldCheck, FileText, Scale, ChevronRight, HelpCircle, Mess
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../ui';
 import { RefundContent, PrivacyContent, TermsContent } from './content';
+import { SiteConfig } from '../../types';
 
-export const LegalPage = () => {
+export const LegalPage = ({ config }: { config?: SiteConfig }) => {
   const { type } = useParams();
   const navigate = useNavigate();
+  const waNumber = config?.whatsappNumber || "6282325103336";
 
   // Scroll to top when tab changes
   useEffect(() => {
@@ -15,10 +17,10 @@ export const LegalPage = () => {
   }, [type]);
 
   const LEGAL_TABS = useMemo(() => [
-    { id: 'refund', label: 'Refund & Garansi', icon: RefreshCw, component: <RefundContent /> },
+    { id: 'refund', label: 'Refund & Garansi', icon: RefreshCw, component: <RefundContent waNumber={waNumber} /> },
     { id: 'privacy', label: 'Kebijakan Privasi', icon: ShieldCheck, component: <PrivacyContent /> },
     { id: 'terms', label: 'Syarat & Ketentuan', icon: FileText, component: <TermsContent /> },
-  ], []);
+  ], [waNumber]);
 
   const activeTab = LEGAL_TABS.find(t => t.id === type);
 
@@ -92,7 +94,7 @@ export const LegalPage = () => {
                         Bahasa hukum emang ribet, Bos. Kalau lo ragu atau ada yang ngeganjel, jangan dipendam. Chat gue, gue jelasin poin-poinnya pake bahasa tongkrongan biar clear.
                     </p>
                     <a 
-                        href="https://wa.me/6282325103336?text=Halo Mas Amin, tolong jelasin soal garansi/legalitas dong, saya bingung bahasanya..." 
+                        href={`https://wa.me/${waNumber}?text=Halo Mas Amin, tolong jelasin soal garansi/legalitas dong, saya bingung bahasanya...`}
                         target="_blank" 
                         rel="noreferrer"
                         className="flex items-center justify-center w-full py-3.5 bg-gradient-to-r from-brand-orange to-red-600 hover:from-brand-orange hover:to-red-500 rounded-xl text-xs font-bold text-white transition-all gap-2 shadow-neon hover:shadow-neon-strong transform hover:-translate-y-0.5"

@@ -61,7 +61,7 @@ export const WarningBlock = ({
 
 // --- CONTENT BLOCKS ---
 
-export const RefundContent = () => (
+export const RefundContent = ({ waNumber }: { waNumber?: string }) => (
   <div className="animate-fade-in text-gray-300 leading-relaxed">
     <PolicyHeader 
       title="Garansi & Retur: Jangan Ada Dusta." 
@@ -119,7 +119,7 @@ export const RefundContent = () => (
         <p className="text-center text-gray-400 mb-8 max-w-2xl mx-auto">
             Udah yakin masalah lo masuk kategori "Dicover" dan punya video unboxing? Silakan isi form di bawah ini.
         </p>
-        <RefundForm />
+        <RefundForm waNumber={waNumber} />
     </div>
   </div>
 );

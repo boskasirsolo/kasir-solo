@@ -6,11 +6,13 @@ import { SectionHeader } from '../ui';
 import { useTrackOrder } from './logic';
 import { SearchForm } from './sections/search-form';
 import { ResultView } from './sections/result-view';
+import { SiteConfig } from '../../types';
 
-export const TrackOrderModule = () => {
+export const TrackOrderModule = ({ config }: { config?: SiteConfig }) => {
     const { orderId, setOrderId, loading, result, error, handleSearch, copyToClipboard } = useTrackOrder();
     const location = useLocation();
     const navigate = useNavigate();
+    const waNumber = config?.whatsappNumber;
 
     return (
         <div className="animate-fade-in pt-24 pb-20">
@@ -53,7 +55,11 @@ export const TrackOrderModule = () => {
                     )}
 
                     {result && (
-                        <ResultView result={result} onCopy={copyToClipboard} />
+                        <ResultView 
+                            result={result} 
+                            onCopy={copyToClipboard} 
+                            waNumber={waNumber}
+                        />
                     )}
                 </div>
             </div>

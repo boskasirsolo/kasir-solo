@@ -9,10 +9,12 @@ import { Timeline } from '../ui-parts';
 interface ResultViewProps {
     result: OrderResult;
     onCopy: (text: string, label?: string) => void;
+    waNumber?: string;
 }
 
-export const ResultView = ({ result, onCopy }: ResultViewProps) => {
+export const ResultView = ({ result, onCopy, waNumber }: ResultViewProps) => {
     const { order, items } = result;
+    const targetWa = waNumber || "6282325103336";
 
     return (
         <div className="bg-brand-dark border border-white/10 rounded-2xl overflow-hidden animate-fade-in shadow-2xl">
@@ -88,7 +90,7 @@ export const ResultView = ({ result, onCopy }: ResultViewProps) => {
             {/* Footer Help */}
             <div className="p-4 bg-white/5 text-center">
                 <p className="text-xs text-gray-500">
-                    Paket mandeg atau nyasar? <a href="https://wa.me/6282325103336" target="_blank" className="text-brand-orange hover:underline font-bold">Lapor Komandan (Admin)</a>
+                    Paket mandeg atau nyasar? <a href={`https://wa.me/${targetWa}`} target="_blank" className="text-brand-orange hover:underline font-bold">Lapor Komandan (Admin)</a>
                 </p>
             </div>
         </div>

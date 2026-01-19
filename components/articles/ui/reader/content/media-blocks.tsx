@@ -24,7 +24,7 @@ export const VideoBlock = ({ content }: { content: string }) => (
     />
 );
 
-export const CustomEmbedBlock = ({ content }: { content: string }) => {
+export const CustomEmbedBlock = ({ content, waNumber }: { content: string, waNumber?: string }) => {
     // 1. FILE DOWNLOAD
     if (content.includes('[FILE:')) {
         const match = content.match(/\[FILE:\s*(.*?)\]\((.*?)\)/);
@@ -57,7 +57,7 @@ export const CustomEmbedBlock = ({ content }: { content: string }) => {
             const image = parts[2];
             const desc = parts.slice(3).join('|');
             
-            return <ProductEmbedCard name={name} price={price} image={image} desc={desc} />;
+            return <ProductEmbedCard name={name} price={price} image={image} desc={desc} waNumber={waNumber} />;
         }
     }
 

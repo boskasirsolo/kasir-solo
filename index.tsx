@@ -262,9 +262,9 @@ const AppContent = () => {
             <Route path="/services/webapp" element={<WebAppServicePage config={config} />} />
             <Route path="/services/seo" element={<SeoServicePage config={config} />} />
             <Route path="/services/maintenance" element={<MaintenanceServicePage config={config} />} />
-            <Route path="/legal/:type" element={<LegalPage />} />
+            <Route path="/legal/:type" element={<LegalPage config={config} />} />
             <Route path="/support" element={<SupportPage config={config} />} />
-            <Route path="/track-order" element={<TrackOrderPage />} /> 
+            <Route path="/track-order" element={<TrackOrderPage config={config} />} /> 
             <Route path="/jual-mesin-kasir-di/:citySlug" element={<CityLandingPage config={config} />} />
             <Route path="/jual-mesin-kasir-di" element={<CityLandingPage config={config} />} />
             <Route path="/area-layanan" element={<CityLandingPage config={config} />} />
@@ -303,4 +303,3 @@ const App = () => (
 
 const root = createRoot(document.getElementById('root')!);
 root.render(<App />);
-    
