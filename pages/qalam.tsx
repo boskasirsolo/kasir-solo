@@ -198,43 +198,6 @@ export const QalamPage = ({ config }: { config: SiteConfig }) => {
                 </div>
             </section>
 
-            {/* MOBILE PREVIEW */}
-            <section className="py-24 relative overflow-hidden">
-                 <div className="absolute inset-0 bg-amber-900/5"></div>
-                 <div className="container mx-auto px-4 relative z-10 text-center">
-                    <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6">
-                        Tampilan Antarmuka <span className="text-amber-500">Mobile Friendly.</span>
-                    </h2>
-                    <p className="text-gray-400 mb-12 max-w-2xl mx-auto">
-                        Desain responsif yang nyaman digunakan di HP Wali Santri maupun Laptop Admin.
-                    </p>
-
-                    {/* Mockup Grid */}
-                    <div className="flex flex-wrap justify-center gap-4 md:gap-8 opacity-90">
-                        {['Admin', 'Wali Santri', 'Ustadz', 'Donatur'].map((role, i) => (
-                            <div key={i} className="w-40 md:w-56 aspect-[9/18] bg-black border-[4px] border-gray-800 rounded-[2rem] overflow-hidden relative shadow-2xl">
-                                <div className="absolute top-0 inset-x-0 h-6 bg-gray-800 z-20 flex justify-center">
-                                    <div className="w-16 h-3 bg-black rounded-b-lg"></div>
-                                </div>
-                                <div className="p-4 pt-10 h-full flex flex-col bg-gray-900">
-                                    <div className="w-8 h-8 rounded-full bg-white/10 mb-4"></div>
-                                    <div className="h-2 w-20 bg-white/10 rounded mb-2"></div>
-                                    <div className="h-2 w-12 bg-white/10 rounded mb-6"></div>
-                                    
-                                    <div className="flex-1 bg-white/5 rounded-xl border border-white/5 p-2 mb-2">
-                                        <div className="h-2 w-full bg-white/10 rounded mb-2"></div>
-                                        <div className="h-2 w-2/3 bg-white/10 rounded"></div>
-                                    </div>
-                                    <div className="h-12 w-full bg-amber-600/20 rounded-lg border border-amber-600/50 mt-auto flex items-center justify-center text-[10px] text-amber-500 font-bold">
-                                        Dashboard {role}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                 </div>
-            </section>
-
             {/* UNTOLD STORY SECTION (REPLACEMENT) */}
             <section className="py-24 relative overflow-hidden bg-brand-black border-t border-white/5">
                 {/* Background Effects */}
@@ -264,21 +227,12 @@ export const QalamPage = ({ config }: { config: SiteConfig }) => {
 
                     <Button 
                         onClick={() => window.open(targetUrl, '_blank')} 
-                        className="bg-amber-600 hover:bg-amber-500 text-black px-10 py-5 font-bold shadow-[0_0_30px_rgba(245,158,11,0.3)] border-none text-lg transition-transform hover:-translate-y-1"
+                        className="mx-auto bg-amber-600 hover:bg-amber-500 text-black px-10 py-5 font-bold shadow-[0_0_30px_rgba(245,158,11,0.3)] border-none text-lg transition-transform hover:-translate-y-1"
                     >
                         GABUNG PROGRAM INKUBASI
                     </Button>
                 </div>
             </section>
-
-            {/* FOOTER MINI */}
-            <div className="py-8 border-t border-white/10 text-center bg-black">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                    <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center text-black font-bold text-xs">Q</div>
-                    <span className="text-white font-bold">Qalam</span>
-                </div>
-                <p className="text-xs text-gray-500">Membangun peradaban digital Islam dari Solo untuk Dunia.</p>
-            </div>
         </div>
     );
 };
