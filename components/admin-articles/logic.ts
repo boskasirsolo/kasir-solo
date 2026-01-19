@@ -204,8 +204,19 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             runImage: async () => { setLoading(p => ({ ...p, generatingImage: true })); try { const { url, file } = await VisionAI.generate(form.title, form.category, 'corporate'); setForm(p => ({ ...p, imagePreview: url, uploadFile: file })); } finally { setLoading(p => ({ ...p, generatingImage: false })); } },
             selectTopic: (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); },
             runClusterResearch: async (pillar: Article) => {
-                setForm(p => ({ ...p, id: null, title: '', content: '', type: 'cluster', pillar_id: pillar.id }));
-                setAiStep(0);
+                setForm(p => ({ 
+                    ...p, 
+                    id: null, 
+                    title: '', 
+                    content: '', 
+                    type: 'cluster', 
+                    pillar_id: pillar.id,
+                    // Optionally pre-fill category based on pillar
+                    category: pillar.category || 'General' 
+                }));
+                // CRITICAL FIX: Skip research steps (0 & 1) and go straight to Config Mode (2)
+                // This ensures the EditorPanel shows the config UI instead of the 'Riset Judul Viral' empty state.
+                setAiStep(2);
                 setActiveMobilePane('CONFIG');
             }
         }
