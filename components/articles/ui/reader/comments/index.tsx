@@ -2,7 +2,7 @@
 import React from 'react';
 import { MessageCircle, Send, Globe, Loader2 } from 'lucide-react';
 import { useComments } from '../../../hooks/use-article-interactions';
-import { Button, Input, TextArea } from '../../../../../ui';
+import { Button, Input, TextArea } from '../../../../ui';
 
 export const CommentSection = ({ articleId }: { articleId: number }) => {
     const { comments, form, setForm, loading, isSubmitting, submitComment } = useComments(articleId);
