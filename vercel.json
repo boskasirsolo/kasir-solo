@@ -1,7 +1,6 @@
 
 {
   "trailingSlash": false,
-  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/sw.js",
@@ -12,7 +11,7 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/((?!assets/|favicon.ico|manifest.json|robots.txt|sitemap.xml).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
