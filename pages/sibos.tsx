@@ -71,8 +71,9 @@ const FEATURES = [
 // --- MAIN PAGE COMPONENT ---
 export const SibosPage = ({ config }: { config: SiteConfig }) => {
     const [activeTab, setActiveTab] = useState<'Retail' | 'F&B' | 'Jasa' | 'Pabrik'>('Retail');
+    const [selectedScale, setSelectedScale] = useState<'Micro' | 'SME' | 'Enterprise'>('Micro');
 
-    const waLink = `https://wa.me/${config.whatsappNumber}?text=Halo Mas Amin, saya tertarik untuk gabung barisan pengguna SIBOS.`;
+    const waLink = `https://wa.me/${config.whatsappNumber}?text=Halo Mas Amin, saya owner bisnis *${activeTab}* dengan skala *${selectedScale}*. Tertarik pakai SIBOS, mohon infonya.`;
 
     return (
         <div className="bg-[#050505] text-gray-200 font-sans selection:bg-red-600 selection:text-white pt-20">
@@ -190,72 +191,118 @@ export const SibosPage = ({ config }: { config: SiteConfig }) => {
                 </div>
             </section>
 
-            {/* TARGET AUDIENCE SECTION */}
-            <section className="py-24 relative overflow-hidden">
-                <div className="absolute inset-0 bg-blue-900/5"></div>
+            {/* TARGET AUDIENCE SECTION (UPDATED) */}
+            <section className="py-24 relative overflow-hidden bg-[#050505]">
+                {/* Background Grid */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-brand-orange/5 rounded-full blur-[100px] pointer-events-none"></div>
+
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="text-center mb-12">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-green-500/30 bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-widest mb-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-green-500/30 bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-widest mb-4 animate-pulse">
                             SECURE CHANNEL ESTABLISHED
                         </div>
                         <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2">IDENTIFIKASI TARGET</h2>
                         <p className="text-gray-400">Sebelum Si Boy kasih strategi, kita perlu tau posisi lo sekarang.</p>
                     </div>
 
-                    <div className="max-w-4xl mx-auto">
-                        {/* Tabs */}
-                        <div className="flex justify-center mb-8 bg-white/5 p-1 rounded-xl w-fit mx-auto">
-                            {['F&B', 'Retail', 'Jasa', 'Pabrik'].map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab as any)}
-                                    className={`px-8 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === tab ? 'bg-white text-black' : 'text-gray-400 hover:text-white'}`}
+                    <div className="max-w-3xl mx-auto bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                        {/* Decorative Corner */}
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-white/5 to-transparent rounded-tr-2xl pointer-events-none"></div>
+
+                        {/* 1. JENIS USAHA */}
+                        <div className="mb-8">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 block">MEDAN TEMPUR (JENIS USAHA)</label>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                {['F&B', 'Retail', 'Jasa', 'Pabrik'].map(tab => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab as any)}
+                                        className={`py-3 rounded-lg text-xs font-bold transition-all border ${
+                                            activeTab === tab 
+                                            ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
+                                            : 'bg-transparent text-gray-500 border-white/10 hover:border-white/30 hover:text-gray-300'
+                                        }`}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 2. SKALA USAHA */}
+                        <div className="mb-10">
+                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 block">KEKUATAN PASUKAN (SKALA)</label>
+                             <div className="space-y-3">
+                                {/* Card 1: Micro */}
+                                <div 
+                                    onClick={() => setSelectedScale('Micro')}
+                                    className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
+                                        selectedScale === 'Micro' 
+                                        ? 'bg-brand-orange/10 border-brand-orange shadow-[inset_0_0_20px_rgba(255,95,31,0.1)]' 
+                                        : 'bg-white/5 border-white/5 hover:bg-white/10'
+                                    }`}
                                 >
-                                    {tab}
-                                </button>
-                            ))}
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                                        selectedScale === 'Micro' ? 'bg-brand-orange text-white' : 'bg-white/10 text-gray-500'
+                                    }`}>
+                                        <Target size={20} />
+                                    </div>
+                                    <div>
+                                        <h4 className={`text-sm font-bold ${selectedScale === 'Micro' ? 'text-white' : 'text-gray-400'}`}>Micro (Solo Fighter)</h4>
+                                        <p className="text-xs text-gray-500">Omzet &lt; 50jt/bln. Masih dikerjakan sendiri/keluarga.</p>
+                                    </div>
+                                </div>
+
+                                {/* Card 2: SME */}
+                                <div 
+                                    onClick={() => setSelectedScale('SME')}
+                                    className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
+                                        selectedScale === 'SME' 
+                                        ? 'bg-brand-orange/10 border-brand-orange shadow-[inset_0_0_20px_rgba(255,95,31,0.1)]' 
+                                        : 'bg-white/5 border-white/5 hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                                        selectedScale === 'SME' ? 'bg-brand-orange text-white' : 'bg-white/10 text-gray-500'
+                                    }`}>
+                                        <Target size={20} />
+                                    </div>
+                                    <div>
+                                        <h4 className={`text-sm font-bold ${selectedScale === 'SME' ? 'text-white' : 'text-gray-400'}`}>SME (Juragan)</h4>
+                                        <p className="text-xs text-gray-500">Omzet 50jt - 500jt/bln. Sudah punya karyawan & stok gudang.</p>
+                                    </div>
+                                </div>
+
+                                {/* Card 3: Enterprise */}
+                                <div 
+                                    onClick={() => setSelectedScale('Enterprise')}
+                                    className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
+                                        selectedScale === 'Enterprise' 
+                                        ? 'bg-brand-orange/10 border-brand-orange shadow-[inset_0_0_20px_rgba(255,95,31,0.1)]' 
+                                        : 'bg-white/5 border-white/5 hover:bg-white/10'
+                                    }`}
+                                >
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                                        selectedScale === 'Enterprise' ? 'bg-brand-orange text-white' : 'bg-white/10 text-gray-500'
+                                    }`}>
+                                        <Target size={20} />
+                                    </div>
+                                    <div>
+                                        <h4 className={`text-sm font-bold ${selectedScale === 'Enterprise' ? 'text-white' : 'text-gray-400'}`}>Enterprise (Konglomerat)</h4>
+                                        <p className="text-xs text-gray-500">Omzet &gt; 500jt/bln. Multi-cabang & butuh kontrol pusat.</p>
+                                    </div>
+                                </div>
+                             </div>
                         </div>
 
-                        {/* Cards */}
-                        <div className="space-y-4">
-                            <div className="border border-white/10 bg-white/5 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6 hover:border-orange-500/50 transition-colors cursor-default">
-                                <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center shrink-0">
-                                    <Target size={24} className="text-white"/>
-                                </div>
-                                <div className="flex-1 text-center md:text-left">
-                                    <h4 className="text-lg font-bold text-white">Micro (Solo Fighter)</h4>
-                                    <p className="text-sm text-gray-400">Omzet &lt; 50jt/bln. Masih dikerjakan sendiri/keluarga.</p>
-                                </div>
-                            </div>
-                            
-                            <div className="border border-white/10 bg-white/5 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6 hover:border-orange-500/50 transition-colors cursor-default">
-                                <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center shrink-0 text-gray-400">
-                                    <Target size={24} />
-                                </div>
-                                <div className="flex-1 text-center md:text-left">
-                                    <h4 className="text-lg font-bold text-white">SME (Juragan)</h4>
-                                    <p className="text-sm text-gray-400">Omzet 50jt - 500jt/bln. Sudah punya karyawan & stok gudang.</p>
-                                </div>
-                            </div>
-
-                            <div className="border border-white/10 bg-white/5 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6 hover:border-orange-500/50 transition-colors cursor-default">
-                                <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center shrink-0 text-gray-400">
-                                    <Target size={24} />
-                                </div>
-                                <div className="flex-1 text-center md:text-left">
-                                    <h4 className="text-lg font-bold text-white">Enterprise (Konglomerat)</h4>
-                                    <p className="text-sm text-gray-400">Omzet &gt; 500jt/bln. Multi-cabang & butuh kontrol pusat.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-10">
-                            <button 
+                        <div className="mt-8">
+                            <Button 
                                 onClick={() => window.open(waLink, '_blank')}
-                                className="w-full py-5 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold rounded-xl text-xl shadow-lg flex items-center justify-center gap-3"
+                                className="w-full py-4 text-base font-bold bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-neon hover:shadow-neon-strong border-0"
                             >
-                                LANJUT <ArrowRight size={24} />
-                            </button>
+                                LANJUT <ArrowRight size={18} className="ml-2"/>
+                            </Button>
                         </div>
                     </div>
                 </div>
