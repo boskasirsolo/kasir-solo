@@ -145,12 +145,12 @@ const AppContent = () => {
             if (settingsData) {
                 setConfig(prev => ({
                     ...prev,
+                    // STANDARD MAPPING: DB (snake_case) -> APP (CamelCase)
                     heroTitle: settingsData.hero_title || prev.heroTitle,
                     heroSubtitle: settingsData.hero_subtitle || prev.heroSubtitle,
                     aboutImage: settingsData.about_image || prev.aboutImage,
                     founderPortrait: settingsData.founder_portrait || prev.founderPortrait,
                     
-                    // STANDARD: Map snake_case DB to camelCase State
                     sibosUrl: settingsData.sibos_url || prev.sibosUrl,
                     qalamUrl: settingsData.qalam_url || prev.qalamUrl,
                     dapurSppgUrl: settingsData.dapur_sppg_url || prev.dapurSppgUrl,

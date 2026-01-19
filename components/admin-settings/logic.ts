@@ -124,12 +124,13 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
             setConfig({ ...config, aboutImage: finalAboutImage, founderPortrait: finalFounderImage });
 
             // MAPPING DATA: Frontend (Camel) -> Database (Snake Case)
+            // THIS IS THE CRITICAL PART: founder_portrait (Snake) <-> finalFounderImage (Camel)
             const dbData = {
                 id: 1,
                 hero_title: config.heroTitle,
                 hero_subtitle: config.heroSubtitle,
                 about_image: finalAboutImage,
-                founder_portrait: finalFounderImage,
+                founder_portrait: finalFounderImage, // <--- EXPLICIT MAPPING HERE
                 
                 // STANDARD: Map camelCase State to snake_case DB
                 sibos_url: config.sibosUrl,
