@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     ShoppingBag, Package, LayoutGrid, Image, Settings, 
@@ -70,14 +70,6 @@ export const DashboardShell = (props: DashboardProps) => {
     const navigate = useNavigate();
     const { activeTab, setActiveTab, storeSubTab, setStoreSubTab } = useAdminDashboard();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isTransitioning, setIsTransitioning] = useState(false);
-
-    // Smooth transition between tabs
-    useEffect(() => {
-        setIsTransitioning(true);
-        const timer = setTimeout(() => setIsTransitioning(false), 350);
-        return () => clearTimeout(timer);
-    }, [activeTab, storeSubTab]);
 
     const renderActiveModule = () => {
         switch (activeTab) {
@@ -91,7 +83,7 @@ export const DashboardShell = (props: DashboardProps) => {
                             <StoreSubTabBtn active={storeSubTab === 'catalog'} onClick={() => setStoreSubTab('catalog')} icon={LayoutGrid} label="CATALOG" />
                             <StoreSubTabBtn active={storeSubTab === 'services'} onClick={() => setStoreSubTab('services')} icon={Cpu} label="SERVICES" />
                         </div>
-                        <div className={`transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
+                        <div>
                             {storeSubTab === 'orders' ? <AdminOrders config={props.config} /> : 
                              storeSubTab === 'catalog' ? <AdminProducts products={props.products} setProducts={props.setProducts} /> : 
                              <AdminServices config={props.config} />}
@@ -101,7 +93,6 @@ export const DashboardShell = (props: DashboardProps) => {
             case 'siboy': return <SibosTrainer />;
             case 'seo': return <AdminSEO />;
             case 'gallery': return <AdminGallery gallery={props.gallery} setGallery={props.setGallery} testimonials={props.testimonials} setTestimonials={props.setTestimonials} />;
-            // Added products={props.products} to AdminArticles component
             case 'articles': return <AdminArticles articles={props.articles} setArticles={props.setArticles} gallery={props.gallery} config={props.config} products={props.products} />;
             case 'career': return <AdminCareer jobs={props.jobs} setJobs={props.setJobs} />;
             case 'downloads': return <AdminDownloads />;
@@ -162,7 +153,7 @@ export const DashboardShell = (props: DashboardProps) => {
                         </div>
                     </header>
 
-                    <div className={`transition-all duration-500 transform ${isTransitioning ? 'opacity-0 translate-y-10 scale-[0.98]' : 'opacity-100 translate-y-0 scale-100'}`}>
+                    <div>
                         {renderActiveModule()}
                     </div>
                 </div>
