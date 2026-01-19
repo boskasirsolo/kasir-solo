@@ -28,7 +28,7 @@ export const VisionPage = () => {
             <span className="text-xs font-bold text-gray-300 tracking-[0.2em] uppercase">Peta Perang Kita</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-display font-bold text-white mb-6 leading-tight">
-            Mimpi Gede, <br/><span className="text-brand-orange">Kerja Keras.</span>
+            Mimpi Gede & <br/><span className="text-brand-orange">Kerja Keras.</span>
           </h1>
           <p className="max-w-2xl mx-auto text-lg text-gray-400 leading-relaxed">
             Gue gak bangun PT Mesin Kasir Solo cuma buat cari untung receh. Gue punya misi buat nyelametin ribuan UMKM dari kebangkrutan karena buta data.
