@@ -11,7 +11,7 @@ export default defineConfig({
     cssCodeSplit: true,
     minify: 'esbuild',
     target: 'es2020',
-    modulePreload: false, // Wajib false untuk mencegah download chunk yang tidak perlu di home
+    modulePreload: false, // Fix: Disable preloading to stop Admin chunk loading on Home
     esbuild: {
       drop: ['console', 'debugger'],
     },
