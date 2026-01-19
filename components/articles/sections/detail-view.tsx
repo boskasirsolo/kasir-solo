@@ -56,33 +56,44 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
               if (!p) return null;
               if (p.startsWith('|') && p.includes('|')) { return <MarkdownTable key={idx} content={p} />; }
               
-              // --- CUSTOM PARSERS (ROBUST) ---
+              // --- CUSTOM PARSERS (EXTREMELY ROBUST) ---
               
-              // 1. FILE DOWNLOAD
-              if (p.startsWith('[FILE:') && p.endsWith(')')) {
-                  const content = p.substring(6, p.lastIndexOf(')')); // Remove '[FILE: ' and ')'
-                  const parts = content.split('](');
-                  if (parts.length >= 2) {
-                      return <FileDownloadCard key={idx} label={parts[0].trim()} url={parts[1].trim()} />;
+              // 1. FILE DOWNLOAD: [FILE: ...](...)
+              if (p.includes('[FILE:')) {
+                  const match = p.match(/\[FILE:\s*(.*?)\]\((.*?)\)/);
+                  if (match) return <FileDownloadCard key={idx} label={match[1]} url={match[2]} />;
+              }
+
+              // 2. PROJECT CARD: [PROJECT: ...]
+              if (p.includes('[PROJECT:')) {
+                  // Clean format: Remove [PROJECT: and ] at end
+                  const rawContent = p.replace('[PROJECT:', '').replace(/\]$/, '').trim();
+                  // Split by pipe, but handle potential extra pipes in description safely
+                  const parts = rawContent.split('|').map((s: string) => s.trim());
+                  
+                  if (parts.length >= 3) {
+                      const title = parts[0];
+                      const url = parts[1];
+                      const image = parts[2];
+                      // Join remaining parts as description (in case desc has pipes)
+                      const desc = parts.slice(3).join('|');
+                      
+                      return <ProjectEmbedCard key={idx} title={title} url={url} image={image} desc={desc} />;
                   }
               }
 
-              // 2. PROJECT CARD: [PROJECT: Title | Url | Image | Desc]
-              if (p.startsWith('[PROJECT:') && p.endsWith(']')) {
-                  const content = p.substring(9, p.length - 1); // Remove '[PROJECT:' and ']'
-                  // Use a limit on split to allow description to contain pipes if necessary, though simpler to just split all
-                  const parts = content.split('|').map(s => s.trim());
-                  if (parts.length >= 4) {
-                      return <ProjectEmbedCard key={idx} title={parts[0]} url={parts[1]} image={parts[2]} desc={parts.slice(3).join('|')} />;
-                  }
-              }
-
-              // 3. PRODUCT CARD: [PRODUCT: Name | Price | Image | Desc]
-              if (p.startsWith('[PRODUCT:') && p.endsWith(']')) {
-                  const content = p.substring(9, p.length - 1);
-                  const parts = content.split('|').map(s => s.trim());
-                  if (parts.length >= 4) {
-                      return <ProductEmbedCard key={idx} name={parts[0]} price={parts[1]} image={parts[2]} desc={parts.slice(3).join('|')} />;
+              // 3. PRODUCT CARD: [PRODUCT: ...]
+              if (p.includes('[PRODUCT:')) {
+                  const rawContent = p.replace('[PRODUCT:', '').replace(/\]$/, '').trim();
+                  const parts = rawContent.split('|').map((s: string) => s.trim());
+                  
+                  if (parts.length >= 3) {
+                      const name = parts[0];
+                      const price = parts[1];
+                      const image = parts[2];
+                      const desc = parts.slice(3).join('|');
+                      
+                      return <ProductEmbedCard key={idx} name={name} price={price} image={image} desc={desc} />;
                   }
               }
               

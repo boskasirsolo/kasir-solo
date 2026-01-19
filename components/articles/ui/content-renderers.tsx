@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileText, HardDrive, Download, ArrowRight, ShoppingCart, MessageCircle, ExternalLink, Layers, Globe, Smartphone } from 'lucide-react';
+import { FileText, HardDrive, Download, ArrowRight, ShoppingCart, MessageCircle, ExternalLink, Layers, Globe, Smartphone, Monitor } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { optimizeImage, formatRupiah } from '../../../utils';
 import { renderFormattedText } from '../utils';
@@ -16,47 +16,55 @@ export const FileDownloadCard: React.FC<{ label: string, url: string }> = ({ lab
 };
 
 export const ProjectEmbedCard: React.FC<{ title: string, url: string, image: string, desc: string }> = ({ title, url, image, desc }) => {
-    return (
-        <div className="my-12 group relative rounded-2xl overflow-hidden bg-brand-dark border border-white/10 hover:border-brand-orange/50 transition-all shadow-2xl">
-            {/* Background Image with Overlay */}
-            <div className="absolute inset-0 z-0">
-                <img 
-                    src={optimizeImage(image, 800)} 
-                    alt={title} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-40 group-hover:opacity-20" 
-                    loading="lazy" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/90 to-brand-black/40"></div>
-            </div>
+    // Detect internal vs external link
+    const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
+    const LinkComponent = isInternal ? Link : 'a';
+    const linkProps = isInternal ? { to: url } : { href: url, target: '_blank', rel: 'noreferrer' };
 
-            <div className="relative z-10 flex flex-col md:flex-row gap-6 p-6 md:p-8 items-center">
-                {/* Thumbnail */}
-                <div className="w-full md:w-48 aspect-video md:aspect-square rounded-xl overflow-hidden border border-white/20 shadow-lg shrink-0 group-hover:border-brand-orange/50 transition-colors">
+    return (
+        <div className="my-10 group relative rounded-2xl overflow-hidden bg-brand-dark border border-white/10 hover:border-brand-orange/50 transition-all shadow-lg hover:shadow-neon">
+            {/* Background Glow Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-brand-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            
+            <div className="flex flex-col md:flex-row h-full">
+                {/* Image Section */}
+                <div className="w-full md:w-2/5 relative h-56 md:h-auto overflow-hidden bg-black shrink-0 border-b md:border-b-0 md:border-r border-white/5">
                     <img 
-                        src={optimizeImage(image, 400)} 
+                        src={optimizeImage(image, 600)} 
                         alt={title} 
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100" 
+                        loading="lazy" 
                     />
+                    <div className="absolute top-3 left-3 flex gap-2">
+                        <span className="bg-black/70 backdrop-blur-md text-brand-orange border border-brand-orange/30 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider flex items-center gap-1">
+                            <Layers size={10} /> Studi Kasus
+                        </span>
+                    </div>
+                    {/* Overlay Gradient on Mobile */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent md:hidden opacity-90"></div>
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 text-center md:text-left">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/30 text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-3">
-                        <Layers size={12} /> Studi Kasus
-                    </div>
-                    <h4 className="text-xl md:text-2xl font-display font-bold text-white mb-3 group-hover:text-brand-orange transition-colors leading-tight">
+                {/* Content Section */}
+                <div className="p-6 md:p-8 flex flex-col justify-center w-full md:w-3/5 relative z-10">
+                    <h4 className="text-xl font-display font-bold text-white mb-3 group-hover:text-brand-orange transition-colors leading-tight">
                         {title}
                     </h4>
-                    <p className="text-sm text-gray-400 leading-relaxed mb-6 line-clamp-3">
+                    <p className="text-sm text-gray-400 leading-relaxed mb-6 line-clamp-2 md:line-clamp-3">
                         {desc}
                     </p>
                     
-                    <Link 
-                        to={url} 
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-brand-orange text-white rounded-xl text-xs font-bold border border-white/10 hover:border-brand-orange transition-all group/btn shadow-lg hover:shadow-neon"
-                    >
-                        BEDAH PROJECT <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform"/>
-                    </Link>
+                    <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
+                        <span className="text-[10px] text-gray-500 font-mono uppercase">
+                            MKS Portfolio Asset
+                        </span>
+                        {/* @ts-ignore */}
+                        <LinkComponent 
+                            {...linkProps} 
+                            className="inline-flex items-center gap-2 px-5 py-2 bg-white/5 hover:bg-brand-orange text-white rounded-lg text-xs font-bold border border-white/10 hover:border-brand-orange transition-all group/btn shadow-lg"
+                        >
+                            BEDAH PROJECT <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform"/>
+                        </LinkComponent>
+                    </div>
                 </div>
             </div>
         </div>
