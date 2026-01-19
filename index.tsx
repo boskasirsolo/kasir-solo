@@ -28,6 +28,9 @@ const ContactPage = lazy(() => import('./pages/contact').then(module => ({ defau
 const AdminPage = lazy(() => import('./pages/admin')); 
 const CheckoutPage = lazy(() => import('./pages/checkout').then(module => ({ default: module.CheckoutPage })));
 const InnovationPage = lazy(() => import('./pages/innovation').then(module => ({ default: module.InnovationPage })));
+// NEW: Dapur SPPG Page
+const DapurSppgPage = lazy(() => import('./pages/dapur-sppg').then(module => ({ default: module.DapurSppgPage })));
+
 const WebsiteServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.WebsiteServicePage })));
 const WebAppServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.WebAppServicePage })));
 const SeoServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.SeoServicePage })));
@@ -274,7 +277,10 @@ const AppContent = () => {
             <Route path="/career" element={<CareerPage jobs={jobs} />} />
             <Route path="/contact" element={<ContactPage config={config} />} /> 
             <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} config={config} />} />
-            <Route path="/innovation" element={<InnovationPage config={config} />} />
+            <Route path="/inovasi" element={<InnovationPage config={config} />} />
+            <Route path="/inovasi/sibos" element={<InnovationPage config={config} />} />
+            <Route path="/inovasi/qalam" element={<InnovationPage config={config} />} />
+            <Route path="/inovasi/dapur-sppg-mbg" element={<DapurSppgPage config={config} />} />
             <Route path="/admin" element={
                 <AdminPage 
                     session={session}

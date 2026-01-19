@@ -9,7 +9,6 @@ export const NAV_ITEMS: NavItem[] = [
     children: [
       { id: 'about', label: 'Profil Perusahaan' },
       { id: 'about/vision', label: 'Visi & Misi' }, 
-      { id: 'innovation', label: 'Inovasi Aplikasi (SaaS)' },
       { id: 'career', label: 'Rekrutmen' },
       { id: 'gallery', label: 'Klien & Portfolio' },
       { id: 'contact', label: 'Hubungi Gue' },
@@ -21,9 +20,17 @@ export const NAV_ITEMS: NavItem[] = [
     children: [
       { id: 'shop', label: 'Hardware Kasir (POS)' },
       { id: 'services/website', label: 'Jasa Pembuatan Website' },
-      { id: 'services/webapp', label: 'Custom Web App' },
+      { id: 'services/webapp', label: 'Custom Web App (Jasa)' },
       { id: 'services/seo', label: 'Optimasi SEO & Traffic' },
-      // { id: 'services/maintenance', label: 'Maintenance & Security' }, // HIDDEN TEMPORARILY
+    ]
+  },
+  {
+    id: 'inovasi',
+    label: 'Inovasi (Produk)',
+    children: [
+        { id: 'inovasi/sibos', label: 'SIBOS (Smart Kasir)' },
+        { id: 'inovasi/qalam', label: 'QALAM (Sekolah)' },
+        { id: 'inovasi/dapur-sppg-mbg', label: 'DAPUR SPPG (MBG) 🆕' },
     ]
   },
   { 
