@@ -49,19 +49,24 @@ export const ServiceHero = ({
 };
 
 export const FeatureGrid = ({ features }: { features: { title: string, desc: string, icon: any }[] }) => (
-  <section className="py-16 bg-brand-dark">
+  <section className="py-12 md:py-16 bg-brand-dark overflow-hidden">
     <div className="container mx-auto px-4">
-      <div className="grid md:grid-cols-3 gap-8">
+      {/* MOBILE: Horizontal Scroll Snap | DESKTOP: Grid */}
+      <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-8 overflow-x-auto md:overflow-visible pb-6 md:pb-0 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 custom-scrollbar-hide">
         {features.map((f, i) => (
-          <Card key={i} className="p-8 bg-brand-card/50 border border-white/5 hover:border-brand-orange/30 group transition-all duration-300">
+          <Card key={i} className="min-w-[85vw] md:min-w-0 snap-center p-6 md:p-8 bg-brand-card/50 border border-white/5 hover:border-brand-orange/30 group transition-all duration-300 h-full">
             <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center text-brand-orange mb-4 border border-white/10 group-hover:bg-brand-orange group-hover:text-white transition-colors">
               <f.icon size={24} />
             </div>
-            <h3 className="text-xl font-bold text-white mb-3 group-hover:text-brand-orange transition-colors">{f.title}</h3>
+            <h3 className="text-lg md:text-xl font-bold text-white mb-3 group-hover:text-brand-orange transition-colors">{f.title}</h3>
             <p className="text-gray-400 text-sm leading-relaxed">{f.desc}</p>
           </Card>
         ))}
       </div>
+      {/* Mobile Indicator Hint */}
+      <p className="md:hidden text-center text-[10px] text-gray-500 mt-2 font-bold uppercase tracking-widest animate-pulse">
+        &larr; Geser Untuk Info Lebih &rarr;
+      </p>
     </div>
   </section>
 );

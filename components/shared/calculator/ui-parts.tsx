@@ -28,26 +28,26 @@ export const BaseOptionItem: React.FC<{
 }) => (
     <div 
         onClick={onSelect}
-        className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${
+        className={`p-3 md:p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group active:scale-[0.98] ${
             isSelected 
             ? 'bg-brand-orange/10 border-brand-orange shadow-neon-text/20' 
             : 'bg-white/5 border-white/5 hover:border-white/20'
         }`}
     >
         <div className="flex-1 min-w-0 pr-4">
-            <div className="flex items-center gap-3 mb-1">
-                <h5 className={`font-bold truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>{option.label}</h5>
+            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 mb-1">
+                <h5 className={`font-bold text-sm md:text-base truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>{option.label}</h5>
                 <button 
                     onClick={(e) => { e.stopPropagation(); onDetail(); }}
-                    className="text-[10px] font-bold text-brand-orange hover:text-white underline decoration-brand-orange/30 underline-offset-2 transition-colors shrink-0"
+                    className="text-[10px] font-bold text-brand-orange hover:text-white underline decoration-brand-orange/30 underline-offset-2 transition-colors shrink-0 w-fit"
                 >
                     pelajari detail
                 </button>
             </div>
-            {option.desc && <p className="text-xs text-gray-500 truncate">{option.desc}</p>}
+            {option.desc && <p className="text-[10px] md:text-xs text-gray-500 truncate">{option.desc}</p>}
         </div>
         <div className="text-right shrink-0">
-            <span className={`text-sm font-bold ${isSelected ? 'text-brand-orange' : 'text-gray-500'}`}>
+            <span className={`text-xs md:text-sm font-bold ${isSelected ? 'text-brand-orange' : 'text-gray-500'}`}>
                 {formatRupiah(option.price)}
             </span>
         </div>
@@ -67,7 +67,7 @@ export const AddonOptionItem: React.FC<{
 }) => (
     <div 
         onClick={onToggle}
-        className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 group ${
+        className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 group active:scale-[0.98] ${
             isSelected
             ? 'bg-blue-500/10 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.2)]' 
             : 'bg-white/5 border-white/5 hover:border-white/20'
@@ -79,8 +79,11 @@ export const AddonOptionItem: React.FC<{
             {isSelected && <Check size={12} />}
         </div>
         <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-2">
                 <h5 className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>{option.label}</h5>
+            </div>
+            <div className="flex items-center justify-between mt-1">
+                <p className="text-[10px] text-gray-500">{formatRupiah(option.price)}</p>
                 <button 
                     onClick={(e) => { e.stopPropagation(); onDetail(); }}
                     className="text-[9px] font-bold text-brand-orange hover:text-white underline decoration-brand-orange/30 underline-offset-2 transition-colors shrink-0"
@@ -88,7 +91,6 @@ export const AddonOptionItem: React.FC<{
                     detail
                 </button>
             </div>
-            <p className="text-[10px] text-gray-500">{formatRupiah(option.price)}</p>
         </div>
     </div>
 );
@@ -128,7 +130,7 @@ export const ResultCard = ({
     };
 
     return (
-        <div className="lg:col-span-5 p-6 md:p-10 bg-black/40 flex flex-col h-full">
+        <div className="lg:col-span-5 p-4 md:p-10 bg-black/40 flex flex-col h-full" id="result-card-anchor">
             <div className="bg-brand-card border border-white/10 rounded-2xl relative overflow-hidden shadow-2xl flex flex-col transition-all duration-500 h-fit">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                     <Calculator size={120} />

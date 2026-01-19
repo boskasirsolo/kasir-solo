@@ -4,7 +4,8 @@ import { CalculatorProps } from './types';
 import { useCalculator } from './logic';
 import { CalcHeader, BaseOptionItem, AddonOptionItem, ResultCard } from './ui-parts';
 import { SideDrawer } from './side-drawer';
-import { Zap, ShieldCheck } from 'lucide-react';
+import { Zap, ShieldCheck, ArrowDown } from 'lucide-react';
+import { formatRupiah } from '../../../utils';
 
 interface ExtendedCalculatorProps extends CalculatorProps {
     waNumber?: string;
@@ -64,12 +65,20 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
       });
   };
 
+  const scrollToResult = () => {
+      const el = document.getElementById('result-card-anchor');
+      if (el) {
+          const y = el.getBoundingClientRect().top + window.pageYOffset - 100;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+  };
+
   // Grouping Addons Logic
   const basicAddons = data.addons.filter(a => !a.tier || a.tier === 'basic');
   const advancedAddons = data.addons.filter(a => a.tier === 'advanced');
 
   return (
-    <div className="bg-brand-dark border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
+    <div className="bg-brand-dark border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative pb-20 lg:pb-0">
       <div className="absolute top-0 right-0 w-64 h-64 bg-brand-orange/5 rounded-full blur-[80px] pointer-events-none"></div>
       
       <CalcHeader title={data.title} subtitle={data.subtitle} />
@@ -77,7 +86,7 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
       <div className="grid lg:grid-cols-12 relative z-10">
          
          {/* LEFT: OPTIONS */}
-         <div className="lg:col-span-7 p-6 md:p-10 space-y-10 border-b lg:border-b-0 lg:border-r border-white/5">
+         <div className="lg:col-span-7 p-4 md:p-10 space-y-8 md:space-y-10 border-b lg:border-b-0 lg:border-r border-white/5">
             
             {/* STEP 1: BASE */}
             <div>
@@ -159,6 +168,22 @@ export const InvestmentSimulator = ({ data, serviceName, waNumber, serviceSlug }
             isCapturing={isCapturing}
          />
 
+      </div>
+
+      {/* MOBILE STICKY FOOTER (Total + Action) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[1000] p-4 bg-brand-dark/95 backdrop-blur-xl border-t border-white/10 shadow-[0_-5px_20px_rgba(0,0,0,0.5)] animate-fade-in">
+          <div className="flex justify-between items-center gap-4">
+              <div>
+                  <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Estimasi Total</p>
+                  <p className="text-lg font-display font-bold text-white leading-none mt-1">{formatRupiah(calculation.total.min)}</p>
+              </div>
+              <button 
+                onClick={scrollToResult}
+                className="px-6 py-3 bg-brand-orange text-white rounded-xl font-bold shadow-neon flex items-center gap-2 text-sm"
+              >
+                  LANJUT <ArrowDown size={16} />
+              </button>
+          </div>
       </div>
 
       {activeDetailItem && (
