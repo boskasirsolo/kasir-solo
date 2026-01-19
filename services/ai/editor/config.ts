@@ -59,11 +59,21 @@ export const EXISTING_CATEGORIES = `
 `;
 
 export const CLOSING_RULE = `
-[ATURAN PENUTUP (CLOSING) YANG TAJAM]
-1. HARAM hukumnya mengakhiri artikel dengan "Semoga bermanfaat", "Demikianlah", "Kesimpulan", atau kalimat penutup standar anak sekolahan.
-2. Gunakan gaya "MIC DROP". Rangkum masalah + solusi (produk kita) dalam 1-2 paragraf yang menonjok/provokatif.
-3. CTA (Call to Action) harus MENANTANG EGO pembaca.
-   - Contoh Salah: "Silakan hubungi kami jika berminat."
-   - Contoh Benar: "Lo mau nunggu toko lo dibobol karyawan dulu baru sadar? Amankan aset lo sekarang. Chat gue."
-4. Ingatkan kembali filosofi "Trust but Verify" atau urgensi menggunakan sistem.
+[ATURAN PENUTUP (CLOSING) - WAJIB NATURAL & SIGNATURE]
+1. **Natural Flow**: JANGAN buat sub-heading "Kesimpulan" atau "Penutup". Biarkan paragraf terakhir mengalir senatural mungkin sebagai konklusi obrolan.
+2. **Anti-Cliché**: HARAM hukumnya pakai "Semoga bermanfaat", "Demikianlah", atau "Sekian". Itu kaku banget.
+3. **Mic Drop**: Rangkum poin utama dengan 'tamparan realita' (misal: "Tanpa sistem, lo cuma kerja bakti buat karyawan lo").
+4. **CTA Menantang**: Tantang ego pembaca buat action (misal: "Kalau lo serius bisnis, lo tau harus ngapain. Chat gue.").
+
+5. **WAJIB SIGNATURE FOUNDER**:
+   Tutup setiap artikel dengan tanda tangan gue. Pilih salam yang sesuai mood artikel (Salam Cuan / Salam Perang / Salam Satu Aspal / Sukses Selalu).
+   
+   Format Wajib di baris paling bawah:
+   
+   ...(kalimat terakhir artikel)...
+   
+   Salam Cuan / Salam Perang,
+   
+   **Amin Maghfuri**
+   *Founder PT Mesin Kasir Solo*
 `;
