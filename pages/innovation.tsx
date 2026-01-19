@@ -183,10 +183,10 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
               </div>
 
               <SmartLinkButton 
-                url={config.sibosUrl} 
+                url={config.sibos_url} 
                 defaultLabel="Akses SIBOS" 
                 waLabel="Antri SIBOS Sekarang" 
-                waNumber={config.whatsappNumber}
+                waNumber={config.whatsapp_number}
               />
             </div>
 
@@ -281,10 +281,10 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <SmartLinkButton 
-                  url={config.qalamUrl} 
+                  url={config.qalam_url} 
                   defaultLabel="Akses QALAM" 
                   waLabel="Daftar Antrian QALAM" 
-                  waNumber={config.whatsappNumber}
+                  waNumber={config.whatsapp_number}
                 />
               </div>
             </div>
@@ -314,16 +314,16 @@ export const InnovationPage = ({ config }: { config: SiteConfig }) => {
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <SmartLinkButton 
-                        url={config.sibosUrl} 
+                        url={config.sibos_url} 
                         defaultLabel="Amankan Slot SIBOS" 
                         waLabel="Antri SIBOS" 
-                        waNumber={config.whatsappNumber}
+                        waNumber={config.whatsapp_number}
                     />
                     <SmartLinkButton 
-                        url={config.qalamUrl} 
+                        url={config.qalam_url} 
                         defaultLabel="Amankan Slot QALAM" 
                         waLabel="Antri QALAM" 
-                        waNumber={config.whatsappNumber}
+                        waNumber={config.whatsapp_number}
                     />
                 </div>
                 <p className="mt-8 text-xs text-gray-500 uppercase tracking-widest">

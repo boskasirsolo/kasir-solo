@@ -26,8 +26,8 @@ const RegulationBadge = ({ text }: { text: string }) => (
 );
 
 export const DapurSppgPage = ({ config }: { config: SiteConfig }) => {
-    // UPDATED: Use config.dapurSppgUrl if available, fallback to WA
-    const targetUrl = config.dapurSppgUrl || `https://wa.me/${config.whatsappNumber}?text=Halo, saya tertarik dengan Sistem Dapur SPPG.`;
+    // UPDATED: Use config.dapur_sppg_url if available, fallback to WA
+    const targetUrl = config.dapur_sppg_url || `https://wa.me/${config.whatsapp_number}?text=Halo, saya tertarik dengan Sistem Dapur SPPG.`;
 
     return (
         <div className="bg-black text-gray-200 animate-fade-in font-sans selection:bg-green-500 selection:text-black">

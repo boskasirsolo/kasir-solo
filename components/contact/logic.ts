@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { supabase, normalizePhone } from '../../utils';
 import { ContactFormState } from './types';
@@ -46,7 +47,7 @@ export const useContactLogic = (config: SiteConfig) => {
         }
     
         const text = `*HALO MAS AMIN (VIA WEB)*%0A%0ANama: ${form.name}%0ANo HP: ${cleanPhone || form.phone}%0ATopik: ${form.category}%0A%0APesan:%0A${form.message}`;
-        const url = `https://wa.me/${config.whatsappNumber}?text=${text}`;
+        const url = `https://wa.me/${config.whatsapp_number}?text=${text}`;
         window.open(url, '_blank');
     };
 

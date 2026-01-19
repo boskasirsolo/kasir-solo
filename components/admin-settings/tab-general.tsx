@@ -39,11 +39,11 @@ export const TabGeneral = ({ config, setConfig, state, actions }: TabProps) => {
                 <div className="space-y-4">
                     <div>
                         <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Judul Besar (H1)</label>
-                        <Input value={config.heroTitle} onChange={(e) => setConfig({...config, heroTitle: e.target.value})} />
+                        <Input value={config.hero_title} onChange={(e) => setConfig({...config, hero_title: e.target.value})} />
                     </div>
                     <div>
                         <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Sub-Judul</label>
-                        <TextArea value={config.heroSubtitle} onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})} className="h-24" />
+                        <TextArea value={config.hero_subtitle} onChange={(e) => setConfig({...config, hero_subtitle: e.target.value})} className="h-24" />
                     </div>
                 </div>
             </SettingsSection>
@@ -74,20 +74,20 @@ export const TabGeneral = ({ config, setConfig, state, actions }: TabProps) => {
                 <div className="bg-brand-dark/30 p-4 rounded-xl border border-white/5 space-y-4">
                     <div className="md:col-span-2">
                         <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Nama Resmi (PT)</label>
-                        <Input value={config.companyLegalName || ''} onChange={(e) => setConfig({...config, companyLegalName: e.target.value})} placeholder="PT MESIN KASIR SOLO" />
+                        <Input value={config.company_legal_name || ''} onChange={(e) => setConfig({...config, company_legal_name: e.target.value})} placeholder="PT MESIN KASIR SOLO" />
                     </div>
                     <div className="grid md:grid-cols-3 gap-4">
                         <div>
                             <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">NIB</label>
-                            <Input value={config.nibNumber || ''} onChange={(e) => setConfig({...config, nibNumber: e.target.value})} placeholder="1234xxx" />
+                            <Input value={config.nib_number || ''} onChange={(e) => setConfig({...config, nib_number: e.target.value})} placeholder="1234xxx" />
                         </div>
                         <div>
                             <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">SK Kemenkumham (AHU)</label>
-                            <Input value={config.ahuNumber || ''} onChange={(e) => setConfig({...config, ahuNumber: e.target.value})} placeholder="AHU-xxx" />
+                            <Input value={config.ahu_number || ''} onChange={(e) => setConfig({...config, ahu_number: e.target.value})} placeholder="AHU-xxx" />
                         </div>
                         <div>
                             <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">NPWP</label>
-                            <Input value={config.npwpNumber || ''} onChange={(e) => setConfig({...config, npwpNumber: e.target.value})} placeholder="XX.XXX..." />
+                            <Input value={config.npwp_number || ''} onChange={(e) => setConfig({...config, npwp_number: e.target.value})} placeholder="XX.XXX..." />
                         </div>
                     </div>
                 </div>

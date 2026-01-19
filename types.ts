@@ -107,39 +107,40 @@ export interface FAQ {
   created_at?: string;
 }
 
+// RAW MAPPING: Sesuai kolom database Supabase
 export interface SiteConfig {
-  heroTitle: string;
-  heroSubtitle: string;
-  aboutImage?: string; 
-  founderPortrait?: string;
-  sibosUrl?: string; 
-  qalamUrl?: string; 
-  dapurSppgUrl?: string; 
-  companyLegalName?: string;
-  nibNumber?: string;
-  ahuNumber?: string;
-  npwpNumber?: string;
-  whatsappNumber?: string;
-  emailAddress?: string; 
-  addressSolo?: string;
-  addressBlora?: string;
-  mapSoloLink?: string; 
-  mapBloraLink?: string; 
-  mapSoloEmbed?: string; 
-  mapBloraEmbed?: string; 
-  instagramUrl?: string;
-  facebookUrl?: string;
-  youtubeUrl?: string;
-  tiktokUrl?: string;
-  linkedinUrl?: string;
-  googleAnalyticsId?: string;
-  googleSearchConsoleCode?: string;
-  googleMerchantId?: string;
+  hero_title: string;
+  hero_subtitle: string;
+  about_image?: string; 
+  founder_portrait?: string;
+  sibos_url?: string; 
+  qalam_url?: string; 
+  dapur_sppg_url?: string; 
+  company_legal_name?: string;
+  nib_number?: string;
+  ahu_number?: string;
+  npwp_number?: string;
+  whatsapp_number?: string;
+  email_address?: string; 
+  address_solo?: string;
+  address_blora?: string;
+  map_solo_link?: string; 
+  map_blora_link?: string; 
+  map_solo_embed?: string; 
+  map_blora_embed?: string; 
+  instagram_url?: string;
+  facebook_url?: string;
+  youtube_url?: string;
+  tiktok_url?: string;
+  linkedin_url?: string;
+  google_analytics_id?: string;
+  google_search_console_code?: string;
+  google_merchant_id?: string;
   timezone?: string;
-  quotaOnsiteMax?: number;
-  quotaOnsiteUsed?: number;
-  quotaDigitalMax?: number;
-  quotaDigitalUsed?: number;
+  quota_onsite_max?: number;
+  quota_onsite_used?: number;
+  quota_digital_max?: number;
+  quota_digital_used?: number;
 }
 
 // --- NEW SERVICE TYPES ---

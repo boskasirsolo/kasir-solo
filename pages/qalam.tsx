@@ -86,7 +86,7 @@ const InfraCard = ({ icon: Icon, title, desc }: { icon: any, title: string, desc
 
 export const QalamPage = ({ config }: { config: SiteConfig }) => {
     // Gunakan URL dari config (Dashboard Admin -> Sosial & Link -> Link QALAM)
-    const targetUrl = config.qalamUrl || `https://wa.me/${config.whatsappNumber}`;
+    const targetUrl = config.qalam_url || `https://wa.me/${config.whatsapp_number}`;
 
     return (
         <div className="bg-[#050505] text-gray-200 font-sans selection:bg-amber-500 selection:text-black">

@@ -18,7 +18,7 @@ import { DownloadItem, Tutorial, FAQ, SiteConfig } from '../types';
 
 export const SupportPage = ({ config }: { config?: SiteConfig }) => {
   const { state, computed, actions } = useSupportLogic();
-  const waNumber = config?.whatsappNumber || "6282325103336";
+  const waNumber = config?.whatsapp_number || "6282325103336";
 
   const handleFileClick = (item: DownloadItem) => {
       actions.setSelectedDownload(item);

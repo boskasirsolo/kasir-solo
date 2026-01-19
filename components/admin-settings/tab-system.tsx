@@ -3,7 +3,7 @@ import React from 'react';
 import { TabProps } from './types';
 import { SettingsSection } from './ui-atoms';
 import { Input, Button } from '../ui';
-import { Clock, BarChart, Monitor, Rss, Copy, ExternalLink, Check, ShoppingBag, Download, AlertTriangle } from 'lucide-react';
+import { Clock, BarChart, Monitor, Rss, Copy, ExternalLink, Check, ShoppingBag, AlertTriangle } from 'lucide-react';
 import { INDONESIA_TIMEZONES, CONFIG } from '../../utils';
 
 export const TabSystem = ({ config, setConfig }: TabProps) => {
@@ -97,8 +97,8 @@ export const TabSystem = ({ config, setConfig }: TabProps) => {
                     <div>
                         <label className="text-[10px] text-gray-500 font-bold mb-1 block flex items-center gap-1"><BarChart size={12}/> Google Analytics 4 (GA4)</label>
                         <Input 
-                            value={config.googleAnalyticsId || ''} 
-                            onChange={(e) => setConfig({...config, googleAnalyticsId: e.target.value})} 
+                            value={config.google_analytics_id || ''} 
+                            onChange={(e) => setConfig({...config, google_analytics_id: e.target.value})} 
                             placeholder="G-XXXXXXXXXX" 
                             className="font-mono text-xs"
                         />
@@ -106,8 +106,8 @@ export const TabSystem = ({ config, setConfig }: TabProps) => {
                     <div>
                         <label className="text-[10px] text-gray-500 font-bold mb-1 block flex items-center gap-1"><Monitor size={12}/> Search Console Verification</label>
                         <Input 
-                            value={config.googleSearchConsoleCode || ''} 
-                            onChange={(e) => setConfig({...config, googleSearchConsoleCode: e.target.value})} 
+                            value={config.google_search_console_code || ''} 
+                            onChange={(e) => setConfig({...config, google_search_console_code: e.target.value})} 
                             placeholder="Paste meta tag content here" 
                             className="font-mono text-xs"
                         />
@@ -115,8 +115,8 @@ export const TabSystem = ({ config, setConfig }: TabProps) => {
                     <div>
                         <label className="text-[10px] text-gray-500 font-bold mb-1 block flex items-center gap-1"><ShoppingBag size={12}/> Google Merchant Center ID</label>
                         <Input 
-                            value={config.googleMerchantId || ''} 
-                            onChange={(e) => setConfig({...config, googleMerchantId: e.target.value})} 
+                            value={config.google_merchant_id || ''} 
+                            onChange={(e) => setConfig({...config, google_merchant_id: e.target.value})} 
                             placeholder="1234567890" 
                             className="font-mono text-xs"
                         />

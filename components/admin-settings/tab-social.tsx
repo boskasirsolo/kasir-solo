@@ -13,15 +13,15 @@ export const TabSocial = ({ config, setConfig }: TabProps) => {
                     <div className="grid md:grid-cols-2 gap-4">
                         <div>
                             <label className="text-[10px] text-gray-500 font-bold mb-1 block">Link SIBOS (App)</label>
-                            <Input value={config.sibosUrl || ''} onChange={(e) => setConfig({...config, sibosUrl: e.target.value})} />
+                            <Input value={config.sibos_url || ''} onChange={(e) => setConfig({...config, sibos_url: e.target.value})} />
                         </div>
                         <div>
                             <label className="text-[10px] text-gray-500 font-bold mb-1 block">Link QALAM (School)</label>
-                            <Input value={config.qalamUrl || ''} onChange={(e) => setConfig({...config, qalamUrl: e.target.value})} />
+                            <Input value={config.qalam_url || ''} onChange={(e) => setConfig({...config, qalam_url: e.target.value})} />
                         </div>
                         <div>
                             <label className="text-[10px] text-gray-500 font-bold mb-1 block">Link Dapur SPPG (MBG)</label>
-                            <Input value={config.dapurSppgUrl || ''} onChange={(e) => setConfig({...config, dapurSppgUrl: e.target.value})} placeholder="https://..." />
+                            <Input value={config.dapur_sppg_url || ''} onChange={(e) => setConfig({...config, dapur_sppg_url: e.target.value})} placeholder="https://..." />
                         </div>
                     </div>
                 </div>
@@ -29,15 +29,22 @@ export const TabSocial = ({ config, setConfig }: TabProps) => {
 
             <SettingsSection title="Jejaring Sosial">
                 <div className="grid gap-3">
-                    {['Instagram', 'Facebook', 'YouTube', 'TikTok', 'LinkedIn'].map((platform) => {
-                        const key = `${platform.toLowerCase()}Url` as keyof SiteConfig;
+                    {[
+                        { label: 'Instagram', key: 'instagram_url' },
+                        { label: 'Facebook', key: 'facebook_url' },
+                        { label: 'YouTube', key: 'youtube_url' },
+                        { label: 'TikTok', key: 'tiktok_url' },
+                        { label: 'LinkedIn', key: 'linkedin_url' }
+                    ].map((platform) => {
                         return (
-                            <div key={platform}>
-                                <label className="text-[10px] text-gray-500 font-bold mb-1 block">{platform} URL</label>
+                            <div key={platform.key}>
+                                <label className="text-[10px] text-gray-500 font-bold mb-1 block">{platform.label} URL</label>
                                 <Input 
-                                    value={String(config[key] || '')} 
-                                    onChange={(e) => setConfig({...config, [key]: e.target.value})} 
-                                    placeholder={`https://${platform.toLowerCase()}.com/...`}
+                                    // @ts-ignore
+                                    value={String(config[platform.key] || '')} 
+                                    // @ts-ignore
+                                    onChange={(e) => setConfig({...config, [platform.key]: e.target.value})} 
+                                    placeholder={`https://${platform.label.toLowerCase()}.com/...`}
                                     className="text-xs"
                                 />
                             </div>

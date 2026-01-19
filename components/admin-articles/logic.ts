@@ -59,7 +59,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const [form, setForm] = useState<ArticleFormState>({
         id: null, title: '', excerpt: '', content: '', category: '',
         readTime: '5 min read', imagePreview: '', uploadFile: null, 
-        author: "Amin Maghfuri", authorAvatar: config?.founderPortrait || "",
+        author: "Amin Maghfuri", authorAvatar: config?.founder_portrait || "",
         uploadAuthorFile: null, status: 'draft', scheduled_for: '',
         type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '',
         date: new Date().toLocaleDateString('id-ID'),
@@ -67,12 +67,12 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     });
 
     const resetForm = () => {
-        setForm({ id: null, title: '', excerpt: '', content: '', category: '', author: "Amin Maghfuri", authorAvatar: config?.founderPortrait || '', uploadAuthorFile: null, readTime: '5 min read', imagePreview: '', uploadFile: null, status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '', date: new Date().toLocaleDateString('id-ID'), targetWordCount: 1000, related_pillars: [], generationContext: '', targetCityId: 0 });
+        setForm({ id: null, title: '', excerpt: '', content: '', category: '', author: "Amin Maghfuri", authorAvatar: config?.founder_portrait || '', uploadAuthorFile: null, readTime: '5 min read', imagePreview: '', uploadFile: null, status: 'draft', scheduled_for: '', type: 'cluster', pillar_id: 0, cluster_ideas: [], scheduleStart: '', date: new Date().toLocaleDateString('id-ID'), targetWordCount: 1000, related_pillars: [], generationContext: '', targetCityId: 0 });
         setAiStep(0); setSelectedTones(['gritty']); setActiveMobilePane('CONFIG');
     };
 
     const handleEditClick = (item: Article) => {
-        setForm({ ...item, id: item.id, authorAvatar: item.author_avatar || config?.founderPortrait || '', imagePreview: item.image, targetWordCount: item.content ? item.content.split(/\s+/).length : 1000, scheduled_for: item.scheduled_for ? (config?.timezone ? convertUTCToLocal(item.scheduled_for, config.timezone) : item.scheduled_for.slice(0, 16)) : '' } as any);
+        setForm({ ...item, id: item.id, authorAvatar: item.author_avatar || config?.founder_portrait || '', imagePreview: item.image, targetWordCount: item.content ? item.content.split(/\s+/).length : 1000, scheduled_for: item.scheduled_for ? (config?.timezone ? convertUTCToLocal(item.scheduled_for, config.timezone) : item.scheduled_for.slice(0, 16)) : '' } as any);
         setAiStep(2); setActiveMobilePane('WRITE');
     };
 
@@ -97,7 +97,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
             const dbData = {
                 title: form.title, excerpt: form.excerpt || '', content: form.content || '', category: form.category || 'General', 
-                author: "Amin Maghfuri", author_avatar: config?.founderPortrait || null, read_time: form.readTime, 
+                author: "Amin Maghfuri", author_avatar: config?.founder_portrait || null, read_time: form.readTime, 
                 image_url: finalImageUrl, status: (form.status || 'draft').toLowerCase() as any,
                 scheduled_for: finalScheduledFor, type: form.type, 
                 pillar_id: (form.type === 'cluster' && form.pillar_id && form.pillar_id > 0) ? form.pillar_id : null,

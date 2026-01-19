@@ -55,10 +55,10 @@ export const TabQuota = ({ config, setConfig }: TabProps) => {
                         colorClass="bg-red-500 text-red-500"
                         title="Slot Setup On-Site (Fisik)"
                         desc="Muncul di Halaman SEO Kota & Landing Page."
-                        maxVal={config.quotaOnsiteMax}
-                        usedVal={config.quotaOnsiteUsed}
-                        onMaxChange={(e: any) => setConfig({...config, quotaOnsiteMax: parseInt(e.target.value)})}
-                        onUsedChange={(e: any) => setConfig({...config, quotaOnsiteUsed: parseInt(e.target.value)})}
+                        maxVal={config.quota_onsite_max}
+                        usedVal={config.quota_onsite_used}
+                        onMaxChange={(e: any) => setConfig({...config, quota_onsite_max: parseInt(e.target.value)})}
+                        onUsedChange={(e: any) => setConfig({...config, quota_onsite_used: parseInt(e.target.value)})}
                     />
                     
                     <QuotaCard 
@@ -66,10 +66,10 @@ export const TabQuota = ({ config, setConfig }: TabProps) => {
                         colorClass="bg-blue-500 text-blue-500"
                         title="Slot Proyek Digital (Web/App)"
                         desc="Muncul di Halaman Services & Homepage."
-                        maxVal={config.quotaDigitalMax}
-                        usedVal={config.quotaDigitalUsed}
-                        onMaxChange={(e: any) => setConfig({...config, quotaDigitalMax: parseInt(e.target.value)})}
-                        onUsedChange={(e: any) => setConfig({...config, quotaDigitalUsed: parseInt(e.target.value)})}
+                        maxVal={config.quota_digital_max}
+                        usedVal={config.quota_digital_used}
+                        onMaxChange={(e: any) => setConfig({...config, quota_digital_max: parseInt(e.target.value)})}
+                        onUsedChange={(e: any) => setConfig({...config, quota_digital_used: parseInt(e.target.value)})}
                     />
                 </div>
 

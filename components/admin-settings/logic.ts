@@ -11,19 +11,19 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
         isGenerating: false,
         magicContext: '',
         aboutImageFile: null,
-        aboutImagePreview: config.aboutImage || '',
+        aboutImagePreview: config.about_image || '',
         founderImageFile: null,
-        founderImagePreview: config.founderPortrait || ''
+        founderImagePreview: config.founder_portrait || ''
     });
 
     // Sync initial props
     useEffect(() => {
         setState(prev => ({
             ...prev,
-            aboutImagePreview: config.aboutImage || '',
-            founderImagePreview: config.founderPortrait || ''
+            aboutImagePreview: config.about_image || '',
+            founderImagePreview: config.founder_portrait || ''
         }));
-    }, [config.aboutImage, config.founderPortrait]);
+    }, [config.about_image, config.founder_portrait]);
 
     const setActiveTab = (id: SettingsTabId) => setState(p => ({ ...p, activeTab: id }));
     const setMagicContext = (val: string) => setState(p => ({ ...p, magicContext: val }));
@@ -62,7 +62,8 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
             });
             const data = JSON.parse(result.text || "{}");
             if (data.heroTitle) {
-                setConfig({ ...config, heroTitle: data.heroTitle, heroSubtitle: data.heroSubtitle });
+                // Keep snake_case keys in state
+                setConfig({ ...config, hero_title: data.heroTitle, hero_subtitle: data.heroSubtitle });
             }
         } catch (e: any) {
             alert("Gagal generate: " + e.message);
@@ -74,10 +75,10 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
     const saveSettings = async () => {
         if (!supabase) return alert("Koneksi Database bermasalah.");
 
-        if (config.whatsappNumber) {
-            const cleanPhone = normalizePhone(config.whatsappNumber);
+        if (config.whatsapp_number) {
+            const cleanPhone = normalizePhone(config.whatsapp_number);
             if (!cleanPhone) return alert("Format WhatsApp Error. Gunakan 08xx atau 628xx.");
-            config.whatsappNumber = cleanPhone;
+            config.whatsapp_number = cleanPhone;
         }
 
         setState(p => ({ ...p, isSaving: true }));
@@ -121,50 +122,20 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                 }
             }
 
-            setConfig({ ...config, aboutImage: finalAboutImage, founderPortrait: finalFounderImage });
-
-            // MAPPING DATA: Frontend (Camel) -> Database (Snake Case)
-            // THIS IS THE CRITICAL PART: founder_portrait (Snake) <-> finalFounderImage (Camel)
-            const dbData = {
-                id: 1,
-                hero_title: config.heroTitle,
-                hero_subtitle: config.heroSubtitle,
-                about_image: finalAboutImage,
-                founder_portrait: finalFounderImage, // <--- EXPLICIT MAPPING HERE
-                
-                // STANDARD: Map camelCase State to snake_case DB
-                sibos_url: config.sibosUrl,
-                qalam_url: config.qalamUrl,
-                dapur_sppg_url: config.dapurSppgUrl,
-                
-                company_legal_name: config.companyLegalName,
-                nib_number: config.nibNumber,
-                ahu_number: config.ahuNumber,
-                npwp_number: config.npwpNumber,
-                whatsapp_number: config.whatsappNumber,
-                email_address: config.emailAddress,
-                address_solo: config.addressSolo,
-                address_blora: config.addressBlora,
-                map_solo_link: config.mapSoloLink,
-                map_blora_link: config.mapBloraLink,
-                map_solo_embed: config.mapSoloEmbed,
-                map_blora_embed: config.mapBloraEmbed,
-                instagram_url: config.instagramUrl,
-                facebook_url: config.facebookUrl,
-                youtube_url: config.youtubeUrl,
-                tiktok_url: config.tiktokUrl,
-                linkedin_url: config.linkedinUrl,
-                google_analytics_id: config.googleAnalyticsId,
-                google_search_console_code: config.googleSearchConsoleCode,
-                google_merchant_id: config.googleMerchantId,
-                timezone: config.timezone,
-                quota_onsite_max: config.quotaOnsiteMax,
-                quota_onsite_used: config.quotaOnsiteUsed,
-                quota_digital_max: config.quotaDigitalMax,
-                quota_digital_used: config.quotaDigitalUsed
+            // UPDATE STATE & DB (Raw Flow)
+            const finalConfig = { 
+                ...config, 
+                about_image: finalAboutImage, 
+                founder_portrait: finalFounderImage 
             };
+            
+            setConfig(finalConfig);
 
-            const { error } = await supabase.from('site_settings').upsert(dbData);
+            // DIRECT UPSERT (No Mapping needed because interface matches DB)
+            const { error } = await supabase.from('site_settings').upsert({
+                id: 1,
+                ...finalConfig
+            });
 
             if (error) {
                 console.error("Supabase Error:", error);

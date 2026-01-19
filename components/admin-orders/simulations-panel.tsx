@@ -10,7 +10,7 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return alert("Pop-up diblokir!");
 
-    const companyName = config.companyLegalName || "PT MESIN KASIR SOLO";
+    const companyName = config.company_legal_name || "PT MESIN KASIR SOLO";
     const dateStr = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
     
     // Grouping for PDF

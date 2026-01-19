@@ -13,8 +13,8 @@ export const useHomeLogic = (
   const featuredGallery = useMemo(() => gallery.slice(0, 6), [gallery]);
 
   // Kalkulasi Kuota (Safe Guard jika config undefined/null)
-  const onsiteRemaining = Math.max(0, (config?.quotaOnsiteMax || 4) - (config?.quotaOnsiteUsed || 0));
-  const digitalRemaining = Math.max(0, (config?.quotaDigitalMax || 2) - (config?.quotaDigitalUsed || 0));
+  const onsiteRemaining = Math.max(0, (config?.quota_onsite_max || 4) - (config?.quota_onsite_used || 0));
+  const digitalRemaining = Math.max(0, (config?.quota_digital_max || 2) - (config?.quota_digital_used || 0));
 
   // Helper: Match Testimonial to Project
   const getTestimonialForProject = (projectTitle: string) => {

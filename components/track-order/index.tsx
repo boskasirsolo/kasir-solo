@@ -12,7 +12,7 @@ export const TrackOrderModule = ({ config }: { config?: SiteConfig }) => {
     const { orderId, setOrderId, loading, result, error, handleSearch, copyToClipboard } = useTrackOrder();
     const location = useLocation();
     const navigate = useNavigate();
-    const waNumber = config?.whatsappNumber;
+    const waNumber = config?.whatsapp_number;
 
     return (
         <div className="animate-fade-in pt-24 pb-20">

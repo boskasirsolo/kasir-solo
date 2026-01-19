@@ -71,7 +71,7 @@ const FEATURES = [
 // --- MAIN PAGE COMPONENT ---
 export const SibosPage = ({ config }: { config: SiteConfig }) => {
     // Gunakan URL dari config (Dashboard Admin -> Sosial & Link -> Link SIBOS)
-    const targetUrl = config.sibosUrl || `https://wa.me/${config.whatsappNumber}`;
+    const targetUrl = config.sibos_url || `https://wa.me/${config.whatsapp_number}`;
 
     const scrollToFeatures = () => {
         const element = document.getElementById('features-grid');

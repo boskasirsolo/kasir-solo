@@ -83,27 +83,27 @@ const AppContent = () => {
   const [jobs, setJobs] = useState<JobOpening[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Config State (with Fallbacks)
+  // Config State (Raw Snake Case)
   const [config, setConfig] = useState<SiteConfig>({
-    heroTitle: "MESIN KASIR SOLO",
-    heroSubtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM.",
-    aboutImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200", 
-    founderPortrait: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800",
-    sibosUrl: "https://sibos.id",
-    qalamUrl: "https://qalam.id",
-    dapurSppgUrl: "https://dapursppg.id",
-    companyLegalName: "PT MESIN KASIR SOLO",
-    whatsappNumber: "6282325103336",
-    emailAddress: "admin@kasirsolo.my.id",
-    addressSolo: "Perum Graha Tiara 2 B1, Kartasura",
-    addressBlora: "Gumiring 04/04, Banjarejo",
-    mapSoloLink: "https://maps.google.com/?q=Perum+Graha+Tiara+2+B1+Kartasura",
-    mapBloraLink: "https://maps.google.com/?q=Gumiring+Banjarejo+Blora",
-    quotaOnsiteMax: 4,
-    quotaOnsiteUsed: 3,
-    quotaDigitalMax: 2,
-    quotaDigitalUsed: 0,
-    googleMerchantId: ""
+    hero_title: "MESIN KASIR SOLO",
+    hero_subtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM.",
+    about_image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200", 
+    founder_portrait: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800",
+    sibos_url: "https://sibos.id",
+    qalam_url: "https://qalam.id",
+    dapur_sppg_url: "https://dapursppg.id",
+    company_legal_name: "PT MESIN KASIR SOLO",
+    whatsapp_number: "6282325103336",
+    email_address: "admin@kasirsolo.my.id",
+    address_solo: "Perum Graha Tiara 2 B1, Kartasura",
+    address_blora: "Gumiring 04/04, Banjarejo",
+    map_solo_link: "https://maps.google.com/?q=Perum+Graha+Tiara+2+B1+Kartasura",
+    map_blora_link: "https://maps.google.com/?q=Gumiring+Banjarejo+Blora",
+    quota_onsite_max: 4,
+    quota_onsite_used: 3,
+    quota_digital_max: 2,
+    quota_digital_used: 0,
+    google_merchant_id: ""
   });
 
   const getCurrentPageId = () => location.pathname.substring(1) || 'home';
@@ -142,45 +142,9 @@ const AppContent = () => {
         try {
             const { data: settingsData } = await supabase.from('site_settings').select('*').limit(1).maybeSingle();
             
+            // DIRECT MAPPING: DB (snake_case) -> State (snake_case)
             if (settingsData) {
-                setConfig(prev => ({
-                    ...prev,
-                    // STANDARD MAPPING: DB (snake_case) -> APP (CamelCase)
-                    heroTitle: settingsData.hero_title || prev.heroTitle,
-                    heroSubtitle: settingsData.hero_subtitle || prev.heroSubtitle,
-                    aboutImage: settingsData.about_image || prev.aboutImage,
-                    founderPortrait: settingsData.founder_portrait || prev.founderPortrait,
-                    
-                    sibosUrl: settingsData.sibos_url || prev.sibosUrl,
-                    qalamUrl: settingsData.qalam_url || prev.qalamUrl,
-                    dapurSppgUrl: settingsData.dapur_sppg_url || prev.dapurSppgUrl,
-                    
-                    companyLegalName: settingsData.company_legal_name || prev.companyLegalName,
-                    nibNumber: settingsData.nib_number || prev.nibNumber,
-                    ahuNumber: settingsData.ahu_number || prev.ahuNumber,
-                    npwpNumber: settingsData.npwp_number || prev.npwpNumber,
-                    whatsappNumber: settingsData.whatsapp_number || prev.whatsappNumber,
-                    emailAddress: settingsData.email_address || prev.emailAddress,
-                    addressSolo: settingsData.address_solo || prev.addressSolo,
-                    addressBlora: settingsData.address_blora || prev.addressBlora,
-                    mapSoloLink: settingsData.map_solo_link || prev.mapSoloLink,
-                    mapBloraLink: settingsData.map_blora_link || prev.mapBloraLink,
-                    mapSoloEmbed: settingsData.map_solo_embed || prev.mapSoloEmbed,
-                    mapBloraEmbed: settingsData.map_blora_embed || prev.mapBloraEmbed,
-                    instagramUrl: settingsData.instagram_url || prev.instagramUrl,
-                    facebookUrl: settingsData.facebook_url || prev.facebookUrl,
-                    youtubeUrl: settingsData.youtube_url || prev.youtubeUrl,
-                    tiktokUrl: settingsData.tiktok_url || prev.tiktokUrl,
-                    linkedinUrl: settingsData.linkedin_url || prev.linkedinUrl,
-                    googleAnalyticsId: settingsData.google_analytics_id || prev.googleAnalyticsId,
-                    googleSearchConsoleCode: settingsData.google_search_console_code || prev.googleSearchConsoleCode,
-                    googleMerchantId: settingsData.google_merchant_id || prev.googleMerchantId,
-                    timezone: settingsData.timezone || prev.timezone,
-                    quotaOnsiteMax: settingsData.quota_onsite_max ?? prev.quotaOnsiteMax,
-                    quotaOnsiteUsed: settingsData.quota_onsite_used ?? prev.quotaOnsiteUsed,
-                    quotaDigitalMax: settingsData.quota_digital_max ?? prev.quotaDigitalMax,
-                    quotaDigitalUsed: settingsData.quota_digital_used ?? prev.quotaDigitalUsed
-                }));
+                setConfig(settingsData);
                 injectGoogleTags(settingsData.google_analytics_id, settingsData.google_search_console_code);
             }
 

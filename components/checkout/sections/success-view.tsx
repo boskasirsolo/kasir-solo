@@ -20,7 +20,7 @@ export const SuccessView = ({
         alert("Nomor rekening disalin!");
     };
 
-    const waNumber = config?.whatsappNumber || "6282325103336";
+    const waNumber = config?.whatsapp_number || "6282325103336";
     const waLink = `https://wa.me/${waNumber}?text=Halo Admin PT Mesin Kasir Solo, saya sudah transfer untuk Order ID #${order.id} sebesar ${formatRupiah(order.total)}. Berikut bukti transfernya...`;
 
     return (

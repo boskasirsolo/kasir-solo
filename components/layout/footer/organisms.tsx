@@ -23,27 +23,27 @@ export const BrandColumn = ({
     </p>
     
     {/* LEGALITAS SECTION - High Contrast Fix */}
-    {(config.nibNumber || config.ahuNumber || config.npwpNumber) && (
+    {(config.nib_number || config.ahu_number || config.npwp_number) && (
       <div className="bg-white/5 border border-white/10 rounded-lg p-3 text-xs space-y-1">
-         {config.companyLegalName && (
+         {config.company_legal_name && (
             <div className="flex items-center gap-2 text-white font-bold mb-1">
                <BadgeCheck size={14} className="text-blue-400" />
-               {config.companyLegalName}
+               {config.company_legal_name}
             </div>
          )}
-         {config.ahuNumber && (
+         {config.ahu_number && (
             <div className="flex justify-between text-gray-400">
-               <span>AHU:</span> <span className="font-mono text-gray-300">{config.ahuNumber}</span>
+               <span>AHU:</span> <span className="font-mono text-gray-300">{config.ahu_number}</span>
             </div>
          )}
-         {config.nibNumber && (
+         {config.nib_number && (
             <div className="flex justify-between text-gray-400">
-               <span>NIB:</span> <span className="font-mono text-gray-300">{config.nibNumber}</span>
+               <span>NIB:</span> <span className="font-mono text-gray-300">{config.nib_number}</span>
             </div>
          )}
-         {config.npwpNumber && (
+         {config.npwp_number && (
             <div className="flex justify-between text-gray-400">
-               <span>NPWP:</span> <span className="font-mono text-gray-300">{config.npwpNumber}</span>
+               <span>NPWP:</span> <span className="font-mono text-gray-300">{config.npwp_number}</span>
             </div>
          )}
       </div>

@@ -18,10 +18,10 @@ export const handlePrintInvoice = (order: Order, items: OrderItem[], config: Sit
     if (!printWindow) return alert("Pop-up diblokir. Izinkan pop-up untuk mencetak invoice.");
 
     const invoiceDate = new Date(order.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-    const companyName = config.companyLegalName || "PT MESIN KASIR SOLO";
-    const companyAddress = config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura, Sukoharjo";
-    const companyPhone = config.whatsappNumber ? (config.whatsappNumber.startsWith('62') ? '+' + config.whatsappNumber : config.whatsappNumber) : "+62 823 2510 3336";
-    const companyEmail = config.emailAddress || "admin@kasirsolo.my.id";
+    const companyName = config.company_legal_name || "PT MESIN KASIR SOLO";
+    const companyAddress = config.address_solo || "Perum Graha Tiara 2 B1, Kartasura, Sukoharjo";
+    const companyPhone = config.whatsapp_number ? (config.whatsapp_number.startsWith('62') ? '+' + config.whatsapp_number : config.whatsapp_number) : "+62 823 2510 3336";
+    const companyEmail = config.email_address || "admin@kasirsolo.my.id";
 
     const html = `
     <!DOCTYPE html>

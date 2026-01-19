@@ -9,7 +9,7 @@ import { SiteConfig } from '../../types';
 export const LegalPage = ({ config }: { config?: SiteConfig }) => {
   const { type } = useParams();
   const navigate = useNavigate();
-  const waNumber = config?.whatsappNumber || "6282325103336";
+  const waNumber = config?.whatsapp_number || "6282325103336";
 
   // Scroll to top when tab changes
   useEffect(() => {

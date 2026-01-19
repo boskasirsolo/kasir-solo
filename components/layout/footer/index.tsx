@@ -24,7 +24,6 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
     { label: 'Inovasi Aplikasi', action: () => setPage('innovation') },
     { label: 'Jasa Website', action: () => setPage('services/website') },
     { label: 'Jasa SEO', action: () => setPage('services/seo') },
-    // { label: 'Maintenance', action: () => setPage('services/maintenance') }, // HIDDEN TEMPORARILY
   ];
 
   const companyLinks = [
@@ -36,11 +35,11 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
   ];
 
   const socialLinks = [
-    { icon: Instagram, url: config.instagramUrl, label: "Instagram" },
-    { icon: Facebook, url: config.facebookUrl, label: "Facebook" },
-    { icon: Youtube, url: config.youtubeUrl, label: "YouTube" },
-    { icon: Linkedin, url: config.linkedinUrl, label: "LinkedIn" },
-    { icon: Video, url: config.tiktokUrl, label: "TikTok" },
+    { icon: Instagram, url: config.instagram_url, label: "Instagram" },
+    { icon: Facebook, url: config.facebook_url, label: "Facebook" },
+    { icon: Youtube, url: config.youtube_url, label: "YouTube" },
+    { icon: Linkedin, url: config.linkedin_url, label: "LinkedIn" },
+    { icon: Video, url: config.tiktok_url, label: "TikTok" },
   ];
 
   return (
@@ -68,26 +67,26 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
             <ContactItem 
               icon={MapPin}
               label="KANTOR LEGAL"
-              value={config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura"}
-              onClick={() => window.open(config.mapSoloLink, '_blank')}
+              value={config.address_solo || "Perum Graha Tiara 2 B1, Kartasura"}
+              onClick={() => window.open(config.map_solo_link, '_blank')}
             />
             <ContactItem 
               icon={MapPin}
               label="KANTOR OPERASIONAL"
-              value={config.addressBlora || "Gumiring 04/04, Banjarejo"}
-              onClick={() => window.open(config.mapBloraLink, '_blank')}
+              value={config.address_blora || "Gumiring 04/04, Banjarejo"}
+              onClick={() => window.open(config.map_blora_link, '_blank')}
             />
             <ContactItem 
               icon={Phone}
               label="HOTLINE (24/7)"
-              value={config.whatsappNumber ? (config.whatsappNumber.startsWith('62') ? `+${config.whatsappNumber}` : config.whatsappNumber) : "0823 2510 3336"}
-              onClick={() => window.open(`https://wa.me/${config.whatsappNumber}`, '_blank')}
+              value={config.whatsapp_number ? (config.whatsapp_number.startsWith('62') ? `+${config.whatsapp_number}` : config.whatsapp_number) : "0823 2510 3336"}
+              onClick={() => window.open(`https://wa.me/${config.whatsapp_number}`, '_blank')}
             />
             <ContactItem 
               icon={Mail}
               label="EMAIL RESMI"
-              value={config.emailAddress || "admin@kasirsolo.my.id"}
-              onClick={() => window.location.href = `mailto:${config.emailAddress}`}
+              value={config.email_address || "admin@kasirsolo.my.id"}
+              onClick={() => window.location.href = `mailto:${config.email_address}`}
             />
           </ul>
         </div>

@@ -64,8 +64,8 @@ const ServicePageWrapper = ({
     const steps = dbData?.steps || fallbackSteps;
     const calcData = dbData?.calc_data || fallbackCalc;
 
-    const max = config?.quotaDigitalMax || 2;
-    const used = config?.quotaDigitalUsed || 0;
+    const max = config?.quota_digital_max || 2;
+    const used = config?.quota_digital_used || 0;
     const remaining = Math.max(0, max - used);
 
     // FILTER RELATED PROJECTS
@@ -190,7 +190,7 @@ const ServicePageWrapper = ({
             calcData={calcData}
             calcServiceName={title + " " + highlight}
             steps={steps}
-            waNumber={config?.whatsappNumber}
+            waNumber={config?.whatsapp_number}
             serviceSlug={slug}
             narrativeContent={renderNarrative()}
             relatedProjects={relatedProjects} // Pass filtered projects

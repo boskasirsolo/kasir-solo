@@ -7,9 +7,9 @@ import { optimizeImage } from '../../../utils';
 export const OfficePreview = ({ config }: { config?: SiteConfig }) => (
     <section className="relative w-full h-[400px] md:h-[600px] overflow-hidden group border-t border-white/5">
         <div className="absolute inset-0 bg-brand-dark flex items-center justify-center">
-            {config?.aboutImage ? (
+            {config?.about_image ? (
                 <img 
-                    src={optimizeImage(config.aboutImage, 1200)} 
+                    src={optimizeImage(config.about_image, 1200)} 
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-60 group-hover:opacity-80"
                     alt="Kantor PT Mesin Kasir Solo" 
                     loading="lazy"

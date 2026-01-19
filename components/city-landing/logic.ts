@@ -9,8 +9,8 @@ export const useCityLogic = ({ citySlug, config }: CityLogicProps) => {
     const [citiesList, setCitiesList] = useState<CityData[]>(TARGET_CITIES as CityData[]);
 
     // Quota Calculation
-    const onsiteMax = config?.quotaOnsiteMax || 4;
-    const onsiteUsed = config?.quotaOnsiteUsed || 0;
+    const onsiteMax = config?.quota_onsite_max || 4;
+    const onsiteUsed = config?.quota_onsite_used || 0;
     
     const quotaInfo: QuotaInfo = {
         max: onsiteMax,

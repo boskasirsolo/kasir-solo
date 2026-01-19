@@ -13,12 +13,12 @@ export const AboutStory = ({ config }: { config?: SiteConfig }) => {
     useEffect(() => {
         // If config has a founder portrait, try to use it.
         // If it's empty/null, use default.
-        if (config?.founderPortrait && config.founderPortrait.length > 5) {
-            setImgSrc(config.founderPortrait);
+        if (config?.founder_portrait && config.founder_portrait.length > 5) {
+            setImgSrc(config.founder_portrait);
         } else {
             setImgSrc(DEFAULT_IMAGE);
         }
-    }, [config?.founderPortrait]);
+    }, [config?.founder_portrait]);
 
     const handleImgError = () => {
         // If the current image fails (broken link from DB), revert to default

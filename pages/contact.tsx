@@ -7,7 +7,7 @@ import { useContactLogic, ContactItem, FaqAccordion, MapEmbed, ContactForm } fro
 export const ContactPage = ({ config }: { config: SiteConfig }) => {
   const { form, setForm, handleShadowCapture, handleSubmit } = useContactLogic(config);
 
-  const email = config.emailAddress || "admin@kasirsolo.my.id";
+  const email = config.email_address || "admin@kasirsolo.my.id";
 
   const getDisplayPhone = (num?: string) => {
       if (!num) return "0823 2510 3336";
@@ -41,16 +41,16 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                   <ContactItem 
                      icon={Coffee} 
                      title="Konsultasi Strategi (Gratis)" 
-                     value={getDisplayPhone(config.whatsappNumber)} 
+                     value={getDisplayPhone(config.whatsapp_number)} 
                      sub="Mau curhat bisnis? Langsung WA aja."
-                     action={() => window.open(`https://wa.me/${config.whatsappNumber}`, '_blank')}
+                     action={() => window.open(`https://wa.me/${config.whatsapp_number}`, '_blank')}
                   />
                   <ContactItem 
                      icon={LifeBuoy} 
                      title="Jalur Darurat (Teknis)" 
                      value="Prioritas 24 Jam" 
                      sub="Khusus kalau kasir error pas toko lagi rame."
-                     action={() => window.open(`https://wa.me/${config.whatsappNumber}?text=URGENT%20SUPPORT:%20Kasir%20saya%20bermasalah.`, '_blank')}
+                     action={() => window.open(`https://wa.me/${config.whatsapp_number}?text=URGENT%20SUPPORT:%20Kasir%20saya%20bermasalah.`, '_blank')}
                   />
                   <ContactItem 
                      icon={Mail} 
@@ -69,7 +69,7 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                   <div className="group relative h-48 bg-gray-800 rounded-xl overflow-hidden border border-white/10 cursor-pointer">
                      <div className="absolute inset-0 z-0">
                         <MapEmbed 
-                            embedCode={config.mapSoloEmbed} 
+                            embedCode={config.map_solo_embed} 
                             title="Office Solo" 
                             fallbackImage="https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?auto=format&fit=crop&q=80&w=600"
                         />
@@ -79,22 +79,22 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                            <div>
                               <span className="text-brand-orange font-bold text-xs uppercase tracking-widest bg-black/80 px-2 py-1 rounded backdrop-blur-sm shadow-lg">SOLO RAYA (HQ)</span>
                               <p className="text-white font-bold text-lg mt-2 leading-tight drop-shadow-md">Markas Legal</p>
-                              <p className="text-gray-200 text-xs line-clamp-2 mt-1 bg-black/60 p-1 rounded inline-block">{config.addressSolo}</p>
+                              <p className="text-gray-200 text-xs line-clamp-2 mt-1 bg-black/60 p-1 rounded inline-block">{config.address_solo}</p>
                            </div>
-                           {!config.mapSoloEmbed && (
+                           {!config.map_solo_embed && (
                                <div className="bg-brand-orange p-2 rounded-full text-white shadow-lg transform group-hover:-translate-y-2 transition-transform">
                                   <MapPin size={20} />
                                </div>
                            )}
                         </div>
                      </div>
-                     <a href={config.mapSoloLink} target="_blank" rel="noreferrer" className="absolute inset-0 z-10" aria-label="Open Map"></a>
+                     <a href={config.map_solo_link} target="_blank" rel="noreferrer" className="absolute inset-0 z-10" aria-label="Open Map"></a>
                   </div>
 
                   <div className="group relative h-48 bg-gray-800 rounded-xl overflow-hidden border border-white/10 cursor-pointer">
                      <div className="absolute inset-0 z-0">
                         <MapEmbed 
-                            embedCode={config.mapBloraEmbed} 
+                            embedCode={config.map_blora_embed} 
                             title="Office Blora" 
                             fallbackImage="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600"
                         />
@@ -104,16 +104,16 @@ export const ContactPage = ({ config }: { config: SiteConfig }) => {
                            <div>
                               <span className="text-blue-400 font-bold text-xs uppercase tracking-widest bg-black/80 px-2 py-1 rounded backdrop-blur-sm shadow-lg">BLORA (WORKSHOP)</span>
                               <p className="text-white font-bold text-lg mt-2 leading-tight drop-shadow-md">Markas Operasi</p>
-                              <p className="text-gray-200 text-xs line-clamp-2 mt-1 bg-black/60 p-1 rounded inline-block">{config.addressBlora}</p>
+                              <p className="text-gray-200 text-xs line-clamp-2 mt-1 bg-black/60 p-1 rounded inline-block">{config.address_blora}</p>
                            </div>
-                           {!config.mapBloraEmbed && (
+                           {!config.map_blora_embed && (
                                <div className="bg-brand-dark border border-brand-orange text-brand-orange p-2 rounded-full shadow-lg transform group-hover:-translate-y-2 transition-transform">
                                   <MapPin size={20} />
                                </div>
                            )}
                         </div>
                      </div>
-                     <a href={config.mapBloraLink} target="_blank" rel="noreferrer" className="absolute inset-0 z-10" aria-label="Open Map"></a>
+                     <a href={config.map_blora_link} target="_blank" rel="noreferrer" className="absolute inset-0 z-10" aria-label="Open Map"></a>
                   </div>
 
                </div>

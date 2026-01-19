@@ -14,28 +14,28 @@ export const AboutLegality = ({ config }: { config?: SiteConfig }) => (
           
           <div className="bg-brand-card/50 border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 shadow-lg">
              <div className="flex-1 space-y-4 w-full">
-                {config?.companyLegalName && (
+                {config?.company_legal_name && (
                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-gray-400 text-sm">Badan Hukum</span>
-                      <span className="text-white font-bold text-sm flex items-center gap-2"><BadgeCheck size={14} className="text-blue-400"/> {config.companyLegalName}</span>
+                      <span className="text-white font-bold text-sm flex items-center gap-2"><BadgeCheck size={14} className="text-blue-400"/> {config.company_legal_name}</span>
                    </div>
                 )}
-                {config?.nibNumber && (
+                {config?.nib_number && (
                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-gray-400 text-sm">NIB (Izin Usaha)</span>
-                      <span className="text-white font-mono text-sm">{config.nibNumber}</span>
+                      <span className="text-white font-mono text-sm">{config.nib_number}</span>
                    </div>
                 )}
-                {config?.ahuNumber && (
+                {config?.ahu_number && (
                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-gray-400 text-sm">SK Kemenkumham</span>
-                      <span className="text-white font-mono text-sm">{config.ahuNumber}</span>
+                      <span className="text-white font-mono text-sm">{config.ahu_number}</span>
                    </div>
                 )}
-                {config?.npwpNumber && (
+                {config?.npwp_number && (
                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-gray-400 text-sm">NPWP Perusahaan</span>
-                      <span className="text-white font-mono text-sm">{config.npwpNumber}</span>
+                      <span className="text-white font-mono text-sm">{config.npwp_number}</span>
                    </div>
                 )}
                 <div className="pt-2">
