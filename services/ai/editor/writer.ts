@@ -3,9 +3,8 @@ import { callGeminiWithRotation } from '../core';
 import { BRAND_CONTEXT, FOUNDER_ANECDOTES, GOV_CRITIQUE_RULE, INTERNAL_LINKING_RULES, CLOSING_RULE } from './config';
 import { Taxonomy } from './taxonomy';
 
-// --- MODULE: WRITER (CONTENT GENERATION) ---
+// --- SHARED UTILS ---
 
-// Helper: Bangun persona penulis
 const buildPersona = (authorName: string) => {
     const isAmin = authorName === 'Amin Maghfuri';
     const selectedAnecdote = FOUNDER_ANECDOTES[Math.floor(Math.random() * FOUNDER_ANECDOTES.length)];
@@ -16,107 +15,57 @@ const buildPersona = (authorName: string) => {
     return "Professional ('Kami'). Trustworthy, Expert, Corporate Tone.";
 };
 
-// Helper: Bangun instruksi linking
+const buildCommonContext = (cityContext?: { name: string, type: string }, userContext?: string) => {
+    let cityInstruction = "";
+    if (cityContext) {
+        const isKandang = cityContext.type === 'Kandang';
+        cityInstruction = `
+        [LOCAL SEO STRATEGY: ${cityContext.name.toUpperCase()}]
+        - Target Audience: Business owners in ${cityContext.name}.
+        - ${isKandang ? "Mention Founder direct handling & local presence." : "Emphasize safe shipping (Wooden Crate) & Video Call Setup."}
+        `;
+    }
+    const userNotes = userContext ? `\n[USER NOTES - HIGH PRIORITY]:\n"${userContext}"\n` : "";
+    return { cityInstruction, userNotes };
+};
+
+// Helper: Build Internal Linking Instructions
 const buildLinkingInstructions = (
-    type: string, 
-    pillarContext?: { title: string, slug: string },
-    relatedPillarsData?: { title: string, slug: string }[],
-    galleryContextString?: string,
-    productContextString?: string
+    relatedPillarsData?: { title: string, slug: string }[]
 ) => {
-    let instructions = "";
+    if (!relatedPillarsData || relatedPillarsData.length === 0) return "";
+
+    let instructions = `\n[MANDATORY CROSS-LINKING STRATEGY]\n`;
+    instructions += `You MUST mention and link to the following related topics naturally within the content body (Horizontal SEO Structure):\n`;
     
-    if (type === 'cluster' && pillarContext) {
-        instructions += `\n[MANDATORY SEO REQUIREMENT]: You MUST mention the main topic "${pillarContext.title}" and link to it using this markdown format: [${pillarContext.title}](/articles/${pillarContext.slug}) within the first 2 paragraphs. This is CRITICAL for site structure.\n`;
-    }
+    relatedPillarsData.forEach(p => {
+        instructions += `- Topic: "${p.title}" -> Link: [${p.title}](/articles/${p.slug})\n`;
+    });
     
-    if (relatedPillarsData && relatedPillarsData.length > 0) {
-        instructions += `\n[MANDATORY CONTEXTUAL LINKING]: You MUST mention and link to the following related topics naturally within the content body:\n`;
-        relatedPillarsData.forEach(p => {
-            instructions += `- Topic: "${p.title}" -> Link: [${p.title}](/articles/${p.slug})\n`;
-        });
-        instructions += `Do not just list them at the end. Weave them into sentences where relevant.\n`;
-    }
-
-    if (galleryContextString) {
-        instructions += `\n[PORTFOLIO SHOWCASE STRATEGY]\nAvailable Projects:\n${galleryContextString}\nIF A PROJECT IS RELEVANT to a section: Insert a "Project Card" shortcode: [PROJECT: Name | /gallery/slug | ImageURL | Desc]\n`;
-    }
-
-    if (productContextString) {
-        instructions += `\n[PRODUCT PLACEMENT STRATEGY]\nAvailable Products:\n${productContextString}\nIF A PRODUCT IS RELEVANT to the context: Insert a "Product Card" shortcode: [PRODUCT: Name | Price | ImageURL | Desc]\n`;
-    }
-
-    instructions += `\n[SERVICE LINKS]\nAvailable Services:\n- Website: /services/website\n- WebApp: /services/webapp\n- SEO: /services/seo\n- Maintenance: /services/maintenance\nIF RELEVANT: Use Service Card shortcode: [SERVICE: ServiceName | /services/slug | Desc]\n`;
+    instructions += `Rules for linking:\n`;
+    instructions += `1. Do NOT just list them at the end.\n`;
+    instructions += `2. Weave them into sentences where relevant contextually.\n`;
+    instructions += `3. Use the exact markdown format provided.\n`;
 
     return instructions;
 };
 
-export const Writer = {
-    /**
-     * Tulis artikel utuh (Smart Router: Short vs Long)
-     */
-    writeArticle: async (
+// --- ENGINE 1: PILLAR WRITER (The Authority) ---
+// Fokus: Broad, Comprehensive, Definitive Guide, Struktur Rapi.
+
+const PillarWriter = {
+    generate: async (
         title: string,
-        tones: string[],
-        type: string,
-        authorName: string,
-        wordCount: number,
-        pillarContext?: { title: string, slug: string },
-        relatedPillarsData?: { title: string, slug: string }[],
-        galleryContextString?: string,
-        userContext?: string,
-        cityContext?: { name: string, type: string },
-        productContextString?: string
+        params: any
     ) => {
-        const pov = buildPersona(authorName);
-        const linking = buildLinkingInstructions(type, pillarContext, relatedPillarsData, galleryContextString, productContextString);
+        const pov = buildPersona(params.authorName);
+        const { cityInstruction, userNotes } = buildCommonContext(params.cityContext, params.userContext);
         
-        let cityInstruction = "";
-        if (cityContext) {
-            const isKandang = cityContext.type === 'Kandang';
-            cityInstruction = `
-            [LOCAL SEO CONTEXT - ${cityContext.name.toUpperCase()}]
-            - Target Location: ${cityContext.name}.
-            - Strategy: ${cityContext.type}.
-            ${isKandang ? 
-                "- NARRATIVE: Mention that the Founder (Amin) will personally deliver, setup, and train the user on-site in this city. Emphasis on 'Local Priority'." : 
-                "- NARRATIVE: Focus on SAFE SHIPPING (Packing Kayu + Asuransi) and dedicated PRIVATE VIDEO CALL for remote setup & training."}
-            - Integrate local keywords like "Jual Mesin Kasir di ${cityContext.name}", "Paket Kasir ${cityContext.name}".
-            `;
-        }
+        // Generate Cross-Linking Instructions
+        const linkingInstructions = buildLinkingInstructions(params.relatedPillarsData);
 
-        const userNotes = userContext ? `\n[ADDITIONAL CONTEXT FROM USER - STRICTLY FOLLOW]:\n"${userContext}"\n` : "";
-
-        // MODE 1: SHORT FORM (< 2000 Words) - Single Shot
-        if (wordCount < 2000) {
-            const prompt = `
-            Role: Expert Copywriter PT Mesin Kasir Solo.
-            Task: Write Article "${title}".
-            Length: Approx ${wordCount} words.
-            POV: ${pov}
-            Tone: ${tones.join(', ')}.
-            Structure: Use Headers #, ##, ###, Lists, Bold.
-            
-            ${linking}
-            
-            ${cityInstruction}
-            Brand Context: ${BRAND_CONTEXT}
-            ${GOV_CRITIQUE_RULE}
-            ${INTERNAL_LINKING_RULES}
-            ${CLOSING_RULE}
-            ${userNotes}
-            
-            CRITICAL RULES:
-            - WEAVE THE SHORTCODES (PRODUCT/PROJECT/SERVICE) NATURALLY INTO THE FLOW. 
-            - DO NOT JUST DUMP THEM AT THE END.
-            - Ensure headers are engaging.
-            `;
-            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            return res.text || '';
-        }
-
-        // MODE 2: LONG FORM (> 2000 Words) - Section by Section
-        const sectionsCount = Math.ceil(wordCount / 1000);
+        // Pillar Prompt Structure
+        const sectionsCount = Math.max(5, Math.ceil(params.wordCount / 800)); // Pillars need more sections
         const sections = await Taxonomy.createOutline(title, sectionsCount);
 
         let fullContent = "";
@@ -126,48 +75,122 @@ export const Writer = {
             const sectionTitle = sections[i];
             const isLastSection = i === sections.length - 1;
             
-            // --- NEW: Flow Control Logic ---
-            let flowControl = "";
-            if (isLastSection) {
-                flowControl = `
-                [SECTION TYPE: CONCLUSION & SUMMARY]
-                1. This is the FINAL section. You MUST wrap up the whole article here.
-                2. Provide a powerful summary of the main points discussed in the entire article "${title}" (Consolidate insights from previous sections).
-                3. Apply the CLOSING RULE below strictly (Mic Drop).
-                ${CLOSING_RULE}
-                `;
-            } else {
-                flowControl = `
-                [SECTION TYPE: BODY CONTENT]
-                1. This is an INTERMEDIATE section (Part ${i+1} of ${sections.length}).
-                2. CRITICAL: DO NOT WRITE A CONCLUSION, SUMMARY, OR OUTRO at the end of this section.
-                3. CRITICAL: DO NOT say "In the next section...".
-                4. Just finish the specific topic of "${sectionTitle}" and stop. Keep the flow open for the next part.
-                `;
-            }
-
-            const sectionPrompt = `
-            Role: Expert Writer. Task: Write Section ${i + 1}: ${sectionTitle} for "${title}".
-            Target: 1000 words. POV: ${pov}.
-            Context: ${BRAND_CONTEXT}
+            const prompt = `
+            [MODE: PILLAR CONTENT - THE ULTIMATE GUIDE]
+            Role: Expert Industry Authority.
+            Task: Write Section ${i + 1}/${sections.length}: "${sectionTitle}" for the article "${title}".
+            Target Word Count for this section: 800 words.
+            POV: ${pov}
+            
+            [PILLAR RULES]
+            1. Be comprehensive. Cover the "What", "Why", and "How" deeply.
+            2. Establish authority. You are defining the standard for this topic.
+            3. Structure: Use H2, H3, Bullet points for readability.
+            
+            [CONTEXT]
+            ${BRAND_CONTEXT}
             ${cityInstruction}
             ${userNotes}
-            ${INTERNAL_LINKING_RULES}
+            ${GOV_CRITIQUE_RULE}
+            ${linkingInstructions}
             
-            ${flowControl}
+            ${isLastSection ? `[FINAL SUMMARY]: Wrap up everything. ${CLOSING_RULE}` : "Do NOT conclude yet. Continue to next topic."}
+            ${i === 0 ? "Start with a strong hook defining the big problem." : `Bridge from previous: "...${previousContext.slice(-100)}..."`}
 
-            ${i === 0 ? "Start with a hook." : `Connect to previous: "...${previousContext.slice(-200)}..."`}
-            
-            ${linking}
-            
-            OUTPUT: Markdown. Use shortcodes for relevant products/projects mentioned in this section.
+            [INJECTED ASSETS]
+            ${params.galleryContextString ? `Projects: ${params.galleryContextString}` : ''}
+            ${params.productContextString ? `Products: ${params.productContextString}` : ''}
+            (Use shortcodes [PRODUCT:...] or [PROJECT:...] if relevant)
+
+            OUTPUT: Markdown.
             `;
-            
-            const secRes = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: sectionPrompt });
-            const text = secRes.text || "";
+
+            const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+            const text = res.text || "";
             fullContent += text + "\n\n";
             previousContext = text;
         }
         return fullContent;
+    }
+};
+
+// --- ENGINE 2: CLUSTER WRITER (The Supporter) ---
+// Fokus: Specific, Long-tail, Internal Linking to Pillar, Niche Problem Solving.
+
+const ClusterWriter = {
+    generate: async (
+        title: string,
+        params: any
+    ) => {
+        const pov = buildPersona(params.authorName);
+        const { cityInstruction, userNotes } = buildCommonContext(params.cityContext, params.userContext);
+        
+        // Validasi Parent Pillar
+        if (!params.pillarContext || !params.pillarContext.title) {
+            throw new Error("Cluster Content MUST have a Parent Pillar defined.");
+        }
+
+        const prompt = `
+        [MODE: CLUSTER CONTENT - SPECIFIC SUPPORT]
+        Role: Specialist Problem Solver.
+        Task: Write Article "${title}".
+        Target Word Count: ${params.wordCount} words.
+        POV: ${pov}
+
+        [THE GOLDEN RULE: PARENT LINKING]
+        You are writing a supporting article for the main pillar: "${params.pillarContext.title}".
+        **MANDATORY:** You MUST mention "${params.pillarContext.title}" and link to it using: [${params.pillarContext.title}](/articles/${params.pillarContext.slug}) 
+        Place this link NATURALLY within the first 2 paragraphs. This is crucial for SEO structure.
+
+        [CLUSTER RULES]
+        1. Be specific. Don't be broad. Solve the specific problem in the title "${title}".
+        2. Don't repeat general info found in the Pillar. Go deep into the niche details.
+        
+        [CONTEXT]
+        ${BRAND_CONTEXT}
+        ${cityInstruction}
+        ${userNotes}
+        ${INTERNAL_LINKING_RULES}
+        ${CLOSING_RULE}
+
+        [INJECTED ASSETS]
+        ${params.galleryContextString ? `Projects: ${params.galleryContextString}` : ''}
+        ${params.productContextString ? `Products: ${params.productContextString}` : ''}
+        (Use shortcodes [PRODUCT:...] or [PROJECT:...] if relevant)
+
+        OUTPUT: Markdown.
+        `;
+
+        const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+        return res.text || "";
+    }
+};
+
+// --- FACADE EXPORT ---
+
+export const Writer = {
+    writeArticle: async (
+        title: string,
+        tones: string[],
+        type: string,
+        authorName: string,
+        wordCount: number,
+        pillarContext?: { title: string, slug: string },
+        relatedPillarsData?: { title: string, slug: string }[], 
+        galleryContextString?: string,
+        userContext?: string,
+        cityContext?: { name: string, type: string },
+        productContextString?: string
+    ) => {
+        const params = {
+            tones, authorName, wordCount, pillarContext, relatedPillarsData,
+            galleryContextString, userContext, cityContext, productContextString
+        };
+
+        if (type === 'pillar') {
+            return await PillarWriter.generate(title, params);
+        } else {
+            return await ClusterWriter.generate(title, params);
+        }
     }
 };

@@ -135,37 +135,59 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             deleteItem: async (id: number) => { if(confirm("Hapus?")) { await supabase!.from('articles').delete().eq('id', id); setArticles((p: Article[]) => p.filter(a => a.id !== id)); } },
             runResearch: async (topic?: string) => { setLoading(p => ({...p, researching: true})); try { const raw = await EditorAI.researchTopics(form.type as any, topic); setKeywords(raw); setAiStep(1); } finally { setLoading(p => ({...p, researching: false})); } },
             runWrite: async () => { 
-                setLoading(p => ({ ...p, generatingText: true, progressMessage: 'Writing Article...' })); 
+                // Validation for Cluster
+                if (form.type === 'cluster' && (!form.pillar_id || form.pillar_id === 0)) {
+                    alert("⚠️ ARTIKEL CLUSTER WAJIB PILIH PILLAR INDUK!\nSilakan pilih 'Mode Cluster' di menu Konfigurasi, lalu cari dan klik salah satu judul Pillar.");
+                    setActiveMobilePane('CONFIG');
+                    return;
+                }
+
+                setLoading(p => ({ ...p, generatingText: true, progressMessage: 'AI sedang meracik konten...' })); 
                 try { 
                     // Prepare Context for AI
                     const galleryCtx = gallery.map(g => `[PROYEK: ${g.title} | SLUG: ${slugify(g.title)} | IMAGE: ${g.image_url} | DESC: ${g.description || ''}]`).join('\n');
                     const productCtx = products.map(p => `[PRODUK: ${p.name} | HARGA: ${p.price} | IMAGE: ${p.image} | DESC: ${p.description}]`).join('\n');
                     
-                    // PREPARE LINKING DATA (Fix: Send full objects, not just IDs)
+                    // PREPARE DATA FOR ENGINE
                     const parentPillar = form.pillar_id ? articles.find(a => a.id === form.pillar_id) : undefined;
-                    const parentPillarData = parentPillar ? { title: parentPillar.title, slug: slugify(parentPillar.title) } : undefined;
+                    const pillarContext = parentPillar ? { title: parentPillar.title, slug: slugify(parentPillar.title) } : undefined;
 
-                    const relatedPillarsObjects = form.related_pillars
-                        ? articles.filter(a => form.related_pillars?.includes(a.id)).map(a => ({ title: a.title, slug: slugify(a.title) }))
-                        : [];
+                    // PREPARE RELATED PILLARS (CROSS-LINKING)
+                    const relatedPillarsData = form.related_pillars
+                        .map(id => articles.find(a => a.id === id))
+                        .filter(Boolean)
+                        .map(a => ({ title: a!.title, slug: slugify(a!.title) }));
 
+                    // Execute Writer
                     const content = await EditorAI.writeArticle(
                         form.title, 
                         selectedTones, 
                         form.type, 
                         form.author, 
                         form.targetWordCount, 
-                        parentPillarData, 
-                        relatedPillarsObjects, 
+                        pillarContext, // Specific Parent Pillar Data (For Cluster)
+                        relatedPillarsData, // Related pillars (For Cross Linking in Pillar mode)
                         galleryCtx, 
                         form.generationContext, 
                         form.targetCityId ? cities.find(c => c.id === form.targetCityId) : undefined as any,
                         productCtx
                     ); 
+                    
                     const meta = await EditorAI.generateMeta(form.title, content); 
-                    setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: p.category.length > 2 ? p.category : meta.category, readTime: `${Math.ceil(content.split(/\s+/).length / 200)} min` })); 
+                    setForm(p => ({ 
+                        ...p, 
+                        content, 
+                        excerpt: meta.excerpt, 
+                        category: p.category.length > 2 ? p.category : meta.category, 
+                        readTime: `${Math.ceil(content.split(/\s+/).length / 200)} min` 
+                    })); 
+                    
                     setActiveMobilePane('WRITE'); 
-                } finally { setLoading(p => ({ ...p, generatingText: false })); } 
+                } catch(e: any) {
+                    alert("AI Error: " + e.message);
+                } finally { 
+                    setLoading(p => ({ ...p, generatingText: false })); 
+                } 
             },
             runImage: async () => { setLoading(p => ({ ...p, generatingImage: true })); try { const { url, file } = await VisionAI.generate(form.title, form.category, 'corporate'); setForm(p => ({ ...p, imagePreview: url, uploadFile: file })); } finally { setLoading(p => ({ ...p, generatingImage: false })); } },
             selectTopic: (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); },
