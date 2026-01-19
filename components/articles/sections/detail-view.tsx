@@ -56,10 +56,35 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
               if (!p) return null;
               if (p.startsWith('|') && p.includes('|')) { return <MarkdownTable key={idx} content={p} />; }
               
-              // Custom Renderers
-              const fileMatch = p.match(/^\[FILE: (.*?)\]\((.*?)\)$/); if (fileMatch) { return <FileDownloadCard key={idx} label={fileMatch[1]} url={fileMatch[2]} />; }
-              const projectMatch = p.match(/^\[PROJECT: (.*?) \| (.*?) \| (.*?) \| (.*?)\]$/); if (projectMatch) { return <ProjectEmbedCard key={idx} title={projectMatch[1]} url={projectMatch[2]} image={projectMatch[3]} desc={projectMatch[4]} />; }
-              const productMatch = p.match(/^\[PRODUCT: (.*?) \| (.*?) \| (.*?) \| (.*?)\]$/); if (productMatch) { return <ProductEmbedCard key={idx} name={productMatch[1]} price={productMatch[2]} image={productMatch[3]} desc={productMatch[4]} />; }
+              // --- CUSTOM PARSERS (ROBUST) ---
+              
+              // 1. FILE DOWNLOAD
+              if (p.startsWith('[FILE:') && p.endsWith(')')) {
+                  const content = p.substring(6, p.lastIndexOf(')')); // Remove '[FILE: ' and ')'
+                  const parts = content.split('](');
+                  if (parts.length >= 2) {
+                      return <FileDownloadCard key={idx} label={parts[0].trim()} url={parts[1].trim()} />;
+                  }
+              }
+
+              // 2. PROJECT CARD: [PROJECT: Title | Url | Image | Desc]
+              if (p.startsWith('[PROJECT:') && p.endsWith(']')) {
+                  const content = p.substring(9, p.length - 1); // Remove '[PROJECT:' and ']'
+                  // Use a limit on split to allow description to contain pipes if necessary, though simpler to just split all
+                  const parts = content.split('|').map(s => s.trim());
+                  if (parts.length >= 4) {
+                      return <ProjectEmbedCard key={idx} title={parts[0]} url={parts[1]} image={parts[2]} desc={parts.slice(3).join('|')} />;
+                  }
+              }
+
+              // 3. PRODUCT CARD: [PRODUCT: Name | Price | Image | Desc]
+              if (p.startsWith('[PRODUCT:') && p.endsWith(']')) {
+                  const content = p.substring(9, p.length - 1);
+                  const parts = content.split('|').map(s => s.trim());
+                  if (parts.length >= 4) {
+                      return <ProductEmbedCard key={idx} name={parts[0]} price={parts[1]} image={parts[2]} desc={parts.slice(3).join('|')} />;
+                  }
+              }
               
               // --- IMAGE HANDLING ---
               const imgMatch = p.match(/^!\[(.*?)\]\((.*?)\)$/);
@@ -69,7 +94,6 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
                           <img 
                               src={optimizeImage(imgMatch[2], 1200)} 
                               alt={imgMatch[1]} 
-                              // UPDATED: Limit height to 600px and use object-contain to fit long screenshots nicely
                               className="w-full h-auto max-h-[600px] object-contain"
                               loading="lazy" 
                           />
@@ -93,68 +117,48 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
 
               // --- HEADINGS (VISUAL UPGRADE H1-H10) ---
               
-              // Helper to clean content
               const getCleanContent = (prefix: string) => {
                   const content = p.replace(new RegExp(`^${prefix}\\s+`), '');
-                  const cleanText = content.replace(/\*\*/g, '');
-                  return { content, cleanText, id: cleanId(cleanText) };
+                  return { content, id: cleanId(content.replace(/\*\*/g, '')) };
               };
 
-              // H10: Tech Spec Mono
+              // Check for headings from specific to general
               if (p.startsWith('########## ')) {
                   const { content, id } = getCleanContent('##########');
                   return <div id={id} key={idx} className="deep-heading scroll-mt-32 text-xs font-mono font-bold text-gray-600 bg-black/20 p-2 rounded border border-white/5 mt-4 mb-2 heading-observer">{renderFormattedText(content)}</div>;
               }
-
-              // H9: Dotted Underline
               if (p.startsWith('######### ')) {
                   const { content, id } = getCleanContent('#########');
                   return <div id={id} key={idx} className="deep-heading scroll-mt-32 text-xs font-bold text-gray-500 underline decoration-dotted underline-offset-4 mt-4 mb-2 heading-observer">{renderFormattedText(content)}</div>;
               }
-
-              // H8: Left Border Thin
               if (p.startsWith('######## ')) {
                   const { content, id } = getCleanContent('########');
                   return <div id={id} key={idx} className="deep-heading scroll-mt-32 text-sm font-bold text-gray-400 border-l-2 border-gray-700 pl-3 italic mt-5 mb-2 heading-observer">{renderFormattedText(content)}</div>;
               }
-
-              // H7: Mini Label (Micro Heading)
               if (p.startsWith('####### ')) {
                   const { content, id } = getCleanContent('#######');
                   return <div id={id} key={idx} className="deep-heading scroll-mt-32 text-[10px] font-bold text-brand-orange uppercase tracking-[0.2em] border border-brand-orange/30 px-2 py-1 rounded-md w-fit mt-6 mb-2 heading-observer">{renderFormattedText(content)}</div>;
               }
-
-              // H6: Caption Style (Small, Gray, Italic)
               if (p.startsWith('###### ')) {
                   const { content, id } = getCleanContent('######');
                   return <h6 id={id} key={idx} className="scroll-mt-32 text-sm font-bold text-gray-500 italic border-b border-white/5 pb-1 inline-block mt-6 mb-2 heading-observer">{renderFormattedText(content)}</h6>;
               }
-
-              // H5: Label Style (Uppercase, Orange, Tracking)
               if (p.startsWith('##### ')) {
                   const { content, id } = getCleanContent('#####');
                   return <h5 id={id} key={idx} className="scroll-mt-32 text-sm font-bold text-brand-orange uppercase tracking-widest mt-8 mb-3 heading-observer flex items-center gap-2"><span className="w-1 h-3 bg-brand-orange rounded-full"></span>{renderFormattedText(content)}</h5>;
               }
-
-              // H4: Sub-section (White, Bold, Simple)
               if (p.startsWith('#### ')) {
                   const { content, id } = getCleanContent('####');
                   return <h4 id={id} key={idx} className="scroll-mt-32 text-lg font-bold text-gray-200 mt-8 mb-2 heading-observer">{renderFormattedText(content)}</h4>;
               }
-
-              // H3: Point (Bullet Dot, Medium Size)
               if (p.startsWith('### ')) { 
                   const { content, id } = getCleanContent('###');
                   return <h3 id={id} key={idx} className="scroll-mt-32 text-xl font-bold text-white mt-10 mb-3 heading-observer flex items-center gap-3"><span className="w-2 h-2 rounded-full bg-brand-orange shrink-0"></span>{renderFormattedText(content)}</h3>; 
               }
-
-              // H2: Major Section (Border Left, Large)
               if (p.startsWith('## ')) { 
                   const { content, id } = getCleanContent('##');
                   return <h2 id={id} key={idx} className="scroll-mt-32 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-red-600 mt-12 mb-6 border-l-4 border-brand-orange pl-4 heading-observer">{renderFormattedText(content)}</h2>; 
               }
-
-              // H1: Main Title (Bottom Border, Very Large)
               if (p.startsWith('# ')) { 
                   const { content, id } = getCleanContent('#');
                   return <h1 id={id} key={idx} className="scroll-mt-32 text-3xl md:text-4xl font-display font-bold text-white mt-16 mb-8 pb-4 border-b border-white/10 heading-observer">{renderFormattedText(content)}</h1>; 

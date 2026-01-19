@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileText, HardDrive, Download, ArrowRight, ShoppingCart, MessageCircle, ExternalLink } from 'lucide-react';
+import { FileText, HardDrive, Download, ArrowRight, ShoppingCart, MessageCircle, ExternalLink, Layers, Globe, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { optimizeImage, formatRupiah } from '../../../utils';
 import { renderFormattedText } from '../utils';
@@ -17,27 +17,45 @@ export const FileDownloadCard: React.FC<{ label: string, url: string }> = ({ lab
 
 export const ProjectEmbedCard: React.FC<{ title: string, url: string, image: string, desc: string }> = ({ title, url, image, desc }) => {
     return (
-        <div className="my-10 bg-brand-dark rounded-2xl border border-white/5 overflow-hidden group hover:border-brand-orange/30 transition-all shadow-lg flex flex-col md:flex-row relative">
-            <div className="absolute top-0 right-0 p-[1px] bg-gradient-to-l from-brand-orange/50 to-transparent w-32 h-px"></div>
-            
-            <div className="w-full md:w-72 h-56 md:h-auto relative bg-black shrink-0 overflow-hidden">
+        <div className="my-12 group relative rounded-2xl overflow-hidden bg-brand-dark border border-white/10 hover:border-brand-orange/50 transition-all shadow-2xl">
+            {/* Background Image with Overlay */}
+            <div className="absolute inset-0 z-0">
                 <img 
-                    src={optimizeImage(image, 600)} 
+                    src={optimizeImage(image, 800)} 
                     alt={title} 
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-40 group-hover:opacity-20" 
                     loading="lazy" 
                 />
-                <div className="absolute top-3 left-3 bg-brand-orange text-white text-[9px] font-bold px-2 py-1 rounded shadow-neon z-10 uppercase tracking-wider">Studi Kasus</div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 md:hidden"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/90 to-brand-black/40"></div>
             </div>
-            
-            <div className="p-6 flex flex-col justify-center flex-1 relative z-10">
-                <h4 className="text-xl font-bold text-white mb-2 leading-tight group-hover:text-brand-orange transition-colors line-clamp-1">{title}</h4>
-                <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-6">{desc}</p>
-                
-                <div className="flex items-center gap-4 mt-auto">
-                    <Link to={url} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold border border-white/10 hover:border-brand-orange/50 transition-all group/btn">
-                        Lihat Project <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform"/>
+
+            <div className="relative z-10 flex flex-col md:flex-row gap-6 p-6 md:p-8 items-center">
+                {/* Thumbnail */}
+                <div className="w-full md:w-48 aspect-video md:aspect-square rounded-xl overflow-hidden border border-white/20 shadow-lg shrink-0 group-hover:border-brand-orange/50 transition-colors">
+                    <img 
+                        src={optimizeImage(image, 400)} 
+                        alt={title} 
+                        className="w-full h-full object-cover" 
+                    />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 text-center md:text-left">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/30 text-brand-orange text-[10px] font-bold uppercase tracking-widest mb-3">
+                        <Layers size={12} /> Studi Kasus
+                    </div>
+                    <h4 className="text-xl md:text-2xl font-display font-bold text-white mb-3 group-hover:text-brand-orange transition-colors leading-tight">
+                        {title}
+                    </h4>
+                    <p className="text-sm text-gray-400 leading-relaxed mb-6 line-clamp-3">
+                        {desc}
+                    </p>
+                    
+                    <Link 
+                        to={url} 
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-brand-orange text-white rounded-xl text-xs font-bold border border-white/10 hover:border-brand-orange transition-all group/btn shadow-lg hover:shadow-neon"
+                    >
+                        BEDAH PROJECT <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform"/>
                     </Link>
                 </div>
             </div>
