@@ -1,7 +1,7 @@
 
 import { Product, Article, GalleryItem, Testimonial, JobOpening, SiteConfig } from '../../types';
 
-export type AdminTabId = 'analytics' | 'store' | 'crm' | 'gallery' | 'articles' | 'seo' | 'career' | 'downloads' | 'social' | 'siboy' | 'settings' | 'documentation';
+export type AdminTabId = 'analytics' | 'store' | 'crm' | 'gallery' | 'articles' | 'seo' | 'career' | 'downloads' | 'social' | 'siboy' | 'settings' | 'documentation' | 'rma';
 
 export interface MenuCategory {
     id: string;

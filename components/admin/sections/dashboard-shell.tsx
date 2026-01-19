@@ -6,7 +6,7 @@ import {
     LogOut, FileText, Briefcase, 
     BarChart, Download, Share2, Globe, Cpu, 
     Bot, BookOpen, Users, LayoutDashboard, Menu, X, ArrowUpRight,
-    Terminal, ShieldCheck, Activity, Box, Zap
+    Terminal, ShieldCheck, Activity, Box, Zap, Wrench
 } from 'lucide-react';
 import { DashboardProps, MenuCategory } from '../types';
 import { useAdminDashboard } from '../logic';
@@ -27,10 +27,11 @@ import { AdminServices } from '../../admin-services/index';
 import { SibosTrainer } from '../sibos-trainer/index';
 import { AdminDocumentation } from '../documentation/index';
 import { AdminCRM } from '../../admin-crm/index';
+import { AdminRMA } from '../../admin-rma/index';
 
 const MENU_GROUPS: MenuCategory[] = [
     { id: 'radar', label: 'Intelligence', items: ['analytics', 'crm', 'seo'] },
-    { id: 'ops', label: 'Operations', items: ['store'] },
+    { id: 'ops', label: 'Operations', items: ['store', 'rma'] },
     { id: 'content', label: 'Asset Library', items: ['articles', 'gallery', 'downloads'] },
     { id: 'growth', label: 'Expansion', items: ['social', 'career'] },
     { id: 'core', label: 'System Core', items: ['siboy', 'documentation', 'settings'] }
@@ -41,6 +42,7 @@ const ICON_MAP: Record<string, any> = {
     crm: Users,
     seo: Globe,
     store: ShoppingBag,
+    rma: Wrench,
     articles: FileText,
     gallery: Image,
     downloads: Download,
@@ -56,6 +58,7 @@ const LABEL_MAP: Record<string, string> = {
     crm: 'Sales War Room',
     seo: 'SEO Engine',
     store: 'Store Management',
+    rma: 'Garansi & Retur',
     articles: 'Article Intel',
     gallery: 'Portfolio Case',
     downloads: 'File Center',
@@ -90,6 +93,7 @@ export const DashboardShell = (props: DashboardProps) => {
                         </div>
                     </div>
                 );
+            case 'rma': return <AdminRMA />;
             case 'siboy': return <SibosTrainer />;
             case 'seo': return <AdminSEO />;
             case 'gallery': return <AdminGallery gallery={props.gallery} setGallery={props.setGallery} testimonials={props.testimonials} setTestimonials={props.setTestimonials} />;
