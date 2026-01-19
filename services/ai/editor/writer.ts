@@ -125,6 +125,27 @@ export const Writer = {
         for (let i = 0; i < sections.length; i++) {
             const sectionTitle = sections[i];
             const isLastSection = i === sections.length - 1;
+            
+            // --- NEW: Flow Control Logic ---
+            let flowControl = "";
+            if (isLastSection) {
+                flowControl = `
+                [SECTION TYPE: CONCLUSION & SUMMARY]
+                1. This is the FINAL section. You MUST wrap up the whole article here.
+                2. Provide a powerful summary of the main points discussed in the entire article "${title}" (Consolidate insights from previous sections).
+                3. Apply the CLOSING RULE below strictly (Mic Drop).
+                ${CLOSING_RULE}
+                `;
+            } else {
+                flowControl = `
+                [SECTION TYPE: BODY CONTENT]
+                1. This is an INTERMEDIATE section (Part ${i+1} of ${sections.length}).
+                2. CRITICAL: DO NOT WRITE A CONCLUSION, SUMMARY, OR OUTRO at the end of this section.
+                3. CRITICAL: DO NOT say "In the next section...".
+                4. Just finish the specific topic of "${sectionTitle}" and stop. Keep the flow open for the next part.
+                `;
+            }
+
             const sectionPrompt = `
             Role: Expert Writer. Task: Write Section ${i + 1}: ${sectionTitle} for "${title}".
             Target: 1000 words. POV: ${pov}.
@@ -132,7 +153,9 @@ export const Writer = {
             ${cityInstruction}
             ${userNotes}
             ${INTERNAL_LINKING_RULES}
-            ${isLastSection ? CLOSING_RULE : ""}
+            
+            ${flowControl}
+
             ${i === 0 ? "Start with a hook." : `Connect to previous: "...${previousContext.slice(-200)}..."`}
             
             ${linking}
