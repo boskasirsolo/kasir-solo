@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Search, PackageOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, PackageOpen, ChevronLeft, ChevronRight, Truck, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Input } from '../../ui';
 
 export const ShopHero = () => (
@@ -12,10 +13,27 @@ export const ShopHero = () => (
     <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">
       Pilih <span className="text-brand-orange">Senjata Lo.</span>
     </h2>
-    <p className="text-gray-400 text-sm md:text-lg leading-relaxed max-w-xl">
+    <p className="text-gray-400 text-sm md:text-lg leading-relaxed max-w-xl mb-6">
       Jangan asal beli murah. Ini investasi jangka panjang. <br className="hidden md:block"/>
       Pilih mesin yang tahan banting buat ngadepin ribuan transaksi.
     </p>
+    
+    <div className="flex flex-wrap gap-3">
+        <Link 
+            to="/track-order" 
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-blue-500/10 hover:border-blue-500 hover:text-blue-400 text-xs font-bold uppercase tracking-wider transition-all text-gray-400 group"
+        >
+            <Truck size={14} className="group-hover:translate-x-0.5 transition-transform" /> 
+            Lacak Pesanan
+        </Link>
+        <Link 
+            to="/legal/refund" 
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-red-500/10 hover:border-red-500 hover:text-red-500 text-xs font-bold uppercase tracking-wider transition-all text-gray-400 group"
+        >
+            <ShieldCheck size={14} /> 
+            Klaim Garansi
+        </Link>
+    </div>
   </div>
 );
 
