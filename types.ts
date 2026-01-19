@@ -175,6 +175,19 @@ export interface ServiceSimulation {
   notes?: string;
 }
 
+export interface RmaTicket {
+  id?: number;
+  created_at?: string;
+  order_id: string;
+  customer_phone: string;
+  serial_number: string;
+  issue_type: string;
+  chronology: string;
+  evidence_urls: { unboxing: string; damage: string };
+  solution_preference: string;
+  status: 'pending' | 'approved' | 'rejected' | 'received' | 'completed';
+}
+
 // --- E-Commerce Types ---
 export interface CartItem extends Product {
   quantity: number;

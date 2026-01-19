@@ -5,6 +5,7 @@ import {
   Video, Lock, CreditCard, AlertTriangle, FileSignature, 
   EyeOff, Database
 } from 'lucide-react';
+import { RefundForm } from './refund-form';
 
 // --- ATOMS ---
 export const PolicyHeader = ({ title, subtitle }: { title: string, subtitle: string }) => (
@@ -111,6 +112,15 @@ export const RefundContent = () => (
             </div>
         </div>
     </PolicySection>
+
+    {/* NEW FORM SECTION */}
+    <div className="mt-16 pt-10 border-t border-white/10">
+        <h3 className="text-2xl font-display font-bold text-white mb-4 text-center">Formulir Pengajuan Klaim</h3>
+        <p className="text-center text-gray-400 mb-8 max-w-2xl mx-auto">
+            Udah yakin masalah lo masuk kategori "Dicover" dan punya video unboxing? Silakan isi form di bawah ini.
+        </p>
+        <RefundForm />
+    </div>
   </div>
 );
 
