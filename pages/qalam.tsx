@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   Brain, Wallet, MessageCircle, ShieldCheck, Database, Printer, 
   Smartphone, BookOpen, GraduationCap, Users, FileText, 
-  ArrowRight, CheckCircle2, Lock
+  ArrowRight, CheckCircle2, Lock, Quote
 } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Button, SectionHeader } from '../components/ui';
@@ -85,7 +85,8 @@ const InfraCard = ({ icon: Icon, title, desc }: { icon: any, title: string, desc
 );
 
 export const QalamPage = ({ config }: { config: SiteConfig }) => {
-    const waLink = `https://wa.me/${config.whatsappNumber}?text=Assalamualaikum, saya tertarik untuk mencoba demo aplikasi QALAM untuk sekolah/pesantren saya.`;
+    // Gunakan URL dari config (Dashboard Admin -> Sosial & Link -> Link QALAM)
+    const targetUrl = config.qalamUrl || `https://wa.me/${config.whatsappNumber}`;
 
     return (
         <div className="bg-[#050505] text-gray-200 font-sans selection:bg-amber-500 selection:text-black">
@@ -125,10 +126,10 @@ export const QalamPage = ({ config }: { config: SiteConfig }) => {
 
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
                         <Button 
-                            onClick={() => window.open(waLink, '_blank')}
-                            className="bg-amber-600 hover:bg-amber-500 text-black px-8 py-4 shadow-[0_0_20px_rgba(245,158,11,0.3)] border-none font-bold"
+                            onClick={() => window.open(targetUrl, '_blank')}
+                            className="bg-amber-600 hover:bg-amber-500 text-black px-8 py-4 shadow-[0_0_20px_rgba(245,158,11,0.3)] border-none font-bold uppercase tracking-wide"
                         >
-                            <Smartphone size={18} className="mr-2"/> COBA LIVE DEMO APLIKASI
+                            <Smartphone size={18} className="mr-2"/> GABUNG PROGRAM INKUBASI
                         </Button>
                     </div>
                 </div>
@@ -234,26 +235,39 @@ export const QalamPage = ({ config }: { config: SiteConfig }) => {
                  </div>
             </section>
 
-            {/* ROADMAP CTA */}
-            <section className="py-20 border-t border-white/5">
-                <div className="container mx-auto px-4">
-                    <div className="bg-brand-card border border-white/10 rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px]"></div>
-                        
-                        <div className="relative z-10 max-w-xl">
-                            <div className="w-12 h-12 bg-amber-500/20 text-amber-500 rounded-xl flex items-center justify-center mb-4">
-                                <Lock size={24} />
-                            </div>
-                            <h3 className="text-2xl font-bold text-white mb-2">Butuh Fitur Lain?</h3>
-                            <p className="text-gray-400">Punya ide fitur spesifik untuk kebutuhan pondok/sekolah Anda? Sampaikan langsung kepada tim developer kami.</p>
-                        </div>
-                        
-                        <div className="relative z-10">
-                            <Button onClick={() => window.open(waLink, '_blank')} className="bg-amber-600 hover:bg-amber-500 text-black px-8 py-4 font-bold shadow-lg border-none">
-                                AJUKAN FITUR DI ROADMAP
-                            </Button>
+            {/* UNTOLD STORY SECTION (REPLACEMENT) */}
+            <section className="py-24 relative overflow-hidden bg-brand-black border-t border-white/5">
+                {/* Background Effects */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/20 via-black to-black opacity-60"></div>
+                
+                <div className="container mx-auto px-4 relative z-10 text-center">
+                    <div className="inline-block px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8">
+                        <span className="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase">THE UNTOLD STORY</span>
+                    </div>
+
+                    <h2 className="text-4xl md:text-6xl font-display font-bold text-white mb-8 leading-tight">
+                        Kehilangan Segalanya,<br/>
+                        Untuk Menemukan <span className="text-amber-500">Makna Sebenarnya.</span>
+                    </h2>
+
+                    <div className="max-w-3xl mx-auto mb-12 relative">
+                        <Quote className="absolute -top-6 -left-6 text-white/5 w-16 h-16 transform -scale-x-100" />
+                        <p className="text-xl md:text-2xl text-gray-300 italic font-light leading-relaxed relative z-10">
+                            "Kadang Tuhan harus meruntuhkan gedung tinggi yang kita banggakan, agar kita mau melihat pondasi rapuh di bawahnya."
+                        </p>
+                        <div className="mt-8 flex items-center justify-center gap-3">
+                             <div className="h-px w-12 bg-amber-500/50"></div>
+                             <p className="text-sm font-bold text-amber-500 uppercase tracking-widest">Amin Maghfuri, Founder PT Mesin Kasir Solo</p>
+                             <div className="h-px w-12 bg-amber-500/50"></div>
                         </div>
                     </div>
+
+                    <Button 
+                        onClick={() => window.open(targetUrl, '_blank')} 
+                        className="bg-amber-600 hover:bg-amber-500 text-black px-10 py-5 font-bold shadow-[0_0_30px_rgba(245,158,11,0.3)] border-none text-lg transition-transform hover:-translate-y-1"
+                    >
+                        GABUNG PROGRAM INKUBASI
+                    </Button>
                 </div>
             </section>
 
