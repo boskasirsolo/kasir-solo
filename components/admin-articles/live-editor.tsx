@@ -1,7 +1,6 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Added ArrowLeft to the imports from lucide-react
-import { Image as ImageIcon, Youtube, MoveUp, MoveDown, Trash2, GripVertical, Type, Loader2, UploadCloud, Plus, Sparkles, FileText, Download, Layers, ShoppingBag, Zap, ArrowLeft } from 'lucide-react';
+import { Image as ImageIcon, Youtube, MoveUp, MoveDown, Trash2, GripVertical, Type, Loader2, UploadCloud, Plus, Sparkles, FileText, Download, Layers, ShoppingBag, Zap, ArrowLeft, Undo, Redo, History } from 'lucide-react';
 import { uploadToSupabase, formatRupiah } from '../../utils';
 
 interface Block {
@@ -124,6 +123,13 @@ export const LiveEditor = ({
     const [hoverIndex, setHoverIndex] = useState<number | null>(null);
     const [uploading, setUploading] = useState(false);
     
+    // --- HISTORY STATE FOR UNDO/REDO ---
+    const [history, setHistory] = useState<Block[][]>([]);
+    const [historyStep, setHistoryStep] = useState(-1);
+    const isUndoing = useRef(false);
+    const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    
+    // Sync external content changes only if not internal (avoid loop)
     const isInternalChange = useRef(false);
 
     useEffect(() => {
@@ -131,35 +137,83 @@ export const LiveEditor = ({
             isInternalChange.current = false;
             return;
         }
-
-        const currentSerialized = serializeBlocksToMarkdown(blocks);
-        if (content !== currentSerialized) {
-            setBlocks(parseMarkdownToBlocks(content));
+        // Initial Load
+        const parsed = parseMarkdownToBlocks(content);
+        setBlocks(parsed);
+        // Set initial history only if empty
+        if (history.length === 0) {
+            setHistory([parsed]);
+            setHistoryStep(0);
         }
     }, [content]);
 
-    const updateParent = (newBlocks: Block[]) => {
+    // --- CORE UPDATE FUNCTION ---
+    const updateParent = (newBlocks: Block[], saveToHistory = false) => {
         isInternalChange.current = true;
         setBlocks(newBlocks);
-        const md = serializeBlocksToMarkdown(newBlocks);
-        onChange(md);
+        onChange(serializeBlocksToMarkdown(newBlocks));
+
+        if (saveToHistory) {
+            pushToHistory(newBlocks);
+        }
+    };
+
+    const pushToHistory = (newBlocks: Block[]) => {
+        const newHistory = history.slice(0, historyStep + 1);
+        newHistory.push(JSON.parse(JSON.stringify(newBlocks))); // Deep copy
+        
+        // Limit history size to 50 steps to save memory
+        if (newHistory.length > 50) newHistory.shift();
+        
+        setHistory(newHistory);
+        setHistoryStep(newHistory.length - 1);
+    };
+
+    const handleUndo = () => {
+        if (historyStep > 0) {
+            isUndoing.current = true;
+            const prevBlocks = history[historyStep - 1];
+            setHistoryStep(historyStep - 1);
+            updateParent(prevBlocks, false);
+            setTimeout(() => { isUndoing.current = false; }, 100);
+        }
+    };
+
+    const handleRedo = () => {
+        if (historyStep < history.length - 1) {
+            isUndoing.current = true;
+            const nextBlocks = history[historyStep + 1];
+            setHistoryStep(historyStep + 1);
+            updateParent(nextBlocks, false);
+            setTimeout(() => { isUndoing.current = false; }, 100);
+        }
     };
 
     const updateBlockContent = (id: string, newContent: string) => {
         const newBlocks = blocks.map(b => b.id === id ? { ...b, content: newContent } : b);
-        updateParent(newBlocks);
+        updateParent(newBlocks, false); // Don't save strictly on every keystroke
+
+        // Debounce Save for Text Typing (Save after 1s of inactivity)
+        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+        debounceTimeout.current = setTimeout(() => {
+            if (!isUndoing.current) {
+                pushToHistory(newBlocks);
+            }
+        }, 1000);
     };
+
+    // --- STRUCTURAL ACTIONS (Instant History Save) ---
 
     const addBlock = (index: number, type: any, content: string = '', meta: any = {}) => {
         const newBlock: Block = { id: `new-${Date.now()}-${Math.random()}`, type, content, meta };
         const newBlocks = [...blocks];
         newBlocks.splice(index + 1, 0, newBlock);
-        updateParent(newBlocks);
+        updateParent(newBlocks, true); // Immediate Save
     };
 
     const removeBlock = (index: number) => {
         const newBlocks = blocks.filter((_, i) => i !== index);
-        updateParent(newBlocks);
+        updateParent(newBlocks, true); // Immediate Save
     };
 
     const moveBlock = (index: number, direction: -1 | 1) => {
@@ -168,7 +222,7 @@ export const LiveEditor = ({
         const temp = newBlocks[index];
         newBlocks[index] = newBlocks[index + direction];
         newBlocks[index + direction] = temp;
-        updateParent(newBlocks);
+        updateParent(newBlocks, true); // Immediate Save
     };
 
     const handleUpload = async (index: number, file: File, type: 'image' | 'file') => {
@@ -176,7 +230,7 @@ export const LiveEditor = ({
         try {
             const { url } = await uploadToSupabase(file, 'articles');
             const meta = type === 'file' ? { label: file.name } : { alt: 'image' };
-            addBlock(index, type, url, meta);
+            addBlock(index, type, url, meta); // addBlock handles history
         } catch (e) {
             alert("Gagal upload file.");
         } finally {
@@ -211,7 +265,35 @@ export const LiveEditor = ({
     const isEmpty = blocks.length === 0 || (blocks.length === 1 && blocks[0].content === '');
 
     return (
-        <div className="pb-20 min-h-[400px]">
+        <div className="pb-20 min-h-[400px] relative">
+            
+            {/* FLOATING TOOLBAR (UNDO/REDO) */}
+            <div className="sticky top-0 z-40 flex justify-center mb-4 pointer-events-none">
+                <div className="bg-brand-dark/90 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 shadow-neon flex items-center gap-4 pointer-events-auto transform -translate-y-2 hover:translate-y-0 transition-transform">
+                    <button 
+                        onClick={handleUndo} 
+                        disabled={historyStep <= 0}
+                        className="p-1.5 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        title="Undo (Balikin yang kehapus)"
+                    >
+                        <Undo size={16} />
+                    </button>
+                    <div className="w-px h-4 bg-white/10"></div>
+                    <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1">
+                        <History size={10}/> {historyStep > 0 ? `${historyStep} Step` : 'Aman'}
+                    </span>
+                    <div className="w-px h-4 bg-white/10"></div>
+                    <button 
+                        onClick={handleRedo} 
+                        disabled={historyStep >= history.length - 1}
+                        className="p-1.5 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        title="Redo (Maju lagi)"
+                    >
+                        <Redo size={16} />
+                    </button>
+                </div>
+            </div>
+
             {isEmpty && onRegenerate && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <button 
@@ -247,7 +329,7 @@ export const LiveEditor = ({
                             <div className="my-4 bg-brand-card border border-white/10 rounded-xl p-4 flex items-center gap-4">
                                 <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center border border-blue-500/30 text-blue-400"><FileText size={24} /></div>
                                 <div className="flex-1 min-w-0">
-                                    <input value={block.meta?.label} onChange={(e) => { const n = [...blocks]; n[index].meta.label = e.target.value; updateParent(n); }} className="bg-transparent text-sm font-bold text-white w-full outline-none focus:border-b focus:border-brand-orange" />
+                                    <input value={block.meta?.label} onChange={(e) => { const n = [...blocks]; n[index].meta.label = e.target.value; updateParent(n, true); }} className="bg-transparent text-sm font-bold text-white w-full outline-none focus:border-b focus:border-brand-orange" />
                                     <p className="text-xs text-gray-500 truncate">{block.content}</p>
                                 </div>
                                 <div className="p-2 bg-white/5 rounded-lg text-gray-400"><Download size={18} /></div>
