@@ -7,7 +7,7 @@ import { useContactLogic, ContactItem, FaqAccordion, MapEmbed, ContactForm } fro
 export const ContactPage = ({ config }: { config: SiteConfig }) => {
   const { form, setForm, handleShadowCapture, handleSubmit } = useContactLogic(config);
 
-  const email = config.emailAddress || "admin@kasirsolo.com";
+  const email = config.emailAddress || "admin@kasirsolo.my.id";
 
   const getDisplayPhone = (num?: string) => {
       if (!num) return "0823 2510 3336";

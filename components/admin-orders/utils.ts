@@ -21,7 +21,7 @@ export const handlePrintInvoice = (order: Order, items: OrderItem[], config: Sit
     const companyName = config.companyLegalName || "PT MESIN KASIR SOLO";
     const companyAddress = config.addressSolo || "Perum Graha Tiara 2 B1, Kartasura, Sukoharjo";
     const companyPhone = config.whatsappNumber ? (config.whatsappNumber.startsWith('62') ? '+' + config.whatsappNumber : config.whatsappNumber) : "+62 823 2510 3336";
-    const companyEmail = config.emailAddress || "admin@kasirsolo.com";
+    const companyEmail = config.emailAddress || "admin@kasirsolo.my.id";
 
     const html = `
     <!DOCTYPE html>

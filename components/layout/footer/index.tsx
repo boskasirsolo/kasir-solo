@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MapPin, Phone, Instagram, Facebook, Youtube, Linkedin, Video } from 'lucide-react';
+import { MapPin, Phone, Instagram, Facebook, Youtube, Linkedin, Video, Mail } from 'lucide-react';
 import { SiteConfig } from '../../types';
 import { BrandColumn, FooterBottom } from './organisms';
 import { FooterColumn, ContactItem } from './molecules';
@@ -82,6 +82,12 @@ export const Footer = ({ setPage, config }: { setPage: (p: string) => void, conf
               label="HOTLINE (24/7)"
               value={config.whatsappNumber ? (config.whatsappNumber.startsWith('62') ? `+${config.whatsappNumber}` : config.whatsappNumber) : "0823 2510 3336"}
               onClick={() => window.open(`https://wa.me/${config.whatsappNumber}`, '_blank')}
+            />
+            <ContactItem 
+              icon={Mail}
+              label="EMAIL RESMI"
+              value={config.emailAddress || "admin@kasirsolo.my.id"}
+              onClick={() => window.location.href = `mailto:${config.emailAddress}`}
             />
           </ul>
         </div>
