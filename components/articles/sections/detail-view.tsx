@@ -7,7 +7,7 @@ import { ArticleDetailProps } from '../types';
 import { optimizeImage, formatRupiah, slugify, supabase, generateUtmUrl, sanitizeHtml } from '../../../utils';
 import { useArticleReader } from '../hooks/use-article-reader';
 import { cleanId, renderFormattedText, extractHeadings } from '../utils';
-import { MarkdownTable, FileDownloadCard, ProjectEmbedCard } from '../ui/content-renderers';
+import { MarkdownTable, FileDownloadCard, ProjectEmbedCard, ProductEmbedCard } from '../ui/content-renderers';
 import { SidebarProductCard } from '../ui/cards';
 import { Button, Input, TextArea } from '../../ui';
 import { SEOHelmet } from '../../seo';
@@ -55,8 +55,11 @@ const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article 
               const p = paragraph.trim();
               if (!p) return null;
               if (p.startsWith('|') && p.includes('|')) { return <MarkdownTable key={idx} content={p} />; }
+              
+              // Custom Renderers
               const fileMatch = p.match(/^\[FILE: (.*?)\]\((.*?)\)$/); if (fileMatch) { return <FileDownloadCard key={idx} label={fileMatch[1]} url={fileMatch[2]} />; }
               const projectMatch = p.match(/^\[PROJECT: (.*?) \| (.*?) \| (.*?) \| (.*?)\]$/); if (projectMatch) { return <ProjectEmbedCard key={idx} title={projectMatch[1]} url={projectMatch[2]} image={projectMatch[3]} desc={projectMatch[4]} />; }
+              const productMatch = p.match(/^\[PRODUCT: (.*?) \| (.*?) \| (.*?) \| (.*?)\]$/); if (productMatch) { return <ProductEmbedCard key={idx} name={productMatch[1]} price={productMatch[2]} image={productMatch[3]} desc={productMatch[4]} />; }
               
               // --- IMAGE HANDLING ---
               const imgMatch = p.match(/^!\[(.*?)\]\((.*?)\)$/);

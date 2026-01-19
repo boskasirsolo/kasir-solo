@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { FileText, HardDrive, Download, ArrowRight } from 'lucide-react';
+import { FileText, HardDrive, Download, ArrowRight, ShoppingCart, MessageCircle, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { optimizeImage } from '../../../utils';
+import { optimizeImage, formatRupiah } from '../../../utils';
 import { renderFormattedText } from '../utils';
 
 export const FileDownloadCard: React.FC<{ label: string, url: string }> = ({ label, url }) => {
@@ -17,33 +17,79 @@ export const FileDownloadCard: React.FC<{ label: string, url: string }> = ({ lab
 
 export const ProjectEmbedCard: React.FC<{ title: string, url: string, image: string, desc: string }> = ({ title, url, image, desc }) => {
     return (
-        <div className="my-10 bg-brand-dark rounded-2xl border border-white/5 overflow-hidden group hover:border-brand-orange/30 transition-all shadow-lg flex flex-col md:flex-row">
-            {/* Image Container:
-                - Mobile: h-48 fixed.
-                - Desktop: w-64 fixed width, height stretches to match text content (flex), min-h-[250px] to ensure size.
-                - Image: absolute inset-0 to fill container without forcing aspect ratio.
-            */}
-            <div className="w-full md:w-64 h-48 md:h-auto md:min-h-[250px] relative bg-black shrink-0 overflow-hidden">
+        <div className="my-10 bg-brand-dark rounded-2xl border border-white/5 overflow-hidden group hover:border-brand-orange/30 transition-all shadow-lg flex flex-col md:flex-row relative">
+            <div className="absolute top-0 right-0 p-[1px] bg-gradient-to-l from-brand-orange/50 to-transparent w-32 h-px"></div>
+            
+            <div className="w-full md:w-72 h-56 md:h-auto relative bg-black shrink-0 overflow-hidden">
                 <img 
                     src={optimizeImage(image, 600)} 
                     alt={title} 
-                    className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" 
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
                     loading="lazy" 
                 />
-                <div className="absolute top-3 left-3 bg-brand-orange text-white text-[10px] font-bold px-2 py-1 rounded shadow-neon z-10">STUDI KASUS</div>
-                {/* Gradient overlay for text readability if needed, or just aesthetic */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-50 md:opacity-0 transition-opacity"></div>
+                <div className="absolute top-3 left-3 bg-brand-orange text-white text-[9px] font-bold px-2 py-1 rounded shadow-neon z-10 uppercase tracking-wider">Studi Kasus</div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 md:hidden"></div>
             </div>
             
-            <div className="p-6 flex flex-col justify-between flex-1">
-                <div>
-                    <h4 className="text-xl font-bold text-white mb-3 leading-tight group-hover:text-brand-orange transition-colors">{title}</h4>
-                    <p className="text-sm text-gray-400 leading-relaxed line-clamp-4 mb-4">{desc}</p>
-                </div>
-                <div className="flex justify-end pt-4 border-t border-white/5">
-                    <Link to={url} className="inline-flex items-center gap-2 text-brand-orange font-bold text-xs uppercase tracking-widest hover:gap-3 transition-all">
-                        Lihat Detail <ArrowRight size={16} />
+            <div className="p-6 flex flex-col justify-center flex-1 relative z-10">
+                <h4 className="text-xl font-bold text-white mb-2 leading-tight group-hover:text-brand-orange transition-colors line-clamp-1">{title}</h4>
+                <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-6">{desc}</p>
+                
+                <div className="flex items-center gap-4 mt-auto">
+                    <Link to={url} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold border border-white/10 hover:border-brand-orange/50 transition-all group/btn">
+                        Lihat Project <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform"/>
                     </Link>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export const ProductEmbedCard = ({ name, price, image, desc }: { name: string, price: string, image: string, desc: string }) => {
+    // Handle price if it comes as number string or formatted string
+    const rawPrice = parseInt(price.replace(/[^0-9]/g, '')) || 0;
+    const displayPrice = rawPrice > 0 ? formatRupiah(rawPrice) : price; // Fallback to original string if NaN
+
+    // Search URL for the product
+    const searchUrl = `/shop?search=${encodeURIComponent(name)}`;
+    const waUrl = `https://wa.me/6282325103336?text=${encodeURIComponent(`Halo, saya tertarik dengan produk *${name}* yang saya lihat di artikel.`)}`;
+
+    return (
+        <div className="my-10 bg-black/40 border border-white/10 rounded-2xl overflow-hidden hover:border-brand-orange/50 transition-all shadow-lg flex flex-col md:flex-row group relative">
+            {/* Visual */}
+            <div className="w-full md:w-56 h-56 bg-black relative shrink-0 flex items-center justify-center p-4 border-b md:border-b-0 md:border-r border-white/5">
+                <img 
+                    src={optimizeImage(image, 400)} 
+                    alt={name} 
+                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-2xl" 
+                    loading="lazy" 
+                />
+                <div className="absolute top-3 left-3 bg-green-600 text-white text-[9px] font-bold px-2 py-1 rounded shadow-md uppercase tracking-wider flex items-center gap-1">
+                    <ShoppingCart size={10} /> Rekomendasi
+                </div>
+            </div>
+
+            {/* Info */}
+            <div className="p-6 flex flex-col justify-center flex-1">
+                <h4 className="text-lg md:text-xl font-bold text-white mb-1 leading-tight group-hover:text-brand-orange transition-colors">{name}</h4>
+                <p className="text-2xl font-display font-bold text-brand-orange mb-3 tracking-tight">{displayPrice}</p>
+                <p className="text-xs text-gray-400 leading-relaxed mb-6 line-clamp-2">{desc}</p>
+                
+                <div className="flex flex-wrap gap-3">
+                    <a 
+                        href={searchUrl} 
+                        className="flex-1 md:flex-none px-6 py-2.5 bg-brand-gradient hover:bg-brand-gradient-hover text-white rounded-xl text-xs font-bold shadow-neon hover:shadow-neon-strong transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                    >
+                        <ExternalLink size={14} /> Cek Spesifikasi
+                    </a>
+                    <a 
+                        href={waUrl}
+                        target="_blank"
+                        rel="noreferrer" 
+                        className="flex-1 md:flex-none px-6 py-2.5 bg-white/5 hover:bg-green-600/20 text-gray-300 hover:text-green-400 border border-white/10 hover:border-green-500/50 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                    >
+                        <MessageCircle size={14} /> Tanya Stok
+                    </a>
                 </div>
             </div>
         </div>
