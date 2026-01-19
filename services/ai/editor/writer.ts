@@ -50,6 +50,45 @@ const buildLinkingInstructions = (
     return instructions;
 };
 
+// Helper: Build Asset Instructions (Products & Projects)
+const buildAssetInstructions = (productJson?: string, galleryJson?: string) => {
+    let instructions = "";
+
+    if (productJson) {
+        try {
+            const products = JSON.parse(productJson);
+            if (products.length > 0) {
+                instructions += `\n[AVAILABLE PRODUCTS TO RECOMMEND]\n`;
+                instructions += `You have access to these specific products in our inventory:\n`;
+                products.forEach((p: any) => {
+                    instructions += `- Name: ${p.name}, Price: ${p.price}, Image: ${p.image}, Desc: ${p.desc}\n`;
+                });
+                instructions += `\n**STRATEGY:** If a section talks about a solution we sell, INSERT A PRODUCT CARD.\n`;
+                instructions += `**STRICT FORMAT:** [PRODUCT: Name | Price | ImageURL | ShortDesc]\n`;
+                instructions += `**RULE:** You MUST use the EXACT 'Image' URL provided above. Do NOT hallucinate URLs.\n`;
+            }
+        } catch (e) { console.warn("Failed to parse product context"); }
+    }
+
+    if (galleryJson) {
+        try {
+            const projects = JSON.parse(galleryJson);
+            if (projects.length > 0) {
+                instructions += `\n[PORTFOLIO SHOWCASE]\n`;
+                instructions += `You can mention our real project experiences:\n`;
+                projects.forEach((p: any) => {
+                    instructions += `- Project: ${p.title}, Slug: /gallery/${p.slug}, Image: ${p.image}\n`;
+                });
+                instructions += `\n**STRATEGY:** Use this to prove credibility.\n`;
+                instructions += `**STRICT FORMAT:** [PROJECT: Title | /gallery/slug | ImageURL | ShortDesc]\n`;
+                instructions += `**RULE:** You MUST use the EXACT 'Image' URL provided above.\n`;
+            }
+        } catch (e) { console.warn("Failed to parse gallery context"); }
+    }
+
+    return instructions;
+}
+
 // --- ENGINE 1: PILLAR WRITER (The Authority) ---
 // Fokus: Broad, Comprehensive, Definitive Guide, Struktur Rapi.
 
@@ -61,8 +100,9 @@ const PillarWriter = {
         const pov = buildPersona(params.authorName);
         const { cityInstruction, userNotes } = buildCommonContext(params.cityContext, params.userContext);
         
-        // Generate Cross-Linking Instructions
+        // Generate Instructions
         const linkingInstructions = buildLinkingInstructions(params.relatedPillarsData);
+        const assetInstructions = buildAssetInstructions(params.productContextString, params.galleryContextString);
 
         // Pillar Prompt Structure
         const sectionsCount = Math.max(5, Math.ceil(params.wordCount / 800)); // Pillars need more sections
@@ -93,14 +133,10 @@ const PillarWriter = {
             ${userNotes}
             ${GOV_CRITIQUE_RULE}
             ${linkingInstructions}
+            ${assetInstructions}
             
             ${isLastSection ? `[FINAL SUMMARY]: Wrap up everything. ${CLOSING_RULE}` : "Do NOT conclude yet. Continue to next topic."}
             ${i === 0 ? "Start with a strong hook defining the big problem." : `Bridge from previous: "...${previousContext.slice(-100)}..."`}
-
-            [INJECTED ASSETS]
-            ${params.galleryContextString ? `Projects: ${params.galleryContextString}` : ''}
-            ${params.productContextString ? `Products: ${params.productContextString}` : ''}
-            (Use shortcodes [PRODUCT:...] or [PROJECT:...] if relevant)
 
             OUTPUT: Markdown.
             `;
@@ -124,6 +160,7 @@ const ClusterWriter = {
     ) => {
         const pov = buildPersona(params.authorName);
         const { cityInstruction, userNotes } = buildCommonContext(params.cityContext, params.userContext);
+        const assetInstructions = buildAssetInstructions(params.productContextString, params.galleryContextString);
         
         // Validasi Parent Pillar
         if (!params.pillarContext || !params.pillarContext.title) {
@@ -152,11 +189,7 @@ const ClusterWriter = {
         ${userNotes}
         ${INTERNAL_LINKING_RULES}
         ${CLOSING_RULE}
-
-        [INJECTED ASSETS]
-        ${params.galleryContextString ? `Projects: ${params.galleryContextString}` : ''}
-        ${params.productContextString ? `Products: ${params.productContextString}` : ''}
-        (Use shortcodes [PRODUCT:...] or [PROJECT:...] if relevant)
+        ${assetInstructions}
 
         OUTPUT: Markdown.
         `;

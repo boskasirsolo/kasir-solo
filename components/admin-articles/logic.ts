@@ -144,9 +144,21 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
                 setLoading(p => ({ ...p, generatingText: true, progressMessage: 'AI sedang meracik konten...' })); 
                 try { 
-                    // Prepare Context for AI
-                    const galleryCtx = gallery.map(g => `[PROYEK: ${g.title} | SLUG: ${slugify(g.title)} | IMAGE: ${g.image_url} | DESC: ${g.description || ''}]`).join('\n');
-                    const productCtx = products.map(p => `[PRODUK: ${p.name} | HARGA: ${p.price} | IMAGE: ${p.image} | DESC: ${p.description}]`).join('\n');
+                    // PREPARE CONTEXT (JSON FORMAT - CLEANER)
+                    // We send minimal necessary data to save token usage and reduce confusion
+                    const galleryCtx = JSON.stringify(gallery.map(g => ({
+                        title: g.title,
+                        slug: slugify(g.title),
+                        image: g.image_url,
+                        desc: g.description?.substring(0, 100) || ''
+                    })).slice(0, 8)); // Limit context
+
+                    const productCtx = JSON.stringify(products.map(p => ({
+                        name: p.name,
+                        price: p.price,
+                        image: p.image,
+                        desc: p.description?.substring(0, 100) || ''
+                    })).slice(0, 8)); // Limit context
                     
                     // PREPARE DATA FOR ENGINE
                     const parentPillar = form.pillar_id ? articles.find(a => a.id === form.pillar_id) : undefined;
@@ -167,10 +179,10 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                         form.targetWordCount, 
                         pillarContext, // Specific Parent Pillar Data (For Cluster)
                         relatedPillarsData, // Related pillars (For Cross Linking in Pillar mode)
-                        galleryCtx, 
+                        galleryCtx, // NOW JSON STRING
                         form.generationContext, 
                         form.targetCityId ? cities.find(c => c.id === form.targetCityId) : undefined as any,
-                        productCtx
+                        productCtx // NOW JSON STRING
                     ); 
                     
                     const meta = await EditorAI.generateMeta(form.title, content); 
