@@ -246,6 +246,31 @@ export const ResultCard = ({
                             </div>
                             
                             <div className="relative">
+                                <Tag className="absolute left-3 top-3 text-gray-600" size={14} />
+                                <select 
+                                    value={customerInfo.category}
+                                    onChange={e => setCustomerInfo({...customerInfo, category: e.target.value})}
+                                    onBlur={onShadowCapture}
+                                    className="w-full bg-black/40 border border-white/5 rounded-lg pl-10 pr-10 py-2.5 text-xs text-white outline-none focus:border-brand-orange transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value="">-- Pilih Kategori Bisnis --</option>
+                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-3 text-gray-600 pointer-events-none" size={14} />
+                            </div>
+
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-3 text-gray-600" size={14} />
+                                <Input 
+                                    value={customerInfo.address}
+                                    onChange={e => setCustomerInfo({...customerInfo, address: e.target.value})}
+                                    onBlur={onShadowCapture}
+                                    placeholder="Alamat / Kota" 
+                                    className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
+                                />
+                            </div>
+
+                            <div className="relative">
                                 <BarChart3 className="absolute left-3 top-3 text-gray-600" size={14} />
                                 <select 
                                     value={customerInfo.scale}
@@ -269,30 +294,6 @@ export const ResultCard = ({
                                     />
                                 </div>
                             )}
-
-                            <div className="relative">
-                                <MapPin className="absolute left-3 top-3 text-gray-600" size={14} />
-                                <Input 
-                                    value={customerInfo.address}
-                                    onChange={e => setCustomerInfo({...customerInfo, address: e.target.value})}
-                                    onBlur={onShadowCapture}
-                                    placeholder="Alamat / Kota" 
-                                    className="pl-10 py-2.5 text-xs bg-black/40 border-white/5 focus:border-brand-orange"
-                                />
-                            </div>
-                            <div className="relative">
-                                <Tag className="absolute left-3 top-3 text-gray-600" size={14} />
-                                <select 
-                                    value={customerInfo.category}
-                                    onChange={e => setCustomerInfo({...customerInfo, category: e.target.value})}
-                                    onBlur={onShadowCapture}
-                                    className="w-full bg-black/40 border border-white/5 rounded-lg pl-10 pr-10 py-2.5 text-xs text-white outline-none focus:border-brand-orange transition-all appearance-none cursor-pointer"
-                                >
-                                    <option value="">-- Pilih Kategori Bisnis --</option>
-                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-3 text-gray-600 pointer-events-none" size={14} />
-                            </div>
                         </div>
 
                         {/* FINAL CTA */}
