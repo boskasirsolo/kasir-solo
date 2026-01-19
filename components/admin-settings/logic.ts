@@ -130,9 +130,12 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
                 hero_subtitle: config.heroSubtitle,
                 about_image: finalAboutImage,
                 founder_portrait: finalFounderImage,
+                
+                // STANDARD: Map camelCase State to snake_case DB
                 sibos_url: config.sibosUrl,
                 qalam_url: config.qalamUrl,
-                dapur_sppg_url: config.dapurSppgUrl, // NEW
+                dapur_sppg_url: config.dapurSppgUrl,
+                
                 company_legal_name: config.companyLegalName,
                 nib_number: config.nibNumber,
                 ahu_number: config.ahuNumber,

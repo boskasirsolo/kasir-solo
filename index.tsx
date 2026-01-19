@@ -24,11 +24,9 @@ const AboutPage = lazy(() => import('./pages/about').then(module => ({ default: 
 const VisionPage = lazy(() => import('./pages/vision').then(module => ({ default: module.VisionPage })));
 const CareerPage = lazy(() => import('./pages/career').then(module => ({ default: module.CareerPage })));
 const ContactPage = lazy(() => import('./pages/contact').then(module => ({ default: module.ContactPage })));
-// UPDATED: Load the default export (AdminPage) which handles Auth logic internally
 const AdminPage = lazy(() => import('./pages/admin')); 
 const CheckoutPage = lazy(() => import('./pages/checkout').then(module => ({ default: module.CheckoutPage })));
 const InnovationPage = lazy(() => import('./pages/innovation').then(module => ({ default: module.InnovationPage })));
-// NEW: Dapur SPPG, Sibos, Qalam Pages
 const DapurSppgPage = lazy(() => import('./pages/dapur-sppg').then(module => ({ default: module.DapurSppgPage })));
 const SibosPage = lazy(() => import('./pages/sibos').then(module => ({ default: module.SibosPage })));
 const QalamPage = lazy(() => import('./pages/qalam').then(module => ({ default: module.QalamPage })));
@@ -119,7 +117,6 @@ const AppContent = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // INIT AUTH LISTENER
   useEffect(() => {
     if (supabase) {
         supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
@@ -130,7 +127,6 @@ const AppContent = () => {
     }
   }, []);
 
-  // DATA FETCHING
   useEffect(() => {
     const loadAppData = async () => {
         if (!supabase) {
@@ -152,12 +148,13 @@ const AppContent = () => {
                     heroTitle: settingsData.hero_title || prev.heroTitle,
                     heroSubtitle: settingsData.hero_subtitle || prev.heroSubtitle,
                     aboutImage: settingsData.about_image || prev.aboutImage,
-                    founderPortrait: settingsData.founder_portrait && settingsData.founder_portrait.length > 5 
-                        ? settingsData.founder_portrait 
-                        : "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800",
+                    founderPortrait: settingsData.founder_portrait || prev.founderPortrait,
+                    
+                    // STANDARD: Map snake_case DB to camelCase State
                     sibosUrl: settingsData.sibos_url || prev.sibosUrl,
                     qalamUrl: settingsData.qalam_url || prev.qalamUrl,
-                    dapurSppgUrl: settingsData.dapur_sppg_url || prev.dapurSppgUrl, // Load new URL
+                    dapurSppgUrl: settingsData.dapur_sppg_url || prev.dapurSppgUrl,
+                    
                     companyLegalName: settingsData.company_legal_name || prev.companyLegalName,
                     nibNumber: settingsData.nib_number || prev.nibNumber,
                     ahuNumber: settingsData.ahu_number || prev.ahuNumber,
@@ -187,7 +184,6 @@ const AppContent = () => {
                 injectGoogleTags(settingsData.google_analytics_id, settingsData.google_search_console_code);
             }
 
-            // SECURITY FIX: Explicitly filter articles by status for non-admin sessions
             let articleQuery = supabase.from('articles').select('*');
             if (!session) {
                 articleQuery = articleQuery.eq('status', 'published');
@@ -242,14 +238,6 @@ const AppContent = () => {
       return false;
   });
 
-  const handleLogout = async () => {
-    if (supabase) {
-        await supabase.auth.signOut();
-        localStorage.removeItem('mks_ghost_mode');
-        window.location.href = '/'; 
-    }
-  };
-
   if (isInitializing) return <SkeletonHome />;
 
   return (
@@ -259,7 +247,6 @@ const AppContent = () => {
           <Routes>
             <Route path="/" element={<HomePage setPage={handleNavigation} config={config} gallery={gallery} testimonials={testimonials} />} />
             <Route path="/home" element={<HomePage setPage={handleNavigation} config={config} gallery={gallery} testimonials={testimonials} />} />
-            {/* UPDATED: Pass gallery to ShopPage */}
             <Route path="/shop" element={<ShopPage products={products} gallery={gallery} />} />
             <Route path="/shop/:slug" element={<ProductDetailPage products={products} config={config} />} />
             <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
