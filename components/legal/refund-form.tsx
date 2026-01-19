@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
-import { ShieldAlert, CheckSquare, Square, ChevronDown, UploadCloud, Send, Loader2, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ShieldAlert, CheckSquare, Square, ChevronDown, UploadCloud, Send, Loader2, ArrowLeft } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Input, TextArea, Button } from '../ui';
 import { supabase } from '../../utils';
 
@@ -23,6 +24,21 @@ export const RefundForm = () => {
     });
     const [loading, setLoading] = useState(false);
     const [ticketId, setTicketId] = useState<string | null>(null);
+
+    // ROUTER HOOKS
+    const location = useLocation();
+    const navigate = useNavigate();
+    const sectionRef = useRef<HTMLDivElement>(null);
+
+    // EFFECT: Auto-Scroll if triggered from Shop
+    useEffect(() => {
+        if (location.state?.autoOpen && sectionRef.current) {
+            // Slight delay to ensure layout is ready
+            setTimeout(() => {
+                sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        }
+    }, [location.state]);
 
     const handleOpenForm = () => {
         if (isAgreed && isLiabilityAgreed) {
@@ -84,8 +100,23 @@ export const RefundForm = () => {
     }
 
     return (
-        <div className="space-y-8 my-12">
+        <div className="space-y-8 my-12" ref={sectionRef}>
             
+            {/* Back Button Logic */}
+            {location.state?.from === 'shop' && (
+                <div className="mb-4">
+                    <button 
+                        onClick={() => navigate('/shop')}
+                        className="flex items-center gap-2 text-gray-500 hover:text-brand-orange transition-colors text-xs font-bold uppercase tracking-widest group"
+                    >
+                        <div className="p-1.5 rounded-full bg-white/5 group-hover:bg-brand-orange/10 border border-white/10 group-hover:border-brand-orange/30 transition-all">
+                            <ArrowLeft size={14} />
+                        </div>
+                        Kembali ke Katalog
+                    </button>
+                </div>
+            )}
+
             {/* GATEKEEPER CARD */}
             <div className={`transition-all duration-500 ${isFormOpen ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100'}`}>
                 <div className="bg-red-950/20 border-l-4 border-red-600 p-6 rounded-r-xl relative overflow-hidden">

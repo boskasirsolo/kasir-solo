@@ -24,6 +24,7 @@ export const QuickActions = () => (
     <div className="flex gap-3 mt-4 justify-end w-full md:w-auto">
         <Link 
             to="/track-order" 
+            state={{ from: 'shop' }}
             className="flex-1 md:flex-none inline-flex justify-center items-center gap-2 px-5 py-3 rounded-xl bg-blue-600/10 border border-blue-500/30 hover:bg-blue-600 hover:text-white text-blue-400 text-xs font-bold uppercase tracking-wider transition-all shadow-lg hover:shadow-blue-500/20 group"
         >
             <Truck size={16} className="group-hover:-translate-x-1 transition-transform" /> 
@@ -31,6 +32,7 @@ export const QuickActions = () => (
         </Link>
         <Link 
             to="/legal/refund" 
+            state={{ from: 'shop', autoOpen: true }}
             className="flex-1 md:flex-none inline-flex justify-center items-center gap-2 px-5 py-3 rounded-xl bg-red-600/10 border border-red-500/30 hover:bg-red-600 hover:text-white text-red-500 text-xs font-bold uppercase tracking-wider transition-all shadow-lg hover:shadow-red-500/20 group"
         >
             <ShieldCheck size={16} /> 
