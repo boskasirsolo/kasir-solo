@@ -12,6 +12,9 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState<OrderSuccessState | null>(null);
+    
+    // NEW: Step State (1: Cart, 2: Shipping/Payment)
+    const [step, setStep] = useState(1);
 
     const lastCapturedPhone = useRef<string>('');
     
@@ -117,6 +120,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             await supabase!.from('order_items').insert(orderItems);
             setOrderSuccess({ id: order.id, total: totalPrice });
             clearCart();
+            setStep(1); // Reset step
         } catch (error: any) {
             alert(`Gagal: ${error.message}`);
         } finally { setIsSubmitting(false); }
@@ -128,6 +132,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
         handleBlur,
         couponInput, setCouponInput, isValidatingCoupon, applyCoupon,
         agreedToTerms, setAgreedToTerms, isSubmitting, submitOrder, 
-        orderSuccess, setOrderSuccess, clearCart
+        orderSuccess, setOrderSuccess, clearCart,
+        step, setStep // Export Step State
     };
 };

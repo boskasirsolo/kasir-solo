@@ -1,23 +1,30 @@
 
 import React from 'react';
-import { Zap, ShieldCheck, Check, Ticket, Loader2 } from 'lucide-react';
+import { Ticket, Loader2, ArrowLeft } from 'lucide-react';
 import { Input, TextArea, Button, LoadingSpinner } from '../../ui';
-import { CheckoutFormData } from '../types';
 import { formatRupiah } from '../../../utils';
 
 export const ShippingForm = ({ 
     formData, onChange, onBlur, onSubmit, isSubmitting, subtotalPrice, totalPrice, discount, 
-    couponInput, setCouponInput, applyCoupon, isValidatingCoupon, agreed, setAgreed 
+    couponInput, setCouponInput, applyCoupon, isValidatingCoupon, agreed, setAgreed, onBack 
 }: any) => {
     return (
-        <div className="lg:col-span-5">
-            <div className="bg-brand-dark border border-white/10 rounded-2xl p-6 md:p-8 sticky top-24 shadow-2xl">
-                <h3 className="text-xl font-bold text-white mb-6 border-b border-white/10 pb-4">Info Pengiriman</h3>
+        <div className="p-4 md:p-2">
+            <div className="bg-brand-dark border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl">
+                <div className="flex items-center gap-4 mb-6 border-b border-white/10 pb-4">
+                    <button onClick={onBack} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-white transition-colors">
+                        <ArrowLeft size={20} />
+                    </button>
+                    <div>
+                        <h3 className="text-lg md:text-xl font-bold text-white">Data Pengiriman</h3>
+                        <p className="text-xs text-gray-500">Lengkapi data untuk proses order.</p>
+                    </div>
+                </div>
                 
                 <form onSubmit={onSubmit} className="space-y-4">
-                    <Input value={formData.name} onChange={e => onChange('name', e.target.value)} onBlur={onBlur} placeholder="Nama Penerima" />
-                    <Input value={formData.phone} onChange={e => onChange('phone', e.target.value)} onBlur={onBlur} placeholder="WA: 0812..." type="tel" />
-                    <TextArea value={formData.address} onChange={e => onChange('address', e.target.value)} onBlur={onBlur} placeholder="Alamat Lengkap..." className="h-20" />
+                    <Input value={formData.name} onChange={(e: any) => onChange('name', e.target.value)} onBlur={onBlur} placeholder="Nama Penerima" />
+                    <Input value={formData.phone} onChange={(e: any) => onChange('phone', e.target.value)} onBlur={onBlur} placeholder="WA: 0812..." type="tel" />
+                    <TextArea value={formData.address} onChange={(e: any) => onChange('address', e.target.value)} onBlur={onBlur} placeholder="Alamat Lengkap (Jalan, RT/RW, Kota)..." className="h-24" />
 
                     {/* KUPON SECTION */}
                     <div className="pt-4 border-t border-white/5">
@@ -46,24 +53,26 @@ export const ShippingForm = ({
                     <div className="mt-6 p-4 bg-brand-orange/5 border border-brand-orange/20 rounded-xl">
                         <label className="flex items-start gap-3 cursor-pointer select-none">
                             <input type="checkbox" className="mt-1" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}/>
-                            <p className="text-[10px] text-gray-400">Saya menyetujui S&K. Data sudah benar.</p>
+                            <p className="text-[10px] text-gray-400 leading-relaxed">
+                                Saya menyetujui bahwa data yang diisi sudah benar. Pesanan tidak dapat dibatalkan setelah pembayaran dikonfirmasi.
+                            </p>
                         </label>
                     </div>
 
                     <div className="pt-6 border-t border-white/10 space-y-2">
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">Subtotal</span><span className="text-white">{formatRupiah(subtotalPrice)}</span></div>
+                        <div className="flex justify-between text-xs"><span className="text-gray-500">Subtotal Barang</span><span className="text-white">{formatRupiah(subtotalPrice)}</span></div>
                         {discount && (
                             <div className="flex justify-between text-xs text-green-400 font-bold">
                                 <span>Promo ({discount.code})</span>
                                 <span>-{formatRupiah(discount.amount)}</span>
                             </div>
                         )}
-                        <div className="flex justify-between text-lg font-bold pt-2">
-                            <span className="text-white">TOTAL</span>
-                            <span className="text-brand-orange font-display">{formatRupiah(totalPrice)}</span>
+                        <div className="flex justify-between items-end pt-2">
+                            <span className="text-white font-bold text-sm">TOTAL TAGIHAN</span>
+                            <span className="text-brand-orange font-display font-bold text-2xl">{formatRupiah(totalPrice)}</span>
                         </div>
-                        <Button type="submit" className="w-full py-4 shadow-neon" disabled={isSubmitting || !agreed}>
-                            {isSubmitting ? <LoadingSpinner /> : "BAYAR SEKARANG"}
+                        <Button type="submit" className="w-full py-4 shadow-neon mt-4" disabled={isSubmitting || !agreed}>
+                            {isSubmitting ? <LoadingSpinner /> : "KONFIRMASI & BAYAR"}
                         </Button>
                     </div>
                 </form>
