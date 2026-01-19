@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { Input } from '../../ui';
 
 export const ShopHero = () => (
-  <div className="text-left mb-6 md:mb-0">
+  <div className="text-left mb-6 md:mb-0 max-w-xl">
     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-orange/30 bg-brand-orange/10 mb-4">
         <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span>
         <span className="text-[10px] font-bold text-brand-orange uppercase tracking-widest">Ready Stock</span>
@@ -13,39 +13,41 @@ export const ShopHero = () => (
     <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">
       Pilih <span className="text-brand-orange">Senjata Lo.</span>
     </h2>
-    <p className="text-gray-400 text-sm md:text-lg leading-relaxed max-w-xl mb-6">
+    <p className="text-gray-400 text-sm md:text-lg leading-relaxed">
       Jangan asal beli murah. Ini investasi jangka panjang. <br className="hidden md:block"/>
       Pilih mesin yang tahan banting buat ngadepin ribuan transaksi.
     </p>
-    
-    <div className="flex flex-wrap gap-3">
-        <Link 
-            to="/track-order" 
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-blue-500/10 hover:border-blue-500 hover:text-blue-400 text-xs font-bold uppercase tracking-wider transition-all text-gray-400 group"
-        >
-            <Truck size={14} className="group-hover:translate-x-0.5 transition-transform" /> 
-            Lacak Pesanan
-        </Link>
-        <Link 
-            to="/legal/refund" 
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-red-500/10 hover:border-red-500 hover:text-red-500 text-xs font-bold uppercase tracking-wider transition-all text-gray-400 group"
-        >
-            <ShieldCheck size={14} /> 
-            Klaim Garansi
-        </Link>
-    </div>
   </div>
 );
 
+export const QuickActions = () => (
+    <div className="flex gap-3 mt-4 justify-end w-full md:w-auto">
+        <Link 
+            to="/track-order" 
+            className="flex-1 md:flex-none inline-flex justify-center items-center gap-2 px-5 py-3 rounded-xl bg-blue-600/10 border border-blue-500/30 hover:bg-blue-600 hover:text-white text-blue-400 text-xs font-bold uppercase tracking-wider transition-all shadow-lg hover:shadow-blue-500/20 group"
+        >
+            <Truck size={16} className="group-hover:-translate-x-1 transition-transform" /> 
+            Lacak Paket
+        </Link>
+        <Link 
+            to="/legal/refund" 
+            className="flex-1 md:flex-none inline-flex justify-center items-center gap-2 px-5 py-3 rounded-xl bg-red-600/10 border border-red-500/30 hover:bg-red-600 hover:text-white text-red-500 text-xs font-bold uppercase tracking-wider transition-all shadow-lg hover:shadow-red-500/20 group"
+        >
+            <ShieldCheck size={16} /> 
+            Klaim Garansi
+        </Link>
+    </div>
+);
+
 export const SearchWidget = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => (
-  <div className="relative group w-full md:w-80">
+  <div className="relative group w-full md:w-[400px]">
     <Input 
       value={value} 
       onChange={(e) => onChange(e.target.value)} 
       placeholder="Cari alat tempur..." 
-      className="pl-12 py-3 rounded-full bg-brand-card/50 border-white/10 focus:border-brand-orange transition-all text-sm font-bold placeholder-gray-600"
+      className="pl-12 py-4 rounded-xl bg-brand-dark border-white/10 focus:border-brand-orange transition-all text-sm font-bold placeholder-gray-600 shadow-xl focus:shadow-neon/20"
     />
-    <Search className="absolute left-4 top-3.5 text-gray-500 w-5 h-5 group-hover:text-brand-orange transition-colors" />
+    <Search className="absolute left-4 top-4 text-gray-500 w-5 h-5 group-hover:text-brand-orange transition-colors" />
   </div>
 );
 

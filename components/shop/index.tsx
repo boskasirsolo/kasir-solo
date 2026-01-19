@@ -6,7 +6,7 @@ import { useShopLogic } from './logic';
 import { slugify } from '../../utils';
 
 // UI Imports
-import { ShopHero, SearchWidget, EmptyState, PaginationControl } from './ui/common';
+import { ShopHero, SearchWidget, EmptyState, PaginationControl, QuickActions } from './ui/common';
 import { ProductCard, ProductGrid } from './product/card';
 import { ComparisonBar, ComparisonModal } from './comparison';
 
@@ -25,12 +25,18 @@ export const ShopModule = ({ products }: { products: Product[] }) => {
     <div className="container mx-auto px-4 py-10 animate-fade-in relative">
       
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-white/5 pb-8">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 gap-8 border-b border-white/5 pb-8">
+        {/* Left: Hero Text */}
         <ShopHero />
-        <SearchWidget 
-          value={state.searchTerm} 
-          onChange={actions.setSearchTerm} 
-        />
+        
+        {/* Right: Search & Actions */}
+        <div className="flex flex-col items-end w-full lg:w-auto gap-2">
+            <SearchWidget 
+              value={state.searchTerm} 
+              onChange={actions.setSearchTerm} 
+            />
+            <QuickActions />
+        </div>
       </div>
 
       {/* Content Section */}
