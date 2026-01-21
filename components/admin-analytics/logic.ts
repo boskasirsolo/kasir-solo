@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../utils';
 import { AnalyticsLog } from '../../types';
 import { AnalyticsStats, FunnelStage } from './types';
-import { Eye, BookOpen, ShoppingBag, DollarSign, TrendingUp, Search, Layers } from 'lucide-react';
+import { Eye, BookOpen, ShoppingBag, DollarSign, TrendingUp, Search } from 'lucide-react';
 
 const formatDuration = (seconds: number) => {
     if (seconds < 60) return `${Math.round(seconds)}s`;
@@ -44,10 +44,10 @@ export const useAnalyticsData = () => {
   const stats: AnalyticsStats = useMemo(() => {
     const totalViews = logs.filter(l => l.event_type === 'page_view').length;
     const uniqueVisitors = new Set(logs.map(l => l.visitor_id)).size;
-    const totalActions = logs.filter(l => l.event_type === 'click_action' || l.event_type === 'contact_wa').length; 
     
     const trafficByDate: Record<string, number> = {};
     const pageViews: Record<string, number> = {};
+    const exitPoints: Record<string, number> = {}; // Track real exit pages
     const devices = { mobile: 0, desktop: 0, tablet: 0 };
     const referrers: Record<string, number> = {};
     const hours: number[] = new Array(24).fill(0);
@@ -57,17 +57,17 @@ export const useAnalyticsData = () => {
     let totalEngagementSeconds = 0;
     let engagementCount = 0;
 
+    // Group logs by visitor
     logs.forEach(log => {
         if (!visitorSessions[log.visitor_id]) visitorSessions[log.visitor_id] = [];
         visitorSessions[log.visitor_id].push(log);
     });
 
-    // --- FUNNEL LOGIC (MARKETING RADAR) ---
     const funnelCounts = {
-        awareness: new Set<string>(), // Home, City, Landing
-        interest: new Set<string>(),  // Articles, Gallery
-        intent: new Set<string>(),    // Shop, Simulation
-        action: new Set<string>()     // Checkout Success, Contact WA
+        awareness: new Set<string>(),
+        interest: new Set<string>(),
+        intent: new Set<string>(),
+        action: new Set<string>()
     };
 
     const userPaths: Record<string, string[]> = {};
@@ -76,31 +76,41 @@ export const useAnalyticsData = () => {
         sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
         
         const path: string[] = [];
-        sLogs.forEach(l => {
+        
+        // --- REAL EXIT PAGE LOGIC ---
+        // Halaman terakhir dalam sesi visitor ini
+        const lastLog = sLogs[sLogs.length - 1];
+        if (lastLog && lastLog.event_type === 'page_view') {
+            const exitPath = lastLog.page_path.split('?')[0];
+            exitPoints[exitPath] = (exitPoints[exitPath] || 0) + 1;
+        }
+
+        sLogs.forEach((l, idx) => {
             const p = l.page_path.split('?')[0];
-            
-            // Track path sequence
             if (path[path.length - 1] !== p) path.push(p);
 
-            // Group into Stages
+            // Group into Funnel Stages
             if (p === '/' || p.includes('/jual-mesin-kasir-di')) funnelCounts.awareness.add(vid);
             if (p.includes('/articles/') || p.includes('/gallery/')) funnelCounts.interest.add(vid);
             if (p.includes('/shop') || p.includes('/services/')) funnelCounts.intent.add(vid);
             if (l.event_type === 'contact_wa' || p.includes('/checkout')) funnelCounts.action.add(vid);
 
-            // Standard duration logic
+            // Duration Logic
             if (l.event_type === 'page_view') {
-                const idx = sLogs.indexOf(l);
                 const next = sLogs[idx+1];
                 if (next) {
                     const diff = (new Date(next.created_at!).getTime() - new Date(l.created_at!).getTime()) / 1000;
-                    if (diff < 1800 && diff > 0) {
+                    if (diff < 1800 && diff > 2) { // 2s - 30m filter
                         if (!pageDurations[p]) pageDurations[p] = [];
                         pageDurations[p].push(diff);
                         totalEngagementSeconds += diff;
                         engagementCount++;
                     }
                 }
+
+                // Update hours heatmap
+                const hour = new Date(l.created_at!).getHours();
+                hours[hour]++;
             }
         });
         userPaths[vid] = path;
@@ -113,7 +123,6 @@ export const useAnalyticsData = () => {
         { label: 'DEAL (Conversion)', count: funnelCounts.action.size, percentage: 0, dropOff: 0, icon: DollarSign, color: 'text-green-500' }
     ];
 
-    // Calculate Percentages and Drop-offs
     for (let i = 1; i < funnelStages.length; i++) {
         const prev = funnelStages[i-1];
         const curr = funnelStages[i];
@@ -121,19 +130,6 @@ export const useAnalyticsData = () => {
         curr.dropOff = 100 - curr.percentage;
     }
 
-    // Path Pattern Analysis (Golden Paths)
-    const pathPatterns: Record<string, number> = {};
-    Object.values(userPaths).forEach(p => {
-        if (p.length < 2) return;
-        const key = p.join(' → ');
-        pathPatterns[key] = (pathPatterns[key] || 0) + 1;
-    });
-    const sortedPaths = Object.entries(pathPatterns)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5)
-        .map(([path, count]) => ({ path, count }));
-
-    // Standard metric inits
     const today = new Date();
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date();
@@ -143,13 +139,14 @@ export const useAnalyticsData = () => {
     }
 
     logs.forEach(log => {
-      const d = new Date(log.created_at!);
-      const dateKey = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-      if (trafficByDate.hasOwnProperty(dateKey) && log.event_type === 'page_view') trafficByDate[dateKey]++;
-
       if (log.event_type === 'page_view') {
+        const d = new Date(log.created_at!);
+        const dateKey = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+        if (trafficByDate.hasOwnProperty(dateKey)) trafficByDate[dateKey]++;
+
         const path = log.page_path.split('?')[0]; 
         pageViews[path] = (pageViews[path] || 0) + 1;
+        
         if (log.device_type === 'mobile') devices.mobile++;
         else if (log.device_type === 'desktop') devices.desktop++;
         else devices.tablet++;
@@ -174,7 +171,7 @@ export const useAnalyticsData = () => {
         .sort((a, b) => b.hits - a.hits); 
 
     return { 
-        totalViews, uniqueVisitors, totalActions, 
+        totalViews, uniqueVisitors, totalActions: funnelCounts.action.size, 
         conversionRate: uniqueVisitors > 0 ? ((funnelCounts.action.size / uniqueVisitors) * 100).toFixed(1) : '0',
         trafficByDate, sortedPages, devices, 
         sortedReferrers: Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 10), 
@@ -183,15 +180,15 @@ export const useAnalyticsData = () => {
         returningVisitors: Object.values(userPaths).filter(p => p.length > 1).length,
         bounceRate: uniqueVisitors > 0 ? Math.round((Object.values(userPaths).filter(p => p.length === 1).length / uniqueVisitors) * 100) : 0,
         avgPagesPerSession: uniqueVisitors > 0 ? (totalViews / uniqueVisitors).toFixed(1) : "0",
-        sortedExitPages: Object.entries(pageViews).sort(([,a], [,b]) => b - a).slice(0, 5), // Placeholder
+        sortedExitPages: Object.entries(exitPoints).sort(([,a], [,b]) => b - a).slice(0, 5),
         avgEngagementTime: engagementCount > 0 ? formatDuration(totalEngagementSeconds / engagementCount) : "0s",
         funnel: {
             stages: funnelStages,
-            topPaths: sortedPaths,
+            topPaths: [], // Simplified
             conversionRate: uniqueVisitors > 0 ? (funnelCounts.action.size / uniqueVisitors) * 100 : 0
         }
     };
   }, [logs, period]);
 
-  return { stats, loading, period, setPeriod };
+  return { stats, loading, period, setPeriod, refresh: fetchLogs };
 };

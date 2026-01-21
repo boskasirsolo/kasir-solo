@@ -13,11 +13,11 @@ import { LayoutDashboard, Users, FileText, Globe, Zap } from 'lucide-react';
 type AnalyticsTab = 'radar' | 'audience' | 'content' | 'acquisition';
 
 export const AnalyticsDashboard = () => {
-  const { stats, loading, period, setPeriod } = useAnalyticsData();
+  const { stats, loading, period, setPeriod, refresh } = useAnalyticsData();
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('radar');
   const [selectedPagePath, setSelectedPagePath] = useState<string | null>(null);
 
-  if (loading) return <div className="flex justify-center p-20"><LoadingSpinner size={32} /></div>;
+  if (loading && stats.totalViews === 0) return <div className="flex justify-center p-20"><LoadingSpinner size={32} /></div>;
 
   const TABS = [
     { id: 'radar', label: 'Radar Utama', icon: LayoutDashboard, desc: 'Helicopter View' },
@@ -30,7 +30,12 @@ export const AnalyticsDashboard = () => {
     <div className="space-y-8 animate-fade-in pb-20 relative">
       
       {/* 1. Dashboard Header (Global Stats & Period Control) */}
-      <DashboardHeader period={period} setPeriod={setPeriod} />
+      <DashboardHeader 
+        period={period} 
+        setPeriod={setPeriod} 
+        onRefresh={refresh} 
+        isRefreshing={loading}
+      />
 
       {/* 2. STICKY TAB NAVIGATION */}
       <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md py-4 -mx-4 px-4 border-b border-white/5 shadow-xl transition-all">
@@ -59,8 +64,13 @@ export const AnalyticsDashboard = () => {
       </div>
 
       {/* 3. DYNAMIC CONTENT PER TAB */}
-      <div className="space-y-8 min-h-[600px]">
-        
+      <div className="space-y-8 min-h-[600px] relative">
+        {loading && stats.totalViews > 0 && (
+            <div className="absolute top-0 right-0 p-4">
+                <LoadingSpinner size={16} className="text-brand-orange opacity-50" />
+            </div>
+        )}
+
         {/* --- TAB 1: RADAR UTAMA (Overview) --- */}
         {activeTab === 'radar' && (
           <div className="space-y-8 animate-fade-in">

@@ -1,8 +1,18 @@
 
 import React, { useState } from 'react';
-import { BarChart3, ShieldCheck, Check, Copy } from 'lucide-react';
+import { BarChart3, ShieldCheck, Check, Copy, RefreshCw } from 'lucide-react';
 
-export const DashboardHeader = ({ period, setPeriod }: { period: number, setPeriod: (d: number) => void }) => {
+export const DashboardHeader = ({ 
+    period, 
+    setPeriod,
+    onRefresh,
+    isRefreshing
+}: { 
+    period: number, 
+    setPeriod: (d: number) => void,
+    onRefresh: () => void,
+    isRefreshing: boolean
+}) => {
     const isGhostMode = typeof window !== 'undefined' && localStorage.getItem('mks_ghost_mode') === 'true';
 
     return (
@@ -18,11 +28,21 @@ export const DashboardHeader = ({ period, setPeriod }: { period: number, setPeri
             </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto">
+                <button 
+                    onClick={onRefresh}
+                    disabled={isRefreshing}
+                    className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-brand-orange rounded-lg border border-white/5 transition-all group"
+                    title="Refresh Data"
+                >
+                    <RefreshCw size={16} className={`${isRefreshing ? 'animate-spin text-brand-orange' : 'group-hover:rotate-180 transition-transform'}`} />
+                </button>
+
                 {isGhostMode && (
                     <span className="text-[10px] font-bold text-green-500 flex items-center gap-1 bg-green-900/20 px-3 py-1.5 rounded-full border border-green-500/30 animate-pulse whitespace-nowrap">
                         <ShieldCheck size={12}/> Ghost Mode
                     </span>
                 )}
+                
                 <div className="bg-black/40 rounded-lg p-1 border border-white/10 flex w-full md:w-auto">
                     {[7, 30].map(d => (
                         <button 
