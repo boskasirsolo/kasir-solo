@@ -14,7 +14,8 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
         </h4>
         
         <div className="bg-black/20 rounded-xl p-2 md:p-4 border border-white/5 overflow-x-auto custom-scrollbar">
-            <div className="min-w-[500px] h-64 flex items-end justify-between gap-2 pt-10 pb-2 relative">
+            {/* Padding top (pt-20) ditingkatkan untuk ruang udara tooltip */}
+            <div className="min-w-[500px] h-64 flex items-end justify-between gap-2 pt-20 pb-2 relative">
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10 z-0">
                     {[...Array(5)].map((_, i) => (
                         <div key={i} className={`w-full h-px ${i === 4 ? 'border-t border-gray-500' : 'border-t border-dashed border-gray-500'}`}></div>
@@ -24,23 +25,40 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
                 {Object.entries(data).map(([date, count], idx) => {
                     const heightPercent = (count / maxValue) * 100;
                     const isZero = count === 0;
+                    const barHeight = isZero ? '4px' : `${heightPercent}%`;
                     
                     return (
-                        <div key={idx} className="flex-1 flex flex-col items-center group relative z-10 h-full justify-end min-w-[20px]">
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-brand-dark border border-brand-orange/50 text-brand-orange text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-neon whitespace-nowrap z-20 pointer-events-none">
-                                {count} Hits
+                        <div key={idx} className="flex-1 group relative h-full flex flex-col justify-end min-w-[20px] cursor-pointer z-10">
+                            
+                            {/* TOOLTIP ANCHORED (Sama dengan Heatmap) */}
+                            <div 
+                                className="absolute left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-150 pointer-events-none z-50 flex flex-col items-center"
+                                style={{ 
+                                    bottom: `calc(${heightPercent}% + 4px)`,
+                                    // Geser dikit kalau di paling kiri/kanan
+                                    transform: `translateX(${idx === 0 ? '-20%' : idx === Object.keys(data).length - 1 ? '-80%' : '-50%'})`
+                                }}
+                            >
+                                <div className="bg-brand-dark/95 border border-brand-orange/40 px-2 py-1 rounded-lg shadow-neon-strong backdrop-blur-md whitespace-nowrap">
+                                    <span className="text-[10px] font-bold text-white">{count} Hits</span>
+                                </div>
+                                <div className="w-1.5 h-1.5 bg-brand-dark border-r border-b border-brand-orange/40 rotate-45 -mt-1 shadow-neon"></div>
                             </div>
+
+                            {/* THE BAR */}
                             <div className="w-full px-0.5 md:px-1 h-full flex items-end relative">
                                 <div 
-                                    className={`w-full rounded-t-sm transition-all duration-1000 relative ${
+                                    className={`w-full rounded-t-sm transition-all duration-500 relative ${
                                         isZero 
                                         ? 'bg-white/5 h-[4px]' 
                                         : 'bg-gradient-to-t from-brand-orange/20 to-brand-orange border-t border-brand-orange group-hover:brightness-125 shadow-[0_0_10px_rgba(255,95,31,0.2)]'
                                     }`}
-                                    style={{ height: isZero ? '4px' : `${heightPercent}%` }}
+                                    style={{ height: barHeight }}
                                 >
                                 </div>
                             </div>
+
+                            {/* DATE LABEL */}
                             <span className="text-[8px] md:text-[9px] text-gray-500 mt-2 truncate w-full text-center font-mono group-hover:text-white transition-colors">
                                 {date}
                             </span>
