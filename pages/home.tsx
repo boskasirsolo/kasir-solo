@@ -2,6 +2,7 @@
 import React from 'react';
 import { SiteConfig, GalleryItem, Testimonial } from '../types';
 import { HomeModule } from '../components/home';
+import { LocalBusinessSchema } from '../components/seo';
 
 export const HomePage = ({ 
   setPage, 
@@ -15,11 +16,14 @@ export const HomePage = ({
   testimonials: Testimonial[]
 }) => {
   return (
-    <HomeModule 
-      setPage={setPage} 
-      config={config} 
-      gallery={gallery} 
-      testimonials={testimonials} 
-    />
+    <>
+      <LocalBusinessSchema city="Solo Raya" />
+      <HomeModule 
+        setPage={setPage} 
+        config={config} 
+        gallery={gallery} 
+        testimonials={testimonials} 
+      />
+    </>
   );
 };
