@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Clock, Activity, Flame } from 'lucide-react';
+import { Calendar, Clock, Activity, Flame, RefreshCw } from 'lucide-react';
 
 export const TrafficChart = ({ data, period }: { data: Record<string, number>, period: number }) => {
     const values = Object.values(data);
@@ -129,9 +129,8 @@ export const RetentionChart = ({ newUsers, returningUsers }: { newUsers: number,
                 </div>
             </div>
             <p className="text-[9px] text-gray-600 mt-6 text-center italic leading-relaxed">
-                *Balik Lagi = Cookie deteksi user yang sama buka web >1 kali.
+                *Balik Lagi = Cookie deteksi user yang sama buka web &gt;1 kali.
             </p>
         </div>
     );
 };
-import { RefreshCw } from 'lucide-react';
