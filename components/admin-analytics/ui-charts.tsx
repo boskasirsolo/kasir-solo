@@ -65,10 +65,7 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
             
             <div className="relative bg-black/40 rounded-2xl p-4 md:p-6 border border-white/5">
                 <div className="overflow-x-auto custom-scrollbar-hide">
-                    {/* 
-                        Tinggi kontainer dinaikin (h-48) & padding atas (pt-24) 
-                        biar tooltip gak kepotong pas bar-nya tinggi.
-                    */}
+                    {/* Tinggi dinaikin dikit buat safety margin tooltip */}
                     <div className="min-w-[500px] h-48 pt-24 flex flex-col justify-end">
                         <div className="flex items-end gap-[2px] h-24 w-full relative">
                             {hours.map((count, h) => {
@@ -89,24 +86,22 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
                                         className="flex-1 group relative h-full flex flex-col justify-end min-w-[15px] cursor-pointer"
                                     >
                                         {/* 
-                                            TOOLTIP: Sekarang ditaruh di dalam div bar (Anchored).
-                                            Selalu muncul tepat di atas kepala bar dengan gap 12px.
+                                            TOOLTIP: Jarak dikurangi (pepet).
+                                            Gap diturunkan dari 12px jadi 4px biar lebih nempel ke bar.
                                         */}
                                         <div 
-                                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 flex flex-col items-center"
+                                            className="absolute left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-150 pointer-events-none z-50 flex flex-col items-center"
                                             style={{ 
-                                                // Start tooltip dari posisi atas bar
-                                                bottom: `calc(${barHeight} + 12px)`,
-                                                // Handle pinggiran biar gak off-screen
+                                                bottom: `calc(${barHeight} + 4px)`,
                                                 transform: `translateX(${h < 3 ? '-20%' : h > 21 ? '-80%' : '-50%'})`
                                             }}
                                         >
-                                            <div className="bg-brand-dark/95 border border-brand-orange/40 px-3 py-1.5 rounded-xl shadow-neon-strong backdrop-blur-md flex items-center gap-2 whitespace-nowrap">
+                                            <div className="bg-brand-dark/95 border border-brand-orange/40 px-2.5 py-1.5 rounded-xl shadow-neon-strong backdrop-blur-md flex items-center gap-2 whitespace-nowrap">
                                                 <span className="text-[10px] font-black text-brand-orange">{h.toString().padStart(2, '0')}:00</span>
                                                 <div className="w-px h-3 bg-white/20"></div>
                                                 <span className="text-[10px] font-bold text-white">{count} Views</span>
                                             </div>
-                                            {/* Caret (Panah) */}
+                                            {/* Caret (Panah) - Dipepetin juga */}
                                             <div className={`w-2 h-2 bg-brand-dark border-r border-b border-brand-orange/40 rotate-45 -mt-1 shadow-neon ${h < 3 ? 'mr-auto ml-4' : h > 21 ? 'ml-auto mr-4' : ''}`}></div>
                                         </div>
 
