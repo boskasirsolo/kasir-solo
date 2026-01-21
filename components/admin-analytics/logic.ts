@@ -47,7 +47,7 @@ export const useAnalyticsData = () => {
     
     const trafficByDate: Record<string, number> = {};
     const pageViews: Record<string, number> = {};
-    const exitPoints: Record<string, number> = {}; // Track real exit pages
+    const exitPoints: Record<string, number> = {}; 
     const devices = { mobile: 0, desktop: 0, tablet: 0 };
     const referrers: Record<string, number> = {};
     const hours: number[] = new Array(24).fill(0);
@@ -57,7 +57,6 @@ export const useAnalyticsData = () => {
     let totalEngagementSeconds = 0;
     let engagementCount = 0;
 
-    // Group logs by visitor
     logs.forEach(log => {
         if (!visitorSessions[log.visitor_id]) visitorSessions[log.visitor_id] = [];
         visitorSessions[log.visitor_id].push(log);
@@ -76,9 +75,6 @@ export const useAnalyticsData = () => {
         sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
         
         const path: string[] = [];
-        
-        // --- REAL EXIT PAGE LOGIC ---
-        // Halaman terakhir dalam sesi visitor ini
         const lastLog = sLogs[sLogs.length - 1];
         if (lastLog && lastLog.event_type === 'page_view') {
             const exitPath = lastLog.page_path.split('?')[0];
@@ -89,26 +85,24 @@ export const useAnalyticsData = () => {
             const p = l.page_path.split('?')[0];
             if (path[path.length - 1] !== p) path.push(p);
 
-            // Group into Funnel Stages
+            // Sequential funnel check logic could be more complex, 
+            // but for simple volume, we check if they hit specific areas
             if (p === '/' || p.includes('/jual-mesin-kasir-di')) funnelCounts.awareness.add(vid);
             if (p.includes('/articles/') || p.includes('/gallery/')) funnelCounts.interest.add(vid);
             if (p.includes('/shop') || p.includes('/services/')) funnelCounts.intent.add(vid);
-            if (l.event_type === 'contact_wa' || p.includes('/checkout')) funnelCounts.action.add(vid);
+            if (l.event_type === 'contact_wa' || l.event_type === 'click_action' || p.includes('/checkout')) funnelCounts.action.add(vid);
 
-            // Duration Logic
             if (l.event_type === 'page_view') {
                 const next = sLogs[idx+1];
                 if (next) {
                     const diff = (new Date(next.created_at!).getTime() - new Date(l.created_at!).getTime()) / 1000;
-                    if (diff < 1800 && diff > 2) { // 2s - 30m filter
+                    if (diff < 1800 && diff > 2) { 
                         if (!pageDurations[p]) pageDurations[p] = [];
                         pageDurations[p].push(diff);
                         totalEngagementSeconds += diff;
                         engagementCount++;
                     }
                 }
-
-                // Update hours heatmap
                 const hour = new Date(l.created_at!).getHours();
                 hours[hour]++;
             }
@@ -116,6 +110,7 @@ export const useAnalyticsData = () => {
         userPaths[vid] = path;
     });
 
+    // FIXED FUNNEL CALCULATION
     const funnelStages: FunnelStage[] = [
         { label: 'TAMU (Awareness)', count: funnelCounts.awareness.size, percentage: 100, dropOff: 0, icon: Search, color: 'text-blue-400' },
         { label: 'KEPO (Interest)', count: funnelCounts.interest.size, percentage: 0, dropOff: 0, icon: BookOpen, color: 'text-purple-400' },
@@ -123,11 +118,19 @@ export const useAnalyticsData = () => {
         { label: 'DEAL (Conversion)', count: funnelCounts.action.size, percentage: 0, dropOff: 0, icon: DollarSign, color: 'text-green-500' }
     ];
 
+    // Math Fix: Percentage relative to total awareness (TOP OF FUNNEL)
+    const totalTraffic = funnelStages[0].count || uniqueVisitors || 1;
+    
     for (let i = 1; i < funnelStages.length; i++) {
         const prev = funnelStages[i-1];
         const curr = funnelStages[i];
-        curr.percentage = prev.count > 0 ? Math.round((curr.count / prev.count) * 100) : 0;
-        curr.dropOff = 100 - curr.percentage;
+        
+        // Survival relative to Start
+        curr.percentage = Math.round((curr.count / totalTraffic) * 100);
+        
+        // Drop-off relative to PREVIOUS stage (how much we lost in this specific step)
+        const gap = prev.count - curr.count;
+        curr.dropOff = prev.count > 0 ? Math.max(0, Math.round((gap / prev.count) * 100)) : 0;
     }
 
     const today = new Date();
@@ -184,7 +187,7 @@ export const useAnalyticsData = () => {
         avgEngagementTime: engagementCount > 0 ? formatDuration(totalEngagementSeconds / engagementCount) : "0s",
         funnel: {
             stages: funnelStages,
-            topPaths: [], // Simplified
+            topPaths: [], 
             conversionRate: uniqueVisitors > 0 ? (funnelCounts.action.size / uniqueVisitors) * 100 : 0
         }
     };

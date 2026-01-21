@@ -57,15 +57,16 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
     const maxVal = Math.max(...hours, 1);
     
     return (
-        <div className="mt-6 pt-6 border-t border-white/5">
+        <div className="mt-6 pt-6 border-t border-white/5 relative">
             <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
                 <Flame size={14} className="text-red-500"/> Jam Sibuk Pasar (WIB)
             </h4>
             <p className="text-[10px] text-gray-500 mb-2">Pantau jam berapa Juragan pada ngintip web lo.</p>
             
             <div className="relative overflow-x-auto custom-scrollbar pb-2">
-                <div className="min-w-[500px]">
-                    <div className="flex items-end gap-[2px] h-20 mt-4 w-full">
+                {/* HEADROOM: Tambah pt-12 agar tooltip tidak terpotong header container */}
+                <div className="min-w-[500px] pt-12">
+                    <div className="flex items-end gap-[2px] h-20 w-full relative">
                         {hours.map((count, h) => {
                             const intensity = count / maxVal;
                             let bgClass = 'bg-white/5';
@@ -78,13 +79,14 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
 
                             return (
                                 <div key={h} className="flex-1 flex flex-col items-center group relative h-full justify-end min-w-[15px]">
-                                    <div 
-                                        className={`w-full rounded-sm ${bgClass} transition-all duration-700 min-h-[4px]`} 
-                                        style={{ height: `${Math.max(intensity * 100, 5)}%` }}
-                                    ></div>
-                                    <div className="absolute bottom-full mb-1 hidden group-hover:block bg-brand-dark text-white text-[9px] px-2 py-1 rounded z-20 border border-brand-orange/30 whitespace-nowrap -translate-x-1/2 left-1/2 shadow-neon">
+                                    {/* TOOLTIP: Berikan z-50 dan pastikan tidak terpotong parent */}
+                                    <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 pointer-events-none bg-brand-dark text-white text-[9px] px-2 py-1.5 rounded-lg z-[100] border border-brand-orange/30 whitespace-nowrap -translate-x-1/2 left-1/2 shadow-neon transition-all duration-200 translate-y-2 group-hover:translate-y-0">
                                         <span className="font-bold text-brand-orange">{h}:00</span> &bull; {count} views
                                     </div>
+                                    <div 
+                                        className={`w-full rounded-sm ${bgClass} transition-all duration-700 min-h-[4px] relative z-10`} 
+                                        style={{ height: `${Math.max(intensity * 100, 5)}%` }}
+                                    ></div>
                                 </div>
                             )
                         })}
