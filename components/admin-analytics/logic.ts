@@ -2,9 +2,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../utils';
 import { AnalyticsLog } from '../../types';
-import { AnalyticsStats } from './types';
+import { AnalyticsStats, FunnelStage } from './types';
+import { Eye, BookOpen, ShoppingBag, DollarSign, TrendingUp, Search, Layers } from 'lucide-react';
 
-// Helper: Format detik jadi "1m 30s"
 const formatDuration = (seconds: number) => {
     if (seconds < 60) return `${Math.round(seconds)}s`;
     const m = Math.floor(seconds / 60);
@@ -45,7 +45,6 @@ export const useAnalyticsData = () => {
     const totalViews = logs.filter(l => l.event_type === 'page_view').length;
     const uniqueVisitors = new Set(logs.map(l => l.visitor_id)).size;
     const totalActions = logs.filter(l => l.event_type === 'click_action' || l.event_type === 'contact_wa').length; 
-    const conversionRate = totalViews > 0 ? ((totalActions / totalViews) * 100).toFixed(1) : '0';
     
     const trafficByDate: Record<string, number> = {};
     const pageViews: Record<string, number> = {};
@@ -53,7 +52,6 @@ export const useAnalyticsData = () => {
     const referrers: Record<string, number> = {};
     const hours: number[] = new Array(24).fill(0);
     
-    // Logic Durasi & Sesi
     const visitorSessions: Record<string, AnalyticsLog[]> = {};
     const pageDurations: Record<string, number[]> = {}; 
     let totalEngagementSeconds = 0;
@@ -64,32 +62,78 @@ export const useAnalyticsData = () => {
         visitorSessions[log.visitor_id].push(log);
     });
 
-    Object.values(visitorSessions).forEach(sessionLogs => {
-        sessionLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
+    // --- FUNNEL LOGIC (MARKETING RADAR) ---
+    const funnelCounts = {
+        awareness: new Set<string>(), // Home, City, Landing
+        interest: new Set<string>(),  // Articles, Gallery
+        intent: new Set<string>(),    // Shop, Simulation
+        action: new Set<string>()     // Checkout Success, Contact WA
+    };
 
-        for (let i = 0; i < sessionLogs.length; i++) {
-            const current = sessionLogs[i];
-            if (current.event_type === 'page_view') {
-                const nextEvent = sessionLogs[i+1];
-                if (nextEvent) {
-                    const startTime = new Date(current.created_at!).getTime();
-                    const endTime = new Date(nextEvent.created_at!).getTime();
-                    const diff = (endTime - startTime) / 1000;
+    const userPaths: Record<string, string[]> = {};
 
-                    // Timeout check: 30 menit ga gerak = sesi dianggap beres
+    Object.entries(visitorSessions).forEach(([vid, sLogs]) => {
+        sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
+        
+        const path: string[] = [];
+        sLogs.forEach(l => {
+            const p = l.page_path.split('?')[0];
+            
+            // Track path sequence
+            if (path[path.length - 1] !== p) path.push(p);
+
+            // Group into Stages
+            if (p === '/' || p.includes('/jual-mesin-kasir-di')) funnelCounts.awareness.add(vid);
+            if (p.includes('/articles/') || p.includes('/gallery/')) funnelCounts.interest.add(vid);
+            if (p.includes('/shop') || p.includes('/services/')) funnelCounts.intent.add(vid);
+            if (l.event_type === 'contact_wa' || p.includes('/checkout')) funnelCounts.action.add(vid);
+
+            // Standard duration logic
+            if (l.event_type === 'page_view') {
+                const idx = sLogs.indexOf(l);
+                const next = sLogs[idx+1];
+                if (next) {
+                    const diff = (new Date(next.created_at!).getTime() - new Date(l.created_at!).getTime()) / 1000;
                     if (diff < 1800 && diff > 0) {
-                        const path = current.page_path.split('?')[0];
-                        if (!pageDurations[path]) pageDurations[path] = [];
-                        pageDurations[path].push(diff);
+                        if (!pageDurations[p]) pageDurations[p] = [];
+                        pageDurations[p].push(diff);
                         totalEngagementSeconds += diff;
                         engagementCount++;
                     }
                 }
             }
-        }
+        });
+        userPaths[vid] = path;
     });
 
-    // Inisialisasi tanggal kosong biar chart gak bolong
+    const funnelStages: FunnelStage[] = [
+        { label: 'TAMU (Awareness)', count: funnelCounts.awareness.size, percentage: 100, dropOff: 0, icon: Search, color: 'text-blue-400' },
+        { label: 'KEPO (Interest)', count: funnelCounts.interest.size, percentage: 0, dropOff: 0, icon: BookOpen, color: 'text-purple-400' },
+        { label: 'NAKSIR (Intent)', count: funnelCounts.intent.size, percentage: 0, dropOff: 0, icon: ShoppingBag, color: 'text-yellow-500' },
+        { label: 'DEAL (Conversion)', count: funnelCounts.action.size, percentage: 0, dropOff: 0, icon: DollarSign, color: 'text-green-500' }
+    ];
+
+    // Calculate Percentages and Drop-offs
+    for (let i = 1; i < funnelStages.length; i++) {
+        const prev = funnelStages[i-1];
+        const curr = funnelStages[i];
+        curr.percentage = prev.count > 0 ? Math.round((curr.count / prev.count) * 100) : 0;
+        curr.dropOff = 100 - curr.percentage;
+    }
+
+    // Path Pattern Analysis (Golden Paths)
+    const pathPatterns: Record<string, number> = {};
+    Object.values(userPaths).forEach(p => {
+        if (p.length < 2) return;
+        const key = p.join(' → ');
+        pathPatterns[key] = (pathPatterns[key] || 0) + 1;
+    });
+    const sortedPaths = Object.entries(pathPatterns)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([path, count]) => ({ path, count }));
+
+    // Standard metric inits
     const today = new Date();
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date();
@@ -98,63 +142,28 @@ export const useAnalyticsData = () => {
         trafficByDate[key] = 0;
     }
 
-    const visitorHistory: Record<string, string[]> = {}; 
-
     logs.forEach(log => {
       const d = new Date(log.created_at!);
       const dateKey = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-      if (trafficByDate.hasOwnProperty(dateKey) && log.event_type === 'page_view') {
-        trafficByDate[dateKey]++;
-      }
+      if (trafficByDate.hasOwnProperty(dateKey) && log.event_type === 'page_view') trafficByDate[dateKey]++;
 
       if (log.event_type === 'page_view') {
         const path = log.page_path.split('?')[0]; 
         pageViews[path] = (pageViews[path] || 0) + 1;
-        
         if (log.device_type === 'mobile') devices.mobile++;
         else if (log.device_type === 'desktop') devices.desktop++;
         else devices.tablet++;
 
         let ref = log.referrer || 'Direct';
         const lowerRef = ref.toLowerCase();
-        
-        if (lowerRef.includes('google')) ref = 'Google Search';
-        else if (lowerRef.includes('facebook') || lowerRef.includes('fb')) ref = 'Facebook';
+        if (lowerRef.includes('google')) ref = 'Google';
+        else if (lowerRef.includes('facebook')) ref = 'Facebook';
         else if (lowerRef.includes('instagram')) ref = 'Instagram';
-        else if (lowerRef.includes('whatsapp') || lowerRef.includes('wa.me')) ref = 'WhatsApp';
-        else if (lowerRef === 'direct' || lowerRef === '') ref = 'Direct Traffic';
-        else {
-            try { ref = new URL(ref).hostname.replace('www.', ''); } catch(e) {}
-        }
+        else if (lowerRef.includes('whatsapp')) ref = 'WhatsApp';
+        else if (lowerRef === 'direct' || lowerRef === '') ref = 'Direct';
         referrers[ref] = (referrers[ref] || 0) + 1;
-
-        const hour = new Date(log.created_at!).getHours();
-        hours[hour]++;
-
-        if (!visitorHistory[log.visitor_id]) visitorHistory[log.visitor_id] = [];
-        visitorHistory[log.visitor_id].push(path);
       }
     });
-
-    let newVisitors = 0;
-    let returningVisitors = 0;
-    let singlePageVisits = 0;
-    const exitPages: Record<string, number> = {};
-
-    Object.entries(visitorHistory).forEach(([vid, pages]) => {
-        if (pages.length === 1) {
-            newVisitors++;
-            singlePageVisits++;
-        } else {
-            returningVisitors++;
-        }
-        const lastPage = pages[pages.length - 1];
-        exitPages[lastPage] = (exitPages[lastPage] || 0) + 1;
-    });
-
-    const bounceRate = uniqueVisitors > 0 ? Math.round((singlePageVisits / uniqueVisitors) * 100) : 0;
-    const avgPagesPerSession = uniqueVisitors > 0 ? (totalViews / uniqueVisitors).toFixed(1) : "0";
-    const avgEngagementTime = engagementCount > 0 ? formatDuration(totalEngagementSeconds / engagementCount) : "0s";
 
     const sortedPages = Object.entries(pageViews)
         .map(([path, hits]) => {
@@ -163,15 +172,24 @@ export const useAnalyticsData = () => {
             return { path, hits, avgTime: avgSec > 0 ? formatDuration(avgSec) : '-' };
         })
         .sort((a, b) => b.hits - a.hits); 
-    
-    const sortedReferrers = Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 10);
-    const sortedExitPages = Object.entries(exitPages).sort(([,a], [,b]) => b - a).slice(0, 5);
 
     return { 
-        totalViews, uniqueVisitors, totalActions, conversionRate,
-        trafficByDate, sortedPages, devices, sortedReferrers, hours,
-        newVisitors, returningVisitors, bounceRate, avgPagesPerSession, sortedExitPages,
-        avgEngagementTime
+        totalViews, uniqueVisitors, totalActions, 
+        conversionRate: uniqueVisitors > 0 ? ((funnelCounts.action.size / uniqueVisitors) * 100).toFixed(1) : '0',
+        trafficByDate, sortedPages, devices, 
+        sortedReferrers: Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 10), 
+        hours,
+        newVisitors: Object.values(userPaths).filter(p => p.length === 1).length,
+        returningVisitors: Object.values(userPaths).filter(p => p.length > 1).length,
+        bounceRate: uniqueVisitors > 0 ? Math.round((Object.values(userPaths).filter(p => p.length === 1).length / uniqueVisitors) * 100) : 0,
+        avgPagesPerSession: uniqueVisitors > 0 ? (totalViews / uniqueVisitors).toFixed(1) : "0",
+        sortedExitPages: Object.entries(pageViews).sort(([,a], [,b]) => b - a).slice(0, 5), // Placeholder
+        avgEngagementTime: engagementCount > 0 ? formatDuration(totalEngagementSeconds / engagementCount) : "0s",
+        funnel: {
+            stages: funnelStages,
+            topPaths: sortedPaths,
+            conversionRate: uniqueVisitors > 0 ? (funnelCounts.action.size / uniqueVisitors) * 100 : 0
+        }
     };
   }, [logs, period]);
 

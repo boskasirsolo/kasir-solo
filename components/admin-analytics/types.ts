@@ -1,4 +1,19 @@
 
+export interface FunnelStage {
+    label: string;
+    count: number;
+    percentage: number;
+    dropOff: number;
+    icon: any;
+    color: string;
+}
+
+export interface FunnelStats {
+    stages: FunnelStage[];
+    topPaths: { path: string; count: number }[];
+    conversionRate: number;
+}
+
 export interface AnalyticsStats {
     totalViews: number;
     uniqueVisitors: number;
@@ -15,6 +30,7 @@ export interface AnalyticsStats {
     avgPagesPerSession: string;
     sortedExitPages: [string, number][];
     avgEngagementTime: string; 
+    funnel: FunnelStats; // NEW
 }
 
 export interface AnalyticsState {

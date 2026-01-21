@@ -7,6 +7,7 @@ import { KPIGrid, DeviceStats, ReferrerList } from './ui-cards';
 import { TrafficChart, PeakHoursHeatmap, RetentionChart } from './ui-charts';
 import { TopPagesTable, ExitPagesList, QualityScorePanel } from './ui-tables';
 import { PageAnalyticsModal } from './page-analytics-modal';
+import { FunnelRadar } from './funnel-radar'; // NEW
 
 export const AnalyticsDashboard = () => {
   const { stats, loading, period, setPeriod } = useAnalyticsData();
@@ -23,7 +24,12 @@ export const AnalyticsDashboard = () => {
       {/* 2. Main KPI Center */}
       <KPIGrid stats={stats} />
 
-      {/* 3. Traffic Behavior Block */}
+      {/* 3. MARKETING FUNNEL (CORONG CUAN) - HIGHLIGHT NEW FEATURE */}
+      <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <FunnelRadar data={stats.funnel} />
+      </div>
+
+      {/* 4. Traffic Behavior Block */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
          {/* LEFT: Main Traffic & Time Trends (2/3) */}
          <div className="lg:col-span-2">
@@ -40,14 +46,14 @@ export const AnalyticsDashboard = () => {
          </div>
       </div>
 
-      {/* 4. Deep Intelligence Grid */}
+      {/* 5. Deep Intelligence Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <RetentionChart newUsers={stats.newVisitors} returningUsers={stats.returningVisitors} />
           <QualityScorePanel bounceRate={stats.bounceRate} avgPages={stats.avgPagesPerSession} />
           <ExitPagesList pages={stats.sortedExitPages} />
       </div>
 
-      {/* 5. Content War Room */}
+      {/* 6. Content War Room */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <TopPagesTable 
             pages={stats.sortedPages} 
