@@ -23,15 +23,12 @@ export const PillarEngine = {
         const assetContext = ContextBuilder.getAssetContext(config.productsJson, config.galleryJson);
 
         let fullContent = "";
-        let prevSection = "";
+        let prevSectionEnd = "";
 
         for (let i = 0; i < outline.length; i++) {
             const isLast = i === outline.length - 1;
             
-            // STRATEGY: Only inject assets in specific sections (e.g. index 1 and 3)
-            // This prevents every section from having a product card.
-            // Index 1 = Section 2 (Early recommendation)
-            // Index 3 = Section 4 (Mid-article proof)
+            // STRATEGY: Only inject assets in specific sections
             const shouldInjectAssets = (i === 1 || i === 3);
 
             const currentContext = `
@@ -48,18 +45,28 @@ export const PillarEngine = {
             ${currentContext}
 
             [WRITING RULES]
-            1. Focus ONLY on the current section "${outline[i]}".
-            2. Depth: Be comprehensive. Use bullet points/tables if needed.
-            3. Flow: ${i === 0 ? "Start with a strong Hook." : `Bridge smoothly from previous point: "...${prevSection.slice(-100)}..."`}
-            4. ${isLast ? CLOSING_RULE : "Do NOT write a conclusion yet."}
+            1. Fokus HANYA pada sub-judul: "${outline[i]}".
+            2. Kedalaman: Bahas tuntas. Pake bullet points/tabel kalau perlu.
+            3. Flow & Anti-Repetisi: 
+               ${i === 0 ? 
+                 "Mulai dengan Hook yang nendang. JANGAN pake basa-basi standar AI." : 
+                 `REFERENSI KONTEKS: Gue kasih 100 karakter terakhir dari bagian sebelumnya biar lo nyambung: "...${prevSectionEnd}...". 
+                  PENTING: JANGAN ULANGI, JANGAN TULIS ULANG, dan JANGAN RE-PHRASE kalimat referensi tersebut. 
+                  Tugas lo adalah: LANGSUNG LANJUT ke kalimat atau paragraf berikutnya seolah-olah lo cuma lanjut ngetik.`
+               }
+            4. ${isLast ? CLOSING_RULE : "JANGAN tulis kesimpulan/closing dulu. Langsung berhenti di poin terakhir seksi ini."}
 
-            Output: Markdown.
+            Output: Markdown murni.
             `;
 
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
             const text = res.text?.trim() || "";
+            
+            // Tambahkan spacing antar seksi
             fullContent += text + "\n\n";
-            prevSection = text;
+            
+            // Simpan ujung teks buat referensi seksi berikutnya
+            prevSectionEnd = text.slice(-150);
         }
         return fullContent;
     }
