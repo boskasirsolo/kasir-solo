@@ -22,6 +22,12 @@ export interface AnalyticsStats {
     trafficByDate: Record<string, number>;
     sortedPages: { path: string; hits: number; avgTime: string }[]; 
     devices: { mobile: number; desktop: number; tablet: number };
+    osDist: Record<string, number>; // NEW
+    sortedCities: [string, number][]; // NEW
+    demographics: { // NEW (SIMULATED)
+        age: Record<string, number>;
+        gender: { male: number; female: number };
+    };
     sortedReferrers: [string, number][];
     hours: number[];
     newVisitors: number;
@@ -30,7 +36,7 @@ export interface AnalyticsStats {
     avgPagesPerSession: string;
     sortedExitPages: [string, number][];
     avgEngagementTime: string; 
-    funnel: FunnelStats; // NEW
+    funnel: FunnelStats;
 }
 
 export interface AnalyticsState {

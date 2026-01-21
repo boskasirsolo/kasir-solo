@@ -3,44 +3,35 @@
 export const optimizeImage = (url: string, width: number = 800) => {
   if (!url) return '';
 
-  // 1. Handle Cloudinary
   if (url.includes('cloudinary.com')) {
-    // Prevent double optimization if params already exist
     if (url.includes('f_auto,q_auto')) return url;
-
-    // Params: 
-    // f_auto: Format auto (WebP/AVIF)
-    // q_auto:eco: Aggressive compression for speed
-    // c_limit: Resize without upscaling (maintains aspect ratio)
-    // w_{width}: Target width
     const params = [`f_auto`, `q_auto:eco`, `c_limit`, `w_${width}`];
-
-    // Insert params after /upload/
     return url.replace('/upload/', `/upload/${params.join(',')}/`);
   }
 
-  // 2. Handle Unsplash (Common in Mock Data)
   if (url.includes('images.unsplash.com')) {
     try {
         const urlObj = new URL(url);
         urlObj.searchParams.set('w', width.toString());
-        urlObj.searchParams.set('q', '75'); // Eco quality
-        urlObj.searchParams.set('fm', 'webp'); // Next-gen format
-        urlObj.searchParams.set('fit', 'max'); // Prevent upscaling
+        urlObj.searchParams.set('q', '75');
+        urlObj.searchParams.set('fm', 'webp');
+        urlObj.searchParams.set('fit', 'max');
         return urlObj.toString();
     } catch(e) {
-        // Fallback if URL parsing fails
         return url;
     }
   }
 
-  // 3. Fallback for others (return original)
   return url;
 };
 
-// --- WATERMARK ENGINE (SECURITY) ---
-export const addWatermarkToFile = async (file: File): Promise<File> => {
-  return new Promise((resolve, reject) => {
+// --- CLIENT-SIDE AUTO COMPRESSOR ---
+export const autoCompressImage = async (file: File, maxSizeMB: number = 2): Promise<File> => {
+  if (file.size <= maxSizeMB * 1024 * 1024) return file;
+
+  console.log(`[AutoCompress] File ${file.name} kegedean (${(file.size / 1024 / 1024).toFixed(2)}MB). Mengecilkan...`);
+
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
@@ -48,44 +39,88 @@ export const addWatermarkToFile = async (file: File): Promise<File> => {
       img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Max dimension 1920px (Full HD) biar gak pecah tapi ringan
+        const MAX_WIDTH = 1920;
+        const MAX_HEIGHT = 1080;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            console.log(`[AutoCompress] Beres! Sekarang cuma ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
+            resolve(compressedFile);
+          } else {
+            resolve(file);
+          }
+        }, 'image/jpeg', 0.8); // 80% quality is sweet spot
+      };
+    };
+  });
+};
+
+// --- WATERMARK ENGINE (SECURITY) ---
+export const addWatermarkToFile = async (file: File): Promise<File> => {
+  // Pastikan file sudah dikompres dulu biar ringan diproses watermark
+  const lightFile = await autoCompressImage(file);
+  
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(lightFile);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-            resolve(file); // Fallback if canvas fails
+            resolve(lightFile);
             return;
         }
 
-        // Set dimensions
         canvas.width = img.width;
         canvas.height = img.height;
-
-        // Draw original image
         ctx.drawImage(img, 0, 0);
 
-        // Watermark Configuration
         const text = "PT MESIN KASIR SOLO";
-        const fontSize = Math.floor(canvas.width / 15); // Responsive font size
+        const fontSize = Math.floor(canvas.width / 15);
         ctx.font = `900 ${fontSize}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        // Style 1: Center Diagonal (The Fortress)
         ctx.save();
         ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(-Math.PI / 6); // -30 degrees
-        
-        // Shadow/Outline for visibility on any background
+        ctx.rotate(-Math.PI / 6);
         ctx.shadowColor = "rgba(0,0,0,0.8)";
         ctx.shadowBlur = 10;
         ctx.lineWidth = 2;
         ctx.strokeStyle = "rgba(0,0,0,0.3)";
         ctx.strokeText(text, 0, 0);
-
-        // Main Text
-        ctx.fillStyle = "rgba(255, 255, 255, 0.4)"; // White semi-transparent
+        ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
         ctx.fillText(text, 0, 0);
         ctx.restore();
 
-        // Style 2: Bottom Right Copyright (Subtle)
         ctx.save();
         const smallSize = Math.floor(canvas.width / 35);
         ctx.font = `bold ${smallSize}px sans-serif`;
@@ -96,21 +131,20 @@ export const addWatermarkToFile = async (file: File): Promise<File> => {
         ctx.fillText("© Original Asset by MesinKasirSolo.com", canvas.width - 20, canvas.height - 20);
         ctx.restore();
 
-        // Convert back to File
         canvas.toBlob((blob) => {
             if (blob) {
                 const watermarkedFile = new File([blob], file.name, {
-                    type: file.type,
+                    type: lightFile.type,
                     lastModified: Date.now(),
                 });
                 resolve(watermarkedFile);
             } else {
-                resolve(file);
+                resolve(lightFile);
             }
-        }, file.type, 0.9); // 0.9 quality
+        }, lightFile.type, 0.9);
       };
-      img.onerror = () => resolve(file);
+      img.onerror = () => resolve(lightFile);
     };
-    reader.onerror = () => resolve(file);
+    reader.onerror = () => resolve(lightFile);
   });
 };

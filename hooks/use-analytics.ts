@@ -6,7 +6,17 @@ import { supabase } from '../utils';
 const GHOST_KEY = 'mks_ghost_mode';
 const VISITOR_KEY = 'mks_visitor_id';
 
-// Helper to check device type
+// --- HELPER: DETEKSI OS ---
+const getOS = () => {
+  const ua = navigator.userAgent;
+  if (/android/i.test(ua)) return 'Android';
+  if (/iPad|iPhone|iPod/.test(ua)) return 'iOS';
+  if (/Windows/i.test(ua)) return 'Windows';
+  if (/Mac/i.test(ua)) return 'MacOS';
+  if (/Linux/i.test(ua)) return 'Linux';
+  return 'Lainnya';
+};
+
 const getDeviceType = () => {
   const ua = navigator.userAgent;
   if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return 'tablet';
@@ -14,7 +24,6 @@ const getDeviceType = () => {
   return 'desktop';
 };
 
-// Helper to get or create visitor ID
 const getVisitorId = () => {
   let id = localStorage.getItem(VISITOR_KEY);
   if (!id) {
@@ -24,14 +33,11 @@ const getVisitorId = () => {
   return id;
 };
 
-// --- MAIN HOOK ---
 export const useAnalytics = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  // Use a ref to ensure we only track once per page load/change, preventing strict mode double firing
   const trackedPath = useRef<string | null>(null);
 
-  // 1. Ghost Mode Logic (The Invisible Cloak)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('mode') === 'ghost_access') {
@@ -41,38 +47,38 @@ export const useAnalytics = () => {
     }
   }, [location.search, navigate, location.pathname]);
 
-  // 2. Tracking Logic (View & Leave)
   useEffect(() => {
-    // Delay to let Ghost Mode logic settle
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
         const isGhost = localStorage.getItem(GHOST_KEY) === 'true';
         const isAdminRoute = location.pathname.startsWith('/admin');
 
-        if (isGhost) return;
-        if (isAdminRoute) return;
-        if (!supabase) return;
-
-        // Prevent double tracking same path in React StrictMode
+        if (isGhost || isAdminRoute || !supabase) return;
         if (trackedPath.current === location.pathname) return;
         trackedPath.current = location.pathname;
 
         const visitorId = getVisitorId();
         const deviceType = getDeviceType();
+        const osName = getOS();
         const currentPath = location.pathname;
 
-        // DETECT SOURCE FROM URL (UTM OR MANUAL SOURCE)
-        // Priority: UTM Source > Source Param > Document Referrer > Direct
+        // --- GEO LOCATION DETECTION (IP-BASED) ---
+        let city = 'Unknown';
+        try {
+            const geoRes = await fetch('https://ipapi.co/json/');
+            const geoData = await geoRes.json();
+            city = geoData.city || 'Unknown';
+        } catch (e) {
+            console.warn("Geo lookup failed, using fallback.");
+        }
+
         const params = new URLSearchParams(location.search);
         const urlSource = params.get('utm_source') || params.get('source') || params.get('ref');
         
         let finalReferrer = document.referrer;
-        if (urlSource) {
-            finalReferrer = urlSource; // Override referrer if URL param exists (e.g. ?source=whatsapp)
-        } else if (!finalReferrer) {
-            finalReferrer = 'direct';
-        }
+        if (urlSource) finalReferrer = urlSource;
+        else if (!finalReferrer) finalReferrer = 'direct';
 
-        // A. TRACK PAGE VIEW (Entry)
+        // A. TRACK PAGE VIEW (ENTRY)
         const trackPageView = async () => {
             try {
                 await supabase.from('analytics_logs').insert([{
@@ -80,25 +86,26 @@ export const useAnalytics = () => {
                     event_type: 'page_view',
                     page_path: currentPath,
                     device_type: deviceType,
-                    referrer: finalReferrer
+                    referrer: finalReferrer,
+                    // NEW DATA FIELDS (Pastikan kolom ini ada di Supabase!)
+                    location_city: city,
+                    os_name: osName
                 }]);
-            } catch (e) {
-                console.error("Analytics Error", e);
-            }
+            } catch (e) { console.error("Analytics Error", e); }
         };
 
         trackPageView();
 
-        // B. TRACK PAGE LEAVE (Exit - For Duration Calculation)
         return () => {
             if (isGhost || isAdminRoute || !supabase) return;
-            // Fire and forget 'page_leave' event
             supabase.from('analytics_logs').insert([{
                 visitor_id: visitorId,
                 event_type: 'page_leave',
                 page_path: currentPath,
                 device_type: deviceType,
-                referrer: 'internal_exit'
+                referrer: 'internal_exit',
+                location_city: city,
+                os_name: osName
             }]).then(() => {}); 
         };
 
@@ -107,10 +114,8 @@ export const useAnalytics = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  // 3. Manual Event Trigger (untuk tombol WA/Beli)
   const trackEvent = async (eventName: 'click_action' | 'contact_wa', details?: string) => {
     if (localStorage.getItem(GHOST_KEY) === 'true' || !supabase) return;
-    
     try {
       await supabase.from('analytics_logs').insert([{
         visitor_id: getVisitorId(),
@@ -125,7 +130,6 @@ export const useAnalytics = () => {
   return { trackEvent };
 };
 
-// Helper untuk mengaktifkan ghost mode saat login admin
 export const activateGhostMode = () => {
   localStorage.setItem(GHOST_KEY, 'true');
 };
