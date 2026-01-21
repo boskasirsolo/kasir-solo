@@ -92,7 +92,7 @@ export const DigitalProjectCard: React.FC<{ item: GalleryItem, onClick: () => vo
       <div className="relative bg-gray-900 pt-4 px-4 pb-0 overflow-hidden border-b border-white/5">
          <div className="relative rounded-t-xl bg-black border-[6px] border-gray-800 border-b-0 overflow-hidden aspect-[16/10] shadow-2xl">
             <div 
-                className="w-full h-full bg-cover bg-top transition-all duration-[10000ms] ease-linear group-hover:bg-bottom"
+                className="w-full h-full bg-cover bg-top transition-all duration-[20000ms] ease-in-out group-hover:bg-bottom"
                 style={{ backgroundImage: `url(${optimizeImage(item.image_url, 600)})` }}
                 role="img"
                 aria-label={item.title}
