@@ -1,6 +1,6 @@
 
-import React, { useState, useMemo } from 'react';
-import { Calendar, Clock, Activity, Flame, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, Activity, Flame, RefreshCw } from 'lucide-react';
 
 export const TrafficChart = ({ data, period }: { data: Record<string, number>, period: number }) => {
     const values = Object.values(data);
@@ -55,102 +55,74 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
 
 export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
     const maxVal = Math.max(...hours, 1);
-    const [hoveredHour, setHoveredHour] = useState<number | null>(null);
-
-    // Hitung posisi absolut di dalam kontainer bar
-    const tooltipData = useMemo(() => {
-        if (hoveredHour === null) return null;
-        const count = hours[hoveredHour];
-        const intensity = count / maxVal;
-        
-        // Horizontal: Pake index bar (0-23) dibagi total
-        const leftPos = (hoveredHour / 23) * 100; 
-        // Vertical: Persentase tinggi bar
-        const barHeightPercent = Math.max(intensity * 100, 5);
-
-        return { hour: hoveredHour, count, barHeight: barHeightPercent, left: leftPos };
-    }, [hoveredHour, hours, maxVal]);
 
     return (
         <div className="mt-6 pt-6 border-t border-white/5 relative">
             <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
                 <Flame size={14} className="text-red-500"/> Jam Sibuk Pasar (WIB)
             </h4>
-            <p className="text-[10px] text-gray-500 mb-4">Sorot bar buat liat detail jam operasional.</p>
+            <p className="text-[10px] text-gray-500 mb-4">Sorot bar buat intip jam tersibuk juragan belanja.</p>
             
-            <div className="relative bg-black/40 rounded-2xl p-4 md:p-6 border border-white/5 overflow-visible">
-                {/* 
-                    PT-16 di bawah ini krusial biar tooltip ada space di atas. 
-                    PB-2 buat kasih jarak sama label jam.
-                */}
-                <div className="relative overflow-visible pb-2 pt-16">
-                    <div className="overflow-x-auto custom-scrollbar-hide">
-                        <div className="min-w-[500px] relative">
-                            
-                            {/* 
-                                LAYER TOOLTIP: Sekarang nempel di kontainer bar.
-                                Posisi bottom: 0 kontainer ini adalah baseline bar.
-                            */}
-                            {tooltipData && (
-                                <div 
-                                    className="absolute z-50 pointer-events-none transition-all duration-300 ease-out"
-                                    style={{ 
-                                        left: `${tooltipData.left}%`,
-                                        bottom: `${tooltipData.barHeight}%`, // Start dari kepala bar
-                                        marginBottom: '12px', // GAP tetap antara bar dan tooltip
-                                        transform: `translateX(${tooltipData.hour < 3 ? '0%' : tooltipData.hour > 21 ? '-100%' : '-50%'})`
-                                    }}
-                                >
-                                    <div className="flex flex-col items-center">
-                                        <div className="bg-brand-dark/95 border border-brand-orange/50 px-3 py-1.5 rounded-xl shadow-neon-strong backdrop-blur-md flex items-center gap-2 whitespace-nowrap min-w-max">
-                                            <span className="text-[11px] font-black text-brand-orange">{tooltipData.hour.toString().padStart(2, '0')}:00</span>
-                                            <div className="w-px h-3 bg-white/20"></div>
-                                            <span className="text-[11px] font-bold text-white">{tooltipData.count} Views</span>
-                                        </div>
-                                        {/* Caret / Panah */}
+            <div className="relative bg-black/40 rounded-2xl p-4 md:p-6 border border-white/5">
+                <div className="overflow-x-auto custom-scrollbar-hide">
+                    {/* 
+                        Tinggi kontainer dinaikin (h-48) & padding atas (pt-24) 
+                        biar tooltip gak kepotong pas bar-nya tinggi.
+                    */}
+                    <div className="min-w-[500px] h-48 pt-24 flex flex-col justify-end">
+                        <div className="flex items-end gap-[2px] h-24 w-full relative">
+                            {hours.map((count, h) => {
+                                const intensity = count / maxVal;
+                                const barHeight = `${Math.max(intensity * 100, 5)}%`;
+                                
+                                let bgClass = 'bg-white/5';
+                                if (count > 0) {
+                                    if (intensity > 0.75) bgClass = 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]';
+                                    else if (intensity > 0.5) bgClass = 'bg-brand-orange shadow-[0_0_12px_rgba(255,95,31,0.25)]';
+                                    else if (intensity > 0.25) bgClass = 'bg-yellow-500/80';
+                                    else bgClass = 'bg-blue-500/80';
+                                }
+
+                                return (
+                                    <div 
+                                        key={h} 
+                                        className="flex-1 group relative h-full flex flex-col justify-end min-w-[15px] cursor-pointer"
+                                    >
+                                        {/* 
+                                            TOOLTIP: Sekarang ditaruh di dalam div bar (Anchored).
+                                            Selalu muncul tepat di atas kepala bar dengan gap 12px.
+                                        */}
                                         <div 
-                                            className={`w-2.5 h-2.5 bg-brand-dark border-r border-b border-brand-orange/40 rotate-45 -mt-1.5 shadow-neon ${
-                                                tooltipData.hour < 3 ? 'mr-auto ml-3' : tooltipData.hour > 21 ? 'ml-auto mr-3' : ''
-                                            }`}
+                                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 flex flex-col items-center"
+                                            style={{ 
+                                                // Start tooltip dari posisi atas bar
+                                                bottom: `calc(${barHeight} + 12px)`,
+                                                // Handle pinggiran biar gak off-screen
+                                                transform: `translateX(${h < 3 ? '-20%' : h > 21 ? '-80%' : '-50%'})`
+                                            }}
+                                        >
+                                            <div className="bg-brand-dark/95 border border-brand-orange/40 px-3 py-1.5 rounded-xl shadow-neon-strong backdrop-blur-md flex items-center gap-2 whitespace-nowrap">
+                                                <span className="text-[10px] font-black text-brand-orange">{h.toString().padStart(2, '0')}:00</span>
+                                                <div className="w-px h-3 bg-white/20"></div>
+                                                <span className="text-[10px] font-bold text-white">{count} Views</span>
+                                            </div>
+                                            {/* Caret (Panah) */}
+                                            <div className={`w-2 h-2 bg-brand-dark border-r border-b border-brand-orange/40 rotate-45 -mt-1 shadow-neon ${h < 3 ? 'mr-auto ml-4' : h > 21 ? 'ml-auto mr-4' : ''}`}></div>
+                                        </div>
+
+                                        {/* THE BAR */}
+                                        <div 
+                                            className={`w-full rounded-sm ${bgClass} transition-all duration-300 min-h-[4px] group-hover:brightness-150 group-hover:scale-x-110 group-hover:z-10`} 
+                                            style={{ height: barHeight }}
                                         ></div>
                                     </div>
-                                </div>
-                            )}
-
-                            {/* CONTAINER BAR */}
-                            <div className="flex items-end gap-[2px] h-24 w-full relative z-10">
-                                {hours.map((count, h) => {
-                                    const intensity = count / maxVal;
-                                    let bgClass = 'bg-white/5';
-                                    if (count > 0) {
-                                        if (intensity > 0.75) bgClass = 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]';
-                                        else if (intensity > 0.5) bgClass = 'bg-brand-orange shadow-[0_0_12px_rgba(255,95,31,0.25)]';
-                                        else if (intensity > 0.25) bgClass = 'bg-yellow-500/80';
-                                        else bgClass = 'bg-blue-500/80';
-                                    }
-
-                                    const isHovered = hoveredHour === h;
-
-                                    return (
-                                        <div 
-                                            key={h} 
-                                            className="flex-1 flex flex-col items-center group relative h-full justify-end min-w-[15px] cursor-pointer"
-                                            onMouseEnter={() => setHoveredHour(h)}
-                                            onMouseLeave={() => setHoveredHour(null)}
-                                        >
-                                            <div 
-                                                className={`w-full rounded-sm ${bgClass} transition-all duration-300 min-h-[4px] relative z-10 ${isHovered ? 'brightness-150 scale-x-125 z-20' : ''}`} 
-                                                style={{ height: `${Math.max(intensity * 100, 5)}%` }}
-                                            ></div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-
-                            {/* LABEL JAM */}
-                            <div className="flex justify-between text-[9px] text-gray-600 mt-4 font-mono uppercase tracking-tighter px-1 border-t border-white/5 pt-2">
-                                <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
-                            </div>
+                                )
+                            })}
+                        </div>
+                        
+                        {/* LABEL JAM */}
+                        <div className="flex justify-between text-[9px] text-gray-600 mt-4 font-mono uppercase tracking-tighter px-1 border-t border-white/5 pt-2">
+                            <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
                         </div>
                     </div>
                 </div>
