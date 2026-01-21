@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { useCRMLogic } from './logic';
+import { useCRMLogic, parseIntel } from './logic';
 import { PIPELINE_STAGES, Customer, LeadStatus } from './types';
-import { Search, RefreshCw, LayoutGrid, List, MessageCircle, Phone, MapPin, Building, Clock, Flame, Loader2, Sparkles, User, ArrowRight } from 'lucide-react';
+import { Search, RefreshCw, LayoutGrid, List, MessageCircle, Phone, MapPin, Building, Clock, Flame, Loader2, Sparkles, User, ArrowRight, FileText, Printer } from 'lucide-react';
 import { formatRupiah } from '../../utils';
 import { LoadingSpinner } from '../ui';
 
 export const AdminCRM = ({ config }: { config: any }) => {
-    const { state, setSearchTerm, setActiveView, filteredCustomers, updateStatus, generateAIScript, isGeneratingScript, refresh } = useCRMLogic();
+    const { state, setSearchTerm, setActiveView, filteredCustomers, updateStatus, generateAIScript, generateProposal, isGeneratingScript, refresh } = useCRMLogic();
 
     return (
         <div className="space-y-6">
@@ -59,8 +59,10 @@ export const AdminCRM = ({ config }: { config: any }) => {
                                             <LeadCard 
                                                 key={customer.id} 
                                                 customer={customer} 
+                                                config={config}
                                                 onStatusUpdate={updateStatus} 
                                                 onAIScript={() => generateAIScript(customer)}
+                                                onGenerateProposal={() => generateProposal(customer, config)}
                                                 isGenerating={isGeneratingScript === customer.id}
                                             />
                                         ))}
@@ -110,12 +112,17 @@ export const AdminCRM = ({ config }: { config: any }) => {
                                                 {formatRupiah(customer.total_spent)}
                                             </td>
                                             <td className="p-4 text-right">
-                                                <button 
-                                                    onClick={() => generateAIScript(customer)}
-                                                    className="p-2 text-brand-orange hover:bg-brand-orange hover:text-white rounded-lg transition-all"
-                                                >
-                                                    <MessageCircle size={16}/>
-                                                </button>
+                                                <div className="flex justify-end gap-2">
+                                                    <button onClick={() => generateProposal(customer, config)} className="p-2 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all" title="Bikin Proposal">
+                                                        <FileText size={16}/>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => generateAIScript(customer)}
+                                                        className="p-2 text-brand-orange hover:bg-brand-orange hover:text-white rounded-lg transition-all"
+                                                    >
+                                                        <MessageCircle size={16}/>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -133,44 +140,61 @@ export const AdminCRM = ({ config }: { config: any }) => {
 
 interface LeadCardProps {
     customer: Customer;
+    config: any;
     onStatusUpdate: (id: string, s: LeadStatus) => any;
     onAIScript: () => any;
+    onGenerateProposal: () => any;
     isGenerating: boolean;
 }
 
-// Fix: Use React.FC<LeadCardProps> to correctly handle React component props (like 'key') and resolve the type mismatch in parent map.
-const LeadCard: React.FC<LeadCardProps> = ({ customer, onStatusUpdate, onAIScript, isGenerating }) => {
+const LeadCard: React.FC<LeadCardProps> = ({ customer, config, onStatusUpdate, onAIScript, onGenerateProposal, isGenerating }) => {
+    const intel = parseIntel(customer.notes);
+    
     return (
         <div className={`bg-brand-card p-4 rounded-xl border-l-4 transition-all hover:border-brand-orange hover:shadow-neon-text/5 group ${customer.lead_temperature === 'hot' ? 'border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.1)]' : customer.lead_temperature === 'warm' ? 'border-orange-500' : 'border-blue-500'}`}>
             <div className="flex justify-between items-start mb-3">
-                <div>
-                    <h5 className="font-bold text-white text-sm group-hover:text-brand-orange transition-colors">{customer.name}</h5>
+                <div className="min-w-0 flex-1">
+                    <h5 className="font-bold text-white text-sm group-hover:text-brand-orange transition-colors truncate">{customer.name}</h5>
                     <p className="text-[10px] text-gray-500 flex items-center gap-1 font-mono"><Phone size={8}/> {customer.phone}</p>
                 </div>
                 <TempBadge temp={customer.lead_temperature} />
             </div>
 
-            <div className="space-y-2 mb-4">
-                {customer.company_name && <p className="text-[10px] text-gray-400 flex items-center gap-1"><Building size={10}/> {customer.company_name}</p>}
-                {customer.location && <p className="text-[10px] text-gray-500 flex items-center gap-1"><MapPin size={10}/> {customer.location}</p>}
+            <div className="space-y-1 mb-4">
+                {intel.paket && (
+                    <div className="bg-black/30 p-2 rounded border border-white/5">
+                        <p className="text-[9px] text-gray-500 uppercase font-black mb-0.5">Produk Minat:</p>
+                        <p className="text-[10px] text-white font-bold truncate">{intel.paket}</p>
+                        <p className="text-[10px] text-brand-orange font-bold mt-1">{intel.estimasi}</p>
+                    </div>
+                )}
+                {customer.company_name && <p className="text-[10px] text-gray-400 flex items-center gap-1 mt-2"><Building size={10}/> {customer.company_name}</p>}
+                {customer.location || intel.alamat ? <p className="text-[10px] text-gray-500 flex items-center gap-1 truncate"><MapPin size={10}/> {customer.location || intel.alamat}</p> : null}
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                <div className="flex gap-1">
+            <div className="flex items-center justify-between pt-3 border-t border-white/5 gap-2">
+                <div className="flex gap-1 flex-1">
+                    <button 
+                        onClick={onGenerateProposal}
+                        className="flex-1 py-1.5 bg-blue-600/10 text-blue-400 rounded-lg hover:bg-blue-600 hover:text-white transition-all border border-blue-500/20 flex items-center justify-center gap-1"
+                        title="Draft Proposal PDF"
+                    >
+                        <FileText size={12}/> <span className="text-[9px] font-bold">PROPOSAL</span>
+                    </button>
                     <button 
                         onClick={onAIScript}
                         disabled={isGenerating}
-                        className="p-1.5 bg-brand-orange/10 text-brand-orange rounded-lg hover:bg-brand-orange hover:text-white transition-all shadow-sm flex items-center gap-1"
+                        className="flex-1 py-1.5 bg-brand-orange/10 text-brand-orange rounded-lg hover:bg-brand-orange hover:text-white transition-all shadow-sm border border-brand-orange/20 flex items-center justify-center gap-1"
                         title="Sapa Pake AI SIBOS"
                     >
-                        {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <><Sparkles size={12}/> <span className="text-[9px] font-bold">SAPA AI</span></>}
+                        {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <><Sparkles size={12}/> <span className="text-[9px] font-bold">SAPA</span></>}
                     </button>
                 </div>
                 
                 <select 
                     value={customer.lead_status}
                     onChange={(e) => onStatusUpdate(customer.id, e.target.value as LeadStatus)}
-                    className="bg-transparent text-[9px] font-bold text-gray-500 hover:text-white outline-none cursor-pointer uppercase"
+                    className="bg-transparent text-[9px] font-bold text-gray-500 hover:text-white outline-none cursor-pointer uppercase shrink-0"
                 >
                     {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.id}</option>)}
                 </select>
