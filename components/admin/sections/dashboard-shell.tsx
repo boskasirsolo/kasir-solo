@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -107,7 +108,7 @@ export const DashboardShell = (props: DashboardProps) => {
     };
 
     return (
-        <div className="min-h-screen bg-brand-black flex flex-col lg:flex-row relative selection:bg-brand-orange selection:text-white">
+        <div className="min-h-screen bg-brand-black flex flex-col lg:flex-row relative overflow-hidden selection:bg-brand-orange selection:text-white">
             
             {/* --- MOBILE TOP HEADER --- */}
             <div className="lg:hidden h-16 bg-brand-card/95 border-b border-white/10 flex items-center justify-between px-6 sticky top-0 z-[60] backdrop-blur-md">
@@ -125,8 +126,8 @@ export const DashboardShell = (props: DashboardProps) => {
                 </button>
             </div>
 
-            {/* --- MAIN CONTENT (LEFT SIDE ON DESKTOP) --- */}
-            <main className="flex-1 min-h-screen p-4 lg:p-8 pb-24 lg:pb-8 relative lg:order-1">
+            {/* --- MAIN CONTENT (LEFT SIDE) --- */}
+            <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar p-4 lg:p-8 order-2 lg:order-1 pb-24 lg:pb-8 relative">
                 <div className="absolute top-0 left-0 w-full h-[600px] bg-[radial-gradient(circle_at_top_left,rgba(255,95,31,0.05),transparent)] pointer-events-none -z-10"></div>
                 
                 <div className="max-w-[1600px] mx-auto">
@@ -142,6 +143,7 @@ export const DashboardShell = (props: DashboardProps) => {
                         </div>
                         
                         <div className="flex gap-3 items-center">
+                             {/* CORE ENGINE MIGRATED TO HEADER */}
                              <SystemHealthWidget horizontal />
                              
                              <div className="bg-brand-card/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-3 shadow-xl group hover:border-brand-orange/30 transition-all cursor-help">
@@ -163,9 +165,9 @@ export const DashboardShell = (props: DashboardProps) => {
                 </div>
             </main>
 
-            {/* --- STICKY SIDEBAR NAV (RIGHT SIDE ON DESKTOP) --- */}
+            {/* --- COMPACT SIDEBAR NAV (RIGHT SIDE) --- */}
             <aside 
-                className={`fixed lg:sticky top-0 right-0 h-screen w-72 lg:w-[280px] bg-brand-card/40 backdrop-blur-3xl border-l border-white/5 z-50 flex flex-col transition-all duration-500 transform lg:translate-x-0 lg:order-2 shadow-[-20px_0_50px_rgba(0,0,0,0.3)] ${
+                className={`fixed lg:sticky top-0 right-0 h-screen w-72 lg:w-[280px] bg-brand-card/40 backdrop-blur-3xl border-l border-white/5 z-50 flex flex-col transition-all duration-500 transform lg:translate-x-0 order-1 lg:order-2 shadow-[0_0_50px_rgba(0,0,0,0.5)] ${
                     isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >
