@@ -21,6 +21,9 @@ export const ProjectEmbedCard: React.FC<{ title: string, url: string, image: str
     const LinkComponent = isInternal ? Link : 'a';
     const linkProps = isInternal ? { to: url } : { href: url, target: '_blank', rel: 'noreferrer' };
 
+    // Prevent Title/Desc duplication if AI sends same text for both
+    const showDesc = desc && desc !== title;
+
     return (
         <div className="my-10 group relative rounded-2xl overflow-hidden bg-brand-dark border border-white/10 hover:border-brand-orange/50 transition-all shadow-lg hover:shadow-neon">
             {/* Background Glow Effect */}
@@ -49,9 +52,11 @@ export const ProjectEmbedCard: React.FC<{ title: string, url: string, image: str
                     <h4 className="text-xl font-display font-bold text-white mb-3 group-hover:text-brand-orange transition-colors leading-tight">
                         {title}
                     </h4>
-                    <p className="text-sm text-gray-400 leading-relaxed mb-6 line-clamp-2 md:line-clamp-3">
-                        {desc}
-                    </p>
+                    {showDesc && (
+                        <p className="text-sm text-gray-400 leading-relaxed mb-6 line-clamp-2 md:line-clamp-3">
+                            {desc}
+                        </p>
+                    )}
                     
                     <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
                         <span className="text-[10px] text-gray-500 font-mono uppercase">
@@ -78,6 +83,9 @@ export const ProductEmbedCard = ({ name, price, image, desc, waNumber }: { name:
     
     const targetWa = waNumber || "6282325103336";
 
+    // Prevent Title/Desc duplication
+    const showDesc = desc && desc !== name;
+
     // Search URL for the product
     const searchUrl = `/shop?search=${encodeURIComponent(name)}`;
     const waUrl = `https://wa.me/${targetWa}?text=${encodeURIComponent(`Halo, saya tertarik dengan produk *${name}* yang saya lihat di artikel.`)}`;
@@ -101,7 +109,9 @@ export const ProductEmbedCard = ({ name, price, image, desc, waNumber }: { name:
             <div className="p-6 flex flex-col justify-center flex-1">
                 <h4 className="text-lg md:text-xl font-bold text-white mb-1 leading-tight group-hover:text-brand-orange transition-colors">{name}</h4>
                 <p className="text-2xl font-display font-bold text-brand-orange mb-3 tracking-tight">{displayPrice}</p>
-                <p className="text-xs text-gray-400 leading-relaxed mb-6 line-clamp-2">{desc}</p>
+                {showDesc && (
+                    <p className="text-xs text-gray-400 leading-relaxed mb-6 line-clamp-2">{desc}</p>
+                )}
                 
                 <div className="flex flex-wrap gap-3">
                     <a 

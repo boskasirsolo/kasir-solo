@@ -2,6 +2,7 @@
 import React from 'react';
 import { optimizeImage, sanitizeHtml } from '../../../../../utils';
 import { FileDownloadCard, ProjectEmbedCard, ProductEmbedCard } from '../../content-renderers';
+import { StandardTextBlock } from './text-blocks';
 
 // FIX: Typed as React.FC to correctly handle internal React props like 'key'
 export const ImageBlock: React.FC<{ alt: string, src: string }> = ({ alt, src }) => (
@@ -28,41 +29,66 @@ export const VideoBlock: React.FC<{ content: string }> = ({ content }) => (
 
 // FIX: Typed as React.FC to correctly handle internal React props like 'key'
 export const CustomEmbedBlock: React.FC<{ content: string, waNumber?: string }> = ({ content, waNumber }) => {
-    // 1. FILE DOWNLOAD
-    if (content.includes('[FILE:')) {
-        const match = content.match(/\[FILE:\s*(.*?)\]\((.*?)\)/);
-        if (match) return <FileDownloadCard label={match[1]} url={match[2]} />;
-    }
+    // REGEX: Tangkap teks sebelum tag, isi tag, dan teks sesudah tag
+    const embedRegex = /^(.*?)\[(FILE|PROJECT|PRODUCT|SERVICE):\s*(.*?)\s*\](.*)$/s;
+    const match = content.match(embedRegex);
 
-    // 2. PROJECT CARD
-    if (content.includes('[PROJECT:')) {
-        const rawContent = content.replace('[PROJECT:', '').replace(/\]$/, '').trim();
-        const parts = rawContent.split('|').map((s: string) => s.trim());
-        
-        if (parts.length >= 3) {
-            const title = parts[0];
-            const url = parts[1];
-            const image = parts[2];
-            const desc = parts.slice(3).join('|');
-            
-            return <ProjectEmbedCard title={title} url={url} image={image} desc={desc} />;
+    if (!match) return null;
+
+    const preText = match[1].trim();
+    const type = match[2];
+    const innerContent = match[3];
+    const postText = match[4].trim();
+
+    const renderCard = () => {
+        // 1. FILE DOWNLOAD
+        if (type === 'FILE') {
+            const fileParts = innerContent.match(/^(.*?)\]\((.*?)$/);
+            if (fileParts) return <FileDownloadCard label={fileParts[1]} url={fileParts[2]} />;
+            // Fallback for direct [FILE: label | url]
+            const [label, url] = innerContent.split('|').map(s => s.trim());
+            return <FileDownloadCard label={label} url={url} />;
         }
-    }
 
-    // 3. PRODUCT CARD
-    if (content.includes('[PRODUCT:')) {
-        const rawContent = content.replace('[PRODUCT:', '').replace(/\]$/, '').trim();
-        const parts = rawContent.split('|').map((s: string) => s.trim());
-        
-        if (parts.length >= 3) {
-            const name = parts[0];
-            const price = parts[1];
-            const image = parts[2];
-            const desc = parts.slice(3).join('|');
-            
-            return <ProductEmbedCard name={name} price={price} image={image} desc={desc} waNumber={waNumber} />;
+        // 2. PROJECT CARD
+        if (type === 'PROJECT') {
+            const parts = innerContent.split('|').map((s: string) => s.trim());
+            if (parts.length >= 3) {
+                return (
+                    <ProjectEmbedCard 
+                        title={parts[0]} 
+                        url={parts[1]} 
+                        image={parts[2]} 
+                        desc={parts.slice(3).join('|') || parts[0]} 
+                    />
+                );
+            }
         }
-    }
 
-    return null;
+        // 3. PRODUCT CARD
+        if (type === 'PRODUCT') {
+            const parts = innerContent.split('|').map((s: string) => s.trim());
+            if (parts.length >= 3) {
+                return (
+                    <ProductEmbedCard 
+                        name={parts[0]} 
+                        price={parts[1]} 
+                        image={parts[2]} 
+                        desc={parts.slice(3).join('|') || parts[0]} 
+                        waNumber={waNumber} 
+                    />
+                );
+            }
+        }
+
+        return null;
+    };
+
+    return (
+        <>
+            {preText && <StandardTextBlock content={preText} />}
+            {renderCard()}
+            {postText && <StandardTextBlock content={postText} />}
+        </>
+    );
 };
