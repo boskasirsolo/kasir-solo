@@ -128,16 +128,26 @@ export const AdminArticles = ({
 
                     {/* RIGHT: ACTION BUTTONS */}
                     <div className="flex items-center gap-2">
-                        {form.content.length > 50 && (
-                            <button 
-                                onClick={manager.actions.runWrite} 
-                                disabled={aiLogic.loading.generatingText}
-                                className="p-2 h-9 text-blue-400 bg-blue-500/10 hover:bg-blue-500 hover:text-white rounded-lg transition-all border border-blue-500/20"
-                                title="Regenerate Artikel (AI)"
-                            >
-                                {aiLogic.loading.generatingText ? <Loader2 size={18} className="animate-spin"/> : <Sparkles size={18} />}
-                            </button>
-                        )}
+                        {/* SMART AI BUTTON */}
+                        <button 
+                            onClick={manager.actions.runWrite} 
+                            disabled={aiLogic.loading.generatingText}
+                            className={`h-10 px-4 rounded-lg font-bold text-[10px] flex items-center gap-2 transition-all shadow-neon hover:scale-105 active:scale-95 shrink-0 ${
+                                form.id 
+                                ? 'bg-blue-600/10 border border-blue-500/30 text-blue-400 hover:bg-blue-600 hover:text-white' 
+                                : 'bg-brand-gradient text-white border-none'
+                            }`}
+                            title={form.id ? "Tulis Ulang Artikel" : "Buat Konten Baru"}
+                        >
+                            {aiLogic.loading.generatingText ? (
+                                <Loader2 size={16} className="animate-spin" />
+                            ) : (
+                                <Sparkles size={16} />
+                            )}
+                            <span className="hidden md:inline uppercase tracking-widest">
+                                {aiLogic.loading.generatingText ? 'RACING...' : form.id ? 'REGENERATE (AI)' : 'GENERATE (AI)'}
+                            </span>
+                        </button>
 
                         <button 
                             onClick={actions.saveArticle} 

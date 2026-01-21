@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wand2, RefreshCw, MessageSquare, FileType, Search, Target, MapPin, Sparkles, Loader2, ArrowLeft, BarChart, Layout, Link2, CheckSquare, Square } from 'lucide-react';
+import { Wand2, RefreshCw, MessageSquare, FileType, Search, Target, MapPin, Sparkles, Loader2, ArrowLeft, BarChart, Layout, Link2, CheckSquare, Square, ChevronDown } from 'lucide-react';
 import { LinkingModule, TagModule, PersonaModule } from './editor/molecules';
 import { EditorCard, SectionLabel, ActionPill } from './editor/atoms';
 import { Button } from '../ui';
@@ -13,7 +13,7 @@ const PillarSelector = ({
     search, 
     onSearch 
 }: any) => (
-    <div className="bg-black/20 border border-white/5 rounded-xl p-3">
+    <div className="bg-black/40 border border-white/5 rounded-xl p-3">
         <div className="relative mb-2">
             <Search size={12} className="absolute left-2 top-2 text-gray-500" />
             <input 
@@ -36,7 +36,7 @@ const PillarSelector = ({
                     return (
                         <button 
                             key={p.id} 
-                            onClick={() => onToggle(p.id)} 
+                            onClick={(e) => { e.stopPropagation(); onToggle(p.id); }} 
                             className={`w-full text-left p-2 rounded text-[9px] border transition-all flex items-center justify-between group ${
                                 isSelected 
                                 ? 'bg-blue-500/20 text-blue-300 border-blue-500/50' 
@@ -55,11 +55,7 @@ const PillarSelector = ({
 
 // --- COMPONENT: CLUSTER CONFIG ---
 const ClusterConfig = ({ pillars, selectedPillarId, onSelectPillar, search, onSearch }: any) => (
-    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-4 animate-fade-in">
-        <div className="flex items-center gap-2 mb-3 text-blue-400">
-            <Link2 size={14} />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Wajib Pilih 1 Pillar Induk</span>
-        </div>
+    <div className="mt-2 animate-fade-in">
         <p className="text-[9px] text-gray-400 mb-3 leading-relaxed">
             Artikel Cluster berfungsi memperkuat SEO Pillar. AI akan otomatis membuat link balik ke artikel induk ini.
         </p>
@@ -76,18 +72,13 @@ const ClusterConfig = ({ pillars, selectedPillarId, onSelectPillar, search, onSe
 
 // --- COMPONENT: PILLAR CONFIG ---
 const PillarConfig = ({ pillars, selectedRelatedIds, onToggleRelated, search, onSearch }: any) => (
-    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4 animate-fade-in">
-        <div className="flex items-center gap-2 mb-2 text-yellow-500">
-            <Layout size={14} />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Mode Pillar (Authority)</span>
-        </div>
+    <div className="mt-2 animate-fade-in">
         <p className="text-[9px] text-gray-400 leading-relaxed mb-3">
             Artikel ini adalah fondasi utama (Ultimate Guide). Pilih Pillar lain yang relevan untuk **Cross-Linking**.
         </p>
         <PillarSelector 
             pillars={pillars}
             selectedIds={selectedRelatedIds || []}
-            // FIX: Using onToggleRelated prop correctly instead of undefined local variable
             onToggle={onToggleRelated}
             mode="multi"
             search={search}
@@ -152,7 +143,7 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
                 <div className="flex items-center gap-2 mb-4 pb-4 border-b border-white/10"><button onClick={() => aiState.setStep(0)} className="p-1 hover:bg-white/10 rounded"><ArrowLeft size={16} className="text-gray-400"/></button><h3 className="text-white font-bold text-sm">Hasil Riset</h3></div>
                 <div className="flex-grow overflow-y-auto custom-scrollbar space-y-2 pb-32">
                     {aiState.keywords.map((k: any, i: number) => (
-                        <div key={i} onClick={() => actions.selectTopic(k)} className="p-3 rounded-lg bg-white/5 border border-white/5 hover:border-brand-orange hover:bg-brand-orange/5 cursor-pointer transition-all"><h4 className="text-xs font-bold text-white mb-2">{k.keyword}</h4><div className="flex items-center gap-2"><span className="text-[9px] px-2 py-0.5 rounded border border-green-500/20 text-green-400 flex items-center gap-1"><BarChart size={8} /> {k.volume}</span></div></div>
+                        <div key={i} onClick={() => actions.selectTopic(k)} className="p-3 rounded-lg bg-white/5 border border-white/5 hover:border-brand-orange/50 hover:bg-brand-orange/5 cursor-pointer transition-all"><h4 className="text-xs font-bold text-white mb-2">{k.keyword}</h4><div className="flex items-center gap-2"><span className="text-[9px] px-2 py-0.5 rounded border border-green-500/20 text-green-400 flex items-center gap-1"><BarChart size={8} /> {k.volume}</span></div></div>
                     ))}
                 </div>
             </div>
@@ -167,31 +158,73 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
             </div>
             
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-5 pb-32">
-                <EditorCard>
-                    <SectionLabel icon={Layout}>Tipe Konten</SectionLabel>
-                    <div className="flex gap-2 mb-4">
-                        <ActionPill active={form.type === 'pillar'} label="Pillar" color="yellow-500" onClick={() => setForm((p:any)=>({...p, type:'pillar'}))} />
-                        <ActionPill active={form.type === 'cluster'} label="Cluster" color="blue-500" onClick={() => setForm((p:any)=>({...p, type:'cluster'}))} />
-                    </div>
+                
+                {/* CONTENT TYPE ACCORDION */}
+                <div className="space-y-2">
+                    <SectionLabel icon={Layout}>Arsitektur Konten</SectionLabel>
                     
-                    {form.type === 'cluster' ? (
-                        <ClusterConfig 
-                            pillars={filteredPillars}
-                            selectedPillarId={form.pillar_id}
-                            onSelectPillar={(id: number) => setForm((p:any) => ({...p, pillar_id: id}))}
-                            search={pillarSearch}
-                            onSearch={setPillarSearch}
-                        />
-                    ) : (
-                        <PillarConfig 
-                            pillars={filteredPillars}
-                            selectedRelatedIds={form.related_pillars}
-                            onToggleRelated={handleRelatedToggle}
-                            search={pillarSearch}
-                            onSearch={setPillarSearch}
-                        />
-                    )}
-                </EditorCard>
+                    {/* PILLAR ACCORDION */}
+                    <div className={`border rounded-xl transition-all overflow-hidden ${form.type === 'pillar' ? 'bg-yellow-500/5 border-yellow-500/30' : 'bg-black/20 border-white/5 hover:border-white/10'}`}>
+                        <button 
+                            onClick={() => setForm((p:any)=>({...p, type:'pillar'}))}
+                            className="w-full flex items-center justify-between p-4 text-left group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg transition-all ${form.type === 'pillar' ? 'bg-yellow-500 text-white shadow-neon' : 'bg-white/5 text-gray-500 group-hover:text-gray-300'}`}>
+                                    <Layout size={16} />
+                                </div>
+                                <div>
+                                    <h4 className={`text-xs font-bold uppercase tracking-widest transition-colors ${form.type === 'pillar' ? 'text-white' : 'text-gray-500 group-hover:text-gray-400'}`}>Mode Pillar</h4>
+                                    <p className="text-[9px] text-gray-600 uppercase font-bold">Authority & Master Guide</p>
+                                </div>
+                            </div>
+                            <ChevronDown size={14} className={`transition-transform duration-300 ${form.type === 'pillar' ? 'rotate-180 text-yellow-500' : 'text-gray-700'}`} />
+                        </button>
+                        
+                        {form.type === 'pillar' && (
+                            <div className="px-4 pb-4">
+                                <PillarConfig 
+                                    pillars={filteredPillars}
+                                    selectedRelatedIds={form.related_pillars}
+                                    onToggleRelated={handleRelatedToggle}
+                                    search={pillarSearch}
+                                    onSearch={setPillarSearch}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* CLUSTER ACCORDION */}
+                    <div className={`border rounded-xl transition-all overflow-hidden ${form.type === 'cluster' ? 'bg-blue-500/5 border-blue-500/30' : 'bg-black/20 border-white/5 hover:border-white/10'}`}>
+                        <button 
+                            onClick={() => setForm((p:any)=>({...p, type:'cluster'}))}
+                            className="w-full flex items-center justify-between p-4 text-left group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg transition-all ${form.type === 'cluster' ? 'bg-blue-500 text-white shadow-neon' : 'bg-white/5 text-gray-500 group-hover:text-gray-300'}`}>
+                                    <Link2 size={16} />
+                                </div>
+                                <div>
+                                    <h4 className={`text-xs font-bold uppercase tracking-widest transition-colors ${form.type === 'cluster' ? 'text-white' : 'text-gray-500 group-hover:text-gray-400'}`}>Mode Cluster</h4>
+                                    <p className="text-[9px] text-gray-600 uppercase font-bold">Deep Dive & Link Juice</p>
+                                </div>
+                            </div>
+                            <ChevronDown size={14} className={`transition-transform duration-300 ${form.type === 'cluster' ? 'rotate-180 text-blue-400' : 'text-gray-700'}`} />
+                        </button>
+                        
+                        {form.type === 'cluster' && (
+                            <div className="px-4 pb-4">
+                                <ClusterConfig 
+                                    pillars={filteredPillars}
+                                    selectedPillarId={form.pillar_id}
+                                    onSelectPillar={(id: number) => setForm((p:any) => ({...p, pillar_id: id}))}
+                                    search={pillarSearch}
+                                    onSearch={setPillarSearch}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 <EditorCard>
                     <SectionLabel icon={MessageSquare}>Konteks Tambahan</SectionLabel>

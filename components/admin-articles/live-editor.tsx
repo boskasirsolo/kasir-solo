@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { Loader2, Sparkles, Plus, Undo, Redo, History } from 'lucide-react';
+// FIX: Add PenTool to imports from lucide-react
+import { Loader2, Sparkles, Plus, Undo, Redo, History, PenTool } from 'lucide-react';
 import { useLiveEditor, Block } from './hooks/use-live-editor';
 import { BlockWrapper } from './editor/blocks/block-wrapper';
 import { TextBlock } from './editor/blocks/text-block';
@@ -35,17 +36,13 @@ export const LiveEditor = ({
                 </div>
             </div>
 
-            {/* AI GENERATE BUTTON (IF EMPTY) */}
-            {isEmpty && onRegenerate && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); onRegenerate(); }}
-                        disabled={isGenerating}
-                        className="pointer-events-auto bg-brand-gradient hover:bg-brand-gradient-hover text-white px-6 py-3 rounded-full font-bold shadow-neon flex items-center gap-2 transform hover:-translate-y-1 transition-all"
-                    >
-                        {isGenerating ? <Loader2 size={18} className="animate-spin"/> : <Sparkles size={18} />}
-                        {isGenerating ? 'Menulis Artikel...' : 'GENERATE ARTIKEL (AI)'}
-                    </button>
+            {/* EMPTY STATE INDICATOR (Prompting from top instead) */}
+            {isEmpty && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                    <div className="flex flex-col items-center gap-2">
+                        <PenTool size={48} className="text-gray-500" />
+                        <p className="text-sm font-bold uppercase tracking-widest text-gray-600">Klik Generate di atas untuk mulai</p>
+                    </div>
                 </div>
             )}
 
@@ -79,9 +76,6 @@ export const LiveEditor = ({
                             type={block.type} 
                             block={block} 
                             onChange={(newMeta) => { 
-                                // Construct full new content string based on meta updates is tricky here
-                                // So we rely on metadata for rendering, but update parent content logic needs the serializer
-                                // useLiveEditor hook handles `updateBlockContent` which triggers serialization using current blocks state + updates
                                 actions.updateBlockContent(block.id, block.content, newMeta); 
                             }} 
                         />
