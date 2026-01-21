@@ -1,16 +1,15 @@
-
 import React, { useState } from 'react';
-import { Wand2, RefreshCw, MessageSquare, FileType, Search, Target, MapPin, Sparkles, Loader2, ArrowLeft, BarChart, Layout, AlertTriangle, Link2, CheckSquare, Square } from 'lucide-react';
-import { StatusModule, MediaModule, LinkingModule, TagModule, PersonaModule } from './editor/molecules';
+import { Wand2, RefreshCw, MessageSquare, FileType, Search, Target, MapPin, Sparkles, Loader2, ArrowLeft, BarChart, Layout, Link2, CheckSquare, Square } from 'lucide-react';
+import { LinkingModule, TagModule, PersonaModule } from './editor/molecules';
 import { EditorCard, SectionLabel, ActionPill } from './editor/atoms';
 import { Button } from '../ui';
 
-// --- ATOMIC COMPONENT: PILLAR SELECTOR (REUSABLE) ---
+// --- ATOMIC COMPONENT: PILLAR SELECTOR ---
 const PillarSelector = ({ 
     pillars, 
-    selectedIds, // Array of IDs
+    selectedIds, 
     onToggle, 
-    mode = 'single', // 'single' | 'multi'
+    mode = 'single', 
     search, 
     onSearch 
 }: any) => (
@@ -54,7 +53,7 @@ const PillarSelector = ({
     </div>
 );
 
-// --- COMPONENT: CLUSTER CONFIG (Parent Selection) ---
+// --- COMPONENT: CLUSTER CONFIG ---
 const ClusterConfig = ({ pillars, selectedPillarId, onSelectPillar, search, onSearch }: any) => (
     <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-4 animate-fade-in">
         <div className="flex items-center gap-2 mb-3 text-blue-400">
@@ -75,7 +74,7 @@ const ClusterConfig = ({ pillars, selectedPillarId, onSelectPillar, search, onSe
     </div>
 );
 
-// --- COMPONENT: PILLAR CONFIG (Cross-Linking) ---
+// --- COMPONENT: PILLAR CONFIG ---
 const PillarConfig = ({ pillars, selectedRelatedIds, onToggleRelated, search, onSearch }: any) => (
     <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4 animate-fade-in">
         <div className="flex items-center gap-2 mb-2 text-yellow-500">
@@ -83,11 +82,12 @@ const PillarConfig = ({ pillars, selectedRelatedIds, onToggleRelated, search, on
             <span className="text-[10px] font-bold uppercase tracking-widest">Mode Pillar (Authority)</span>
         </div>
         <p className="text-[9px] text-gray-400 leading-relaxed mb-3">
-            Artikel ini adalah fondasi utama (Ultimate Guide). Pilih Pillar lain yang relevan untuk **Cross-Linking** (opsional) agar struktur SEO makin kuat.
+            Artikel ini adalah fondasi utama (Ultimate Guide). Pilih Pillar lain yang relevan untuk **Cross-Linking**.
         </p>
         <PillarSelector 
             pillars={pillars}
             selectedIds={selectedRelatedIds || []}
+            // FIX: Using onToggleRelated prop correctly instead of undefined local variable
             onToggle={onToggleRelated}
             mode="multi"
             search={search}
@@ -96,7 +96,6 @@ const PillarConfig = ({ pillars, selectedRelatedIds, onToggleRelated, search, on
     </div>
 );
 
-// --- MAIN COMPONENT ---
 export const EditorPanel = ({ form, setForm, loading, aiState, actions, availablePillars }: any) => {
     const [catInput, setCatInput] = useState('');
     const [pillarSearch, setPillarSearch] = useState('');
@@ -107,7 +106,6 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
     const addCat = (c: string) => { if (c && !selectedCats.includes(c)) setForm((p:any) => ({...p, category: [...selectedCats, c].join(', ')})); setCatInput(''); };
     const remCat = (c: string) => setForm((p:any) => ({...p, category: selectedCats.filter(x => x !== c).join(', ')}));
 
-    // Filter pillars based on search & exclude self
     const filteredPillars = availablePillars.filter((p:any) => 
         p.title.toLowerCase().includes(pillarSearch.toLowerCase()) && p.id !== form.id
     );
@@ -121,7 +119,6 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
         }
     };
 
-    // --- VIEW: RESEARCH MODE ---
     if (aiState.step === 0 && !form.id) {
         return (
             <div className="flex flex-col h-full bg-brand-dark p-4 items-center justify-center text-center overflow-y-auto custom-scrollbar pb-32">
@@ -149,7 +146,6 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
         );
     }
 
-    // --- VIEW: RESULTS MODE ---
     if (aiState.step === 1 && !form.id) {
         return (
             <div className="flex flex-col h-full bg-brand-dark p-4">
@@ -163,7 +159,6 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
         );
     }
 
-    // --- VIEW: EDITOR CONFIG MODE ---
     return (
         <div className="flex flex-col h-full bg-brand-dark overflow-hidden">
             <div className="p-4 border-b border-white/5 flex justify-between items-center bg-brand-dark z-20 shrink-0">
@@ -172,7 +167,6 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
             </div>
             
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-5 pb-32">
-                {/* STRATEGY SELECTOR */}
                 <EditorCard>
                     <SectionLabel icon={Layout}>Tipe Konten</SectionLabel>
                     <div className="flex gap-2 mb-4">
@@ -180,7 +174,6 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
                         <ActionPill active={form.type === 'cluster'} label="Cluster" color="blue-500" onClick={() => setForm((p:any)=>({...p, type:'cluster'}))} />
                     </div>
                     
-                    {/* CONDITIONAL RENDER BASED ON TYPE */}
                     {form.type === 'cluster' ? (
                         <ClusterConfig 
                             pillars={filteredPillars}
@@ -200,20 +193,13 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
                     )}
                 </EditorCard>
 
-                {/* GENERAL SETTINGS */}
-                <StatusModule status={form.status} scheduledFor={form.scheduled_for} onStatusChange={(s:any) => setForm((p:any) => ({...p, status: s}))} onScheduleChange={(v:any) => setForm((p:any) => ({...p, scheduled_for: v}))} />
-                
-                <MediaModule preview={form.imagePreview} loading={loading.generatingImage} onGenerate={actions.runImage} onUpload={(e:any) => { const f = e.target.files?.[0]; if (f) setForm((p:any) => ({...p, uploadFile: f, imagePreview: URL.createObjectURL(f)})); }} />
-                
-                {/* CONTEXT */}
                 <EditorCard>
                     <SectionLabel icon={MessageSquare}>Konteks Tambahan</SectionLabel>
-                    <textarea value={form.generationContext} onChange={(e) => setForm((p:any) => ({...p, generationContext: e.target.value}))} placeholder="Instruksi khusus buat AI..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white outline-none focus:border-brand-orange h-16 resize-none" />
+                    <textarea value={form.generationContext} onChange={(e) => setForm((p:any) => ({...p, generationContext: e.target.value}))} placeholder="Instruksi khusus buat AI..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[10px] text-white outline-none focus:border-brand-orange h-24 resize-none" />
                 </EditorCard>
                 
                 <TagModule selected={selectedCats} input={catInput} onInputChange={setCatInput} onAdd={addCat} onRemove={remCat} />
                 
-                {/* WORD COUNT SLIDER */}
                 <EditorCard>
                     <div className="flex justify-between items-center mb-2">
                         <SectionLabel icon={FileType} className="mb-0">Target Panjang</SectionLabel>
