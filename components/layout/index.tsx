@@ -1,5 +1,6 @@
 
 import React, { Suspense, lazy } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { SiteConfig } from '../../types';
 import { INITIAL_PRODUCTS } from '../../utils';
 import { useAnalytics } from '../../hooks/use-analytics';
@@ -7,9 +8,6 @@ import { Header } from './header';
 import { Footer } from './footer';
 import { ScrollToTop } from './ui/scroll-top';
 
-// LAZY LOAD SIBOS WIDGET
-// This ensures the chat logic (and its heavy dependencies) aren't loaded 
-// until the browser is idle or interaction happens.
 const SibosWidget = lazy(() => import('../sibos-core/index').then(module => ({ default: module.SibosWidget })));
 
 export const Layout = ({ 
@@ -27,17 +25,14 @@ export const Layout = ({
   setConfig?: (c: SiteConfig) => void,
   session?: any
 }) => {
-  // ACTIVATE TRACKER HERE
   useAnalytics();
 
-  // Hide Header/Footer on Admin Page
   if (currentPage === 'admin') {
     return (
       <div className="min-h-screen flex flex-col font-sans bg-brand-black text-gray-200">
         <main className="flex-grow">
           {children}
         </main>
-        {/* SIBOS AI WIDGET (ADMIN MODE) - Wrapped in Suspense */}
         <Suspense fallback={null}>
             <SibosWidget products={INITIAL_PRODUCTS} isAdmin={true} currentPage={currentPage} setConfig={setConfig} session={session} />
         </Suspense>
@@ -47,6 +42,10 @@ export const Layout = ({
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-brand-black text-gray-200">
+      <Helmet>
+        {config.is_noindex && <meta name="robots" content="noindex, nofollow" />}
+      </Helmet>
+      
       <Header currentPage={currentPage} setPage={setPage} />
       
       <main className="flex-grow pt-[76px]">
@@ -55,10 +54,8 @@ export const Layout = ({
 
       <Footer setPage={setPage} config={config} />
       
-      {/* SCROLL TO TOP BUTTON */}
       <ScrollToTop />
 
-      {/* SIBOS AI WIDGET (PUBLIC MODE) - Wrapped in Suspense */}
       <Suspense fallback={null}>
         <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} currentPage={currentPage} setConfig={setConfig} session={session} />
       </Suspense>

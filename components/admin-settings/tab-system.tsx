@@ -3,15 +3,13 @@ import React from 'react';
 import { TabProps } from './types';
 import { SettingsSection } from './ui-atoms';
 import { Input, Button } from '../ui';
-import { Clock, BarChart, Monitor, Rss, Copy, ExternalLink, Check, ShoppingBag, AlertTriangle } from 'lucide-react';
+import { Clock, BarChart, Monitor, Rss, Copy, ExternalLink, Check, ShoppingBag, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { INDONESIA_TIMEZONES, CONFIG } from '../../utils';
 
 export const TabSystem = ({ config, setConfig }: TabProps) => {
     const [copied, setCopied] = React.useState(false);
     
-    // Construct Feed URL dynamically based on current Supabase Project
     const projectUrl = CONFIG.SUPABASE_URL || "";
-    // Hacky way to get functions URL if not standard, but usually it follows this pattern for Supabase
     const projectRef = projectUrl.split('//')[1]?.split('.')[0];
     const feedUrl = projectRef ? `https://${projectRef}.supabase.co/functions/v1/google-product-feed` : "Error: Supabase URL not found";
 
@@ -23,7 +21,32 @@ export const TabSystem = ({ config, setConfig }: TabProps) => {
 
     return (
         <div className="space-y-8 animate-fade-in">
-            {/* GOOGLE MERCHANT FEED (UPDATED INSTRUCTIONS) */}
+            {/* VISIBILITY CONTROL */}
+            <SettingsSection title="Indeks Mesin Pencari" desc="Atur apakah website boleh muncul di Google atau tidak.">
+                <div className={`p-6 rounded-2xl border transition-all flex flex-col md:flex-row items-center gap-6 ${config.is_noindex ? 'bg-red-500/5 border-red-500/30' : 'bg-green-500/5 border-green-500/30'}`}>
+                    <div className={`p-4 rounded-full ${config.is_noindex ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500 shadow-neon'}`}>
+                        {config.is_noindex ? <EyeOff size={32} /> : <Eye size={32} />}
+                    </div>
+                    <div className="flex-1 text-center md:text-left">
+                        <h4 className="text-white font-bold text-lg mb-1">
+                            {config.is_noindex ? 'Website Sedang Disembunyikan' : 'Website Publik (Terindeks)'}
+                        </h4>
+                        <p className="text-xs text-gray-500 leading-relaxed max-w-md">
+                            {config.is_noindex 
+                                ? 'Google dan mesin pencari lainnya diperintahkan untuk mengabaikan website ini. Cocok saat website masih dalam perbaikan.' 
+                                : 'Website lo bisa dicari dan muncul di halaman Google. Pastikan konten sudah siap jualan sebelum tayang.'}
+                        </p>
+                    </div>
+                    <button 
+                        onClick={() => setConfig({...config, is_noindex: !config.is_noindex})}
+                        className={`px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${config.is_noindex ? 'bg-green-600 hover:bg-green-500 text-white' : 'bg-red-600 hover:bg-red-500 text-white'}`}
+                    >
+                        {config.is_noindex ? 'Tampilkan ke Google' : 'Sembunyikan Sekarang'}
+                    </button>
+                </div>
+            </SettingsSection>
+
+            {/* GOOGLE MERCHANT FEED */}
             <SettingsSection title="Google Merchant Center (Product Feed)" desc="Sinkronisasi produk otomatis ke Google Shopping (Free Listing/Ads).">
                 <div className="bg-brand-orange/5 p-6 rounded-xl border border-brand-orange/20 relative">
                     <div className="flex items-start gap-4">
@@ -60,9 +83,6 @@ export const TabSystem = ({ config, setConfig }: TabProps) => {
                                     <ExternalLink size={16}/>
                                 </Button>
                             </div>
-                            <p className="text-[10px] text-gray-500 italic">
-                                *Link ini berisi data semua produk lo dalam format XML yang disukai Google. Update otomatis real-time.
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -85,9 +105,6 @@ export const TabSystem = ({ config, setConfig }: TabProps) => {
                                 <option key={tz.value} value={tz.value}>{tz.label} (GMT {tz.offset > 0 ? '+' : ''}{tz.offset})</option>
                             ))}
                         </select>
-                        <p className="text-[9px] text-gray-500 mt-2 leading-relaxed">
-                            *Pengaturan ini akan mempengaruhi jadwal posting artikel otomatis.
-                        </p>
                     </div>
                 </div>
             </SettingsSection>
@@ -111,16 +128,6 @@ export const TabSystem = ({ config, setConfig }: TabProps) => {
                             placeholder="Paste meta tag content here" 
                             className="font-mono text-xs"
                         />
-                    </div>
-                    <div>
-                        <label className="text-[10px] text-gray-500 font-bold mb-1 block flex items-center gap-1"><ShoppingBag size={12}/> Google Merchant Center ID</label>
-                        <Input 
-                            value={config.google_merchant_id || ''} 
-                            onChange={(e) => setConfig({...config, google_merchant_id: e.target.value})} 
-                            placeholder="1234567890" 
-                            className="font-mono text-xs"
-                        />
-                        <p className="text-[9px] text-gray-500 mt-1">ID Toko di Google Merchant. Biarkan kosong jika tidak punya.</p>
                     </div>
                 </div>
             </SettingsSection>
