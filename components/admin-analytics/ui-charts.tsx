@@ -57,17 +57,18 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
     const maxVal = Math.max(...hours, 1);
     const [hoveredHour, setHoveredHour] = useState<number | null>(null);
 
+    // Hitung posisi absolut di dalam kontainer bar
     const tooltipData = useMemo(() => {
         if (hoveredHour === null) return null;
         const count = hours[hoveredHour];
         const intensity = count / maxVal;
         
-        // Horizontal: (index / total_slots) * 100
+        // Horizontal: Pake index bar (0-23) dibagi total
         const leftPos = (hoveredHour / 23) * 100; 
-        // Vertical: Match the bar height percentage exactly
-        const barHeight = Math.max(intensity * 100, 5);
+        // Vertical: Persentase tinggi bar
+        const barHeightPercent = Math.max(intensity * 100, 5);
 
-        return { hour: hoveredHour, count, barHeight, left: leftPos };
+        return { hour: hoveredHour, count, barHeight: barHeightPercent, left: leftPos };
     }, [hoveredHour, hours, maxVal]);
 
     return (
@@ -75,39 +76,49 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
             <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
                 <Flame size={14} className="text-red-500"/> Jam Sibuk Pasar (WIB)
             </h4>
-            <p className="text-[10px] text-gray-500 mb-8">Sorot bar buat intip jam tersibuk juragan belanja.</p>
+            <p className="text-[10px] text-gray-500 mb-4">Sorot bar buat liat detail jam operasional.</p>
             
-            <div className="relative bg-black/40 rounded-2xl p-4 md:p-6 border border-white/5">
-                <div className="relative overflow-visible pb-2 pt-14">
-                    {/* DYNAMIC FLOATING TOOLTIP: Snapping precision anchor */}
-                    {tooltipData && (
-                        <div 
-                            className="absolute z-[100] pointer-events-none transition-all duration-200 ease-out"
-                            style={{ 
-                                left: `${tooltipData.left}%`,
-                                bottom: `calc(${tooltipData.barHeight}% + 16px)`, // Snapping tepat di atas kepala bar
-                                transform: `translateX(${tooltipData.hour < 3 ? '0%' : tooltipData.hour > 21 ? '-100%' : '-50%'})`
-                            }}
-                        >
-                            <div className="flex flex-col items-center">
-                                <div className="bg-brand-dark/95 border border-brand-orange/50 px-3 py-1.5 rounded-xl shadow-neon-strong backdrop-blur-md flex items-center gap-2 whitespace-nowrap min-w-max">
-                                    <span className="text-[11px] font-black text-brand-orange">{tooltipData.hour.toString().padStart(2, '0')}:00</span>
-                                    <div className="w-px h-3 bg-white/20"></div>
-                                    <span className="text-[11px] font-bold text-white">{tooltipData.count} Views</span>
-                                </div>
-                                {/* Caret: Menunjuk ke atas bar */}
-                                <div 
-                                    className={`w-2.5 h-2.5 bg-brand-dark border-r border-b border-brand-orange/40 rotate-45 -mt-1.5 shadow-neon ${
-                                        tooltipData.hour < 3 ? 'mr-auto ml-3' : tooltipData.hour > 21 ? 'ml-auto mr-3' : ''
-                                    }`}
-                                ></div>
-                            </div>
-                        </div>
-                    )}
-
+            <div className="relative bg-black/40 rounded-2xl p-4 md:p-6 border border-white/5 overflow-visible">
+                {/* 
+                    PT-16 di bawah ini krusial biar tooltip ada space di atas. 
+                    PB-2 buat kasih jarak sama label jam.
+                */}
+                <div className="relative overflow-visible pb-2 pt-16">
                     <div className="overflow-x-auto custom-scrollbar-hide">
-                        <div className="min-w-[500px]">
-                            <div className="flex items-end gap-[2px] h-24 w-full relative">
+                        <div className="min-w-[500px] relative">
+                            
+                            {/* 
+                                LAYER TOOLTIP: Sekarang nempel di kontainer bar.
+                                Posisi bottom: 0 kontainer ini adalah baseline bar.
+                            */}
+                            {tooltipData && (
+                                <div 
+                                    className="absolute z-50 pointer-events-none transition-all duration-300 ease-out"
+                                    style={{ 
+                                        left: `${tooltipData.left}%`,
+                                        bottom: `${tooltipData.barHeight}%`, // Start dari kepala bar
+                                        marginBottom: '12px', // GAP tetap antara bar dan tooltip
+                                        transform: `translateX(${tooltipData.hour < 3 ? '0%' : tooltipData.hour > 21 ? '-100%' : '-50%'})`
+                                    }}
+                                >
+                                    <div className="flex flex-col items-center">
+                                        <div className="bg-brand-dark/95 border border-brand-orange/50 px-3 py-1.5 rounded-xl shadow-neon-strong backdrop-blur-md flex items-center gap-2 whitespace-nowrap min-w-max">
+                                            <span className="text-[11px] font-black text-brand-orange">{tooltipData.hour.toString().padStart(2, '0')}:00</span>
+                                            <div className="w-px h-3 bg-white/20"></div>
+                                            <span className="text-[11px] font-bold text-white">{tooltipData.count} Views</span>
+                                        </div>
+                                        {/* Caret / Panah */}
+                                        <div 
+                                            className={`w-2.5 h-2.5 bg-brand-dark border-r border-b border-brand-orange/40 rotate-45 -mt-1.5 shadow-neon ${
+                                                tooltipData.hour < 3 ? 'mr-auto ml-3' : tooltipData.hour > 21 ? 'ml-auto mr-3' : ''
+                                            }`}
+                                        ></div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* CONTAINER BAR */}
+                            <div className="flex items-end gap-[2px] h-24 w-full relative z-10">
                                 {hours.map((count, h) => {
                                     const intensity = count / maxVal;
                                     let bgClass = 'bg-white/5';
@@ -135,6 +146,8 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
                                     )
                                 })}
                             </div>
+
+                            {/* LABEL JAM */}
                             <div className="flex justify-between text-[9px] text-gray-600 mt-4 font-mono uppercase tracking-tighter px-1 border-t border-white/5 pt-2">
                                 <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
                             </div>
