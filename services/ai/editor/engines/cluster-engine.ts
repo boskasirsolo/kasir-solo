@@ -31,7 +31,10 @@ export const ClusterEngine = {
         ${contextBlock}
         ${CLOSING_RULE}
 
-        Task: Write a specific, problem-solving article. Don't be too broad. Go deep into the specific title topic.
+        Task: Write a specific, problem-solving article. Don't be too broad.
+        STRICT ASSET RULE: Letakkan kartu produk atau portofolio DI LUAR paragraf (punya baris sendiri). 
+        Jangan taruh kartu aset berdekatan jaraknya.
+
         Output: Full Markdown Article.
         `;
 

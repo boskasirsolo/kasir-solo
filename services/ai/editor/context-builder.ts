@@ -25,19 +25,24 @@ export const ContextBuilder = {
         let text = "";
         try {
             if (productsJson) {
-                // LIMIT TO 3 ITEMS to prevent cognitive load on AI and overcrowding
                 const prods = JSON.parse(productsJson).slice(0, 3);
-                if (prods.length) text += `\n[RECOMMENDED PRODUCTS (Select Max 1)]\n` + prods.map((p:any) => `- ${p.name} (Rp ${p.price}) -> [PRODUCT: ${p.name} | ${p.price} | ${p.image} | ${p.desc}]`).join('\n');
+                if (prods.length) text += `\n[AVAILABLE PRODUCTS]\n` + prods.map((p:any) => `- ${p.name} (Rp ${p.price}) -> [PRODUCT: ${p.name} | ${p.price} | ${p.image} | ${p.desc}]`).join('\n');
             }
             if (galleryJson) {
-                // LIMIT TO 3 ITEMS
                 const projs = JSON.parse(galleryJson).slice(0, 3);
-                if (projs.length) text += `\n[PORTFOLIO REFERENCES (Select Max 1)]\n` + projs.map((p:any) => `- ${p.title} -> [PROJECT: ${p.title} | /gallery/${p.slug} | ${p.image} | ${p.desc}]`).join('\n');
+                if (projs.length) text += `\n[PORTFOLIO REFERENCES]\n` + projs.map((p:any) => `- ${p.title} -> [PROJECT: ${p.title} | /gallery/${p.slug} | ${p.image} | ${p.desc}]`).join('\n');
             }
         } catch (e) { console.warn("Asset parse error", e); }
         
-        // STRICT CONSTRAINT
-        return text ? text + "\n[CONSTRAINT] Insert MAXIMUM 1 Product OR Project Card in this generation. Do not force them if not relevant to the topic. Keep the content clean." : "";
+        return text ? `
+            ${text}
+            
+            [STRICT CARD PLACEMENT RULES]
+            1. JANGAN PERNAH taruh tag [PRODUCT:...] atau [PROJECT:...] di tengah kalimat atau di dalam paragraf.
+            2. Kartu WAJIB berdiri sendiri di baris baru. Harus ada baris kosong di atas dan di bawah tag kartu tersebut.
+            3. Jika lo mutusin buat pasang kartu, pasang setelah lo selesai ngejelasin satu poin bahasan, atau di akhir seksi ini.
+            4. JANGAN tumpuk kartu berdekatan. Jika sudah pasang 1 kartu di seksi ini, jangan pasang lagi kecuali sangat relevan.
+        ` : "";
     },
 
     getCrossLinking: (pillars?: { title: string; slug: string }[]) => {

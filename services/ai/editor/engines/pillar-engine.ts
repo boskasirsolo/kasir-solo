@@ -10,7 +10,7 @@ export const PillarEngine = {
         const sectionsCount = Math.max(5, Math.ceil(config.wordCount / 700));
         const outline = await Taxonomy.createOutline(title, sectionsCount);
         
-        // Base context without assets
+        // Base context
         const baseContext = `
             ${BRAND_CONTEXT}
             ${ContextBuilder.getPersona(config.authorName)}
@@ -20,20 +20,25 @@ export const PillarEngine = {
             ${config.userNotes ? `[USER NOTES]: ${config.userNotes}` : ""}
         `;
 
-        const assetContext = ContextBuilder.getAssetContext(config.productsJson, config.galleryJson);
-
         let fullContent = "";
         let prevSectionEnd = "";
 
         for (let i = 0; i < outline.length; i++) {
             const isLast = i === outline.length - 1;
             
-            // STRATEGY: Only inject assets in specific sections
-            const shouldInjectAssets = (i === 1 || i === 3);
+            // STRATEGY: Spread assets across different sections to ensure distancing
+            // Section 1 (Index 1): Focused on Product
+            // Section 3 (Index 3): Focused on Gallery/Project
+            let specificAssetContext = "";
+            if (i === 1) {
+                specificAssetContext = ContextBuilder.getAssetContext(config.productsJson, undefined);
+            } else if (i === 3) {
+                specificAssetContext = ContextBuilder.getAssetContext(undefined, config.galleryJson);
+            }
 
             const currentContext = `
                 ${baseContext}
-                ${shouldInjectAssets ? assetContext : ""}
+                ${specificAssetContext}
             `;
 
             const prompt = `
@@ -50,11 +55,12 @@ export const PillarEngine = {
             3. Flow & Anti-Repetisi: 
                ${i === 0 ? 
                  "Mulai dengan Hook yang nendang. JANGAN pake basa-basi standar AI." : 
-                 `REFERENSI KONTEKS: Gue kasih 100 karakter terakhir dari bagian sebelumnya biar lo nyambung: "...${prevSectionEnd}...". 
-                  PENTING: JANGAN ULANGI, JANGAN TULIS ULANG, dan JANGAN RE-PHRASE kalimat referensi tersebut. 
-                  Tugas lo adalah: LANGSUNG LANJUT ke kalimat atau paragraf berikutnya seolah-olah lo cuma lanjut ngetik.`
+                 `REFERENSI KONTEKS (100 char terakhir): "...${prevSectionEnd}...". 
+                  JANGAN ULANGI kalimat tersebut. LANGSUNG LANJUT ke paragraf baru.`
                }
-            4. ${isLast ? CLOSING_RULE : "JANGAN tulis kesimpulan/closing dulu. Langsung berhenti di poin terakhir seksi ini."}
+            4. Asset Rule: Jika ada data [PRODUCT] atau [PROJECT] di atas, gunakan MAKSIMAL 1 saja di seksi ini. 
+               Letakkan kartu tersebut DI ANTARA paragraf (setelah paragraf selesai), JANGAN nyelip di dalam teks.
+            5. ${isLast ? CLOSING_RULE : "JANGAN tulis kesimpulan/closing dulu. Langsung berhenti di poin terakhir seksi ini."}
 
             Output: Markdown murni.
             `;
@@ -62,10 +68,7 @@ export const PillarEngine = {
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
             const text = res.text?.trim() || "";
             
-            // Tambahkan spacing antar seksi
             fullContent += text + "\n\n";
-            
-            // Simpan ujung teks buat referensi seksi berikutnya
             prevSectionEnd = text.slice(-150);
         }
         return fullContent;
