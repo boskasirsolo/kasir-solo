@@ -14,7 +14,6 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
         </h4>
         
         <div className="bg-black/20 rounded-xl p-2 md:p-4 border border-white/5 overflow-x-auto custom-scrollbar">
-            {/* Padding top (pt-20) ditingkatkan untuk ruang udara tooltip */}
             <div className="min-w-[500px] h-64 flex items-end justify-between gap-2 pt-20 pb-2 relative">
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10 z-0">
                     {[...Array(5)].map((_, i) => (
@@ -28,25 +27,27 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
                     const barHeight = isZero ? '4px' : `${heightPercent}%`;
                     
                     return (
-                        <div key={idx} className="flex-1 group relative h-full flex flex-col justify-end min-w-[20px] cursor-pointer z-10">
+                        <div key={idx} className="flex-1 group h-full flex flex-col justify-end min-w-[20px] cursor-pointer z-10">
                             
-                            {/* TOOLTIP ANCHORED (Sama dengan Heatmap) */}
-                            <div 
-                                className="absolute left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-150 pointer-events-none z-50 flex flex-col items-center"
-                                style={{ 
-                                    bottom: `calc(${heightPercent}% + 4px)`,
-                                    // Geser dikit kalau di paling kiri/kanan
-                                    transform: `translateX(${idx === 0 ? '-20%' : idx === Object.keys(data).length - 1 ? '-80%' : '-50%'})`
-                                }}
-                            >
-                                <div className="bg-brand-dark/95 border border-brand-orange/40 px-2 py-1 rounded-lg shadow-neon-strong backdrop-blur-md whitespace-nowrap">
-                                    <span className="text-[10px] font-bold text-white">{count} Hits</span>
-                                </div>
-                                <div className="w-1.5 h-1.5 bg-brand-dark border-r border-b border-brand-orange/40 rotate-45 -mt-1 shadow-neon"></div>
-                            </div>
-
-                            {/* THE BAR */}
                             <div className="w-full px-0.5 md:px-1 h-full flex items-end relative">
+                                {/* 
+                                    TOOLTIP ANCHORED INSIDE BAR WRAPPER 
+                                    Ini kuncinya biar presisi: Tooltip & Bar pake bottom yang sama.
+                                */}
+                                <div 
+                                    className="absolute left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-150 pointer-events-none z-50 flex flex-col items-center"
+                                    style={{ 
+                                        bottom: `calc(${barHeight} + 2px)`,
+                                        transform: `translateX(${idx === 0 ? '-20%' : idx === Object.keys(data).length - 1 ? '-80%' : '-50%'})`
+                                    }}
+                                >
+                                    <div className="bg-brand-dark/95 border border-brand-orange/40 px-2 py-1 rounded-lg shadow-neon-strong backdrop-blur-md whitespace-nowrap">
+                                        <span className="text-[10px] font-bold text-white">{count} Hits</span>
+                                    </div>
+                                    <div className="w-1.5 h-1.5 bg-brand-dark border-r border-b border-brand-orange/40 rotate-45 -mt-1 shadow-neon"></div>
+                                </div>
+
+                                {/* THE BAR */}
                                 <div 
                                     className={`w-full rounded-t-sm transition-all duration-500 relative ${
                                         isZero 
@@ -83,7 +84,6 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
             
             <div className="relative bg-black/40 rounded-2xl p-4 md:p-6 border border-white/5">
                 <div className="overflow-x-auto custom-scrollbar-hide">
-                    {/* Tinggi dinaikin dikit buat safety margin tooltip */}
                     <div className="min-w-[500px] h-48 pt-24 flex flex-col justify-end">
                         <div className="flex items-end gap-[2px] h-24 w-full relative">
                             {hours.map((count, h) => {
@@ -103,14 +103,10 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
                                         key={h} 
                                         className="flex-1 group relative h-full flex flex-col justify-end min-w-[15px] cursor-pointer"
                                     >
-                                        {/* 
-                                            TOOLTIP: Jarak dikurangi (pepet).
-                                            Gap diturunkan dari 12px jadi 4px biar lebih nempel ke bar.
-                                        */}
                                         <div 
                                             className="absolute left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-150 pointer-events-none z-50 flex flex-col items-center"
                                             style={{ 
-                                                bottom: `calc(${barHeight} + 4px)`,
+                                                bottom: `calc(${barHeight} + 2px)`,
                                                 transform: `translateX(${h < 3 ? '-20%' : h > 21 ? '-80%' : '-50%'})`
                                             }}
                                         >
@@ -119,7 +115,6 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
                                                 <div className="w-px h-3 bg-white/20"></div>
                                                 <span className="text-[10px] font-bold text-white">{count} Views</span>
                                             </div>
-                                            {/* Caret (Panah) - Dipepetin juga */}
                                             <div className={`w-2 h-2 bg-brand-dark border-r border-b border-brand-orange/40 rotate-45 -mt-1 shadow-neon ${h < 3 ? 'mr-auto ml-4' : h > 21 ? 'ml-auto mr-4' : ''}`}></div>
                                         </div>
 
@@ -133,7 +128,6 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
                             })}
                         </div>
                         
-                        {/* LABEL JAM */}
                         <div className="flex justify-between text-[9px] text-gray-600 mt-4 font-mono uppercase tracking-tighter px-1 border-t border-white/5 pt-2">
                             <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
                         </div>
