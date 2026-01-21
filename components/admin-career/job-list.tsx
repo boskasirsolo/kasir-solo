@@ -11,7 +11,7 @@ export const JobList = ({
     actions: any 
 }) => {
     return (
-        <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden md:sticky md:top-6">
+        <div className="bg-brand-dark rounded-xl border border-white/5 flex flex-col h-full overflow-hidden">
             <div className="p-4 border-b border-white/10 bg-black/20 flex items-center gap-3">
                 <div className="relative flex-grow">
                     <Search size={14} className="absolute left-3 top-2.5 text-gray-500" />
