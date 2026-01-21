@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wand2, RefreshCw, MessageSquare, FileType, Search, Target, MapPin, Sparkles, Loader2, ArrowLeft, BarChart, Layout, Link2, CheckSquare, Square, ChevronDown } from 'lucide-react';
 import { LinkingModule, TagModule, PersonaModule } from './editor/molecules';
 import { EditorCard, SectionLabel, ActionPill } from './editor/atoms';
@@ -92,6 +92,14 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
     const [pillarSearch, setPillarSearch] = useState('');
     const [researchTopicInput, setResearchTopicInput] = useState('');
     const [useCityTemplate, setUseCityTemplate] = useState(false);
+    
+    // State untuk kontrol buka-tutup akordeon secara manual
+    const [activeAccordion, setActiveAccordion] = useState<string | null>(form.type);
+
+    // Sinkronisasi saat form type berubah dari luar (misal saat edit artikel lain)
+    useEffect(() => {
+        if (form.type) setActiveAccordion(form.type);
+    }, [form.id]);
 
     const selectedCats = form.category ? form.category.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
     const addCat = (c: string) => { if (c && !selectedCats.includes(c)) setForm((p:any) => ({...p, category: [...selectedCats, c].join(', ')})); setCatInput(''); };
@@ -108,6 +116,13 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
         } else {
             setForm((p: any) => ({ ...p, related_pillars: [...current, id] }));
         }
+    };
+
+    const toggleAccordion = (type: string) => {
+        // Set tipe konten di form data
+        setForm((p:any) => ({...p, type: type}));
+        // Toggle visual akordeon: kalau klik yang sama, dia nutup. Kalau beda, dia buka yang baru.
+        setActiveAccordion(prev => prev === type ? null : type);
     };
 
     if (aiState.step === 0 && !form.id) {
@@ -164,9 +179,9 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
                     <SectionLabel icon={Layout}>Arsitektur Konten</SectionLabel>
                     
                     {/* PILLAR ACCORDION */}
-                    <div className={`border rounded-xl transition-all overflow-hidden ${form.type === 'pillar' ? 'bg-yellow-500/5 border-yellow-500/30' : 'bg-black/20 border-white/5 hover:border-white/10'}`}>
+                    <div className={`border rounded-xl transition-all overflow-hidden ${form.type === 'pillar' ? 'bg-yellow-500/5 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.05)]' : 'bg-black/20 border-white/5 hover:border-white/10'}`}>
                         <button 
-                            onClick={() => setForm((p:any)=>({...p, type:'pillar'}))}
+                            onClick={() => toggleAccordion('pillar')}
                             className="w-full flex items-center justify-between p-4 text-left group"
                         >
                             <div className="flex items-center gap-3">
@@ -178,10 +193,10 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
                                     <p className="text-[9px] text-gray-600 uppercase font-bold">Authority & Master Guide</p>
                                 </div>
                             </div>
-                            <ChevronDown size={14} className={`transition-transform duration-300 ${form.type === 'pillar' ? 'rotate-180 text-yellow-500' : 'text-gray-700'}`} />
+                            <ChevronDown size={14} className={`transition-transform duration-300 ${activeAccordion === 'pillar' ? 'rotate-180 text-yellow-500' : 'text-gray-700'}`} />
                         </button>
                         
-                        {form.type === 'pillar' && (
+                        {activeAccordion === 'pillar' && (
                             <div className="px-4 pb-4">
                                 <PillarConfig 
                                     pillars={filteredPillars}
@@ -195,9 +210,9 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
                     </div>
 
                     {/* CLUSTER ACCORDION */}
-                    <div className={`border rounded-xl transition-all overflow-hidden ${form.type === 'cluster' ? 'bg-blue-500/5 border-blue-500/30' : 'bg-black/20 border-white/5 hover:border-white/10'}`}>
+                    <div className={`border rounded-xl transition-all overflow-hidden ${form.type === 'cluster' ? 'bg-blue-500/5 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.05)]' : 'bg-black/20 border-white/5 hover:border-white/10'}`}>
                         <button 
-                            onClick={() => setForm((p:any)=>({...p, type:'cluster'}))}
+                            onClick={() => toggleAccordion('cluster')}
                             className="w-full flex items-center justify-between p-4 text-left group"
                         >
                             <div className="flex items-center gap-3">
@@ -209,10 +224,10 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
                                     <p className="text-[9px] text-gray-600 uppercase font-bold">Deep Dive & Link Juice</p>
                                 </div>
                             </div>
-                            <ChevronDown size={14} className={`transition-transform duration-300 ${form.type === 'cluster' ? 'rotate-180 text-blue-400' : 'text-gray-700'}`} />
+                            <ChevronDown size={14} className={`transition-transform duration-300 ${activeAccordion === 'cluster' ? 'rotate-180 text-blue-400' : 'text-gray-700'}`} />
                         </button>
                         
-                        {form.type === 'cluster' && (
+                        {activeAccordion === 'cluster' && (
                             <div className="px-4 pb-4">
                                 <ClusterConfig 
                                     pillars={filteredPillars}
