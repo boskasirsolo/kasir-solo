@@ -4,12 +4,12 @@ import { CONFIG } from '../config/env';
 import { autoCompressImage } from '../lib/image-processing';
 
 // --- STORAGE CONSTANTS ---
-const MAX_FILE_SIZE = 15 * 1024 * 1024; // Naik ke 15MB limit buat upload mentah
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // Naik ke 20MB biar lega upload file 4K
 
 // --- HELPER: VALIDATOR ---
 const validateFile = (file: File) => {
     if (file.size > MAX_FILE_SIZE) {
-        throw new Error(`Waduh kegedean Bos! Maksimal 15MB biar server gak pingsan.`);
+        throw new Error(`Waduh, ini file apa gajah? Maksimal 20MB Bos!`);
     }
 };
 
@@ -21,10 +21,10 @@ export const uploadToSupabase = async (file: File, folder: string = 'temp', buck
     
     validateFile(file);
 
-    // Otomatis kompres jika ini gambar dan ukurannya > 3MB (Naik dari 1.5MB)
+    // Sekarang cuma kompres kalau bener-bener kegedean (> 5MB)
     let fileToUpload = file;
     if (file.type.startsWith('image/')) {
-        fileToUpload = await autoCompressImage(file, 3);
+        fileToUpload = await autoCompressImage(file, 5);
     }
 
     const fileExt = fileToUpload.name.split('.').pop();
@@ -45,9 +45,9 @@ export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
     if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Cloudinary Missing");
     
     let finalFile = fileOrBlob;
-    // Jika file mentah raksasa (>3MB), sikat pake mode High Quality (0.95)
-    if (fileOrBlob instanceof File && fileOrBlob.size > 3 * 1024 * 1024) {
-        finalFile = await autoCompressImage(fileOrBlob, 3);
+    // Threshold sinkron di 5MB
+    if (fileOrBlob instanceof File && fileOrBlob.size > 5 * 1024 * 1024) {
+        finalFile = await autoCompressImage(fileOrBlob, 5);
     }
 
     const formData = new FormData();
