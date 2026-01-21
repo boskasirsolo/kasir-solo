@@ -4,12 +4,12 @@ import { CONFIG } from '../config/env';
 import { autoCompressImage } from '../lib/image-processing';
 
 // --- STORAGE CONSTANTS ---
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // Naik ke 20MB biar lega upload file 4K
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // Naik ke 25MB biar bebas upload file 4K mentah
 
 // --- HELPER: VALIDATOR ---
 const validateFile = (file: File) => {
     if (file.size > MAX_FILE_SIZE) {
-        throw new Error(`Waduh, ini file apa gajah? Maksimal 20MB Bos!`);
+        throw new Error(`Waduh, ini file apa gajah? Maksimal 25MB Bos!`);
     }
 };
 
@@ -21,14 +21,20 @@ export const uploadToSupabase = async (file: File, folder: string = 'temp', buck
     
     validateFile(file);
 
-    // Sekarang cuma kompres kalau bener-bener kegedean (> 5MB)
+    // Paksa konversi ke WebP untuk semua jenis gambar
     let fileToUpload = file;
     if (file.type.startsWith('image/')) {
-        fileToUpload = await autoCompressImage(file, 5);
+        fileToUpload = await autoCompressImage(file);
     }
 
-    const fileExt = fileToUpload.name.split('.').pop();
-    const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${fileExt}`;
+    // Pastikan ekstensi file di storage selalu .webp jika itu gambar
+    let fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    if (fileToUpload.type === 'image/webp') {
+        fileName += '.webp';
+    } else {
+        const ext = fileToUpload.name.split('.').pop();
+        fileName += `.${ext}`;
+    }
     
     const { error: uploadError } = await supabase.storage
         .from(bucketName) 
@@ -45,9 +51,9 @@ export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
     if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Cloudinary Missing");
     
     let finalFile = fileOrBlob;
-    // Threshold sinkron di 5MB
-    if (fileOrBlob instanceof File && fileOrBlob.size > 5 * 1024 * 1024) {
-        finalFile = await autoCompressImage(fileOrBlob, 5);
+    // Paksa konversi ke WebP jika mentahannya bukan blob ringan
+    if (fileOrBlob instanceof File && fileOrBlob.type.startsWith('image/')) {
+        finalFile = await autoCompressImage(fileOrBlob);
     }
 
     const formData = new FormData();

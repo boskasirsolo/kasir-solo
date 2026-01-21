@@ -5,7 +5,7 @@ export const optimizeImage = (url: string, width: number = 1200) => {
 
   if (url.includes('cloudinary.com')) {
     if (url.includes('f_auto,q_auto')) return url;
-    // Set ke q_auto:best biar Cloudinary gak pelit kualitas
+    // Paksa format auto (WebP/AVIF) di Cloudinary
     const params = [`f_auto`, `q_auto:best`, `c_limit`, `w_${width}`];
     return url.replace('/upload/', `/upload/${params.join(',')}/`);
   }
@@ -14,8 +14,8 @@ export const optimizeImage = (url: string, width: number = 1200) => {
     try {
         const urlObj = new URL(url);
         urlObj.searchParams.set('w', width.toString());
-        urlObj.searchParams.set('q', '95'); // High quality unsplash
-        urlObj.searchParams.set('fm', 'webp');
+        urlObj.searchParams.set('q', '90'); 
+        urlObj.searchParams.set('fm', 'webp'); // Unsplash juga paksa WebP
         urlObj.searchParams.set('fit', 'max');
         return urlObj.toString();
     } catch(e) {
@@ -26,11 +26,8 @@ export const optimizeImage = (url: string, width: number = 1200) => {
   return url;
 };
 
-// --- CLIENT-SIDE AUTO COMPRESSOR (V3.0 - ULTRA SHARP) ---
-export const autoCompressImage = async (file: File, maxSizeMB: number = 5): Promise<File> => {
-  // Kalau file di bawah 5MB, JANGAN DISENTUH. Biar kualitas aslinya keluar.
-  if (file.size <= maxSizeMB * 1024 * 1024) return file;
-
+// --- CLIENT-SIDE WebP CONVERTER (V4.0 - WEBP HIGH FIDELITY) ---
+export const autoCompressImage = async (file: File): Promise<File> => {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -44,7 +41,7 @@ export const autoCompressImage = async (file: File, maxSizeMB: number = 5): Prom
         let width = img.width;
         let height = img.height;
 
-        // Limit resolusi di 4K murni (4096px)
+        // Jaga di resolusi 4K biar detail mesin kasir tetep gila
         const MAX_DIM = 4096;
         if (width > MAX_DIM || height > MAX_DIM) {
           if (width > height) {
@@ -61,43 +58,45 @@ export const autoCompressImage = async (file: File, maxSizeMB: number = 5): Prom
         const ctx = canvas.getContext('2d');
         if (!ctx) return resolve(file);
 
-        // ULTRA SMOOTHING SETTINGS
+        // Rendering setingan dewa
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Gunakan format asli, quality 0.98 (Hampir Perfect)
-        const targetType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-        const quality = 0.98; 
+        // KONVERSI KE WEBP DENGAN KUALITAS 0.9 (Ultra Sharp)
+        const targetType = 'image/webp';
+        const quality = 0.90; 
 
         canvas.toBlob((blob) => {
           if (blob) {
-            const compressedFile = new File([blob], file.name, {
+            // Ubah nama file, ganti ekstensinya jadi .webp
+            const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+            const finalName = `${baseName}.webp`;
+            
+            const convertedFile = new File([blob], finalName, {
               type: targetType,
               lastModified: Date.now(),
             });
-            console.log(`[MKS-Ultra-Sharp] ${(file.size / 1024 / 1024).toFixed(1)}MB -> ${(compressedFile.size / 1024 / 1024).toFixed(1)}MB (Q: 0.98)`);
-            resolve(compressedFile);
+            
+            console.log(`[MKS-WebP-Engine] Converted: ${file.name} (${(file.size / 1024).toFixed(0)}KB) -> ${finalName} (${(convertedFile.size / 1024).toFixed(0)}KB) Q:0.9`);
+            resolve(convertedFile);
           } else {
             resolve(file);
           }
         }, targetType, quality);
       };
 
-      img.onerror = () => {
-        resolve(file);
-      };
+      img.onerror = () => resolve(file);
     };
 
     reader.onerror = () => resolve(file);
   });
 };
 
-// --- WATERMARK ENGINE (V3.0 - HD PRECISION) ---
+// --- WATERMARK ENGINE (V4.0 - WEBP PRECISION) ---
 export const addWatermarkToFile = async (file: File): Promise<File> => {
-  // Hanya kompres file raksasa (di atas 7MB) sebelum di-watermark
-  const processedFile = file.size > 7 * 1024 * 1024 ? await autoCompressImage(file, 5) : file;
+  // Semua file diproses lewat WebP Engine dulu
+  const processedFile = await autoCompressImage(file);
   
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -119,7 +118,7 @@ export const addWatermarkToFile = async (file: File): Promise<File> => {
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0);
 
-        // Watermark Style - Lebih Elegan
+        // Style Watermark MKS - Transparansi pas, tetep tegas
         const text = "PT MESIN KASIR SOLO";
         const fontSize = Math.floor(canvas.width / 22);
         ctx.font = `900 ${fontSize}px sans-serif`;
@@ -129,8 +128,8 @@ export const addWatermarkToFile = async (file: File): Promise<File> => {
         ctx.save();
         ctx.translate(canvas.width / 2, canvas.height / 2);
         ctx.rotate(-Math.PI / 12);
-        ctx.shadowColor = "rgba(0,0,0,0.4)";
-        ctx.shadowBlur = 15;
+        ctx.shadowColor = "rgba(0,0,0,0.3)";
+        ctx.shadowBlur = 12;
         ctx.fillStyle = "rgba(255, 255, 255, 0.15)"; 
         ctx.fillText(text, 0, 0);
         ctx.restore();
@@ -140,15 +139,16 @@ export const addWatermarkToFile = async (file: File): Promise<File> => {
         ctx.font = `bold ${smallSize}px sans-serif`;
         ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
         ctx.textAlign = 'right';
-        ctx.fillText("Aset Resmi: MesinKasirSolo.my.id", canvas.width - 40, canvas.height - 40);
+        ctx.fillText("Official: MesinKasirSolo.my.id", canvas.width - 40, canvas.height - 40);
 
         canvas.toBlob((blob) => {
             if (blob) {
-                resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                // Return hasil akhir sebagai WebP kualitas 0.92 (sedikit lebih tinggi buat final)
+                resolve(new File([blob], processedFile.name, { type: 'image/webp' }));
             } else {
                 resolve(processedFile);
             }
-        }, 'image/jpeg', 0.98); // Kualitas output watermark juga 0.98
+        }, 'image/webp', 0.92);
       };
       img.onerror = () => resolve(processedFile);
     };
