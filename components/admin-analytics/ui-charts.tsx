@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Calendar, Clock, Activity, Flame, RefreshCw } from 'lucide-react';
 
 export const TrafficChart = ({ data, period }: { data: Record<string, number>, period: number }) => {
@@ -55,89 +55,89 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
 
 export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
     const maxVal = Math.max(...hours, 1);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [tooltip, setTooltip] = useState<{ x: number, y: number, hour: number, count: number, visible: boolean }>({
-        x: 0, y: 0, hour: 0, count: 0, visible: false
-    });
+    const [hoveredHour, setHoveredHour] = useState<number | null>(null);
 
-    const handleMouseMove = (e: React.MouseEvent, h: number, count: number) => {
-        if (!containerRef.current) return;
+    // Hitung posisi tooltip secara dinamis berdasarkan bar yang di-hover
+    const tooltipData = useMemo(() => {
+        if (hoveredHour === null) return null;
+        const count = hours[hoveredHour];
+        const intensity = count / maxVal;
+        const barHeightPercent = Math.max(intensity * 100, 5);
         
-        // Get relative position within container
-        const rect = containerRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        // Horizontal position (h / 24 total bars)
+        const leftPos = (hoveredHour / 23) * 100; 
 
-        setTooltip({
-            x,
-            y,
-            hour: h,
+        return {
+            hour: hoveredHour,
             count,
-            visible: true
-        });
-    };
+            bottom: barHeightPercent,
+            left: leftPos
+        };
+    }, [hoveredHour, hours, maxVal]);
 
     return (
         <div className="mt-6 pt-6 border-t border-white/5 relative">
             <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
                 <Flame size={14} className="text-red-500"/> Jam Sibuk Pasar (WIB)
             </h4>
-            <p className="text-[10px] text-gray-500 mb-6">Arahkan kursor buat liat detail jam gentayangan juragan.</p>
+            <p className="text-[10px] text-gray-500 mb-6">Arahkan kursor ke grafik untuk bedah jam tayang.</p>
             
-            <div 
-                ref={containerRef}
-                className="relative bg-black/20 rounded-2xl p-4 border border-white/5 overflow-hidden group/container"
-                onMouseLeave={() => setTooltip(prev => ({ ...prev, visible: false }))}
-            >
-                {/* FLOATING DYNAMIC TOOLTIP */}
-                {tooltip.visible && (
+            <div className="relative bg-black/30 rounded-2xl p-4 md:p-6 border border-white/5 overflow-visible">
+                {/* DYNAMIC SNAPPING TOOLTIP */}
+                {tooltipData && (
                     <div 
-                        className="absolute pointer-events-none z-[100] transition-transform duration-75 ease-out"
+                        className="absolute z-[100] pointer-events-none transition-all duration-300 ease-out flex flex-col items-center"
                         style={{ 
-                            left: `${tooltip.x}px`, 
-                            top: `${tooltip.y}px`,
-                            transform: `translate(${tooltip.x > 350 ? '-110%' : '10%'}, -110%)` 
+                            left: `${tooltipData.left}%`,
+                            bottom: `calc(${tooltipData.bottom}% + 45px)`, // Dinamis ikut tinggi bar + padding
+                            transform: `translateX(${tooltipData.hour < 3 ? '0%' : tooltipData.hour > 21 ? '-100%' : '-50%'})`
                         }}
                     >
-                        <div className="bg-brand-dark/95 backdrop-blur-md border border-brand-orange/50 px-3 py-2 rounded-xl shadow-neon flex items-center gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-pulse"></div>
-                            <div className="text-left">
-                                <p className="text-white font-bold text-[11px] leading-none">Jam {tooltip.hour.toString().padStart(2, '0')}:00</p>
-                                <p className="text-brand-orange font-black text-[10px] mt-1">{tooltip.count} Views</p>
-                            </div>
+                        <div className="bg-brand-dark border border-brand-orange/40 px-3 py-2 rounded-xl shadow-neon-strong backdrop-blur-md flex items-center gap-2 whitespace-nowrap min-w-max">
+                            <span className="text-[11px] font-black text-brand-orange">{tooltipData.hour.toString().padStart(2, '0')}:00</span>
+                            <div className="w-px h-3 bg-white/20"></div>
+                            <span className="text-[11px] font-bold text-white">{tooltipData.count} Views</span>
                         </div>
+                        {/* Caret/Arrow Down */}
+                        <div 
+                            className={`w-2.5 h-2.5 bg-brand-dark border-r border-b border-brand-orange/40 rotate-45 -mt-1.5 shadow-neon ${
+                                tooltipData.hour < 3 ? 'mr-auto ml-3' : tooltipData.hour > 21 ? 'ml-auto mr-3' : ''
+                            }`}
+                        ></div>
                     </div>
                 )}
 
                 <div className="overflow-x-auto custom-scrollbar-hide pb-2">
                     <div className="min-w-[500px]">
-                        <div className="flex items-end gap-[2px] h-24 w-full">
+                        <div className="flex items-end gap-[2px] h-28 w-full relative">
                             {hours.map((count, h) => {
                                 const intensity = count / maxVal;
                                 let bgClass = 'bg-white/5';
                                 if (count > 0) {
-                                    if (intensity > 0.75) bgClass = 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]';
-                                    else if (intensity > 0.5) bgClass = 'bg-brand-orange shadow-[0_0_12px_rgba(255,95,31,0.3)]';
+                                    if (intensity > 0.75) bgClass = 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]';
+                                    else if (intensity > 0.5) bgClass = 'bg-brand-orange shadow-[0_0_12px_rgba(255,95,31,0.25)]';
                                     else if (intensity > 0.25) bgClass = 'bg-yellow-500/80';
                                     else bgClass = 'bg-blue-500/80';
                                 }
+
+                                const isHovered = hoveredHour === h;
 
                                 return (
                                     <div 
                                         key={h} 
                                         className="flex-1 flex flex-col items-center group relative h-full justify-end min-w-[15px]"
-                                        onMouseMove={(e) => handleMouseMove(e, h, count)}
-                                        onMouseEnter={(e) => handleMouseMove(e, h, count)}
+                                        onMouseEnter={() => setHoveredHour(h)}
+                                        onMouseLeave={() => setHoveredHour(null)}
                                     >
                                         <div 
-                                            className={`w-full rounded-sm ${bgClass} transition-all duration-500 min-h-[4px] relative z-10 group-hover:brightness-125 group-hover:scale-x-110`} 
+                                            className={`w-full rounded-sm ${bgClass} transition-all duration-300 min-h-[4px] relative z-10 ${isHovered ? 'brightness-150 scale-x-125 z-20 shadow-neon' : ''}`} 
                                             style={{ height: `${Math.max(intensity * 100, 5)}%` }}
                                         ></div>
                                     </div>
                                 )
                             })}
                         </div>
-                        <div className="flex justify-between text-[8px] text-gray-600 mt-3 font-mono uppercase tracking-tighter px-1">
+                        <div className="flex justify-between text-[9px] text-gray-600 mt-4 font-mono uppercase tracking-tighter px-1 border-t border-white/5 pt-2">
                             <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
                         </div>
                     </div>
