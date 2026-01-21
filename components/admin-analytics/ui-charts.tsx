@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Calendar, Clock, Activity, Flame, RefreshCw } from 'lucide-react';
 
 export const TrafficChart = ({ data, period }: { data: Record<string, number>, period: number }) => {
@@ -55,57 +55,91 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
 
 export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
     const maxVal = Math.max(...hours, 1);
-    
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [tooltip, setTooltip] = useState<{ x: number, y: number, hour: number, count: number, visible: boolean }>({
+        x: 0, y: 0, hour: 0, count: 0, visible: false
+    });
+
+    const handleMouseMove = (e: React.MouseEvent, h: number, count: number) => {
+        if (!containerRef.current) return;
+        
+        // Get relative position within container
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        setTooltip({
+            x,
+            y,
+            hour: h,
+            count,
+            visible: true
+        });
+    };
+
     return (
         <div className="mt-6 pt-6 border-t border-white/5 relative">
             <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
                 <Flame size={14} className="text-red-500"/> Jam Sibuk Pasar (WIB)
             </h4>
-            <p className="text-[10px] text-gray-500 mb-2">Pantau jam berapa Juragan pada ngintip web lo.</p>
+            <p className="text-[10px] text-gray-500 mb-6">Arahkan kursor buat liat detail jam gentayangan juragan.</p>
             
-            <div className="relative overflow-x-auto custom-scrollbar pb-2">
-                {/* HEADROOM LEBIH LUAS: pt-14 dan overflow tetap visible di axis-y agar tooltip bebas */}
-                <div className="min-w-[500px] pt-14 relative z-10">
-                    <div className="flex items-end gap-[2px] h-20 w-full relative">
-                        {hours.map((count, h) => {
-                            const intensity = count / maxVal;
-                            let bgClass = 'bg-white/5';
-                            if (count > 0) {
-                                if (intensity > 0.75) bgClass = 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]';
-                                else if (intensity > 0.5) bgClass = 'bg-brand-orange shadow-[0_0_10px_rgba(255,95,31,0.3)]';
-                                else if (intensity > 0.25) bgClass = 'bg-yellow-500/80';
-                                else bgClass = 'bg-blue-500/80';
-                            }
-
-                            // Logic buat geser tooltip biar gak kepotong di pinggir kiri/kanan
-                            let tooltipAlignClass = "left-1/2 -translate-x-1/2";
-                            if (h < 3) tooltipAlignClass = "left-0 translate-x-0"; // Jam 00-02 nempel kiri
-                            if (h > 21) tooltipAlignClass = "right-0 translate-x-0 left-auto"; // Jam 22-23 nempel kanan
-
-                            return (
-                                <div key={h} className="flex-1 flex flex-col items-center group relative h-full justify-end min-w-[15px]">
-                                    {/* TOOLTIP: z-index Gahar & posisi nempel di atas Bar masing-masing */}
-                                    <div className={`absolute bottom-full mb-1.5 opacity-0 group-hover:opacity-100 pointer-events-none bg-brand-dark/95 backdrop-blur-sm text-white text-[9px] px-2 py-1.5 rounded-lg z-[100] border border-brand-orange/40 whitespace-nowrap shadow-neon transition-all duration-200 translate-y-2 group-hover:translate-y-0 ${tooltipAlignClass}`}>
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="font-bold text-brand-orange">{h.toString().padStart(2, '0')}:00</span>
-                                            <div className="w-px h-2 bg-white/20"></div>
-                                            <span className="font-medium">{count} Views</span>
-                                        </div>
-                                        {/* Panah Tooltip */}
-                                        <div className={`absolute -bottom-1 w-2 h-2 bg-brand-dark rotate-45 border-r border-b border-brand-orange/40 ${h < 3 ? 'left-2' : h > 21 ? 'right-2' : 'left-1/2 -translate-x-1/2'}`}></div>
-                                    </div>
-
-                                    {/* BAR GRAFIK */}
-                                    <div 
-                                        className={`w-full rounded-sm ${bgClass} transition-all duration-700 min-h-[4px] relative z-10`} 
-                                        style={{ height: `${Math.max(intensity * 100, 5)}%` }}
-                                    ></div>
-                                </div>
-                            )
-                        })}
+            <div 
+                ref={containerRef}
+                className="relative bg-black/20 rounded-2xl p-4 border border-white/5 overflow-hidden group/container"
+                onMouseLeave={() => setTooltip(prev => ({ ...prev, visible: false }))}
+            >
+                {/* FLOATING DYNAMIC TOOLTIP */}
+                {tooltip.visible && (
+                    <div 
+                        className="absolute pointer-events-none z-[100] transition-transform duration-75 ease-out"
+                        style={{ 
+                            left: `${tooltip.x}px`, 
+                            top: `${tooltip.y}px`,
+                            transform: `translate(${tooltip.x > 350 ? '-110%' : '10%'}, -110%)` 
+                        }}
+                    >
+                        <div className="bg-brand-dark/95 backdrop-blur-md border border-brand-orange/50 px-3 py-2 rounded-xl shadow-neon flex items-center gap-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-pulse"></div>
+                            <div className="text-left">
+                                <p className="text-white font-bold text-[11px] leading-none">Jam {tooltip.hour.toString().padStart(2, '0')}:00</p>
+                                <p className="text-brand-orange font-black text-[10px] mt-1">{tooltip.count} Views</p>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex justify-between text-[8px] text-gray-600 mt-2 font-mono uppercase tracking-tighter">
-                        <span>00:00</span><span>04:00</span><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span><span>23:00</span>
+                )}
+
+                <div className="overflow-x-auto custom-scrollbar-hide pb-2">
+                    <div className="min-w-[500px]">
+                        <div className="flex items-end gap-[2px] h-24 w-full">
+                            {hours.map((count, h) => {
+                                const intensity = count / maxVal;
+                                let bgClass = 'bg-white/5';
+                                if (count > 0) {
+                                    if (intensity > 0.75) bgClass = 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]';
+                                    else if (intensity > 0.5) bgClass = 'bg-brand-orange shadow-[0_0_12px_rgba(255,95,31,0.3)]';
+                                    else if (intensity > 0.25) bgClass = 'bg-yellow-500/80';
+                                    else bgClass = 'bg-blue-500/80';
+                                }
+
+                                return (
+                                    <div 
+                                        key={h} 
+                                        className="flex-1 flex flex-col items-center group relative h-full justify-end min-w-[15px]"
+                                        onMouseMove={(e) => handleMouseMove(e, h, count)}
+                                        onMouseEnter={(e) => handleMouseMove(e, h, count)}
+                                    >
+                                        <div 
+                                            className={`w-full rounded-sm ${bgClass} transition-all duration-500 min-h-[4px] relative z-10 group-hover:brightness-125 group-hover:scale-x-110`} 
+                                            style={{ height: `${Math.max(intensity * 100, 5)}%` }}
+                                        ></div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <div className="flex justify-between text-[8px] text-gray-600 mt-3 font-mono uppercase tracking-tighter px-1">
+                            <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span>
+                        </div>
                     </div>
                 </div>
             </div>
