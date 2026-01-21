@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { LogOut, Zap, Clock, ShoppingBag, ImageIcon, FileText, Layout, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { LogOut, Zap, Clock, ShoppingBag, ImageIcon, FileText, Layout, ChevronLeft, ChevronRight, Eye, ArrowRight, Sparkles } from 'lucide-react';
 
 export const TopPagesTable = ({ 
     pages, 
@@ -9,7 +9,7 @@ export const TopPagesTable = ({
     pages: { path: string; hits: number; avgTime: string }[], 
     onPageClick: (path: string) => void 
 }) => {
-    const ITEMS_PER_PAGE = 6;
+    const ITEMS_PER_PAGE = 8;
     const [currentPage, setCurrentPage] = useState(1);
 
     const totalPages = Math.ceil(pages.length / ITEMS_PER_PAGE);
@@ -24,15 +24,22 @@ export const TopPagesTable = ({
     };
 
     return (
-        <div className="lg:col-span-2 bg-brand-dark border border-white/5 rounded-xl p-4 md:p-6 flex flex-col h-full shadow-xl">
-            <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-3">
-                <h4 className="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2">
-                    <Eye size={16} className="text-brand-orange"/> Konten Terlaris
-                </h4>
-                <span className="text-[10px] text-gray-500 font-mono">Total: {pages.length}</span>
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-4 md:p-8 flex flex-col h-full shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><Eye size={120}/></div>
+            
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-white/5 pb-5 gap-4 relative z-10">
+                <div>
+                    <h4 className="text-white font-black text-lg uppercase tracking-wider flex items-center gap-2">
+                        <Sparkles size={18} className="text-brand-orange animate-pulse"/> Konten Paling Cuan
+                    </h4>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Audit Performa Halaman Website</p>
+                </div>
+                <div className="bg-black/40 px-3 py-1.5 rounded-full border border-white/5 text-[10px] font-mono text-gray-500">
+                    Total: {pages.length} Assets
+                </div>
             </div>
             
-            <div className="space-y-2 flex-grow overflow-y-auto custom-scrollbar">
+            <div className="space-y-3 flex-grow overflow-y-auto custom-scrollbar relative z-10">
                 {currentData.map((item, idx) => {
                     const { icon: Icon, label, color } = getPageContext(item.path);
                     const rank = ((currentPage - 1) * ITEMS_PER_PAGE) + idx + 1;
@@ -41,30 +48,32 @@ export const TopPagesTable = ({
                         <div 
                             key={idx} 
                             onClick={() => onPageClick(item.path)}
-                            className="flex justify-between items-center p-3 bg-brand-card/40 rounded-xl border border-white/5 hover:border-brand-orange/40 hover:bg-brand-card transition-all group cursor-pointer"
+                            className="flex justify-between items-center p-4 bg-brand-card/40 rounded-2xl border border-white/5 hover:border-brand-orange transition-all group cursor-pointer hover:bg-brand-card"
                         >
                             <div className="flex items-center gap-4 flex-1 min-w-0">
-                                <span className="w-6 h-6 rounded bg-black flex items-center justify-center text-[10px] font-black text-gray-600 border border-white/10 group-hover:text-brand-orange group-hover:border-brand-orange/30 transition-colors">
+                                <span className="w-8 h-8 rounded-xl bg-black flex items-center justify-center text-[11px] font-black text-gray-600 border border-white/10 group-hover:text-brand-orange group-hover:border-brand-orange/30 transition-colors shadow-inner shrink-0">
                                     {rank}
                                 </span>
                                 <div className="flex flex-col min-w-0 flex-1">
-                                    <span className="text-xs text-white font-bold truncate w-full group-hover:text-brand-orange transition-colors">{item.path}</span>
-                                    <span className={`text-[8px] px-1.5 py-0.5 rounded w-fit font-black mt-1 border ${color}`}>
-                                        {label}
-                                    </span>
+                                    <span className="text-sm text-white font-bold truncate w-full group-hover:text-brand-orange transition-colors">{item.path}</span>
+                                    <div className="flex items-center gap-2 mt-1.5">
+                                        <span className={`text-[8px] px-2 py-0.5 rounded-full font-black border uppercase tracking-wider ${color}`}>
+                                            {label}
+                                        </span>
+                                        <div className="flex items-center gap-1 text-[10px] text-gray-600 font-mono">
+                                            <Clock size={10}/> {item.avgTime}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <div className="flex items-center gap-4 shrink-0">
-                                <div className="hidden sm:flex flex-col items-end">
-                                    <p className="text-[8px] text-gray-600 font-black uppercase mb-0.5">Waktu Baca</p>
-                                    <div className="flex items-center gap-1 text-blue-400 font-mono text-[10px] font-bold">
-                                        <Clock size={10}/> {item.avgTime}
-                                    </div>
+                            <div className="flex items-center gap-6 shrink-0 ml-4">
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-[10px] font-black text-white group-hover:text-brand-orange transition-colors">{item.hits}</p>
+                                    <p className="text-[8px] text-gray-600 font-black uppercase tracking-tighter">Views</p>
                                 </div>
-                                <div className="bg-black/40 px-3 py-1.5 rounded-lg border border-white/10 group-hover:border-brand-orange/20 text-center min-w-[70px] shadow-inner">
-                                    <p className="text-[8px] text-gray-600 font-black uppercase mb-0.5">Hits</p>
-                                    <span className="text-xs font-black text-white group-hover:text-brand-orange transition-colors">{item.hits}</span>
+                                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-600 group-hover:bg-brand-orange group-hover:text-white transition-all">
+                                    <ArrowRight size={16} />
                                 </div>
                             </div>
                         </div>
@@ -73,10 +82,24 @@ export const TopPagesTable = ({
             </div>
 
             {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-4 mt-6 pt-4 border-t border-white/5">
-                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-20"><ChevronLeft size={16}/></button>
-                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hal <span className="text-brand-orange">{currentPage}</span> / {totalPages}</span>
-                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-20"><ChevronRight size={16}/></button>
+                <div className="flex justify-center items-center gap-6 mt-8 pt-6 border-t border-white/5 relative z-10">
+                    <button 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                        disabled={currentPage === 1} 
+                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-20 transition-all border border-white/10"
+                    >
+                        <ChevronLeft size={20} className="text-white"/>
+                    </button>
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                        Hal <span className="text-brand-orange">{currentPage}</span> <span className="mx-1">/</span> {totalPages}
+                    </span>
+                    <button 
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                        disabled={currentPage === totalPages} 
+                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-20 transition-all border border-white/10"
+                    >
+                        <ChevronRight size={20} className="text-white"/>
+                    </button>
                 </div>
             )}
         </div>
@@ -84,17 +107,21 @@ export const TopPagesTable = ({
 };
 
 export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-xl p-5 md:p-6 shadow-xl">
-        <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-            <LogOut size={16} className="text-red-400"/> Exit Points
+    <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform"><LogOut size={60}/></div>
+        <h4 className="text-white font-black text-xs mb-4 flex items-center gap-2 uppercase tracking-widest relative z-10">
+            <LogOut size={14} className="text-red-500"/> Exit Points (Titik Pamit)
         </h4>
-        <p className="text-[10px] text-gray-500 mb-6 leading-relaxed">Halaman tempat Juragan milih pamit dari web lo.</p>
-        <div className="space-y-3">
+        <p className="text-[10px] text-gray-500 mb-6 leading-relaxed relative z-10">TKP terakhir sebelum Juragan nutup tab atau pindah ke web lain.</p>
+        <div className="space-y-3 relative z-10">
             {pages.map(([page, count], idx) => (
-                <div key={idx} className="flex flex-col border-b border-white/5 pb-2 last:border-0 group">
+                <div key={idx} className="flex flex-col border-b border-white/5 pb-2 last:border-0 group/item">
                     <div className="flex justify-between items-center text-xs mb-1">
-                        <span className="text-gray-400 truncate max-w-[180px] group-hover:text-white transition-colors">{page}</span>
-                        <span className="text-red-500 font-black font-mono">{count}</span>
+                        <span className="text-gray-400 truncate max-w-[180px] group-hover/item:text-white transition-colors font-mono text-[10px]">{page}</span>
+                        <div className="flex items-center gap-2">
+                             <span className="text-red-500 font-black font-mono">{count}</span>
+                             <div className="w-1 h-1 rounded-full bg-red-500/50"></div>
+                        </div>
                     </div>
                 </div>
             ))}
@@ -104,25 +131,26 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => (
 );
 
 export const QualityScorePanel = ({ bounceRate, avgPages }: { bounceRate: number, avgPages: string }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-xl p-5 md:p-6 flex flex-col justify-between shadow-xl">
+    <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+        <div className="absolute bottom-0 right-0 p-4 opacity-5 pointer-events-none"><Zap size={100}/></div>
         <div>
-            <h4 className="text-white font-bold text-sm mb-6 flex items-center gap-2 uppercase tracking-widest">
-                <Zap size={16} className="text-yellow-400"/> Quality Score
+            <h4 className="text-white font-black text-xs mb-6 flex items-center gap-2 uppercase tracking-widest relative z-10">
+                <Zap size={14} className="text-yellow-400"/> Quality Score
             </h4>
-            <div className="space-y-4">
-                <div className="p-5 bg-white/5 rounded-2xl border border-white/5 hover:border-yellow-500/30 transition-all group">
+            <div className="space-y-4 relative z-10">
+                <div className="p-5 bg-white/5 rounded-2xl border border-white/5 hover:border-yellow-500/30 transition-all group/box">
                     <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Boncos Rate (Bounce)</p>
                     <div className="flex justify-between items-end">
-                        <h3 className="text-3xl font-display font-black text-white group-hover:text-yellow-400 transition-colors">{bounceRate}%</h3>
-                        <div className={`text-[9px] px-2 py-0.5 rounded font-black uppercase ${bounceRate < 40 ? 'bg-green-500/20 text-green-400' : bounceRate < 70 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-500'}`}>
+                        <h3 className="text-3xl font-display font-black text-white group-hover/box:text-yellow-400 transition-colors">{bounceRate}%</h3>
+                        <div className={`text-[9px] px-2 py-0.5 rounded font-black uppercase border ${bounceRate < 40 ? 'bg-green-500/20 text-green-400 border-green-500/30' : bounceRate < 70 ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : 'bg-red-500/20 text-red-500 border-red-500/30'}`}>
                             {bounceRate < 40 ? 'LOW' : bounceRate < 70 ? 'NORMAL' : 'HIGH'}
                         </div>
                     </div>
                 </div>
-                <div className="p-5 bg-white/5 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all group">
+                <div className="p-5 bg-white/5 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all group/box">
                     <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Kedalaman Jelajah</p>
                     <div className="flex justify-between items-end">
-                        <h3 className="text-3xl font-display font-black text-white group-hover:text-blue-400 transition-colors">{avgPages}</h3>
+                        <h3 className="text-3xl font-display font-black text-white group-hover/box:text-blue-400 transition-colors">{avgPages}</h3>
                         <span className="text-[9px] text-gray-600 font-black uppercase mb-1">Hal / Visit</span>
                     </div>
                 </div>
