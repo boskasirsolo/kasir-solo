@@ -79,7 +79,7 @@ export const AdminArticles = ({
       {/* 3. RIGHT PANEL: Canvas (50%) */}
       <div className={`w-full lg:w-[50%] lg:flex h-full bg-black flex-col relative overflow-hidden ${activeMobilePane === 'WRITE' ? 'flex' : 'hidden'}`}>
          
-         {/* Top Bar Editor - Control Center */}
+         {/* Top Bar Editor - Minimalist Command Center */}
          <div className="p-4 md:p-6 border-b border-white/10 bg-brand-dark/50 backdrop-blur-sm z-10 sticky top-0 shrink-0">
             <div className="flex flex-col gap-4">
                 <input 
@@ -91,38 +91,9 @@ export const AdminArticles = ({
                 />
 
                 <div className="flex flex-row gap-4 items-center justify-between">
-                    {/* COVER CONTROLS (Small Header Display) */}
-                    <div className="flex items-center gap-3">
-                        <div className="relative w-20 h-12 md:w-24 md:h-14 bg-black rounded-lg border border-white/10 overflow-hidden group/cover shadow-lg shrink-0">
-                            {form.imagePreview ? (
-                                <img src={form.imagePreview} className="w-full h-full object-cover" alt="Cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-700 bg-white/5">
-                                    <ImageIcon size={16} />
-                                </div>
-                            )}
-                            <div className="absolute inset-0 bg-black/80 opacity-0 group-hover/cover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-1">
-                                <label className="p-1.5 bg-white/10 hover:bg-white/20 rounded cursor-pointer transition-colors" title="Upload">
-                                    <UploadCloud size={12} className="text-white"/>
-                                    <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
-                                </label>
-                                <button onClick={() => setShowMediaLib(true)} className="p-1.5 bg-brand-orange/20 hover:bg-brand-orange/40 rounded transition-colors" title="Media">
-                                    <FolderOpen size={12} className="text-brand-orange" />
-                                </button>
-                                <button onClick={manager.actions.runImage} disabled={aiLogic.loading.generatingImage} className="p-1.5 bg-blue-500/20 hover:bg-blue-500/40 rounded transition-colors" title="AI Gen">
-                                    {aiLogic.loading.generatingImage ? <Loader2 size={12} className="animate-spin text-blue-400"/> : <Sparkles size={12} className="text-blue-400"/>}
-                                </button>
-                            </div>
-                        </div>
-                        <div className="hidden sm:block">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">Set Visual Cover</p>
-                            <p className="text-[9px] text-brand-orange font-mono leading-none">{form.readTime}</p>
-                        </div>
-                    </div>
-
+                    {/* LEFT: STATUS & SCHEDULER */}
                     <div className="flex items-center gap-2">
-                        {/* STATUS SWITCHER (Moved from Left Panel) */}
-                        <div className="flex bg-black/40 p-1 rounded-lg border border-white/5 mr-1">
+                        <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
                             {[
                                 { id: 'draft', label: 'DRAFT', icon: PenTool, color: 'text-gray-400' },
                                 { id: 'published', label: 'TAYANG', icon: Send, color: 'text-green-400' },
@@ -131,7 +102,7 @@ export const AdminArticles = ({
                                 <button
                                     key={s.id}
                                     onClick={() => manager.setForm((p:any) => ({...p, status: s.id}))}
-                                    className={`px-2 py-1.5 rounded-md text-[9px] font-black tracking-widest transition-all flex items-center gap-1.5 ${
+                                    className={`px-3 py-1.5 rounded-md text-[9px] font-black tracking-widest transition-all flex items-center gap-2 ${
                                         form.status === s.id 
                                         ? 'bg-white/10 text-white shadow-inner' 
                                         : 'text-gray-600 hover:text-gray-400'
@@ -139,11 +110,24 @@ export const AdminArticles = ({
                                     title={s.label}
                                 >
                                     <s.icon size={12} className={form.status === s.id ? s.color : ''} />
-                                    <span className="hidden xl:inline">{s.label}</span>
+                                    <span className="hidden sm:inline">{s.label}</span>
                                 </button>
                             ))}
                         </div>
 
+                        {/* DATE TIME PICKER FOR SCHEDULED STATUS */}
+                        {form.status === 'scheduled' && (
+                            <input 
+                                type="datetime-local" 
+                                value={form.scheduled_for}
+                                onChange={(e) => manager.setForm((p:any) => ({...p, scheduled_for: e.target.value}))}
+                                className="bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-bold px-3 py-1.5 rounded-lg outline-none focus:border-blue-500 transition-all animate-fade-in"
+                            />
+                        )}
+                    </div>
+
+                    {/* RIGHT: ACTION BUTTONS */}
+                    <div className="flex items-center gap-2">
                         {form.content.length > 50 && (
                             <button 
                                 onClick={manager.actions.runWrite} 
@@ -170,25 +154,60 @@ export const AdminArticles = ({
          
          <div className="flex-grow overflow-y-auto custom-scrollbar p-4 md:p-8 relative bg-black pb-24 lg:pb-8">
             
-            {/* BIG COVER PREVIEW (Just for display) */}
-            {form.imagePreview && (
-                <div className="w-full mb-10 group/bigcover relative">
-                    <div className="aspect-video w-full rounded-2xl overflow-hidden border border-white/5 bg-gray-900 shadow-2xl relative">
-                        <img src={form.imagePreview} className="w-full h-full object-cover" alt="Large Preview" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
-                        <div className="absolute bottom-4 left-6">
-                            <span className="text-[10px] font-black text-white bg-brand-orange px-2 py-1 rounded shadow-neon uppercase tracking-[0.2em]">Visual Utama</span>
+            {/* COVER SETUP AREA (Combined Preview + Actions) */}
+            <div className="w-full mb-10 group/cover relative">
+                <div className="aspect-video w-full rounded-2xl overflow-hidden border-2 border-white/5 bg-gray-900 shadow-2xl relative">
+                    {form.imagePreview ? (
+                        <>
+                            <img src={form.imagePreview} className="w-full h-full object-cover" alt="Large Preview" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                            <div className="absolute bottom-4 left-6 flex items-center gap-4">
+                                <span className="text-[10px] font-black text-white bg-brand-orange px-2 py-1 rounded shadow-neon uppercase tracking-[0.2em]">Visual Utama</span>
+                                <p className="text-[10px] text-gray-400 font-mono italic">{form.readTime}</p>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-700 bg-white/[0.02]">
+                            <ImageIcon size={48} className="mb-4 opacity-20" />
+                            <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Belum Ada Cover</p>
                         </div>
-                        <button 
-                            onClick={() => manager.setForm((p:any) => ({...p, imagePreview: '', uploadFile: null}))}
-                            className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-red-500 text-white rounded-full opacity-0 group-hover/bigcover:opacity-100 transition-all"
-                            title="Hapus Cover"
-                        >
-                            <X size={16}/>
+                    )}
+
+                    {/* OVERLAY CONTROLS */}
+                    <div className={`absolute inset-0 bg-black/60 flex items-center justify-center gap-4 transition-opacity ${form.imagePreview ? 'opacity-0 group-hover/cover:opacity-100' : 'opacity-100'}`}>
+                        <label className="flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 w-24" title="Upload dari Device">
+                            <UploadCloud size={24} className="text-white"/>
+                            <span className="text-[10px] font-bold text-white uppercase tracking-tighter">Upload</span>
+                            <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+                        </label>
+                        
+                        <button onClick={() => setShowMediaLib(true)} className="flex flex-col items-center gap-2 p-4 bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/20 rounded-2xl transition-all hover:-translate-y-1 w-24" title="Media Library">
+                            <FolderOpen size={24} className="text-brand-orange" />
+                            <span className="text-[10px] font-bold text-brand-orange uppercase tracking-tighter">Media</span>
                         </button>
+                        
+                        <button 
+                            onClick={manager.actions.runImage} 
+                            disabled={aiLogic.loading.generatingImage} 
+                            className="flex flex-col items-center gap-2 p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-2xl transition-all hover:-translate-y-1 w-24" 
+                            title="Generate pake AI"
+                        >
+                            {aiLogic.loading.generatingImage ? <Loader2 size={24} className="animate-spin text-blue-400"/> : <Sparkles size={24} className="text-blue-400"/>}
+                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">AI GEN</span>
+                        </button>
+
+                        {form.imagePreview && (
+                            <button 
+                                onClick={() => manager.setForm((p:any) => ({...p, imagePreview: '', uploadFile: null}))}
+                                className="absolute top-4 right-4 p-2 bg-red-500/20 hover:bg-red-500 text-white rounded-full transition-all"
+                                title="Hapus Visual"
+                            >
+                                <X size={16}/>
+                            </button>
+                        )}
                     </div>
                 </div>
-            )}
+            </div>
 
             <LiveEditor 
                 content={form.content} 
@@ -220,11 +239,6 @@ export const AdminArticles = ({
                     {form.status === 'draft' && <><PenTool size={10}/> Draft Konsep</>}
                     {form.status === 'scheduled' && <><Clock size={10} className="text-blue-400"/> Terjadwal</>}
                 </span>
-                {form.status === 'scheduled' && form.scheduled_for && (
-                    <span className="text-blue-400 flex items-center gap-1 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 font-mono">
-                        {new Date(form.scheduled_for).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})}
-                    </span>
-                )}
             </div>
             <div className="flex items-center gap-4">
                 <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest italic">Solo Intel Engine v3.2</p>
