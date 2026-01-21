@@ -29,9 +29,9 @@ export const ProjectEmbedCard: React.FC<{ title: string, url: string, image: str
             {/* Background Glow Effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-brand-orange/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             
-            <div className="flex flex-col md:flex-row h-full">
-                {/* Image Section */}
-                <div className="w-full md:w-2/5 relative h-56 md:h-auto overflow-hidden bg-black shrink-0 border-b md:border-b-0 md:border-r border-white/5">
+            <div className="flex flex-col md:flex-row min-h-[320px]">
+                {/* Image Section - FIXED HEIGHT to prevent stretching */}
+                <div className="w-full md:w-2/5 relative h-64 md:h-auto overflow-hidden bg-black shrink-0 border-b md:border-b-0 md:border-r border-white/5">
                     <img 
                         src={optimizeImage(image, 600)} 
                         alt={title} 
@@ -53,7 +53,7 @@ export const ProjectEmbedCard: React.FC<{ title: string, url: string, image: str
                         {title}
                     </h4>
                     {showDesc && (
-                        <p className="text-sm text-gray-400 leading-relaxed mb-6 line-clamp-2 md:line-clamp-3">
+                        <p className="text-sm text-gray-400 leading-relaxed mb-6 line-clamp-3 md:line-clamp-4">
                             {desc}
                         </p>
                     )}
