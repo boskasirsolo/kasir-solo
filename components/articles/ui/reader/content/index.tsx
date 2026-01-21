@@ -17,6 +17,9 @@ interface ReaderContentProps {
 }
 
 export const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, article, waNumber }: ReaderContentProps) => {
+    // Counter untuk membatasi kartu visual agar tidak terlalu ramai
+    let visualCardCount = 0;
+
     return (
       <div className="prose prose-invert prose-lg max-w-none text-gray-300 leading-relaxed space-y-6">
           {/* Excerpt on first page */}
@@ -29,9 +32,15 @@ export const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, a
               const p = paragraph.trim();
               if (!p) return null;
 
-              // 1. Custom Embeds ([FILE:], [PROJECT:], [PRODUCT:])
-              if (p.includes('[FILE:') || p.includes('[PROJECT:') || p.includes('[PRODUCT:')) {
-                  return <CustomEmbedBlock key={`custom-${idx}`} content={p} waNumber={waNumber} />;
+              // 1. Custom Embeds ([FILE:], [PROJECT:], [PRODUCT:], [SERVICE:])
+              if (p.includes('[FILE:') || p.includes('[PROJECT:') || p.includes('[PRODUCT:') || p.includes('[SERVICE:')) {
+                  // Batasan maksimal 3 kartu per halaman
+                  if (visualCardCount < 3) {
+                      visualCardCount++;
+                      return <CustomEmbedBlock key={`custom-${idx}`} content={p} waNumber={waNumber} />;
+                  }
+                  // Jika sudah 3 kartu, abaikan kartu berikutnya di halaman ini
+                  return null;
               }
               
               // 2. Images
