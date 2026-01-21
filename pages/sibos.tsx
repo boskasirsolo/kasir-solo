@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { 
-  ShieldAlert, crosshair, Zap, Target, Users, BarChart3, 
+  ShieldAlert, Crosshair, Zap, Target, Users, BarChart3, 
   Store, Globe, Calculator, Megaphone, Monitor, Smartphone, 
   ChevronRight, CheckCircle2, ArrowRight, Skull
 } from 'lucide-react';
