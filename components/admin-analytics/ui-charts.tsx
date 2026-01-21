@@ -64,8 +64,8 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
             <p className="text-[10px] text-gray-500 mb-2">Pantau jam berapa Juragan pada ngintip web lo.</p>
             
             <div className="relative overflow-x-auto custom-scrollbar pb-2">
-                {/* HEADROOM: Tambah pt-12 agar tooltip tidak terpotong header container */}
-                <div className="min-w-[500px] pt-12">
+                {/* HEADROOM LEBIH LUAS: pt-14 dan overflow tetap visible di axis-y agar tooltip bebas */}
+                <div className="min-w-[500px] pt-14 relative z-10">
                     <div className="flex items-end gap-[2px] h-20 w-full relative">
                         {hours.map((count, h) => {
                             const intensity = count / maxVal;
@@ -77,12 +77,25 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
                                 else bgClass = 'bg-blue-500/80';
                             }
 
+                            // Logic buat geser tooltip biar gak kepotong di pinggir kiri/kanan
+                            let tooltipAlignClass = "left-1/2 -translate-x-1/2";
+                            if (h < 3) tooltipAlignClass = "left-0 translate-x-0"; // Jam 00-02 nempel kiri
+                            if (h > 21) tooltipAlignClass = "right-0 translate-x-0 left-auto"; // Jam 22-23 nempel kanan
+
                             return (
                                 <div key={h} className="flex-1 flex flex-col items-center group relative h-full justify-end min-w-[15px]">
-                                    {/* TOOLTIP: Berikan z-50 dan pastikan tidak terpotong parent */}
-                                    <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 pointer-events-none bg-brand-dark text-white text-[9px] px-2 py-1.5 rounded-lg z-[100] border border-brand-orange/30 whitespace-nowrap -translate-x-1/2 left-1/2 shadow-neon transition-all duration-200 translate-y-2 group-hover:translate-y-0">
-                                        <span className="font-bold text-brand-orange">{h}:00</span> &bull; {count} views
+                                    {/* TOOLTIP: z-index Gahar & posisi nempel di atas Bar masing-masing */}
+                                    <div className={`absolute bottom-full mb-1.5 opacity-0 group-hover:opacity-100 pointer-events-none bg-brand-dark/95 backdrop-blur-sm text-white text-[9px] px-2 py-1.5 rounded-lg z-[100] border border-brand-orange/40 whitespace-nowrap shadow-neon transition-all duration-200 translate-y-2 group-hover:translate-y-0 ${tooltipAlignClass}`}>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="font-bold text-brand-orange">{h.toString().padStart(2, '0')}:00</span>
+                                            <div className="w-px h-2 bg-white/20"></div>
+                                            <span className="font-medium">{count} Views</span>
+                                        </div>
+                                        {/* Panah Tooltip */}
+                                        <div className={`absolute -bottom-1 w-2 h-2 bg-brand-dark rotate-45 border-r border-b border-brand-orange/40 ${h < 3 ? 'left-2' : h > 21 ? 'right-2' : 'left-1/2 -translate-x-1/2'}`}></div>
                                     </div>
+
+                                    {/* BAR GRAFIK */}
                                     <div 
                                         className={`w-full rounded-sm ${bgClass} transition-all duration-700 min-h-[4px] relative z-10`} 
                                         style={{ height: `${Math.max(intensity * 100, 5)}%` }}
