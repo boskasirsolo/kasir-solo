@@ -19,7 +19,7 @@ export const CityListPanel = ({
     onAdd: () => void
 }) => {
     return (
-        <div className="flex flex-col h-full bg-brand-dark border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+        <div className="flex flex-col h-full bg-brand-dark border border-white/5 rounded-2xl overflow-hidden shadow-xl lg:sticky lg:top-6">
             {/* List Header: Search & Buttons */}
             <div className="p-4 md:p-6 border-b border-white/10 bg-black/20 space-y-4">
                 <div className="flex items-center justify-between">

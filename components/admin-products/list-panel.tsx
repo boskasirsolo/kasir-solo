@@ -13,7 +13,7 @@ export const ListPanel = ({
     actions: any 
 }) => {
     return (
-        <div className="bg-brand-dark rounded-2xl border border-white/5 flex flex-col h-full overflow-hidden shadow-2xl">
+        <div className="bg-brand-dark rounded-2xl border border-white/5 flex flex-col h-full overflow-hidden shadow-2xl md:sticky md:top-6">
             {/* Header: Search & Category */}
             <div className="p-4 md:p-6 border-b border-white/10 bg-black/20 space-y-4">
                 <div className="flex items-center justify-between">

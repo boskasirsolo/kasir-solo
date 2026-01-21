@@ -17,7 +17,7 @@ export const SettingsSidebar = ({
     isSaving: boolean
 }) => {
     return (
-        <div className="w-full md:w-64 shrink-0 space-y-2">
+        <div className="w-full md:w-64 shrink-0 space-y-2 md:sticky md:top-6 h-fit">
             <div className="p-4 mb-4 bg-brand-orange/10 border border-brand-orange/20 rounded-xl">
                 <h3 className="text-white font-bold text-lg">Konfigurasi</h3>
                 <p className="text-xs text-gray-400">Pusat kontrol website.</p>
