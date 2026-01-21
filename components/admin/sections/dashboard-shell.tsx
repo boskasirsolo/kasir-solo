@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -126,49 +125,10 @@ export const DashboardShell = (props: DashboardProps) => {
                 </button>
             </div>
 
-            {/* --- MAIN CONTENT (LEFT SIDE) --- */}
-            <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar p-4 lg:p-8 order-2 lg:order-1 pb-24 lg:pb-8 relative">
-                <div className="absolute top-0 left-0 w-full h-[600px] bg-[radial-gradient(circle_at_top_left,rgba(255,95,31,0.05),transparent)] pointer-events-none -z-10"></div>
-                
-                <div className="max-w-[1600px] mx-auto">
-                    <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/5 pb-4">
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-3 text-[9px] font-black text-gray-500 uppercase tracking-[0.4em] mb-0.5">
-                                <span className="p-1 bg-brand-orange/10 rounded border border-brand-orange/30"><Zap size={10} className="text-brand-orange" /></span>
-                                Command &gt; {activeTab}
-                            </div>
-                            <h1 className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter leading-none">
-                                {LABEL_MAP[activeTab].toUpperCase()}
-                            </h1>
-                        </div>
-                        
-                        <div className="flex gap-3 items-center">
-                             {/* CORE ENGINE MIGRATED TO HEADER */}
-                             <SystemHealthWidget horizontal />
-                             
-                             <div className="bg-brand-card/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-3 shadow-xl group hover:border-brand-orange/30 transition-all cursor-help">
-                                <div className="relative">
-                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,1)]"></div>
-                                    <div className="absolute inset-0 rounded-full bg-green-500/50 animate-ping"></div>
-                                </div>
-                                <div className="text-right">
-                                    <span className="text-[8px] font-black text-white uppercase tracking-widest block leading-none mb-0.5">System Live</span>
-                                    <span className="text-[7px] text-gray-500 font-mono uppercase tracking-tighter block leading-none">Lat: 24ms</span>
-                                </div>
-                             </div>
-                        </div>
-                    </header>
-
-                    <div>
-                        {renderActiveModule()}
-                    </div>
-                </div>
-            </main>
-
-            {/* --- COMPACT SIDEBAR NAV (RIGHT SIDE) --- */}
+            {/* --- STICKY SIDEBAR NAV (LEFT SIDE) --- */}
             <aside 
-                className={`fixed lg:sticky top-0 right-0 h-screen w-72 lg:w-[280px] bg-brand-card/40 backdrop-blur-3xl border-l border-white/5 z-50 flex flex-col transition-all duration-500 transform lg:translate-x-0 order-1 lg:order-2 shadow-[0_0_50px_rgba(0,0,0,0.5)] ${
-                    isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+                className={`fixed lg:sticky top-0 left-0 h-screen w-72 lg:w-[260px] bg-brand-card/40 backdrop-blur-3xl border-r border-white/5 z-50 flex flex-col transition-all duration-500 transform lg:translate-x-0 shadow-[20px_0_50px_rgba(0,0,0,0.3)] ${
+                    isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
             >
                 {/* Sidebar Header with Action Buttons */}
@@ -234,6 +194,44 @@ export const DashboardShell = (props: DashboardProps) => {
                     <ShieldCheck size={12} className="text-brand-orange" />
                 </div>
             </aside>
+
+            {/* --- MAIN CONTENT (RIGHT SIDE) --- */}
+            <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar p-4 lg:p-8 pb-24 lg:pb-8 relative">
+                <div className="absolute top-0 left-0 w-full h-[600px] bg-[radial-gradient(circle_at_top_left,rgba(255,95,31,0.05),transparent)] pointer-events-none -z-10"></div>
+                
+                <div className="max-w-[1600px] mx-auto">
+                    <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/5 pb-4">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-3 text-[9px] font-black text-gray-500 uppercase tracking-[0.4em] mb-0.5">
+                                <span className="p-1 bg-brand-orange/10 rounded border border-brand-orange/30"><Zap size={10} className="text-brand-orange" /></span>
+                                Command &gt; {activeTab}
+                            </div>
+                            <h1 className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter leading-none">
+                                {LABEL_MAP[activeTab].toUpperCase()}
+                            </h1>
+                        </div>
+                        
+                        <div className="flex gap-3 items-center">
+                             <SystemHealthWidget horizontal />
+                             
+                             <div className="bg-brand-card/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-3 shadow-xl group hover:border-brand-orange/30 transition-all cursor-help">
+                                <div className="relative">
+                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,1)]"></div>
+                                    <div className="absolute inset-0 rounded-full bg-green-500/50 animate-ping"></div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-[8px] font-black text-white uppercase tracking-widest block leading-none mb-0.5">System Live</span>
+                                    <span className="text-[7px] text-gray-500 font-mono uppercase tracking-tighter block leading-none">Lat: 24ms</span>
+                                </div>
+                             </div>
+                        </div>
+                    </header>
+
+                    <div>
+                        {renderActiveModule()}
+                    </div>
+                </div>
+            </main>
 
             {/* Backdrop for mobile */}
             {isSidebarOpen && (
