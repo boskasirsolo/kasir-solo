@@ -3,75 +3,36 @@ import { supabase } from '../lib/supabase-client';
 import { CONFIG } from '../config/env';
 import { autoCompressImage } from '../lib/image-processing';
 
-// --- SECURITY CONSTANTS ---
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // Naik ke 10MB karena nanti kita kompres otomatis
-const MAX_DOC_SIZE = 5 * 1024 * 1024;   // 5MB (CV Pelamar)
-const MAX_DRIVER_SIZE = 100 * 1024 * 1024; // 100MB (Driver/Software)
-
-const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
-const ALLOWED_CV_MIMES = ['application/pdf'];
+// --- STORAGE CONSTANTS ---
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // Naik ke 15MB limit buat upload mentah
 
 // --- HELPER: VALIDATOR ---
-const validateFile = (file: File, context: 'image' | 'career' | 'download') => {
-    // 1. Image Validation
-    if (context === 'image') {
-        if (!ALLOWED_IMAGE_MIMES.includes(file.type)) {
-            throw new Error(`Format file haram! Gunakan JPG, PNG, atau WEBP.`);
-        }
-        // Limit fisik tetap ada di 10MB buat jaga-jaga file monster
-        if (file.size > MAX_IMAGE_SIZE) {
-            throw new Error(`File kegedean parah, Bos! Maksimal 10MB buat diproses auto-compress.`);
-        }
-    }
-    // 2. Career/CV Validation
-    else if (context === 'career') {
-        if (!ALLOWED_CV_MIMES.includes(file.type)) {
-            throw new Error(`CV wajib format PDF biar rapi.`);
-        }
-        if (file.size > MAX_DOC_SIZE) {
-            throw new Error(`CV maksimal 5MB. Kecilin dulu PDF-nya.`);
-        }
-    }
-    // 3. Download/Driver Validation
-    else if (context === 'download') {
-        if (file.size > MAX_DRIVER_SIZE) {
-            throw new Error(`File driver maksimal 100MB via sistem ini. Gunakan G-Drive untuk file raksasa.`);
-        }
-        if (file.name.endsWith('.php') || file.name.endsWith('.html') || file.name.endsWith('.sh')) {
-             throw new Error(`Format file berbahaya ditolak.`);
-        }
+const validateFile = (file: File) => {
+    if (file.size > MAX_FILE_SIZE) {
+        throw new Error(`Waduh kegedean Bos! Maksimal 15MB biar server gak pingsan.`);
     }
 };
 
-// --- STORAGE HELPERS (HYBRID STRATEGY) ---
+// --- HYBRID UPLOAD SYSTEM ---
 
-// 1. Upload to Supabase (Fast, Temporary or Private)
+// 1. Upload ke Supabase (Temporary/Fast Storage)
 export const uploadToSupabase = async (file: File, folder: string = 'temp', bucketName: string = 'images') => {
-    if (!supabase) throw new Error("Supabase not connected");
+    if (!supabase) throw new Error("Supabase Offline");
     
-    // SECURITY CHECK
-    let context: 'image' | 'career' | 'download' = 'image';
-    if (bucketName === 'careers') context = 'career';
-    else if (bucketName === 'downloads') context = 'download';
-    
-    validateFile(file, context);
+    validateFile(file);
 
-    // AUTO-FIX: Jika ini gambar dan masih kegedean (>2MB), kita sikat pake compressor
+    // Otomatis kompres jika ini gambar dan ukurannya > 3MB (Naik dari 1.5MB)
     let fileToUpload = file;
-    if (context === 'image') {
-        fileToUpload = await autoCompressImage(file, 2);
+    if (file.type.startsWith('image/')) {
+        fileToUpload = await autoCompressImage(file, 3);
     }
 
     const fileExt = fileToUpload.name.split('.').pop();
-    const cleanName = fileToUpload.name.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 50); 
-    const fileName = `${folder}/${Date.now()}_${cleanName}.${fileExt}`;
+    const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
         .from(bucketName) 
-        .upload(fileName, fileToUpload, {
-            cacheControl: '3600',
-            upsert: false
-        });
+        .upload(fileName, fileToUpload, { cacheControl: '3600' });
 
     if (uploadError) throw uploadError;
 
@@ -79,27 +40,18 @@ export const uploadToSupabase = async (file: File, folder: string = 'temp', buck
     return { url: data.publicUrl, path: fileName };
 };
 
-// Get Signed URL
-export const getSignedUrl = async (bucketName: string, path: string, expiresIn: number = 60) => {
-    if (!supabase) throw new Error("Supabase not connected");
-    const { data, error } = await supabase.storage.from(bucketName).createSignedUrl(path, expiresIn); 
-    if (error) throw error;
-    return data.signedUrl;
-};
-
-// 2. Upload to Cloudinary (Permanent, Optimized)
+// 2. Upload ke Cloudinary (Permanent Optimized Storage)
 export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
-    if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Cloudinary Config Missing");
+    if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Cloudinary Missing");
     
-    let processedFile = fileOrBlob;
-    if (fileOrBlob instanceof File) {
-        validateFile(fileOrBlob, 'image');
-        // Auto compress sebelum kirim ke Cloudinary biar hemat bandwidth
-        processedFile = await autoCompressImage(fileOrBlob, 2);
+    let finalFile = fileOrBlob;
+    // Jika file mentah raksasa (>3MB), sikat pake mode High Quality (0.95)
+    if (fileOrBlob instanceof File && fileOrBlob.size > 3 * 1024 * 1024) {
+        finalFile = await autoCompressImage(fileOrBlob, 3);
     }
 
     const formData = new FormData();
-    formData.append('file', processedFile);
+    formData.append('file', finalFile);
     formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
     
     const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/auto/upload`, { 
@@ -107,18 +59,25 @@ export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
         body: formData 
     });
     
-    if (!res.ok) throw new Error("Cloudinary Upload Failed");
+    if (!res.ok) throw new Error("Cloudinary Error");
     const data = await res.json();
     return data.secure_url; 
 };
 
-// 3. Delete from Supabase
-export const deleteFromSupabase = async (path: string, bucketName: string = 'images') => {
-    if (!supabase) return;
-    await supabase.storage.from(bucketName).remove([path]);
+// Get Signed URL
+export const getSignedUrl = async (bucketName: string, path: string, expiresIn: number = 60) => {
+    if (!supabase) throw new Error("Supabase Offline");
+    const { data, error } = await supabase.storage.from(bucketName).createSignedUrl(path, expiresIn); 
+    if (error) throw error;
+    return data.signedUrl;
 };
 
-// 4. Background Migration Process
+// Delete from Supabase
+export const deleteFromSupabase = async (path: string, bucketName: string = 'images') => {
+    if (supabase) await supabase.storage.from(bucketName).remove([path]);
+};
+
+// Background Migration
 export const processBackgroundMigration = async (
     file: File, 
     sbPath: string, 
