@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -132,19 +131,19 @@ export const DashboardShell = (props: DashboardProps) => {
                 <div className="absolute top-0 left-0 w-full h-[600px] bg-[radial-gradient(circle_at_top_left,rgba(255,95,31,0.05),transparent)] pointer-events-none -z-10"></div>
                 
                 <div className="max-w-[1600px] mx-auto">
-                    <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-white/5 pb-10">
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-3 text-[9px] font-black text-gray-500 uppercase tracking-[0.4em] mb-1">
+                    <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/5 pb-6">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-3 text-[9px] font-black text-gray-500 uppercase tracking-[0.4em] mb-0.5">
                                 <span className="p-1 bg-brand-orange/10 rounded border border-brand-orange/30"><Zap size={10} className="text-brand-orange" /></span>
                                 Command &gt; {activeTab}
                             </div>
-                            <h1 className="text-4xl md:text-6xl font-display font-black text-white tracking-tighter leading-none">
+                            <h1 className="text-3xl md:text-5xl font-display font-black text-white tracking-tighter leading-none">
                                 {LABEL_MAP[activeTab].toUpperCase()}
                             </h1>
                         </div>
                         
                         <div className="flex gap-4 items-center">
-                             <div className="bg-brand-card/80 backdrop-blur-md border border-white/10 px-5 py-2.5 rounded-2xl flex items-center gap-4 shadow-xl group hover:border-brand-orange/30 transition-all cursor-help">
+                             <div className="bg-brand-card/80 backdrop-blur-md border border-white/10 px-5 py-2 rounded-2xl flex items-center gap-4 shadow-xl group hover:border-brand-orange/30 transition-all cursor-help">
                                 <div className="relative">
                                     <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,1)]"></div>
                                     <div className="absolute inset-0 rounded-full bg-green-500/50 animate-ping"></div>

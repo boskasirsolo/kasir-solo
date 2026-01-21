@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { BarChart3, ShieldCheck, Check, Copy, RefreshCw } from 'lucide-react';
 
@@ -16,7 +15,7 @@ export const DashboardHeader = ({
     const isGhostMode = typeof window !== 'undefined' && localStorage.getItem('mks_ghost_mode') === 'true';
 
     return (
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-brand-card/30 p-4 rounded-xl border border-white/5 gap-4 mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-brand-card/30 p-4 rounded-xl border border-white/5 gap-4 mb-4">
             <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className="bg-brand-orange/10 p-2 rounded-lg text-brand-orange shrink-0">
                     <BarChart3 size={20} />

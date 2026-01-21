@@ -1,18 +1,28 @@
 
 import React, { useState } from 'react';
-import { LoadingSpinner } from '../ui';
+// Add missing icons from lucide-react
+import { 
+    LayoutDashboard, 
+    Users, 
+    FileText, 
+    Globe, 
+    Zap 
+} from 'lucide-react';
+// Import the core logic hook for analytics
 import { useAnalyticsData } from './logic';
+import { LoadingSpinner } from '../ui';
 import { DashboardHeader, GhostLinkCopier } from './ui-controls';
 import { KPIGrid, DeviceStats, ReferrerList } from './ui-cards';
 import { TrafficChart, PeakHoursHeatmap, RetentionChart } from './ui-charts';
 import { TopPagesTable, ExitPagesList, QualityScorePanel } from './ui-tables';
+import { FunnelRadar } from './funnel-radar';
 import { CityDistribution, OSDistribution, DemographicEstimator } from './ui-demographics';
 import { PageAnalyticsModal } from './page-analytics-modal';
-import { FunnelRadar } from './funnel-radar';
-import { LayoutDashboard, Users, FileText, Globe, Zap } from 'lucide-react';
 
+// Define the missing AnalyticsTab type
 type AnalyticsTab = 'radar' | 'audience' | 'content' | 'acquisition';
 
+// --- MAIN ANALYTICS DASHBOARD ---
 export const AnalyticsDashboard = () => {
   const { stats, loading, period, setPeriod, refresh } = useAnalyticsData();
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('radar');
@@ -28,10 +38,10 @@ export const AnalyticsDashboard = () => {
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 relative">
+    <div className="space-y-6 animate-fade-in pb-20 relative">
       <DashboardHeader period={period} setPeriod={setPeriod} onRefresh={refresh} isRefreshing={loading} />
 
-      <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md py-4 -mx-4 px-4 border-b border-white/5 shadow-xl transition-all">
+      <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md py-2.5 -mx-4 px-4 border-b border-white/5 shadow-xl transition-all">
         <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -39,14 +49,14 @@ export const AnalyticsDashboard = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as AnalyticsTab)}
-                className={`flex items-center gap-3 px-6 py-3 rounded-2xl border transition-all shrink-0 group ${
+                className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all shrink-0 group ${
                   isActive ? 'bg-brand-orange border-brand-orange text-white shadow-neon' : 'bg-brand-card/50 border-white/5 text-gray-500 hover:text-white hover:border-white/20'
                 }`}
               >
-                <tab.icon size={18} className={isActive ? 'text-white' : 'text-gray-600 group-hover:text-brand-orange'} />
+                <tab.icon size={16} className={isActive ? 'text-white' : 'text-gray-600 group-hover:text-brand-orange'} />
                 <div className="text-left">
-                  <p className="text-[10px] font-black uppercase tracking-widest leading-none">{tab.label}</p>
-                  <p className={`text-[8px] mt-1 font-bold ${isActive ? 'text-white/60' : 'text-gray-700'}`}>{tab.desc}</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest leading-none">{tab.label}</p>
+                  <p className={`text-[8px] mt-0.5 font-bold ${isActive ? 'text-white/60' : 'text-gray-700'}`}>{tab.desc}</p>
                 </div>
               </button>
             );
@@ -54,9 +64,9 @@ export const AnalyticsDashboard = () => {
         </div>
       </div>
 
-      <div className="space-y-8 min-h-[600px] relative">
+      <div className="space-y-6 min-h-[600px] relative">
         {activeTab === 'radar' && (
-          <div className="space-y-8 animate-fade-in">
+          <div className="space-y-6 animate-fade-in">
             <KPIGrid stats={stats} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                <div className="lg:col-span-3"><FunnelRadar data={stats.funnel} /></div>
@@ -66,7 +76,7 @@ export const AnalyticsDashboard = () => {
         )}
 
         {activeTab === 'audience' && (
-          <div className="space-y-8 animate-fade-in">
+          <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-4"><CityDistribution cities={stats.sortedCities} total={stats.totalViews} /></div>
                 <div className="lg:col-span-4"><DemographicEstimator data={stats.demographics} /></div>
