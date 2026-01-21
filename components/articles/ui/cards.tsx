@@ -78,7 +78,8 @@ export const InFeedProductCard = ({ product, onClick }: { product: Product, onCl
     </div>
 );
 
-export const SidebarProductCard = ({ product, onDetail, waNumber }: { product: Product, onDetail: () => void, waNumber?: string }) => {
+// FIX: Typed as React.FC to correctly handle internal React props like 'key'
+export const SidebarProductCard: React.FC<{ product: Product, onDetail: () => void, waNumber?: string }> = ({ product, onDetail, waNumber }) => {
   const { addToCart } = useCart();
   const [isAnimating, setIsAnimating] = useState(false);
   const [isAdded, setIsAdded] = useState(false);

@@ -58,7 +58,8 @@ export const RightSidebar = ({
                         <SidebarProductCard 
                             key={p.id}
                             product={p} 
-                            onDetail={() => window.open(`https://wa.me/${waNumber}?text=Halo, saya tertarik dengan produk ${p.name} yang ada di artikel ${window.location.href}`, '_blank')} 
+                            // FIX: Wrapped window.open in braces to ensure return type is void
+                            onDetail={() => { window.open(`https://wa.me/${waNumber}?text=Halo, saya tertarik dengan produk ${p.name} yang ada di artikel ${window.location.href}`, '_blank'); }} 
                             waNumber={waNumber} 
                         />
                     ))}

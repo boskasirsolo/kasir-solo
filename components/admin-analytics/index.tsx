@@ -15,51 +15,50 @@ export const AnalyticsDashboard = () => {
   if (loading) return <div className="flex justify-center p-20"><LoadingSpinner size={32} /></div>;
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10 relative">
+    <div className="space-y-6 animate-fade-in pb-20 relative">
       
-      {/* 1. Header & Controls */}
+      {/* 1. Header & Global Controls */}
       <DashboardHeader period={period} setPeriod={setPeriod} />
 
-      {/* 2. KPI Cards */}
+      {/* 2. Main KPI Center */}
       <KPIGrid stats={stats} />
 
-      {/* 3. Main Traffic & Behavior Charts */}
+      {/* 3. Traffic Behavior Block */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         {/* Traffic Chart (2 Cols) */}
+         {/* LEFT: Main Traffic & Time Trends (2/3) */}
          <div className="lg:col-span-2">
-             <div className="bg-brand-dark border border-white/5 rounded-xl p-6 relative overflow-hidden h-full">
+             <div className="bg-brand-dark/50 border border-white/5 rounded-2xl p-6 relative overflow-hidden h-full shadow-2xl">
                 <TrafficChart data={stats.trafficByDate} period={period} />
                 <PeakHoursHeatmap hours={stats.hours} />
              </div>
          </div>
 
-         {/* Device & Referrer (1 Col) */}
+         {/* RIGHT: Demographics (1/3) */}
          <div className="space-y-6">
              <DeviceStats devices={stats.devices} totalViews={stats.totalViews} />
-             {/* UPDATED: Pass totalViews for percentage calculation */}
              <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} />
          </div>
       </div>
 
-      {/* 4. Demographics & Deep Behavior */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* 4. Deep Intelligence Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <RetentionChart newUsers={stats.newVisitors} returningUsers={stats.returningVisitors} />
           <QualityScorePanel bounceRate={stats.bounceRate} avgPages={stats.avgPagesPerSession} />
           <ExitPagesList pages={stats.sortedExitPages} />
       </div>
 
-      {/* 5. Content Performance */}
+      {/* 5. Content War Room */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <TopPagesTable 
             pages={stats.sortedPages} 
-            onPageClick={(path) => setSelectedPagePath(path)} // Handle click
+            onPageClick={(path) => setSelectedPagePath(path)} 
           />
           <div className="lg:col-span-1">
              <GhostLinkCopier />
           </div>
       </div>
 
-      {/* MODAL DETAIL (The God Mode Drill-down) */}
+      {/* MODAL: Page Deep Dive */}
       {selectedPagePath && (
           <PageAnalyticsModal 
             pagePath={selectedPagePath} 

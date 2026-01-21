@@ -31,27 +31,27 @@ export const ReaderContent = ({ blocks, currentPage, totalPages, onPageChange, a
 
               // 1. Custom Embeds ([FILE:], [PROJECT:], [PRODUCT:])
               if (p.includes('[FILE:') || p.includes('[PROJECT:') || p.includes('[PRODUCT:')) {
-                  return <CustomEmbedBlock key={idx} content={p} waNumber={waNumber} />;
+                  return <CustomEmbedBlock key={`custom-${idx}`} content={p} waNumber={waNumber} />;
               }
               
               // 2. Images
               const imgMatch = p.match(/^!\[(.*?)\]\((.*?)\)$/);
               if (imgMatch) {
-                  return <ImageBlock key={idx} alt={imgMatch[1]} src={imgMatch[2]} />;
+                  return <ImageBlock key={`img-${idx}`} alt={imgMatch[1]} src={imgMatch[2]} />;
               }
 
               // 3. Videos
               if (p.startsWith('<iframe') && p.endsWith('></iframe>')) {
-                  return <VideoBlock key={idx} content={p} />;
+                  return <VideoBlock key={`vid-${idx}`} content={p} />;
               }
 
               // 4. Headings
               if (p.startsWith('#')) {
-                  return <HeadingBlock key={idx} content={p} />;
+                  return <HeadingBlock key={`heading-${idx}`} content={p} />;
               }
 
               // 5. Standard Text (Tables, Lists, Quotes, Paragraphs)
-              return <StandardTextBlock key={idx} content={p} />;
+              return <StandardTextBlock key={`text-${idx}`} content={p} />;
           })}
 
           {/* Pagination */}

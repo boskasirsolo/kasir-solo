@@ -70,7 +70,8 @@ export const ServicePageTemplate = ({
                                 <DigitalProjectCard 
                                     key={item.id} 
                                     item={item} 
-                                    onClick={() => navigate(`/gallery/${slugify(item.title)}`)} 
+                                    // FIX: Changed arrow function to block to ensure void return
+                                    onClick={() => { navigate(`/gallery/${slugify(item.title)}`); }} 
                                 />
                             ))}
                         </div>

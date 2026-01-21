@@ -55,9 +55,9 @@ export const GalleryPagination = ({
       <button 
         onClick={() => setPage(Math.max(1, page - 1))}
         disabled={page === 1}
-        className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
+        className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white group"
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
       </button>
       
       <span className="text-brand-orange font-display font-bold">
@@ -67,9 +67,9 @@ export const GalleryPagination = ({
       <button 
         onClick={() => setPage(Math.min(totalPages, page + 1))}
         disabled={page === totalPages}
-        className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white"
+        className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white group"
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
       </button>
     </div>
   );
@@ -82,7 +82,8 @@ export const EmptyGalleryState = () => (
   </div>
 );
 
-export const DigitalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: () => void }) => {
+// FIX: Typed as React.FC to correctly handle internal React props like 'key'
+export const DigitalProjectCard: React.FC<{ item: GalleryItem, onClick: () => void }> = ({ item, onClick }) => {
   return (
     <div 
       onClick={onClick}
@@ -126,7 +127,8 @@ export const DigitalProjectCard = ({ item, onClick }: { item: GalleryItem, onCli
   );
 };
 
-export const PhysicalProjectCard = ({ item, onClick }: { item: GalleryItem, onClick: () => void }) => (
+// FIX: Typed as React.FC to correctly handle internal React props like 'key'
+export const PhysicalProjectCard: React.FC<{ item: GalleryItem, onClick: () => void }> = ({ item, onClick }) => (
     <div 
       onClick={onClick}
       className="group relative bg-brand-card border border-white/5 rounded-2xl overflow-hidden hover:border-brand-orange transition-all duration-500 cursor-pointer shadow-lg hover:shadow-neon flex flex-col h-full"

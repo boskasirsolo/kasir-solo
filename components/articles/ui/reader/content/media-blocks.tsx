@@ -3,7 +3,8 @@ import React from 'react';
 import { optimizeImage, sanitizeHtml } from '../../../../../utils';
 import { FileDownloadCard, ProjectEmbedCard, ProductEmbedCard } from '../../content-renderers';
 
-export const ImageBlock = ({ alt, src }: { alt: string, src: string }) => (
+// FIX: Typed as React.FC to correctly handle internal React props like 'key'
+export const ImageBlock: React.FC<{ alt: string, src: string }> = ({ alt, src }) => (
     <div className="my-8 rounded-xl overflow-hidden border border-white/10 bg-black flex flex-col items-center">
         <img 
             src={optimizeImage(src, 1200)} 
@@ -17,14 +18,16 @@ export const ImageBlock = ({ alt, src }: { alt: string, src: string }) => (
     </div>
 );
 
-export const VideoBlock = ({ content }: { content: string }) => (
+// FIX: Typed as React.FC to correctly handle internal React props like 'key'
+export const VideoBlock: React.FC<{ content: string }> = ({ content }) => (
     <div 
         className="my-8 aspect-video rounded-xl overflow-hidden border border-white/10 bg-black" 
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} 
     />
 );
 
-export const CustomEmbedBlock = ({ content, waNumber }: { content: string, waNumber?: string }) => {
+// FIX: Typed as React.FC to correctly handle internal React props like 'key'
+export const CustomEmbedBlock: React.FC<{ content: string, waNumber?: string }> = ({ content, waNumber }) => {
     // 1. FILE DOWNLOAD
     if (content.includes('[FILE:')) {
         const match = content.match(/\[FILE:\s*(.*?)\]\((.*?)\)/);

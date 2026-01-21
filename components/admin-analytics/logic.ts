@@ -4,7 +4,7 @@ import { supabase } from '../../utils';
 import { AnalyticsLog } from '../../types';
 import { AnalyticsStats } from './types';
 
-// Helper: Format seconds to "1m 30s" or "45s"
+// Helper: Format detik jadi "1m 30s"
 const formatDuration = (seconds: number) => {
     if (seconds < 60) return `${Math.round(seconds)}s`;
     const m = Math.floor(seconds / 60);
@@ -15,7 +15,7 @@ const formatDuration = (seconds: number) => {
 export const useAnalyticsData = () => {
   const [logs, setLogs] = useState<AnalyticsLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState(7); // Default 7 days
+  const [period, setPeriod] = useState(7); 
 
   useEffect(() => {
     fetchLogs();
@@ -33,7 +33,7 @@ export const useAnalyticsData = () => {
       .from('analytics_logs')
       .select('*')
       .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: true }); // Penting: Ascending untuk urutan waktu
+      .order('created_at', { ascending: true });
 
     if (!error && data) {
       setLogs(data);
@@ -47,68 +47,49 @@ export const useAnalyticsData = () => {
     const totalActions = logs.filter(l => l.event_type === 'click_action' || l.event_type === 'contact_wa').length; 
     const conversionRate = totalViews > 0 ? ((totalActions / totalViews) * 100).toFixed(1) : '0';
     
-    // Data Structures
     const trafficByDate: Record<string, number> = {};
     const pageViews: Record<string, number> = {};
     const devices = { mobile: 0, desktop: 0, tablet: 0 };
     const referrers: Record<string, number> = {};
     const hours: number[] = new Array(24).fill(0);
     
-    // Session & Duration Logic
+    // Logic Durasi & Sesi
     const visitorSessions: Record<string, AnalyticsLog[]> = {};
-    const pageDurations: Record<string, number[]> = {}; // path -> array of seconds
+    const pageDurations: Record<string, number[]> = {}; 
     let totalEngagementSeconds = 0;
     let engagementCount = 0;
 
-    // 1. Group Logs by Visitor
     logs.forEach(log => {
         if (!visitorSessions[log.visitor_id]) visitorSessions[log.visitor_id] = [];
         visitorSessions[log.visitor_id].push(log);
     });
 
-    // 2. Process Durations (Now utilizing page_leave)
     Object.values(visitorSessions).forEach(sessionLogs => {
-        // Sort by time just in case
         sessionLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
 
         for (let i = 0; i < sessionLogs.length; i++) {
             const current = sessionLogs[i];
-            
-            // Only calc duration for page views
             if (current.event_type === 'page_view') {
-                let duration = 0;
-                
-                // Look ahead for the immediate next event (leave or next view)
                 const nextEvent = sessionLogs[i+1];
-
                 if (nextEvent) {
                     const startTime = new Date(current.created_at!).getTime();
                     const endTime = new Date(nextEvent.created_at!).getTime();
                     const diff = (endTime - startTime) / 1000;
 
-                    // Logic: 
-                    // If next event is 'page_leave' of SAME path, use it.
-                    // If next event is 'page_view' of DIFFERENT path, use it as exit time.
-                    // Timeout check: 30 mins (1800s).
+                    // Timeout check: 30 menit ga gerak = sesi dianggap beres
                     if (diff < 1800 && diff > 0) {
-                        duration = diff;
+                        const path = current.page_path.split('?')[0];
+                        if (!pageDurations[path]) pageDurations[path] = [];
+                        pageDurations[path].push(diff);
+                        totalEngagementSeconds += diff;
+                        engagementCount++;
                     }
-                }
-
-                // If duration found, record it
-                if (duration > 0) {
-                    const path = current.page_path.split('?')[0];
-                    if (!pageDurations[path]) pageDurations[path] = [];
-                    pageDurations[path].push(duration);
-                    
-                    totalEngagementSeconds += duration;
-                    engagementCount++;
                 }
             }
         }
     });
 
-    // 3. General Aggregation
+    // Inisialisasi tanggal kosong biar chart gak bolong
     const today = new Date();
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date();
@@ -120,7 +101,6 @@ export const useAnalyticsData = () => {
     const visitorHistory: Record<string, string[]> = {}; 
 
     logs.forEach(log => {
-      // Date Map
       const d = new Date(log.created_at!);
       const dateKey = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
       if (trafficByDate.hasOwnProperty(dateKey) && log.event_type === 'page_view') {
@@ -131,43 +111,31 @@ export const useAnalyticsData = () => {
         const path = log.page_path.split('?')[0]; 
         pageViews[path] = (pageViews[path] || 0) + 1;
         
-        // Device
         if (log.device_type === 'mobile') devices.mobile++;
         else if (log.device_type === 'desktop') devices.desktop++;
         else devices.tablet++;
 
-        // Referrer Logic
         let ref = log.referrer || 'Direct';
         const lowerRef = ref.toLowerCase();
         
         if (lowerRef.includes('google')) ref = 'Google Search';
         else if (lowerRef.includes('facebook') || lowerRef.includes('fb')) ref = 'Facebook';
         else if (lowerRef.includes('instagram')) ref = 'Instagram';
-        else if (lowerRef.includes('t.co') || lowerRef.includes('twitter')) ref = 'Twitter/X';
-        else if (lowerRef.includes('tiktok')) ref = 'TikTok';
-        else if (lowerRef.includes('whatsapp') || lowerRef.includes('wa.me')) ref = 'WhatsApp'; // Separate WA
-        else if (lowerRef === 'direct' || lowerRef === '') ref = 'Direct Traffic'; // Separate Direct
+        else if (lowerRef.includes('whatsapp') || lowerRef.includes('wa.me')) ref = 'WhatsApp';
+        else if (lowerRef === 'direct' || lowerRef === '') ref = 'Direct Traffic';
         else {
-            try {
-                const url = new URL(ref);
-                ref = url.hostname.replace('www.', '');
-            } catch(e) { /* keep original */ }
+            try { ref = new URL(ref).hostname.replace('www.', ''); } catch(e) {}
         }
         referrers[ref] = (referrers[ref] || 0) + 1;
 
-        // Hour
         const hour = new Date(log.created_at!).getHours();
         hours[hour]++;
 
-        // Visitor Tracking
-        if (!visitorHistory[log.visitor_id]) {
-            visitorHistory[log.visitor_id] = [];
-        }
+        if (!visitorHistory[log.visitor_id]) visitorHistory[log.visitor_id] = [];
         visitorHistory[log.visitor_id].push(path);
       }
     });
 
-    // 4. Advanced Metrics
     let newVisitors = 0;
     let returningVisitors = 0;
     let singlePageVisits = 0;
@@ -186,27 +154,16 @@ export const useAnalyticsData = () => {
 
     const bounceRate = uniqueVisitors > 0 ? Math.round((singlePageVisits / uniqueVisitors) * 100) : 0;
     const avgPagesPerSession = uniqueVisitors > 0 ? (totalViews / uniqueVisitors).toFixed(1) : "0";
-    
-    const avgEngagementTime = engagementCount > 0 
-        ? formatDuration(totalEngagementSeconds / engagementCount) 
-        : "0s";
+    const avgEngagementTime = engagementCount > 0 ? formatDuration(totalEngagementSeconds / engagementCount) : "0s";
 
-    // 5. Final Sorting for Top Pages (With Duration)
     const sortedPages = Object.entries(pageViews)
         .map(([path, hits]) => {
             const durations = pageDurations[path] || [];
-            const avgSec = durations.length > 0 
-                ? durations.reduce((a, b) => a + b, 0) / durations.length 
-                : 0;
-            return {
-                path,
-                hits,
-                avgTime: avgSec > 0 ? formatDuration(avgSec) : '-'
-            };
+            const avgSec = durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
+            return { path, hits, avgTime: avgSec > 0 ? formatDuration(avgSec) : '-' };
         })
-        .sort((a, b) => b.hits - a.hits); // Tetap sort by hits
+        .sort((a, b) => b.hits - a.hits); 
     
-    // UPDATED: Show Top 10 Referrers instead of 5
     const sortedReferrers = Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 10);
     const sortedExitPages = Object.entries(exitPages).sort(([,a], [,b]) => b - a).slice(0, 5);
 

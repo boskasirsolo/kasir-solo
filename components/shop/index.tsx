@@ -88,7 +88,8 @@ export const ShopModule = ({ products, gallery = [] }: { products: Product[], ga
                     <PhysicalProjectCard 
                         key={item.id} 
                         item={item} 
-                        onClick={() => navigate(`/gallery/${slugify(item.title)}`)}
+                        // FIX: Wrapped navigate in braces to ensure return type is void
+                        onClick={() => { navigate(`/gallery/${slugify(item.title)}`); }}
                     />
                 ))}
             </div>

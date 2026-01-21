@@ -3,17 +3,19 @@ import React, { useState } from 'react';
 import { MoveUp, MoveDown, Trash2, Plus, Type, ImageIcon, Youtube } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
+// FIX: Added optional content and meta to onAdd, and allowed Promise return for onUpload to match hook implementation
 interface BlockWrapperProps {
     index: number;
     onMove: (idx: number, dir: -1 | 1) => void;
     onRemove: (idx: number) => void;
-    onAdd: (idx: number, type: any) => void;
-    onUpload: (idx: number, file: File, type: 'image' | 'file') => void;
+    onAdd: (idx: number, type: any, content?: string, meta?: any) => void;
+    onUpload: (idx: number, file: File, type: 'image' | 'file') => Promise<void> | void;
     uploading: boolean;
     children: React.ReactNode;
 }
 
-export const BlockWrapper = ({ index, onMove, onRemove, onAdd, onUpload, uploading, children }: BlockWrapperProps) => {
+// FIX: Typed as React.FC to correctly handle internal React props like 'key' in list rendering
+export const BlockWrapper: React.FC<BlockWrapperProps> = ({ index, onMove, onRemove, onAdd, onUpload, uploading, children }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     const handleVideoInsert = () => {
@@ -22,18 +24,7 @@ export const BlockWrapper = ({ index, onMove, onRemove, onAdd, onUpload, uploadi
             let embedUrl = url;
             if (url.includes('watch?v=')) embedUrl = `https://www.youtube.com/embed/${url.split('v=')[1]?.split('&')[0]}`;
             else if (url.includes('youtu.be/')) embedUrl = `https://www.youtube.com/embed/${url.split('youtu.be/')[1]}`;
-            onAdd(index, 'video'); // Add empty placeholder or logic to pass content directly if modified
-            // Note: In real implementation, onAdd might need to accept content. 
-            // For now, we assume simple addition and user pastes URL or logic handles it. 
-            // Better yet, let's assume parent handles logic or we pass content here?
-            // To keep simple, we'll just pass 'video' and handle content update in parent if needed, 
-            // OR strictly, we need to pass content. 
-            // Let's rely on parent's `addBlock` logic to accept content param if we refactored `useLiveEditor` correctly.
-            // (Checked `useLiveEditor`: addBlock accepts content).
-            // So:
-            // onAdd(index, 'video', embedUrl); 
-            // Typescript check needed. BlockWrapper props `onAdd` definition needs update? 
-            // `onAdd: (idx: number, type: any, content?: string) => void;`
+            onAdd(index, 'video', embedUrl); 
         }
     };
 
@@ -65,17 +56,7 @@ export const BlockWrapper = ({ index, onMove, onRemove, onAdd, onUpload, uploadi
                         {uploading ? <Loader2 size={14} className="animate-spin"/> : <ImageIcon size={14} />}
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && onUpload(index, e.target.files[0], 'image')} />
                     </label>
-                    {/* Add specialized handling in parent if needed, or simple type passing */}
-                    <button className="hover:text-brand-orange text-gray-400 transition-colors" title="Video" onClick={() => {
-                         const url = prompt("Youtube Link:");
-                         if(url) {
-                             let embed = url;
-                             if(url.includes('watch?v=')) embed = `https://www.youtube.com/embed/${url.split('v=')[1].split('&')[0]}`;
-                             else if(url.includes('youtu.be/')) embed = `https://www.youtube.com/embed/${url.split('youtu.be/')[1]}`;
-                             // Casting onAdd to accept content for this specific case
-                             (onAdd as any)(index, 'video', embed);
-                         }
-                    }}><Youtube size={14}/></button>
+                    <button className="hover:text-brand-orange text-gray-400 transition-colors" title="Video" onClick={handleVideoInsert}><Youtube size={14}/></button>
                 </div>
             </div>
         </div>

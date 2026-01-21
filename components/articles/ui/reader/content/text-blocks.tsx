@@ -4,7 +4,8 @@ import { Quote } from 'lucide-react';
 import { cleanId, renderFormattedText } from '../../../utils';
 import { MarkdownTable } from '../../content-renderers';
 
-export const ArticleExcerpt = ({ text }: { text: string }) => (
+// FIX: Typed as React.FC to correctly handle internal React props like 'key'
+export const ArticleExcerpt: React.FC<{ text: string }> = ({ text }) => (
     <div className="mb-10 relative">
         <div className="absolute -top-4 -left-2 text-brand-orange opacity-20">
             <Quote size={40} fill="currentColor" />
@@ -15,7 +16,8 @@ export const ArticleExcerpt = ({ text }: { text: string }) => (
     </div>
 );
 
-export const HeadingBlock = ({ content }: { content: string }) => {
+// FIX: Typed as React.FC to correctly handle internal React props like 'key'
+export const HeadingBlock: React.FC<{ content: string }> = ({ content }) => {
     const getDetails = (prefix: string) => {
         const text = content.replace(new RegExp(`^${prefix}\\s+`), '');
         return { text, id: cleanId(text.replace(/\*\*/g, '')) };
@@ -65,7 +67,8 @@ export const HeadingBlock = ({ content }: { content: string }) => {
     return null;
 };
 
-export const StandardTextBlock = ({ content }: { content: string }) => {
+// FIX: Typed as React.FC to correctly handle internal React props like 'key'
+export const StandardTextBlock: React.FC<{ content: string }> = ({ content }) => {
     if (content.startsWith('> ')) {
         return <blockquote className="border-l-4 border-gray-600 bg-white/5 p-6 italic text-gray-300 my-8 rounded-r-xl">{renderFormattedText(content.replace('> ', ''))}</blockquote>;
     }
