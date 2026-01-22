@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Wand2, RefreshCw, MessageSquare, FileType, Search, Target, MapPin, Sparkles, Loader2, ArrowLeft, BarChart, Layout, Link2, CheckSquare, Square, ChevronDown } from 'lucide-react';
 import { LinkingModule, TagModule, PersonaModule } from './editor/molecules';
 import { EditorCard, SectionLabel, ActionPill } from './editor/atoms';
-import { Button } from '../ui';
+import { Button, LoadingSpinner } from '../ui';
 
 // --- ATOMIC COMPONENT: PILLAR SELECTOR ---
 const PillarSelector = ({ 
@@ -93,10 +94,8 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
     const [researchTopicInput, setResearchTopicInput] = useState('');
     const [useCityTemplate, setUseCityTemplate] = useState(false);
     
-    // State untuk kontrol buka-tutup akordeon secara manual
     const [activeAccordion, setActiveAccordion] = useState<string | null>(form.type);
 
-    // Sinkronisasi saat form type berubah dari luar (misal saat edit artikel lain)
     useEffect(() => {
         if (form.type) setActiveAccordion(form.type);
     }, [form.id]);
@@ -119,11 +118,24 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
     };
 
     const toggleAccordion = (type: string) => {
-        // Set tipe konten di form data
         setForm((p:any) => ({...p, type: type}));
-        // Toggle visual akordeon: kalau klik yang sama, dia nutup. Kalau beda, dia buka yang baru.
         setActiveAccordion(prev => prev === type ? null : type);
     };
+
+    if (loading.researching) {
+        return (
+            <div className="flex flex-col h-full bg-brand-dark p-8 items-center justify-center text-center">
+                <div className="relative mb-8">
+                    <Loader2 size={48} className="text-brand-orange animate-spin" />
+                    <Sparkles size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white animate-pulse" />
+                </div>
+                <h3 className="text-white font-black text-sm uppercase tracking-[0.3em] mb-4">Scanning Market...</h3>
+                <p className="text-gray-500 text-xs italic leading-relaxed px-4">
+                    {loading.progressMessage || "SIBOS lagi ngebongkar pola keyword yang volumenya gurih..."}
+                </p>
+            </div>
+        );
+    }
 
     if (aiState.step === 0 && !form.id) {
         return (
@@ -147,19 +159,51 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
                 
                 {!useCityTemplate && (<div className="w-full max-w-[250px] mb-4 text-left"><SectionLabel icon={Target}>Topik Spesifik</SectionLabel><input type="text" value={researchTopicInput} onChange={(e) => setResearchTopicInput(e.target.value)} placeholder="Contoh: Pajak, Stok..." className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-orange" /></div>)}
                 
-                <Button onClick={() => useCityTemplate ? aiState.setStep(2) : actions.runResearch(researchTopicInput)} disabled={loading.researching} className="w-full max-w-[250px] py-3 shadow-neon">{loading.researching ? <Loader2 size={16} className="animate-spin"/> : <><Sparkles size={16}/> {useCityTemplate ? 'GUNAKAN TEMPLATE' : 'RISET MARKET'}</>}</Button>
+                <Button onClick={() => useCityTemplate ? aiState.setStep(2) : actions.researchTitles ? actions.researchTitles(researchTopicInput) : actions.runResearch(researchTopicInput)} disabled={loading.researching} className="w-full max-w-[250px] py-3 shadow-neon">{loading.researching ? <Loader2 size={16} className="animate-spin"/> : <><Sparkles size={16}/> {useCityTemplate ? 'GUNAKAN TEMPLATE' : 'RISET MARKET'}</>}</Button>
             </div>
         );
     }
 
     if (aiState.step === 1 && !form.id) {
         return (
-            <div className="flex flex-col h-full bg-brand-dark p-4">
-                <div className="flex items-center gap-2 mb-4 pb-4 border-b border-white/10"><button onClick={() => aiState.setStep(0)} className="p-1 hover:bg-white/10 rounded"><ArrowLeft size={16} className="text-gray-400"/></button><h3 className="text-white font-bold text-sm">Hasil Riset</h3></div>
+            <div className="flex flex-col h-full bg-brand-dark p-4 animate-fade-in">
+                <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => aiState.setStep(0)} className="p-1 hover:bg-white/10 rounded transition-colors">
+                            <ArrowLeft size={16} className="text-gray-400"/>
+                        </button>
+                        <h3 className="text-white font-bold text-sm uppercase tracking-widest">Rekomendasi Judul</h3>
+                    </div>
+                    {form.pillar_id && (
+                        <span className="text-[8px] font-black text-brand-orange bg-brand-orange/10 px-2 py-1 rounded border border-brand-orange/20 uppercase tracking-tighter">Cluster Mode</span>
+                    )}
+                </div>
+
                 <div className="flex-grow overflow-y-auto custom-scrollbar space-y-2 pb-32">
-                    {aiState.keywords.map((k: any, i: number) => (
-                        <div key={i} onClick={() => actions.selectTopic(k)} className="p-3 rounded-lg bg-white/5 border border-white/5 hover:border-brand-orange/50 hover:bg-brand-orange/5 cursor-pointer transition-all"><h4 className="text-xs font-bold text-white mb-2">{k.keyword}</h4><div className="flex items-center gap-2"><span className="text-[9px] px-2 py-0.5 rounded border border-green-500/20 text-green-400 flex items-center gap-1"><BarChart size={8} /> {k.volume}</span></div></div>
-                    ))}
+                    {aiState.keywords.length === 0 ? (
+                        <div className="text-center py-20 opacity-30 italic text-xs">Gak ada keyword yang cocok, Bos.</div>
+                    ) : (
+                        aiState.keywords.map((k: any, i: number) => (
+                            <div 
+                                key={i} 
+                                onClick={() => actions.selectTopic(k)} 
+                                className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-brand-orange/50 hover:bg-brand-orange/5 cursor-pointer transition-all group relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Sparkles size={12} className="text-brand-orange" />
+                                </div>
+                                <h4 className="text-xs font-bold text-white mb-2 leading-snug group-hover:text-brand-orange transition-colors">{k.keyword}</h4>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-[9px] px-2 py-0.5 rounded border border-green-500/20 text-green-400 flex items-center gap-1 font-mono">
+                                        <BarChart size={8} /> {k.volume}
+                                    </span>
+                                    <span className={`text-[8px] font-black uppercase tracking-widest ${k.competition === 'Low' ? 'text-green-500' : 'text-yellow-500'}`}>
+                                        Comp: {k.competition}
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
         );
@@ -174,11 +218,9 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
             
             <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-5 pb-32">
                 
-                {/* CONTENT TYPE ACCORDION */}
                 <div className="space-y-2">
                     <SectionLabel icon={Layout}>Arsitektur Konten</SectionLabel>
                     
-                    {/* PILLAR ACCORDION */}
                     <div className={`border rounded-xl transition-all overflow-hidden ${form.type === 'pillar' ? 'bg-yellow-500/5 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.05)]' : 'bg-black/20 border-white/5 hover:border-white/10'}`}>
                         <button 
                             onClick={() => toggleAccordion('pillar')}
@@ -209,7 +251,6 @@ export const EditorPanel = ({ form, setForm, loading, aiState, actions, availabl
                         )}
                     </div>
 
-                    {/* CLUSTER ACCORDION */}
                     <div className={`border rounded-xl transition-all overflow-hidden ${form.type === 'cluster' ? 'bg-blue-500/5 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.05)]' : 'bg-black/20 border-white/5 hover:border-white/10'}`}>
                         <button 
                             onClick={() => toggleAccordion('cluster')}

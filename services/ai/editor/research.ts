@@ -7,21 +7,43 @@ export const Researcher = {
      */
     researchTopics: async (type: 'pillar' | 'cluster', topic?: string) => {
         const industryContext = "Retail Technology, Point of Sale (POS), Business Management, UMKM Indonesia";
+        
+        let specificityInstruction = type === 'pillar' 
+            ? 'Identify Broad, High-Volume "Ultimate Guide" concepts.' 
+            : 'Identify highly specific, Long-tail, Problem-Solving sub-topics.';
+
         const topicContext = topic 
-            ? `FOCUS TOPIC: "${topic}". Find keywords specifically related to this topic within the context of ${industryContext}.`
-            : `BROAD SCOPE: Find general trending topics in ${industryContext}.`;
+            ? `CONTEXT: Lo baru aja nulis artikel Pilar tentang "${topic}". TUGAS: Cari 15 judul artikel turunan (Cluster) yang lebih spesifik, teknis, atau berupa tips praktis yang mendukung pilar tersebut.`
+            : `BROAD SCOPE: Cari topik trending umum di industri ${industryContext}.`;
 
         const prompt = `
-        Act as a Senior SEO Strategist for the Indonesian Market.
+        Role: Senior SEO Strategist & Content Architect for the Indonesian Market.
+        Persona: Street-smart, aggressive, "Gue/Lo" style.
+        
         ${topicContext}
-        Task: Identify ${type === 'pillar' ? '10 Broad, High-Volume "Ultimate Guide"' : '15 Specific, Long-tail, Problem-Solving'} Article Titles.
-        **CRITICAL FILTER:** Only find keywords with **LOW or MEDIUM** competition.
+        ${specificityInstruction}
+        
+        **CRITICAL SEO FILTER:** 
+        1. Judul harus nendang, provokatif, dan bikin orang pengen klik (Click-worthy).
+        2. Cari keyword dengan **LOW or MEDIUM** competition.
+        3. Prioritaskan volume pencarian yang valid untuk UMKM Indonesia.
+        
         Strict Output Format: JSON Array of Objects.
-        Example: [{"keyword": "Judul", "volume": "12k/mo", "competition": "Medium", "type": "${type === 'pillar' ? 'Pillar' : 'Cluster'}"}]
+        Example: [{"keyword": "Cara Atasi Stok Selisih di Kasir Android", "volume": "1.2k/mo", "competition": "Low", "type": "Cluster"}]
         `;
 
-        const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
-        return JSON.parse(res.text || '[]');
+        const res = await callGeminiWithRotation({ 
+            model: 'gemini-3-flash-preview', 
+            contents: prompt, 
+            config: { responseMimeType: "application/json" } 
+        });
+
+        try {
+            return JSON.parse(res.text || '[]');
+        } catch (e) {
+            console.error("[Researcher] JSON Parse Error", e);
+            return [];
+        }
     },
 
     /**

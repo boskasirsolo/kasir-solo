@@ -44,7 +44,6 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
 };
 
 export const useArticleManager = (articles: Article[], setArticles: any, gallery: GalleryItem[] = [], config?: SiteConfig, products: Product[] = []) => {
-    // Audit: itemsPerPage gue set ke 10 biar pas sama layar laptop standar
     const filterLogic = useArticleFilter(articles, 10);
     const [loading, setLoading] = useState({ researching: false, generatingText: false, generatingImage: false, uploading: false, progressMessage: '' });
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
@@ -52,8 +51,6 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const [activeMobilePane, setActiveMobilePane] = useState<'LIST' | 'CONFIG' | 'WRITE'>('LIST');
     const [aiStep, setAiStep] = useState(0);
     const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']);
-    
-    // UI Logic states moved from index.tsx
     const [showMediaLib, setShowMediaLib] = useState(false);
 
     useEffect(() => {
@@ -171,7 +168,31 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             },
             runImage: async () => { setLoading(p => ({ ...p, generatingImage: true })); try { const { url, file } = await VisionAI.generate(form.title, form.category, 'corporate'); setForm(p => ({ ...p, imagePreview: url, uploadFile: file })); } finally { setLoading(p => ({ ...p, generatingImage: false })); } },
             selectTopic: (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); },
-            runClusterResearch: async (pillar: Article) => { setForm(p => ({ ...p, id: null, title: '', content: '', type: 'cluster', pillar_id: pillar.id, category: pillar.category || 'General' })); setAiStep(2); setActiveMobilePane('CONFIG'); }
+            runClusterResearch: async (pillar: Article) => { 
+                // STEP 1: Inisialisasi Form sebagai Cluster yang terikat ke Pillar ini
+                setForm(p => ({ 
+                    ...p, 
+                    id: null, 
+                    title: '', 
+                    content: '', 
+                    type: 'cluster', 
+                    pillar_id: pillar.id, 
+                    category: pillar.category || 'General' 
+                })); 
+                
+                // STEP 2: Pindah ke pane konfigurasi
+                setActiveMobilePane('CONFIG');
+                
+                // STEP 3: Jalankan Riset otomatis pake judul Pillar sebagai basis context
+                setLoading(p => ({...p, researching: true, progressMessage: `SIBOS lagi nyadap keyword turunan dari: ${pillar.title}`}));
+                try { 
+                    const raw = await EditorAI.researchTopics('cluster', pillar.title); 
+                    setKeywords(raw); 
+                    setAiStep(1); // Langsung lempar ke layar hasil riset (Step 1)
+                } finally { 
+                    setLoading(p => ({...p, researching: false})); 
+                }
+            }
         }
     };
 };
