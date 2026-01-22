@@ -2,9 +2,44 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../utils';
 import { AnalyticsStats } from './types';
+import { Search, BookOpen, ShoppingBag, DollarSign } from 'lucide-react';
+
+const INITIAL_STATS: AnalyticsStats = {
+    totalViews: 0,
+    uniqueVisitors: 0,
+    totalActions: 0,
+    conversionRate: '0',
+    trafficByDate: {},
+    sortedPages: [],
+    devices: { mobile: 0, desktop: 0, tablet: 0 },
+    osDist: {},
+    sortedCities: [],
+    demographics: {
+        age: { "18-24": 0, "25-34": 0, "35-44": 0, "45+": 0 },
+        gender: { male: 0, female: 0 }
+    },
+    sortedReferrers: [],
+    hours: new Array(24).fill(0),
+    newVisitors: 0,
+    returningVisitors: 0,
+    bounceRate: 0,
+    avgPagesPerSession: "0",
+    sortedExitPages: [],
+    avgEngagementTime: "0s",
+    funnel: {
+        stages: [
+            { label: 'TAMU', count: 0, percentage: 0, dropOff: 0, icon: Search, color: 'text-blue-400' },
+            { label: 'KEPO', count: 0, percentage: 0, dropOff: 0, icon: BookOpen, color: 'text-purple-400' },
+            { label: 'NAKSIR', count: 0, percentage: 0, dropOff: 0, icon: ShoppingBag, color: 'text-yellow-500' },
+            { label: 'DEAL', count: 0, percentage: 0, dropOff: 0, icon: DollarSign, color: 'text-green-500' }
+        ],
+        topPaths: [],
+        conversionRate: 0
+    }
+};
 
 export const useAnalyticsData = () => {
-  const [stats, setStats] = useState<Partial<AnalyticsStats>>({});
+  const [stats, setStats] = useState<AnalyticsStats>(INITIAL_STATS);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState(7); 
 
@@ -17,19 +52,18 @@ export const useAnalyticsData = () => {
     setLoading(true);
     
     try {
-        // MANGGIL MANTRA DATABASE (RPC)
         const { data, error } = await supabase.rpc('get_analytics_summary', { 
             p_days: period 
         });
 
         if (error) throw error;
 
-        // Map data dari database (snake_case) ke state (sesuai UI)
         if (data) {
-            setStats({
-                totalViews: data.total_views,
-                uniqueVisitors: data.unique_visitors,
-                totalActions: data.total_conversions,
+            setStats(prev => ({
+                ...prev,
+                totalViews: data.total_views || 0,
+                uniqueVisitors: data.unique_visitors || 0,
+                totalActions: data.total_conversions || 0,
                 conversionRate: data.unique_visitors > 0 ? ((data.total_conversions / data.unique_visitors) * 100).toFixed(1) : '0',
                 devices: {
                     mobile: data.device_stats?.mobile || 0,
@@ -38,16 +72,16 @@ export const useAnalyticsData = () => {
                 },
                 osDist: data.os_stats || {},
                 sortedPages: data.top_pages || [],
-                // Trend harian tetap bisa ditarik lewat RPC jika dibutuhkan detail grafisnya
-                trafficByDate: {} 
-            } as any);
+                // Data mapping lainnya bisa ditambahkan di sini sesuai kebutuhan UI
+            }));
         }
     } catch (e) {
-        console.error("Gagal ambil statistik via RPC:", e);
+        console.error("Analytics Error:", e);
+        // Tetap gunakan stats lama/initial jika error
     } finally {
         setLoading(false);
     }
   };
 
-  return { stats: stats as AnalyticsStats, loading, period, setPeriod, refresh: fetchStats };
+  return { stats, loading, period, setPeriod, refresh: fetchStats };
 };

@@ -16,7 +16,7 @@ import { TopPagesTable, ExitPagesList, QualityScorePanel } from './ui-tables';
 import { FunnelRadar } from './funnel-radar';
 import { CityDistribution, OSDistribution, DemographicEstimator } from './ui-demographics';
 import { PageAnalyticsModal } from './page-analytics-modal';
-import { AIInsights } from './ai-insights'; // IMPORT BARU
+import { AIInsights } from './ai-insights';
 
 type AnalyticsTab = 'radar' | 'audience' | 'content' | 'acquisition';
 
@@ -25,7 +25,15 @@ export const AnalyticsDashboard = () => {
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('radar');
   const [selectedPagePath, setSelectedPagePath] = useState<string | null>(null);
 
-  if (loading && stats.totalViews === 0) return <div className="flex justify-center p-20"><LoadingSpinner size={32} /></div>;
+  // FIX: Logika loading yang lebih robust
+  if (loading && (!stats || stats.totalViews === 0)) {
+    return (
+        <div className="flex flex-col items-center justify-center p-24 gap-4 animate-fade-in">
+            <LoadingSpinner size={32} className="text-brand-orange" />
+            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Menarik Data Radar...</p>
+        </div>
+    );
+  }
 
   const TABS = [
     { id: 'radar', label: 'Radar Utama', icon: LayoutDashboard, desc: 'Helicopter View' },
@@ -64,15 +72,20 @@ export const AnalyticsDashboard = () => {
       <div className="space-y-6 min-h-[600px] relative">
         {activeTab === 'radar' && (
           <div className="space-y-6 animate-fade-in">
-            {/* INTEGRASI AI INSIGHTS DI BARIS PALING ATAS */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1"><AIInsights stats={stats} /></div>
-                <div className="lg:col-span-2"><KPIGrid stats={stats as any} /></div>
+                <div className="lg:col-span-2"><KPIGrid stats={stats} /></div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-               <div className="lg:col-span-3"><FunnelRadar data={stats.funnel as any} /></div>
-               <div className="lg:col-span-3"><div className="bg-brand-dark/50 border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden"><TrafficChart data={stats.trafficByDate as any} period={period} /></div></div>
+               <div className="lg:col-span-3">
+                  {stats.funnel && <FunnelRadar data={stats.funnel} />}
+               </div>
+               <div className="lg:col-span-3">
+                  <div className="bg-brand-dark/50 border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                    <TrafficChart data={stats.trafficByDate} period={period} />
+                  </div>
+               </div>
             </div>
           </div>
         )}
@@ -80,11 +93,11 @@ export const AnalyticsDashboard = () => {
         {activeTab === 'audience' && (
           <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-4"><CityDistribution cities={stats.sortedCities as any} total={stats.totalViews as any} /></div>
+                <div className="lg:col-span-4"><CityDistribution cities={stats.sortedCities} total={stats.totalViews} /></div>
                 <div className="lg:col-span-4"><DemographicEstimator data={stats.demographics} /></div>
                 <div className="lg:col-span-4 space-y-6">
-                    <OSDistribution data={stats.osDist as any} />
-                    <DeviceStats devices={stats.devices as any} totalViews={stats.totalViews as any} />
+                    <OSDistribution data={stats.osDist} />
+                    <DeviceStats devices={stats.devices} totalViews={stats.totalViews} />
                 </div>
             </div>
           </div>
@@ -92,14 +105,17 @@ export const AnalyticsDashboard = () => {
 
         {activeTab === 'content' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-            <div className="lg:col-span-2"><TopPagesTable pages={stats.sortedPages as any} onPageClick={(path) => setSelectedPagePath(path)} /></div>
-            <div className="lg:col-span-1 space-y-8"><QualityScorePanel bounceRate={stats.bounceRate as any} avgPages={stats.avgPagesPerSession as any} /><ExitPagesList pages={stats.sortedExitPages as any} /></div>
+            <div className="lg:col-span-2"><TopPagesTable pages={stats.sortedPages} onPageClick={(path) => setSelectedPagePath(path)} /></div>
+            <div className="lg:col-span-1 space-y-8">
+                <QualityScorePanel bounceRate={stats.bounceRate} avgPages={stats.avgPagesPerSession} />
+                <ExitPagesList pages={stats.sortedExitPages} />
+            </div>
           </div>
         )}
 
         {activeTab === 'acquisition' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
-            <div className="lg:col-span-8"><ReferrerList referrers={stats.sortedReferrers as any} totalViews={stats.totalViews as any} /></div>
+            <div className="lg:col-span-8"><ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} /></div>
             <div className="lg:col-span-4"><GhostLinkCopier /></div>
           </div>
         )}
