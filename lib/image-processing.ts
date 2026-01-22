@@ -1,7 +1,9 @@
 
 // --- IMAGE OPTIMIZATION (CLOUDINARY & UNSPLASH) ---
 export const optimizeImage = (url: string, width: number = 1200) => {
-  if (!url) return '';
+  if (!url || typeof url !== 'string' || url === 'undefined') {
+    return 'https://via.placeholder.com/1200x675?text=Mesin+Kasir+Solo';
+  }
 
   if (url.includes('cloudinary.com')) {
     if (url.includes('f_auto,q_auto')) return url;

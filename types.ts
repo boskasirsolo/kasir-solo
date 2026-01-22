@@ -1,7 +1,7 @@
 
+
 // --- CORE INTERFACES ---
 
-// RAW MAPPING: Sesuai kolom database Supabase yang diaudit
 export interface SiteConfig {
   hero_title: string;
   hero_subtitle: string;
@@ -29,10 +29,8 @@ export interface SiteConfig {
   linkedin_url?: string;
   google_analytics_id?: string;
   google_search_console_code?: string;
-  /* FIX: Add missing property google_merchant_id to SiteConfig */
   google_merchant_id?: string;
   is_maintenance_mode?: boolean;
-  /* FIX: Add missing property is_noindex to SiteConfig */
   is_noindex?: boolean;
   bank_name?: string;
   bank_account_number?: string;
@@ -50,8 +48,8 @@ export interface Product {
   price: number;
   category: string;
   description: string;
-  image: string; // Alias for UI
-  image_url?: string; // Direct from DB
+  image: string; 
+  image_url?: string; 
   gallery_images?: string[];
   video_url?: string;
   specs?: Record<string, any>;
@@ -72,15 +70,13 @@ export interface Article {
   category: string;
   author: string;
   author_avatar?: string;
-  read_time?: string; // DB Column name
-  readTime?: string; // UI Mapping
+  read_time?: string;
+  readTime?: string;
   status?: 'draft' | 'published' | 'scheduled';
-  /* FIX: Add missing property scheduled_for to Article */
   scheduled_for?: string;
   tags?: string[];
   type?: 'pillar' | 'cluster';
   pillar_id?: number;
-  /* FIX: Add missing property related_pillars to Article */
   related_pillars?: number[];
   created_at?: string;
 }
@@ -88,12 +84,11 @@ export interface Article {
 export interface GalleryItem {
   id: number;
   title: string;
+  slug?: string; // Pastikan ada buat routing
   image_url: string;
   gallery_images?: string[];
   category_type: 'physical' | 'digital';
-  /* FIX: Add missing property type to GalleryItem */
   type?: 'image' | 'video';
-  /* FIX: Add missing property video_url to GalleryItem */
   video_url?: string;
   platform?: 'web' | 'mobile' | 'desktop';
   description?: string;
@@ -132,64 +127,10 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
-export interface Customer {
-  id?: string;
-  name: string;
-  phone: string;
-  email?: string;
-  company_name?: string;
-  business_category?: string;
-  business_scale?: string;
-  location?: string;
-  source?: string;
-  lead_status?: string;
-  lead_temperature?: string;
-  notes?: string;
-  created_at?: string;
-}
+/**
+ * FIX: Added missing exported members to resolve TypeScript errors across multiple files
+ */
 
-/* FIX: Add missing DownloadItem interface */
-export interface DownloadItem {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  file_url: string;
-  file_size: string;
-  version: string;
-  os_support: string;
-  access_key?: string;
-  updated_at?: string;
-  created_at?: string;
-}
-
-/* FIX: Add missing Tutorial interface */
-export interface Tutorial {
-  id: number;
-  title: string;
-  video_url: string;
-  created_at?: string;
-}
-
-/* FIX: Add missing FAQ interface */
-export interface FAQ {
-  id: number;
-  question: string;
-  answer: string;
-  created_at?: string;
-}
-
-/* FIX: Add missing ScheduledPost interface */
-export interface ScheduledPost {
-  day: string;
-  theme: string;
-  hook: string;
-  caption: string;
-  image_idea: string;
-  status: 'pending' | 'posted';
-}
-
-/* FIX: Add missing Order interface */
 export interface Order {
   id: number;
   created_at: string;
@@ -204,7 +145,6 @@ export interface Order {
   tracking_number?: string;
 }
 
-/* FIX: Add missing OrderItem interface */
 export interface OrderItem {
   id: number;
   order_id: number;
@@ -212,22 +152,59 @@ export interface OrderItem {
   product_name: string;
   quantity: number;
   price: number;
+  products?: {
+    specs: any;
+  };
 }
 
-/* FIX: Add missing Lead interface */
 export interface Lead {
   id: number;
+  created_at: string;
   name: string;
   phone: string;
-  email?: string;
   source: string;
   interest?: string;
-  notes?: string;
+  notes: string;
   status: 'new' | 'contacted' | 'negotiating' | 'closed' | 'lost';
-  created_at: string;
 }
 
-/* FIX: Add missing ServicePageData interface */
+export interface DownloadItem {
+  id: string;
+  title: string;
+  category: 'driver' | 'manual' | 'software' | 'tools';
+  description: string;
+  file_url: string;
+  file_size: string;
+  version: string;
+  os_support: string;
+  access_key?: string;
+  updated_at?: string;
+  created_at?: string;
+}
+
+export interface Tutorial {
+  id: number;
+  title: string;
+  video_url: string;
+  created_at?: string;
+}
+
+export interface FAQ {
+  id: number;
+  question: string;
+  answer: string;
+  created_at?: string;
+}
+
+export interface ScheduledPost {
+  day: string;
+  theme: string;
+  hook: string;
+  caption: string;
+  image_idea: string;
+  status: 'pending' | 'posted';
+}
+
 export interface ServicePageData {
   id: number;
   slug: string;
@@ -238,14 +215,12 @@ export interface ServicePageData {
   features: any[];
   steps: any[];
   calc_data: any;
-  created_at?: string;
 }
 
-/* FIX: Add missing AnalyticsLog interface */
 export interface AnalyticsLog {
-  id: number;
+  id?: string;
   visitor_id: string;
-  event_type: 'page_view' | 'page_leave' | 'click_action' | 'contact_wa';
+  event_type: string;
   page_path: string;
   device_type: string;
   referrer: string;
@@ -254,7 +229,6 @@ export interface AnalyticsLog {
   created_at?: string;
 }
 
-/* FIX: Add missing ServiceSimulation interface */
 export interface ServiceSimulation {
   id: number;
   created_at: string;
