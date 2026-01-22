@@ -3,77 +3,57 @@ import { callGeminiWithRotation } from './core';
 import { supabase } from '../../lib/supabase-client';
 
 const SIBOS_BRAIN_CONTEXT = `
-You are **SIBOS AI**, digital alter-ego of **Amin Maghfuri** (Founder PT Mesin Kasir Solo).
-Gaya bahasa: Street-smart, jujur brutal, pake "Gue/Lo". Jangan kaku kayak robot CS bank.
+You are **SIBOS AI**, the strategic brain of **Amin Maghfuri** (Founder PT Mesin Kasir Solo).
+Language Style: Indonesian Street-smart, gritty, use "Gue/Lo". Not a robot.
 
-[MISSION]
-Tugas lo adalah jadi "Partner Perang" buat user (Bos). Lo harus jagain bisnisnya biar gak boncos.
+[RECOVERY MISSION]
+Tugas lo sekarang adalah "Conversion Recovery Specialist". 
+Lo harus bantu Bos (Admin) buat nge-chat orang yang GAK JADI beli (Abandoned Checkout).
 
-[CRM & DATA INTELLIGENCE]
-Kalau di dashboard admin, lo punya tugas tambahan:
-1. Analisa Data: Baca pola interaksi pelanggan.
-2. Deteksi Fraud: Kasih peringatan kalau ada data anomali.
-3. Strategi Sapaan: Kasih skrip chat WA yang gak cuma jualan, tapi ngebantu masalah mereka.
+[STRATEGY RULES]
+1. Analisa Cart: Liat barang apa yang dia tinggalin.
+2. Analisa Lokasi: Kalau dia di luar Solo, tawarin pengiriman kayu aman. Kalau di Solo, tawarin Founder dateng langsung.
+3. Scripting: Tulis pesan WA yang nggak maksa, tapi nanya "Ada kendala apa Bos?". Tawarin bantuan teknis atau diskon tipis kalau perlu.
+4. Forbidden: Jangan pake kata "Sayang sekali Anda belum menyelesaikan pembayaran". Pake gaya: "Oit Bos, tadi gue liat lo lagi liat-liat [Product Name], ada yang bikin bingung di speknya?".
 `;
-
-const ADMIN_TOOLS = [
-    {
-        name: 'analyze_pipeline',
-        description: 'Menganalisa status pipeline CRM untuk menemukan peluang closing tercepat.',
-        parameters: { type: 'OBJECT', properties: { days: { type: 'NUMBER' } } }
-    },
-    {
-        name: 'generate_followup_script',
-        description: 'Membuat draf pesan WhatsApp yang sangat personal berdasarkan histori pelanggan.',
-        parameters: { 
-            type: 'OBJECT', 
-            properties: { 
-                customerName: { type: 'STRING' },
-                lastInterest: { type: 'STRING' },
-                painPoint: { type: 'STRING' }
-            },
-            required: ['customerName']
-        }
-    }
-];
 
 export const SibosAI = {
     chat: async (history: { role: string; parts: any[] }[], userMessage: string, isAdmin: boolean) => {
         const systemInstruction = SIBOS_BRAIN_CONTEXT;
-        const tools = isAdmin ? [{ functionDeclarations: ADMIN_TOOLS }] : [];
-
         const contents = [...history, { role: 'user', parts: [{ text: userMessage }] }];
         
         let result = await callGeminiWithRotation({
             model: 'gemini-3-flash-preview',
             contents: contents,
-            config: { systemInstruction, tools }
+            config: { systemInstruction }
         });
-
-        // Tool Execution Logic (Simulated or Real DB Calls)
-        const responseContent = result.candidates?.[0]?.content;
-        const functionCalls = responseContent?.parts?.filter((p: any) => p.functionCall).map((p: any) => p.functionCall);
-
-        if (functionCalls && functionCalls.length > 0) {
-            // Logika eksekusi tool di sini sesuai kebutuhan database lo
-            return "Siap Bos, gue lagi bedah datanya. Hasilnya ada di panel utama ya.";
-        }
 
         return result.text || "Sinyal gue lagi bapuk Bos, coba lagi dah.";
     },
 
-    // FUNGSI BARU: Analisa Insight Cepat
+    // NEW: Recovery Script Generator
+    generateRecoveryScript: async (customerName: string, cartDetails: string, location: string) => {
+        const prompt = `
+            ${SIBOS_BRAIN_CONTEXT}
+            DATA TARGET:
+            Nama: ${customerName}
+            Isi Keranjang: ${cartDetails}
+            Lokasi: ${location}
+            
+            TUGAS: Tulis 1 draf pesan WhatsApp buat "pancing" dia balik lagi. 
+            Fokus ke: "Ngebantu kendala teknis" atau "Nego harga paket".
+            
+            Output: Just the message text. Start directly with the greeting.
+        `;
+        const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+        return res.text?.trim() || "";
+    },
+
     getQuickInsight: async (statsData: any) => {
         const prompt = `
             ${SIBOS_BRAIN_CONTEXT}
-            Data Statistik Web 7 Hari Terakhir: ${JSON.stringify(statsData)}
-            
-            TUGAS: Kasih 3 "Insight Jalanan" buat gue. 
-            1. Mana yang paling oke performanya.
-            2. Mana yang "Boncos" (Rugi/Bocor).
-            3. Satu saran "Gila" buat minggu depan biar omzet naik.
-            
-            Format: Markdown. Pendek, padat, nendang.
+            Data Statistik Web: ${JSON.stringify(statsData)}
+            TUGAS: Kasih 3 Insight Jalanan. Pendek, padat, nendang.
         `;
         const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
         return res.text;

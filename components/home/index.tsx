@@ -4,6 +4,7 @@ import { GalleryItem, Testimonial, SiteConfig } from '../../types';
 import { ProjectDetailModal } from '../gallery';
 import { useHomeLogic } from './logic';
 import { useScrollReveal } from '../../hooks/use-scroll-reveal';
+import { useSocialPulse } from '../../hooks/use-social-pulse';
 
 // Import Sections
 import { HomeHero } from './sections/hero';
@@ -13,6 +14,7 @@ import { InnovationTeaser } from './sections/innovation';
 import { GalleryMarquee } from './sections/gallery-marquee';
 import { ServicesGrid } from './sections/services';
 import { FounderCTA } from './sections/founder-cta';
+import { LivePulseSection } from './sections/live-pulse';
 
 export const HomeModule = ({ 
   setPage, 
@@ -34,6 +36,8 @@ export const HomeModule = ({
     getTestimonialForProject
   } = useHomeLogic(gallery, testimonials, config);
 
+  const { allEvents } = useSocialPulse();
+
   // Aktifin Scroll Reveal Engine
   useScrollReveal();
 
@@ -41,6 +45,8 @@ export const HomeModule = ({
     <div className="animate-fade-in space-y-0">
       <HomeHero setPage={setPage} />
       
+      <LivePulseSection events={allEvents} />
+
       <div className="reveal-on-scroll">
         <TrustStrip />
       </div>

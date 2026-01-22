@@ -5,9 +5,11 @@ import { useLocation } from 'react-router-dom';
 import { SiteConfig } from '../../types';
 import { INITIAL_PRODUCTS } from '../../utils';
 import { useAnalytics } from '../../hooks/use-analytics';
+import { useSocialPulse } from '../../hooks/use-social-pulse';
 import { Header } from './header';
 import { Footer } from './footer';
 import { ScrollToTop } from './ui/scroll-top';
+import { SocialPulseWidget } from '../shared/social-pulse-widget';
 
 const SibosWidget = lazy(() => import('../sibos-core/index').then(module => ({ default: module.SibosWidget })));
 
@@ -28,8 +30,8 @@ export const Layout = ({
 }) => {
   useAnalytics();
   const { pathname } = useLocation();
+  const { currentEvent, allEvents } = useSocialPulse();
 
-  // Scroll restoration fix & Page Transition logic
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [pathname]);
@@ -57,7 +59,6 @@ export const Layout = ({
       <Header currentPage={currentPage} setPage={setPage} />
       
       <main className="flex-grow pt-[76px] relative overflow-hidden">
-        {/* Subtle background noise/texture global */}
         <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[100] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
         {children}
       </main>
@@ -65,6 +66,8 @@ export const Layout = ({
       <Footer setPage={setPage} config={config} />
       
       <ScrollToTop />
+      
+      <SocialPulseWidget event={currentEvent} />
 
       <Suspense fallback={null}>
         <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} currentPage={currentPage} setConfig={setConfig} session={session} />

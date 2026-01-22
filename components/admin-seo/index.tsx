@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Sparkles, Map, Loader2, Globe, FileText } from 'lucide-react';
+import { ArrowLeft, Sparkles, Map, Loader2, Globe, FileText, Zap } from 'lucide-react';
 import { useSEOLogic } from './logic';
 import { CityListPanel } from './city-list';
 import { CityEditorPanel } from './city-editor';
 import { AISuggestionsPanel } from './ai-suggestions';
 import { TemplateListPanel } from './template-list';
 import { TemplateEditorPanel } from './template-editor';
+import { SEOIntelligencePanel } from './intelligence-panel';
 
 export const AdminSEO = () => {
   const { state, setters, actions } = useSEOLogic();
@@ -38,15 +39,16 @@ export const AdminSEO = () => {
   return (
     <div className="relative space-y-8">
       
-      {/* 1. TOP NAV & MAGIC GENERATOR */}
+      {/* 1. TOP NAV & MODULE SELECTOR */}
       <div className="bg-brand-card border border-white/5 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-b border-white/5 pb-6">
               <div>
                   <h3 className="text-white font-bold text-lg mb-1 flex items-center gap-2"><Globe size={20} className="text-brand-orange"/> SEO Engine Solo</h3>
                   <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Digital Domination Control</p>
               </div>
-              <div className="flex bg-black/40 p-1 rounded-xl border border-white/5 w-full md:w-auto">
+              <div className="flex bg-black/40 p-1 rounded-xl border border-white/5 w-full md:w-auto overflow-x-auto custom-scrollbar-hide">
                   <button onClick={() => setters.setModuleSubTab('cities')} className={`flex-1 md:flex-none flex items-center gap-2 px-6 py-2.5 rounded-lg text-xs font-bold transition-all ${state.moduleSubTab === 'cities' ? 'bg-brand-orange text-white shadow-neon' : 'text-gray-500 hover:text-white'}`}><Map size={14}/> Wilayah</button>
+                  <button onClick={() => setters.setModuleSubTab('intelligence')} className={`flex-1 md:flex-none flex items-center gap-2 px-6 py-2.5 rounded-lg text-xs font-bold transition-all ${state.moduleSubTab === 'intelligence' ? 'bg-brand-orange text-white shadow-neon' : 'text-gray-500 hover:text-white'}`}><Zap size={14}/> SEO Intel</button>
                   <button onClick={() => setters.setModuleSubTab('templates')} className={`flex-1 md:flex-none flex items-center gap-2 px-6 py-2.5 rounded-lg text-xs font-bold transition-all ${state.moduleSubTab === 'templates' ? 'bg-brand-orange text-white shadow-neon' : 'text-gray-500 hover:text-white'}`}><FileText size={14}/> Master Template</button>
               </div>
           </div>
@@ -64,31 +66,38 @@ export const AdminSEO = () => {
                   <AISuggestionsPanel suggestions={state.suggestions} onPublish={actions.publishAllSuggestions} onClear={() => setters.setRegionInput('')} loading={state.loading} />
               </div>
           )}
+
+          {state.moduleSubTab === 'intelligence' && (
+              <div className="animate-fade-in">
+                  <SEOIntelligencePanel state={state} setters={setters} actions={actions} />
+              </div>
+          )}
       </div>
 
-      {/* 2. MAIN CONTENT AREA */}
-      <div className={`w-full lg:grid lg:grid-cols-12 gap-8 items-start ${state.showMobileEditor ? 'hidden lg:grid' : 'block'}`}>
-        
-        {state.moduleSubTab === 'cities' ? (
-            <>
-                <div className="lg:col-span-8 h-auto lg:h-[800px]">
-                    <CityListPanel state={state} setters={setters} onEdit={actions.handleEdit} onDelete={actions.handleDelete} onAdd={actions.openNewCity} />
-                </div>
-                <div className="hidden lg:block lg:col-span-4">
-                    <CityEditorPanel form={state.form} setForm={setters.setForm} templates={state.templates} onSubmit={actions.handleSubmit} onReset={actions.resetForm} onGenerate={actions.generateNarrative} loading={state.loading} isGenerating={state.isGeneratingNarrative} />
-                </div>
-            </>
-        ) : (
-            <>
-                <div className="lg:col-span-8 h-auto lg:h-[800px]">
-                    <TemplateListPanel templates={state.templates} onEdit={setters.setTemplateForm} onAdd={() => setters.setTemplateForm({ id: 0, title: '', prompt_structure: '' })} />
-                </div>
-                <div className="lg:col-span-4">
-                    <TemplateEditorPanel form={state.templateForm} setForm={setters.setTemplateForm} onSubmit={actions.handleTemplateSubmit} onReset={() => setters.setTemplateForm({ id: 0, title: '', prompt_structure: '' })} />
-                </div>
-            </>
-        )}
-      </div>
+      {/* 2. MAIN CONTENT AREA (FOR CITIES & TEMPLATES) */}
+      {state.moduleSubTab !== 'intelligence' && (
+        <div className={`w-full lg:grid lg:grid-cols-12 gap-8 items-start ${state.showMobileEditor ? 'hidden lg:grid' : 'block'}`}>
+          {state.moduleSubTab === 'cities' ? (
+              <>
+                  <div className="lg:col-span-8 h-auto lg:h-[800px]">
+                      <CityListPanel state={state} setters={setters} onEdit={actions.handleEdit} onDelete={actions.handleDelete} onAdd={actions.openNewCity} />
+                  </div>
+                  <div className="hidden lg:block lg:col-span-4">
+                      <CityEditorPanel form={state.form} setForm={setters.setForm} templates={state.templates} onSubmit={actions.handleSubmit} onReset={actions.resetForm} onGenerate={actions.generateNarrative} loading={state.loading} isGenerating={state.isGeneratingNarrative} />
+                  </div>
+              </>
+          ) : (
+              <>
+                  <div className="lg:col-span-8 h-auto lg:h-[800px]">
+                      <TemplateListPanel templates={state.templates} onEdit={setters.setTemplateForm} onAdd={() => setters.setTemplateForm({ id: 0, title: '', prompt_structure: '' })} />
+                  </div>
+                  <div className="lg:col-span-4">
+                      <TemplateEditorPanel form={state.templateForm} setForm={setters.setTemplateForm} onSubmit={actions.handleTemplateSubmit} onReset={() => setters.setTemplateForm({ id: 0, title: '', prompt_structure: '' })} />
+                  </div>
+              </>
+          )}
+        </div>
+      )}
 
       {state.showMobileEditor && state.moduleSubTab === 'cities' && createPortal(<MobileEditorOverlay />, document.body)}
 

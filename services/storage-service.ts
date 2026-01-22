@@ -20,7 +20,7 @@ const logAssetToDb = async (asset: { url: string, path: string, name: string, si
             url: asset.url,
             storage_path: asset.path,
             file_name: asset.name,
-            file_size: `${(asset.size / 1024).toFixed(1)} KB`,
+            file_size: `${(asset.size / (1024 * 1024)).toFixed(2)} MB`,
             mime_type: asset.type
         }], { onConflict: 'url' });
     } catch (e) {
