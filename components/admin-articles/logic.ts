@@ -44,7 +44,8 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
 };
 
 export const useArticleManager = (articles: Article[], setArticles: any, gallery: GalleryItem[] = [], config?: SiteConfig, products: Product[] = []) => {
-    const filterLogic = useArticleFilter(articles, 7);
+    // Audit: itemsPerPage gue set ke 10 biar pas sama layar laptop standar
+    const filterLogic = useArticleFilter(articles, 10);
     const [loading, setLoading] = useState({ researching: false, generatingText: false, generatingImage: false, uploading: false, progressMessage: '' });
     const [keywords, setKeywords] = useState<KeywordData[]>([]);
     const [cities, setCities] = useState<CityTarget[]>([]);
