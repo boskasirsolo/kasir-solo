@@ -34,7 +34,8 @@ export const Header = ({
           <div className="flex items-center gap-4">
              {/* Desktop Cart */}
              <div className="hidden lg:block">
-                <CartIcon count={totalItems} onClick={() => setCartOpen(true)} />
+                {/* FIX: Added id to identify the element for fly-animations */}
+                <CartIcon id="desktop-cart-btn" count={totalItems} onClick={() => setCartOpen(true)} />
              </div>
              
              {/* Desktop CTA */}
@@ -42,7 +43,8 @@ export const Header = ({
 
              {/* Mobile Cart & Toggle */}
              <div className="flex items-center gap-4 lg:hidden">
-                <CartIcon count={totalItems} onClick={() => { setCartOpen(true); setIsMenuOpen(false); }} mobile />
+                {/* FIX: Corrected component call to include id which now exists in props */}
+                <CartIcon count={totalItems} id="mobile-cart-btn" onClick={() => { setCartOpen(true); setIsMenuOpen(false); }} mobile />
                 <MenuToggle isOpen={isMenuOpen} onClick={() => setIsMenuOpen(!isMenuOpen)} />
              </div>
           </div>

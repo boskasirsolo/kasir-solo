@@ -17,7 +17,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
 
     const captureTimeout = useRef<any>(null);
 
-    // REAL-TIME SHADOW CAPTURE (LEAKING SYSTEM)
+    // REAL-TIME SHADOW CAPTURE
     useEffect(() => {
         if (!formData.name || !formData.phone || formData.phone.length < 9 || cart.length === 0) return;
 
@@ -69,15 +69,15 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
         } catch (e: any) { alert(e.message); setDiscount(null); } finally { setIsValidatingCoupon(false); }
     };
 
-    const handleCheckboxClick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleCheckboxToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked && !agreedToTerms) {
             setShowTermsModal(true);
-        } else if (!e.target.checked) {
-            setAgreedToTerms(false);
+        } else {
+            setAgreedToTerms(e.target.checked);
         }
     };
 
-    const confirmTerms = () => {
+    const confirmAgreement = () => {
         setAgreedToTerms(true);
         setShowTermsModal(false);
     };
@@ -87,7 +87,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
         if (cart.length === 0) return;
         if (!formData.name || !formData.phone || !formData.address) return alert("Lengkapi data pengiriman.");
         const cleanPhone = normalizePhone(formData.phone);
-        if (!cleanPhone) return alert("Format WA salah.");
+        if (!cleanPhone) return alert("Format nomor WA salah.");
 
         setIsSubmitting(true);
         try {
@@ -104,7 +104,11 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             if (error) throw error;
             const orderItems = cart.map(item => ({ order_id: order.id, product_id: item.id, product_name: item.name, quantity: item.quantity, price: item.price }));
             await supabase!.from('order_items').insert(orderItems);
-            setOrderSuccess({ id: order.id, total: totalPrice });
+            
+            // Simpan snapshot cart ke success state sebelum clear
+            const cartSnapshot = [...cart];
+            setOrderSuccess({ id: order.id, total: totalPrice, items: cartSnapshot });
+            
             clearCart();
             setStep(1);
         } catch (error: any) { alert(`Gagal: ${error.message}`); } finally { setIsSubmitting(false); }
@@ -115,7 +119,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
         formData, handleFieldChange: (f: any, v: any) => setFormData(p => ({...p, [f]: v})),
         handleBlur: () => {},
         couponInput, setCouponInput, isValidatingCoupon, applyCoupon,
-        agreedToTerms, handleCheckboxClick, showTermsModal, setShowTermsModal, confirmTerms,
+        agreedToTerms, handleCheckboxToggle, showTermsModal, setShowTermsModal, confirmAgreement,
         isSubmitting, submitOrder, 
         orderSuccess, setOrderSuccess, clearCart,
         step, setStep

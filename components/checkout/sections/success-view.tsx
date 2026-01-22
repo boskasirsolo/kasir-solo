@@ -20,8 +20,24 @@ export const SuccessView = ({
         alert("Nomor rekening disalin!");
     };
 
-    const waNumber = config?.whatsapp_number || "6282325103336";
-    const waLink = `https://wa.me/${waNumber}?text=Halo Admin PT Mesin Kasir Solo, saya sudah transfer untuk Order ID #${order.id} sebesar ${formatRupiah(order.total)}. Berikut bukti transfernya...`;
+    const waNumber = config?.whatsapp_number || "628816566935";
+
+    // MERAKIT PESAN DETAIL UNTUK WHATSAPP
+    const generateWAMessage = () => {
+        const itemLines = order.items.map(item => `- ${item.quantity}x ${item.name} (${formatRupiah(item.price * item.quantity)})`).join('%0A');
+        
+        const text = 
+            `*HALO ADMIN PT MESIN KASIR SOLO*%0A%0A` +
+            `SAYA SUDAH TRANSFER UNTUK:%0A` +
+            `*Order ID:* #${order.id}%0A` +
+            `*Total:* ${formatRupiah(order.total)}%0A%0A` +
+            `*Rincian Barang:*%0A${itemLines}%0A%0A` +
+            `Berikut saya lampirkan bukti transfernya. Mohon segera diproses ya Bos!`;
+            
+        return text;
+    };
+
+    const waLink = `https://wa.me/${waNumber}?text=${generateWAMessage()}`;
 
     return (
         <div className="container mx-auto px-4 py-20 animate-fade-in flex justify-center">
@@ -31,7 +47,7 @@ export const SuccessView = ({
                     <CheckCircle2 size={48} className="text-green-500" />
                 </div>
                 
-                <h2 className="text-3xl font-display font-bold text-white mb-2">Pesanan Diterima!</h2>
+                <h2 className="text-3xl font-display font-bold text-white mb-2">Order Terkirim!</h2>
                 <p className="text-gray-400 mb-8">
                     Order ID: <span className="text-brand-orange font-mono text-xl md:text-2xl font-bold tracking-wider">#{order.id}</span>
                 </p>
@@ -46,7 +62,7 @@ export const SuccessView = ({
                 </div>
 
                 <p className="text-gray-400 text-sm mb-8 leading-relaxed max-w-md mx-auto">
-                    Langkah terakhir: Silakan transfer sesuai nominal, lalu konfirmasi bukti pembayaran ke WhatsApp Admin agar pesanan segera diproses.
+                    Terakhir Bos: Silakan transfer, terus klik tombol di bawah buat kirim bukti pembayaran ke WhatsApp. Tanpa bukti transfer, pesanan gak bakal kita rakit.
                 </p>
 
                 <div className="flex flex-col gap-4">
@@ -54,13 +70,13 @@ export const SuccessView = ({
                         href={waLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center justify-center w-full px-8 py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-green-500/20 gap-2"
+                        className="inline-flex items-center justify-center w-full px-8 py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-green-500/20 gap-2 uppercase tracking-wider"
                     >
-                        <MessageCircle size={20} /> Konfirmasi via WhatsApp
+                        <MessageCircle size={20} /> KONFIRMASI PEMBAYARAN (WA)
                     </a>
                     
-                    <button onClick={onHome} className="text-gray-500 hover:text-white text-sm font-bold py-2">
-                        Kembali ke Beranda
+                    <button onClick={onHome} className="text-gray-500 hover:text-white text-xs font-bold py-2 uppercase tracking-widest">
+                        Nanti Aja, Balik ke Beranda
                     </button>
                 </div>
             </div>

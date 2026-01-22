@@ -14,8 +14,10 @@ export const Logo = ({ onClick, className = "" }: { onClick: () => void, classNa
   </div>
 );
 
-export const CartIcon = ({ count, onClick, mobile = false }: { count: number, onClick: () => void, mobile?: boolean }) => (
+// FIX: Added 'id' to the props interface and destructuring, and applied it to the button element
+export const CartIcon = ({ count, onClick, mobile = false, id }: { count: number, onClick: () => void, mobile?: boolean, id?: string }) => (
   <button 
+    id={id}
     onClick={onClick}
     className={`relative p-2 transition-colors group ${mobile ? 'text-brand-orange' : 'text-gray-400 hover:text-brand-orange'}`}
     aria-label="Shopping Cart"

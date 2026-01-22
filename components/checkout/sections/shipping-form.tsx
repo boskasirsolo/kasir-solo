@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Ticket, Loader2, ArrowLeft, ShieldAlert } from 'lucide-react';
-import { Input, TextArea, Button, LoadingSpinner } from '../../ui';
+import { Input, TextArea, Button, LoadingSpinner, PhoneInput } from '../../ui';
 import { formatRupiah } from '../../../utils';
 
 export const ShippingForm = ({ 
@@ -17,16 +17,18 @@ export const ShippingForm = ({
                     </button>
                     <div>
                         <h3 className="text-lg md:text-xl font-bold text-white">Data Pengiriman</h3>
-                        <p className="text-xs text-gray-500">Lengkapi data untuk proses order.</p>
+                        <p className="text-xs text-gray-500">Pastikan alamat lo bener biar kurir gak pusing.</p>
                     </div>
                 </div>
                 
                 <form onSubmit={onSubmit} className="space-y-4">
-                    <Input value={formData.name} onChange={(e: any) => onChange('name', e.target.value)} onBlur={onBlur} placeholder="Nama Penerima" />
-                    <Input value={formData.phone} onChange={(e: any) => onChange('phone', e.target.value)} onBlur={onBlur} placeholder="WA: 0812..." type="tel" />
-                    <TextArea value={formData.address} onChange={(e: any) => onChange('address', e.target.value)} onBlur={onBlur} placeholder="Alamat Lengkap (Jalan, RT/RW, Kota)..." className="h-24" />
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <Input value={formData.name} onChange={(e: any) => onChange('name', e.target.value)} onBlur={onBlur} placeholder="Nama Lengkap" />
+                        <PhoneInput value={formData.phone} onChange={(e: any) => onChange('phone', e.target.value)} onBlur={onBlur} placeholder="Nomor WhatsApp" />
+                    </div>
+                    <TextArea value={formData.address} onChange={(e: any) => onChange('address', e.target.value)} onBlur={onBlur} placeholder="Alamat Lengkap (Jl, RT/RW, Kota, Kode Pos)..." className="h-24" />
 
-                    {/* KUPON SECTION */}
+                    {/* PROMO SECTION */}
                     <div className="pt-4 border-t border-white/5">
                         <label className="block text-[10px] font-bold text-gray-500 uppercase mb-2">Punya Kode Promo?</label>
                         <div className="flex gap-2">
@@ -50,6 +52,7 @@ export const ShippingForm = ({
                         </div>
                     </div>
 
+                    {/* COMPLIANCE CHECKBOX */}
                     <div className={`mt-6 p-4 rounded-xl border transition-all duration-300 ${agreed ? 'bg-green-500/10 border-green-500/30' : 'bg-brand-orange/5 border-brand-orange/20'}`}>
                         <label className="flex items-start gap-4 cursor-pointer select-none group">
                             <input 
@@ -58,12 +61,12 @@ export const ShippingForm = ({
                                 checked={agreed} 
                                 onChange={onToggleTerms}
                             />
-                            <div>
+                            <div className="flex-1">
                                 <p className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${agreed ? 'text-green-400' : 'text-brand-orange'}`}>
-                                    {agreed ? 'SAYA SETUJU & SIAP ORDER' : 'BACA DULU ATURAN MAINNYA'}
+                                    {agreed ? 'SAYA SETUJU & SIAP TRANSAKSI' : 'BACA DULU ATURAN MAINNYA'}
                                 </p>
                                 <p className="text-[10px] text-gray-400 leading-relaxed group-hover:text-gray-300">
-                                    Klik di sini untuk membaca Syarat & Ketentuan. Pesanan tidak dapat dibatalkan setelah pembayaran dikonfirmasi.
+                                    Centang untuk menyetujui syarat layanan. Pesanan tidak dapat dibatalkan setelah pembayaran dikonfirmasi.
                                 </p>
                             </div>
                         </label>
@@ -82,7 +85,7 @@ export const ShippingForm = ({
                             <span className="text-brand-orange font-display font-bold text-2xl">{formatRupiah(totalPrice)}</span>
                         </div>
                         <Button type="submit" className="w-full py-4 shadow-neon mt-4" disabled={isSubmitting || !agreed}>
-                            {isSubmitting ? <LoadingSpinner /> : "KONFIRMASI & BAYAR"}
+                            {isSubmitting ? <LoadingSpinner /> : "BAYAR SEKARANG"}
                         </Button>
                     </div>
                 </form>

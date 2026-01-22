@@ -1,4 +1,6 @@
 
+import { CartItem } from '../../types';
+
 export interface CheckoutFormData {
     name: string;
     phone: string;
@@ -9,4 +11,5 @@ export interface CheckoutFormData {
 export interface OrderSuccessState {
     id: number;
     total: number;
+    items: CartItem[];
 }

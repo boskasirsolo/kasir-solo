@@ -54,7 +54,7 @@ export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-    setCartOpen(true); // Otomatis buka drawer saat nambah produk
+    setCartOpen(true); // Buka drawer otomatis saat nambah barang
   };
 
   const removeFromCart = (productId: number) => {

@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, AlertTriangle, Sparkles } from 'lucide-react';
+import { Loader2, AlertTriangle, Sparkles, Phone } from 'lucide-react';
+import { normalizePhone } from '../utils';
 
 // --- Atoms ---
 
-// FIX: Added missing Input component to resolve export errors in multiple files
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className = "", ...props }, ref) => (
     <input 
@@ -17,7 +17,34 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
 );
 Input.displayName = 'Input';
 
-// FIX: Added missing TextArea component to resolve export errors in multiple files
+export const PhoneInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className = "", onBlur, ...props }, ref) => {
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      const normalized = normalizePhone(e.target.value);
+      if (normalized) {
+        e.target.value = normalized;
+      }
+      if (onBlur) onBlur(e);
+    };
+
+    return (
+      <div className="relative group">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-brand-orange transition-colors">
+          <Phone size={14} />
+        </div>
+        <Input 
+          ref={ref}
+          onBlur={handleBlur}
+          type="tel"
+          className={`pl-10 ${className}`}
+          {...props}
+        />
+      </div>
+    );
+  }
+);
+PhoneInput.displayName = 'PhoneInput';
+
 export const TextArea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
   ({ className = "", ...props }, ref) => (
     <textarea 
@@ -65,13 +92,11 @@ export const Button = ({
       {...props}
     >
       <span className="relative z-10 flex items-center gap-2">{children}</span>
-      {/* Subtle Shine Effect on Hover */}
       <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shine_1.5s_infinite] pointer-events-none"></div>
     </button>
   );
 };
 
-// FIX: Updated Card typing to React.FC to allow standard attributes like 'key' in list rendering
 export const Card: React.FC<{ 
     children?: React.ReactNode, 
     className?: string, 
@@ -105,7 +130,6 @@ export const SectionHeader = ({ title, subtitle, highlight, align = "center" }: 
         <div className="absolute -bottom-2 left-0 w-full h-1 bg-brand-orange/30 blur-sm"></div>
       </span>
     </h2>
-    {/* PERBAIKAN: Tambahkan mx-auto jika align center agar box teks subtitle berada di tengah */}
     {subtitle && (
       <p className={`text-gray-500 text-base md:text-lg max-w-2xl leading-relaxed italic ${align === 'center' ? 'mx-auto' : ''}`}>
         {subtitle}

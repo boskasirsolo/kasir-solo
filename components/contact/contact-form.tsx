@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, Input, TextArea, Button } from '../ui';
+import { Card, Input, TextArea, Button, PhoneInput } from '../ui';
 import { Send } from 'lucide-react';
 import { CONTACT_CATEGORIES } from './types';
 
@@ -25,18 +25,16 @@ export const ContactForm = ({
                         <Input 
                             value={form.name} 
                             onChange={e => setForm({...form, name: e.target.value})} 
-                            onBlur={onBlur}
                             placeholder="Mas / Mba ..."
                         />
                     </div>
                     <div>
                         <label className="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Nomor WhatsApp</label>
-                        <Input 
+                        <PhoneInput 
                             value={form.phone} 
                             onChange={e => setForm({...form, phone: e.target.value})} 
                             onBlur={onBlur}
-                            placeholder="0812xxxx"
-                            type="tel"
+                            placeholder="WA: 0812..."
                         />
                     </div>
                 </div>

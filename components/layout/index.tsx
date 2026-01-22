@@ -31,7 +31,7 @@ export const Layout = ({
 }) => {
   useAnalytics();
   const { pathname } = useLocation();
-  const { currentEvent, allEvents } = useSocialPulse();
+  const { currentEvent } = useSocialPulse();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
