@@ -25,7 +25,6 @@ export const AnalyticsDashboard = () => {
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('radar');
   const [selectedPagePath, setSelectedPagePath] = useState<string | null>(null);
 
-  // FIX: Logika loading yang lebih robust
   if (loading && (!stats || stats.totalViews === 0)) {
     return (
         <div className="flex flex-col items-center justify-center p-24 gap-4 animate-fade-in">
@@ -44,7 +43,13 @@ export const AnalyticsDashboard = () => {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 relative">
-      <DashboardHeader period={period} setPeriod={setPeriod} onRefresh={refresh} isRefreshing={loading} />
+      <DashboardHeader 
+        period={period} 
+        setPeriod={setPeriod} 
+        onRefresh={refresh} 
+        isRefreshing={loading}
+        aiInsights={<AIInsights stats={stats} />} // PASSING COMPONENT AS PROP
+      />
 
       <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md py-2.5 -mx-4 px-4 border-b border-white/5 shadow-xl transition-all">
         <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
@@ -72,9 +77,9 @@ export const AnalyticsDashboard = () => {
       <div className="space-y-6 min-h-[600px] relative">
         {activeTab === 'radar' && (
           <div className="space-y-6 animate-fade-in">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1"><AIInsights stats={stats} /></div>
-                <div className="lg:col-span-2"><KPIGrid stats={stats} /></div>
+            {/* GRID UPDATED: REMOVED AI CARD, FULL WIDTH KPI */}
+            <div className="grid grid-cols-1 gap-6">
+                <KPIGrid stats={stats} />
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

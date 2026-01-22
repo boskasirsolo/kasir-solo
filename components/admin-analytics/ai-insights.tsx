@@ -1,11 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Zap, TrendingUp, AlertTriangle, Coffee, Loader2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Sparkles, Zap, TrendingUp, X, Coffee, Loader2, Radar, ShieldAlert, Terminal } from 'lucide-react';
 import { SibosAI } from '../../services/ai/sibos';
+import { SimpleMarkdown } from '../admin-articles/markdown';
 
 export const AIInsights = ({ stats }: { stats: any }) => {
     const [insight, setInsight] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     const generateInsight = async () => {
         if (!stats) return;
@@ -21,56 +24,82 @@ export const AIInsights = ({ stats }: { stats: any }) => {
     };
 
     useEffect(() => {
-        if (stats && !insight) generateInsight();
-    }, [stats]);
+        if (stats && !insight && isOpen) generateInsight();
+    }, [stats, isOpen]);
 
-    return (
-        <div className="bg-brand-dark/80 border border-brand-orange/30 rounded-3xl p-6 relative overflow-hidden shadow-neon-strong">
-            <div className="absolute top-0 right-0 p-8 opacity-5">
-                <Sparkles size={150} className="text-brand-orange" />
-            </div>
-            
-            <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-brand-orange flex items-center justify-center text-white shadow-neon">
-                        <Zap size={20} />
-                    </div>
-                    <div>
-                        <h3 className="text-white font-black text-sm uppercase tracking-widest leading-none">Mata-Mata AI</h3>
-                        <p className="text-[10px] text-gray-500 mt-1 font-bold">ANALISA JALUR SUKSES</p>
-                    </div>
-                </div>
-                <button 
-                    onClick={generateInsight} 
-                    disabled={loading}
-                    className="p-2 bg-white/5 hover:bg-brand-orange/20 text-gray-500 hover:text-brand-orange rounded-lg transition-all"
-                >
-                    {loading ? <Loader2 size={16} className="animate-spin" /> : <TrendingUp size={16} />}
-                </button>
-            </div>
-
-            {loading ? (
-                <div className="py-10 flex flex-col items-center justify-center space-y-4">
-                    <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-brand-orange rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                        <div className="w-2 h-2 bg-brand-orange rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        <div className="w-2 h-2 bg-brand-orange rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                    </div>
-                    <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Sabar Bos, Siboy lagi bedah data...</p>
-                </div>
-            ) : (
-                <div className="prose prose-invert prose-sm max-w-none text-gray-300 leading-relaxed animate-fade-in">
-                    <div className="flex items-start gap-4 bg-brand-orange/5 p-4 rounded-2xl border border-brand-orange/10 mb-4">
-                        <Coffee size={24} className="text-brand-orange shrink-0 mt-1" />
-                        <div className="text-[11px] font-medium italic">
-                            {insight || "Gue belum nemu pola aneh hari ini. Tetep fokus jualan!"}
+    const Modal = () => createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+            <div className="bg-brand-dark border border-brand-orange/30 rounded-3xl w-full max-w-2xl shadow-[0_0_50px_rgba(255,95,31,0.2)] overflow-hidden flex flex-col max-h-[80vh]">
+                {/* Modal Header */}
+                <div className="p-5 border-b border-white/10 bg-brand-card flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-brand-orange/10 rounded-lg text-brand-orange animate-pulse">
+                            <Radar size={20} />
+                        </div>
+                        <div>
+                            <h3 className="text-white font-black text-sm uppercase tracking-widest leading-none">Intelligence Report</h3>
+                            <p className="text-[10px] text-gray-500 font-bold mt-1 uppercase tracking-tighter">Analisa Jalur Sukses SIBOS</p>
                         </div>
                     </div>
-                    <p className="text-[9px] text-gray-600 uppercase font-black tracking-widest text-center mt-4">
-                        Powered by SIBOS AI Engine v5.0
-                    </p>
+                    <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-red-500/20 text-gray-500 hover:text-red-500 rounded-full transition-all">
+                        <X size={24} />
+                    </button>
                 </div>
-            )}
-        </div>
+
+                {/* Modal Body */}
+                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-black/20">
+                    {loading ? (
+                        <div className="py-20 flex flex-col items-center justify-center space-y-6">
+                            <div className="relative">
+                                <Loader2 size={48} className="text-brand-orange animate-spin" />
+                                <Zap size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white animate-pulse" />
+                            </div>
+                            <p className="text-xs font-black text-gray-400 uppercase tracking-[0.3em] animate-pulse">Siboy lagi nyadap trafik lo...</p>
+                        </div>
+                    ) : (
+                        <div className="animate-fade-in">
+                            <div className="flex items-start gap-5 bg-brand-orange/5 p-6 rounded-2xl border border-brand-orange/20 mb-6 shadow-inner">
+                                <div className="p-3 bg-brand-orange/10 rounded-2xl text-brand-orange shrink-0">
+                                    <Coffee size={32} />
+                                </div>
+                                <div className="prose prose-invert prose-sm max-w-none text-gray-300 leading-relaxed italic">
+                                    <SimpleMarkdown content={insight || "Gue belum nemu pola aneh hari ini. Tetep fokus jualan!"} />
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 bg-black/40 rounded-xl border border-white/5">
+                                    <p className="text-[9px] text-gray-600 font-black uppercase mb-1">Status Enkripsi</p>
+                                    <p className="text-[10px] text-green-500 font-bold flex items-center gap-1"><ShieldAlert size={10}/> END-TO-END SECURE</p>
+                                </div>
+                                <div className="p-4 bg-black/40 rounded-xl border border-white/5">
+                                    <p className="text-[9px] text-gray-600 font-black uppercase mb-1">AI Engine</p>
+                                    <p className="text-[10px] text-blue-400 font-bold flex items-center gap-1"><Terminal size={10}/> GEMINI 1.5 PRO</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Modal Footer */}
+                <div className="p-4 bg-brand-dark border-t border-white/5 flex justify-center items-center">
+                    <p className="text-[8px] text-gray-700 font-black uppercase tracking-[0.4em]">Proprietary Intelligence System // PT MKS</p>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+
+    return (
+        <>
+            <button 
+                onClick={() => setIsOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-brand-orange/10 border border-brand-orange/30 rounded-lg text-[10px] font-black text-brand-orange hover:bg-brand-orange hover:text-white transition-all shadow-lg group active:scale-95"
+            >
+                <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
+                MATA-MATA AI
+            </button>
+            {isOpen && <Modal />}
+        </>
     );
 };

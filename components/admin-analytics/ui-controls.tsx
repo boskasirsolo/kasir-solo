@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BarChart3, ShieldCheck, Check, Copy, RefreshCw } from 'lucide-react';
 
@@ -5,12 +6,14 @@ export const DashboardHeader = ({
     period, 
     setPeriod,
     onRefresh,
-    isRefreshing
+    isRefreshing,
+    aiInsights // NEW PROP
 }: { 
     period: number, 
     setPeriod: (d: number) => void,
     onRefresh: () => void,
-    isRefreshing: boolean
+    isRefreshing: boolean,
+    aiInsights?: React.ReactNode // NEW TYPE
 }) => {
     const isGhostMode = typeof window !== 'undefined' && localStorage.getItem('mks_ghost_mode') === 'true';
 
@@ -26,7 +29,10 @@ export const DashboardHeader = ({
                 </div>
             </div>
 
-            <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                {/* AI INSIGHTS BUTTON MOVED HERE */}
+                {aiInsights}
+
                 <button 
                     onClick={onRefresh}
                     disabled={isRefreshing}
@@ -37,19 +43,19 @@ export const DashboardHeader = ({
                 </button>
 
                 {isGhostMode && (
-                    <span className="text-[10px] font-bold text-green-500 flex items-center gap-1 bg-green-900/20 px-3 py-1.5 rounded-full border border-green-500/30 animate-pulse whitespace-nowrap">
+                    <span className="hidden sm:flex text-[10px] font-bold text-green-500 items-center gap-1 bg-green-900/20 px-3 py-1.5 rounded-full border border-green-500/30 animate-pulse whitespace-nowrap">
                         <ShieldCheck size={12}/> Ghost Mode
                     </span>
                 )}
                 
-                <div className="bg-black/40 rounded-lg p-1 border border-white/10 flex w-full md:w-auto">
+                <div className="bg-black/40 rounded-lg p-1 border border-white/10 flex">
                     {[7, 30].map(d => (
                         <button 
                             key={d}
                             onClick={() => setPeriod(d)}
-                            className={`flex-1 md:flex-none px-4 py-1.5 text-xs font-bold rounded-md transition-all ${period === d ? 'bg-brand-orange text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
+                            className={`px-4 py-1.5 text-[10px] font-bold rounded-md transition-all ${period === d ? 'bg-brand-orange text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
                         >
-                            {d} Hari
+                            {d}D
                         </button>
                     ))}
                 </div>
