@@ -7,6 +7,7 @@ import { TabGeneral } from './tab-general';
 import { TabQuota } from './tab-quota';
 import { TabContact } from './tab-contact';
 import { TabSocial } from './tab-social';
+import { TabTracking } from './tab-tracking';
 import { TabSystem } from './tab-system';
 
 export const AdminSettings = ({
@@ -25,6 +26,7 @@ export const AdminSettings = ({
           case 'quota': return <TabQuota {...props} />;
           case 'contact': return <TabContact {...props} />;
           case 'social': return <TabSocial {...props} />;
+          case 'tracking': return <TabTracking {...props} />;
           case 'system': return <TabSystem {...props} />;
           default: return null;
       }

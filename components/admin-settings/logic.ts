@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { SiteConfig } from '../../types';
-import { supabase, callGeminiWithRotation, CONFIG, renameFile, normalizePhone, uploadToSupabase } from '../../utils';
+import { supabase, callGeminiWithRotation, uploadToSupabase } from '../../utils';
 import { SettingsState, SettingsTabId } from './types';
 
 export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) => void) => {
@@ -17,6 +17,7 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
         isTogglingMaintenance: false
     });
 
+    // Sinkronisasi preview saat config luar berubah
     useEffect(() => {
         setState(prev => ({
             ...prev,
@@ -45,29 +46,13 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
         }
     };
 
-    // --- HELPER: CLEAN JSON FROM AI ---
-    const cleanJsonResponse = (text: string) => {
-        try {
-            // Hilangkan blok markdown ```json ... ``` atau ``` ... ```
-            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-            return JSON.parse(cleanText);
-        } catch (e) {
-            console.error("[Settings] JSON Parse Error. Raw Text:", text);
-            return null;
-        }
-    };
-
     const toggleMaintenanceInstant = async () => {
         if (!supabase) return;
         setState(p => ({ ...p, isTogglingMaintenance: true }));
         const nextState = !config.is_maintenance_mode;
         
         try {
-            const { error } = await supabase
-                .from('site_settings')
-                .update({ is_maintenance_mode: nextState })
-                .eq('id', 1);
-
+            const { error } = await supabase.from('site_settings').update({ is_maintenance_mode: nextState }).eq('id', 1);
             if (error) throw error;
             setConfig({ ...config, is_maintenance_mode: nextState });
         } catch (e: any) {
@@ -80,40 +65,23 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
     const generateHeroContent = async () => {
         setState(p => ({ ...p, isGenerating: true }));
         try {
-            const prompt = `Role: Senior High-Conversion Copywriter. 
-            Company: 'PT MESIN KASIR SOLO'. 
-            Task: Generate Hero Header (H1) and Subtitle for the homepage.
-            Context for current promo: "${state.magicContext || "General Branding"}". 
-            Tone: Aggressive, Professional, Street-smart.
-            
-            STRICT STYLE GUIDE:
-            - Use {word} to highlight words in ORANGE.
-            - Use [word] to highlight words in GRADIENT.
-            - Use \\n for manual line breaks to make the layout punchy.
-            Example: "AKHIRI ERA\\n{BONCOS}" or "Pusat [Mesin Kasir]\\nTerpercaya".
-            
-            Output: STIRCT JSON format { "heroTitle": "string", "heroSubtitle": "string" }. No other text.`;
-
+            const prompt = `Role: Senior Copywriter. Company: 'PT MESIN KASIR SOLO'. Task: Generate Hero Header (H1) and Subtitle. Context: "${state.magicContext}". Format: JSON { "heroTitle": "string", "heroSubtitle": "string" }. Rules: Use {word} for orange accent, [word] for gradient, \\n for breaks.`;
             const result = await callGeminiWithRotation({
                 model: 'gemini-3-flash-preview',
                 contents: [{ parts: [{ text: prompt }] }],
                 config: { responseMimeType: "application/json" }
             });
 
-            const rawText = result.text || "";
-            const data = cleanJsonResponse(rawText);
-
+            const data = JSON.parse(result.text.replace(/```json/g, '').replace(/```/g, '').trim());
             if (data && data.heroTitle) {
                 setConfig({ 
                     ...config, 
                     hero_title: data.heroTitle.replace(/\\n/g, '\n'), 
                     hero_subtitle: (data.heroSubtitle || config.hero_subtitle).replace(/\\n/g, '\n')
                 });
-            } else {
-                throw new Error("AI ngasih format rusak, coba lagi Bos.");
             }
         } catch (e: any) {
-            alert("Gagal generate: " + e.message);
+            alert("Gagal racik mantera: " + e.message);
         } finally {
             setState(p => ({ ...p, isGenerating: false }));
         }
@@ -136,15 +104,14 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
             }
 
             const finalConfig = { ...config, about_image: finalAboutImage, founder_portrait: finalFounderImage };
-            setConfig(finalConfig);
-
             const { error } = await supabase.from('site_settings').upsert({ id: 1, ...finalConfig });
             if (error) throw error;
             
-            alert("Pengaturan berhasil disimpan!");
+            setConfig(finalConfig);
+            alert("Pengaturan berhasil dicairkan!");
             setState(p => ({ ...p, aboutImageFile: null, founderImageFile: null }));
         } catch (e: any) {
-            alert("Gagal menyimpan: " + e.message);
+            alert("Gagal simpan: " + e.message);
         } finally {
             setState(p => ({ ...p, isSaving: false }));
         }

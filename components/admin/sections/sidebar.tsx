@@ -4,7 +4,7 @@ import {
     ShoppingBag, Package, LayoutGrid, Image, Settings, 
     LogOut, FileText, Briefcase, 
     BarChart, Download, Share2, Globe, Cpu, 
-    Bot, BookOpen, Users, X, Box, Zap, Wrench, ArrowUpRight, Database
+    Bot, BookOpen, Users, X, Box, Zap, Wrench, ArrowUpRight, Database, Quote
 } from 'lucide-react';
 import { AdminTabId, MenuCategory } from '../types';
 import { SidebarTabButton, SidebarGroupHeader, SystemHealthWidget } from '../ui-parts';
@@ -12,20 +12,21 @@ import { SidebarTabButton, SidebarGroupHeader, SystemHealthWidget } from '../ui-
 export const MENU_GROUPS: MenuCategory[] = [
     { id: 'radar', label: 'Intelligence', items: ['analytics', 'crm', 'seo'] },
     { id: 'ops', label: 'Operations', items: ['store', 'rma'] },
-    { id: 'content', label: 'Asset Library', items: ['articles', 'gallery', 'media', 'downloads'] },
+    { id: 'content', label: 'Asset Library', items: ['articles', 'gallery', 'testimonials', 'media', 'downloads'] },
     { id: 'growth', label: 'Expansion', items: ['social', 'career'] },
     { id: 'core', label: 'System Core', items: ['siboy', 'documentation', 'settings'] }
 ];
 
 export const ICON_MAP: Record<string, any> = {
     analytics: BarChart, crm: Users, seo: Globe, store: ShoppingBag, rma: Wrench,
-    articles: FileText, gallery: Image, media: Database, downloads: Download, social: Share2,
+    articles: FileText, gallery: Image, testimonials: Quote, media: Database, downloads: Download, social: Share2,
     career: Briefcase, siboy: Bot, documentation: BookOpen, settings: Settings
 };
 
 export const LABEL_MAP: Record<string, string> = {
     analytics: 'Radar Trafik', crm: 'Sales War Room', seo: 'SEO Engine', store: 'Toko & Produk',
     rma: 'Klaim Garansi', articles: 'Intel Artikel', gallery: 'Portfolio Proyek',
+    testimonials: 'Testimoni Klien',
     media: 'Digital Vault', downloads: 'File Center', social: 'Social Studio', career: 'HR Recruitment',
     siboy: 'AI Trainer', documentation: 'War Manual', settings: 'Setting Core'
 };
@@ -77,11 +78,11 @@ export const Sidebar = ({ isOpen, onClose, activeTab, onTabChange, onLogout }: S
                         {group.items.map(tabId => (
                             <SidebarTabButton 
                                 key={tabId}
-                                id={tabId}
+                                id={tabId as any}
                                 label={LABEL_MAP[tabId].split(' ')[0]}
                                 icon={ICON_MAP[tabId]}
                                 isActive={activeTab === tabId}
-                                onClick={() => { onTabChange(tabId); if(window.innerWidth < 1024) onClose(); }}
+                                onClick={() => { onTabChange(tabId as any); if(window.innerWidth < 1024) onClose(); }}
                             />
                         ))}
                     </div>

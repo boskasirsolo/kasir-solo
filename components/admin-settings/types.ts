@@ -1,7 +1,7 @@
 
 import { SiteConfig } from '../../types';
 
-export type SettingsTabId = 'general' | 'contact' | 'social' | 'quota' | 'system';
+export type SettingsTabId = 'general' | 'contact' | 'social' | 'quota' | 'tracking' | 'system';
 
 export interface SettingsState {
     activeTab: SettingsTabId;
@@ -24,7 +24,6 @@ export interface SettingsActions {
     handleUrlSelect: (target: 'about' | 'founder', url: string) => void;
     saveSettings: () => Promise<void>;
     generateHeroContent: () => Promise<void>;
-    // NEW: Action for instant save
     toggleMaintenanceInstant: () => Promise<void>;
 }
 

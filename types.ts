@@ -29,6 +29,8 @@ export interface SiteConfig {
   linkedin_url?: string;
   google_analytics_id?: string;
   google_search_console_code?: string;
+  /* FIX: Add missing property google_merchant_id to SiteConfig */
+  google_merchant_id?: string;
   is_maintenance_mode?: boolean;
   /* FIX: Add missing property is_noindex to SiteConfig */
   is_noindex?: boolean;

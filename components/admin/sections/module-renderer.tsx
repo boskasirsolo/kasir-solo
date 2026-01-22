@@ -15,10 +15,11 @@ const AdminProducts = lazy(() => import('../../admin-products/index').then(m => 
 const AdminServices = lazy(() => import('../../admin-services/index').then(m => ({ default: m.AdminServices })));
 const AdminArticles = lazy(() => import('../../admin-articles/index').then(m => ({ default: m.AdminArticles })));
 const AdminGallery = lazy(() => import('../../admin-gallery/index').then(m => ({ default: m.AdminGallery })));
+const AdminTestimonials = lazy(() => import('../testimonials/index').then(m => ({ default: m.AdminTestimonials })));
 const AdminCareer = lazy(() => import('../../admin-career/index').then(m => ({ default: m.AdminCareer })));
+const AdminMedia = lazy(() => import('../../admin-media/index').then(m => ({ default: m.AdminMedia })));
 const AdminDownloads = lazy(() => import('../../admin-downloads/index').then(m => ({ default: m.AdminDownloads })));
 const AdminSocialStudio = lazy(() => import('../../admin-social/index').then(m => ({ default: m.AdminSocialStudio })));
-const AdminMedia = lazy(() => import('../../admin-media/index').then(m => ({ default: m.AdminMedia })));
 const SibosTrainer = lazy(() => import('../sibos-trainer/index').then(m => ({ default: m.SibosTrainer })));
 const AdminDocumentation = lazy(() => import('../documentation/index').then(m => ({ default: m.AdminDocumentation })));
 const AdminSettings = lazy(() => import('../../admin-settings/index').then(m => ({ default: m.AdminSettings })));
@@ -65,6 +66,7 @@ export const ModuleRenderer = ({
                         );
                     case 'rma': return <AdminRMA />;
                     case 'gallery': return <AdminGallery gallery={props.gallery} setGallery={props.setGallery} testimonials={props.testimonials} setTestimonials={props.setTestimonials} />;
+                    case 'testimonials': return <AdminTestimonials testimonials={props.testimonials} setTestimonials={props.setTestimonials} />;
                     case 'articles': return <AdminArticles articles={props.articles} setArticles={props.setArticles} gallery={props.gallery} config={props.config} products={props.products} />;
                     case 'career': return <AdminCareer jobs={props.jobs} setJobs={props.setJobs} />;
                     case 'media': return <AdminMedia />;

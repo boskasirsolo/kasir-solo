@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
@@ -23,6 +22,7 @@ const ArticlesPage = lazy(() => import('./pages/articles').then(module => ({ def
 const ArticleDetailPage = lazy(() => import('./pages/articles').then(module => ({ default: module.ArticleDetailPage })));
 const AboutPage = lazy(() => import('./pages/about').then(module => ({ default: module.AboutPage })));
 const VisionPage = lazy(() => import('./pages/vision').then(module => ({ default: module.VisionPage })));
+const CalendarPage = lazy(() => import('./pages/career').then(module => ({ default: module.CareerPage }))); // Renamed for avoidance of confusion
 const CareerPage = lazy(() => import('./pages/career').then(module => ({ default: module.CareerPage })));
 const ContactPage = lazy(() => import('./pages/contact').then(module => ({ default: module.ContactPage })));
 const AdminPage = lazy(() => import('./pages/admin')); 
@@ -164,10 +164,10 @@ const AppContent = () => {
             <Route path="/career" element={<CareerPage jobs={jobs} />} />
             <Route path="/contact" element={<ContactPage config={config} />} /> 
             <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} config={config} />} />
-            <Route path="/innovation" element={<InnovationPage config={config} />} />
-            <Route path="/innovation/sibos" element={<SibosPage config={config} />} />
-            <Route path="/innovation/qalam" element={<QalamPage config={config} />} />
-            <Route path="/innovation/dapur-sppg-mbg" element={<DapurSppgPage config={config} />} />
+            <Route path="/inovasi" element={<InnovationPage config={config} />} />
+            <Route path="/inovasi/sibos" element={<SibosPage config={config} />} />
+            <Route path="/inovasi/qalam" element={<QalamPage config={config} />} />
+            <Route path="/inovasi/dapur-sppg-mbg" element={<DapurSppgPage config={config} />} />
             <Route path="/support" element={<SupportPage config={config} />} />
             <Route path="/track-order" element={<TrackOrderPage config={config} />} />
             <Route path="/legal/:type" element={<LegalPage config={config} />} />
