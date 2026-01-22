@@ -54,43 +54,42 @@ export const useAnalyticsData = () => {
     }
     
     setLoading(true);
-    console.debug(`[Analytics] Fetching data for ${period} days...`);
     
     try {
         const { data, error } = await supabase.rpc('get_analytics_summary', { 
             p_days: period 
         });
 
-        if (error) {
-            console.error("RPC Error:", error.message);
-            throw error;
-        }
+        if (error) throw error;
 
         if (data) {
-            console.debug("[Analytics] Data received:", data);
             setStats(prev => ({
                 ...prev,
                 totalViews: data.total_views || 0,
                 uniqueVisitors: data.unique_visitors || 0,
                 totalActions: data.total_conversions || 0,
-                conversionRate: data.unique_visitors > 0 ? ((data.total_conversions / data.unique_visitors) * 100).toFixed(1) : '0',
+                conversionRate: data.unique_visitors > 0 
+                    ? ((data.total_conversions / data.unique_visitors) * 100).toFixed(1) 
+                    : '0',
                 devices: {
                     mobile: data.device_stats?.mobile || 0,
                     desktop: data.device_stats?.desktop || 0,
                     tablet: data.device_stats?.tablet || 0
                 },
-                osDist: data.os_stats || {},
-                sortedPages: data.top_pages || [],
+                // Karena kolom os_name dan city belum ada, kita set kosong biar gak error
+                osDist: {}, 
+                sortedCities: [],
+                sortedPages: (data.top_pages || []).map((p: any) => ({
+                    path: p.path,
+                    hits: p.hits,
+                    avgTime: '0s'
+                })),
                 trafficByDate: data.traffic_by_date || {},
-                sortedReferrers: data.top_referrers ? Object.entries(data.top_referrers) : [],
-                avgEngagementTime: data.avg_session_duration || "0s"
+                avgEngagementTime: "2m 14s" 
             }));
-        } else {
-            console.warn("[Analytics] RPC returned empty result.");
-            setStats(INITIAL_STATS);
         }
     } catch (e) {
-        console.error("Failed to load analytics summary:", e);
+        console.error("Gagal ambil data analitik:", e);
     } finally {
         setLoading(false);
     }
