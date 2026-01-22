@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { TabProps } from './types';
 import { SettingsSection, ImageUploader } from './ui-atoms';
 import { Input, TextArea } from '../ui';
-import { Smartphone, Mail, Building, ShieldCheck, MapPin } from 'lucide-react';
+import { Smartphone, Mail, Building, ShieldCheck, MapPin, CreditCard, Landmark, UserCheck } from 'lucide-react';
 import { MediaLibraryModal } from '../admin/media-library';
 
 export const TabContact = ({ config, setConfig, state, actions }: TabProps) => {
@@ -29,68 +29,100 @@ export const TabContact = ({ config, setConfig, state, actions }: TabProps) => {
                 />
             )}
 
-            {/* 1. IDENTITAS & KONTAK */}
-            <SettingsSection title="Identitas & Kontak" desc="Data resmi perusahaan dan jalur komunikasi utama.">
-                <div className="bg-brand-dark/30 p-5 rounded-2xl border border-white/5 space-y-6">
-                    <div>
-                        <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest flex items-center gap-1"><Building size={10}/> Nama Resmi Perusahaan (PT)</label>
-                        <Input value={config.company_legal_name || ''} onChange={(e) => setConfig({...config, company_legal_name: e.target.value})} placeholder="PT MESIN KASIR SOLO" className="bg-black/40 font-bold" />
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block flex items-center gap-1"><Smartphone size={10}/> WhatsApp Business</label>
-                            <Input value={config.whatsapp_number || ''} onChange={(e) => setConfig({...config, whatsapp_number: e.target.value})} placeholder="628xxx" className="bg-black/40" />
+            <div className="grid grid-cols-1 lg:grid-cols-10 gap-10 items-start">
+                {/* 1. KOLOM KIRI (30%) - ASET VISUAL VERTIKAL */}
+                <div className="lg:col-span-3 space-y-8">
+                    <SettingsSection title="Aset Visual" desc="Branding Kantor & Founder.">
+                        <div className="flex flex-col gap-8 bg-brand-dark/30 p-5 rounded-2xl border border-white/5">
+                            <ImageUploader 
+                                label="Foto Kantor" 
+                                previewUrl={state.aboutImagePreview} 
+                                onSelect={(f) => actions.handleImageSelect('about', f)}
+                                onGalleryPick={() => openMediaLib('about')}
+                                helperText="Ratio: Landscape (Halaman About)"
+                            />
+                            <div className="h-px bg-white/5 w-full"></div>
+                            <ImageUploader 
+                                label="Foto Founder" 
+                                previewUrl={state.founderImagePreview} 
+                                onSelect={(f) => actions.handleImageSelect('founder', f)}
+                                onGalleryPick={() => openMediaLib('founder')}
+                                aspect="portrait"
+                                helperText="Ratio: Portrait (Section Trust)"
+                            />
                         </div>
+                    </SettingsSection>
+                </div>
+
+                {/* 2. KOLOM KANAN (70%) - DATA BISNIS */}
+                <div className="lg:col-span-7 space-y-8">
+                    {/* IDENTITAS */}
+                    <div className="bg-brand-dark/30 p-6 rounded-2xl border border-white/5 space-y-6">
+                        <h4 className="text-[10px] font-black text-brand-orange uppercase tracking-[0.2em] flex items-center gap-2 mb-2">
+                           <Building size={12}/> Identitas Bisnis
+                        </h4>
                         <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block flex items-center gap-1"><Mail size={10}/> Email Support</label>
-                            <Input value={config.email_address || ''} onChange={(e) => setConfig({...config, email_address: e.target.value})} placeholder="admin@kasirsolo.my.id" className="bg-black/40" />
+                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">Nama Resmi Perusahaan (PT)</label>
+                            <Input value={config.company_legal_name || ''} onChange={(e) => setConfig({...config, company_legal_name: e.target.value})} placeholder="PT MESIN KASIR SOLO" className="bg-black/40 font-bold" />
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block flex items-center gap-1"><Smartphone size={10}/> WhatsApp Business</label>
+                                <Input value={config.whatsapp_number || ''} onChange={(e) => setConfig({...config, whatsapp_number: e.target.value})} placeholder="628xxx" className="bg-black/40" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block flex items-center gap-1"><Mail size={10}/> Email Support</label>
+                                <Input value={config.email_address || ''} onChange={(e) => setConfig({...config, email_address: e.target.value})} placeholder="admin@kasirsolo.my.id" className="bg-black/40" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* LEGALITAS */}
+                    <div className="bg-brand-dark/30 p-6 rounded-2xl border border-white/5 space-y-6">
+                        <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] flex items-center gap-2 mb-2">
+                           <ShieldCheck size={12}/> Dokumen Hukum
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">NIB</label>
+                                <Input value={config.nib_number || ''} onChange={(e) => setConfig({...config, nib_number: e.target.value})} placeholder="1234xxx" className="bg-black/40 text-xs" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">SK AHU</label>
+                                <Input value={config.ahu_number || ''} onChange={(e) => setConfig({...config, ahu_number: e.target.value})} placeholder="AHU-xxx" className="bg-black/40 text-xs" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">NPWP</label>
+                                <Input value={config.npwp_number || ''} onChange={(e) => setConfig({...config, npwp_number: e.target.value})} placeholder="XX.XXX..." className="bg-black/40 text-xs" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* REKENING */}
+                    <div className="bg-brand-dark/30 p-6 rounded-2xl border border-white/5 space-y-6">
+                        <h4 className="text-[10px] font-black text-green-500 uppercase tracking-[0.2em] flex items-center gap-2 mb-2">
+                           <CreditCard size={12}/> Rekening Perusahaan
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block flex items-center gap-1"><Landmark size={10}/> Bank</label>
+                                <Input value={config.bank_name || ''} onChange={(e) => setConfig({...config, bank_name: e.target.value})} placeholder="BNC, BCA, Mandiri..." className="bg-black/40 text-xs font-bold" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block">Nomor Rekening</label>
+                                <Input value={config.bank_account_number || ''} onChange={(e) => setConfig({...config, bank_account_number: e.target.value})} placeholder="5859xxx" className="bg-black/40 text-xs font-mono" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block flex items-center gap-1"><UserCheck size={10}/> Atas Nama</label>
+                                <Input value={config.bank_account_name || ''} onChange={(e) => setConfig({...config, bank_account_name: e.target.value})} placeholder="PT MESIN KASIR SOLO" className="bg-black/40 text-xs" />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </SettingsSection>
+            </div>
 
-            {/* 2. ASET VISUAL */}
-            <SettingsSection title="Aset Visual" desc="Foto representatif perusahaan dan personal branding.">
-                <div className="grid md:grid-cols-2 gap-6 bg-brand-dark/30 p-5 rounded-2xl border border-white/5">
-                    <ImageUploader 
-                        label="Foto Kantor (Landscape)" 
-                        previewUrl={state.aboutImagePreview} 
-                        onSelect={(f) => actions.handleImageSelect('about', f)}
-                        onGalleryPick={() => openMediaLib('about')}
-                        helperText="Akan muncul di halaman About & Contact."
-                    />
-                    <ImageUploader 
-                        label="Foto Founder (Portrait)" 
-                        previewUrl={state.founderImagePreview} 
-                        onSelect={(f) => actions.handleImageSelect('founder', f)}
-                        onGalleryPick={() => openMediaLib('founder')}
-                        aspect="portrait"
-                        helperText="Digunakan untuk seksi personal branding."
-                    />
-                </div>
-            </SettingsSection>
-
-            {/* 3. LEGALITAS (COMPACT GRID) */}
-            <SettingsSection title="Legalitas Hukum" desc="Nomor izin resmi yang valid di sistem pemerintahan.">
-                <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block flex items-center gap-1"><ShieldCheck size={10}/> NIB</label>
-                            <Input value={config.nib_number || ''} onChange={(e) => setConfig({...config, nib_number: e.target.value})} placeholder="1234xxx" className="bg-brand-dark/50 text-xs" />
-                        </div>
-                        <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block flex items-center gap-1"><ShieldCheck size={10}/> SK AHU</label>
-                            <Input value={config.ahu_number || ''} onChange={(e) => setConfig({...config, ahu_number: e.target.value})} placeholder="AHU-xxx" className="bg-brand-dark/50 text-xs" />
-                        </div>
-                        <div>
-                            <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block flex items-center gap-1"><ShieldCheck size={10}/> NPWP</label>
-                            <Input value={config.npwp_number || ''} onChange={(e) => setConfig({...config, npwp_number: e.target.value})} placeholder="XX.XXX..." className="bg-brand-dark/50 text-xs" />
-                        </div>
-                    </div>
-                </div>
-            </SettingsSection>
-
-            {/* 4. LOKASI FISIK */}
+            {/* 3. LOKASI FISIK (BAWAH, TETAP) */}
+            <div className="h-px bg-white/5 w-full"></div>
             <SettingsSection title="Lokasi Markas" desc="Titik koordinat dan alamat fisik kantor.">
                 <div className="grid md:grid-cols-2 gap-6">
                     {/* SOLO */}
