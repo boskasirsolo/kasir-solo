@@ -14,45 +14,47 @@ export const SettingsSection = ({ title, desc, children }: { title: string, desc
 );
 
 export const HeroCheatSheet = () => (
-    <div className="bg-brand-dark/80 border border-brand-orange/20 rounded-2xl p-5 mb-6 relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Zap size={80} className="text-brand-orange" />
+    <div className="bg-brand-dark/80 border border-brand-orange/20 rounded-2xl p-5 relative overflow-hidden group h-full">
+        <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Zap size={40} className="text-brand-orange" />
         </div>
         
-        <h4 className="text-brand-orange text-[10px] font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-            <Info size={14} /> Mantra Visual Hero (Cheat Codes)
+        <h4 className="text-brand-orange text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+            <Info size={14} /> Mantra Visual
         </h4>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+        <div className="flex flex-col gap-5 relative z-10">
             {/* Rule 1: Orange */}
             <div className="p-3 bg-black/40 rounded-xl border border-white/5 hover:border-brand-orange/30 transition-all">
-                <p className="text-[9px] text-gray-500 font-bold uppercase mb-2">Warna Orange Brand</p>
-                <code className="text-xs text-white bg-white/5 px-2 py-1 rounded block mb-2">{"{Teks Lo}"}</code>
-                <p className="text-[10px] text-brand-orange font-black italic">Preview: Teks Lo</p>
+                <p className="text-[9px] text-gray-500 font-bold uppercase mb-2">Orange Brand</p>
+                <code className="text-[10px] text-white bg-white/5 px-2 py-1 rounded block mb-2 font-mono">{"{Teks}"}</code>
+                <p className="text-[10px] text-brand-orange font-black italic">Preview: Teks</p>
             </div>
 
             {/* Rule 2: Gradient */}
             <div className="p-3 bg-black/40 rounded-xl border border-white/5 hover:border-blue-500/30 transition-all">
-                <p className="text-[9px] text-gray-500 font-bold uppercase mb-2">Efek Gradasi Mewah</p>
-                <code className="text-xs text-white bg-white/5 px-2 py-1 rounded block mb-2">{"[Teks Lo]"}</code>
-                <p className="text-[10px] text-transparent bg-clip-text bg-brand-gradient font-black italic">Preview: Teks Lo</p>
+                <p className="text-[9px] text-gray-500 font-bold uppercase mb-2">Gradasi Mewah</p>
+                <code className="text-[10px] text-white bg-white/5 px-2 py-1 rounded block mb-2 font-mono">{"[Teks]"}</code>
+                <p className="text-[10px] text-transparent bg-clip-text bg-brand-gradient font-black italic">Preview: Teks</p>
             </div>
 
             {/* Rule 3: Line Break */}
             <div className="p-3 bg-black/40 rounded-xl border border-white/5 hover:border-green-500/30 transition-all">
-                <p className="text-[9px] text-gray-500 font-bold uppercase mb-2">Ganti Baris Baru</p>
-                <div className="flex items-center gap-2 mb-2">
-                   <code className="text-xs text-white bg-white/5 px-2 py-1 rounded">Enter</code>
-                   <span className="text-[10px] text-gray-600">atau</span>
-                   <code className="text-xs text-white bg-white/5 px-2 py-1 rounded">\n</code>
+                <p className="text-[9px] text-gray-500 font-bold uppercase mb-2">Ganti Baris</p>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                   <code className="text-[10px] text-white bg-white/5 px-1.5 py-1 rounded font-mono">Enter</code>
+                   <span className="text-[9px] text-gray-600">atau</span>
+                   <code className="text-[10px] text-white bg-white/5 px-1.5 py-1 rounded font-mono">\n</code>
                 </div>
-                <p className="text-[10px] text-gray-400 leading-tight">Bikin judul lo <br/>jadi dua baris.</p>
+                <p className="text-[9px] text-gray-400 leading-tight">Bikin judul jadi <br/>dua baris atau lebih.</p>
             </div>
         </div>
         
-        <p className="text-[9px] text-gray-600 mt-4 italic">
-            *Tips: Jangan pake efek kebanyakan biar gak pusing liatnya, Bos. Satu seksi satu efek aja udah mantap.
-        </p>
+        <div className="mt-8 pt-4 border-t border-white/5">
+             <p className="text-[8px] text-gray-600 uppercase font-black tracking-widest leading-relaxed">
+                *Satu seksi satu efek aja udah mantap, Bos.
+             </p>
+        </div>
     </div>
 );
 
@@ -60,14 +62,14 @@ export const ImageUploader = ({
     label, 
     previewUrl, 
     onSelect, 
-    onGalleryPick, // NEW PROP
+    onGalleryPick, 
     aspect = 'landscape',
     helperText 
 }: { 
     label: string, 
     previewUrl: string, 
     onSelect: (f: File) => void,
-    onGalleryPick?: () => void, // Optional
+    onGalleryPick?: () => void,
     aspect?: 'landscape' | 'portrait',
     helperText?: string
 }) => {
@@ -80,7 +82,6 @@ export const ImageUploader = ({
             <div className="flex gap-4 items-start">
                 <div className={`${hClass} bg-black rounded-lg overflow-hidden border border-white/10 shrink-0 relative group`}>
                     <img src={previewUrl || "https://via.placeholder.com/150"} className="w-full h-full object-cover" />
-                    {/* Hover Actions in Image */}
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                         <button onClick={() => inputRef.current?.click()} className="p-1 bg-white/20 hover:bg-white/40 rounded text-white" title="Upload Baru">
                             <UploadCloud size={14} />
@@ -137,20 +138,20 @@ export const AIGeneratorBox = ({
     onGenerate: () => void, 
     isGenerating: boolean 
 }) => (
-    <div className="bg-brand-dark/50 p-3 rounded-xl border border-white/10 flex flex-col md:flex-row gap-3 items-end mb-6">
+    <div className="bg-brand-dark/50 p-4 rounded-2xl border border-white/10 flex flex-col md:flex-row gap-4 items-end mb-6">
         <div className="flex-1 w-full">
-            <label className="text-[10px] text-blue-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
+            <label className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1">
                 <Sparkles size={12}/> AI Copywriter
             </label>
             <Input 
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
-                placeholder="Konteks: 'Promo Lebaran', 'Kasir Cafe'..."
-                className="bg-black/40 text-xs h-9"
+                placeholder="Konteks promo, gaya bicara, dll..."
+                className="bg-black/40 text-sm h-11"
             />
         </div>
-        <Button onClick={onGenerate} disabled={isGenerating} variant="outline" className="w-full md:w-auto h-9 text-[10px] px-6">
-            {isGenerating ? <Loader2 size={12} className="animate-spin"/> : 'GENERATE HERO'}
+        <Button onClick={onGenerate} disabled={isGenerating} variant="outline" className="w-full md:w-auto h-11 text-[10px] px-8 border-brand-orange/40 text-brand-orange">
+            {isGenerating ? <Loader2 size={14} className="animate-spin"/> : 'GENERATE'}
         </Button>
     </div>
 );
