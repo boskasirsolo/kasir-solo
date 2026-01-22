@@ -10,6 +10,7 @@ import { Header } from './header';
 import { Footer } from './footer';
 import { ScrollToTop } from './ui/scroll-top';
 import { SocialPulseWidget } from '../shared/social-pulse-widget';
+import { CartDrawer } from '../shared/cart-drawer';
 
 const SibosWidget = lazy(() => import('../sibos-core/index').then(module => ({ default: module.SibosWidget })));
 
@@ -68,6 +69,7 @@ export const Layout = ({
       <ScrollToTop />
       
       <SocialPulseWidget event={currentEvent} />
+      <CartDrawer />
 
       <Suspense fallback={null}>
         <SibosWidget products={INITIAL_PRODUCTS} isAdmin={false} currentPage={currentPage} setConfig={setConfig} session={session} />

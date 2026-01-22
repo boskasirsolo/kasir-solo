@@ -14,7 +14,7 @@ export const Header = ({
   setPage: (p: string) => void 
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { totalItems } = useCart(); 
+  const { totalItems, setCartOpen } = useCart(); 
 
   return (
     <>
@@ -34,7 +34,7 @@ export const Header = ({
           <div className="flex items-center gap-4">
              {/* Desktop Cart */}
              <div className="hidden lg:block">
-                <CartIcon count={totalItems} onClick={() => setPage('checkout')} />
+                <CartIcon count={totalItems} onClick={() => setCartOpen(true)} />
              </div>
              
              {/* Desktop CTA */}
@@ -42,7 +42,7 @@ export const Header = ({
 
              {/* Mobile Cart & Toggle */}
              <div className="flex items-center gap-4 lg:hidden">
-                <CartIcon count={totalItems} onClick={() => { setPage('checkout'); setIsMenuOpen(false); }} mobile />
+                <CartIcon count={totalItems} onClick={() => { setCartOpen(true); setIsMenuOpen(false); }} mobile />
                 <MenuToggle isOpen={isMenuOpen} onClick={() => setIsMenuOpen(!isMenuOpen)} />
              </div>
           </div>

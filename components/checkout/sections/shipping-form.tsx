@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { Ticket, Loader2, ArrowLeft } from 'lucide-react';
+import { Ticket, Loader2, ArrowLeft, ShieldAlert } from 'lucide-react';
 import { Input, TextArea, Button, LoadingSpinner } from '../../ui';
 import { formatRupiah } from '../../../utils';
 
 export const ShippingForm = ({ 
     formData, onChange, onBlur, onSubmit, isSubmitting, subtotalPrice, totalPrice, discount, 
-    couponInput, setCouponInput, applyCoupon, isValidatingCoupon, agreed, setAgreed, onBack 
+    couponInput, setCouponInput, applyCoupon, isValidatingCoupon, agreed, onToggleTerms, onBack 
 }: any) => {
     return (
         <div className="p-4 md:p-2">
@@ -50,12 +50,22 @@ export const ShippingForm = ({
                         </div>
                     </div>
 
-                    <div className="mt-6 p-4 bg-brand-orange/5 border border-brand-orange/20 rounded-xl">
-                        <label className="flex items-start gap-3 cursor-pointer select-none">
-                            <input type="checkbox" className="mt-1" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}/>
-                            <p className="text-[10px] text-gray-400 leading-relaxed">
-                                Saya menyetujui bahwa data yang diisi sudah benar. Pesanan tidak dapat dibatalkan setelah pembayaran dikonfirmasi.
-                            </p>
+                    <div className={`mt-6 p-4 rounded-xl border transition-all duration-300 ${agreed ? 'bg-green-500/10 border-green-500/30' : 'bg-brand-orange/5 border-brand-orange/20'}`}>
+                        <label className="flex items-start gap-4 cursor-pointer select-none group">
+                            <input 
+                                type="checkbox" 
+                                className="mt-1 w-5 h-5 accent-brand-orange cursor-pointer" 
+                                checked={agreed} 
+                                onChange={onToggleTerms}
+                            />
+                            <div>
+                                <p className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${agreed ? 'text-green-400' : 'text-brand-orange'}`}>
+                                    {agreed ? 'SAYA SETUJU & SIAP ORDER' : 'BACA DULU ATURAN MAINNYA'}
+                                </p>
+                                <p className="text-[10px] text-gray-400 leading-relaxed group-hover:text-gray-300">
+                                    Klik di sini untuk membaca Syarat & Ketentuan. Pesanan tidak dapat dibatalkan setelah pembayaran dikonfirmasi.
+                                </p>
+                            </div>
                         </label>
                     </div>
 

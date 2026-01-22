@@ -9,6 +9,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
     const [formData, setFormData] = useState<CheckoutFormData>({ name: '', phone: '', address: '', note: '' });
     const [couponInput, setCouponInput] = useState('');
     const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState<OrderSuccessState | null>(null);
@@ -22,7 +23,6 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
 
         if (captureTimeout.current) clearTimeout(captureTimeout.current);
         
-        // Debounce 2 detik biar gak nyampah ke DB
         captureTimeout.current = setTimeout(async () => {
             const cleanPhone = normalizePhone(formData.phone);
             if (!cleanPhone || !supabase) return;
@@ -44,7 +44,6 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                     notes: report,
                     status: 'new'
                 }], { onConflict: 'phone' });
-                console.log("[SIBOS] Shadow captured.");
             } catch (e) {}
         }, 2000);
 
@@ -68,6 +67,19 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             setDiscount({ code: coupon.code, type: coupon.discount_type, value: coupon.discount_value, amount: amount });
             alert("🔥 PROMO DIAKTIFKAN!");
         } catch (e: any) { alert(e.message); setDiscount(null); } finally { setIsValidatingCoupon(false); }
+    };
+
+    const handleCheckboxClick = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked && !agreedToTerms) {
+            setShowTermsModal(true);
+        } else if (!e.target.checked) {
+            setAgreedToTerms(false);
+        }
+    };
+
+    const confirmTerms = () => {
+        setAgreedToTerms(true);
+        setShowTermsModal(false);
     };
 
     const submitOrder = async (e: React.FormEvent) => {
@@ -101,9 +113,10 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
     return {
         cart, removeFromCart, updateQuantity, subtotalPrice, totalPrice, discount, setDiscount,
         formData, handleFieldChange: (f: any, v: any) => setFormData(p => ({...p, [f]: v})),
-        handleBlur: () => {}, // Handled by useEffect
+        handleBlur: () => {},
         couponInput, setCouponInput, isValidatingCoupon, applyCoupon,
-        agreedToTerms, setAgreedToTerms, isSubmitting, submitOrder, 
+        agreedToTerms, handleCheckboxClick, showTermsModal, setShowTermsModal, confirmTerms,
+        isSubmitting, submitOrder, 
         orderSuccess, setOrderSuccess, clearCart,
         step, setStep
     };

@@ -20,6 +20,8 @@ interface CartContextType {
   discount: DiscountInfo | null;
   setDiscount: (d: DiscountInfo | null) => void;
   totalPrice: number;
+  isCartOpen: boolean;
+  setCartOpen: (open: boolean) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -27,6 +29,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState<DiscountInfo | null>(null);
+  const [isCartOpen, setCartOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -51,6 +54,7 @@ export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
+    setCartOpen(true); // Otomatis buka drawer saat nambah produk
   };
 
   const removeFromCart = (productId: number) => {
@@ -77,7 +81,6 @@ export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
   const subtotalPrice = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   
-  // Hitung Total Akhir (Subtotal - Diskon)
   const discountAmount = discount ? 
     (discount.type === 'percentage' ? (subtotalPrice * discount.value / 100) : discount.value) 
     : 0;
@@ -87,7 +90,8 @@ export const CartProvider = ({ children }: { children?: React.ReactNode }) => {
   return (
     <CartContext.Provider value={{ 
         cart, addToCart, removeFromCart, updateQuantity, clearCart, 
-        totalItems, subtotalPrice, discount, setDiscount, totalPrice 
+        totalItems, subtotalPrice, discount, setDiscount, totalPrice,
+        isCartOpen, setCartOpen 
     }}>
       {children}
     </CartContext.Provider>

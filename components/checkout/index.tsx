@@ -6,6 +6,7 @@ import { EmptyCartView } from './ui-parts';
 import { SuccessView } from './sections/success-view';
 import { CartSummary } from './sections/cart-summary';
 import { ShippingForm } from './sections/shipping-form';
+import { TermsModal } from './terms-modal';
 import { SiteConfig } from '../../types';
 import { Check, ChevronRight, ShoppingBag, Truck } from 'lucide-react';
 
@@ -49,7 +50,7 @@ export const CheckoutModule = ({ setPage, config }: { setPage: (p: string) => vo
     const {
         cart, removeFromCart, updateQuantity, totalPrice, clearCart,
         formData, handleFieldChange, handleBlur,
-        agreedToTerms, setAgreedToTerms,
+        agreedToTerms, handleCheckboxClick, showTermsModal, setShowTermsModal, confirmTerms,
         isSubmitting, submitOrder,
         orderSuccess, setOrderSuccess,
         subtotalPrice, discount, couponInput, setCouponInput, applyCoupon, isValidatingCoupon,
@@ -109,13 +110,21 @@ export const CheckoutModule = ({ setPage, config }: { setPage: (p: string) => vo
                                     applyCoupon={applyCoupon}
                                     isValidatingCoupon={isValidatingCoupon}
                                     agreed={agreedToTerms}
-                                    setAgreed={setAgreedToTerms}
+                                    onToggleTerms={handleCheckboxClick}
                                     onBack={() => setStep(1)}
                                 />
                             </div>
                         )}
                     </div>
                 </div>
+            )}
+
+            {/* MODAL TERMS */}
+            {showTermsModal && (
+                <TermsModal 
+                    onAgree={confirmTerms} 
+                    onClose={() => setShowTermsModal(false)} 
+                />
             )}
         </div>
     );
