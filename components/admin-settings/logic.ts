@@ -85,6 +85,12 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
             Task: Generate Hero Header (H1) and Subtitle for the homepage.
             Context for current promo: "${state.magicContext || "General Branding"}". 
             Tone: Aggressive, Professional, Street-smart.
+            
+            STRICT STYLE GUIDE:
+            - Use {word} to highlight words in ORANGE.
+            - Use [word] to highlight words in GRADIENT.
+            Example: "AKHIRI ERA {BONCOS}" or "Pusat [Mesin Kasir] Terpercaya".
+            
             Output: STIRCT JSON format { "heroTitle": "string", "heroSubtitle": "string" }. No other text.`;
 
             const result = await callGeminiWithRotation({

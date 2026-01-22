@@ -5,9 +5,33 @@ import { Button } from '../../ui';
 import { SiteConfig } from '../../../types';
 
 export const HomeHero = ({ setPage, config }: { setPage: (p: string) => void, config: SiteConfig }) => {
-  // Parsing judul biar bisa ada efek warna orange di kata terakhir atau sesuai input
-  const title = config.hero_title || "AKHIRI ERA BONCOS";
-  const subtitle = config.hero_subtitle || "Gue bantu rakit Sistem Kasir & Aset Digital yang bikin bisnis lo kerja sendiri.";
+  const title = config.hero_title || "AKHIRI ERA {BONCOS}";
+  const subtitle = config.hero_subtitle || "Gue bantu rakit [Sistem Kasir] & Aset Digital yang bikin bisnis lo kerja sendiri.";
+
+  // Helper untuk parse teks dengan highlight
+  const parseHeroText = (text: string) => {
+    // Regex 1: {teks} -> Orange
+    // Regex 2: [teks] -> Gradient
+    const parts = text.split(/(\{.*?\}|\[.*?\])/g);
+    
+    return parts.map((part, i) => {
+      if (part.startsWith('{') && part.endsWith('}')) {
+        return (
+          <span key={i} className="text-brand-orange drop-shadow-neon-text">
+            {part.slice(1, -1)}
+          </span>
+        );
+      }
+      if (part.startsWith('[') && part.endsWith(']')) {
+        return (
+          <span key={i} className="text-transparent bg-clip-text bg-brand-gradient drop-shadow-2xl">
+            {part.slice(1, -1)}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
 
   return (
     <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden bg-brand-black">
@@ -29,11 +53,11 @@ export const HomeHero = ({ setPage, config }: { setPage: (p: string) => void, co
         
         <div className="space-y-6 max-w-5xl mb-12">
           <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-black text-white leading-[1.1] tracking-tighter drop-shadow-2xl animate-fade-in uppercase">
-            {title}
+            {parseHeroText(title)}
           </h1>
           
           <p className="text-base md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed px-4 font-medium animate-fade-in whitespace-pre-line" style={{ animationDelay: '0.2s' }}>
-            {subtitle}
+            {parseHeroText(subtitle)}
           </p>
         </div>
         
