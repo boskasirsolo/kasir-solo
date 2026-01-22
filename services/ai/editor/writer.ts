@@ -1,36 +1,33 @@
 
 import { WriterConfig } from './types';
-import { PillarEngine } from './engines/pillar-engine';
-import { ClusterEngine } from './engines/cluster-engine';
+import { Orchestrator } from './orchestrator';
 
 export const Writer = {
     writeArticle: async (
-        title: string,
-        tones: string[],
-        type: string,
-        authorName: string,
-        wordCount: number,
-        pillarContext?: { title: string; slug: string },
-        relatedPillarsData?: { title: string; slug: string }[],
-        galleryContextString?: string,
-        userContext?: string,
-        cityContext?: { name: string; type: string },
-        productContextString?: string
+        p_title: string,
+        p_tones: string[],
+        p_type: string,
+        p_author_name: string,
+        p_word_count: number,
+        p_pillar_context?: { title: string; slug: string },
+        p_related_pillars?: { title: string; slug: string }[],
+        p_gallery_json?: string,
+        p_user_context?: string,
+        p_city_context?: { name: string; type: string },
+        p_product_json?: string
     ) => {
         const config: WriterConfig = {
-            authorName, tones, wordCount,
-            userNotes: userContext,
-            city: cityContext,
-            pillarParent: pillarContext,
-            relatedPillars: relatedPillarsData,
-            productsJson: productContextString,
-            galleryJson: galleryContextString
+            author_name: p_author_name,
+            selected_tones: p_tones,
+            target_word_count: p_word_count,
+            user_notes: p_user_context,
+            city_context: p_city_context,
+            pillar_parent: p_pillar_context,
+            related_pillars: p_related_pillars,
+            products_json: p_product_json,
+            gallery_json: p_gallery_json
         };
 
-        if (type === 'pillar') {
-            return await PillarEngine.execute(title, config);
-        } else {
-            return await ClusterEngine.execute(title, config);
-        }
+        return await Orchestrator.assemble(p_title, config, p_type as 'pillar' | 'cluster');
     }
 };
