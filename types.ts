@@ -142,6 +142,7 @@ export interface SiteConfig {
   quota_digital_max?: number;
   quota_digital_used?: number;
   is_noindex?: boolean;
+  is_maintenance_mode?: boolean;
 }
 
 // --- NEW SERVICE TYPES ---

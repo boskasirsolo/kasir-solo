@@ -7,6 +7,7 @@ import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_
 import { Product, Article, GalleryItem, SiteConfig, Testimonial, JobOpening } from './types';
 import { CartProvider } from './context/cart-context';
 import { LoadingSpinner } from './components/ui';
+import { MaintenancePage } from './pages/maintenance'; // Import langsung karena critical
 import './index.css'; 
 
 // Component Imports
@@ -50,7 +51,7 @@ const PageLoader = () => (
 const SkeletonHome = () => (
   <div className="min-h-screen flex flex-col bg-brand-black text-white font-sans overflow-hidden">
     <nav className="h-[76px] border-b border-white/5 flex items-center justify-between px-5 fixed top-0 w-full z-50 bg-brand-black/90 backdrop-blur-md">
-       <div className="w-[160px] h-[40px] bg-white/10 rounded-lg animate-pulse"></div>
+       <div className="as-logo animate-pulse"></div>
     </nav>
     <div className="flex-1 flex flex-col items-center justify-center text-center px-5 gap-6 mt-[60px] relative overflow-hidden min-h-[90vh]">
        <div className="w-[220px] h-[32px] bg-white/5 rounded-full animate-pulse mb-4"></div>
@@ -87,23 +88,9 @@ const AppContent = () => {
   const [config, setConfig] = useState<SiteConfig>({
     hero_title: "MESIN KASIR SOLO",
     hero_subtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM.",
-    about_image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200", 
-    founder_portrait: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800",
-    sibos_url: "https://sibos.id",
-    qalam_url: "https://qalam.id",
-    dapur_sppg_url: "https://dapursppg.id",
     company_legal_name: "PT MESIN KASIR SOLO",
     whatsapp_number: "6282325103336",
-    email_address: "admin@kasirsolo.my.id",
-    address_solo: "Perum Graha Tiara 2 B1, Kartasura",
-    address_blora: "Gumiring 04/04, Banjarejo",
-    map_solo_link: "https://maps.google.com/?q=Perum+Graha+Tiara+2+B1+Kartasura",
-    map_blora_link: "https://maps.google.com/?q=Gumiring+Banjarejo+Blora",
-    quota_onsite_max: 4,
-    quota_onsite_used: 3,
-    quota_digital_max: 2,
-    quota_digital_used: 0,
-    google_merchant_id: ""
+    is_maintenance_mode: false
   });
 
   const getCurrentPageId = () => location.pathname.substring(1) || 'home';
@@ -141,8 +128,6 @@ const AppContent = () => {
 
         try {
             const { data: settingsData } = await supabase.from('site_settings').select('*').limit(1).maybeSingle();
-            
-            // DIRECT MAPPING: DB (snake_case) -> State (snake_case)
             if (settingsData) {
                 setConfig(settingsData);
                 injectGoogleTags(settingsData.google_analytics_id, settingsData.google_search_console_code);
@@ -203,6 +188,15 @@ const AppContent = () => {
   });
 
   if (isInitializing) return <SkeletonHome />;
+
+  // --- GHOST MODE MAINTENANCE GATEKEEPER ---
+  const isGhost = localStorage.getItem('mks_ghost_mode') === 'true';
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isMaintenanceActive = config.is_maintenance_mode;
+
+  if (isMaintenanceActive && !isGhost && !isAdminRoute) {
+    return <MaintenancePage config={config} />;
+  }
 
   return (
     <CartProvider>
