@@ -105,7 +105,12 @@ export const SectionHeader = ({ title, subtitle, highlight, align = "center" }: 
         <div className="absolute -bottom-2 left-0 w-full h-1 bg-brand-orange/30 blur-sm"></div>
       </span>
     </h2>
-    {subtitle && <p className="text-gray-500 text-base md:text-lg max-w-2xl leading-relaxed italic">{subtitle}</p>}
+    {/* PERBAIKAN: Tambahkan mx-auto jika align center agar box teks subtitle berada di tengah */}
+    {subtitle && (
+      <p className={`text-gray-500 text-base md:text-lg max-w-2xl leading-relaxed italic ${align === 'center' ? 'mx-auto' : ''}`}>
+        {subtitle}
+      </p>
+    )}
   </div>
 );
 
