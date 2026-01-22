@@ -1,111 +1,15 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-    ShoppingBag, Package, LayoutGrid, Image, Settings, 
-    LogOut, FileText, Briefcase, 
-    BarChart, Download, Share2, Globe, Cpu, 
-    Bot, BookOpen, Users, LayoutDashboard, Menu, X, ArrowUpRight,
-    Terminal, ShieldCheck, Activity, Box, Zap, Wrench
-} from 'lucide-react';
-import { DashboardProps, MenuCategory } from '../types';
+import { Terminal, Menu, X, Zap } from 'lucide-react';
+import { DashboardProps } from '../types';
 import { useAdminDashboard } from '../logic';
-import { SidebarTabButton, SidebarGroupHeader, StoreSubTabBtn, SidebarActionBtn, SystemHealthWidget } from '../ui-parts';
-
-// Sub-Modules Imports
-import { AdminProducts } from '../../admin-products/index'; 
-import { AdminGallery } from '../../admin-gallery/index'; 
-import { AdminSettings } from '../../admin-settings/index'; 
-import { AdminOrders } from '../../admin-orders/index'; 
-import { AdminArticles } from '../../admin-articles/index';
-import { AdminCareer } from '../../admin-career/index'; 
-import { AdminDownloads } from '../../admin-downloads/index'; 
-import { AdminSocialStudio } from '../../admin-social/index'; 
-import { AdminSEO } from '../../admin-seo/index'; 
-import { AnalyticsDashboard } from '../../admin-analytics/index';
-import { AdminServices } from '../../admin-services/index';
-import { SibosTrainer } from '../sibos-trainer/index';
-import { AdminDocumentation } from '../documentation/index';
-import { AdminCRM } from '../../admin-crm/index';
-import { AdminRMA } from '../../admin-rma/index';
-
-const MENU_GROUPS: MenuCategory[] = [
-    { id: 'radar', label: 'Intelligence', items: ['analytics', 'crm', 'seo'] },
-    { id: 'ops', label: 'Operations', items: ['store', 'rma'] },
-    { id: 'content', label: 'Asset Library', items: ['articles', 'gallery', 'downloads'] },
-    { id: 'growth', label: 'Expansion', items: ['social', 'career'] },
-    { id: 'core', label: 'System Core', items: ['siboy', 'documentation', 'settings'] }
-];
-
-const ICON_MAP: Record<string, any> = {
-    analytics: BarChart,
-    crm: Users,
-    seo: Globe,
-    store: ShoppingBag,
-    rma: Wrench,
-    articles: FileText,
-    gallery: Image,
-    downloads: Download,
-    social: Share2,
-    career: Briefcase,
-    siboy: Bot,
-    documentation: BookOpen,
-    settings: Settings
-};
-
-const LABEL_MAP: Record<string, string> = {
-    analytics: 'Traffic Analytics',
-    crm: 'Sales War Room',
-    seo: 'SEO Engine',
-    store: 'Store Management',
-    rma: 'Garansi & Retur',
-    articles: 'Article Intel',
-    gallery: 'Portfolio Case',
-    downloads: 'File Center',
-    social: 'Social Studio',
-    career: 'HR Recruitment',
-    siboy: 'AI Trainer',
-    documentation: 'War Manual',
-    settings: 'Core Settings'
-};
+import { SystemHealthWidget } from '../ui-parts';
+import { Sidebar, LABEL_MAP } from './sidebar';
+import { ModuleRenderer } from './module-renderer';
 
 export const DashboardShell = (props: DashboardProps) => {
-    const navigate = useNavigate();
     const { activeTab, setActiveTab, storeSubTab, setStoreSubTab } = useAdminDashboard();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-    const renderActiveModule = () => {
-        switch (activeTab) {
-            case 'analytics': return <AnalyticsDashboard />;
-            case 'crm': return <AdminCRM config={props.config} />;
-            case 'store':
-                return (
-                    <div className="space-y-6">
-                        <div className="bg-brand-dark/40 p-1.5 rounded-2xl inline-flex border border-white/5 w-full mb-6 shadow-inner backdrop-blur-sm">
-                            <StoreSubTabBtn active={storeSubTab === 'orders'} onClick={() => setStoreSubTab('orders')} icon={Package} label="ORDERS" />
-                            <StoreSubTabBtn active={storeSubTab === 'catalog'} onClick={() => setStoreSubTab('catalog')} icon={LayoutGrid} label="CATALOG" />
-                            <StoreSubTabBtn active={storeSubTab === 'services'} onClick={() => setStoreSubTab('services')} icon={Cpu} label="SERVICES" />
-                        </div>
-                        <div>
-                            {storeSubTab === 'orders' ? <AdminOrders config={props.config} /> : 
-                             storeSubTab === 'catalog' ? <AdminProducts products={props.products} setProducts={props.setProducts} /> : 
-                             <AdminServices config={props.config} />}
-                        </div>
-                    </div>
-                );
-            case 'rma': return <AdminRMA />;
-            case 'siboy': return <SibosTrainer />;
-            case 'seo': return <AdminSEO />;
-            case 'gallery': return <AdminGallery gallery={props.gallery} setGallery={props.setGallery} testimonials={props.testimonials} setTestimonials={props.setTestimonials} />;
-            case 'articles': return <AdminArticles articles={props.articles} setArticles={props.setArticles} gallery={props.gallery} config={props.config} products={props.products} />;
-            case 'career': return <AdminCareer jobs={props.jobs} setJobs={props.setJobs} />;
-            case 'downloads': return <AdminDownloads />;
-            case 'social': return <AdminSocialStudio products={props.products} articles={props.articles} gallery={props.gallery} />;
-            case 'documentation': return <AdminDocumentation />;
-            case 'settings': return <AdminSettings config={props.config} setConfig={props.setConfig} />;
-            default: return <AnalyticsDashboard />;
-        }
-    };
 
     return (
         <div className="h-screen bg-brand-black flex flex-col lg:flex-row relative overflow-hidden selection:bg-brand-orange selection:text-white">
@@ -138,7 +42,7 @@ export const DashboardShell = (props: DashboardProps) => {
                                 Command &gt; {activeTab}
                             </div>
                             <h1 className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter leading-none">
-                                {LABEL_MAP[activeTab].toUpperCase()}
+                                {LABEL_MAP[activeTab]?.toUpperCase() || 'DASHBOARD'}
                             </h1>
                         </div>
                         
@@ -152,87 +56,29 @@ export const DashboardShell = (props: DashboardProps) => {
                                 </div>
                                 <div className="text-right">
                                     <span className="text-[8px] font-black text-white uppercase tracking-widest block leading-none mb-0.5">System Live</span>
-                                    <span className="text-[7px] text-gray-500 font-mono uppercase tracking-tighter block leading-none">Lat: 24ms</span>
+                                    <span className="text-[7px] text-gray-500 font-mono uppercase tracking-tighter block leading-none">Lat: 18ms</span>
                                 </div>
                              </div>
                         </div>
                     </header>
 
-                    <div>
-                        {renderActiveModule()}
-                    </div>
+                    <ModuleRenderer 
+                        activeTab={activeTab} 
+                        storeSubTab={storeSubTab} 
+                        setStoreSubTab={setStoreSubTab} 
+                        props={props} 
+                    />
                 </div>
             </main>
 
             {/* --- COMPACT SIDEBAR NAV (RIGHT SIDE) --- */}
-            <aside 
-                className={`fixed lg:sticky top-0 right-0 h-screen w-72 lg:w-[280px] bg-brand-card/40 backdrop-blur-3xl border-l border-white/5 z-50 flex flex-col transition-all duration-500 transform lg:translate-x-0 order-1 lg:order-2 shadow-[0_0_50px_rgba(0,0,0,0.5)] ${
-                    isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-                }`}
-            >
-                {/* Sidebar Header with Action Buttons */}
-                <div className="p-6 border-b border-white/5 bg-black/40 shrink-0 space-y-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-brand-gradient flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,95,31,0.3)] shrink-0">
-                            <Box size={20} />
-                        </div>
-                        <div className="min-w-0">
-                            <h3 className="text-white font-black text-sm leading-none tracking-tight truncate">SOLO CMD</h3>
-                            <p className="text-[8px] text-brand-orange font-black uppercase tracking-[0.25em] mt-1 flex items-center gap-1.5">
-                                <div className="w-1 h-1 rounded-full bg-brand-orange animate-ping"></div> V 3.0 GOLD
-                            </p>
-                        </div>
-                    </div>
-                    
-                    {/* TOP ACTION BUTTONS */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <button 
-                            onClick={() => window.open('/', '_blank')}
-                            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-brand-orange/30 hover:bg-brand-orange/5 transition-all group"
-                        >
-                            <ArrowUpRight size={14} className="text-brand-orange group-hover:scale-110 transition-transform" />
-                            <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest group-hover:text-white">Web</span>
-                        </button>
-                        <button 
-                            onClick={props.onLogout}
-                            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-red-500/5 border border-red-500/10 hover:bg-red-500/10 transition-all group"
-                        >
-                            <LogOut size={14} className="text-red-500 group-hover:scale-110 transition-transform" />
-                            <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest group-hover:text-red-400">Exit</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Sidebar Menu - Scrollable */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-1">
-                    {MENU_GROUPS.map(group => (
-                        <div key={group.id} className="mb-4">
-                            <SidebarGroupHeader label={group.label} />
-                            <div className="space-y-1">
-                                {group.items.map(tabId => (
-                                    <SidebarTabButton 
-                                        key={tabId}
-                                        id={tabId}
-                                        label={LABEL_MAP[tabId].split(' ')[0]}
-                                        icon={ICON_MAP[tabId]}
-                                        isActive={activeTab === tabId}
-                                        onClick={() => {
-                                            setActiveTab(tabId);
-                                            if(window.innerWidth < 1024) setIsSidebarOpen(false);
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Sidebar Bottom Branding */}
-                <div className="p-6 border-t border-white/5 opacity-20 hover:opacity-100 transition-opacity duration-500 flex justify-between items-center shrink-0">
-                    <p className="text-[7px] text-gray-500 font-black uppercase tracking-[0.4em]">Proprietary OS © 2025</p>
-                    <ShieldCheck size={12} className="text-brand-orange" />
-                </div>
-            </aside>
+            <Sidebar 
+                isOpen={isSidebarOpen} 
+                onClose={() => setIsSidebarOpen(false)} 
+                activeTab={activeTab} 
+                onTabChange={setActiveTab} 
+                onLogout={props.onLogout} 
+            />
 
             {/* Backdrop for mobile */}
             {isSidebarOpen && (
