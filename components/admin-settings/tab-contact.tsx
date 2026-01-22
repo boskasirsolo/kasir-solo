@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { TabProps } from './types';
 import { SettingsTabWrapper, SettingsHeader, SettingsCard, SettingsField, SettingsImageUploader } from './ui-atoms';
 import { Input, TextArea } from '../ui';
-// FIX: Added Image as ImageIcon to lucide-react imports
-import { Building, ShieldCheck, CreditCard, MapPin, Code, UserCheck, Mail, Phone, Image as ImageIcon } from 'lucide-react';
+import { Building, ShieldCheck, CreditCard, MapPin, Code, UserCheck, Mail, Phone, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { MediaLibraryModal } from '../admin/media-library';
 
 export const TabContact = ({ config, setConfig, state, actions }: TabProps) => {
@@ -80,30 +79,43 @@ export const TabContact = ({ config, setConfig, state, actions }: TabProps) => {
                         </div>
                     </SettingsCard>
 
-                    {/* SEKSI: BANK */}
-                    <SettingsCard title="Data Rekening" icon={CreditCard} color="text-green-500">
-                        <div className="bg-black/40 p-4 rounded-xl border border-green-500/10 grid grid-cols-12 gap-4">
-                            <div className="col-span-3">
-                                <SettingsField label="Bank"><Input value={config.bank_name || ''} onChange={(e: any) => setConfig({...config, bank_name: e.target.value})} className="bg-brand-dark h-8 text-xs font-bold" /></SettingsField>
+                    {/* SEKSI: BANK (FIXED & IMPROVED) */}
+                    <SettingsCard title="Data Rekening Utama" icon={CreditCard} color="text-green-500">
+                        <div className="bg-black/40 p-4 rounded-xl border border-green-500/10 grid grid-cols-1 md:grid-cols-12 gap-4">
+                            <div className="md:col-span-3">
+                                <SettingsField label="Nama Bank">
+                                    <Input value={config.bank_name || ''} onChange={(e: any) => setConfig({...config, bank_name: e.target.value})} placeholder="Cth: BNC / BCA" className="bg-brand-dark h-9 text-xs font-bold" />
+                                </SettingsField>
                             </div>
-                            <div className="col-span-5">
-                                <SettingsField label="No. Rekening"><Input value={config.bank_account_number || ''} onChange={(e: any) => setConfig({...config, bank_account_number: e.target.value})} className="bg-brand-dark h-8 text-xs font-mono" /></SettingsField>
+                            <div className="md:col-span-5">
+                                <SettingsField label="No. Rekening">
+                                    <Input value={config.bank_account_number || ''} onChange={(e: any) => setConfig({...config, bank_account_number: e.target.value})} placeholder="000123xxx" className="bg-brand-dark h-9 text-xs font-mono" />
+                                </SettingsField>
                             </div>
-                            <div className="col-span-4">
-                                <SettingsField label="Atas Nama"><Input value={config.bank_account_name || ''} onChange={(e: any) => setConfig({...config, bank_account_name: e.target.value})} className="bg-brand-dark h-8 text-xs" /></SettingsField>
+                            <div className="md:col-span-4">
+                                <SettingsField label="Atas Nama">
+                                    <Input value={config.bank_account_name || ''} onChange={(e: any) => setConfig({...config, bank_account_name: e.target.value})} placeholder="Nama Pemilik..." className="bg-brand-dark h-9 text-xs" />
+                                </SettingsField>
                             </div>
                         </div>
+                        <p className="text-[9px] text-gray-600 italic px-1">*Data ini muncul di halaman checkout setelah user klik bayar.</p>
                     </SettingsCard>
                 </div>
             </div>
 
-            {/* SEKSI: LOKASI (FULL WIDTH) */}
+            {/* SEKSI: LOKASI (WITH REINSTATED MAP LINKS) */}
             <div className="pt-8 border-t border-white/5 grid md:grid-cols-2 gap-8">
                 <SettingsCard title="Headquarters (Solo)" icon={MapPin}>
                     <SettingsField label="Alamat Lengkap">
                         <TextArea value={config.address_solo || ''} onChange={(e: any) => setConfig({...config, address_solo: e.target.value})} className="h-20 bg-black/20 text-xs" />
                     </SettingsField>
-                    <SettingsField label="Iframe Google Maps" helper="Paste kode <iframe> di sini.">
+                    <SettingsField label="URL Google Maps (Navigasi)" helper="Paste shortlink dari tombol Share di Google Maps.">
+                        <div className="relative">
+                            <LinkIcon size={12} className="absolute left-3 top-3 text-gray-600" />
+                            <Input value={config.map_solo_link || ''} onChange={(e: any) => setConfig({...config, map_solo_link: e.target.value})} placeholder="https://maps.app.goo.gl/..." className="pl-9 bg-black/40 text-[10px]" />
+                        </div>
+                    </SettingsField>
+                    <SettingsField label="Iframe Embed (Visual)" helper="Paste kode <iframe> di sini.">
                         <TextArea value={config.map_solo_embed || ''} onChange={(e: any) => setConfig({...config, map_solo_embed: e.target.value})} className="h-24 bg-black/40 font-mono text-[9px]" />
                     </SettingsField>
                 </SettingsCard>
@@ -112,7 +124,13 @@ export const TabContact = ({ config, setConfig, state, actions }: TabProps) => {
                     <SettingsField label="Alamat Lengkap">
                         <TextArea value={config.address_blora || ''} onChange={(e: any) => setConfig({...config, address_blora: e.target.value})} className="h-20 bg-black/20 text-xs" />
                     </SettingsField>
-                    <SettingsField label="Iframe Google Maps" helper="Paste kode <iframe> di sini.">
+                    <SettingsField label="URL Google Maps (Navigasi)" helper="Paste shortlink dari tombol Share di Google Maps.">
+                        <div className="relative">
+                            <LinkIcon size={12} className="absolute left-3 top-3 text-gray-600" />
+                            <Input value={config.map_blora_link || ''} onChange={(e: any) => setConfig({...config, map_blora_link: e.target.value})} placeholder="https://maps.app.goo.gl/..." className="pl-9 bg-black/40 text-[10px]" />
+                        </div>
+                    </SettingsField>
+                    <SettingsField label="Iframe Embed (Visual)" helper="Paste kode <iframe> di sini.">
                         <TextArea value={config.map_blora_embed || ''} onChange={(e: any) => setConfig({...config, map_blora_embed: e.target.value})} className="h-24 bg-black/40 font-mono text-[9px]" />
                     </SettingsField>
                 </SettingsCard>
