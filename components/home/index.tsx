@@ -43,7 +43,7 @@ export const HomeModule = ({
 
   return (
     <div className="animate-fade-in space-y-0">
-      <HomeHero setPage={setPage} />
+      <HomeHero setPage={setPage} config={config} />
       
       <LivePulseSection events={allEvents} />
 
