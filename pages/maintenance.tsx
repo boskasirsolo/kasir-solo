@@ -1,10 +1,14 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Wrench, MessageCircle, AlertTriangle, Monitor, Zap } from 'lucide-react';
 import { Button } from '../components/ui';
 import { SiteConfig } from '../types';
+import { useAnalytics } from '../hooks/use-analytics';
 
 export const MaintenancePage = ({ config }: { config: SiteConfig }) => {
+  // Pasang radar di sini biar tetep kerekam walau ruko tutup
+  useAnalytics();
+  
   const waNumber = config.whatsapp_number || "6282325103336";
   
   return (

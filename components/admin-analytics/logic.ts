@@ -48,22 +48,26 @@ export const useAnalyticsData = () => {
   }, [period]);
 
   const fetchStats = async () => {
-    // FIX: Set loading false if supabase is missing to prevent infinite spinner
     if (!supabase) {
         setLoading(false);
         return;
     }
     
     setLoading(true);
+    console.debug(`[Analytics] Fetching data for ${period} days...`);
     
     try {
         const { data, error } = await supabase.rpc('get_analytics_summary', { 
             p_days: period 
         });
 
-        if (error) throw error;
+        if (error) {
+            console.error("RPC Error:", error.message);
+            throw error;
+        }
 
         if (data) {
+            console.debug("[Analytics] Data received:", data);
             setStats(prev => ({
                 ...prev,
                 totalViews: data.total_views || 0,
@@ -77,15 +81,16 @@ export const useAnalyticsData = () => {
                 },
                 osDist: data.os_stats || {},
                 sortedPages: data.top_pages || [],
-                // Mapping extra fields with safety
                 trafficByDate: data.traffic_by_date || {},
                 sortedReferrers: data.top_referrers ? Object.entries(data.top_referrers) : [],
                 avgEngagementTime: data.avg_session_duration || "0s"
             }));
+        } else {
+            console.warn("[Analytics] RPC returned empty result.");
+            setStats(INITIAL_STATS);
         }
     } catch (e) {
-        console.error("Analytics Error (Check if RPC exists):", e);
-        // On error, we still need to stop loading
+        console.error("Failed to load analytics summary:", e);
     } finally {
         setLoading(false);
     }
