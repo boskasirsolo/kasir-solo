@@ -1,6 +1,7 @@
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 import { SiteConfig } from '../../types';
 import { INITIAL_PRODUCTS } from '../../utils';
 import { useAnalytics } from '../../hooks/use-analytics';
@@ -26,10 +27,16 @@ export const Layout = ({
   session?: any
 }) => {
   useAnalytics();
+  const { pathname } = useLocation();
+
+  // Scroll restoration fix & Page Transition logic
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
 
   if (currentPage === 'admin') {
     return (
-      <div className="min-h-screen flex flex-col font-sans bg-brand-black text-gray-200">
+      <div className="min-h-screen flex flex-col font-sans bg-brand-black text-gray-200 selection:bg-brand-orange selection:text-white">
         <main className="flex-grow">
           {children}
         </main>
@@ -41,14 +48,17 @@ export const Layout = ({
   }
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-brand-black text-gray-200">
+    <div className="min-h-screen flex flex-col font-sans bg-brand-black text-gray-200 selection:bg-brand-orange selection:text-white">
       <Helmet>
         {config.is_noindex && <meta name="robots" content="noindex, nofollow" />}
+        <body className="overflow-x-hidden" />
       </Helmet>
       
       <Header currentPage={currentPage} setPage={setPage} />
       
-      <main className="flex-grow pt-[76px]">
+      <main className="flex-grow pt-[76px] relative overflow-hidden">
+        {/* Subtle background noise/texture global */}
+        <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[100] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
         {children}
       </main>
 

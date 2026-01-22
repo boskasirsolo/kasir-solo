@@ -1,8 +1,6 @@
 
 import { callGeminiWithRotation } from '../core';
 
-// --- MODULE: RESEARCHER (SEO & TOPICS) ---
-
 export const Researcher = {
     /**
      * Cari ide judul artikel berdasarkan tren & volume
@@ -23,6 +21,23 @@ export const Researcher = {
         `;
 
         const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
+        return JSON.parse(res.text || '[]');
+    },
+
+    /**
+     * Riset Kata Kunci Lokal (Kota) - NEW
+     */
+    researchLocalKeywords: async (cityName: string) => {
+        const prompt = `
+        Role: Local SEO Expert Indonesia.
+        Task: Cari 5 kata kunci paling banyak dicari pebisnis di kota "${cityName}" terkait mesin kasir dan sistem toko.
+        Output: JSON Array of Strings. Just the keywords.
+        `;
+        const res = await callGeminiWithRotation({ 
+            model: 'gemini-3-flash-preview', 
+            contents: prompt,
+            config: { responseMimeType: "application/json" }
+        });
         return JSON.parse(res.text || '[]');
     },
 

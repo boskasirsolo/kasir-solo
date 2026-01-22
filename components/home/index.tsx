@@ -3,6 +3,7 @@ import React from 'react';
 import { GalleryItem, Testimonial, SiteConfig } from '../../types';
 import { ProjectDetailModal } from '../gallery';
 import { useHomeLogic } from './logic';
+import { useScrollReveal } from '../../hooks/use-scroll-reveal';
 
 // Import Sections
 import { HomeHero } from './sections/hero';
@@ -33,27 +34,45 @@ export const HomeModule = ({
     getTestimonialForProject
   } = useHomeLogic(gallery, testimonials, config);
 
-  return (
-    <div className="animate-fade-in">
-      <HomeHero setPage={setPage} />
-      <TrustStrip />
-      <ProblemSolution />
-      <InnovationTeaser setPage={setPage} />
-      
-      <GalleryMarquee 
-        featuredGallery={featuredGallery}
-        getTestimonialForProject={getTestimonialForProject}
-        onProjectClick={setSelectedProject}
-        onViewAll={() => setPage('gallery')}
-      />
+  // Aktifin Scroll Reveal Engine
+  useScrollReveal();
 
-      <ServicesGrid setPage={setPage} />
+  return (
+    <div className="animate-fade-in space-y-0">
+      <HomeHero setPage={setPage} />
       
-      <FounderCTA 
-        config={config} 
-        onsiteRemaining={onsiteRemaining} 
-        digitalRemaining={digitalRemaining} 
-      />
+      <div className="reveal-on-scroll">
+        <TrustStrip />
+      </div>
+
+      <div className="reveal-on-scroll">
+        <ProblemSolution />
+      </div>
+
+      <div className="reveal-on-scroll">
+        <InnovationTeaser setPage={setPage} />
+      </div>
+      
+      <div className="reveal-on-scroll">
+        <GalleryMarquee 
+            featuredGallery={featuredGallery}
+            getTestimonialForProject={getTestimonialForProject}
+            onProjectClick={setSelectedProject}
+            onViewAll={() => setPage('gallery')}
+        />
+      </div>
+
+      <div className="reveal-on-scroll">
+        <ServicesGrid setPage={setPage} />
+      </div>
+      
+      <div className="reveal-on-scroll">
+        <FounderCTA 
+            config={config} 
+            onsiteRemaining={onsiteRemaining} 
+            digitalRemaining={digitalRemaining} 
+        />
+      </div>
 
       {selectedProject && (
         <ProjectDetailModal 

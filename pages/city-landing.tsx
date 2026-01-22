@@ -8,7 +8,6 @@ import { SEOHelmet, BreadcrumbSchema } from '../components/seo';
 export const CityLandingPage = ({ config }: { config?: SiteConfig }) => {
   const { citySlug } = useParams();
   
-  // SEO logic: Make title more aggressive for search intent
   const cityName = citySlug ? citySlug.charAt(0).toUpperCase() + citySlug.slice(1).replace(/-/g, ' ') : 'Seluruh Indonesia';
   const pageTitle = `Jual Paket Mesin Kasir di ${cityName} - Murah & Bergaransi`;
   const pageDesc = `Distributor mesin kasir (POS) Android & Windows terlengkap di area ${cityName}. Gratis instalasi dan training langsung oleh Founder.`;

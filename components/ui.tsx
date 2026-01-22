@@ -1,34 +1,59 @@
+
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle, Sparkles } from 'lucide-react';
 
 // --- Atoms ---
+
+// FIX: Added missing Input component to resolve export errors in multiple files
+export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className = "", ...props }, ref) => (
+    <input 
+      ref={ref}
+      className={`w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 ${className}`}
+      {...props}
+    />
+  )
+);
+Input.displayName = 'Input';
+
+// FIX: Added missing TextArea component to resolve export errors in multiple files
+export const TextArea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
+  ({ className = "", ...props }, ref) => (
+    <textarea 
+      ref={ref}
+      className={`w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 resize-none custom-scrollbar ${className}`}
+      {...props}
+    />
+  )
+);
+TextArea.displayName = 'TextArea';
 
 export const Button = ({ 
   children, 
   variant = 'primary', 
   onClick, 
-  className = '', 
+  className = "", 
   disabled = false,
   type = 'button',
   ...props
 }: { 
   children?: React.ReactNode, 
-  variant?: 'primary' | 'outline' | 'ghost' | 'danger', 
+  variant?: 'primary' | 'outline' | 'ghost' | 'danger' | 'success', 
   onClick?: () => void, 
   className?: string,
   disabled?: boolean,
   type?: 'button' | 'submit',
   [key: string]: any
 }) => {
-  const baseStyles = "rounded-lg font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseStyles = "relative overflow-hidden rounded-xl font-black uppercase tracking-widest text-[10px] md:text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-90 select-none group h-12 px-6";
   
   const variants = {
-    primary: "bg-brand-gradient text-white hover:bg-brand-gradient-hover shadow-action hover:shadow-action-strong transform hover:-translate-y-1",
-    // UPDATED: Outline now uses solid orange border by default for high contrast
-    outline: "border border-brand-orange text-white hover:bg-brand-orange hover:text-white shadow-[0_0_10px_rgba(255,95,31,0.1)] hover:shadow-action",
-    ghost: "text-gray-400 hover:text-brand-orange hover:bg-white/5",
-    danger: "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 shadow-neon-text/20"
+    primary: "bg-brand-gradient text-white shadow-action hover:shadow-action-strong border-none",
+    outline: "bg-transparent border-2 border-brand-orange text-brand-orange hover:bg-brand-orange hover:text-white shadow-neon-text/10",
+    ghost: "text-gray-500 hover:text-white hover:bg-white/5 border-none",
+    danger: "bg-red-600/10 text-red-500 border-2 border-red-500/20 hover:bg-red-600 hover:text-white",
+    success: "bg-green-600/10 text-green-500 border-2 border-green-500/20 hover:bg-green-600 hover:text-white"
   };
 
   return (
@@ -39,125 +64,67 @@ export const Button = ({
       className={`${baseStyles} ${variants[variant]} ${className}`}
       {...props}
     >
-      {children}
+      <span className="relative z-10 flex items-center gap-2">{children}</span>
+      {/* Subtle Shine Effect on Hover */}
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shine_1.5s_infinite] pointer-events-none"></div>
     </button>
   );
 };
 
-export const Input = ({
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  className = "",
-  ...props
-}: {
-  value: string | number,
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
-  placeholder?: string,
-  type?: string,
-  className?: string,
-  [key: string]: any
+// FIX: Updated Card typing to React.FC to allow standard attributes like 'key' in list rendering
+export const Card: React.FC<{ 
+    children?: React.ReactNode, 
+    className?: string, 
+    hover?: boolean,
+    glass?: boolean
+}> = ({ 
+    children, 
+    className = "", 
+    hover = true,
+    glass = false 
 }) => (
-  <input 
-    type={type}
-    value={value}
-    onChange={onChange}
-    placeholder={placeholder}
-    className={`bg-brand-card border border-white/10 rounded-lg px-4 py-3 text-white w-full focus:border-brand-orange outline-none transition-colors focus:shadow-neon-text/20 ${className}`} 
-    {...props}
-  />
-);
-
-export const TextArea = ({
-  value,
-  onChange,
-  placeholder,
-  className = "",
-  ...props
-}: {
-  value: string,
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void,
-  placeholder?: string,
-  className?: string,
-  [key: string]: any
-}) => (
-  <textarea 
-    value={value}
-    onChange={onChange}
-    placeholder={placeholder}
-    className={`bg-brand-card border border-white/10 rounded-lg px-4 py-3 text-white w-full focus:border-brand-orange outline-none transition-colors focus:shadow-neon-text/20 ${className}`} 
-    {...props}
-  />
-);
-
-export const Badge = ({ children, className = '' }: { children?: React.ReactNode, className?: string }) => (
-  <span className={`px-3 py-1 rounded-full text-xs font-bold text-brand-orange border border-brand-orange/30 bg-black/60 backdrop-blur-sm ${className}`}>
+  <div className={`
+    ${glass ? 'glass-v2' : 'bg-brand-card border border-white/5'} 
+    rounded-3xl overflow-hidden transition-all duration-500 
+    ${hover ? 'hover:border-brand-orange/40 hover:shadow-neon hover:-translate-y-2' : ''} 
+    ${className}
+  `}>
     {children}
-  </span>
+  </div>
 );
 
-export const SectionHeader = ({ title, subtitle, highlight }: { title: string, subtitle?: string, highlight: string }) => (
-  <div className="text-center mb-12">
-    <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
-      {title} <span className="text-brand-orange">{highlight}</span>
+export const SectionHeader = ({ title, subtitle, highlight, align = "center" }: { title: string, subtitle?: string, highlight: string, align?: "center" | "left" }) => (
+  <div className={`mb-16 ${align === 'center' ? 'text-center' : 'text-left'}`}>
+    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange/20 mb-4 ${align === 'center' ? 'mx-auto' : ''}`}>
+        <Sparkles size={12} className="text-brand-orange animate-pulse" />
+        <span className="text-[10px] font-black text-brand-orange uppercase tracking-widest">Premium Solutions</span>
+    </div>
+    <h2 className="text-4xl md:text-6xl font-display font-black text-white mb-4 leading-tight">
+      {title} <span className="text-brand-orange relative">
+        {highlight}
+        <div className="absolute -bottom-2 left-0 w-full h-1 bg-brand-orange/30 blur-sm"></div>
+      </span>
     </h2>
-    {subtitle && <p className="text-gray-400 text-lg max-w-2xl mx-auto">{subtitle}</p>}
+    {subtitle && <p className="text-gray-500 text-base md:text-lg max-w-2xl leading-relaxed italic">{subtitle}</p>}
   </div>
 );
 
-export const LoadingSpinner = ({ size = 24, className = '' }: { size?: number, className?: string }) => (
-  <Loader2 size={size} className={`animate-spin ${className}`} />
-);
-
-// --- Molecules ---
-
-export const Card: React.FC<{ children?: React.ReactNode, className?: string, hoverEffect?: boolean }> = ({ children, className = '', hoverEffect = true }) => (
-  <div className={`bg-brand-card border border-white/5 rounded-2xl overflow-hidden ${hoverEffect ? 'hover:border-brand-orange transition-all duration-300 hover:shadow-neon hover:-translate-y-2 group' : ''} ${className}`}>
-    {children}
+export const LoadingSpinner = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
+  <div className={`flex items-center justify-center ${className}`}>
+    <Loader2 size={size} className="animate-spin text-brand-orange" />
   </div>
 );
 
-export const ConfirmModal = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  title,
-  message,
-  confirmText = "Ya, Lanjutkan",
-  cancelText = "Batal",
-  variant = 'danger'
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  variant?: 'primary' | 'danger';
-}) => {
-  if (!isOpen) return null;
-
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in">
-      <div className="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-      <div className="relative bg-brand-dark border border-white/10 rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center overflow-hidden z-[10000]">
-         <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-[60px] opacity-20 pointer-events-none ${variant === 'danger' ? 'bg-red-500' : 'bg-brand-orange'}`}></div>
-         
-         <div className={`relative w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 border ${variant === 'danger' ? 'bg-red-500/10 border-red-500/30' : 'bg-brand-orange/10 border-brand-orange/30'}`}>
-            <AlertTriangle className={variant === 'danger' ? 'text-red-500' : 'text-brand-orange'} size={32} />
-         </div>
-
-         <h3 className="text-xl font-display font-bold text-white mb-3 relative z-10">{title}</h3>
-         <p className="text-gray-400 text-sm mb-8 leading-relaxed relative z-10">{message}</p>
-         
-         <div className="grid grid-cols-2 gap-4 relative z-10">
-            <Button variant="outline" onClick={onClose} className="border-white/10 hover:bg-white/5 w-full py-3">{cancelText}</Button>
-            <Button variant={variant} onClick={onConfirm} className="w-full py-3">{confirmText}</Button>
-         </div>
-      </div>
-    </div>,
-    document.body
-  );
+export const Badge = ({ children, color = "orange", className = "" }: { children?: React.ReactNode, color?: "orange" | "blue" | "green" | "red", className?: string }) => {
+    const colors = {
+        orange: "text-brand-orange border-brand-orange/30 bg-brand-orange/10",
+        blue: "text-blue-400 border-blue-400/30 bg-blue-400/10",
+        green: "text-green-400 border-green-500/30 bg-green-500/10",
+        red: "text-red-400 border-red-500/30 bg-red-500/10"
+    };
+    return (
+        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${colors[color]} ${className}`}>
+            {children}
+        </span>
+    );
 };

@@ -8,20 +8,62 @@
     @apply bg-brand-black text-gray-200 font-sans;
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
+    @apply font-display tracking-tight;
   }
 }
 
-/* Custom Scrollbar (God Mode Dark) */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
-::-webkit-scrollbar-thumb { background: rgba(255, 95, 31, 0.1); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 95, 31, 0.4); }
+/* --- LUXURY DARK UTILITIES --- */
 
-.custom-scrollbar::-webkit-scrollbar { width: 5px; }
-.custom-scrollbar-hide::-webkit-scrollbar { display: none; }
+.glass-v2 {
+  @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
+}
+
+.neon-border-orange {
+  box-shadow: 0 0 0 1px rgba(255, 95, 31, 0.2), 0 0 20px rgba(255, 95, 31, 0.1);
+}
+
+.text-mask-reveal {
+  background: linear-gradient(to right, #fff 20%, #FF5F1F 40%, #FF5F1F 60%, #fff 80%);
+  background-size: 200% auto;
+  color: #000;
+  background-clip: text;
+  text-fill-color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 5s linear infinite;
+}
+
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+/* --- PERFORMANCE TUNED ANIMATIONS --- */
+
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hover-lift {
+  @apply transition-transform duration-300 hover:-translate-y-2 active:scale-95;
+}
+
+/* Custom Scrollbar (God Mode Dark) */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #050505; }
+::-webkit-scrollbar-thumb { 
+  background: linear-gradient(to bottom, transparent, #FF5F1F, transparent); 
+  border-radius: 10px; 
+}
 
 /* HIDE NUMBER INPUT SPINNERS */
 input::-webkit-outer-spin-button,
@@ -29,39 +71,8 @@ input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-input[type=number] {
-  -moz-appearance: textfield;
-}
-
-/* ERROR SUPPRESSOR */
-iframe[style*="z-index: 2147483647"], 
-#webpack-dev-server-client-overlay-div, 
-.react-error-overlay { 
-  display: none !important; 
-  pointer-events: none !important;
-  visibility: hidden !important;
-}
 
 /* Map & Media Effects */
 .iframe-map-container iframe {
-  filter: grayscale(100%) invert(100%) contrast(85%) brightness(90%);
-}
-
-/* Animation Add-ons */
-@keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-.animate-slide-in-right {
-  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-/* Glass UI Helper */
-.glass-panel {
-  @apply bg-brand-card/40 backdrop-blur-2xl border border-white/5 shadow-2xl;
-}
-
-.neon-glow-orange {
-  box-shadow: 0 0 20px rgba(255, 95, 31, 0.15);
+  filter: grayscale(100%) invert(95%) contrast(90%) brightness(95%);
 }

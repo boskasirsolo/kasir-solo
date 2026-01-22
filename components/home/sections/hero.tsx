@@ -1,42 +1,68 @@
 
 import React from 'react';
-import { ShieldCheck, ArrowRight } from 'lucide-react';
+import { ShieldCheck, ArrowRight, Zap } from 'lucide-react';
 import { Button } from '../../ui';
 
 export const HomeHero = ({ setPage }: { setPage: (p: string) => void }) => (
-  // CLS FIX: Use dynamic viewport height (dvh) and ensure min-height matches skeleton
-  <section className="relative min-h-[90vh] md:min-h-screen flex items-center justify-center overflow-hidden bg-brand-black">
-    <div className="absolute inset-0 z-0 pointer-events-none">
-      <div className="absolute top-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-brand-orange/20 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2 animate-pulse-slow"></div>
-      <div className="absolute bottom-0 left-0 w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-brand-orange/15 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2"></div>
+  <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden bg-brand-black">
+    {/* DYNAMIC BACKGROUND ENGINE */}
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      {/* Moving Ambient Glows */}
+      <div className="absolute top-0 right-0 w-[80vw] h-[80vw] bg-brand-orange/10 rounded-full blur-[120px] animate-pulse-slow -translate-y-1/2 translate-x-1/2"></div>
+      <div className="absolute bottom-0 left-0 w-[60vw] h-[60vw] bg-red-600/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3"></div>
+      
+      {/* Subtle Grid Overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px]"></div>
     </div>
 
-    <div className="container mx-auto px-4 z-10 text-center relative pt-20 md:pt-0 flex flex-col items-center">
-      <div className="inline-flex items-center gap-2 px-4 md:px-6 py-2 border border-brand-orange/50 rounded-full bg-brand-orange/10 mb-6 md:mb-8 backdrop-blur-md shadow-neon hover:bg-brand-orange/20 transition-colors cursor-default">
-        <ShieldCheck size={16} className="text-brand-orange shrink-0" />
-        <h2 className="text-brand-orange text-[10px] md:text-sm font-bold tracking-widest uppercase whitespace-nowrap">
-          Pusat Jual Paket Mesin Kasir Terlengkap
+    <div className="container mx-auto px-4 z-10 text-center relative pt-10 flex flex-col items-center">
+      {/* Floating Badge */}
+      <div className="inline-flex items-center gap-2 px-5 py-2.5 border border-brand-orange/40 rounded-full bg-brand-orange/5 mb-8 backdrop-blur-md shadow-neon animate-fade-in">
+        <div className="w-2 h-2 rounded-full bg-brand-orange animate-ping"></div>
+        <h2 className="text-brand-orange text-[10px] md:text-xs font-black tracking-[0.3em] uppercase whitespace-nowrap">
+          Pusat Digitalisasi UMKM Terlengkap
         </h2>
       </div>
       
-      {/* LCP OPTIMIZATION: Use 'font-display' class which sets font-display:swap/optional via Tailwind or CSS */}
-      <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-6 md:mb-8 leading-tight drop-shadow-lg max-w-5xl">
-        Solusi <span className="text-brand-orange">Paket Mesin Kasir.</span><br/>
-        Bisnis Jalan, Lo Jalan-Jalan.
-      </h1>
+      <div className="space-y-6 max-w-5xl mb-12">
+        <h1 className="text-4xl md:text-7xl lg:text-9xl font-display font-black text-white leading-[0.95] tracking-tighter drop-shadow-2xl animate-fade-in">
+          AKHIRI ERA <br/>
+          <span className="text-brand-orange italic">BONCOS.</span>
+        </h1>
+        
+        <p className="text-base md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed px-4 font-medium animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          Gue bantu rakit <strong className="text-white">Sistem Kasir</strong> & <strong className="text-white">Aset Digital</strong> yang bikin bisnis lo kerja sendiri. Lo cukup pantau cuan dari rumah.
+        </p>
+      </div>
       
-      <p className="text-base md:text-2xl text-gray-300 mb-8 md:mb-12 max-w-3xl mx-auto leading-relaxed px-2 font-light">
-        Gue bukan sales bacot. Gue praktisi yang ngerti kalau <strong>Mesin Kasir</strong> itu jantungnya toko. Tanpa sistem yang bener, lo cuma "jaga warung", bukan "punya bisnis".
-      </p>
-      
-      <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center w-full px-4 sm:px-0">
-        <Button onClick={() => setPage('shop')} className="w-full sm:w-auto px-8 md:px-10 py-4 text-sm md:text-base shadow-neon hover:shadow-neon-strong">
-          LIHAT PAKET MESIN KASIR <ArrowRight size={20} />
+      <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center w-full px-6 sm:px-0 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+        <Button onClick={() => setPage('shop')} className="w-full sm:w-auto h-16 px-12 shadow-neon-strong text-sm">
+          BORONG ALAT TEMPUR <ArrowRight size={20} />
         </Button>
-        <Button variant="outline" onClick={() => setPage('about')} className="w-full sm:w-auto px-8 md:px-10 py-4 text-sm md:text-base">
-          KENAPA HARUS GUE?
+        <Button variant="outline" onClick={() => setPage('contact')} className="w-full sm:w-auto h-16 px-12 text-sm">
+          CURHAT SAMA GUE <Zap size={18} />
         </Button>
       </div>
+
+      {/* Floating Elements (Visual Decoration) */}
+      <div className="absolute hidden lg:block left-10 top-1/2 -translate-y-1/2 space-y-12 opacity-20">
+         <div className="w-px h-32 bg-gradient-to-b from-transparent via-white to-transparent"></div>
+         <p className="vertical-text text-[10px] font-black tracking-[0.5em] text-white uppercase">REBORN 2025</p>
+         <div className="w-px h-32 bg-gradient-to-b from-transparent via-white to-transparent"></div>
+      </div>
     </div>
+
+    {/* Scroll Indicator */}
+    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
+        <div className="w-[1px] h-12 bg-gradient-to-b from-brand-orange to-transparent"></div>
+        <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Scroll</span>
+    </div>
+
+    <style>{`
+      .vertical-text {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+      }
+    `}</style>
   </section>
 );

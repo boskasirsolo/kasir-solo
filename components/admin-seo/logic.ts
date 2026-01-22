@@ -1,7 +1,7 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { supabase, slugify, callGeminiWithRotation } from '../../utils';
 import { CityTarget, SEOFormState, CityType, AITargetSuggestion, SEOTemplate } from './types';
+import { Researcher } from '../../services/ai/editor/research';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -17,7 +17,6 @@ export const useSEOLogic = () => {
   const [page, setPage] = useState(1);
   const [showMobileEditor, setShowMobileEditor] = useState(false);
   
-  // AI Suggestions State
   const [suggestions, setSuggestions] = useState<AITargetSuggestion[]>([]);
   const [regionInput, setRegionInput] = useState('');
 
@@ -40,10 +39,6 @@ export const useSEOLogic = () => {
     fetchTemplates();
   }, []);
 
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm, activeTab]);
-
   const fetchCities = async () => {
     if (!supabase) return;
     setLoading(true);
@@ -57,6 +52,39 @@ export const useSEOLogic = () => {
     if (!supabase) return;
     const { data } = await supabase.from('seo_templates').select('*').order('created_at', { ascending: false });
     if (data) setTemplates(data);
+  };
+
+  const generateNarrative = async () => {
+      if (!form.name) return alert("Isi nama kota dulu.");
+      setIsGeneratingNarrative(true);
+      
+      try {
+          // 1. Riset Keyword Lokal Dulu
+          const keywords = await Researcher.researchLocalKeywords(form.name);
+          
+          // 2. Ambil Template
+          const selectedTpl = templates.find(t => t.id === form.template_id);
+          const basePrompt = selectedTpl?.prompt_structure || "Buat artikel penawaran mesin kasir yang persuasif.";
+
+          const prompt = `
+          Role: Senior SEO Copywriter PT Mesin Kasir Solo.
+          Context: Target Kota "${form.name}", Tipe Strategi: "${form.type}".
+          Keywords Wajib: ${keywords.join(', ')}.
+          
+          Instruksi Khusus:
+          ${basePrompt}
+          
+          Gaya Bahasa: Street-smart Indonesia (Gue/Lo), jujur, ngebantu, bukan sales kaku.
+          Output: Narasi Markdown (tanpa judul H1). Gunakan sub-heading H2/H3 yang menarik.
+          `;
+
+          const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
+          setForm(prev => ({ ...prev, narrative: res.text || '' }));
+      } catch (e: any) {
+          alert("Gagal generate narasi: " + e.message);
+      } finally {
+          setIsGeneratingNarrative(false);
+      }
   };
 
   const handleSubmit = async () => {
@@ -90,63 +118,92 @@ export const useSEOLogic = () => {
     } finally { setLoading(false); }
   };
 
+  // FIX: Added handleTemplateSubmit implementation to resolve scope error
   const handleTemplateSubmit = async () => {
-      if (!templateForm.title || !templateForm.prompt_structure) return alert("Lengkapi data template.");
-      if (!supabase) return;
-      setLoading(true);
-      try {
-          if (templateForm.id) {
-              await supabase.from('seo_templates').update(templateForm).eq('id', templateForm.id);
-              setTemplates(prev => prev.map(t => t.id === templateForm.id ? { ...t, ...templateForm } as SEOTemplate : t));
-          } else {
-              const { data } = await supabase.from('seo_templates').insert([{ title: templateForm.title, prompt_structure: templateForm.prompt_structure }]).select().single();
-              if (data) setTemplates(prev => [data, ...prev]);
-          }
-          setTemplateForm({ id: 0, title: '', prompt_structure: '' });
-      } catch (e) { alert("Gagal simpan template"); } finally { setLoading(false); }
+    if (!templateForm.title || !templateForm.prompt_structure) return alert("Judul dan Struktur Prompt wajib diisi.");
+    if (!supabase) return;
+
+    setLoading(true);
+    try {
+        const payload = {
+            title: templateForm.title,
+            prompt_structure: templateForm.prompt_structure
+        };
+
+        if (templateForm.id && templateForm.id !== 0) {
+            const { error } = await supabase.from('seo_templates').update(payload).eq('id', templateForm.id);
+            if (error) throw error;
+            setTemplates(prev => prev.map(t => t.id === templateForm.id ? { ...t, ...payload } : t));
+            alert("Template berhasil diupdate!");
+        } else {
+            const { data, error } = await supabase.from('seo_templates').insert([payload]).select().single();
+            if (error) throw error;
+            if (data) {
+                setTemplates(prev => [data, ...prev]);
+                alert("Template berhasil ditambahkan!");
+            }
+        }
+        
+        setTemplateForm({ id: 0, title: '', prompt_structure: '' });
+    } catch (e: any) {
+        alert("Gagal simpan template: " + e.message);
+    } finally {
+        setLoading(false);
+    }
   };
 
+  // FIX: Added implementation for generateAITargets stub
   const generateAITargets = async () => {
-      if (!regionInput) return alert("Ketik wilayahnya dulu, Bos.");
+      if (!regionInput) return alert("Isi wilayah dulu (misal: Jawa Tengah)");
       setGenLoading(true);
-      setSuggestions([]);
-      try {
-          const existingNames = cities.map(c => c.name).join(', ');
-          const prompt = `Role: SEO Specialist. Task: Cari 8 kota di "${regionInput}" selain [${existingNames}]. Output JSON Array: [{"name": "Kota", "slug": "slug", "type": "Kandang/Ekspansi", "reason": "..."}]`;
-          const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt, config: { responseMimeType: "application/json" } });
-          setSuggestions(JSON.parse(res.text || '[]'));
-      } catch (e: any) { alert(e.message); } finally { setGenLoading(false); }
-  };
-
-  const generateNarrative = async () => {
-      if (!form.name) return alert("Isi nama kota dulu.");
-      const selectedTpl = templates.find(t => t.id === form.template_id);
-      if (!selectedTpl) return alert("Pilih Master Template dulu.");
-
-      setIsGeneratingNarrative(true);
       try {
           const prompt = `
-          Role: SEO Copywriter Mesin Kasir Solo. 
-          Context: City: ${form.name}, Type: ${form.type}.
-          Structure: ${selectedTpl.prompt_structure}
-          Rules: Pake 'Gue/Lo', sebut 'PT Mesin Kasir Solo', sebut keunggulan di ${form.name}.
-          Output: Narasi Markdown (max 3 paragraf). NO INTRO.
+          Role: SEO Strategist for PT Mesin Kasir Solo.
+          Task: Riset 4 kota/kabupaten paling potensial di wilayah "${regionInput}" untuk ekspansi jualan mesin kasir.
+          Output: JSON Array of Objects with keys: "name", "slug", "type", "reason".
+          "type" must be either "Kandang" (if very close to Solo) or "Ekspansi".
           `;
-          const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-          setForm(prev => ({ ...prev, narrative: res.text || '' }));
-      } catch (e) { alert("Gagal generate narasi."); } finally { setIsGeneratingNarrative(false); }
+          const res = await callGeminiWithRotation({ 
+              model: 'gemini-3-flash-preview', 
+              contents: prompt,
+              config: { responseMimeType: "application/json" }
+          });
+          setSuggestions(JSON.parse(res.text || '[]'));
+      } catch (e: any) {
+          alert("Gagal riset AI: " + e.message);
+      } finally {
+          setGenLoading(false);
+      }
   };
 
+  // FIX: Added implementation for publishAllSuggestions stub
   const publishAllSuggestions = async () => {
-      if (suggestions.length === 0 || !supabase) return;
+      if (suggestions.length === 0) return;
+      if (!supabase) return;
+
       setLoading(true);
       try {
-          const payload = suggestions.map(s => ({ name: s.name, slug: s.slug, type: s.type }));
-          const { data } = await supabase.from('target_cities').insert(payload).select();
-          if (data) setCities(prev => [...data, ...prev]);
-          setSuggestions([]); setRegionInput('');
-          alert("Beres!");
-      } catch (e: any) { alert(e.message); } finally { setLoading(false); }
+          const payloads = suggestions.map(s => ({
+              name: s.name,
+              slug: s.slug,
+              type: s.type,
+              narrative: ''
+          }));
+
+          const { data, error } = await supabase.from('target_cities').insert(payloads).select();
+          if (error) throw error;
+          
+          if (data) {
+              setCities(prev => [...data, ...prev]);
+              setSuggestions([]);
+              setRegionInput('');
+              alert(`${data.length} kota berhasil diterbitkan!`);
+          }
+      } catch (e: any) {
+          alert("Gagal menerbitkan: " + e.message);
+      } finally {
+          setLoading(false);
+      }
   };
 
   const resetForm = () => {
@@ -169,6 +226,16 @@ export const useSEOLogic = () => {
         totalPages: Math.ceil(filteredCities.length / ITEMS_PER_PAGE), totalCount: filteredCities.length, suggestions, regionInput
     },
     setters: { setSearchTerm, setForm, setTemplateForm, setShowMobileEditor, setActiveTab, setPage, setRegionInput, setModuleSubTab },
-    actions: { handleSubmit, handleTemplateSubmit, handleDelete: async (id: number) => { if(confirm("Hapus?")) { await supabase?.from('target_cities').delete().eq('id', id); setCities(p => p.filter(c => c.id !== id)); } }, handleEdit: (city: CityTarget) => { setForm({ id: city.id, name: city.name, type: city.type, narrative: city.narrative || '', template_id: city.template_id || 0 }); setShowMobileEditor(true); }, resetForm, openNewCity: () => { resetForm(); setShowMobileEditor(true); }, generateAITargets, publishAllSuggestions, generateNarrative }
+    actions: { 
+        handleSubmit, 
+        generateNarrative, 
+        handleTemplateSubmit, 
+        handleDelete: async (id: number) => { if(confirm("Hapus?")) { await supabase?.from('target_cities').delete().eq('id', id); setCities(p => p.filter(c => c.id !== id)); } }, 
+        handleEdit: (city: CityTarget) => { setForm({ id: city.id, name: city.name, type: city.type, narrative: city.narrative || '', template_id: city.template_id || 0 }); setShowMobileEditor(true); }, 
+        resetForm, 
+        openNewCity: () => { resetForm(); setShowMobileEditor(true); }, 
+        generateAITargets, 
+        publishAllSuggestions 
+    }
   };
 };

@@ -5,6 +5,7 @@ import { LoadingSpinner } from '../ui';
 import { LocalBusinessSchema } from '../seo';
 import { CityLogicProps } from './types';
 import { useCityLogic } from './logic';
+import { SimpleMarkdown } from '../admin-articles/markdown';
 
 // Section Imports
 import { CityListView } from './sections/city-list-view';
@@ -17,7 +18,6 @@ export const CityLandingModule = (props: CityLogicProps) => {
     const { citySlug } = useParams();
     const navigate = useNavigate();
     
-    // Pass slug from router param to logic hook
     const { cityData, citiesList, loading, isKandang, quotaInfo } = useCityLogic({ 
         ...props, 
         citySlug: citySlug 
@@ -31,12 +31,10 @@ export const CityLandingModule = (props: CityLogicProps) => {
         );
     }
 
-    // LIST VIEW: Jika kota tidak ditemukan atau user akses root path /jual-mesin-kasir-di
     if (!cityData) {
         return <CityListView cities={citiesList} />;
     }
 
-    // DETAIL VIEW: Landing Page Spesifik Kota
     return (
         <div className="animate-fade-in">
             <LocalBusinessSchema city={cityData.name} />
@@ -48,6 +46,20 @@ export const CityLandingModule = (props: CityLogicProps) => {
                 onShop={() => navigate('/shop')}
                 waNumber={props.config?.whatsapp_number}
             />
+
+            {/* AI GENERATED NARRATIVE SECTION */}
+            {(cityData as any).narrative && (
+                <section className="py-20 bg-brand-dark/30 border-b border-white/5">
+                    <div className="container mx-auto px-4 max-w-4xl">
+                        <div className="bg-brand-card/50 p-8 md:p-12 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-5">
+                                <span className="text-8xl font-black italic">SOLO</span>
+                            </div>
+                            <SimpleMarkdown content={(cityData as any).narrative} />
+                        </div>
+                    </div>
+                </section>
+            )}
 
             <WhyUsSection 
                 city={cityData}
