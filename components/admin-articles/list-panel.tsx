@@ -1,6 +1,6 @@
 
-import React, { useRef, useState, useEffect } from 'react';
-import { Search, List, Filter, Plus, Crown, Network, HelpCircle, ChevronUp, ChevronDown, Trash2, Edit, User, Users, Clock, FileEdit, Camera, Sparkles, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
+import { Search, List, Filter, Plus, Clock, Edit, Sparkles, Trash2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Article } from '../../types';
 import { FilterType } from './types';
 
@@ -41,7 +41,7 @@ const ArticleCard = ({ article, activeId, expandedId, onExpand, onEdit, onDelete
     return (
         <div className={`rounded-xl border transition-all overflow-hidden mb-2 ${borderClass}`}>
             <div className="p-3 cursor-pointer flex gap-3 items-center" onClick={() => canExpand ? onExpand() : onEdit(article)}>
-                <img src={article.image} className="w-12 h-12 rounded-lg object-cover bg-black shrink-0 border border-white/5" />
+                <img src={article.image} className="w-12 h-12 rounded-lg object-cover bg-black shrink-0 border border-white/5" loading="lazy" />
                 <div className="flex-1 min-w-0">
                     <h5 className={`text-[11px] font-bold leading-tight line-clamp-1 ${isSelected ? 'text-brand-orange' : 'text-white'}`}>
                         {article.title}
@@ -80,6 +80,44 @@ const ArticleCard = ({ article, activeId, expandedId, onExpand, onEdit, onDelete
     );
 };
 
+// --- COMPONENT: Virtual List Container ---
+const VirtualArticleList = ({ items, ...props }: any) => {
+    // Implementasi load-more berbasis scroll untuk menjaga performa DOM
+    const [visibleCount, setVisibleCount] = useState(20);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const handleScroll = () => {
+        if (!containerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+        if (scrollTop + clientHeight >= scrollHeight - 100) {
+            setVisibleCount(prev => Math.min(prev + 20, items.length));
+        }
+    };
+
+    return (
+        <div 
+            ref={containerRef} 
+            onScroll={handleScroll}
+            className="flex-grow overflow-y-auto p-3 custom-scrollbar pb-24"
+        >
+            {items.slice(0, visibleCount).map((article: Article) => (
+                <ArticleCard 
+                    key={article.id}
+                    article={article}
+                    {...props}
+                    canExpand={article.type === 'pillar'}
+                    linkedClusters={props.allArticles.filter((a: Article) => a.pillar_id === article.id)}
+                />
+            ))}
+            {visibleCount < items.length && (
+                <div className="py-4 text-center">
+                    <p className="text-[9px] text-gray-600 uppercase font-black tracking-widest animate-pulse">Loading more archives...</p>
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const ListPanel = ({ articles, logic, onReset, form }: any) => {
     return (
         <div className="flex flex-col h-full bg-brand-black">
@@ -102,34 +140,22 @@ export const ListPanel = ({ articles, logic, onReset, form }: any) => {
                 </div>
             </div>
 
-            <div className="flex-grow overflow-y-auto p-3 custom-scrollbar pb-24">
-                {logic.paginatedList.length === 0 ? (
-                    <div className="text-center py-20 text-gray-700">
-                        <Filter size={32} className="mx-auto mb-2 opacity-20"/>
-                        <p className="text-xs italic">Belum ada konten...</p>
-                    </div>
-                ) : logic.paginatedList.map((article: Article) => (
-                    <ArticleCard 
-                        key={article.id}
-                        article={article}
-                        activeId={form?.id}
-                        expandedId={logic.expandedPillarId}
-                        onExpand={() => logic.setExpandedPillarId(logic.expandedPillarId === article.id ? null : article.id)}
-                        onEdit={logic.actions.handleEditClick}
-                        onDelete={logic.actions.deleteItem}
-                        canExpand={article.type === 'pillar'}
-                        linkedClusters={articles.filter((a: Article) => a.pillar_id === article.id)}
-                        onAddCluster={logic.actions.runClusterResearch}
-                    />
-                ))}
-            </div>
-
-            {logic.totalPages > 1 && (
-                <div className="p-3 border-t border-white/10 flex justify-between items-center bg-brand-dark shrink-0 lg:mb-0 mb-16">
-                    <button onClick={() => logic.setPage(Math.max(1, logic.page - 1))} disabled={logic.page === 1} className="p-2 text-gray-500 hover:text-white disabled:opacity-20"><ChevronLeft size={16}/></button>
-                    <span className="text-[10px] font-bold text-brand-orange">{logic.page} / {logic.totalPages}</span>
-                    <button onClick={() => logic.setPage(Math.min(logic.totalPages, logic.page + 1))} disabled={logic.page === logic.totalPages} className="p-2 text-gray-500 hover:text-white disabled:opacity-20"><ChevronRight size={16}/></button>
+            {logic.paginatedList.length === 0 ? (
+                <div className="flex-grow flex flex-col items-center justify-center text-gray-700">
+                    <Filter size={32} className="mb-2 opacity-20"/>
+                    <p className="text-xs italic">Belum ada konten...</p>
                 </div>
+            ) : (
+                <VirtualArticleList 
+                    items={logic.sortedList || logic.paginatedList} 
+                    allArticles={articles}
+                    activeId={form?.id}
+                    expandedId={logic.expandedPillarId}
+                    onExpand={() => logic.setExpandedPillarId(logic.expandedPillarId === form?.id ? null : logic.expandedPillarId)}
+                    onEdit={logic.actions.handleEditClick}
+                    onDelete={logic.actions.deleteItem}
+                    onAddCluster={logic.actions.runClusterResearch}
+                />
             )}
         </div>
     );

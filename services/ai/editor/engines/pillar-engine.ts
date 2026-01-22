@@ -7,10 +7,14 @@ import { WriterConfig } from '../types';
 
 export const PillarEngine = {
     async execute(title: string, config: WriterConfig) {
-        const sectionsCount = Math.max(5, Math.ceil(config.wordCount / 700));
-        const outline = await Taxonomy.createOutline(title, sectionsCount);
+        // 1. COLLECT LORE & ASSETS
+        const loreContext = ContextBuilder.getAssetContext(config.productsJson, config.galleryJson);
         
-        // Base context
+        // 2. DEFINE STRUCTURE (Pillar biasanya 5-8 seksi)
+        const sectionsCount = Math.max(5, Math.min(8, Math.ceil(config.wordCount / 500)));
+        const outline = await Taxonomy.createOutline(title, sectionsCount, loreContext);
+        
+        // 3. BASE CONTEXT SETUP
         const baseContext = `
             ${BRAND_CONTEXT}
             ${ContextBuilder.getPersona(config.authorName)}
@@ -21,62 +25,44 @@ export const PillarEngine = {
         `;
 
         let fullContent = "";
-        let prevSectionEnd = "";
+        let memoryBuffer = "";
 
+        // 4. SECTIONAL WRITING LOOP
         for (let i = 0; i < outline.length; i++) {
             const isLast = i === outline.length - 1;
+            const currentHeading = outline[i];
             
-            // STRATEGY: Spread assets across different sections to ensure distancing
-            let specificAssetContext = "";
-            if (i === 1) {
-                specificAssetContext = ContextBuilder.getAssetContext(config.productsJson, undefined);
-            } else if (i === 3) {
-                specificAssetContext = ContextBuilder.getAssetContext(undefined, config.galleryJson);
-            }
-
-            const currentContext = `
-                ${baseContext}
-                ${specificAssetContext}
-            `;
-
             const prompt = `
-            [MODE: PILLAR AUTHORITY WRITER - SESSION CONTINUATION]
+            [MODE: LONG-FORM AUTHORITY WRITER - SECTION ${i + 1}/${outline.length}]
             Article Title: "${title}"
-            Sub-Heading Target: "## ${outline[i]}" (${i + 1}/${outline.length})
+            Full Strategy Roadmap: [${outline.join(' -> ')}]
+            TARGET SUB-HEADING: "## ${currentHeading}"
             
-            [CONTEXTUAL DATA]
-            ${currentContext}
+            [CONTINUITY MEMORY]
+            ${i === 0 
+                ? "Bikin pembukaan yang provokatif. Tampar ego pembaca biar sadar pentingnya topik ini." 
+                : `Barusan lo bahas tentang: "${memoryBuffer}". JANGAN ULANG poin itu. Sekarang lanjutin ke target heading di atas.`}
 
-            [STRICT WRITING RULES]
-            1. Fokus HANYA pada isi materi: "${outline[i]}".
-            2. Flow Kontinuitas (ANTI-REPETISI): 
-               ${i === 0 ? 
-                 "Mulai dengan Hook yang nendang. JANGAN pake basa-basi standar AI." : 
-                 `TEKS SEBELUMNYA BERAKHIR DI: "...${prevSectionEnd}...".
-                  TUGAS LO: LANGSUNG MASUK KE MATERI BARU. 
-                  - JANGAN tulis ulang kalimat referensi di atas.
-                  - JANGAN bikin ringkasan atau transisi "Nah, setelah membahas...", "Seperti yang disebutkan sebelumnya...", atau "Selain hal itu...".
-                  - ANGGAP pembaca sudah tahu apa yang lo tulis di atas, jadi gak perlu lo ingetin lagi.
-                  - LANGSUNG GAS ke paragraf pertama seksi ini.`
-               }
-            3. Kedalaman: Bahas tuntas. Pake bullet points/tabel jika data mendukung.
-            4. Asset Rule: Jika ada tag [PRODUCT] atau [PROJECT] di atas, gunakan MAKSIMAL 1 di seksi ini. Letakkan di baris kosong tersendiri SETELAH sebuah paragraf selesai.
-            5. ${isLast ? CLOSING_RULE : "JANGAN tulis kesimpulan. Langsung berhenti di kalimat terakhir materi seksi ini."}
+            [WEBSITE LORE (REFERENSI NYATA)]
+            ${loreContext}
 
-            Output: Markdown murni (Tanpa kata-kata pengantar AI).
+            [WRITING RULES]
+            1. Gaya: Street-smart, gritty, prioritaskan "Gue/Lo".
+            2. Ceritakan Produk/Project dari Lore secara naratif (misal: "Gue pernah pasang alat ini di...").
+            3. Jika ada tag [PRODUCT] atau [PROJECT], selipkan di baris baru setelah narasi pendukung.
+            4. ${isLast ? CLOSING_RULE : "JANGAN tulis closing. Langsung cut di bahasan terakhir."}
+
+            Output: Markdown.
             `;
 
             const res = await callGeminiWithRotation({ model: 'gemini-3-flash-preview', contents: prompt });
-            const text = res.text?.trim() || "";
+            const sectionText = res.text?.trim() || "";
             
-            // Tambahkan sub-heading jika belum ada (AI sering nulis sub-heading sendiri tapi kita mastiin)
-            const formattedText = text.startsWith('##') ? text : `## ${outline[i]}\n\n${text}`;
-            
-            fullContent += formattedText + "\n\n";
-            
-            // Ambil 300 karakter terakhir buat konteks yang lebih solid tapi instruksi tetep galak
-            prevSectionEnd = text.slice(-300);
+            const formattedSection = sectionText.startsWith('##') ? sectionText : `## ${currentHeading}\n\n${sectionText}`;
+            fullContent += formattedSection + "\n\n";
+            memoryBuffer = sectionText.slice(-500);
         }
+        
         return fullContent;
     }
 };
