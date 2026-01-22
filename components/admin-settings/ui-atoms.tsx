@@ -74,54 +74,65 @@ export const ImageUploader = ({
     helperText?: string
 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
-    const hClass = aspect === 'portrait' ? 'h-32 w-24' : 'h-24 w-40';
+    const aspectClass = aspect === 'portrait' ? 'aspect-[3/4]' : 'aspect-video';
 
     return (
-        <div>
-            <h3 className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-2"><ImageIcon size={14}/> {label}</h3>
-            <div className="flex gap-4 items-start">
-                <div className={`${hClass} bg-black rounded-lg overflow-hidden border border-white/10 shrink-0 relative group`}>
-                    <img src={previewUrl || "https://via.placeholder.com/150"} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                        <button onClick={() => inputRef.current?.click()} className="p-1 bg-white/20 hover:bg-white/40 rounded text-white" title="Upload Baru">
-                            <UploadCloud size={14} />
-                        </button>
-                        {onGalleryPick && (
-                            <button onClick={onGalleryPick} className="p-1 bg-brand-orange/20 hover:bg-brand-orange/40 rounded text-brand-orange border border-brand-orange/50" title="Pilih dari Galeri">
-                                <FolderOpen size={14} />
-                            </button>
-                        )}
-                    </div>
-                </div>
-                <div className="flex-1">
-                    <div className="flex gap-2 mb-2">
-                        <button 
-                            onClick={() => inputRef.current?.click()}
-                            className="flex-1 border border-dashed border-white/20 rounded-lg p-2 text-center hover:border-brand-orange/50 transition-colors cursor-pointer bg-white/5 flex flex-col items-center justify-center gap-1 group"
-                        >
-                            <input 
-                                type="file" 
-                                accept="image/*" 
-                                ref={inputRef}
-                                onChange={(e) => e.target.files?.[0] && onSelect(e.target.files[0])} 
-                                className="hidden" 
-                            />
-                            <UploadCloud size={14} className="text-gray-500 group-hover:text-brand-orange" />
-                            <span className="text-gray-400 font-bold text-[9px] group-hover:text-white">Upload</span>
-                        </button>
-                        
-                        {onGalleryPick && (
+        <div className="w-full">
+            <h3 className="text-xs font-bold text-gray-400 mb-3 flex items-center gap-2 uppercase tracking-widest">
+                <ImageIcon size={14}/> {label}
+            </h3>
+            
+            <div className="space-y-3">
+                <div className={`w-full ${aspectClass} bg-black rounded-2xl overflow-hidden border border-white/10 relative group shadow-inner`}>
+                    <img 
+                        src={previewUrl || "https://via.placeholder.com/800"} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                        alt={label}
+                    />
+                    
+                    {/* OVERLAY KONTROL - AKTIF PAS HOVER */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
+                        <div className="flex gap-3">
                             <button 
-                                onClick={onGalleryPick}
-                                className="flex-1 border border-dashed border-brand-orange/20 rounded-lg p-2 text-center hover:bg-brand-orange/10 transition-colors cursor-pointer bg-brand-orange/5 flex flex-col items-center justify-center gap-1 group"
+                                onClick={() => inputRef.current?.click()} 
+                                className="flex flex-col items-center gap-2 p-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl transition-all hover:-translate-y-1"
+                                title="Upload Foto Baru"
                             >
-                                <FolderOpen size={14} className="text-brand-orange opacity-70 group-hover:opacity-100" />
-                                <span className="text-brand-orange font-bold text-[9px]">Galeri</span>
+                                <UploadCloud size={24} className="text-white" />
+                                <span className="text-[10px] font-black text-white uppercase tracking-tighter">Upload</span>
                             </button>
-                        )}
+                            
+                            {onGalleryPick && (
+                                <button 
+                                    onClick={onGalleryPick} 
+                                    className="flex flex-col items-center gap-2 p-4 bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/30 rounded-2xl transition-all hover:-translate-y-1"
+                                    title="Pilih dari Galeri Aset"
+                                >
+                                    <FolderOpen size={24} className="text-brand-orange" />
+                                    <span className="text-[10px] font-black text-brand-orange uppercase tracking-tighter">Galeri</span>
+                                </button>
+                            )}
+                        </div>
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest px-6 text-center">
+                            {previewUrl ? 'Klik salah satu untuk ganti foto' : 'Foto masih kosong, Bos!'}
+                        </p>
                     </div>
-                    {helperText && <p className="text-[9px] text-gray-600 mt-1">{helperText}</p>}
+
+                    <input 
+                        type="file" 
+                        accept="image/*" 
+                        ref={inputRef}
+                        onChange={(e) => e.target.files?.[0] && onSelect(e.target.files[0])} 
+                        className="hidden" 
+                    />
                 </div>
+
+                {helperText && (
+                    <div className="flex items-center gap-2 px-1">
+                        <div className="w-1 h-1 rounded-full bg-brand-orange"></div>
+                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">{helperText}</p>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -141,7 +152,7 @@ export const AIGeneratorBox = ({
     <div className="bg-brand-dark/50 p-4 rounded-2xl border border-white/10 flex flex-col md:flex-row gap-4 items-end mb-6">
         <div className="flex-1 w-full">
             <label className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-1">
-                <Sparkles size={12}/> AI Copywriter
+                <span className="p-1 bg-blue-500/10 rounded-md"><Sparkles size={10}/></span> AI Copywriter
             </label>
             <Input 
                 value={context}
