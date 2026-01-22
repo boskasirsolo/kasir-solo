@@ -3,7 +3,7 @@ import React from 'react';
 import { TabProps } from './types';
 import { SettingsSection } from './ui-atoms';
 import { Input, Button } from '../ui';
-import { Clock, BarChart, Monitor, Rss, Copy, ExternalLink, Check, ShoppingBag, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Clock, BarChart, Monitor, Rss, Copy, ExternalLink, Check, ShoppingBag, AlertTriangle, Eye, EyeOff, ShieldAlert, Zap } from 'lucide-react';
 import { INDONESIA_TIMEZONES, CONFIG } from '../../utils';
 
 export const TabSystem = ({ config, setConfig }: TabProps) => {
@@ -21,6 +21,34 @@ export const TabSystem = ({ config, setConfig }: TabProps) => {
 
     return (
         <div className="space-y-8 animate-fade-in">
+            {/* --- NEW: MAINTENANCE MODE SWITCH --- */}
+            <SettingsSection title="Stealth & Maintenance Control" desc="Gembok ruko depan biar publik gak liat pas lo lagi ngelas sistem.">
+                <div className={`p-6 rounded-2xl border transition-all duration-500 flex flex-col md:flex-row items-center gap-6 ${config.is_maintenance_mode ? 'bg-red-600/10 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'bg-green-500/5 border-green-500/30'}`}>
+                    <div className={`p-4 rounded-3xl transition-all duration-500 ${config.is_maintenance_mode ? 'bg-red-500 text-white shadow-neon-strong rotate-12' : 'bg-green-500/20 text-green-500 shadow-neon'}`}>
+                        {config.is_maintenance_mode ? <ShieldAlert size={32} /> : <Zap size={32} />}
+                    </div>
+                    <div className="flex-1 text-center md:text-left">
+                        <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                            <h4 className="text-white font-black text-lg uppercase tracking-tighter">
+                                {config.is_maintenance_mode ? 'MODE MAINTENANCE AKTIF' : 'WEBSITE STATUS: LIVE'}
+                            </h4>
+                            <div className={`w-2 h-2 rounded-full animate-ping ${config.is_maintenance_mode ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                        </div>
+                        <p className="text-xs text-gray-500 leading-relaxed max-w-md font-bold uppercase tracking-widest">
+                            {config.is_maintenance_mode 
+                                ? 'Publik cuma bisa liat halaman "Lagi Bongkar Mesin". Browser lo (Ghost Mode) tetep bisa liat web asli.' 
+                                : 'Web lo kebuka lebar buat semua orang. Pastikan semua konten udah oke Bos!'}
+                        </p>
+                    </div>
+                    <button 
+                        onClick={() => setConfig({...config, is_maintenance_mode: !config.is_maintenance_mode})}
+                        className={`px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all transform active:scale-95 ${config.is_maintenance_mode ? 'bg-green-600 hover:bg-green-500 text-white shadow-neon' : 'bg-red-600 hover:bg-red-500 text-white'}`}
+                    >
+                        {config.is_maintenance_mode ? 'BUKA GEMBOK (GO LIVE)' : 'GEMBOK RUKO (MAINTENANCE)'}
+                    </button>
+                </div>
+            </SettingsSection>
+
             {/* VISIBILITY CONTROL */}
             <SettingsSection title="Indeks Mesin Pencari" desc="Atur apakah website boleh muncul di Google atau tidak.">
                 <div className={`p-6 rounded-2xl border transition-all flex flex-col md:flex-row items-center gap-6 ${config.is_noindex ? 'bg-red-500/5 border-red-500/30' : 'bg-green-500/5 border-green-500/30'}`}>
