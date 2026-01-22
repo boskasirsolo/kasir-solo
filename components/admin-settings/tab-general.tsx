@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { TabProps } from './types';
-import { SettingsSection, ImageUploader, AIGeneratorBox } from './ui-atoms';
+import { SettingsSection, ImageUploader, AIGeneratorBox, HeroCheatSheet } from './ui-atoms';
 import { Input, TextArea } from '../ui';
 import { MediaLibraryModal } from '../admin/media-library';
 
@@ -30,20 +30,33 @@ export const TabGeneral = ({ config, setConfig, state, actions }: TabProps) => {
 
             {/* HERO SECTION */}
             <SettingsSection title="Tampilan Utama (Hero)" desc="Konten yang muncul paling depan di website.">
+                {/* TUTORIAL / CHEAT SHEET */}
+                <HeroCheatSheet />
+
                 <AIGeneratorBox 
                     context={state.magicContext} 
                     setContext={actions.setMagicContext} 
                     onGenerate={actions.generateHeroContent} 
                     isGenerating={state.isGenerating} 
                 />
+                
                 <div className="space-y-4">
                     <div>
                         <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Judul Besar (H1)</label>
-                        <Input value={config.hero_title} onChange={(e) => setConfig({...config, hero_title: e.target.value})} />
+                        <TextArea 
+                            value={config.hero_title} 
+                            onChange={(e) => setConfig({...config, hero_title: e.target.value})} 
+                            placeholder="Gunakan {} untuk Orange, [] untuk Gradasi, dan Enter untuk baris baru."
+                            className="h-32 font-bold"
+                        />
                     </div>
                     <div>
                         <label className="text-[10px] text-gray-500 font-bold uppercase mb-1 block">Sub-Judul</label>
-                        <TextArea value={config.hero_subtitle} onChange={(e) => setConfig({...config, hero_subtitle: e.target.value})} className="h-24" />
+                        <TextArea 
+                            value={config.hero_subtitle} 
+                            onChange={(e) => setConfig({...config, hero_subtitle: e.target.value})} 
+                            className="h-24" 
+                        />
                     </div>
                 </div>
             </SettingsSection>

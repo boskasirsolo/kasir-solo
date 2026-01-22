@@ -89,7 +89,8 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
             STRICT STYLE GUIDE:
             - Use {word} to highlight words in ORANGE.
             - Use [word] to highlight words in GRADIENT.
-            Example: "AKHIRI ERA {BONCOS}" or "Pusat [Mesin Kasir] Terpercaya".
+            - Use \\n for manual line breaks to make the layout punchy.
+            Example: "AKHIRI ERA\\n{BONCOS}" or "Pusat [Mesin Kasir]\\nTerpercaya".
             
             Output: STIRCT JSON format { "heroTitle": "string", "heroSubtitle": "string" }. No other text.`;
 
@@ -105,8 +106,8 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
             if (data && data.heroTitle) {
                 setConfig({ 
                     ...config, 
-                    hero_title: data.heroTitle, 
-                    hero_subtitle: data.heroSubtitle || config.hero_subtitle 
+                    hero_title: data.heroTitle.replace(/\\n/g, '\n'), 
+                    hero_subtitle: (data.heroSubtitle || config.hero_subtitle).replace(/\\n/g, '\n')
                 });
             } else {
                 throw new Error("AI ngasih format rusak, coba lagi Bos.");

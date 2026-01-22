@@ -8,23 +8,22 @@ export const HomeHero = ({ setPage, config }: { setPage: (p: string) => void, co
   const title = config.hero_title || "AKHIRI ERA {BONCOS}";
   const subtitle = config.hero_subtitle || "Gue bantu rakit [Sistem Kasir] & Aset Digital yang bikin bisnis lo kerja sendiri.";
 
-  // Helper untuk parse teks dengan highlight
+  // Helper untuk parse teks dengan highlight dan ganti baris
   const parseHeroText = (text: string) => {
-    // Regex 1: {teks} -> Orange
-    // Regex 2: [teks] -> Gradient
+    // Regex untuk memisahkan highlight {} dan []
     const parts = text.split(/(\{.*?\}|\[.*?\])/g);
     
     return parts.map((part, i) => {
       if (part.startsWith('{') && part.endsWith('}')) {
         return (
-          <span key={i} className="text-brand-orange drop-shadow-neon-text">
+          <span key={i} className="text-brand-orange drop-shadow-neon-text inline-block">
             {part.slice(1, -1)}
           </span>
         );
       }
       if (part.startsWith('[') && part.endsWith(']')) {
         return (
-          <span key={i} className="text-transparent bg-clip-text bg-brand-gradient drop-shadow-2xl">
+          <span key={i} className="text-transparent bg-clip-text bg-brand-gradient drop-shadow-2xl inline-block">
             {part.slice(1, -1)}
           </span>
         );
@@ -52,7 +51,8 @@ export const HomeHero = ({ setPage, config }: { setPage: (p: string) => void, co
         </div>
         
         <div className="space-y-6 max-w-5xl mb-12">
-          <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-black text-white leading-[1.1] tracking-tighter drop-shadow-2xl animate-fade-in uppercase">
+          {/* whitespace-pre-line untuk mendukung ganti baris dari textarea */}
+          <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-black text-white leading-[1.1] tracking-tighter drop-shadow-2xl animate-fade-in uppercase whitespace-pre-line">
             {parseHeroText(title)}
           </h1>
           

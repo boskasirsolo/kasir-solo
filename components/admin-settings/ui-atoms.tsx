@@ -1,6 +1,6 @@
 
 import React, { useRef } from 'react';
-import { UploadCloud, Image as ImageIcon, Sparkles, Loader2, FolderOpen } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, Sparkles, Loader2, FolderOpen, Info, Zap, Type } from 'lucide-react';
 import { Input, Button } from '../ui';
 
 export const SettingsSection = ({ title, desc, children }: { title: string, desc?: string, children?: React.ReactNode }) => (
@@ -10,6 +10,49 @@ export const SettingsSection = ({ title, desc, children }: { title: string, desc
             {desc && <p className="text-[10px] text-gray-500 mt-1">{desc}</p>}
         </div>
         {children}
+    </div>
+);
+
+export const HeroCheatSheet = () => (
+    <div className="bg-brand-dark/80 border border-brand-orange/20 rounded-2xl p-5 mb-6 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Zap size={80} className="text-brand-orange" />
+        </div>
+        
+        <h4 className="text-brand-orange text-[10px] font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+            <Info size={14} /> Mantra Visual Hero (Cheat Codes)
+        </h4>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+            {/* Rule 1: Orange */}
+            <div className="p-3 bg-black/40 rounded-xl border border-white/5 hover:border-brand-orange/30 transition-all">
+                <p className="text-[9px] text-gray-500 font-bold uppercase mb-2">Warna Orange Brand</p>
+                <code className="text-xs text-white bg-white/5 px-2 py-1 rounded block mb-2">{"{Teks Lo}"}</code>
+                <p className="text-[10px] text-brand-orange font-black italic">Preview: Teks Lo</p>
+            </div>
+
+            {/* Rule 2: Gradient */}
+            <div className="p-3 bg-black/40 rounded-xl border border-white/5 hover:border-blue-500/30 transition-all">
+                <p className="text-[9px] text-gray-500 font-bold uppercase mb-2">Efek Gradasi Mewah</p>
+                <code className="text-xs text-white bg-white/5 px-2 py-1 rounded block mb-2">{"[Teks Lo]"}</code>
+                <p className="text-[10px] text-transparent bg-clip-text bg-brand-gradient font-black italic">Preview: Teks Lo</p>
+            </div>
+
+            {/* Rule 3: Line Break */}
+            <div className="p-3 bg-black/40 rounded-xl border border-white/5 hover:border-green-500/30 transition-all">
+                <p className="text-[9px] text-gray-500 font-bold uppercase mb-2">Ganti Baris Baru</p>
+                <div className="flex items-center gap-2 mb-2">
+                   <code className="text-xs text-white bg-white/5 px-2 py-1 rounded">Enter</code>
+                   <span className="text-[10px] text-gray-600">atau</span>
+                   <code className="text-xs text-white bg-white/5 px-2 py-1 rounded">\n</code>
+                </div>
+                <p className="text-[10px] text-gray-400 leading-tight">Bikin judul lo <br/>jadi dua baris.</p>
+            </div>
+        </div>
+        
+        <p className="text-[9px] text-gray-600 mt-4 italic">
+            *Tips: Jangan pake efek kebanyakan biar gak pusing liatnya, Bos. Satu seksi satu efek aja udah mantap.
+        </p>
     </div>
 );
 
