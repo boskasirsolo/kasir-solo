@@ -2,25 +2,12 @@
 import React from 'react';
 import { TabProps } from './types';
 import { SettingsSection } from './ui-atoms';
-import { Input, Button } from '../ui';
-import { Clock, Rss, Copy, Check, Eye, EyeOff, ShieldAlert, Zap, Loader2 } from 'lucide-react';
-import { INDONESIA_TIMEZONES, CONFIG } from '../../utils';
+import { Clock, ShieldAlert, Zap, Loader2 } from 'lucide-react';
+import { INDONESIA_TIMEZONES } from '../../utils';
 
 export const TabSystem = ({ config, setConfig, state, actions }: TabProps) => {
-    const [copied, setCopied] = React.useState(false);
-    
     // Clean access thanks to updated interface
     const isToggling = state.isTogglingMaintenance;
-
-    const projectUrl = CONFIG.SUPABASE_URL || "";
-    const projectRef = projectUrl.split('//')[1]?.split('.')[0];
-    const feedUrl = projectRef ? `https://${projectRef}.supabase.co/functions/v1/google-product-feed` : "Error: Supabase URL not found";
-
-    const handleCopy = () => {
-        navigator.clipboard.writeText(feedUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -84,28 +71,6 @@ export const TabSystem = ({ config, setConfig, state, actions }: TabProps) => {
                 </div>
             </SettingsSection>
 
-            {/* GOOGLE MERCHANT FEED */}
-            <SettingsSection title="Google Merchant Center (Product Feed)" desc="Sinkronisasi produk otomatis ke Google Shopping (Free Listing/Ads).">
-                <div className="bg-brand-orange/5 p-6 rounded-xl border border-brand-orange/20 relative">
-                    <div className="flex items-start gap-4">
-                        <div className="p-3 bg-brand-orange/10 rounded-lg text-brand-orange shrink-0">
-                            <Rss size={24} />
-                        </div>
-                        <div className="flex-1">
-                            <h4 className="text-white font-bold text-sm mb-2">Link XML Feed Otomatis</h4>
-                            <div className="flex gap-2 mb-2">
-                                <div className="relative flex-1">
-                                    <Input value={feedUrl} readOnly className="bg-black/50 border-brand-orange/30 text-brand-orange font-mono text-xs pr-10 cursor-text" />
-                                </div>
-                                <Button onClick={handleCopy} className="bg-brand-orange hover:bg-brand-action text-white px-4 shrink-0">
-                                    {copied ? <Check size={16}/> : <Copy size={16}/>}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </SettingsSection>
-
             <SettingsSection title="Konfigurasi Server & Waktu">
                 <div className="bg-brand-dark/50 p-6 rounded-xl border border-white/10 relative overflow-hidden">
                     <h4 className="text-brand-orange font-bold text-sm mb-4 flex items-center gap-2">
@@ -127,3 +92,4 @@ export const TabSystem = ({ config, setConfig, state, actions }: TabProps) => {
         </div>
     );
 };
+import { Eye, EyeOff } from 'lucide-react';
