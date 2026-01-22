@@ -40,7 +40,7 @@ const ArticleCard = ({ article, activeId, expandedId, onExpand, onEdit, onDelete
 
     return (
         <div className={`rounded-xl border transition-all overflow-hidden mb-2 ${borderClass}`}>
-            <div className="p-3 cursor-pointer flex gap-3 items-center" onClick={() => canExpand ? onExpand() : onEdit(article)}>
+            <div className="p-3 cursor-pointer flex gap-3 items-center" onClick={() => canExpand ? onExpand(article.id) : onEdit(article)}>
                 <img src={article.image} className="w-12 h-12 rounded-lg object-cover bg-black shrink-0 border border-white/5" loading="lazy" />
                 <div className="flex-1 min-w-0">
                     <h5 className={`text-[11px] font-bold leading-tight line-clamp-1 ${isSelected ? 'text-brand-orange' : 'text-white'}`}>
@@ -50,7 +50,7 @@ const ArticleCard = ({ article, activeId, expandedId, onExpand, onEdit, onDelete
                         {isPillar ? (
                             <span className="text-[8px] text-yellow-500 border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 rounded font-bold uppercase">Pilar</span>
                         ) : (
-                            <span className="text-[8px] text-blue-400 border border-blue-400/30 bg-blue-400/10 px-1.5 py-0.5 rounded font-bold uppercase">Cluster</span>
+                            <span className="text-[8px] text-blue-400 border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 rounded font-bold uppercase">Cluster</span>
                         )}
                         <span className="text-[8px] text-gray-500 font-mono flex items-center gap-1 ml-auto">
                             <Clock size={8}/> {article.date}
@@ -81,8 +81,7 @@ const ArticleCard = ({ article, activeId, expandedId, onExpand, onEdit, onDelete
 };
 
 // --- COMPONENT: Virtual List Container ---
-const VirtualArticleList = ({ items, ...props }: any) => {
-    // Implementasi load-more berbasis scroll untuk menjaga performa DOM
+const VirtualArticleList = ({ items, onExpand, ...props }: any) => {
     const [visibleCount, setVisibleCount] = useState(20);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -104,6 +103,7 @@ const VirtualArticleList = ({ items, ...props }: any) => {
                 <ArticleCard 
                     key={article.id}
                     article={article}
+                    onExpand={onExpand}
                     {...props}
                     canExpand={article.type === 'pillar'}
                     linkedClusters={props.allArticles.filter((a: Article) => a.pillar_id === article.id)}
@@ -118,7 +118,7 @@ const VirtualArticleList = ({ items, ...props }: any) => {
     );
 };
 
-export const ListPanel = ({ articles, logic, onReset, form }: any) => {
+export const ListPanel = ({ articles, logic, onExpand, onReset, form }: any) => {
     return (
         <div className="flex flex-col h-full bg-brand-black">
             <div className="p-4 border-b border-white/10 space-y-4 bg-brand-card/50">
@@ -151,7 +151,7 @@ export const ListPanel = ({ articles, logic, onReset, form }: any) => {
                     allArticles={articles}
                     activeId={form?.id}
                     expandedId={logic.expandedPillarId}
-                    onExpand={() => logic.setExpandedPillarId(logic.expandedPillarId === form?.id ? null : logic.expandedPillarId)}
+                    onExpand={onExpand}
                     onEdit={logic.actions.handleEditClick}
                     onDelete={logic.actions.deleteItem}
                     onAddCluster={logic.actions.runClusterResearch}

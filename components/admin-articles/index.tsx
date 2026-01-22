@@ -22,7 +22,6 @@ export const AdminArticles = ({
     config: SiteConfig,
     products: Product[]
 }) => {
-  // Logic Particle: Semua otak ada di sini
   const manager = useArticleManager(articles, setArticles, gallery, config, products);
   const { form, filterLogic, aiLogic, aiState, uiState, actions, activeMobilePane, setActiveMobilePane } = manager;
   
@@ -42,11 +41,15 @@ export const AdminArticles = ({
       <div className={`w-full lg:w-[25%] lg:block border-r-0 lg:border-r border-white/5 min-w-[280px] h-full ${activeMobilePane === 'LIST' ? 'block' : 'hidden'}`}>
          <ListPanel 
             articles={articles}
-            logic={{ ...filterLogic, actions: { 
-                handleEditClick: actions.handleEditClick, 
-                deleteItem: actions.deleteItem,
-                runClusterResearch: actions.runClusterResearch 
-            } }}
+            logic={{ 
+                ...filterLogic, 
+                actions: { 
+                    handleEditClick: actions.handleEditClick, 
+                    deleteItem: actions.deleteItem,
+                    runClusterResearch: actions.runClusterResearch 
+                } 
+            }}
+            onExpand={(id: number) => filterLogic.setExpandedPillarId(filterLogic.expandedPillarId === id ? null : id)}
             onReset={actions.resetForm}
             form={form} 
          />

@@ -53,9 +53,17 @@ export const Taxonomy = {
             contents: prompt, 
             config: { responseMimeType: "application/json" } 
         });
+
         try {
-            return JSON.parse(res.text || '[]');
+            // ROBUST JSON EXTRACTOR: Bersihkan kemungkinan pembungkus markdown dari AI
+            let cleanJson = res.text?.trim() || '[]';
+            if (cleanJson.includes('```')) {
+                const match = cleanJson.match(/```(?:json)?([\s\S]*?)```/);
+                if (match && match[1]) cleanJson = match[1].trim();
+            }
+            return JSON.parse(cleanJson);
         } catch (e) {
+            console.error("[SIBOS] Outline Parse Error:", e);
             return ["Akar Masalah", "Bukti Lapangan", "Solusi Taktis", "Strategi Cuan", "Langkah Selanjutnya"];
         }
     }
