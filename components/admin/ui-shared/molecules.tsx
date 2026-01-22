@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Ghost, Search, Plus } from 'lucide-react';
+import { Ghost, Search, Plus, Loader2, Sparkles } from 'lucide-react';
 import { CmdButton } from './atoms';
 
 // --- MINI DASHBOARD HEADER ---
@@ -31,6 +31,50 @@ export const ModuleHeader = ({
       <CmdButton onClick={onAdd} variant="primary" icon={Plus} label={addLabel} />
     )}
   </div>
+);
+
+// --- FIELD GROUP Cerdas (Atomic Build) ---
+// FIX: children is now optional to resolve "Property 'children' is missing" errors in consuming components
+export const FieldGroup = ({ 
+  label, 
+  icon: Icon, 
+  children, 
+  onAI, 
+  aiLoading, 
+  className = "",
+  helperText
+}: {
+  label: string,
+  icon?: any,
+  children?: React.ReactNode,
+  onAI?: () => void,
+  aiLoading?: boolean,
+  className?: string,
+  helperText?: string
+}) => (
+    <div className={`space-y-1.5 ${className}`}>
+        <div className="flex justify-between items-center px-1">
+            <label className="text-[9px] text-gray-600 font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                {Icon && <Icon size={10} className="text-gray-700"/>}
+                {label}
+            </label>
+            {onAI && (
+                <button 
+                    type="button"
+                    onClick={onAI} 
+                    disabled={aiLoading}
+                    className="text-[9px] font-black text-blue-500 hover:text-white flex items-center gap-1 disabled:opacity-30 transition-colors"
+                >
+                    {aiLoading ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                    AUTO-GEN
+                </button>
+            )}
+        </div>
+        <div className="relative">
+            {children}
+        </div>
+        {helperText && <p className="text-[8px] text-gray-700 italic px-1">{helperText}</p>}
+    </div>
 );
 
 // --- DASHBOARD EMPTY STATE ---
