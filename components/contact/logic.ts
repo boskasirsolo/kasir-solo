@@ -23,13 +23,14 @@ export const useContactLogic = (config: SiteConfig) => {
         if (!supabase) return;
 
         try {
-            await supabase.from('leads').insert([{
+            // Audit: Ganti 'leads' ke 'customers' sesuai dump lo
+            await supabase.from('customers').insert([{
                 name: form.name,
                 phone: cleanPhone,
                 source: 'contact_form',
-                interest: form.category,
-                notes: form.message.substring(0, 100) + '...',
-                status: 'new'
+                notes: `Topik: ${form.category}. Pesan: ${form.message.substring(0, 100)}...`,
+                lead_status: 'new',
+                lead_temperature: 'cold'
             }]);
             lastCapturedPhone.current = cleanPhone;
         } catch (e) {

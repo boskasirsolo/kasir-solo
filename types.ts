@@ -1,7 +1,7 @@
 
 // --- CORE INTERFACES ---
 
-// RAW MAPPING: Sesuai kolom database Supabase
+// RAW MAPPING: Sesuai kolom database Supabase yang diaudit
 export interface SiteConfig {
   hero_title: string;
   hero_subtitle: string;
@@ -29,22 +29,19 @@ export interface SiteConfig {
   linkedin_url?: string;
   google_analytics_id?: string;
   google_search_console_code?: string;
-  google_merchant_id?: string;
-  timezone?: string;
+  is_maintenance_mode?: boolean;
+  /* FIX: Add missing property is_noindex to SiteConfig */
+  is_noindex?: boolean;
+  bank_name?: string;
+  bank_account_number?: string;
+  bank_account_name?: string;
   quota_onsite_max?: number;
   quota_onsite_used?: number;
   quota_digital_max?: number;
   quota_digital_used?: number;
-  is_noindex?: boolean;
-  is_maintenance_mode?: boolean;
-  bank_name?: string;
-  bank_account_number?: string;
-  bank_account_name?: string;
+  timezone?: string;
 }
 
-/**
- * Interface untuk produk fisik (Mesin Kasir / Hardware)
- */
 export interface Product {
   id: number;
   name: string;
@@ -62,42 +59,40 @@ export interface Product {
   cta_text?: string;
 }
 
-/**
- * Interface untuk Artikel / Blog (Pillar & Cluster)
- */
 export interface Article {
   id: number;
   title: string;
   excerpt: string;
   content: string;
-  date: string; // Formatting for UI
-  image: string; // Alias for UI
-  image_url?: string; // Direct from DB
+  date: string; 
+  image: string; 
+  image_url?: string; 
   category: string;
   author: string;
   author_avatar?: string;
-  readTime?: string;
-  read_time?: string;
+  read_time?: string; // DB Column name
+  readTime?: string; // UI Mapping
   status?: 'draft' | 'published' | 'scheduled';
+  /* FIX: Add missing property scheduled_for to Article */
   scheduled_for?: string;
+  tags?: string[];
   type?: 'pillar' | 'cluster';
   pillar_id?: number;
-  cluster_ideas?: string[];
+  /* FIX: Add missing property related_pillars to Article */
   related_pillars?: number[];
-  generation_context?: string;
-  target_city_id?: number;
   created_at?: string;
 }
 
-/**
- * Interface untuk Item Galeri / Portofolio
- */
 export interface GalleryItem {
   id: number;
   title: string;
   image_url: string;
   gallery_images?: string[];
   category_type: 'physical' | 'digital';
+  /* FIX: Add missing property type to GalleryItem */
+  type?: 'image' | 'video';
+  /* FIX: Add missing property video_url to GalleryItem */
+  video_url?: string;
   platform?: 'web' | 'mobile' | 'desktop';
   description?: string;
   client_url?: string;
@@ -107,13 +102,8 @@ export interface GalleryItem {
     solution: string;
     result: string;
   };
-  type?: 'image' | 'video';
-  video_url?: string;
 }
 
-/**
- * Interface untuk Testimoni Klien
- */
 export interface Testimonial {
   id: number;
   client_name: string;
@@ -124,9 +114,6 @@ export interface Testimonial {
   is_featured: boolean;
 }
 
-/**
- * Interface untuk Lowongan Kerja (Career)
- */
 export interface JobOpening {
   id: number;
   title: string;
@@ -139,67 +126,31 @@ export interface JobOpening {
   created_at?: string;
 }
 
-/**
- * Interface untuk Item di Keranjang Belanja
- */
 export interface CartItem extends Product {
   quantity: number;
 }
 
-/**
- * Interface untuk Transaksi Pesanan (Orders)
- */
-export interface Order {
-  id: number;
-  created_at: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_address: string;
-  customer_note?: string;
-  total_amount: number;
-  status: 'pending' | 'paid' | 'processed' | 'completed' | 'cancelled';
-  payment_method?: string;
-  courier?: string;
-  tracking_number?: string;
-}
-
-/**
- * Interface untuk Item dalam satu Pesanan
- */
-export interface OrderItem {
-  id: number;
-  order_id: number;
-  product_id: number;
-  product_name: string;
-  quantity: number;
-  price: number;
-  products?: {
-    specs: any;
-  };
-}
-
-/**
- * Interface untuk Calon Pelanggan / Leads (CRM)
- */
-export interface Lead {
-  id: number;
-  created_at: string;
+export interface Customer {
+  id?: string;
   name: string;
   phone: string;
   email?: string;
+  company_name?: string;
+  business_category?: string;
+  business_scale?: string;
+  location?: string;
   source?: string;
-  interest?: string;
+  lead_status?: string;
+  lead_temperature?: string;
   notes?: string;
-  status: string;
+  created_at?: string;
 }
 
-/**
- * Interface untuk File Download (Support)
- */
+/* FIX: Add missing DownloadItem interface */
 export interface DownloadItem {
   id: string;
   title: string;
-  category: 'driver' | 'manual' | 'software' | 'tools';
+  category: string;
   description: string;
   file_url: string;
   file_size: string;
@@ -210,9 +161,7 @@ export interface DownloadItem {
   created_at?: string;
 }
 
-/**
- * Interface untuk Tutorial Video
- */
+/* FIX: Add missing Tutorial interface */
 export interface Tutorial {
   id: number;
   title: string;
@@ -220,9 +169,7 @@ export interface Tutorial {
   created_at?: string;
 }
 
-/**
- * Interface untuk FAQ
- */
+/* FIX: Add missing FAQ interface */
 export interface FAQ {
   id: number;
   question: string;
@@ -230,36 +177,82 @@ export interface FAQ {
   created_at?: string;
 }
 
-/**
- * Interface untuk Kalender Sosmed AI
- */
+/* FIX: Add missing ScheduledPost interface */
 export interface ScheduledPost {
   day: string;
   theme: string;
   hook: string;
   caption: string;
   image_idea: string;
-  status?: string;
+  status: 'pending' | 'posted';
 }
 
-/**
- * Interface untuk Logs Analytics
- */
+/* FIX: Add missing Order interface */
+export interface Order {
+  id: number;
+  created_at: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_address: string;
+  customer_note?: string;
+  total_amount: number;
+  status: 'pending' | 'paid' | 'processed' | 'completed' | 'cancelled';
+  payment_method: string;
+  courier?: string;
+  tracking_number?: string;
+}
+
+/* FIX: Add missing OrderItem interface */
+export interface OrderItem {
+  id: number;
+  order_id: number;
+  product_id: number;
+  product_name: string;
+  quantity: number;
+  price: number;
+}
+
+/* FIX: Add missing Lead interface */
+export interface Lead {
+  id: number;
+  name: string;
+  phone: string;
+  email?: string;
+  source: string;
+  interest?: string;
+  notes?: string;
+  status: 'new' | 'contacted' | 'negotiating' | 'closed' | 'lost';
+  created_at: string;
+}
+
+/* FIX: Add missing ServicePageData interface */
+export interface ServicePageData {
+  id: number;
+  slug: string;
+  title: string;
+  highlight: string;
+  subtitle: string;
+  icon_name: string;
+  features: any[];
+  steps: any[];
+  calc_data: any;
+  created_at?: string;
+}
+
+/* FIX: Add missing AnalyticsLog interface */
 export interface AnalyticsLog {
-  id?: number;
+  id: number;
   visitor_id: string;
-  event_type: string;
+  event_type: 'page_view' | 'page_leave' | 'click_action' | 'contact_wa';
   page_path: string;
   device_type: string;
-  referrer?: string;
+  referrer: string;
   location_city?: string;
   os_name?: string;
   created_at?: string;
 }
 
-/**
- * Interface untuk Simulasi Layanan Digital
- */
+/* FIX: Add missing ServiceSimulation interface */
 export interface ServiceSimulation {
   id: number;
   created_at: string;
@@ -272,25 +265,10 @@ export interface ServiceSimulation {
   selected_addons: any[];
   total_min: number;
   total_max: number;
-  status: string;
+  status: 'new' | 'contacted' | 'proposed' | 'closed';
   company_name?: string;
   address?: string;
   business_category?: string;
   business_scale?: string;
   notes?: string;
-}
-
-/**
- * Interface untuk Halaman Layanan Jasa
- */
-export interface ServicePageData {
-  id: number;
-  slug: string;
-  title: string;
-  highlight: string;
-  subtitle: string;
-  icon_name: string;
-  features: any[];
-  steps: any[];
-  calc_data: any;
 }
