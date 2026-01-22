@@ -3,21 +3,25 @@ export type LeadTemperature = 'cold' | 'warm' | 'hot';
 export type LeadStatus = 'new' | 'contacted' | 'negotiating' | 'closed' | 'lost';
 
 export interface Customer {
-    id: string;
+    phone: string; // Primary Key
     name: string;
-    phone: string;
     email?: string;
+    location?: string;
     company_name?: string;
     business_category?: string;
     business_scale?: string;
-    location?: string;
-    source: string;
     lead_status: LeadStatus;
     lead_temperature: LeadTemperature;
     total_spent: number;
-    last_interaction: string;
-    notes?: string;
+    total_orders: number;
+    interaction_history: any[];
+    last_notes?: string;
+    updated_at: string;
     created_at: string;
+    // AI ENHANCEMENTS
+    ai_probability?: number; // 0 - 100
+    ai_closing_strategy?: string;
+    ai_buyer_persona?: string;
 }
 
 export interface CRMState {

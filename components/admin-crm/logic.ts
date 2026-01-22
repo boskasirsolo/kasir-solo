@@ -23,7 +23,8 @@ export const useCRMLogic = () => {
         activeView: 'pipeline'
     });
 
-    const [summary, setSummary] = useState<any>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [isGeneratingScript, setIsGeneratingScript] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState(false);
     const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
@@ -48,6 +49,44 @@ export const useCRMLogic = () => {
     useEffect(() => {
         fetchCustomers();
     }, [fetchCustomers]);
+
+    const deepAnalyzeLead = async (customer: Customer) => {
+        setIsAnalyzing(customer.phone);
+        try {
+            const prompt = `
+                Role: Master Sales PT Mesin Kasir Solo.
+                Task: Bedah psikologi dan potensi closing Juragan "${customer.name}".
+                Data Histori: ${JSON.stringify(customer.interaction_history)}
+                Notes Terakhir: ${customer.last_notes}
+                
+                Gaya: Jujur, Street-smart, pake Gue/Lo.
+                Output: JSON dengan kunci:
+                - probability: angka 1-100 (persentase closing)
+                - strategy: tips 1 kalimat cara nge-handle orang ini
+                - persona: tipe buyer (misal: "Si Hemat tapi Mau Spek Tinggi")
+            `;
+            const res = await callGeminiWithRotation({ 
+                model: 'gemini-3-flash-preview', 
+                contents: prompt,
+                config: { responseMimeType: "application/json" }
+            });
+            const analysis = JSON.parse(res.text || '{}');
+            
+            setState(p => ({
+                ...p,
+                customers: p.customers.map(c => c.phone === customer.phone ? {
+                    ...c,
+                    ai_probability: analysis.probability,
+                    ai_closing_strategy: analysis.strategy,
+                    ai_buyer_persona: analysis.persona
+                } : c)
+            }));
+        } catch (e) {
+            console.error("Analysis Error", e);
+        } finally {
+            setIsAnalyzing(null);
+        }
+    };
 
     const scanPipelineAI = async () => {
         if (state.customers.length === 0) return;
@@ -197,13 +236,14 @@ export const useCRMLogic = () => {
         );
     }, [state.customers, state.searchTerm]);
 
+    // Added missing isGeneratingScript to return object
     return { 
-        state, summary, isGeneratingScript, isScanning, aiRecommendation,
-        setSearchTerm: (s: string) => setState(p => ({ ...p, searchTerm: s })),
+        state, setSearchTerm: (s: string) => setState(p => ({ ...p, searchTerm: s })),
         setActiveView: (v: 'pipeline' | 'list') => setState(p => ({ ...p, activeView: v })),
-        filteredCustomers, updateStatus, generateAIScript, scanPipelineAI,
+        filteredCustomers, updateStatus, generateAIScript, isGeneratingScript, scanPipelineAI,
+        deepAnalyzeLead, isAnalyzing, selectedCustomer, setSelectedCustomer,
+        setAiRecommendation, aiRecommendation, isScanning,
         generateProposal,
-        setAiRecommendation,
         refresh: fetchCustomers
     };
 };
