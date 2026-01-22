@@ -13,15 +13,19 @@ export interface SettingsState {
     aboutImagePreview: string;
     founderImageFile: File | null;
     founderImagePreview: string;
+    // NEW: Real-time status for maintenance toggle
+    isTogglingMaintenance: boolean;
 }
 
 export interface SettingsActions {
     setActiveTab: (id: SettingsTabId) => void;
     setMagicContext: (val: string) => void;
     handleImageSelect: (target: 'about' | 'founder', file: File) => void;
-    handleUrlSelect: (target: 'about' | 'founder', url: string) => void; // NEW ACTION
+    handleUrlSelect: (target: 'about' | 'founder', url: string) => void;
     saveSettings: () => Promise<void>;
     generateHeroContent: () => Promise<void>;
+    // NEW: Action for instant save
+    toggleMaintenanceInstant: () => Promise<void>;
 }
 
 export interface TabProps {

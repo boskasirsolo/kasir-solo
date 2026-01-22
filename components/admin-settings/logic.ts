@@ -13,10 +13,10 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
         aboutImageFile: null,
         aboutImagePreview: config.about_image || '',
         founderImageFile: null,
-        founderImagePreview: config.founder_portrait || ''
+        founderImagePreview: config.founder_portrait || '',
+        isTogglingMaintenance: false
     });
 
-    // Sync initial props
     useEffect(() => {
         setState(prev => ({
             ...prev,
@@ -28,7 +28,6 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
     const setActiveTab = (id: SettingsTabId) => setState(p => ({ ...p, activeTab: id }));
     const setMagicContext = (val: string) => setState(p => ({ ...p, magicContext: val }));
 
-    // Handle File Upload (New File)
     const handleImageSelect = (target: 'about' | 'founder', file: File) => {
         const preview = URL.createObjectURL(file);
         if (target === 'about') {
@@ -38,7 +37,6 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
         }
     };
 
-    // Handle Gallery Selection (Existing URL)
     const handleUrlSelect = (target: 'about' | 'founder', url: string) => {
         if (target === 'about') {
             setState(p => ({ ...p, aboutImageFile: null, aboutImagePreview: url }));
@@ -47,23 +45,65 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
         }
     };
 
+    // --- HELPER: CLEAN JSON FROM AI ---
+    const cleanJsonResponse = (text: string) => {
+        try {
+            // Hilangkan blok markdown ```json ... ``` atau ``` ... ```
+            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(cleanText);
+        } catch (e) {
+            console.error("[Settings] JSON Parse Error. Raw Text:", text);
+            return null;
+        }
+    };
+
+    const toggleMaintenanceInstant = async () => {
+        if (!supabase) return;
+        setState(p => ({ ...p, isTogglingMaintenance: true }));
+        const nextState = !config.is_maintenance_mode;
+        
+        try {
+            const { error } = await supabase
+                .from('site_settings')
+                .update({ is_maintenance_mode: nextState })
+                .eq('id', 1);
+
+            if (error) throw error;
+            setConfig({ ...config, is_maintenance_mode: nextState });
+        } catch (e: any) {
+            alert("Gagal gembok ruko: " + e.message);
+        } finally {
+            setState(p => ({ ...p, isTogglingMaintenance: false }));
+        }
+    };
+
     const generateHeroContent = async () => {
         setState(p => ({ ...p, isGenerating: true }));
         try {
-            const prompt = `
-            Role: Senior Copywriter. Task: Generate Hero Section for 'PT MESIN KASIR SOLO'.
-            Context: "${state.magicContext || "General Promotion"}"
-            Output JSON: { "heroTitle": "...", "heroSubtitle": "..." }
-            `;
+            const prompt = `Role: Senior High-Conversion Copywriter. 
+            Company: 'PT MESIN KASIR SOLO'. 
+            Task: Generate Hero Header (H1) and Subtitle for the homepage.
+            Context for current promo: "${state.magicContext || "General Branding"}". 
+            Tone: Aggressive, Professional, Street-smart.
+            Output: STIRCT JSON format { "heroTitle": "string", "heroSubtitle": "string" }. No other text.`;
+
             const result = await callGeminiWithRotation({
                 model: 'gemini-3-flash-preview',
-                contents: prompt,
+                contents: [{ parts: [{ text: prompt }] }],
                 config: { responseMimeType: "application/json" }
             });
-            const data = JSON.parse(result.text || "{}");
-            if (data.heroTitle) {
-                // Keep snake_case keys in state
-                setConfig({ ...config, hero_title: data.heroTitle, hero_subtitle: data.heroSubtitle });
+
+            const rawText = result.text || "";
+            const data = cleanJsonResponse(rawText);
+
+            if (data && data.heroTitle) {
+                setConfig({ 
+                    ...config, 
+                    hero_title: data.heroTitle, 
+                    hero_subtitle: data.heroSubtitle || config.hero_subtitle 
+                });
+            } else {
+                throw new Error("AI ngasih format rusak, coba lagi Bos.");
             }
         } catch (e: any) {
             alert("Gagal generate: " + e.message);
@@ -74,73 +114,25 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
 
     const saveSettings = async () => {
         if (!supabase) return alert("Koneksi Database bermasalah.");
-
-        if (config.whatsapp_number) {
-            const cleanPhone = normalizePhone(config.whatsapp_number);
-            if (!cleanPhone) return alert("Format WhatsApp Error. Gunakan 08xx atau 628xx.");
-            config.whatsapp_number = cleanPhone;
-        }
-
         setState(p => ({ ...p, isSaving: true }));
         try {
             let finalAboutImage = state.aboutImagePreview;
             let finalFounderImage = state.founderImagePreview;
 
-            // --- 1. UPLOAD ABOUT IMAGE (IF NEW FILE) ---
             if (state.aboutImageFile) {
-                const seoName = 'kantor-mesin-kasir-solo-hq';
-                const fileToUpload = renameFile(state.aboutImageFile, seoName);
-
-                if (CONFIG.CLOUDINARY_CLOUD_NAME) {
-                    const formData = new FormData();
-                    formData.append('file', fileToUpload);
-                    formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
-                    const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
-                    const data = await res.json();
-                    if (data.secure_url) finalAboutImage = data.secure_url;
-                } else {
-                    const { url } = await uploadToSupabase(fileToUpload, 'settings', 'images');
-                    finalAboutImage = url;
-                }
+                const { url } = await uploadToSupabase(state.aboutImageFile, 'settings', 'images');
+                finalAboutImage = url;
             }
-
-            // --- 2. UPLOAD FOUNDER IMAGE (IF NEW FILE) ---
             if (state.founderImageFile) {
-                const seoName = 'founder-amin-maghfuri-mesin-kasir-solo';
-                const fileToUpload = renameFile(state.founderImageFile, seoName);
-
-                if (CONFIG.CLOUDINARY_CLOUD_NAME) {
-                    const formData = new FormData();
-                    formData.append('file', fileToUpload);
-                    formData.append('upload_preset', CONFIG.CLOUDINARY_PRESET);
-                    const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
-                    const data = await res.json();
-                    if (data.secure_url) finalFounderImage = data.secure_url;
-                } else {
-                    const { url } = await uploadToSupabase(fileToUpload, 'settings', 'images');
-                    finalFounderImage = url;
-                }
+                const { url } = await uploadToSupabase(state.founderImageFile, 'settings', 'images');
+                finalFounderImage = url;
             }
 
-            // UPDATE STATE & DB (Raw Flow)
-            const finalConfig = { 
-                ...config, 
-                about_image: finalAboutImage, 
-                founder_portrait: finalFounderImage 
-            };
-            
+            const finalConfig = { ...config, about_image: finalAboutImage, founder_portrait: finalFounderImage };
             setConfig(finalConfig);
 
-            // DIRECT UPSERT (No Mapping needed because interface matches DB)
-            const { error } = await supabase.from('site_settings').upsert({
-                id: 1,
-                ...finalConfig
-            });
-
-            if (error) {
-                console.error("Supabase Error:", error);
-                throw new Error(error.message);
-            }
+            const { error } = await supabase.from('site_settings').upsert({ id: 1, ...finalConfig });
+            if (error) throw error;
             
             alert("Pengaturan berhasil disimpan!");
             setState(p => ({ ...p, aboutImageFile: null, founderImageFile: null }));
@@ -151,5 +143,8 @@ export const useSettingsLogic = (config: SiteConfig, setConfig: (c: SiteConfig) 
         }
     };
 
-    return { state, actions: { setActiveTab, setMagicContext, handleImageSelect, handleUrlSelect, saveSettings, generateHeroContent } };
+    return { 
+        state, 
+        actions: { setActiveTab, setMagicContext, handleImageSelect, handleUrlSelect, saveSettings, generateHeroContent, toggleMaintenanceInstant } 
+    };
 };
