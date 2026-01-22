@@ -51,6 +51,9 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const [activeMobilePane, setActiveMobilePane] = useState<'LIST' | 'CONFIG' | 'WRITE'>('LIST');
     const [aiStep, setAiStep] = useState(0);
     const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']);
+    
+    // UI Logic states moved from index.tsx
+    const [showMediaLib, setShowMediaLib] = useState(false);
 
     useEffect(() => {
         if (supabase) supabase.from('target_cities').select('*').order('name', { ascending: true }).then(({data}) => data && setCities(data));
@@ -74,6 +77,15 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     const handleEditClick = (item: Article) => {
         setForm({ ...item, id: item.id, authorAvatar: item.author_avatar || config?.founder_portrait || '', imagePreview: item.image, targetWordCount: item.content ? item.content.split(/\s+/).length : 1000, scheduled_for: item.scheduled_for ? (config?.timezone ? convertUTCToLocal(item.scheduled_for, config.timezone) : item.scheduled_for.slice(0, 16)) : '' } as any);
         setAiStep(2); setActiveMobilePane('WRITE');
+    };
+
+    const handleCoverUpload = (file: File) => {
+        setForm(prev => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
+    };
+
+    const handleMediaSelect = (url: string) => {
+        setForm(prev => ({ ...prev, imagePreview: url, uploadFile: null }));
+        setShowMediaLib(false);
     };
 
     const saveArticle = async () => {
@@ -129,96 +141,36 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     return {
         form, setForm, filterLogic, activeMobilePane, setActiveMobilePane, 
         aiLogic: { loading, keywords },
+        uiState: { showMediaLib, setShowMediaLib },
         aiState: { step: aiStep, setStep: setAiStep, keywords, selectedTones, setSelectedTones, cities },
         actions: { 
-            resetForm, handleEditClick, saveArticle, 
+            resetForm, handleEditClick, saveArticle, handleCoverUpload, handleMediaSelect,
             deleteItem: async (id: number) => { if(confirm("Hapus?")) { await supabase!.from('articles').delete().eq('id', id); setArticles((p: Article[]) => p.filter(a => a.id !== id)); } },
             runResearch: async (topic?: string) => { setLoading(p => ({...p, researching: true})); try { const raw = await EditorAI.researchTopics(form.type as any, topic); setKeywords(raw); setAiStep(1); } finally { setLoading(p => ({...p, researching: false})); } },
             runWrite: async () => { 
-                // Validation for Cluster
                 if (form.type === 'cluster' && (!form.pillar_id || form.pillar_id === 0)) {
-                    alert("⚠️ ARTIKEL CLUSTER WAJIB PILIH PILLAR INDUK!\nSilakan pilih 'Mode Cluster' di menu Konfigurasi, lalu cari dan klik salah satu judul Pillar.");
+                    alert("⚠️ ARTIKEL CLUSTER WAJIB PILIH PILLAR INDUK!");
                     setActiveMobilePane('CONFIG');
                     return;
                 }
 
                 setLoading(p => ({ ...p, generatingText: true, progressMessage: 'AI sedang meracik konten...' })); 
                 try { 
-                    // PREPARE CONTEXT (JSON FORMAT - CLEANER)
-                    // We send minimal necessary data to save token usage and reduce confusion
-                    const galleryCtx = JSON.stringify(gallery.map(g => ({
-                        title: g.title,
-                        slug: slugify(g.title),
-                        image: g.image_url,
-                        desc: g.description?.substring(0, 100) || ''
-                    })).slice(0, 8)); // Limit context
-
-                    const productCtx = JSON.stringify(products.map(p => ({
-                        name: p.name,
-                        price: p.price,
-                        image: p.image,
-                        desc: p.description?.substring(0, 100) || ''
-                    })).slice(0, 8)); // Limit context
-                    
-                    // PREPARE DATA FOR ENGINE
+                    const galleryCtx = JSON.stringify(gallery.slice(0, 8)); 
+                    const productCtx = JSON.stringify(products.slice(0, 8));
                     const parentPillar = form.pillar_id ? articles.find(a => a.id === form.pillar_id) : undefined;
                     const pillarContext = parentPillar ? { title: parentPillar.title, slug: slugify(parentPillar.title) } : undefined;
+                    const relatedPillarsData = form.related_pillars.map(id => articles.find(a => a.id === id)).filter(Boolean).map(a => ({ title: a!.title, slug: slugify(a!.title) }));
 
-                    // PREPARE RELATED PILLARS (CROSS-LINKING)
-                    const relatedPillarsData = form.related_pillars
-                        .map(id => articles.find(a => a.id === id))
-                        .filter(Boolean)
-                        .map(a => ({ title: a!.title, slug: slugify(a!.title) }));
-
-                    // Execute Writer
-                    const content = await EditorAI.writeArticle(
-                        form.title, 
-                        selectedTones, 
-                        form.type, 
-                        form.author, 
-                        form.targetWordCount, 
-                        pillarContext, // Specific Parent Pillar Data (For Cluster)
-                        relatedPillarsData, // Related pillars (For Cross Linking in Pillar mode)
-                        galleryCtx, // NOW JSON STRING
-                        form.generationContext, 
-                        form.targetCityId ? cities.find(c => c.id === form.targetCityId) : undefined as any,
-                        productCtx // NOW JSON STRING
-                    ); 
-                    
+                    const content = await EditorAI.writeArticle(form.title, selectedTones, form.type, form.author, form.targetWordCount, pillarContext, relatedPillarsData, galleryCtx, form.generationContext, form.targetCityId ? cities.find(c => c.id === form.targetCityId) : undefined as any, productCtx); 
                     const meta = await EditorAI.generateMeta(form.title, content); 
-                    setForm(p => ({ 
-                        ...p, 
-                        content, 
-                        excerpt: meta.excerpt, 
-                        category: p.category.length > 2 ? p.category : meta.category, 
-                        readTime: `${Math.ceil(content.split(/\s+/).length / 200)} min` 
-                    })); 
-                    
+                    setForm(p => ({ ...p, content, excerpt: meta.excerpt, category: p.category.length > 2 ? p.category : meta.category, readTime: `${Math.ceil(content.split(/\s+/).length / 200)} min` })); 
                     setActiveMobilePane('WRITE'); 
-                } catch(e: any) {
-                    alert("AI Error: " + e.message);
-                } finally { 
-                    setLoading(p => ({ ...p, generatingText: false })); 
-                } 
+                } catch(e: any) { alert("AI Error: " + e.message); } finally { setLoading(p => ({ ...p, generatingText: false })); } 
             },
             runImage: async () => { setLoading(p => ({ ...p, generatingImage: true })); try { const { url, file } = await VisionAI.generate(form.title, form.category, 'corporate'); setForm(p => ({ ...p, imagePreview: url, uploadFile: file })); } finally { setLoading(p => ({ ...p, generatingImage: false })); } },
             selectTopic: (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); },
-            runClusterResearch: async (pillar: Article) => {
-                setForm(p => ({ 
-                    ...p, 
-                    id: null, 
-                    title: '', 
-                    content: '', 
-                    type: 'cluster', 
-                    pillar_id: pillar.id,
-                    // Optionally pre-fill category based on pillar
-                    category: pillar.category || 'General' 
-                }));
-                // CRITICAL FIX: Skip research steps (0 & 1) and go straight to Config Mode (2)
-                // This ensures the EditorPanel shows the config UI instead of the 'Riset Judul Viral' empty state.
-                setAiStep(2);
-                setActiveMobilePane('CONFIG');
-            }
+            runClusterResearch: async (pillar: Article) => { setForm(p => ({ ...p, id: null, title: '', content: '', type: 'cluster', pillar_id: pillar.id, category: pillar.category || 'General' })); setAiStep(2); setActiveMobilePane('CONFIG'); }
         }
     };
 };

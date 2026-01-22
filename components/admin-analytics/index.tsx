@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-// Add missing icons from lucide-react
 import { 
     LayoutDashboard, 
     Users, 
@@ -8,7 +7,6 @@ import {
     Globe, 
     Zap 
 } from 'lucide-react';
-// Import the core logic hook for analytics
 import { useAnalyticsData } from './logic';
 import { LoadingSpinner } from '../ui';
 import { DashboardHeader, GhostLinkCopier } from './ui-controls';
@@ -18,11 +16,10 @@ import { TopPagesTable, ExitPagesList, QualityScorePanel } from './ui-tables';
 import { FunnelRadar } from './funnel-radar';
 import { CityDistribution, OSDistribution, DemographicEstimator } from './ui-demographics';
 import { PageAnalyticsModal } from './page-analytics-modal';
+import { AIInsights } from './ai-insights'; // IMPORT BARU
 
-// Define the missing AnalyticsTab type
 type AnalyticsTab = 'radar' | 'audience' | 'content' | 'acquisition';
 
-// --- MAIN ANALYTICS DASHBOARD ---
 export const AnalyticsDashboard = () => {
   const { stats, loading, period, setPeriod, refresh } = useAnalyticsData();
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('radar');
@@ -67,10 +64,15 @@ export const AnalyticsDashboard = () => {
       <div className="space-y-6 min-h-[600px] relative">
         {activeTab === 'radar' && (
           <div className="space-y-6 animate-fade-in">
-            <KPIGrid stats={stats} />
+            {/* INTEGRASI AI INSIGHTS DI BARIS PALING ATAS */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-               <div className="lg:col-span-3"><FunnelRadar data={stats.funnel} /></div>
-               <div className="lg:col-span-3"><div className="bg-brand-dark/50 border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden"><TrafficChart data={stats.trafficByDate} period={period} /></div></div>
+                <div className="lg:col-span-1"><AIInsights stats={stats} /></div>
+                <div className="lg:col-span-2"><KPIGrid stats={stats as any} /></div>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+               <div className="lg:col-span-3"><FunnelRadar data={stats.funnel as any} /></div>
+               <div className="lg:col-span-3"><div className="bg-brand-dark/50 border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden"><TrafficChart data={stats.trafficByDate as any} period={period} /></div></div>
             </div>
           </div>
         )}
@@ -78,38 +80,29 @@ export const AnalyticsDashboard = () => {
         {activeTab === 'audience' && (
           <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-4"><CityDistribution cities={stats.sortedCities} total={stats.totalViews} /></div>
+                <div className="lg:col-span-4"><CityDistribution cities={stats.sortedCities as any} total={stats.totalViews as any} /></div>
                 <div className="lg:col-span-4"><DemographicEstimator data={stats.demographics} /></div>
                 <div className="lg:col-span-4 space-y-6">
-                    <OSDistribution data={stats.osDist} />
-                    <DeviceStats devices={stats.devices} totalViews={stats.totalViews} />
+                    <OSDistribution data={stats.osDist as any} />
+                    <DeviceStats devices={stats.devices as any} totalViews={stats.totalViews as any} />
                 </div>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-4"><RetentionChart newUsers={stats.newVisitors} returningUsers={stats.returningVisitors} /></div>
-                <div className="lg:col-span-8"><div className="bg-brand-dark/50 border border-white/5 rounded-3xl p-6 shadow-2xl"><PeakHoursHeatmap hours={stats.hours} /></div></div>
             </div>
           </div>
         )}
 
         {activeTab === 'content' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-            <div className="lg:col-span-2"><TopPagesTable pages={stats.sortedPages} onPageClick={(path) => setSelectedPagePath(path)} /></div>
-            <div className="lg:col-span-1 space-y-8"><QualityScorePanel bounceRate={stats.bounceRate} avgPages={stats.avgPagesPerSession} /><ExitPagesList pages={stats.sortedExitPages} /></div>
+            <div className="lg:col-span-2"><TopPagesTable pages={stats.sortedPages as any} onPageClick={(path) => setSelectedPagePath(path)} /></div>
+            <div className="lg:col-span-1 space-y-8"><QualityScorePanel bounceRate={stats.bounceRate as any} avgPages={stats.avgPagesPerSession as any} /><ExitPagesList pages={stats.sortedExitPages as any} /></div>
           </div>
         )}
 
         {activeTab === 'acquisition' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
-            <div className="lg:col-span-8"><ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} /></div>
+            <div className="lg:col-span-8"><ReferrerList referrers={stats.sortedReferrers as any} totalViews={stats.totalViews as any} /></div>
             <div className="lg:col-span-4"><GhostLinkCopier /></div>
           </div>
         )}
-      </div>
-
-      <div className="mt-12 p-6 bg-brand-orange/5 border border-white/5 rounded-3xl flex items-center gap-4 text-gray-500">
-          <Zap size={24} className="text-brand-orange opacity-30 animate-pulse" />
-          <div><p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1">MKS Surveillance System v3.1</p><p className="text-[9px] leading-relaxed">Sistem ini memantau interaksi user, lokasi, dan perangkat secara anonim untuk optimasi konversi. Data demografi bersifat estimasi berdasarkan pola perilaku.</p></div>
       </div>
 
       {selectedPagePath && <PageAnalyticsModal pagePath={selectedPagePath} onClose={() => setSelectedPagePath(null)} />}

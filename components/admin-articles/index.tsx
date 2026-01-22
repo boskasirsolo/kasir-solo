@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Article, GalleryItem, SiteConfig, Product } from '../../types';
-import { Image as ImageIcon, Sparkles, Loader2, UploadCloud, Save, List, Settings, PenTool, Wand2, Clock, FolderOpen, Calendar, Check, Send, X } from 'lucide-react';
+import { Image as ImageIcon, Sparkles, Loader2, UploadCloud, Save, List, Settings, PenTool, Calendar, X, FolderOpen } from 'lucide-react';
 import { useArticleManager } from './logic';
 import { ListPanel } from './list-panel';
 import { EditorPanel } from './editor-panel';
 import { LiveEditor } from './live-editor';
-import { Button, LoadingSpinner } from '../ui';
+import { LoadingSpinner } from '../ui';
 import { MediaLibraryModal } from '../admin/media-library';
 
 export const AdminArticles = ({ 
@@ -22,35 +22,28 @@ export const AdminArticles = ({
     config: SiteConfig,
     products: Product[]
 }) => {
+  // Logic Particle: Semua otak ada di sini
   const manager = useArticleManager(articles, setArticles, gallery, config, products);
-  const { form, filterLogic, aiLogic, aiState, actions, activeMobilePane, setActiveMobilePane } = manager;
-  const availablePillars = articles.filter(a => a.type === 'pillar');
+  const { form, filterLogic, aiLogic, aiState, uiState, actions, activeMobilePane, setActiveMobilePane } = manager;
   
-  const [showMediaLib, setShowMediaLib] = useState(false);
-
-  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files ? e.target.files[0] : null;
-      if (file) {
-          manager.setForm((prev: any) => ({ ...prev, uploadFile: file, imagePreview: URL.createObjectURL(file) }));
-      }
-  };
-
-  const handleMediaSelect = (url: string) => {
-      manager.setForm((prev: any) => ({ ...prev, imagePreview: url, uploadFile: null }));
-      setShowMediaLib(false);
-  };
+  const availablePillars = articles.filter(a => a.type === 'pillar');
 
   return (
     <div className="flex flex-col lg:flex-row h-[75vh] lg:h-[850px] border-t border-white/5 bg-brand-black overflow-hidden lg:rounded-xl border-b shadow-2xl relative">
       
-      {showMediaLib && <MediaLibraryModal onSelect={handleMediaSelect} onClose={() => setShowMediaLib(false)} />}
+      {uiState.showMediaLib && (
+        <MediaLibraryModal 
+            onSelect={actions.handleMediaSelect} 
+            onClose={() => uiState.setShowMediaLib(false)} 
+        />
+      )}
 
       {/* 1. LEFT PANEL: List (25%) */}
       <div className={`w-full lg:w-[25%] lg:block border-r-0 lg:border-r border-white/5 min-w-[280px] h-full ${activeMobilePane === 'LIST' ? 'block' : 'hidden'}`}>
          <ListPanel 
             articles={articles}
             logic={{ ...filterLogic, actions: { 
-                handleEditClick: (a: Article) => { actions.handleEditClick(a); }, 
+                handleEditClick: actions.handleEditClick, 
                 deleteItem: actions.deleteItem,
                 runClusterResearch: actions.runClusterResearch 
             } }}
@@ -66,12 +59,7 @@ export const AdminArticles = ({
             setForm={manager.setForm}
             loading={aiLogic.loading}
             aiState={{ ...aiState, keywords: aiLogic.keywords }}
-            actions={{
-                ...actions,
-                runResearch: manager.actions.runResearch,
-                runWrite: manager.actions.runWrite,
-                runImage: manager.actions.runImage
-            }}
+            actions={actions}
             availablePillars={availablePillars}
          />
       </div>
@@ -79,7 +67,6 @@ export const AdminArticles = ({
       {/* 3. RIGHT PANEL: Canvas (50%) */}
       <div className={`w-full lg:w-[50%] lg:flex h-full bg-black flex-col relative overflow-hidden ${activeMobilePane === 'WRITE' ? 'flex' : 'hidden'}`}>
          
-         {/* Top Bar Editor - Minimalist Command Center */}
          <div className="p-4 md:p-6 border-b border-white/10 bg-brand-dark/50 backdrop-blur-sm z-10 sticky top-0 shrink-0">
             <div className="flex flex-col gap-4">
                 <input 
@@ -91,69 +78,36 @@ export const AdminArticles = ({
                 />
 
                 <div className="flex flex-row gap-4 items-center justify-between">
-                    {/* LEFT: STATUS & SCHEDULER */}
                     <div className="flex items-center gap-2">
                         <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
-                            {[
-                                { id: 'draft', label: 'DRAFT', icon: PenTool, color: 'text-gray-400' },
-                                { id: 'published', label: 'TAYANG', icon: Send, color: 'text-green-400' },
-                                { id: 'scheduled', label: 'JADWAL', icon: Calendar, color: 'text-blue-400' }
-                            ].map((s) => (
+                            {['draft', 'published', 'scheduled'].map((s) => (
                                 <button
-                                    key={s.id}
-                                    onClick={() => manager.setForm((p:any) => ({...p, status: s.id}))}
-                                    className={`px-3 py-1.5 rounded-md text-[9px] font-black tracking-widest transition-all flex items-center gap-2 ${
-                                        form.status === s.id 
-                                        ? 'bg-white/10 text-white shadow-inner' 
-                                        : 'text-gray-600 hover:text-gray-400'
+                                    key={s}
+                                    onClick={() => manager.setForm((p:any) => ({...p, status: s}))}
+                                    className={`px-3 py-1.5 rounded-md text-[9px] font-black tracking-widest transition-all ${
+                                        form.status === s ? 'bg-white/10 text-white' : 'text-gray-600'
                                     }`}
-                                    title={s.label}
                                 >
-                                    <s.icon size={12} className={form.status === s.id ? s.color : ''} />
-                                    <span className="hidden sm:inline">{s.label}</span>
+                                    {s.toUpperCase()}
                                 </button>
                             ))}
                         </div>
-
-                        {/* DATE TIME PICKER FOR SCHEDULED STATUS */}
-                        {form.status === 'scheduled' && (
-                            <input 
-                                type="datetime-local" 
-                                value={form.scheduled_for}
-                                onChange={(e) => manager.setForm((p:any) => ({...p, scheduled_for: e.target.value}))}
-                                className="bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-bold px-3 py-1.5 rounded-lg outline-none focus:border-blue-500 transition-all animate-fade-in"
-                            />
-                        )}
                     </div>
 
-                    {/* RIGHT: ACTION BUTTONS */}
                     <div className="flex items-center gap-2">
-                        {/* SMART AI BUTTON */}
                         <button 
-                            onClick={manager.actions.runWrite} 
+                            onClick={actions.runWrite} 
                             disabled={aiLogic.loading.generatingText}
-                            className={`h-10 px-4 rounded-lg font-bold text-[10px] flex items-center gap-2 transition-all shadow-neon hover:scale-105 active:scale-95 shrink-0 ${
-                                form.id 
-                                ? 'bg-blue-600/10 border border-blue-500/30 text-blue-400 hover:bg-blue-600 hover:text-white' 
-                                : 'bg-brand-gradient text-white border-none'
-                            }`}
-                            title={form.id ? "Tulis Ulang Artikel" : "Buat Konten Baru"}
+                            className="h-10 px-4 rounded-lg font-bold text-[10px] bg-brand-gradient text-white flex items-center gap-2 shadow-neon transition-all active:scale-95 disabled:opacity-50"
                         >
-                            {aiLogic.loading.generatingText ? (
-                                <Loader2 size={16} className="animate-spin" />
-                            ) : (
-                                <Sparkles size={16} />
-                            )}
-                            <span className="hidden md:inline uppercase tracking-widest">
-                                {aiLogic.loading.generatingText ? 'RACING...' : form.id ? 'REGENERATE (AI)' : 'GENERATE (AI)'}
-                            </span>
+                            {aiLogic.loading.generatingText ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                            <span className="hidden md:inline uppercase tracking-widest">GENERATE (AI)</span>
                         </button>
 
                         <button 
                             onClick={actions.saveArticle} 
                             disabled={aiLogic.loading.uploading} 
                             className="w-10 h-10 bg-brand-orange hover:bg-brand-action text-white rounded-lg shadow-neon flex items-center justify-center transition-all active:scale-90"
-                            title="Simpan Strategi"
                         >
                             {aiLogic.loading.uploading ? <LoadingSpinner size={18}/> : <Save size={20} />}
                         </button>
@@ -163,19 +117,10 @@ export const AdminArticles = ({
          </div>
          
          <div className="flex-grow overflow-y-auto custom-scrollbar p-4 md:p-8 relative bg-black pb-24 lg:pb-8">
-            
-            {/* COVER SETUP AREA (Combined Preview + Actions) */}
             <div className="w-full mb-10 group/cover relative">
                 <div className="aspect-video w-full rounded-2xl overflow-hidden border-2 border-white/5 bg-gray-900 shadow-2xl relative">
                     {form.imagePreview ? (
-                        <>
-                            <img src={form.imagePreview} className="w-full h-full object-cover" alt="Large Preview" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                            <div className="absolute bottom-4 left-6 flex items-center gap-4">
-                                <span className="text-[10px] font-black text-white bg-brand-orange px-2 py-1 rounded shadow-neon uppercase tracking-[0.2em]">Visual Utama</span>
-                                <p className="text-[10px] text-gray-400 font-mono italic">{form.readTime}</p>
-                            </div>
-                        </>
+                        <img src={form.imagePreview} className="w-full h-full object-cover" alt="Large Preview" />
                     ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center text-gray-700 bg-white/[0.02]">
                             <ImageIcon size={48} className="mb-4 opacity-20" />
@@ -183,38 +128,16 @@ export const AdminArticles = ({
                         </div>
                     )}
 
-                    {/* OVERLAY CONTROLS */}
                     <div className={`absolute inset-0 bg-black/60 flex items-center justify-center gap-4 transition-opacity ${form.imagePreview ? 'opacity-0 group-hover/cover:opacity-100' : 'opacity-100'}`}>
-                        <label className="flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 w-24" title="Upload dari Device">
+                        <label className="flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 w-24">
                             <UploadCloud size={24} className="text-white"/>
                             <span className="text-[10px] font-bold text-white uppercase tracking-tighter">Upload</span>
-                            <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && actions.handleCoverUpload(e.target.files[0])} />
                         </label>
-                        
-                        <button onClick={() => setShowMediaLib(true)} className="flex flex-col items-center gap-2 p-4 bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/20 rounded-2xl transition-all hover:-translate-y-1 w-24" title="Media Library">
+                        <button onClick={() => uiState.setShowMediaLib(true)} className="flex flex-col items-center gap-2 p-4 bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/20 rounded-2xl transition-all hover:-translate-y-1 w-24">
                             <FolderOpen size={24} className="text-brand-orange" />
                             <span className="text-[10px] font-bold text-brand-orange uppercase tracking-tighter">Media</span>
                         </button>
-                        
-                        <button 
-                            onClick={manager.actions.runImage} 
-                            disabled={aiLogic.loading.generatingImage} 
-                            className="flex flex-col items-center gap-2 p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-2xl transition-all hover:-translate-y-1 w-24" 
-                            title="Generate pake AI"
-                        >
-                            {aiLogic.loading.generatingImage ? <Loader2 size={24} className="animate-spin text-blue-400"/> : <Sparkles size={24} className="text-blue-400"/>}
-                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">AI GEN</span>
-                        </button>
-
-                        {form.imagePreview && (
-                            <button 
-                                onClick={() => manager.setForm((p:any) => ({...p, imagePreview: '', uploadFile: null}))}
-                                className="absolute top-4 right-4 p-2 bg-red-500/20 hover:bg-red-500 text-white rounded-full transition-all"
-                                title="Hapus Visual"
-                            >
-                                <X size={16}/>
-                            </button>
-                        )}
                     </div>
                 </div>
             </div>
@@ -222,56 +145,30 @@ export const AdminArticles = ({
             <LiveEditor 
                 content={form.content} 
                 onChange={(newContent) => manager.setForm((prev: any) => ({ ...prev, content: newContent }))}
-                onRegenerate={manager.actions.runWrite}
-                isGenerating={aiLogic.loading.generatingText}
             />
 
             {(aiLogic.loading.generatingText || aiLogic.loading.generatingImage) && (
                 <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-50 animate-fade-in backdrop-blur-md">
-                    <div className="relative">
-                        <div className="absolute inset-0 bg-brand-orange blur-xl opacity-20 animate-pulse"></div>
-                        <Loader2 size={48} className="text-brand-orange animate-spin mb-4 relative"/>
-                    </div>
+                    <Loader2 size={48} className="text-brand-orange animate-spin mb-4 relative"/>
                     <p className="text-white font-bold text-lg animate-pulse text-center px-6 leading-relaxed">
                         {aiLogic.loading.progressMessage || 'Gemini lagi ngeracik...'}
                     </p>
                 </div>
             )}
          </div>
-
-         {/* Meta Bar Bottom */}
-         <div className="p-3 bg-brand-dark border-t border-white/5 flex justify-between items-center text-[10px] text-gray-500 px-4 shrink-0">
-            <div className="flex gap-4 items-center">
-                <span className="font-mono">{form.content.split(/\s+/).length} Kata</span>
-                <span className="text-gray-600">|</span>
-                <span className="font-bold text-gray-400 flex items-center gap-1 uppercase tracking-widest">
-                    {form.status === 'published' && <><Check size={10} className="text-green-500"/> Live di Web</>}
-                    {form.status === 'draft' && <><PenTool size={10}/> Draft Konsep</>}
-                    {form.status === 'scheduled' && <><Clock size={10} className="text-blue-400"/> Terjadwal</>}
-                </span>
-            </div>
-            <div className="flex items-center gap-4">
-                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest italic">Solo Intel Engine v3.2</p>
-            </div>
-         </div>
       </div>
 
-      {/* MOBILE FLOATING NAV TAB */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-brand-card/90 backdrop-blur-xl border-t border-white/10 z-[100] flex justify-around items-center px-6">
-          <button onClick={() => setActiveMobilePane('LIST')} className={`flex flex-col items-center gap-1 transition-all ${activeMobilePane === 'LIST' ? 'text-brand-orange scale-110' : 'text-gray-500'}`}>
-              <List size={20}/>
-              <span className="text-[9px] font-bold uppercase">Arsip</span>
+          <button onClick={() => setActiveMobilePane('LIST')} className={`flex flex-col items-center gap-1 ${activeMobilePane === 'LIST' ? 'text-brand-orange' : 'text-gray-500'}`}>
+              <List size={20}/><span className="text-[9px] font-bold uppercase">Arsip</span>
           </button>
-          <button onClick={() => setActiveMobilePane('CONFIG')} className={`flex flex-col items-center gap-1 transition-all ${activeMobilePane === 'CONFIG' ? 'text-brand-orange scale-110' : 'text-gray-500'}`}>
-              <Settings size={20}/>
-              <span className="text-[9px] font-bold uppercase">Setting</span>
+          <button onClick={() => setActiveMobilePane('CONFIG')} className={`flex flex-col items-center gap-1 ${activeMobilePane === 'CONFIG' ? 'text-brand-orange' : 'text-gray-500'}`}>
+              <Settings size={20}/><span className="text-[9px] font-bold uppercase">Setting</span>
           </button>
-          <button onClick={() => setActiveMobilePane('WRITE')} className={`flex flex-col items-center gap-1 transition-all ${activeMobilePane === 'WRITE' ? 'text-brand-orange scale-110' : 'text-gray-500'}`}>
-              <PenTool size={20}/>
-              <span className="text-[9px] font-bold uppercase">Nulis</span>
+          <button onClick={() => setActiveMobilePane('WRITE')} className={`flex flex-col items-center gap-1 ${activeMobilePane === 'WRITE' ? 'text-brand-orange' : 'text-gray-500'}`}>
+              <PenTool size={20}/><span className="text-[9px] font-bold uppercase">Nulis</span>
           </button>
       </div>
-
     </div>
   );
 };

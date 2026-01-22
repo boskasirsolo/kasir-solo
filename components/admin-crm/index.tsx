@@ -2,15 +2,30 @@
 import React from 'react';
 import { useCRMLogic, parseIntel } from './logic';
 import { PIPELINE_STAGES, Customer, LeadStatus } from './types';
-import { Search, RefreshCw, LayoutGrid, List, MessageCircle, Phone, MapPin, Building, Clock, Flame, Loader2, Sparkles, User, ArrowRight, FileText, Printer } from 'lucide-react';
+import { Search, RefreshCw, LayoutGrid, List, MessageCircle, Phone, MapPin, Building, Clock, Flame, Loader2, Sparkles, User, ArrowRight, FileText, Printer, Radar, X } from 'lucide-react';
 import { formatRupiah } from '../../utils';
-import { LoadingSpinner } from '../ui';
+import { LoadingSpinner, Button } from '../ui';
+import { SimpleMarkdown } from '../admin-articles/markdown';
 
 export const AdminCRM = ({ config }: { config: any }) => {
-    const { state, setSearchTerm, setActiveView, filteredCustomers, updateStatus, generateAIScript, generateProposal, isGeneratingScript, refresh } = useCRMLogic();
+    const { state, setSearchTerm, setActiveView, filteredCustomers, updateStatus, generateAIScript, generateProposal, isGeneratingScript, isScanning, aiRecommendation, scanPipelineAI, setAiRecommendation, refresh } = useCRMLogic();
 
     return (
         <div className="space-y-6">
+            {/* AI RECOMMENDATION BOX */}
+            {aiRecommendation && (
+                <div className="bg-brand-orange/10 border border-brand-orange/30 p-6 rounded-3xl relative animate-fade-in shadow-neon-text/5">
+                    <button onClick={() => setAiRecommendation(null)} className="absolute top-4 right-4 text-gray-500 hover:text-white"><X size={18}/></button>
+                    <div className="flex items-center gap-3 mb-4">
+                        <Sparkles className="text-brand-orange" size={24} />
+                        <h3 className="text-white font-black text-sm uppercase tracking-widest">Saran Partner Perang (AI)</h3>
+                    </div>
+                    <div className="prose prose-invert prose-sm max-w-none">
+                        <SimpleMarkdown content={aiRecommendation} />
+                    </div>
+                </div>
+            )}
+
             {/* TOOLBAR */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-brand-card/30 p-4 rounded-2xl border border-white/5 shadow-lg">
                 <div className="flex items-center gap-4 w-full md:w-auto">
@@ -23,6 +38,17 @@ export const AdminCRM = ({ config }: { config: any }) => {
                             className="w-full bg-brand-dark border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white outline-none focus:border-brand-orange transition-all"
                         />
                     </div>
+                    
+                    {/* TOMBOL RADAR AI */}
+                    <button 
+                        onClick={scanPipelineAI} 
+                        disabled={isScanning}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-lg"
+                    >
+                        {isScanning ? <Loader2 size={14} className="animate-spin"/> : <Radar size={14}/>}
+                        <span className="hidden sm:inline">Radar Peluang</span>
+                    </button>
+                    
                     <button onClick={refresh} className="p-2 text-gray-500 hover:text-white transition-colors bg-white/5 rounded-lg"><RefreshCw size={18}/></button>
                 </div>
 
@@ -136,18 +162,8 @@ export const AdminCRM = ({ config }: { config: any }) => {
     );
 };
 
-// --- SUB-COMPONENTS ---
-
-interface LeadCardProps {
-    customer: Customer;
-    config: any;
-    onStatusUpdate: (id: string, s: LeadStatus) => any;
-    onAIScript: () => any;
-    onGenerateProposal: () => any;
-    isGenerating: boolean;
-}
-
-const LeadCard: React.FC<LeadCardProps> = ({ customer, config, onStatusUpdate, onAIScript, onGenerateProposal, isGenerating }) => {
+// ... Internal components (LeadCard, TempBadge) remain the same
+const LeadCard: React.FC<any> = ({ customer, config, onStatusUpdate, onAIScript, onGenerateProposal, isGenerating }) => {
     const intel = parseIntel(customer.notes);
     
     return (
@@ -169,7 +185,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ customer, config, onStatusUpdate, o
                     </div>
                 )}
                 {customer.company_name && <p className="text-[10px] text-gray-400 flex items-center gap-1 mt-2"><Building size={10}/> {customer.company_name}</p>}
-                {customer.location || intel.alamat ? <p className="text-[10px] text-gray-500 flex items-center gap-1 truncate"><MapPin size={10}/> {customer.location || intel.alamat}</p> : null}
+                {customer.location || (intel as any).alamat ? <p className="text-[10px] text-gray-500 flex items-center gap-1 truncate"><MapPin size={10}/> {customer.location || (intel as any).alamat}</p> : null}
             </div>
 
             <div className="flex items-center justify-between pt-3 border-t border-white/5 gap-2">
