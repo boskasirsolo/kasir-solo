@@ -22,7 +22,7 @@ const ArticlesPage = lazy(() => import('./pages/articles').then(module => ({ def
 const ArticleDetailPage = lazy(() => import('./pages/articles').then(module => ({ default: module.ArticleDetailPage })));
 const AboutPage = lazy(() => import('./pages/about').then(module => ({ default: module.AboutPage })));
 const VisionPage = lazy(() => import('./pages/vision').then(module => ({ default: module.VisionPage })));
-const CalendarPage = lazy(() => import('./pages/career').then(module => ({ default: module.CareerPage }))); // Renamed for avoidance of confusion
+const CalendarPage = lazy(() => import('./pages/career').then(module => ({ default: module.CareerPage }))); 
 const CareerPage = lazy(() => import('./pages/career').then(module => ({ default: module.CareerPage })));
 const ContactPage = lazy(() => import('./pages/contact').then(module => ({ default: module.ContactPage })));
 const AdminPage = lazy(() => import('./pages/admin')); 
@@ -171,6 +171,7 @@ const AppContent = () => {
             <Route path="/support" element={<SupportPage config={config} />} />
             <Route path="/track-order" element={<TrackOrderPage config={config} />} />
             <Route path="/legal/:type" element={<LegalPage config={config} />} />
+            <Route path="/area-layanan" element={<CityLandingPage config={config} />} />
             <Route path="/jual-mesin-kasir-di/:citySlug" element={<CityLandingPage config={config} />} />
             <Route path="/services/website" element={<WebsiteServicePage config={config} gallery={gallery} />} />
             <Route path="/services/webapp" element={<WebAppServicePage config={config} gallery={gallery} />} />
