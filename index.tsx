@@ -28,6 +28,17 @@ const ContactPage = lazy(() => import('./pages/contact').then(module => ({ defau
 const AdminPage = lazy(() => import('./pages/admin')); 
 const CheckoutPage = lazy(() => import('./pages/checkout').then(module => ({ default: module.CheckoutPage })));
 const InnovationPage = lazy(() => import('./pages/innovation').then(module => ({ default: module.InnovationPage })));
+const SibosPage = lazy(() => import('./pages/sibos').then(module => ({ default: module.SibosPage })));
+const QalamPage = lazy(() => import('./pages/qalam').then(module => ({ default: module.QalamPage })));
+const DapurSppgPage = lazy(() => import('./pages/dapur-sppg').then(module => ({ default: module.DapurSppgPage })));
+const SupportPage = lazy(() => import('./pages/support').then(module => ({ default: module.SupportPage })));
+const TrackOrderPage = lazy(() => import('./pages/track-order').then(module => ({ default: module.TrackOrderPage })));
+const LegalPage = lazy(() => import('./pages/legal').then(module => ({ default: module.LegalPage })));
+const CityLandingPage = lazy(() => import('./pages/city-landing').then(module => ({ default: module.CityLandingPage })));
+const WebsiteServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.WebsiteServicePage })));
+const WebAppServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.WebAppServicePage })));
+const SeoServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.SeoServicePage })));
+const MaintenanceServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.MaintenanceServicePage })));
 const NotFoundPage = lazy(() => import('./pages/not-found').then(module => ({ default: module.NotFoundPage })));
 
 const PageLoader = () => (
@@ -50,7 +61,7 @@ const AppContent = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [jobs, setJobs] = useState<JobOpening[]>([]);
 
-  // Config State (Raw Mapping ke Database)
+  // Config State
   const [config, setConfig] = useState<SiteConfig>({
     hero_title: "MESIN KASIR SOLO",
     hero_subtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM.",
@@ -65,7 +76,6 @@ const AppContent = () => {
     else navigate(`/${pageId}`);
   };
 
-  // Auth Sync
   useEffect(() => {
     if (supabase) {
         supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
@@ -76,7 +86,6 @@ const AppContent = () => {
     }
   }, []);
 
-  // AUDIT KABEL DATABASE: Fetching & Mapping
   useEffect(() => {
     const loadAppData = async () => {
         if (!supabase) {
@@ -89,14 +98,12 @@ const AppContent = () => {
         }
 
         try {
-            // 1. Fetch Site Settings (Table: site_settings)
             const { data: settingsData } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle();
             if (settingsData) {
                 setConfig(settingsData);
                 injectGoogleTags(settingsData.google_analytics_id, settingsData.google_search_console_code);
             }
 
-            // 2. Fetch Parallel Data
             const results = await Promise.allSettled([
                 supabase.from('products').select('*').order('id', { ascending: true }),
                 supabase.from('gallery').select('*').order('id', { ascending: false }),
@@ -105,7 +112,6 @@ const AppContent = () => {
                 supabase.from('jobs').select('*').order('created_at', { ascending: false })
             ]);
 
-            // Mapping Hasil (Snake Case Audit)
             if (results[0].status === 'fulfilled' && results[0].value.data) {
                 setProducts(results[0].value.data.map((p: any) => ({
                     ...p,
@@ -118,7 +124,7 @@ const AppContent = () => {
                 setArticles(results[3].value.data.map((a: any) => ({
                     ...a,
                     image: a.image_url || a.image || 'https://via.placeholder.com/800',
-                    readTime: a.read_time || a.readTime || '3 min' // Sync Kabel: DB read_time -> UI readTime
+                    readTime: a.read_time || a.readTime || '3 min'
                 })));
             }
             if (results[4].status === 'fulfilled' && results[4].value.data) setJobs(results[4].value.data);
@@ -135,7 +141,6 @@ const AppContent = () => {
 
   if (isInitializing) return <PageLoader />;
 
-  // Maintenance Gate
   const isGhost = localStorage.getItem('mks_ghost_mode') === 'true';
   const isAdminRoute = location.pathname.startsWith('/admin');
   if (config.is_maintenance_mode && !isGhost && !isAdminRoute) {
@@ -151,11 +156,26 @@ const AppContent = () => {
             <Route path="/shop" element={<ShopPage products={products} gallery={gallery} />} />
             <Route path="/shop/:slug" element={<ProductDetailPage products={products} config={config} />} />
             <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
+            <Route path="/gallery/:slug" element={<ProjectDetailPage gallery={gallery} testimonials={testimonials} />} />
             <Route path="/articles" element={<ArticlesPage articles={articles} products={products} config={config} />} />
+            <Route path="/articles/:slug" element={<ArticleDetailPage articles={articles} products={products} config={config} />} />
             <Route path="/about" element={<AboutPage config={config} />} />
             <Route path="/about/vision" element={<VisionPage />} />
             <Route path="/career" element={<CareerPage jobs={jobs} />} />
             <Route path="/contact" element={<ContactPage config={config} />} /> 
+            <Route path="/checkout" element={<CheckoutPage setPage={handleNavigation} config={config} />} />
+            <Route path="/innovation" element={<InnovationPage config={config} />} />
+            <Route path="/innovation/sibos" element={<SibosPage config={config} />} />
+            <Route path="/innovation/qalam" element={<QalamPage config={config} />} />
+            <Route path="/innovation/dapur-sppg-mbg" element={<DapurSppgPage config={config} />} />
+            <Route path="/support" element={<SupportPage config={config} />} />
+            <Route path="/track-order" element={<TrackOrderPage config={config} />} />
+            <Route path="/legal/:type" element={<LegalPage config={config} />} />
+            <Route path="/jual-mesin-kasir-di/:citySlug" element={<CityLandingPage config={config} />} />
+            <Route path="/services/website" element={<WebsiteServicePage config={config} gallery={gallery} />} />
+            <Route path="/services/webapp" element={<WebAppServicePage config={config} gallery={gallery} />} />
+            <Route path="/services/seo" element={<SeoServicePage config={config} />} />
+            <Route path="/services/maintenance" element={<MaintenanceServicePage config={config} />} />
             <Route path="/admin" element={
                 <AdminPage 
                     session={session}
