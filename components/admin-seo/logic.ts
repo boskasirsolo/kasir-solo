@@ -49,7 +49,11 @@ export const useSEOLogic = () => {
   }, []);
 
   const fetchCities = async () => {
-    if (!supabase) return;
+    // FIX: Set loading false if supabase is missing
+    if (!supabase) {
+        setLoading(false);
+        return;
+    }
     setLoading(true);
     try {
         const { data } = await supabase.from('target_cities').select('*').order('created_at', { ascending: false });

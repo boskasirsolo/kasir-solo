@@ -48,7 +48,12 @@ export const useAnalyticsData = () => {
   }, [period]);
 
   const fetchStats = async () => {
-    if (!supabase) return;
+    // FIX: Set loading false if supabase is missing to prevent infinite spinner
+    if (!supabase) {
+        setLoading(false);
+        return;
+    }
+    
     setLoading(true);
     
     try {
@@ -72,12 +77,15 @@ export const useAnalyticsData = () => {
                 },
                 osDist: data.os_stats || {},
                 sortedPages: data.top_pages || [],
-                // Data mapping lainnya bisa ditambahkan di sini sesuai kebutuhan UI
+                // Mapping extra fields with safety
+                trafficByDate: data.traffic_by_date || {},
+                sortedReferrers: data.top_referrers ? Object.entries(data.top_referrers) : [],
+                avgEngagementTime: data.avg_session_duration || "0s"
             }));
         }
     } catch (e) {
-        console.error("Analytics Error:", e);
-        // Tetap gunakan stats lama/initial jika error
+        console.error("Analytics Error (Check if RPC exists):", e);
+        // On error, we still need to stop loading
     } finally {
         setLoading(false);
     }
