@@ -64,7 +64,7 @@ export const useAnalyticsData = () => {
             const convRate = visitors > 0 ? ((conversions / visitors) * 100).toFixed(1) : '0.0';
 
             // 2. ROBUST FUNNEL RECONSTRUCTION
-            // Kita pastiin awareness minimal sama dengan unique visitors biar gak aneh di UI
+            // Mapping data dari RPC 'funnel_stats' ke format UI
             const f = data.funnel_stats || {};
             const awareness = Math.max(visitors, Number(f.awareness || 0));
             const interest = Number(f.interest || 0);
@@ -82,7 +82,7 @@ export const useAnalyticsData = () => {
             const processedTraffic: Record<string, number> = {};
             const today = new Date();
             
-            // Create template based on ISO Date key for stability
+            // Generate template tanggal dalam ISO format (YYYY-MM-DD) biar sinkron sama database
             const dateTemplate: Record<string, { label: string, count: number }> = {};
             for (let i = period - 1; i >= 0; i--) {
                 const d = new Date();
@@ -92,10 +92,9 @@ export const useAnalyticsData = () => {
                 dateTemplate[isoKey] = { label: displayLabel, count: 0 };
             }
 
-            // Fill template with data from DB
+            // Isi template dengan data asli dari database
             if (data.traffic_by_date) {
                 Object.entries(data.traffic_by_date).forEach(([dbDate, count]) => {
-                    // dbDate bisa format "2024-03-20" atau full ISO
                     const isoKey = dbDate.split('T')[0];
                     if (dateTemplate[isoKey]) {
                         dateTemplate[isoKey].count = Number(count);
@@ -103,7 +102,7 @@ export const useAnalyticsData = () => {
                 });
             }
 
-            // Reconstruct processedTraffic for the UI
+            // Kembalikan ke format yang dimengerti UI Charts (Display Label -> Count)
             Object.values(dateTemplate).forEach(item => {
                 processedTraffic[item.label] = item.count;
             });
@@ -112,7 +111,7 @@ export const useAnalyticsData = () => {
             let mappedReferrers: [string, number][] = [];
             if (data.top_referrers) {
                 if (Array.isArray(data.top_referrers)) {
-                    mappedReferrers = data.top_referrers.map((r: any) => [r.source || 'Direct', Number(r.count || 0)]);
+                    mappedReferrers = data.top_referrers.map((r: any) => [r.source || r.referrer || 'Direct', Number(r.count || 0)]);
                 } else {
                     mappedReferrers = Object.entries(data.top_referrers).map(([name, count]) => [name, Number(count)]);
                 }
@@ -129,6 +128,8 @@ export const useAnalyticsData = () => {
                     desktop: Number(data.device_stats?.desktop || 0),
                     tablet: Number(data.device_stats?.tablet || 0)
                 },
+                osDist: data.os_dist || INITIAL_STATS.osDist,
+                sortedCities: data.city_dist ? Object.entries(data.city_dist).sort((a: any, b: any) => b[1] - a[1]) as any : [],
                 sortedPages: (data.top_pages || []).map((p: any) => ({
                     path: p.path,
                     hits: Number(p.hits || 0),
@@ -144,7 +145,7 @@ export const useAnalyticsData = () => {
             }));
         }
     } catch (e) {
-        console.error("Gagal ambil data analitik:", e);
+        console.error("Gagal sinkronisasi Radar Analitik:", e);
     } finally {
         setLoading(false);
     }

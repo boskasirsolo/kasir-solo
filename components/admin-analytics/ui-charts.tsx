@@ -4,16 +4,16 @@ import { Calendar, Activity, Flame } from 'lucide-react';
 
 export const TrafficChart = ({ data, period }: { data: Record<string, number>, period: number }) => {
     const values = Object.values(data);
-    const maxValue = Math.max(...values, 10); // Minimal scale 10 biar gak jomplang kalau cuma ada 1 view
+    const maxValue = Math.max(...values, 10); // Minimal scale 10 biar bar pendek tetep keliatan
   
     return (
-      <div className="lg:col-span-2 bg-brand-dark border border-white/5 rounded-xl p-4 md:p-6 relative overflow-hidden">
+      <div className="lg:col-span-2 bg-brand-dark border border-white/5 rounded-xl p-4 md:p-6 relative overflow-hidden h-full flex flex-col">
         <div className="absolute top-0 right-0 p-4 opacity-5"><Activity size={80}/></div>
         <h4 className="text-white font-bold text-sm mb-4 md:mb-6 flex items-center gap-2">
             <Calendar size={16} className="text-brand-orange"/> Grafik Gentayangan ({period} Hari)
         </h4>
         
-        <div className="bg-black/20 rounded-xl p-2 md:p-4 border border-white/5 overflow-x-auto custom-scrollbar">
+        <div className="bg-black/20 rounded-xl p-2 md:p-4 border border-white/5 overflow-x-auto custom-scrollbar flex-1">
             <div className="min-w-[500px] h-64 flex items-end justify-between gap-2 pt-10 pb-2 relative">
                 {/* Grid Background Lines */}
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-5 z-0 pb-10">
@@ -25,6 +25,7 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
                 {Object.entries(data).map(([date, count], idx) => {
                     const heightPercent = (count / maxValue) * 100;
                     const isZero = count === 0;
+                    // Bar minimal 4px biar gak 'ilang' kalau datanya 0
                     const barHeight = isZero ? '4px' : `${Math.max(heightPercent, 8)}%`;
                     
                     return (
@@ -87,5 +88,5 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
 };
 
 export const RetentionChart = ({ newUsers, returningUsers }: { newUsers: number, returningUsers: number }) => {
-    return null; // Simplified for this fix
+    return null; // Simplified for current dashboard
 };
