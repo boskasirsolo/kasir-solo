@@ -30,7 +30,8 @@ export const RecoveryPanel = ({ leads, onRescue, isRescuingId }: { leads: Custom
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {leads.map(lead => {
                     const intel = parseIntel(lead.last_notes);
-                    const isHot = lead.lead_temperature === 'hot';
+                    // Fix: Changed lead_temperature to temperature to match Customer interface
+                    const isHot = lead.temperature === 'hot';
 
                     return (
                         <div key={lead.phone} className={`bg-brand-card border rounded-2xl p-5 relative overflow-hidden transition-all hover:shadow-neon-strong group ${isHot ? 'border-red-600/40 bg-red-600/5' : 'border-white/5'}`}>

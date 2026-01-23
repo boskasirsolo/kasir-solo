@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from 'react';
 import { Article, GalleryItem, SiteConfig, Product } from '../../types';
 import { supabase, uploadToSupabase, processBackgroundMigration, slugify, renameFile, convertLocalToUTC, convertUTCToLocal } from '../../utils';
@@ -20,7 +19,7 @@ export const useArticleFilter = (articles: Article[], itemsPerPage: number) => {
 
     const filteredList = useMemo(() => {
         return articles.filter(a => {
-            const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesSearch = (a.title || '').toLowerCase().includes(searchTerm.toLowerCase());
             if (!matchesSearch) return false;
             if (filterType === 'all') return true; 
             if (filterType === 'pillar') return a.type === 'pillar';
@@ -55,7 +54,21 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
 
     useEffect(() => {
         if (supabase) supabase.from('target_cities').select('*').order('name', { ascending: true }).then(({data}) => data && setCities(data));
+        fetchInitialData();
     }, []);
+
+    const fetchInitialData = async () => {
+        if (!supabase) return;
+        const { data } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
+        if (data) {
+            const mapped = data.map((a: any) => ({
+                ...a,
+                image: a.image_url,
+                readTime: a.read_time
+            }));
+            setArticles(mapped);
+        }
+    };
 
     const [form, setForm] = useState<ArticleFormState>({
         id: null, title: '', excerpt: '', content: '', category: '',
@@ -73,7 +86,15 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
     };
 
     const handleEditClick = (item: Article) => {
-        setForm({ ...item, id: item.id, authorAvatar: item.author_avatar || config?.founder_portrait || '', imagePreview: item.image, targetWordCount: item.content ? item.content.split(/\s+/).length : 1000, scheduled_for: item.scheduled_for ? (config?.timezone ? convertUTCToLocal(item.scheduled_for, config.timezone) : item.scheduled_for.slice(0, 16)) : '' } as any);
+        setForm({ 
+            ...item, 
+            id: item.id, 
+            authorAvatar: item.author_avatar || config?.founder_portrait || '', 
+            imagePreview: item.image || (item as any).image_url, 
+            readTime: item.readTime || (item as any).read_time,
+            targetWordCount: item.content ? item.content.split(/\s+/).length : 1000, 
+            scheduled_for: item.scheduled_for ? (config?.timezone ? convertUTCToLocal(item.scheduled_for, config.timezone) : item.scheduled_for.slice(0, 16)) : '' 
+        } as any);
         setAiStep(2); setActiveMobilePane('WRITE');
     };
 
@@ -119,11 +140,11 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             if (form.id) {
                 const { data, error } = await supabase!.from('articles').update(dbData).eq('id', form.id).select().single();
                 if (error) throw error;
-                if (data) setArticles((prev: Article[]) => prev.map(a => a.id === form.id ? { ...a, ...data, image: data.image_url } : a));
+                if (data) setArticles((prev: Article[]) => prev.map(a => a.id === form.id ? { ...a, ...data, image: data.image_url, readTime: data.read_time } : a));
             } else {
                 const { data, error } = await supabase!.from('articles').insert([{ ...dbData, created_at: new Date().toISOString() }]).select().single();
                 if (error) throw error;
-                if (data) { savedId = data.id; setArticles((prev: Article[]) => [{ ...data, image: data.image_url } as Article, ...prev]); }
+                if (data) { savedId = data.id; setArticles((prev: Article[]) => [{ ...data, image: data.image_url, readTime: data.read_time } as Article, ...prev]); }
             }
 
             if (supabasePath && fileToMigrate && savedId) {
@@ -169,26 +190,13 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             runImage: async () => { setLoading(p => ({ ...p, generatingImage: true })); try { const { url, file } = await VisionAI.generate(form.title, form.category, 'corporate'); setForm(p => ({ ...p, imagePreview: url, uploadFile: file })); } finally { setLoading(p => ({ ...p, generatingImage: false })); } },
             selectTopic: (k: any) => { setForm(p => ({ ...p, title: k.keyword })); setAiStep(2); },
             runClusterResearch: async (pillar: Article) => { 
-                // STEP 1: Inisialisasi Form sebagai Cluster yang terikat ke Pillar ini
-                setForm(p => ({ 
-                    ...p, 
-                    id: null, 
-                    title: '', 
-                    content: '', 
-                    type: 'cluster', 
-                    pillar_id: pillar.id, 
-                    category: pillar.category || 'General' 
-                })); 
-                
-                // STEP 2: Pindah ke pane konfigurasi
+                setForm(p => ({ ...p, id: null, title: '', content: '', type: 'cluster', pillar_id: pillar.id, category: pillar.category || 'General' })); 
                 setActiveMobilePane('CONFIG');
-                
-                // STEP 3: Jalankan Riset otomatis pake judul Pillar sebagai basis context
                 setLoading(p => ({...p, researching: true, progressMessage: `SIBOS lagi nyadap keyword turunan dari: ${pillar.title}`}));
                 try { 
                     const raw = await EditorAI.researchTopics('cluster', pillar.title); 
                     setKeywords(raw); 
-                    setAiStep(1); // Langsung lempar ke layar hasil riset (Step 1)
+                    setAiStep(1); 
                 } finally { 
                     setLoading(p => ({...p, researching: false})); 
                 }

@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useCRMLogic, parseIntel } from './logic';
-import { PIPELINE_STAGES, Customer, LeadStatus } from './types';
+import { PIPELINE_STAGES, Customer } from './types';
 import { Search, RefreshCw, LayoutGrid, List, MessageCircle, Zap, Sparkles, X, LayoutDashboard, ShoppingCart, Eye, MousePointer2 } from 'lucide-react';
 import { LoadingSpinner } from '../ui';
 import { SimpleMarkdown } from '../admin-articles/markdown';
@@ -23,7 +22,6 @@ export const AdminCRM = ({ config }: { config: any }) => {
 
     return (
         <div className="space-y-6 pb-20">
-            {/* AI RECOMMENDATION BOX */}
             {aiRecommendation && (
                 <div className="bg-brand-orange/10 border border-brand-orange/30 p-6 rounded-3xl relative animate-fade-in shadow-neon-text/5">
                     <button onClick={() => setAiRecommendation(null)} className="absolute top-4 right-4 text-gray-500 hover:text-white"><X size={18}/></button>
@@ -37,7 +35,6 @@ export const AdminCRM = ({ config }: { config: any }) => {
                 </div>
             )}
 
-            {/* SALES MODULE SUB-TABS */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-brand-card/30 p-4 rounded-2xl border border-white/5 shadow-lg">
                 <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 w-full overflow-x-auto custom-scrollbar-hide">
                     <button onClick={() => setActiveSubTab('pipeline')} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeSubTab === 'pipeline' ? 'bg-brand-orange text-white shadow-neon' : 'text-gray-500'}`}><LayoutDashboard size={14}/> PIPELINE</button>
@@ -66,10 +63,10 @@ export const AdminCRM = ({ config }: { config: any }) => {
                                 <div key={stage.id} className="flex flex-col h-[700px] bg-black/20 rounded-3xl border border-white/5 overflow-hidden">
                                     <div className={`p-4 border-b-2 bg-brand-card/50 ${stage.color} flex justify-between items-center`}>
                                         <h4 className="text-[10px] font-black text-white uppercase tracking-widest">{stage.label}</h4>
-                                        <span className="text-[10px] text-gray-500 font-mono">{filteredCustomers.filter(c => c.lead_status === stage.id).length}</span>
+                                        <span className="text-[10px] text-gray-500 font-mono">{filteredCustomers.filter(c => c.status === stage.id).length}</span>
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
-                                        {filteredCustomers.filter(c => c.lead_status === stage.id).map(customer => (
+                                        {filteredCustomers.filter(c => c.status === stage.id).map(customer => (
                                             <LeadCard key={customer.phone} customer={customer} onOpenDetail={() => setSelectedCustomer(customer)} onStatusUpdate={updateStatus} />
                                         ))}
                                     </div>
@@ -111,7 +108,7 @@ export const AdminCRM = ({ config }: { config: any }) => {
                                                     </div>
                                                 ) : <span className="text-[9px] text-gray-700 italic">No radar data</span>}
                                             </td>
-                                            <td className="p-4"><span className="px-2 py-1 bg-white/5 rounded border border-white/10 text-[9px] font-bold uppercase text-gray-400">{customer.lead_status}</span></td>
+                                            <td className="p-4"><span className="px-2 py-1 bg-white/5 rounded border border-white/10 text-[9px] font-bold uppercase text-gray-400">{customer.status}</span></td>
                                             <td className="p-4 font-bold text-brand-orange">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(customer.total_spent)}</td>
                                             <td className="p-4 text-right">
                                                 <button onClick={(e) => { e.stopPropagation(); runRecoveryAI(customer); }} className="p-2 text-brand-orange hover:bg-brand-orange hover:text-white rounded-lg transition-all"><MessageCircle size={16}/></button>
@@ -134,27 +131,20 @@ const LeadCard = ({ customer, onOpenDetail, onStatusUpdate }: any) => {
     const intel = parseIntel(customer.last_notes);
     return (
         <div className="bg-brand-card p-4 rounded-2xl border border-white/5 transition-all hover:border-brand-orange cursor-pointer relative overflow-hidden group" onClick={onOpenDetail}>
-            {/* RADAR OVERLAY (MINI) */}
             {customer.intelligence && (
                 <div className="absolute top-2 right-2 flex gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
                     <div className="bg-blue-500/20 text-blue-400 p-1 rounded border border-blue-500/30" title={`${customer.intelligence.total_views} Page Views`}>
                         <Eye size={10} />
                     </div>
-                    {customer.intelligence.top_category !== 'Unknown' && (
-                        <div className="bg-purple-500/20 text-purple-400 p-1 rounded border border-purple-500/30" title={`Focus on ${customer.intelligence.top_category}`}>
-                            <Zap size={10} />
-                        </div>
-                    )}
                 </div>
             )}
 
             <h5 className="font-bold text-white text-sm truncate mb-1 pr-12">{customer.name}</h5>
             <p className="text-[10px] text-gray-500 font-mono mb-3">{customer.phone}</p>
             
-            {/* RADAR DESCRIPTION */}
             {customer.intelligence && (
                 <div className="mb-3 px-2 py-1 bg-blue-500/5 border border-blue-500/10 rounded-lg">
-                    <p className="text-[8px] text-blue-400 font-black uppercase tracking-widest mb-0.5 flex items-center gap-1"><Activity size={8}/> Radar Pulse</p>
+                    <p className="text-[8px] text-blue-400 font-black uppercase tracking-widest mb-0.5 flex items-center gap-1">Radar Pulse</p>
                     <p className="text-[9px] text-gray-400 line-clamp-1 italic">Mampir di: {customer.intelligence.most_visited_path}</p>
                 </div>
             )}
@@ -165,12 +155,11 @@ const LeadCard = ({ customer, onOpenDetail, onStatusUpdate }: any) => {
                 </div>
             )}
             <div className="flex justify-between items-center pt-3 border-t border-white/5">
-                 <select value={customer.lead_status} onClick={e => e.stopPropagation()} onChange={(e) => onStatusUpdate(customer.phone, e.target.value)} className="bg-transparent text-[8px] font-black text-gray-600 uppercase outline-none">
+                 <select value={customer.status} onClick={e => e.stopPropagation()} onChange={(e) => onStatusUpdate(customer.phone, e.target.value)} className="bg-transparent text-[8px] font-black text-gray-600 uppercase outline-none">
                     {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.id}</option>)}
                  </select>
-                 <span className={`w-2 h-2 rounded-full ${customer.lead_temperature === 'hot' ? 'bg-red-500 animate-ping' : 'bg-blue-500'}`}></span>
+                 <span className={`w-2 h-2 rounded-full ${customer.temperature === 'hot' ? 'bg-red-500 animate-ping' : 'bg-blue-500'}`}></span>
             </div>
         </div>
     );
 };
-import { Activity } from 'lucide-react';

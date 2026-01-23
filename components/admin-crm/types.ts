@@ -1,4 +1,3 @@
-
 export type LeadTemperature = 'cold' | 'warm' | 'hot';
 export type LeadStatus = 'new' | 'contacted' | 'negotiating' | 'closed' | 'lost';
 
@@ -18,8 +17,8 @@ export interface Customer {
     company_name?: string;
     business_category?: string;
     business_scale?: string;
-    lead_status: LeadStatus;
-    lead_temperature: LeadTemperature;
+    status: string; // Matching DB: status
+    temperature: string; // Matching DB: temperature
     total_spent: number;
     total_orders: number;
     interaction_history: any[];
@@ -29,7 +28,7 @@ export interface Customer {
     visitor_id?: string;
     // AI & RADAR ENHANCEMENTS
     intelligence?: BehavioralIntel;
-    ai_probability?: number; // 0 - 100
+    ai_probability?: number; 
     ai_closing_strategy?: string;
     ai_buyer_persona?: string;
 }
@@ -41,7 +40,7 @@ export interface CRMState {
     activeView: 'pipeline' | 'list';
 }
 
-export const PIPELINE_STAGES: { id: LeadStatus; label: string; color: string }[] = [
+export const PIPELINE_STAGES: { id: string; label: string; color: string }[] = [
     { id: 'new', label: '🆕 Baru Masuk', color: 'border-blue-500' },
     { id: 'contacted', label: '📞 Analisa Kebutuhan', color: 'border-yellow-500' },
     { id: 'negotiating', label: '📑 Kirim Penawaran', color: 'border-brand-orange' },
