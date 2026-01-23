@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { GalleryItem, Testimonial, SiteConfig } from '../../types';
 import { ProjectDetailModal } from '../gallery';
@@ -42,12 +43,7 @@ export const HomeModule = ({
 
   return (
     <div className="animate-fade-in space-y-0">
-      <HomeHero 
-        setPage={setPage} 
-        config={config} 
-        onsiteRemaining={onsiteRemaining}
-        digitalRemaining={digitalRemaining}
-      />
+      <HomeHero setPage={setPage} config={config} />
       
       <LivePulseSection events={allEvents} />
 

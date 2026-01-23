@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Product, GalleryItem } from '../../types';
+import { Product, GalleryItem, SiteConfig } from '../../types';
 import { useShopLogic } from './logic';
 import { slugify } from '../../utils';
 
@@ -9,14 +8,22 @@ import { slugify } from '../../utils';
 import { ShopHero, SearchWidget, EmptyState, PaginationControl, QuickActions } from './ui/common';
 import { ProductCard, ProductGrid } from './product/card';
 import { ComparisonBar, ComparisonModal } from './comparison';
-import { PhysicalProjectCard } from '../gallery/ui-parts'; // Import Project Card
-import { SectionHeader, Button } from '../ui'; // Import SectionHeader & Button
+import { PhysicalProjectCard } from '../gallery/ui-parts'; 
+import { SectionHeader, Button } from '../ui'; 
 import { ArrowRight } from 'lucide-react';
 
 // Export Detail View for standalone usage (routes)
 export { ProductDetailView } from './product/detail';
 
-export const ShopModule = ({ products, gallery = [] }: { products: Product[], gallery?: GalleryItem[] }) => {
+export const ShopModule = ({ 
+  products, 
+  gallery = [],
+  config
+}: { 
+  products: Product[], 
+  gallery?: GalleryItem[],
+  config: SiteConfig
+}) => {
   const navigate = useNavigate();
   const { state, actions } = useShopLogic(products);
 
@@ -29,13 +36,19 @@ export const ShopModule = ({ products, gallery = [] }: { products: Product[], ga
     .filter(item => item.category_type === 'physical')
     .slice(0, 3);
 
+  // Scarcity Logic
+  const onsiteRemaining = Math.max(0, (config?.quota_onsite_max || 5) - (config?.quota_onsite_used || 0));
+
   return (
     <div className="container mx-auto px-4 py-10 animate-fade-in relative">
       
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 gap-8 border-b border-white/5 pb-8">
-        {/* Left: Hero Text */}
-        <ShopHero />
+        {/* Left: Hero Text with Quota */}
+        <ShopHero 
+            remaining={onsiteRemaining} 
+            max={config?.quota_onsite_max || 5} 
+        />
         
         {/* Right: Search & Actions */}
         <div className="flex flex-col items-end w-full lg:w-auto gap-2">
@@ -88,7 +101,6 @@ export const ShopModule = ({ products, gallery = [] }: { products: Product[], ga
                     <PhysicalProjectCard 
                         key={item.id} 
                         item={item} 
-                        // FIX: Wrapped navigate in braces to ensure return type is void
                         onClick={() => { navigate(`/gallery/${slugify(item.title)}`); }}
                     />
                 ))}
