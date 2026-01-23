@@ -22,7 +22,6 @@ const ArticlesPage = lazy(() => import('./pages/articles').then(module => ({ def
 const ArticleDetailPage = lazy(() => import('./pages/articles').then(module => ({ default: module.ArticleDetailPage })));
 const AboutPage = lazy(() => import('./pages/about').then(module => ({ default: module.AboutPage })));
 const VisionPage = lazy(() => import('./pages/vision').then(module => ({ default: module.VisionPage })));
-const CalendarPage = lazy(() => import('./pages/career').then(module => ({ default: module.CareerPage }))); 
 const CareerPage = lazy(() => import('./pages/career').then(module => ({ default: module.CareerPage })));
 const ContactPage = lazy(() => import('./pages/contact').then(module => ({ default: module.ContactPage })));
 const AdminPage = lazy(() => import('./pages/admin')); 
@@ -42,8 +41,13 @@ const MaintenanceServicePage = lazy(() => import('./pages/services').then(module
 const NotFoundPage = lazy(() => import('./pages/not-found').then(module => ({ default: module.NotFoundPage })));
 
 const PageLoader = () => (
-  <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-      <LoadingSpinner size={32} className="text-brand-orange" />
+  <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 animate-fade-in">
+      <div className="relative">
+          {/* Mocking the theme in React Loader */}
+          <div className="w-16 h-1 bg-brand-orange shadow-neon animate-pulse mb-1 rounded-full"></div>
+          <LoadingSpinner size={32} className="text-brand-orange" />
+      </div>
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Syncing Logic...</p>
   </div>
 );
 
@@ -132,7 +136,10 @@ const AppContent = () => {
         } catch (e) {
             console.error("Audit Kabel Database Gagal:", e);
         } finally {
-            setIsInitializing(false);
+            // Berikan sedikit delay agar animasi loader di HTML terlihat manis
+            setTimeout(() => {
+                setIsInitializing(false);
+            }, 1000);
         }
     };
 
