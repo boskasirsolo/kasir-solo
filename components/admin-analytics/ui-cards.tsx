@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Eye, Users, MousePointer, TrendingUp, Smartphone, Monitor, Tablet, Globe, Clock, Zap } from 'lucide-react';
 import { AnalyticsStats } from './types';
@@ -54,29 +53,37 @@ const DeviceBar = ({ label, count, total, icon: Icon, color }: any) => (
 );
 
 export const ReferrerList = ({ referrers, totalViews }: { referrers: [string, number][], totalViews: number }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-xl p-5 md:p-6 flex flex-col h-full">
-        <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+    <div className="bg-brand-dark border border-white/5 rounded-2xl p-6 flex flex-col h-full shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-5"><Globe size={100} /></div>
+        
+        <h4 className="text-white font-bold text-sm mb-8 flex items-center gap-2 relative z-10">
             <Globe size={16} className="text-blue-400"/> Pintu Masuk (Top 10)
         </h4>
-        <div className="space-y-2 overflow-y-auto custom-scrollbar max-h-[300px] pr-2">
+        
+        <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2 relative z-10">
             {referrers.map(([ref, count], idx) => {
                 const percent = totalViews > 0 ? ((count / totalViews) * 100).toFixed(1) : "0";
                 return (
-                    <div key={idx} className="flex justify-between items-center text-xs p-2 bg-white/5 rounded border border-white/5 hover:border-brand-orange/30 transition-colors group">
-                        <div className="flex flex-col min-w-0 flex-1 mr-2">
-                             <span className="text-gray-300 truncate font-medium group-hover:text-white transition-colors">{ref}</span>
-                             <div className="w-full bg-black/40 h-1 rounded-full mt-1.5 overflow-hidden">
-                                <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
-                             </div>
+                    <div key={idx} className="flex flex-col p-3 bg-white/5 rounded-xl border border-white/5 hover:border-blue-500/30 transition-all group">
+                        <div className="flex justify-between items-center mb-2">
+                             <span className="text-[11px] text-gray-300 truncate font-bold group-hover:text-white transition-colors">{ref}</span>
+                             <span className="text-[10px] font-bold text-white font-mono">{count}</span>
                         </div>
-                        <div className="text-right shrink-0">
-                            <span className="font-bold text-white block">{count}</span>
-                            <span className="text-[9px] text-gray-500">{percent}%</span>
+                        <div className="w-full bg-black/40 h-1 rounded-full overflow-hidden">
+                            <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
+                        </div>
+                        <div className="text-right mt-1">
+                            <span className="text-[8px] text-gray-600 font-black uppercase tracking-tighter">{percent}% Kontribusi</span>
                         </div>
                     </div>
                 );
             })}
-            {referrers.length === 0 && <p className="text-[10px] text-gray-500 italic">Belum ada data sumber trafik.</p>}
+            {referrers.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-20 opacity-20">
+                    <Globe size={48} className="mb-4" />
+                    <p className="text-xs italic">Belum ada data sumber trafik.</p>
+                </div>
+            )}
         </div>
     </div>
 );
