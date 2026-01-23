@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { 
-  Brain, Wallet, MessageCircle, ShieldCheck, Database, Printer, 
+  Brain, Wallet, LayoutDashboard, ShieldCheck, Database, Printer, 
   Smartphone, BookOpen, GraduationCap, Users, FileText, 
-  ArrowRight, CheckCircle2, Lock, Quote, Sparkles, Send
+  ArrowRight, CheckCircle2, Lock, Quote, Sparkles, Send,
+  LineChart, Activity, Clock
 } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { Button, SectionHeader } from '../components/ui';
@@ -13,18 +14,26 @@ import { SEOHelmet, BreadcrumbSchema } from '../components/seo';
 
 const AcademicVisual = () => (
     <div className="space-y-3">
-        <div className="flex items-center gap-2 mb-2">
-            <Sparkles size={14} className="text-amber-500 animate-pulse" />
-            <span className="text-[10px] font-black text-amber-500 uppercase tracking-tighter">AI Narration Engine</span>
-        </div>
-        <div className="p-3 bg-white/5 rounded-lg border border-white/5 italic text-[11px] text-gray-400 leading-relaxed">
-            "Alhamdulillah, ananda <span className="text-white font-bold">Zaid</span> menunjukkan kemajuan pesat dalam tajwid, khususnya hukum Nun Sukun. Karakter kepemimpinannya..."
-        </div>
-        <div className="flex justify-between items-center pt-2">
-            <div className="h-1.5 w-20 bg-amber-500/20 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-500 w-[90%]"></div>
+        <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-ping"></div>
+                <span className="text-[10px] font-black text-white uppercase tracking-tighter">Live Sync: Setoran Hafalan</span>
             </div>
-            <span className="text-[9px] font-bold text-gray-500">90% Progress</span>
+            <span className="text-[9px] text-gray-500">Baru saja</span>
+        </div>
+        <div className="p-3 bg-white/5 rounded-lg border border-green-500/20">
+            <p className="text-[11px] text-gray-400 leading-relaxed mb-2">
+                Guru: <span className="text-white font-bold">Ustadz Hanif</span> menandai <span className="text-brand-orange font-bold">An-Naba (1-10)</span> sebagai Lulus.
+            </p>
+            <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-green-500 w-[75%] transition-all duration-1000"></div>
+                </div>
+                <span className="text-[9px] font-bold text-green-400">+15% Target</span>
+            </div>
+        </div>
+        <div className="flex justify-center pt-2">
+             <div className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[8px] font-bold text-blue-400 uppercase">Otomatis Update ke Dashboard Wali</div>
         </div>
     </div>
 );
@@ -53,23 +62,50 @@ const FinanceVisual = () => (
 );
 
 const CommunicationVisual = () => (
-    <div className="space-y-3">
-        <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20 w-fit">
-            <MessageCircle size={12} className="text-green-500"/>
-            <span className="text-[9px] font-black text-green-500 uppercase">WhatsApp Gateway</span>
-        </div>
-        <div className="relative">
-            <div className="bg-brand-dark p-3 rounded-2xl rounded-tl-none border border-white/10 text-[11px] text-gray-300">
-                Halo Pak Budi, ananda Zaid sudah sampai di sekolah pukul 07:15 WIB. Selamat beraktivitas!
+    <div className="space-y-4">
+        <div className="flex items-center justify-between p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
+            <div className="flex items-center gap-2">
+                <LayoutDashboard size={14} className="text-indigo-400"/>
+                <span className="text-[9px] font-black text-white uppercase tracking-widest">Portal Wali Santri</span>
             </div>
-            <div className="flex justify-end mt-1">
-                <div className="flex gap-0.5 text-blue-400">
-                    <CheckCircle2 size={10} /><CheckCircle2 size={10} />
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+        </div>
+        
+        {/* Real-time Activity Feed */}
+        <div className="space-y-3">
+            <div className="relative pl-4 border-l-2 border-indigo-500/30 space-y-4">
+                <div className="relative">
+                    <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-indigo-500 border-2 border-brand-card"></div>
+                    <p className="text-[9px] text-gray-500 font-mono mb-1">07:15 WIB</p>
+                    <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+                        <p className="text-[10px] text-white font-bold">Absensi: Masuk Sekolah</p>
+                        <p className="text-[9px] text-gray-400">Ananda Zaid terdeteksi di area sekolah.</p>
+                    </div>
+                </div>
+                <div className="relative">
+                    <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-green-500 border-2 border-brand-card"></div>
+                    <p className="text-[9px] text-gray-500 font-mono mb-1">10:30 WIB</p>
+                    <div className="bg-green-500/5 p-2 rounded-lg border border-green-500/20">
+                        <p className="text-[10px] text-green-400 font-bold">Capaian: Setoran Hafalan</p>
+                        <p className="text-[9px] text-gray-300">Surah An-Naziat selesai (Predikat: Mumtaz).</p>
+                    </div>
                 </div>
             </div>
         </div>
-        <div className="flex items-center gap-2 text-[10px] text-gray-500">
-            <Send size={10} /> Terkirim otomatis via Qalam
+
+        {/* Small Analytics Graph */}
+        <div className="pt-2 border-t border-white/5">
+            <p className="text-[8px] text-gray-500 uppercase font-black mb-2 tracking-widest">Grafik Mingguan Ananda</p>
+            <div className="h-12 flex items-end gap-1 px-1">
+                {[40, 70, 55, 90, 85, 60, 95].map((h, i) => (
+                    <div key={i} className="flex-1 bg-indigo-500/20 rounded-t-sm relative group overflow-hidden">
+                        <div className="absolute bottom-0 w-full bg-indigo-500 transition-all duration-1000" style={{ height: `${h}%` }}></div>
+                    </div>
+                ))}
+            </div>
+            <div className="flex justify-between mt-1 text-[7px] text-gray-600 font-mono">
+                <span>SEN</span><span>SEL</span><span>RAB</span><span>KAM</span><span>JUM</span><span>SAB</span><span>MIG</span>
+            </div>
         </div>
     </div>
 );
@@ -159,7 +195,7 @@ export const QalamPage = ({ config }: { config: SiteConfig }) => {
         <div className="bg-[#050505] text-gray-200 font-sans selection:bg-amber-500 selection:text-black">
              <SEOHelmet 
                 title="QALAM - Aplikasi Manajemen Sekolah & Pesantren"
-                description="Sistem pendidikan terintegrasi: Akademik AI, Keuangan Transparan, dan WhatsApp Gateway. Gratis untuk lembaga kecil."
+                description="Sistem pendidikan terintegrasi: Akademik AI, Keuangan Transparan, dan Portal Wali Santri Real-time."
                 image="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=1200"
             />
             <BreadcrumbSchema 
@@ -175,19 +211,16 @@ export const QalamPage = ({ config }: { config: SiteConfig }) => {
 
                 <div className="container mx-auto px-4 relative z-10 text-center">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-bold uppercase tracking-widest mb-6">
-                        ALL-IN-ONE PLATFORM
+                        DIRECT SYNC PLATFORM
                     </div>
                     
                     <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight max-w-5xl mx-auto">
-                        Teknologi Pendidikan Elit,<br/>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600">Kini Milik Semua.</span>
+                        Bukan Sekadar Pesan,<br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-600">Tapi Portal Kepercayaan.</span>
                     </h1>
                     
                     <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
-                        Qalam menyatukan 3 pilar utama manajemen pendidikan: 
-                        <span className="text-white font-bold"> Akademik</span>, 
-                        <span className="text-white font-bold"> Keuangan</span>, dan 
-                        <span className="text-white font-bold"> Komunikasi</span> dalam satu dashboard terintegrasi.
+                        Guru absen di kelas, data mendarat di HP Wali detik itu juga. Anak selesai setoran, grafik di dashboard Wali langsung naik. Transparansi total tanpa <em>noise</em> chat WhatsApp.
                     </p>
 
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -210,10 +243,10 @@ export const QalamPage = ({ config }: { config: SiteConfig }) => {
                         icon={Brain}
                         type="academic"
                         color="text-amber-500"
-                        title="Guru Fokus Mengajar,"
-                        highlight="AI yang Bikin Laporan."
-                        desc="Tidak ada lagi lembur mengisi rapor manual. Cukup input poin perilaku dan hafalan, AI (Gemini) kami akan merangkai narasi yang personal, menyentuh hati, dan profesional untuk setiap santri."
-                        tags={['Rapor Otomatis', 'Tracking Hafalan', 'Absensi Digital', 'Cetak Kartu Ujian']}
+                        title="Hafalan Terukur,"
+                        highlight="Grafik Naik Terus."
+                        desc="Lupakan catatan manual di buku penghubung yang sering hilang. Ustadz input capaian hafalan di kelas, dashboard Wali Santri otomatis mengupdate grafik progress secara visual. Memotivasi santri untuk lebih giat."
+                        tags={['Tracking Hafalan Live', 'Rapor Otomatis AI', 'Dashboard Progres', 'Absensi QR Code']}
                     />
 
                     {/* 2. KEUANGAN (TEAL) */}
@@ -224,19 +257,19 @@ export const QalamPage = ({ config }: { config: SiteConfig }) => {
                         align="right"
                         title="Keuangan Transparan,"
                         highlight="Cegah Kebocoran Dana."
-                        desc="Sistem pencatatan SPP dan donasi yang real-time. Wali santri bisa melihat tagihan dan riwayat pembayaran di HP mereka. Laporan arus kas otomatis terbit setiap bulan."
-                        tags={['Tagihan SPP', 'Laporan Arus Kas', 'Donasi In-App', 'Slip Gaji Guru']}
+                        desc="Sistem pencatatan SPP dan donasi yang real-time. Wali santri bisa melihat tagihan dan riwayat pembayaran di dashboard pribadi mereka. Laporan arus kas otomatis terbit setiap bulan untuk menjaga amanah umat."
+                        tags={['Tagihan SPP Digital', 'E-Invoice', 'Laporan Arus Kas', 'Riwayat Infaq']}
                     />
 
-                    {/* 3. KOMUNIKASI (BLUE) */}
+                    {/* 3. KOMUNIKASI (INDIGO) */}
                     <FeaturePillar 
-                        icon={MessageCircle}
+                        icon={LayoutDashboard}
                         type="communication"
-                        color="text-blue-400"
-                        title="WhatsApp Gateway,"
-                        highlight="Tanpa Biaya Langganan."
-                        desc="Kirim notifikasi kehadiran, tagihan SPP, dan pengumuman libur langsung ke WhatsApp orang tua secara otomatis. Membangun kedekatan emosional antara lembaga dan keluarga."
-                        tags={['Auto-Notifikasi WA', 'Broadcast Pengumuman', 'Jadwal Kegiatan', 'Konsultasi Ortu']}
+                        color="text-indigo-400"
+                        title="Portal Wali Santri,"
+                        highlight="Data di Genggaman."
+                        desc="Semua informasi sekolah dalam satu aplikasi. Cek absensi, capaian akademik, hingga tagihan tanpa perlu scroll chat WhatsApp yang menumpuk. Real-time notification langsung dari dashboard guru ke portal wali."
+                        tags={['Personal Dashboard', 'Activity Feed Live', 'Grafik Perkembangan', 'Notif In-App']}
                     />
 
                 </div>
@@ -259,9 +292,9 @@ export const QalamPage = ({ config }: { config: SiteConfig }) => {
                             desc="Data Anda dicadangkan otomatis ke Google Cloud Storage setiap malam. Anti-hilang."
                         />
                         <InfraCard 
-                            icon={Printer}
-                            title="Cetak Dokumen Massal"
-                            desc="Cetak 500 Rapor atau Kartu Ujian dalam sekali klik. Format PDF siap cetak."
+                            icon={Activity}
+                            title="Real-time Analytics"
+                            desc="Sistem memproses ribuan data per detik untuk menyajikan statistik akurat di dashboard wali."
                         />
                     </div>
                 </div>
