@@ -25,7 +25,6 @@ export const useMediaVault = () => {
     }, []);
 
     const fetchAssets = async () => {
-        // FIX: Ensure loading is stopped even if supabase is not initialized
         if (!supabase) {
             setLoading(false);
             return;

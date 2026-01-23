@@ -41,9 +41,10 @@ const INITIAL_STATS: AnalyticsStats = {
 export const useAnalyticsData = () => {
   const [stats, setStats] = useState<AnalyticsStats>(INITIAL_STATS);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState(30); // Default ke 30 hari biar semua 524 data lo masuk
+  const [period, setPeriod] = useState(30);
 
   const fetchStats = async () => {
+    // Jika supabase belum siap, langsung stop loading biar gak stuck
     if (!supabase) {
         setLoading(false);
         return;
@@ -62,7 +63,6 @@ export const useAnalyticsData = () => {
             const conversions = Number(data.total_conversions || 0);
             const convRate = visitors > 0 ? ((conversions / visitors) * 100).toFixed(1) : '0.0';
 
-            // 1. Funnel Mapping
             const f = data.funnel_stats || {};
             const awareness = Number(f.awareness || visitors || 0);
             const interest = Number(f.interest || 0);
@@ -76,7 +76,6 @@ export const useAnalyticsData = () => {
                 { label: 'DEAL', count: action, percentage: awareness > 0 ? Math.round((action/awareness)*100) : 0, dropOff: intent > 0 ? Math.max(0, Math.round(((intent-action)/intent)*100)) : 0, icon: DollarSign, color: 'text-green-500' }
             ];
 
-            // 2. Traffic by Date Mapping
             const processedTraffic: Record<string, number> = {};
             const today = new Date();
             const dateTemplate: Record<string, { label: string, count: number }> = {};
@@ -102,7 +101,6 @@ export const useAnalyticsData = () => {
                 processedTraffic[item.label] = item.count;
             });
 
-            // 3. Referrer Mapping
             let mappedReferrers: [string, number][] = [];
             if (data.top_referrers) {
                 mappedReferrers = data.top_referrers.map((r: any) => [r.source || 'Direct', Number(r.count || 0)]);
@@ -117,7 +115,7 @@ export const useAnalyticsData = () => {
                 sortedPages: (data.top_pages || []).map((p: any) => ({
                     path: p.path,
                     hits: Number(p.hits || 0),
-                    avgTime: '2m 15s' // Fallback
+                    avgTime: '2m 15s'
                 })),
                 devices: {
                     mobile: Number(data.device_stats?.mobile || 0),
@@ -131,7 +129,7 @@ export const useAnalyticsData = () => {
                 hours: data.hourly_stats || INITIAL_STATS.hours,
                 newVisitors: 0,
                 returningVisitors: 0,
-                bounceRate: 42, // Simulated
+                bounceRate: 42,
                 avgPagesPerSession: "3.2",
                 sortedExitPages: [],
                 avgEngagementTime: "1m 48s",
@@ -143,8 +141,11 @@ export const useAnalyticsData = () => {
             });
         }
     } catch (e) {
-        console.error("Radar Sync Failed:", e);
+        console.warn("Radar Sync Failed. Kemungkinan RPC belum dibuat di Supabase.", e);
+        // Tetap set stats kosong biar dashboard bisa nampil (walau angkanya 0)
+        setStats(INITIAL_STATS);
     } finally {
+        // Apapun yang terjadi, matikan loading spinner
         setLoading(false);
     }
   };
