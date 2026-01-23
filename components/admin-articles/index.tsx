@@ -132,11 +132,24 @@ export const AdminArticles = ({
                     )}
 
                     <div className={`absolute inset-0 bg-black/60 flex items-center justify-center gap-4 transition-opacity ${form.imagePreview ? 'opacity-0 group-hover/cover:opacity-100' : 'opacity-100'}`}>
+                        {/* BUTTON: GENERATE AI */}
+                        <button 
+                            onClick={actions.runImage}
+                            disabled={aiLogic.loading.generatingImage}
+                            className="flex flex-col items-center gap-2 p-4 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 rounded-2xl transition-all hover:-translate-y-1 w-24 disabled:opacity-50"
+                        >
+                            {aiLogic.loading.generatingImage ? <Loader2 size={24} className="text-blue-400 animate-spin"/> : <Sparkles size={24} className="text-blue-400" />}
+                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">AI Gen</span>
+                        </button>
+
+                        {/* BUTTON: UPLOAD */}
                         <label className="flex flex-col items-center gap-2 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl cursor-pointer transition-all hover:-translate-y-1 w-24">
                             <UploadCloud size={24} className="text-white"/>
                             <span className="text-[10px] font-bold text-white uppercase tracking-tighter">Upload</span>
                             <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && actions.handleCoverUpload(e.target.files[0])} />
                         </label>
+
+                        {/* BUTTON: MEDIA LIBRARY */}
                         <button onClick={() => uiState.setShowMediaLib(true)} className="flex flex-col items-center gap-2 p-4 bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/20 rounded-2xl transition-all hover:-translate-y-1 w-24">
                             <FolderOpen size={24} className="text-brand-orange" />
                             <span className="text-[10px] font-bold text-brand-orange uppercase tracking-tighter">Media</span>
