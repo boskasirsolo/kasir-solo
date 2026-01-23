@@ -9,7 +9,7 @@ const PulseItem: React.FC<{ event: PulseEvent }> = ({ event }) => (
             <ShieldCheck size={14} />
         </div>
         <div className="min-w-0 max-w-[200px]">
-            <p className="text-white text-[10px] font-bold truncate uppercase tracking-wider">Juragan {event.name}</p>
+            <p className="text-white text-[10px] font-bold truncate uppercase tracking-wider">Bos {event.name}</p>
             <p className="text-[9px] text-gray-500 truncate font-medium">
                 <span className="text-brand-orange">{event.item}</span> @ {event.location}
             </p>
@@ -34,8 +34,11 @@ export const LivePulseSection = ({ events }: { events: PulseEvent[] }) => {
                             <Activity size={24} className="animate-pulse" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-display font-bold text-white leading-tight">Live Pulse</h3>
-                            <p className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em]">Signal & Traffics</p>
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-xl font-display font-bold text-white leading-tight">Live Pulse</h3>
+                                <span className="bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-neon animate-pulse">24/7</span>
+                            </div>
+                            <p className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em]">Signals & Traffics</p>
                         </div>
                     </div>
 

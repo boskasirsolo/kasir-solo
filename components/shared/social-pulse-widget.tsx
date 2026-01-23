@@ -31,7 +31,7 @@ export const SocialPulseWidget = ({ event }: { event: PulseEvent | null }) => {
                     </p>
                     {/* Dark text for visibility on white bg */}
                     <h4 className="text-xs font-bold text-gray-900 truncate">
-                        Juragan {event.name}
+                        Bos {event.name}
                     </h4>
                     <div className="flex items-center gap-2 mt-1 text-[9px] text-gray-600 font-bold">
                         <span className="flex items-center gap-1"><MapPin size={10} className="text-gray-400" /> {event.location}</span>
