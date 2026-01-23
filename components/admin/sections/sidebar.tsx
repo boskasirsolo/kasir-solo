@@ -4,27 +4,27 @@ import {
     ShoppingBag, Package, LayoutGrid, Image, Settings, 
     LogOut, FileText, Briefcase, 
     BarChart, Download, Share2, Globe, Cpu, 
-    Bot, BookOpen, Users, X, Box, Zap, Wrench, ArrowUpRight, Database, Quote
+    Bot, BookOpen, Users, X, Box, Zap, Wrench, ArrowUpRight, Database, Quote, TrendingUp
 } from 'lucide-react';
 import { AdminTabId, MenuCategory } from '../types';
 import { SidebarTabButton, SidebarGroupHeader, SystemHealthWidget } from '../ui-parts';
 
 export const MENU_GROUPS: MenuCategory[] = [
-    { id: 'radar', label: 'Intelligence', items: ['analytics', 'crm', 'seo'] },
-    { id: 'ops', label: 'Operations', items: ['store', 'rma'] },
+    { id: 'radar', label: 'Intelligence', items: ['analytics', 'sales', 'seo'] },
+    { id: 'ops', label: 'Operations (Dapur)', items: ['store', 'rma'] },
     { id: 'content', label: 'Asset Library', items: ['articles', 'gallery', 'testimonials', 'media', 'downloads'] },
     { id: 'growth', label: 'Expansion', items: ['social', 'career'] },
     { id: 'core', label: 'System Core', items: ['siboy', 'documentation', 'settings'] }
 ];
 
 export const ICON_MAP: Record<string, any> = {
-    analytics: BarChart, crm: Users, seo: Globe, store: ShoppingBag, rma: Wrench,
+    analytics: BarChart, sales: TrendingUp, seo: Globe, store: Package, rma: Wrench,
     articles: FileText, gallery: Image, testimonials: Quote, media: Database, downloads: Download, social: Share2,
     career: Briefcase, siboy: Bot, documentation: BookOpen, settings: Settings
 };
 
 export const LABEL_MAP: Record<string, string> = {
-    analytics: 'Radar Trafik', crm: 'Sales War Room', seo: 'SEO Engine', store: 'Toko & Produk',
+    analytics: 'Radar Trafik', sales: 'War Room Sales', seo: 'SEO Engine', store: 'Katalog Toko',
     rma: 'Klaim Garansi', articles: 'Intel Artikel', gallery: 'Portfolio Proyek',
     testimonials: 'Testimoni Klien',
     media: 'Digital Vault', downloads: 'File Center', social: 'Social Studio', career: 'HR Recruitment',
