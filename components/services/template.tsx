@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GalleryItem } from '../../types';
@@ -21,9 +22,6 @@ interface ServicePageTemplateProps {
     waNumber?: string;
     serviceSlug?: string;
     relatedProjects?: GalleryItem[];
-    // Quota props
-    remaining: number;
-    max: number;
 }
 
 export const ServicePageTemplate = ({
@@ -34,9 +32,7 @@ export const ServicePageTemplate = ({
     steps,
     waNumber,
     serviceSlug,
-    relatedProjects,
-    remaining,
-    max
+    relatedProjects
 }: ServicePageTemplateProps) => {
     const navigate = useNavigate();
 
@@ -48,8 +44,6 @@ export const ServicePageTemplate = ({
                 subtitle={subtitle} 
                 icon={icon} 
                 waNumber={waNumber}
-                remaining={remaining}
-                max={max}
             />
             
             <NarrativeSection>
@@ -76,6 +70,7 @@ export const ServicePageTemplate = ({
                                 <DigitalProjectCard 
                                     key={item.id} 
                                     item={item} 
+                                    // FIX: Changed arrow function to block to ensure void return
                                     onClick={() => { navigate(`/gallery/${slugify(item.title)}`); }} 
                                 />
                             ))}

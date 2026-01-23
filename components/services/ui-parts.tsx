@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { ArrowRight, Monitor, AlertTriangle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Card, SectionHeader } from '../ui';
 
 // --- ATOMS ---
@@ -9,17 +10,13 @@ export const ServiceHero = ({
   highlight, 
   subtitle, 
   icon: Icon,
-  waNumber,
-  remaining,
-  max
+  waNumber
 }: { 
   title: string, 
   highlight: string, 
   subtitle: string, 
   icon: any,
-  waNumber?: string,
-  remaining: number,
-  max: number
+  waNumber?: string
 }) => {
   const targetWa = waNumber || "6282325103336";
   
@@ -27,21 +24,6 @@ export const ServiceHero = ({
     <section className="relative py-20 overflow-hidden border-b border-white/5">
       <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/5 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="container mx-auto px-4 relative z-10 text-center">
-        
-        {/* QUOTA RADAR - DIGITAL */}
-        <div className="mb-8 flex justify-center animate-fade-in">
-           <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-blue-500/10 border border-blue-500/30 rounded-2xl backdrop-blur-md shadow-[0_0_20px_rgba(59,130,246,0.1)]">
-              <div className="relative">
-                <Monitor size={18} className="text-blue-400" />
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-              </div>
-              <div className="text-left">
-                <p className="text-[9px] font-black text-blue-300 uppercase tracking-widest leading-none mb-1">Live Digital Slot</p>
-                <p className="text-xs font-bold text-white leading-none">Sisa <span className="text-blue-400">{remaining}</span> / {max} Antrian Proyek</p>
-              </div>
-           </div>
-        </div>
-
         <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-brand-orange mx-auto mb-6 shadow-neon border border-white/10">
           <Icon size={32} />
         </div>

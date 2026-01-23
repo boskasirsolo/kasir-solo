@@ -1,31 +1,21 @@
+
 import React from 'react';
-import { Search, PackageOpen, ChevronLeft, ChevronRight, Truck, ShieldCheck, MapPin, AlertTriangle } from 'lucide-react';
+import { Search, PackageOpen, ChevronLeft, ChevronRight, Truck, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Input } from '../../ui';
 
-export const ShopHero = ({ remaining, max }: { remaining: number, max: number }) => (
+export const ShopHero = () => (
   <div className="text-left mb-6 md:mb-0 max-w-xl">
-    <div className="flex flex-wrap gap-2 mb-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-orange/30 bg-brand-orange/10">
-            <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span>
-            <span className="text-[10px] font-bold text-brand-orange uppercase tracking-widest">Ready Stock</span>
-        </div>
-        
-        {/* QUOTA RADAR - ON SITE */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10 shadow-[0_0_10px_rgba(239,68,68,0.2)]">
-            <MapPin size={12} className="text-red-500" />
-            <span className="text-[10px] font-bold text-white uppercase tracking-widest">
-                Sisa <span className="text-red-500">{remaining}</span> / {max} Slot On-Site
-            </span>
-        </div>
+    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-orange/30 bg-brand-orange/10 mb-4">
+        <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span>
+        <span className="text-[10px] font-bold text-brand-orange uppercase tracking-widest">Ready Stock</span>
     </div>
-
-    <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-3 leading-tight">
+    <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">
       Pilih <span className="text-brand-orange">Senjata Lo.</span>
     </h2>
     <p className="text-gray-400 text-sm md:text-lg leading-relaxed">
       Jangan asal beli murah. Ini investasi jangka panjang. <br className="hidden md:block"/>
-      Slot pemasangan langsung oleh <strong>Founder</strong> sangat terbatas bulan ini.
+      Pilih mesin yang tahan banting buat ngadepin ribuan transaksi.
     </p>
   </div>
 );
@@ -57,7 +47,7 @@ export const SearchWidget = ({ value, onChange }: { value: string, onChange: (va
       value={value} 
       onChange={(e) => onChange(e.target.value)} 
       placeholder="Cari alat tempur..." 
-      className="pl-12 py-4 rounded-xl bg-brand-dark border-white/10 focus:border-brand-orange transition-all text-sm font-bold placeholder:text-gray-600 shadow-xl focus:shadow-neon/20"
+      className="pl-12 py-4 rounded-xl bg-brand-dark border-white/10 focus:border-brand-orange transition-all text-sm font-bold placeholder-gray-600 shadow-xl focus:shadow-neon/20"
     />
     <Search className="absolute left-4 top-4 text-gray-500 w-5 h-5 group-hover:text-brand-orange transition-colors" />
   </div>

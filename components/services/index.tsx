@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Globe, Layers, LineChart, ShieldCheck, Store, ArrowRight, FileSpreadsheet, Database, CheckCircle2, Megaphone, Anchor, TrendingUp, TrendingDown, Skull, ShieldAlert, Activity, AlertTriangle } from 'lucide-react';
 import { ServicePageTemplate } from './template';
@@ -26,7 +27,7 @@ const ServicePageWrapper = ({
     defaultHighlight,
     defaultSubtitle,
     config,
-    gallery = [] 
+    gallery = [] // Default to empty array if not passed
 }: {
     slug: string,
     fallbackData: any,
@@ -35,7 +36,7 @@ const ServicePageWrapper = ({
     defaultTitle: string,
     defaultHighlight: string,
     defaultSubtitle: string,
-    config: SiteConfig,
+    config?: SiteConfig,
     gallery?: GalleryItem[]
 }) => {
     const [dbData, setDbData] = useState<ServicePageData | null>(null);
@@ -63,19 +64,26 @@ const ServicePageWrapper = ({
     const steps = dbData?.steps || fallbackSteps;
     const calcData = dbData?.calc_data || fallbackCalc;
 
-    const max = config?.quota_digital_max || 3;
+    const max = config?.quota_digital_max || 2;
     const used = config?.quota_digital_used || 0;
     const remaining = Math.max(0, max - used);
 
     // FILTER RELATED PROJECTS
     const relatedProjects = gallery.filter(item => {
         if (item.category_type !== 'digital') return false;
-        if (slug === 'website') return item.platform === 'web' || item.platform === 'desktop';
-        if (slug === 'webapp') return true; 
+        
+        // Specific filtering based on slug
+        if (slug === 'website') {
+            return item.platform === 'web' || item.platform === 'desktop';
+        }
+        if (slug === 'webapp') {
+            // Webapp can be web or mobile or desktop app
+            return true; 
+        }
         return false;
-    }).slice(0, 3);
+    }).slice(0, 3); // Take top 3 recent projects
 
-    // Narrative logic
+    // Narrative logic specific to slug but can be overwritten by DB if we add narrative column (optional)
     const renderNarrative = () => {
         if (slug === 'website') return (
             <>
@@ -93,6 +101,9 @@ const ServicePageWrapper = ({
                             </p>
                             <p className="text-gray-300 text-sm leading-relaxed">
                                 Gue <strong>Single Fighter</strong> untuk urusan coding & strategi. Gue gak mau oper ke anak magang terus hasilnya ampas.
+                            </p>
+                            <p className="text-gray-300 text-sm leading-relaxed mt-2">
+                                Sisa slot saat ini: <strong className="text-white">{remaining}</strong>.
                             </p>
                         </div>
                     </div>
@@ -118,6 +129,10 @@ const ServicePageWrapper = ({
                 <div>
                     <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6 leading-tight">Lo Owner, Bukan <span className="text-red-500">Admin.</span></h2>
                     <p className="text-gray-400 leading-relaxed mb-6">Masih jaman rekap nota manual tiap malem? Itu tanda <strong>sistem lo purba</strong>.</p>
+                    <div className="bg-brand-dark border-l-4 border-brand-orange p-4 rounded-r-lg mt-6">
+                        <p className="text-brand-orange font-bold text-xs uppercase tracking-widest mb-1 flex items-center gap-2"><AlertTriangle size={12}/> SLOT TERBATAS (MAX {max}/BULAN)</p>
+                        <p className="text-white italic text-sm">"Tersisa <strong>{remaining} slot</strong>. Pastikan lo booking slot jauh-jauh hari."</p>
+                    </div>
                 </div>
                 <div className="relative">
                     <div className="absolute inset-0 bg-brand-orange/10 blur-[80px] rounded-full"></div>
@@ -178,14 +193,12 @@ const ServicePageWrapper = ({
             waNumber={config?.whatsapp_number}
             serviceSlug={slug}
             narrativeContent={renderNarrative()}
-            relatedProjects={relatedProjects}
-            remaining={remaining}
-            max={max}
+            relatedProjects={relatedProjects} // Pass filtered projects
         />
     );
 };
 
-export const WebsiteServicePage = ({ config, gallery }: { config: SiteConfig, gallery?: GalleryItem[] }) => (
+export const WebsiteServicePage = ({ config, gallery }: { config?: SiteConfig, gallery?: GalleryItem[] }) => (
     <ServicePagePageWrapper 
         slug="website"
         fallbackData={WEBSITE_DATA}
@@ -199,7 +212,7 @@ export const WebsiteServicePage = ({ config, gallery }: { config: SiteConfig, ga
     />
 );
 
-export const WebAppServicePage = ({ config, gallery }: { config: SiteConfig, gallery?: GalleryItem[] }) => (
+export const WebAppServicePage = ({ config, gallery }: { config?: SiteConfig, gallery?: GalleryItem[] }) => (
     <ServicePagePageWrapper 
         slug="webapp"
         fallbackData={WEBAPP_DATA}
@@ -213,7 +226,7 @@ export const WebAppServicePage = ({ config, gallery }: { config: SiteConfig, gal
     />
 );
 
-export const SeoServicePage = ({ config }: { config: SiteConfig }) => (
+export const SeoServicePage = ({ config }: { config?: SiteConfig }) => (
     <ServicePagePageWrapper 
         slug="seo"
         fallbackData={SEO_DATA}
@@ -226,7 +239,7 @@ export const SeoServicePage = ({ config }: { config: SiteConfig }) => (
     />
 );
 
-export const MaintenanceServicePage = ({ config }: { config: SiteConfig }) => (
+export const MaintenanceServicePage = ({ config }: { config?: SiteConfig }) => (
     <ServicePagePageWrapper 
         slug="maintenance"
         fallbackData={MAINTENANCE_DATA}
