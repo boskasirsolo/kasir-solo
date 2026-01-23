@@ -40,14 +40,16 @@ const SeoServicePage = lazy(() => import('./pages/services').then(module => ({ d
 const MaintenanceServicePage = lazy(() => import('./pages/services').then(module => ({ default: module.MaintenanceServicePage })));
 const NotFoundPage = lazy(() => import('./pages/not-found').then(module => ({ default: module.NotFoundPage })));
 
+/**
+ * PageLoader sekarang cuma dipake buat transisi Suspense (pindah halaman).
+ * Untuk loading pertama kali, kita pake HTML loader di index.html.
+ */
 const PageLoader = () => (
-  <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 animate-fade-in">
+  <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 animate-fade-in">
       <div className="relative">
-          {/* Mocking the theme in React Loader */}
-          <div className="w-16 h-1 bg-brand-orange shadow-neon animate-pulse mb-1 rounded-full"></div>
           <LoadingSpinner size={32} className="text-brand-orange" />
       </div>
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Syncing Logic...</p>
+      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-700 animate-pulse">Syncing Logic...</p>
   </div>
 );
 
@@ -90,6 +92,18 @@ const AppContent = () => {
     }
   }, []);
 
+  // --- SINKRONISASI DENGAN LOADER HTML ---
+  useEffect(() => {
+    if (!isInitializing) {
+        const htmlLoader = document.getElementById('mks-initial-loader');
+        if (htmlLoader) {
+            htmlLoader.classList.add('hidden');
+            // Hapus dari DOM setelah animasi fade out selesai (0.8s di CSS)
+            setTimeout(() => htmlLoader.remove(), 1000);
+        }
+    }
+  }, [isInitializing]);
+
   useEffect(() => {
     const loadAppData = async () => {
         if (!supabase) {
@@ -97,7 +111,8 @@ const AppContent = () => {
             setGallery(INITIAL_GALLERY);
             setArticles(INITIAL_ARTICLES);
             setTestimonials(INITIAL_TESTIMONIALS);
-            setIsInitializing(false);
+            // Berikan nafas buat animasi printer
+            setTimeout(() => setIsInitializing(false), 1500);
             return;
         }
 
@@ -136,17 +151,18 @@ const AppContent = () => {
         } catch (e) {
             console.error("Audit Kabel Database Gagal:", e);
         } finally {
-            // Berikan sedikit delay agar animasi loader di HTML terlihat manis
+            // Berikan sedikit delay agar animasi loader di HTML terlihat manis dan tuntas
             setTimeout(() => {
                 setIsInitializing(false);
-            }, 1000);
+            }, 1200);
         }
     };
 
     loadAppData();
   }, [session]);
 
-  if (isInitializing) return <PageLoader />;
+  // Pas inisialisasi, jangan render apa-apa (biarin loader HTML yang kerja)
+  if (isInitializing) return null;
 
   const isGhost = localStorage.getItem('mks_ghost_mode') === 'true';
   const isAdminRoute = location.pathname.startsWith('/admin');

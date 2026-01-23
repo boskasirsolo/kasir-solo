@@ -56,7 +56,14 @@
       #mks-initial-loader {
         position: fixed; inset: 0; background: #050505; 
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        z-index: 9999; transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 9999; 
+        transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+      }
+
+      #mks-initial-loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
       }
 
       .printer-slot {
@@ -69,7 +76,7 @@
       .receipt-paper {
         width: 180px; background: #fff; margin: 0 auto;
         position: relative; top: -6px; height: 0;
-        animation: printReceipt 2.5s ease-out forwards;
+        animation: printReceipt 2.2s ease-out forwards;
         overflow: hidden; padding: 0 10px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         clip-path: polygon(0 0, 100% 0, 100% 95%, 95% 100%, 90% 95%, 85% 100%, 80% 95%, 75% 100%, 70% 95%, 65% 100%, 60% 95%, 55% 100%, 50% 95%, 45% 100%, 40% 95%, 35% 100%, 30% 95%, 25% 100%, 20% 95%, 15% 100%, 10% 95%, 5% 100%, 0 95%);
@@ -79,7 +86,7 @@
         color: #000; font-family: 'Courier New', Courier, monospace;
         font-size: 8px; font-weight: 900; line-height: 1.5;
         padding-top: 10px; opacity: 0;
-        animation: showText 0.5s step-end 0.8s forwards;
+        animation: showText 0.5s step-end 0.6s forwards;
       }
 
       @keyframes printReceipt {
@@ -99,7 +106,7 @@
       .mks-progress {
         width: 0%; height: 100%; background: #FF5F1F;
         box-shadow: 0 0 10px #FF5F1F;
-        animation: growProgress 2s ease-in-out forwards;
+        animation: growProgress 2.5s ease-in-out forwards;
       }
 
       @keyframes growProgress {
@@ -111,7 +118,6 @@
         text-transform: uppercase;
       }
 
-      /* Pulse decoration */
       .loader-ping {
         position: absolute; width: 300px; height: 300px; border-radius: 50%;
         background: rgba(255, 95, 31, 0.05); filter: blur(60px);
@@ -119,9 +125,6 @@
       }
 
       @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.2); opacity: 0.6; } }
-
-      .animate-pulse { animation: as-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-      @keyframes as-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
     </style>
 
     <!-- Error Handler -->
@@ -152,9 +155,8 @@
 </script>
 </head>
   <body>
-    <div id="root">
-      <!-- --- THERMAL PRINTER LOADER --- -->
-      <div id="mks-initial-loader">
+    <!-- --- THERMAL PRINTER LOADER (DI LUAR ROOT) --- -->
+    <div id="mks-initial-loader">
         <div class="loader-ping"></div>
         <div class="printer-slot">
           <div class="receipt-paper">
@@ -175,8 +177,11 @@
           <div class="mks-progress"></div>
         </div>
         <p class="loader-label">Calibrating System...</p>
-      </div>
     </div>
+
+    <!-- ROOT DIV (TEMPAT REACT MOUNTING) -->
+    <div id="root"></div>
+
     <script type="module" src="/index.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
