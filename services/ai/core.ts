@@ -1,7 +1,9 @@
 
+import { GoogleGenAI } from "@google/genai";
+
 // --- RATE LIMITER CONFIG ---
 const RATE_LIMIT_KEY = 'mks_ai_throttle';
-const LIMIT_COUNT = 20; // Kasih longgar dikit
+const LIMIT_COUNT = 20; 
 const LIMIT_WINDOW = 60 * 1000;
 
 const checkClientRateLimit = () => {
@@ -38,7 +40,10 @@ export const ensureAPIKey = async () => {
   return false;
 };
 
-// --- CORE GENERATOR ENGINE ---
+/**
+ * CORE GENERATOR ENGINE
+ * Berbasis instruksi teknis terbaru: Menggunakan process.env.API_KEY secara eksklusif.
+ */
 export const callGeminiWithRotation = async (params: {
   model: string,
   contents: any,
@@ -47,41 +52,36 @@ export const callGeminiWithRotation = async (params: {
   
   checkClientRateLimit();
 
-  // 1. AI Studio Mode (IDX environment / Local Dev)
-  // @ts-ignore
-  if (typeof window !== 'undefined' && window.aistudio) {
+  // Pastikan API Key tersedia (IDX/Vercel handling)
+  if (!process.env.API_KEY) {
+      // Trigger dialog jika di IDX dan belum ada key
       await ensureAPIKey();
-      const { GoogleGenAI } = await import("@google/genai");
-      // Use the injected API_KEY or GEMINI_API_KEY_1 as fallback
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY_1 || '' });
-      return await ai.models.generateContent(params);
   }
 
-  // 2. Production Mode (Fetch through Vercel API bridge)
+  // Inisialisasi sesuai Guideline
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+
+  // EXECUTION WITH RETRY
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const response = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params)
+      // Gunakan generateContent secara langsung dari ai.models
+      const result = await ai.models.generateContent({
+        model: params.model,
+        contents: params.contents,
+        config: params.config
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 429) throw new Error("Rate Limit Tercapai.");
-        throw new Error(data.details || data.error || "Server Error");
-      }
-
-      return {
-        ...data,
-        get text() {
-          return data.text || "";
-        }
-      };
+      return result;
 
     } catch (error: any) {
-      if (attempt === retries - 1) throw error;
+      const isLastAttempt = attempt === retries - 1;
+      
+      // Handle race conditions or temporary network issues
+      if (isLastAttempt) {
+          console.error("Gemini API Error:", error);
+          throw new Error(`Gemini Gagal: ${error.message || 'Unknown error'}`);
+      }
+      
       await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1))); 
     }
   }

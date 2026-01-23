@@ -17,11 +17,10 @@ export const SEOHelmet = ({
     type?: string;
 }) => {
     const siteTitle = "PT MESIN KASIR SOLO";
-    const finalTitle = title ? `${title} | ${siteTitle}` : siteTitle;
-    const finalDesc = description || "Pusat penjualan mesin kasir modern (POS), jasa pembuatan website SEO, dan aplikasi kasir online/offline terlengkap.";
+    const finalTitle = title ? `${title} | ${siteTitle}` : `${siteTitle} | Pusat Kasir & Jasa Website Terpercaya`;
+    const finalDesc = description || "PT Mesin Kasir Solo (MKS) adalah distributor resmi paket mesin kasir Android & Windows terlengkap di Solo. Kami juga melayani jasa pembuatan website SEO dan custom ERP.";
     const finalImage = image || "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=1200&h=630";
     
-    // SEO FIX: Ensure canonical URL never has a trailing slash (unless root)
     const currentPath = window.location.pathname;
     const cleanPath = currentPath !== '/' && currentPath.endsWith('/') 
         ? currentPath.slice(0, -1) 
@@ -46,6 +45,9 @@ export const SEOHelmet = ({
             <meta name="twitter:title" content={finalTitle} />
             <meta name="twitter:description" content={finalDesc} />
             <meta name="twitter:image" content={finalImage} />
+            
+            {/* SEO TAGS BUAT GOOGLE BOT */}
+            <meta name="keywords" content="mesin kasir solo, jual pos solo, paket kasir murah, pt mesin kasir solo, jasa website solo, aplikasi kasir android" />
         </Helmet>
     );
 };
@@ -74,9 +76,9 @@ export const ProductSchema = ({ product }: { product: Product }) => {
     "@type": "Product",
     "name": product.name,
     "image": [product.image],
-    "description": product.description?.substring(0, 200) || `Jual ${product.name} termurah dan bergaransi.`,
+    "description": product.description?.substring(0, 200) || `Jual ${product.name} termurah dan bergaransi resmi di PT Mesin Kasir Solo.`,
     "sku": `MKS-${product.id}`,
-    "brand": { "@type": "Brand", "name": "Mesin Kasir Solo" },
+    "brand": { "@type": "Brand", "name": "PT Mesin Kasir Solo" },
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "4.9",
@@ -103,21 +105,16 @@ export const LocalBusinessSchema = ({ city }: { city: string }) => {
     const schema = {
         "@context": "https://schema.org",
         "@type": "LocalBusiness",
-        "name": `PT Mesin Kasir Solo - Cabang ${city}`,
+        "name": `PT Mesin Kasir Solo - Area ${city}`,
         "image": "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&q=80&w=800",
-        "@id": `https://kasirsolo.my.id/jual-mesin-kasir-di/${city.toLowerCase()}`,
+        "@id": `https://kasirsolo.my.id/area/${city.toLowerCase()}`,
         "url": window.location.href,
-        "telephone": "+6282325103336",
-        "priceRange": "IDR 2.000.000 - IDR 15.000.000",
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.9",
-          "reviewCount": "250"
-        },
+        "telephone": "+628816566935",
+        "priceRange": "IDR 2.000.000 - IDR 25.000.000",
         "address": {
             "@type": "PostalAddress",
-            "streetAddress": "Perum Graha Tiara 2 B1",
-            "addressLocality": "Kartasura",
+            "streetAddress": "Perum Graha Tiara 2 B1, Kartasura",
+            "addressLocality": "Solo Raya",
             "addressRegion": "Jawa Tengah",
             "postalCode": "57169",
             "addressCountry": "ID"
@@ -126,17 +123,7 @@ export const LocalBusinessSchema = ({ city }: { city: string }) => {
             "@type": "GeoCoordinates",
             "latitude": -7.5515,
             "longitude": 110.7534
-        },
-        "openingHoursSpecification": {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-            "opens": "08:00",
-            "closes": "17:00"
-        },
-        "sameAs": [
-            "https://www.facebook.com/mesinkasirsolo",
-            "https://www.instagram.com/mesinkasirsolo"
-        ]
+        }
     };
     return (
         <Helmet>

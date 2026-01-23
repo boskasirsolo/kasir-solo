@@ -1,16 +1,15 @@
 
 import React from 'react';
-import { ArrowRight, Zap } from 'lucide-react';
+import { ArrowRight, Zap, Target } from 'lucide-react';
 import { Button } from '../../ui';
 import { SiteConfig } from '../../../types';
 
 export const HomeHero = ({ setPage, config }: { setPage: (p: string) => void, config: SiteConfig }) => {
-  const title = config.hero_title || "AKHIRI ERA {BONCOS}";
-  const subtitle = config.hero_subtitle || "Gue bantu rakit [Sistem Kasir] & Aset Digital yang bikin bisnis lo kerja sendiri.";
+  const title = config.hero_title || "Pusat {Mesin Kasir}\nTerbesar di Solo.";
+  const subtitle = config.hero_subtitle || "Gue rakitkan [Aset Digital] & Sistem POS yang bikin ruko lo kerja otomatis tanpa perlu lo tongkrongin tiap hari.";
 
   // Helper untuk parse teks dengan highlight dan ganti baris
   const parseHeroText = (text: string) => {
-    // Regex untuk memisahkan highlight {} dan []
     const parts = text.split(/(\{.*?\}|\[.*?\])/g);
     
     return parts.map((part, i) => {
@@ -44,14 +43,13 @@ export const HomeHero = ({ setPage, config }: { setPage: (p: string) => void, co
       <div className="container mx-auto px-4 z-10 text-center relative pt-10 flex flex-col items-center">
         {/* Floating Badge */}
         <div className="inline-flex items-center gap-2 px-5 py-2.5 border border-brand-orange/40 rounded-full bg-brand-orange/5 mb-8 backdrop-blur-md shadow-neon animate-fade-in">
-          <div className="w-2 h-2 rounded-full bg-brand-orange animate-ping"></div>
+          <Target size={14} className="text-brand-orange animate-pulse" />
           <h2 className="text-brand-orange text-[10px] md:text-xs font-black tracking-[0.3em] uppercase whitespace-nowrap">
-            Pusat Digitalisasi UMKM Terlengkap
+            Official Site: PT MESIN KASIR SOLO
           </h2>
         </div>
         
         <div className="space-y-6 max-w-5xl mb-12">
-          {/* whitespace-pre-line untuk mendukung ganti baris dari textarea */}
           <h1 className="text-4xl md:text-7xl lg:text-8xl font-display font-black text-white leading-[1.1] tracking-tighter drop-shadow-2xl animate-fade-in uppercase whitespace-pre-line">
             {parseHeroText(title)}
           </h1>
@@ -63,18 +61,16 @@ export const HomeHero = ({ setPage, config }: { setPage: (p: string) => void, co
         
         <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center w-full px-6 sm:px-0 animate-fade-in" style={{ animationDelay: '0.4s' }}>
           <Button onClick={() => setPage('shop')} className="w-full sm:w-auto h-16 px-12 shadow-neon-strong text-sm">
-            BORONG ALAT TEMPUR <ArrowRight size={20} />
+            BORONG PAKET MESIN <ArrowRight size={20} />
           </Button>
           <Button variant="outline" onClick={() => setPage('contact')} className="w-full sm:w-auto h-16 px-12 text-sm">
-            CURHAT SAMA GUE <Zap size={18} />
+            TANYA FOUNDER LANGSUNG <Zap size={18} />
           </Button>
         </div>
 
-        {/* Vertical Decor */}
-        <div className="absolute hidden lg:block left-10 top-1/2 -translate-y-1/2 space-y-12 opacity-20">
-           <div className="w-px h-32 bg-gradient-to-b from-transparent via-white to-transparent"></div>
-           <p className="vertical-text text-[10px] font-black tracking-[0.5em] text-white uppercase">REBORN 2025</p>
-           <div className="w-px h-32 bg-gradient-to-b from-transparent via-white to-transparent"></div>
+        {/* Brand Overlay */}
+        <div className="mt-16 opacity-30 select-none hidden md:block">
+            <p className="text-[12px] font-black uppercase tracking-[1em] text-white">ESTABLISHED 2015 // SURAKARTA</p>
         </div>
       </div>
 
@@ -83,13 +79,6 @@ export const HomeHero = ({ setPage, config }: { setPage: (p: string) => void, co
           <div className="w-[1px] h-12 bg-gradient-to-b from-brand-orange to-transparent"></div>
           <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Scroll</span>
       </div>
-
-      <style>{`
-        .vertical-text {
-          writing-mode: vertical-rl;
-          transform: rotate(180deg);
-        }
-      `}</style>
     </section>
   );
 };
