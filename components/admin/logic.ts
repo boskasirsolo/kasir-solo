@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import { supabase } from '../../utils';
 import { activateGhostMode } from '../../hooks/use-analytics';
 import { AdminTabId } from './types';
@@ -53,6 +52,7 @@ export const useAdminDashboard = () => {
     const [activeTab, setActiveTab] = useState<AdminTabId>('analytics');
     const [storeSubTab, setStoreSubTab] = useState<'orders' | 'catalog' | 'services'>('orders');
     const [showConnectAI, setShowConnectAI] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
         // Detect Google IDX Environment
@@ -71,9 +71,25 @@ export const useAdminDashboard = () => {
         }
     };
 
+    const handleTabChange = (id: AdminTabId) => {
+        startTransition(() => {
+            setActiveTab(id);
+        });
+    };
+
+    const handleStoreSubTabChange = (tab: 'orders' | 'catalog' | 'services') => {
+        startTransition(() => {
+            setStoreSubTab(tab);
+        });
+    };
+
     return {
-        activeTab, setActiveTab,
-        storeSubTab, setStoreSubTab,
-        showConnectAI, connectAI
+        activeTab, 
+        setActiveTab: handleTabChange,
+        storeSubTab, 
+        setStoreSubTab: handleStoreSubTabChange,
+        showConnectAI, 
+        connectAI,
+        isTabLoading: isPending
     };
 };
