@@ -73,13 +73,12 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 fileToMigrate = renamedFile;
             }
 
-            // DOUBLE PUNCH: Kirim ke image DAN image_url biar trigger gak error
+            // Kirim ke image_url (karena trigger lama udah dihapus via SQL)
             const dbData = {
                 title: form.title, 
                 excerpt: form.excerpt || '', 
                 content: form.content || '', 
                 category: form.category || 'General', 
-                image: finalImageUrl,
                 image_url: finalImageUrl, 
                 status: (form.status || 'draft').toLowerCase()
             };
@@ -95,12 +94,12 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 savedRecord = data;
             }
 
-            // BACKGROUND MIGRATION
+            // Migrasi ke Cloudinary di background biar web kenceng
             if (supabasePath && fileToMigrate && savedRecord) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'articles', savedRecord.id, 'image_url');
             }
 
-            alert("Artikel Aman, Juragan!"); 
+            alert("Artikel Berhasil Diamankan!"); 
             resetForm(); 
             setActiveMobilePane('LIST');
             window.location.reload();
@@ -121,7 +120,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             handleCoverUpload: (f: File) => setForm(p => ({...p, uploadFile: f, imagePreview: URL.createObjectURL(f)})),
             handleMediaSelect: (u: string) => { setForm(p => ({...p, imagePreview: u})); setShowMediaLib(false); },
             deleteItem: async (id: number) => { if(confirm("Hapus?")) { await supabase!.from('articles').delete().eq('id', id); window.location.reload(); } },
-            runResearch: async () => {}, runWrite: async () => {}, runImage: async () => {}, selectTopic: () => {}, runClusterResearch: () => {}
+            runResearch: async (topic?: string) => {}, runWrite: async () => {}, runImage: async () => {}, selectTopic: (k:any) => {}, runClusterResearch: (a:Article) => {}
         }
     };
 };
