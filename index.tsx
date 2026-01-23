@@ -6,6 +6,8 @@ import { CartProvider } from './context/cart-context';
 import { Layout } from './components/layout/index';
 import { HomePage } from './pages/home';
 import { LoadingSpinner } from './components/ui';
+import { supabase } from './utils'; // Impor senjata utama
+import { Product, GalleryItem, Article, Testimonial, JobOpening } from './types';
 import './index.css';
 
 // Lazy Pages
@@ -25,6 +27,7 @@ const PageLoader = () => (
 );
 
 const AppContent = () => {
+  const [session, setSession] = useState<any>(null);
   const [config, setConfig] = useState({
     hero_title: "AKHIRI ERA {BONCOS}",
     hero_subtitle: "Gue bantu rakit [Sistem Kasir] & Aset Digital yang bikin bisnis lo kerja sendiri.",
@@ -33,26 +36,51 @@ const AppContent = () => {
     is_maintenance_mode: false
   });
 
-  // Mock data for initial render
-  const [products] = useState([]);
-  const [gallery] = useState([]);
-  const [articles] = useState([]);
-  const [testimonials] = useState([]);
-  const [jobs] = useState([]);
+  // Reactive data for the whole app
+  const [products, setProducts] = useState<Product[]>([]);
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [jobs, setJobs] = useState<JobOpening[]>([]);
+
+  // --- KABEL AUTH: BIAR BISA MASUK DASHBOARD ---
+  useEffect(() => {
+    if (!supabase) return;
+
+    // 1. Cek sesi pas pertama loading
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    // 2. Pantau perubahan auth (Login / Logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <CartProvider>
-      <Layout setPage={() => {}} currentPage="" config={config} session={null}>
+      <Layout setPage={(p) => window.location.pathname = p} currentPage={window.location.pathname.split('/')[1] || 'home'} config={config} setConfig={setConfig} session={session}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route path="/" element={<HomePage setPage={(p) => window.location.pathname = p} config={config} gallery={gallery} testimonials={testimonials} />} />
+            <Route path="/" element={<HomePage setPage={(p) => window.location.href = p} config={config} gallery={gallery} testimonials={testimonials} />} />
             <Route path="/shop" element={<ShopPage products={products} gallery={gallery} />} />
             <Route path="/gallery" element={<GalleryPage gallery={gallery} testimonials={testimonials} />} />
             <Route path="/articles" element={<ArticlesPage articles={articles} products={products} config={config} />} />
             <Route path="/about" element={<AboutPage config={config} />} />
             <Route path="/contact" element={<ContactPage config={config} />} />
-            <Route path="/checkout" element={<CheckoutPage setPage={() => {}} config={config} />} />
-            <Route path="/admin" element={<AdminPage session={null} products={products} setProducts={() => {}} gallery={gallery} setGallery={() => {}} testimonials={testimonials} setTestimonials={() => {}} articles={articles} setArticles={() => {}} jobs={jobs} setJobs={() => {}} config={config} setConfig={setConfig} />} />
+            <Route path="/checkout" element={<CheckoutPage setPage={(p) => window.location.href = p} config={config} />} />
+            <Route path="/admin" element={<AdminPage 
+                session={session} 
+                products={products} setProducts={setProducts} 
+                gallery={gallery} setGallery={setGallery} 
+                testimonials={testimonials} setTestimonials={setTestimonials} 
+                articles={articles} setArticles={setArticles} 
+                jobs={jobs} setJobs={setJobs} 
+                config={config} setConfig={setConfig} 
+            />} />
           </Routes>
         </Suspense>
       </Layout>
