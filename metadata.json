@@ -1,7 +1,5 @@
 {
   "description": "Website Resmi PT MESIN KASIR SOLO - Pusat Penjualan Mesin Kasir (POS) dan Jasa Arsitek Sistem Digital Terpercaya untuk UMKM Indonesia.",
-  "requestFramePermissions": [
-    "camera"
-  ],
+  "requestFramePermissions": [],
   "name": "PT MESIN KASIR SOLO"
 }

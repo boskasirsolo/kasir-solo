@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Terminal, Menu, X, Zap } from 'lucide-react';
 import { DashboardProps } from '../types';
 import { useAdminDashboard } from '../logic';
-import { SystemHealthWidget } from '../ui-parts';
+import { SystemHealthWidget, GhostModeBtn } from '../ui-parts';
 import { Sidebar, LABEL_MAP } from './sidebar';
 import { ModuleRenderer } from './module-renderer';
 
@@ -22,12 +22,15 @@ export const DashboardShell = (props: DashboardProps) => {
                     </div>
                     <span className="font-display font-black text-white uppercase tracking-widest text-[10px]">SOLO_CMD_V3</span>
                 </div>
-                <button 
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-                    className="p-2.5 text-brand-orange bg-brand-orange/5 border border-brand-orange/20 rounded-xl active:scale-90 transition-transform"
-                >
-                    {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-                </button>
+                <div className="flex items-center gap-2">
+                    <GhostModeBtn />
+                    <button 
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+                        className="p-2.5 text-brand-orange bg-brand-orange/5 border border-brand-orange/20 rounded-xl active:scale-90 transition-transform"
+                    >
+                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </div>
             </div>
 
             {/* --- MAIN CONTENT (LEFT SIDE) --- */}
@@ -47,6 +50,7 @@ export const DashboardShell = (props: DashboardProps) => {
                         </div>
                         
                         <div className="flex gap-3 items-center">
+                             <GhostModeBtn />
                              <SystemHealthWidget horizontal />
                              
                              <div className="bg-brand-card/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-3 shadow-xl group hover:border-brand-orange/30 transition-all cursor-help">
@@ -80,7 +84,6 @@ export const DashboardShell = (props: DashboardProps) => {
                 onLogout={props.onLogout} 
             />
 
-            {/* Backdrop for mobile */}
             {isSidebarOpen && (
                 <div 
                     className="fixed inset-0 bg-black/95 backdrop-blur-md z-40 lg:hidden animate-fade-in"

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
     LayoutDashboard, 
@@ -8,9 +9,9 @@ import {
 } from 'lucide-react';
 import { useAnalyticsData } from './logic';
 import { LoadingSpinner } from '../ui';
-import { DashboardHeader, GhostLinkCopier } from './ui-controls';
+import { DashboardHeader } from './ui-controls';
 import { KPIGrid, DeviceStats, ReferrerList } from './ui-cards';
-import { TrafficChart, PeakHoursHeatmap, RetentionChart } from './ui-charts';
+import { TrafficChart, PeakHoursHeatmap } from './ui-charts';
 import { TopPagesTable, ExitPagesList, QualityScorePanel } from './ui-tables';
 import { FunnelVisual, GoldenPathsVisual } from './funnel-radar';
 import { CityDistribution, OSDistribution, DemographicEstimator } from './ui-demographics';
@@ -76,28 +77,22 @@ export const AnalyticsDashboard = () => {
       <div className="space-y-6 min-h-[600px] relative">
         {activeTab === 'radar' && (
           <div className="space-y-6 animate-fade-in">
-            {/* 1. KPI TOP BAR: Napsu Beli & Durasi Betah */}
             <KPIGrid stats={stats} />
             
-            {/* 2. 3 COLUMN COMMAND CENTER (4/12, 4/12, 4/12) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-               {/* KOLOM KIRI: Pintu Masuk (Top 10) */}
                <div className="flex flex-col h-full">
                   <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} />
                </div>
                
-               {/* KOLOM TENGAH: Radar Corong Cuan & Success Rate */}
                <div className="flex flex-col h-full">
                   <FunnelVisual data={stats.funnel} />
                </div>
                
-               {/* KOLOM KANAN: Jalur Paling Cuan & Radar Boncos */}
                <div className="flex flex-col h-full">
                   <GoldenPathsVisual data={stats.funnel} />
                </div>
             </div>
 
-            {/* 3. FULL WIDTH: Grafik Gentayangan (7 Hari) */}
             <div className="bg-brand-dark/50 border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
                 <TrafficChart data={stats.trafficByDate} period={period} />
             </div>
@@ -128,11 +123,8 @@ export const AnalyticsDashboard = () => {
         )}
 
         {activeTab === 'acquisition' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
-            <div className="lg:col-span-8">
-                <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} />
-            </div>
-            <div className="lg:col-span-4"><GhostLinkCopier /></div>
+          <div className="animate-fade-in">
+            <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} />
           </div>
         )}
       </div>

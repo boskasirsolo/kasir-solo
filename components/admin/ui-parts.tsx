@@ -1,7 +1,50 @@
 
 import React, { useState, useEffect } from 'react';
 import { AdminTabId } from './types';
-import { ChevronRight, Activity, ShieldCheck, Zap, Terminal as TerminalIcon } from 'lucide-react';
+import { ChevronRight, Activity, ShieldCheck, Zap, Ghost, Check, Copy } from 'lucide-react';
+
+// --- MOLECULE: Ghost Mode Header Button ---
+export const GhostModeBtn = () => {
+    const [copied, setCopied] = useState(false);
+    const [isGhost, setIsGhost] = useState(false);
+
+    useEffect(() => {
+        setIsGhost(localStorage.getItem('mks_ghost_mode') === 'true');
+    }, []);
+
+    const copyLink = () => {
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        const ghostLink = `${origin}/?mode=ghost_access`;
+        navigator.clipboard.writeText(ghostLink);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <button 
+            onClick={copyLink}
+            className={`flex items-center gap-2 px-3 py-2 rounded-2xl border transition-all shadow-xl group ${
+                isGhost 
+                ? 'bg-green-600/10 border-green-500/30 text-green-400' 
+                : 'bg-brand-card/80 border-white/10 text-gray-500 hover:text-white hover:border-brand-orange/30'
+            }`}
+            title="Salin Link Akses Tanpa Tracking (Ghost Mode)"
+        >
+            <div className="relative">
+                <Ghost size={16} className={isGhost ? 'animate-pulse' : 'group-hover:text-brand-orange'} />
+                {isGhost && <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></div>}
+            </div>
+            <div className="text-left hidden sm:block">
+                <span className="text-[8px] font-black uppercase tracking-widest block leading-none mb-0.5">
+                    {isGhost ? 'Ghost Mode' : 'Stealth Link'}
+                </span>
+                <span className="text-[7px] font-mono uppercase tracking-tighter block leading-none flex items-center gap-1">
+                    {copied ? <><Check size={8}/> COPIED</> : <><Copy size={8}/> SALIN LINK</>}
+                </span>
+            </div>
+        </button>
+    );
+};
 
 // --- ATOM: Sidebar Tab Button ---
 export const SidebarTabButton: React.FC<{ 
@@ -25,7 +68,6 @@ export const SidebarTabButton: React.FC<{
           : 'bg-transparent text-gray-500 border-transparent hover:bg-white/5 hover:text-gray-300'
       }`}
     >
-      {/* Active Indicator Glow */}
       {isActive && (
           <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-brand-orange shadow-[0_0_10px_#FF5F1F]"></div>
       )}
@@ -55,7 +97,7 @@ export const SidebarGroupHeader = ({ label }: { label: string }) => (
     </div>
 );
 
-// --- MOLECULE: System Health Widget (Updatable for Header) ---
+// --- MOLECULE: System Health Widget ---
 export const SystemHealthWidget = ({ horizontal = false }: { horizontal?: boolean }) => {
     if (horizontal) {
         return (
