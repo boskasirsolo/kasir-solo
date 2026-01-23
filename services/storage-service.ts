@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabase-client';
 import { CONFIG } from '../config/env';
 import { autoCompressImage } from '../lib/image-processing';
 
-// --- STORAGE CONSTANTS ---
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
 const validateFile = (file: File) => {
@@ -16,6 +15,7 @@ const validateFile = (file: File) => {
 const logAssetToDb = async (asset: { url: string, path: string, name: string, size: number, type: string }) => {
     if (!supabase) return;
     try {
+        // Pake upsert berdasarkan URL biar gak duplikat
         await supabase.from('media_assets').upsert([{
             url: asset.url,
             storage_path: asset.path,
@@ -38,19 +38,19 @@ export const uploadToSupabase = async (file: File, folder: string = 'temp', buck
         fileToUpload = await autoCompressImage(file);
     }
 
-    let fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-    fileName += fileToUpload.type === 'image/webp' ? '.webp' : `.${fileToUpload.name.split('.').pop()}`;
+    const fileExt = fileToUpload.name.split('.').pop();
+    const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${fileExt}`;
     
     const { error: uploadError } = await supabase.storage
         .from(bucketName) 
-        .upload(fileName, fileToUpload, { cacheControl: '3600' });
+        .upload(fileName, fileToUpload, { cacheControl: '3600', upsert: true });
 
     if (uploadError) throw uploadError;
 
     const { data } = supabase.storage.from(bucketName).getPublicUrl(fileName);
     
-    // LOG KE REGISTRY
-    await logAssetToDb({
+    // LOG KE REGISTRY (Non-blocking)
+    logAssetToDb({
         url: data.publicUrl,
         path: fileName,
         name: file.name,
@@ -62,7 +62,7 @@ export const uploadToSupabase = async (file: File, folder: string = 'temp', buck
 };
 
 export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
-    if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Cloudinary Missing");
+    if (!CONFIG.CLOUDINARY_CLOUD_NAME) throw new Error("Config Cloudinary Belum Diset di Vercel");
     
     let finalFile = fileOrBlob;
     if (fileOrBlob instanceof File && fileOrBlob.type.startsWith('image/')) {
@@ -78,12 +78,16 @@ export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
         body: formData 
     });
     
-    if (!res.ok) throw new Error("Cloudinary Error");
+    if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error?.message || "Cloudinary Error");
+    }
+    
     const data = await res.json();
 
     // LOG KE REGISTRY (Cloudinary version)
     if (fileOrBlob instanceof File) {
-        await logAssetToDb({
+        logAssetToDb({
             url: data.secure_url,
             path: data.public_id,
             name: fileOrBlob.name,
@@ -95,20 +99,6 @@ export const uploadToCloudinary = async (fileOrBlob: File | Blob) => {
     return data.secure_url; 
 };
 
-export const getSignedUrl = async (bucketName: string, path: string, expiresIn: number = 60) => {
-    if (!supabase) throw new Error("Supabase Offline");
-    const { data, error } = await supabase.storage.from(bucketName).createSignedUrl(path, expiresIn); 
-    if (error) throw error;
-    return data.signedUrl;
-};
-
-export const deleteFromSupabase = async (path: string, bucketName: string = 'images') => {
-    if (supabase) {
-        await supabase.storage.from(bucketName).remove([path]);
-        await supabase.from('media_assets').delete().eq('storage_path', path);
-    }
-};
-
 export const processBackgroundMigration = async (
     file: File, 
     sbPath: string, 
@@ -118,12 +108,29 @@ export const processBackgroundMigration = async (
 ) => {
     try {
         const cloudUrl = await uploadToCloudinary(file);
-        if (supabase) {
-            await supabase.from(tableName).update({ [columnName]: cloudUrl }).eq('id', recordId);
+        if (supabase && cloudUrl) {
+            const { error } = await supabase.from(tableName).update({ [columnName]: cloudUrl }).eq('id', recordId);
+            if (error) throw error;
+            // Hapus dari Supabase Storage cuma kalau udah sukses pindah ke Cloudinary
+            await supabase.storage.from('images').remove([sbPath]);
         }
-        await deleteFromSupabase(sbPath, 'images');
         return cloudUrl;
     } catch (e) {
+        console.error("Background Migration Failed:", e);
         return null;
     }
+};
+
+export const deleteFromSupabase = async (path: string, bucketName: string = 'images') => {
+    if (supabase) {
+        await supabase.storage.from(bucketName).remove([path]);
+        await supabase.from('media_assets').delete().eq('storage_path', path);
+    }
+};
+
+export const getSignedUrl = async (bucketName: string, path: string, expiresIn: number = 60) => {
+    if (!supabase) throw new Error("Supabase Offline");
+    const { data, error } = await supabase.storage.from(bucketName).createSignedUrl(path, expiresIn); 
+    if (error) throw error;
+    return data.signedUrl;
 };

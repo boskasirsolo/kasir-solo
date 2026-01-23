@@ -99,7 +99,8 @@ export const AdminArticles = ({
 
                     <div className="flex items-center gap-2">
                         <button 
-                            onClick={actions.runWrite} 
+                            // --- FIX: Wrapped in arrow function to prevent passing MouseEvent to 0-argument function ---
+                            onClick={() => actions.runWrite()} 
                             disabled={aiLogic.loading.generatingText}
                             className="h-10 px-4 rounded-lg font-bold text-[10px] bg-brand-gradient text-white flex items-center gap-2 shadow-neon transition-all active:scale-95 disabled:opacity-50"
                         >
@@ -108,7 +109,8 @@ export const AdminArticles = ({
                         </button>
 
                         <button 
-                            onClick={actions.saveArticle} 
+                            // --- FIX: Wrapped in arrow function to prevent passing MouseEvent to 0-argument function ---
+                            onClick={() => actions.saveArticle()} 
                             disabled={aiLogic.loading.uploading} 
                             className="w-10 h-10 bg-brand-orange hover:bg-brand-action text-white rounded-lg shadow-neon flex items-center justify-center transition-all active:scale-90"
                         >
@@ -134,7 +136,8 @@ export const AdminArticles = ({
                     <div className={`absolute inset-0 bg-black/60 flex items-center justify-center gap-4 transition-opacity ${form.imagePreview ? 'opacity-0 group-hover/cover:opacity-100' : 'opacity-100'}`}>
                         {/* BUTTON: GENERATE AI */}
                         <button 
-                            onClick={actions.runImage}
+                            // --- FIX: Wrapped in arrow function to prevent passing MouseEvent to 0-argument function ---
+                            onClick={() => actions.runImage()}
                             disabled={aiLogic.loading.generatingImage}
                             className="flex flex-col items-center gap-2 p-4 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 rounded-2xl transition-all hover:-translate-y-1 w-24 disabled:opacity-50"
                         >
@@ -150,7 +153,7 @@ export const AdminArticles = ({
                         </label>
 
                         {/* BUTTON: MEDIA LIBRARY */}
-                        <button onClick={() => uiState.setShowMediaLib(true)} className="flex flex-col items-center gap-2 p-4 bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/20 rounded-2xl transition-all hover:-translate-y-1 w-24">
+                        <button onClick={() => uiState.setShowMediaLib(true)} className="flex flex-col items-center gap-2 p-4 bg-brand-orange/10 hover:bg-brand-orange/20 border-brand-orange/20 rounded-2xl transition-all hover:-translate-y-1 w-24">
                             <FolderOpen size={24} className="text-brand-orange" />
                             <span className="text-[10px] font-bold text-brand-orange uppercase tracking-tighter">Media</span>
                         </button>
