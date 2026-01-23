@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from 'react';
 import { Article, GalleryItem, SiteConfig, Product } from '../../types';
 import { supabase, uploadToSupabase, processBackgroundMigration, slugify, renameFile } from '../../utils';
@@ -73,12 +72,13 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 fileToMigrate = renamedFile;
             }
 
-            // Kirim ke image_url (karena trigger lama udah dihapus via SQL)
+            // DOUBLE PUNCH: Kirim ke image DAN image_url biar trigger gak error
             const dbData = {
                 title: form.title, 
                 excerpt: form.excerpt || '', 
                 content: form.content || '', 
                 category: form.category || 'General', 
+                image: finalImageUrl,
                 image_url: finalImageUrl, 
                 status: (form.status || 'draft').toLowerCase()
             };
@@ -94,12 +94,12 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
                 savedRecord = data;
             }
 
-            // Migrasi ke Cloudinary di background biar web kenceng
+            // BACKGROUND MIGRATION
             if (supabasePath && fileToMigrate && savedRecord) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'articles', savedRecord.id, 'image_url');
             }
 
-            alert("Artikel Berhasil Diamankan!"); 
+            alert("Artikel Aman, Juragan!"); 
             resetForm(); 
             setActiveMobilePane('LIST');
             window.location.reload();
@@ -120,7 +120,7 @@ export const useArticleManager = (articles: Article[], setArticles: any, gallery
             handleCoverUpload: (f: File) => setForm(p => ({...p, uploadFile: f, imagePreview: URL.createObjectURL(f)})),
             handleMediaSelect: (u: string) => { setForm(p => ({...p, imagePreview: u})); setShowMediaLib(false); },
             deleteItem: async (id: number) => { if(confirm("Hapus?")) { await supabase!.from('articles').delete().eq('id', id); window.location.reload(); } },
-            runResearch: async (topic?: string) => {}, runWrite: async () => {}, runImage: async () => {}, selectTopic: (k:any) => {}, runClusterResearch: (a:Article) => {}
+            runResearch: async () => {}, runWrite: async () => {}, runImage: async () => {}, selectTopic: () => {}, runClusterResearch: () => {}
         }
     };
 };
