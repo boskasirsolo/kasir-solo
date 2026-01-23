@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { User, MessageCircle, AlertTriangle } from 'lucide-react';
 import { SiteConfig } from '../../types';
@@ -26,11 +25,11 @@ export const FounderCTA = ({
            Ngobrol Langsung sama <br/><span className="text-brand-orange">Arsitek Sistemnya</span>
         </h2>
         <p className="max-w-2xl mx-auto text-lg text-gray-400 leading-relaxed mb-6">
-           Lo gak bakal dilayani sama Chatbot atau Admin magang yang jawab pake template robot. 
+           Lo gak bakal dilayani sama Chatbot atau Admin robot yang jawab pake template. 
            Gue, <strong>Amin Maghfuri</strong>, bakal langsung bedah kebutuhan bisnis lo dan kasih solusi <strong>mesin kasir</strong> yang paling efisien.
         </p>
 
-        {/* LIMITED SLOT BADGE */}
+        {/* LIMITED SLOT BADGE - DATA FROM DB */}
         <div className="mb-10 inline-flex flex-col sm:flex-row items-center gap-2 bg-red-500/5 border border-red-500/20 px-6 py-3 rounded-xl">
             <AlertTriangle size={18} className="text-red-500" />
             <span className="text-red-400 text-sm font-bold uppercase tracking-wide">
@@ -43,7 +42,7 @@ export const FounderCTA = ({
         
         <div className="flex justify-center">
            <a 
-              href={`https://wa.me/${config.whatsappNumber}?text=Halo Mas Amin, saya mau curhat masalah sistem mesin kasir saya.`}
+              href={`https://wa.me/${config.whatsapp_number}?text=Halo Mas Amin, saya mau curhat masalah sistem mesin kasir saya.`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-3 px-10 py-5 bg-brand-gradient hover:bg-brand-gradient-hover text-white rounded-full font-bold text-lg shadow-[0_0_20px_rgba(255,95,31,0.4)] hover:shadow-[0_0_30px_rgba(255,95,31,0.6)] transition-all transform hover:-translate-y-1"

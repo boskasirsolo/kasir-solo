@@ -67,13 +67,17 @@ const AppContent = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [jobs, setJobs] = useState<JobOpening[]>([]);
 
-  // Config State
+  // Config State - Initial values for smooth loading
   const [config, setConfig] = useState<SiteConfig>({
     hero_title: "MESIN KASIR SOLO",
     hero_subtitle: "Pusat penjualan mesin kasir (POS) dan jasa arsitek sistem digital untuk UMKM.",
     company_legal_name: "PT MESIN KASIR SOLO",
     whatsapp_number: "628816566935",
-    is_maintenance_mode: false
+    is_maintenance_mode: false,
+    quota_onsite_max: 5,
+    quota_onsite_used: 0,
+    quota_digital_max: 3,
+    quota_digital_used: 0
   });
 
   const getCurrentPageId = () => location.pathname.substring(1) || 'home';
@@ -111,12 +115,12 @@ const AppContent = () => {
             setGallery(INITIAL_GALLERY);
             setArticles(INITIAL_ARTICLES);
             setTestimonials(INITIAL_TESTIMONIALS);
-            // Berikan nafas buat animasi printer
             setTimeout(() => setIsInitializing(false), 1500);
             return;
         }
 
         try {
+            // Ambil Site Settings terbaru termasuk KUOTA
             const { data: settingsData } = await supabase.from('site_settings').select('*').eq('id', 1).maybeSingle();
             if (settingsData) {
                 setConfig(settingsData);
@@ -151,7 +155,6 @@ const AppContent = () => {
         } catch (e) {
             console.error("Audit Kabel Database Gagal:", e);
         } finally {
-            // Berikan sedikit delay agar animasi loader di HTML terlihat manis dan tuntas
             setTimeout(() => {
                 setIsInitializing(false);
             }, 1200);
@@ -161,7 +164,6 @@ const AppContent = () => {
     loadAppData();
   }, [session]);
 
-  // Pas inisialisasi, jangan render apa-apa (biarin loader HTML yang kerja)
   if (isInitializing) return null;
 
   const isGhost = localStorage.getItem('mks_ghost_mode') === 'true';
