@@ -41,44 +41,36 @@ export default async function handler(req: any, res: any) {
   try {
     const { model, contents, config } = req.body;
 
-    // --- SMART KEY FINDER (Sinkron dengan Screenshot lo, Bos) ---
-    // Cek master key dulu, kalau gak ada cari yang bernomor
-    let selectedKey = process.env.API_KEY;
-
-    if (!selectedKey) {
-      const keys: string[] = [];
-      // Lo punya 1 sampe 7 di screenshot, gue scan sampe 10 buat jaga-jaga
-      for (let i = 1; i <= 10; i++) {
+    // --- ROTASI 7 KEY (Sesuai Dashboard Vercel Juragan) ---
+    const keys: string[] = [];
+    for (let i = 1; i <= 7; i++) {
         const k = process.env[`GEMINI_API_KEY_${i}`];
         if (k && k.length > 10) keys.push(k);
-      }
-      
-      if (keys.length > 0) {
-        // Rotasi biar beban merata
-        selectedKey = keys[Math.floor(Math.random() * keys.length)];
-      }
+    }
+    
+    // Fallback ke master key jika ada
+    if (process.env.API_KEY) keys.push(process.env.API_KEY);
+
+    if (keys.length === 0) {
+      throw new Error('Konfigurasi Gawat: Gak nemu API Key 1-7 di Vercel.');
     }
 
-    if (!selectedKey) {
-      throw new Error('Konfigurasi Gawat: Gak nemu API Key satupun di Vercel.');
-    }
-
+    // Ambil acak dari 7 key yang ada
+    const selectedKey = keys[Math.floor(Math.random() * keys.length)];
     const ai = new GoogleGenAI({ apiKey: selectedKey });
     
+    // Eksekusi langsung sesuai Guideline
     const response = await ai.models.generateContent({
       model: model,
       contents: contents,
       config: config
     });
 
-    // Normalisasi data biar gak error pas dikirim lewat JSON
-    const output = {
+    return res.status(200).json({
       text: response.text || "",
       candidates: response.candidates ? JSON.parse(JSON.stringify(response.candidates)) : [],
       usageMetadata: response.usageMetadata
-    };
-
-    return res.status(200).json(output);
+    });
 
   } catch (error: any) {
     console.error('[Gemini-Bridge-Error]', error.message);
