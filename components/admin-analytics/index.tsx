@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
     LayoutDashboard, 
@@ -13,7 +12,7 @@ import { DashboardHeader, GhostLinkCopier } from './ui-controls';
 import { KPIGrid, DeviceStats, ReferrerList } from './ui-cards';
 import { TrafficChart, PeakHoursHeatmap, RetentionChart } from './ui-charts';
 import { TopPagesTable, ExitPagesList, QualityScorePanel } from './ui-tables';
-import { FunnelRadar } from './funnel-radar';
+import { FunnelVisual, GoldenPathsVisual } from './funnel-radar';
 import { CityDistribution, OSDistribution, DemographicEstimator } from './ui-demographics';
 import { PageAnalyticsModal } from './page-analytics-modal';
 import { AIInsights } from './ai-insights';
@@ -48,7 +47,7 @@ export const AnalyticsDashboard = () => {
         setPeriod={setPeriod} 
         onRefresh={refresh} 
         isRefreshing={loading}
-        aiInsights={<AIInsights stats={stats} />} // PASSING COMPONENT AS PROP
+        aiInsights={<AIInsights stats={stats} />}
       />
 
       <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md py-2.5 -mx-4 px-4 border-b border-white/5 shadow-xl transition-all">
@@ -77,20 +76,25 @@ export const AnalyticsDashboard = () => {
       <div className="space-y-6 min-h-[600px] relative">
         {activeTab === 'radar' && (
           <div className="space-y-6 animate-fade-in">
-            {/* GRID UPDATED: REMOVED AI CARD, FULL WIDTH KPI */}
-            <div className="grid grid-cols-1 gap-6">
-                <KPIGrid stats={stats} />
-            </div>
+            {/* KPI TOP BAR */}
+            <KPIGrid stats={stats} />
             
+            {/* 3 COLUMN COMMAND CENTER (Pintu Masuk, Funnel, Golden Paths) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-               <div className="lg:col-span-3">
-                  {stats.funnel && <FunnelRadar data={stats.funnel} />}
+               <div className="h-full">
+                  <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} />
                </div>
-               <div className="lg:col-span-3">
-                  <div className="bg-brand-dark/50 border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-                    <TrafficChart data={stats.trafficByDate} period={period} />
-                  </div>
+               <div className="h-full">
+                  <FunnelVisual data={stats.funnel} />
                </div>
+               <div className="h-full">
+                  <GoldenPathsVisual data={stats.funnel} />
+               </div>
+            </div>
+
+            {/* TRAFFIC CHART FULL WIDTH */}
+            <div className="bg-brand-dark/50 border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                <TrafficChart data={stats.trafficByDate} period={period} />
             </div>
           </div>
         )}
@@ -120,7 +124,9 @@ export const AnalyticsDashboard = () => {
 
         {activeTab === 'acquisition' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
-            <div className="lg:col-span-8"><ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} /></div>
+            <div className="lg:col-span-8">
+                <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} />
+            </div>
             <div className="lg:col-span-4"><GhostLinkCopier /></div>
           </div>
         )}
