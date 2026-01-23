@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Product } from '../../types';
 import { supabase, formatNumberInput, cleanNumberInput, slugify, renameFile, addWatermarkToFile, uploadToSupabase, processBackgroundMigration } from '../../utils';
@@ -44,22 +45,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
     const [page, setPage] = useState(1);
     const [showMobileEditor, setShowMobileEditor] = useState(false);
 
-    useEffect(() => { 
-        setPage(1); 
-        fetchInitialProducts();
-    }, [searchTerm, selectedCategory]);
-
-    const fetchInitialProducts = async () => {
-        if (!supabase) return;
-        const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-        if (data) {
-            const mapped = data.map((p: any) => ({
-                ...p,
-                image: p.image_url
-            }));
-            setProducts(mapped);
-        }
-    };
+    useEffect(() => { setPage(1); }, [searchTerm, selectedCategory]);
 
     const resetForm = () => {
         setForm({
@@ -87,7 +73,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             specsStr: specsString,
             includesStr: includesString,
             whyBuyStr: whyBuyString,
-            imagePreview: p.image || (p as any).image_url,
+            imagePreview: p.image,
             uploadFile: null,
             galleryImages: p.gallery_images || [],
             newGalleryFiles: [],
@@ -193,6 +179,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             let supabasePath = '';
             let fileToMigrate = form.uploadFile;
 
+            // 1. Image Processing
             if (form.uploadFile) {
                 if (useWatermark) {
                     setLoading(p => ({ ...p, processingImage: true }));
@@ -207,6 +194,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
                 supabasePath = path;
             }
 
+            // 2. Gallery Processing
             const newGalleryUrls: string[] = [];
             if (form.newGalleryFiles.length > 0) {
                 if (useWatermark) setLoading(p => ({ ...p, processingImage: true }));
@@ -226,6 +214,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             }
             const finalGallery = [...form.galleryImages, ...newGalleryUrls];
 
+            // 3. Data Parsing
             const specsObj: Record<string, string> = {};
             if (form.specsStr) {
                 form.specsStr.split('\n').forEach(line => {
@@ -236,6 +225,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             const includesArr = form.includesStr ? form.includesStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
             const whyBuyArr = form.whyBuyStr ? form.whyBuyStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
 
+            // DB MAPPING: Pastikan field snake_case sesuai tabel Supabase
             const dbData = {
                 name: form.name,
                 price: cleanNumberInput(form.price),
@@ -253,6 +243,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
 
             let savedProduct: any = null;
 
+            // 4. SUPABASE SYNC
             if (form.id) {
                 const { data, error } = await supabase
                     .from('products')
@@ -263,6 +254,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
                 
                 if (error) throw error;
                 savedProduct = data;
+                
                 setProducts(prev => prev.map(p => p.id === form.id ? { ...p, ...data, image: data.image_url } : p));
             } else {
                 const { data, error } = await supabase
@@ -273,9 +265,11 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
                 
                 if (error) throw error;
                 savedProduct = data;
+                
                 setProducts(prev => [{ ...data, image: data.image_url }, ...prev]);
             }
 
+            // 5. Cloudinary Migration (Background)
             if (supabasePath && fileToMigrate && savedProduct) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'products', savedProduct.id, 'image_url')
                     .then((cloudUrl) => {
@@ -296,7 +290,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
 
     const filteredProducts = useMemo(() => {
         return products.filter(p => {
-            const matchSearch = (p.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+            const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
             const matchCat = selectedCategory === 'All' || p.category === selectedCategory;
             return matchSearch && matchCat;
         });

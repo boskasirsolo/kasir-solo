@@ -1,6 +1,7 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase, callGeminiWithRotation, normalizePhone } from '../../utils';
-import { Customer, CRMState, BehavioralIntel } from './types';
+import { Customer, CRMState, LeadStatus, BehavioralIntel } from './types';
 import { SibosAI } from '../../services/ai/sibos';
 
 export const parseIntel = (notes?: string) => {
@@ -56,7 +57,7 @@ export const useCRMLogic = () => {
                 total_views: views.length,
                 most_visited_path: mostVisited,
                 last_activity_desc: views[0]?.page_path || 'Main Page',
-                avg_engagement_sec: 0, 
+                avg_engagement_sec: 0, // Placeholder
                 top_category: topCat
             };
         } catch (e) { return undefined; }
@@ -69,6 +70,7 @@ export const useCRMLogic = () => {
             const { data: profiles, error } = await supabase.from('crm_profiles').select('*').order('updated_at', { ascending: false });
             if (error) throw error;
 
+            // Sync with Intelligence
             const customersWithIntel = await Promise.all((profiles || []).map(async (p: any) => {
                 const intel = await fetchIntelligenceForCustomer(p.visitor_id);
                 return { ...p, intelligence: intel } as Customer;
@@ -86,6 +88,8 @@ export const useCRMLogic = () => {
     const runRecoveryAI = async (customer: Customer) => {
         setIsGeneratingScript(customer.phone);
         const intel = parseIntel(customer.last_notes);
+        
+        // Behavioral context injection
         const behaviorContext = customer.intelligence 
             ? `Baru saja mengunjungi ${customer.intelligence.most_visited_path} sebanyak ${customer.intelligence.total_views} kali.` 
             : "";
@@ -105,16 +109,18 @@ export const useCRMLogic = () => {
         }
     };
 
-    const updateStatus = async (customerId: string, status: string) => {
+    const updateStatus = async (customerId: string, status: LeadStatus) => {
         if (!supabase) return;
         try {
-            await supabase.from('crm_profiles').update({ status: status, updated_at: new Date().toISOString() }).eq('phone', customerId);
+            await supabase.from('crm_profiles').update({ lead_status: status, updated_at: new Date().toISOString() }).eq('phone', customerId);
             setState(p => ({
                 ...p,
-                customers: p.customers.map(c => c.phone === customerId ? { ...c, status: status } : c)
+                customers: p.customers.map(c => c.phone === customerId ? { ...c, lead_status: status } : c)
             }));
         } catch (e) { alert("Gagal update status."); }
     };
+
+    const generateProposal = (customer: any, config: any) => {};
 
     const filteredCustomers = useMemo(() => {
         return state.customers.filter(c => 
@@ -126,8 +132,8 @@ export const useCRMLogic = () => {
     const abandonedLeads = useMemo(() => {
         return state.customers.filter(c => 
             (c.last_notes || '').includes('checkout_shadow') && 
-            c.status !== 'closed' && 
-            c.status !== 'lost'
+            c.lead_status !== 'closed' && 
+            c.lead_status !== 'lost'
         );
     }, [state.customers]);
 
@@ -136,6 +142,7 @@ export const useCRMLogic = () => {
         setActiveView: (v: any) => setState(p => ({ ...p, activeView: v })),
         filteredCustomers, abandonedLeads, updateStatus, runRecoveryAI, isGeneratingScript,
         selectedCustomer, setSelectedCustomer, aiRecommendation, setAiRecommendation, 
-        refresh: fetchCustomers
+        isScanning: false, scanPipelineAI: () => {}, 
+        generateProposal, refresh: fetchCustomers
     };
 };

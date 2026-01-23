@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { X, User, Phone, MapPin, Building, Calendar, History, Sparkles, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Customer } from './types';
@@ -17,16 +18,16 @@ export const CustomerDetailModal = ({ customer, onClose }: { customer: Customer,
                     
                     <div className="flex items-center gap-6">
                         <div className="w-20 h-20 rounded-3xl bg-brand-orange/10 border-2 border-brand-orange/30 flex items-center justify-center text-brand-orange text-3xl font-black shadow-neon-text/10">
-                            {customer.name?.charAt(0)}
+                            {customer.name.charAt(0)}
                         </div>
                         <div>
                             <h2 className="text-2xl font-display font-black text-white">{customer.name}</h2>
                             <p className="text-gray-500 font-mono text-sm">{customer.phone}</p>
                             <div className="flex gap-2 mt-3">
                                 <span className={`px-2 py-0.5 rounded text-[9px] font-black border ${
-                                    customer.temperature === 'hot' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                } uppercase tracking-widest`}>{customer.temperature}</span>
-                                <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 uppercase tracking-widest">{customer.status}</span>
+                                    customer.lead_temperature === 'hot' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                } uppercase tracking-widest`}>{customer.lead_temperature}</span>
+                                <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 uppercase tracking-widest">{customer.lead_status}</span>
                             </div>
                         </div>
                     </div>
@@ -87,14 +88,12 @@ export const CustomerDetailModal = ({ customer, onClose }: { customer: Customer,
                                     </div>
                                 </div>
                             ))}
-                            {(!customer.interaction_history || customer.interaction_history.length === 0) && (
-                                <p className="text-xs text-gray-600 italic">Belum ada jejak interaksi tercatat.</p>
-                            )}
                         </div>
                     </div>
 
                 </div>
 
+                {/* Footer Action */}
                 <div className="p-8 border-t border-white/5 bg-brand-card flex gap-4">
                     <button className="flex-1 py-4 bg-brand-orange text-white rounded-xl font-bold text-sm shadow-neon hover:shadow-neon-strong transition-all flex items-center justify-center gap-2">
                         <Phone size={18} /> TELEPON SEKARANG
