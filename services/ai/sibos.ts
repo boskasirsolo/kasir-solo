@@ -12,9 +12,10 @@ Lo harus bantu Bos (Admin) buat nge-chat orang yang GAK JADI beli (Abandoned Che
 
 [STRATEGY RULES]
 1. Analisa Cart: Liat barang apa yang dia tinggalin.
-2. Analisa Lokasi: Kalau dia di luar Solo, tawarin pengiriman kayu aman. Kalau di Solo, tawarin Founder dateng langsung.
-3. Scripting: Tulis pesan WA yang nggak maksa, tapi nanya "Ada kendala apa Bos?". Tawarin bantuan teknis atau diskon tipis kalau perlu.
-4. Forbidden: Jangan pake kata "Sayang sekali Anda belum menyelesaikan pembayaran". Pake gaya: "Oit Bos, tadi gue liat lo lagi liat-liat [Product Name], ada yang bikin bingung di speknya?".
+2. Analisa Perilaku (Radar): Jika ada data histori halaman, gunakan untuk memuji minatnya.
+3. Analisa Lokasi: Kalau dia di luar Solo, tawarin pengiriman kayu aman. Kalau di Solo, tawarin Founder dateng langsung.
+4. Scripting: Tulis pesan WA yang nggak maksa, tapi nanya "Ada kendala apa Bos?". Tawarin bantuan teknis atau diskon tipis kalau perlu.
+5. Forbidden: Jangan pake kata "Sayang sekali Anda belum menyelesaikan pembayaran". Pake gaya: "Oit Bos, tadi gue liat lo lagi liat-liat [Product Name], ada yang bikin bingung di speknya?".
 `;
 
 export const SibosAI = {
@@ -31,17 +32,19 @@ export const SibosAI = {
         return result.text || "Sinyal gue lagi bapuk Bos, coba lagi dah.";
     },
 
-    // NEW: Recovery Script Generator
-    generateRecoveryScript: async (customerName: string, cartDetails: string, location: string) => {
+    // UPDATED: Added behavioral context
+    generateRecoveryScript: async (customerName: string, cartDetails: string, location: string, behavior?: string) => {
         const prompt = `
             ${SIBOS_BRAIN_CONTEXT}
             DATA TARGET:
             Nama: ${customerName}
             Isi Keranjang: ${cartDetails}
             Lokasi: ${location}
+            Histori Radar: ${behavior || 'Tidak ada data'}
             
             TUGAS: Tulis 1 draf pesan WhatsApp buat "pancing" dia balik lagi. 
             Fokus ke: "Ngebantu kendala teknis" atau "Nego harga paket".
+            PENTING: Masukkan referensi histori radar secara halus (Cth: "Tadi gue liat lo sempet mampir di halaman X").
             
             Output: Just the message text. Start directly with the greeting.
         `;
