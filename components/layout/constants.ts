@@ -26,7 +26,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     id: 'inovasi',
-    label: 'Inovasi (Produk)',
+    label: 'Inovasi',
     children: [
         { id: 'inovasi/sibos', label: 'SIBOS (Smart Kasir)' },
         { id: 'inovasi/qalam', label: 'QALAM (Sekolah)' },
