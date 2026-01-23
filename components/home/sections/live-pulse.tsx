@@ -3,13 +3,12 @@ import React from 'react';
 import { Activity, ShieldCheck } from 'lucide-react';
 import { PulseEvent } from '../../../hooks/use-social-pulse';
 
-// FIX: Typed as React.FC to correctly handle internal React props like 'key' in map rendering
 const PulseItem: React.FC<{ event: PulseEvent }> = ({ event }) => (
-    <div className="min-w-[240px] md:min-w-[280px] p-3 bg-brand-card/50 rounded-xl border border-white/5 flex items-center gap-3 shrink-0 hover:border-brand-orange/30 transition-colors group">
+    <div className="p-3 bg-brand-card/50 rounded-xl border border-white/5 flex items-center gap-3 shrink-0 hover:border-brand-orange/30 transition-colors group mr-4">
         <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-500 border border-white/5 group-hover:text-brand-orange transition-colors">
             <ShieldCheck size={14} />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 max-w-[200px]">
             <p className="text-white text-[10px] font-bold truncate uppercase tracking-wider">Juragan {event.name}</p>
             <p className="text-[9px] text-gray-500 truncate font-medium">
                 <span className="text-brand-orange">{event.item}</span> @ {event.location}
@@ -19,7 +18,6 @@ const PulseItem: React.FC<{ event: PulseEvent }> = ({ event }) => (
 );
 
 export const LivePulseSection = ({ events }: { events: PulseEvent[] }) => {
-    // CLS Fix: Jangan render apapun kalau data kosong
     if (events.length === 0) return null;
 
     return (
@@ -28,10 +26,10 @@ export const LivePulseSection = ({ events }: { events: PulseEvent[] }) => {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-orange/[0.02] via-transparent to-transparent pointer-events-none"></div>
 
             <div className="container mx-auto px-4 relative z-10">
-                <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+                <div className="flex flex-col lg:flex-row items-center">
                     
                     {/* Header Label (Static) */}
-                    <div className="flex items-center gap-4 shrink-0 bg-black/80 backdrop-blur-md lg:pr-8 lg:border-r border-white/10 relative z-20">
+                    <div className="flex items-center gap-4 shrink-0 bg-black lg:pr-8 lg:border-r border-white/10 relative z-20 mb-6 lg:mb-0">
                         <div className="w-12 h-12 rounded-2xl bg-brand-orange/10 border border-brand-orange/20 flex items-center justify-center text-brand-orange shadow-neon">
                             <Activity size={24} className="animate-pulse" />
                         </div>
@@ -42,21 +40,22 @@ export const LivePulseSection = ({ events }: { events: PulseEvent[] }) => {
                     </div>
 
                     {/* Marquee Container (Dynamic) */}
-                    <div className="flex-1 relative overflow-hidden group/marquee h-14 flex items-center">
-                        {/* Faders overlay biar transisi ke tepi lebih smooth */}
-                        <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none"></div>
-                        <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none"></div>
+                    <div className="flex-1 relative overflow-hidden h-14 flex items-center ml-0 lg:ml-8">
+                        {/* Faders overlay */}
+                        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none"></div>
+                        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none"></div>
 
-                        <div className="flex gap-4">
-                            {/* Set 1: Original */}
-                            <div className="flex gap-4 animate-marquee whitespace-nowrap min-w-full items-center group-hover/pulse-section:[animation-play-state:paused]">
+                        {/* Kontainer Utama Marquee tanpa gap eksternal */}
+                        <div className="flex w-max group-hover/pulse-section:[animation-play-state:paused]">
+                            {/* Set 1 */}
+                            <div className="flex animate-marquee shrink-0">
                                 {events.map((e, i) => (
                                     <PulseItem key={`p1-${e.id}-${i}`} event={e} />
                                 ))}
                             </div>
                             
-                            {/* Set 2: Clone for seamless looping */}
-                            <div className="flex gap-4 animate-marquee whitespace-nowrap min-w-full items-center group-hover/pulse-section:[animation-play-state:paused]" aria-hidden="true">
+                            {/* Set 2 (Identik buat nyambung tanpa jeda) */}
+                            <div className="flex animate-marquee shrink-0" aria-hidden="true">
                                 {events.map((e, i) => (
                                     <PulseItem key={`p2-${e.id}-${i}`} event={e} />
                                 ))}
@@ -65,7 +64,7 @@ export const LivePulseSection = ({ events }: { events: PulseEvent[] }) => {
                     </div>
 
                     {/* Verified Trust Badge (Static Desktop) */}
-                    <div className="hidden xl:flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/10 shrink-0 shadow-inner group hover:border-brand-orange/20 transition-all">
+                    <div className="hidden xl:flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/10 shrink-0 shadow-inner group hover:border-brand-orange/20 transition-all ml-8">
                         <div className="text-right">
                             <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Trust Status</p>
                             <p className="text-xs font-bold text-green-500 uppercase flex items-center gap-1">
