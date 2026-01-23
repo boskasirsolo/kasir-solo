@@ -6,7 +6,7 @@ import { CartProvider } from './context/cart-context';
 import { Layout } from './components/layout/index';
 import { HomePage } from './pages/home';
 import { LoadingSpinner } from './components/ui';
-import { supabase } from './utils'; // Impor senjata utama
+import { supabase } from './utils'; 
 import { Product, GalleryItem, Article, Testimonial, JobOpening } from './types';
 import './index.css';
 
@@ -22,7 +22,7 @@ const AdminPage = lazy(() => import('./pages/admin'));
 const PageLoader = () => (
   <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
       <LoadingSpinner size={32} />
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Menyiapkan Amunisi...</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Menghubungkan ke Radar...</p>
   </div>
 );
 
@@ -36,28 +36,42 @@ const AppContent = () => {
     is_maintenance_mode: false
   });
 
-  // Reactive data for the whole app
   const [products, setProducts] = useState<Product[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [jobs, setJobs] = useState<JobOpening[]>([]);
 
-  // --- KABEL AUTH: BIAR BISA MASUK DASHBOARD ---
-  useEffect(() => {
+  // --- KABEL DATA UTAMA ---
+  const fetchAllData = async () => {
     if (!supabase) return;
+    try {
+        const [prod, gal, art, testi] = await Promise.all([
+            supabase.from('products').select('*').order('created_at', { ascending: false }),
+            supabase.from('gallery').select('*').order('created_at', { ascending: false }),
+            supabase.from('articles').select('*').eq('status', 'published').order('created_at', { ascending: false }),
+            supabase.from('testimonials').select('*').order('created_at', { ascending: false }),
+            supabase.from('site_settings').select('*').eq('id', 1).single()
+        ]);
 
-    // 1. Cek sesi pas pertama loading
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+        if (prod.data) setProducts(prod.data.map(p => ({ ...p, image: p.image_url })));
+        if (gal.data) setGallery(gal.data);
+        if (art.data) setArticles(art.data.map(a => ({ ...a, image: a.image_url, readTime: a.read_time })));
+        if (testi.data) setTestimonials(testi.data);
+        // Special case for settings
+        const settings = await supabase.from('site_settings').select('*').eq('id', 1).single();
+        if (settings.data) setConfig(settings.data);
+    } catch (e) { console.error("Global Fetch Error", e); }
+  };
 
-    // 2. Pantau perubahan auth (Login / Logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
+  useEffect(() => {
+    // 1. Cek sesi
+    if (supabase) {
+        supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+        supabase.auth.onAuthStateChange((_event, session) => setSession(session));
+    }
+    // 2. Tarik data biar halaman publik gak zonk
+    fetchAllData();
   }, []);
 
   return (
