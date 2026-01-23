@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '../../utils';
 import { OrderResult } from './types';
@@ -10,9 +11,9 @@ export const useTrackOrder = () => {
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        const cleanId = orderId.trim().replace('#', '');
+        const inputVal = orderId.trim().toUpperCase();
         
-        if (!cleanId) return;
+        if (!inputVal) return;
         
         setLoading(true);
         setError('');
@@ -21,35 +22,35 @@ export const useTrackOrder = () => {
         try {
             if (!supabase) throw new Error("Database not connected");
 
-            // 1. Fetch Order Head
+            // SEARCH STRATEGY:
+            // Karena ID kita sekarang "Virtual" (Kategori-Tanggal-Scramble),
+            // kita cari di 'orders' yang ID-nya (atau metadata-nya) cocok.
+            // Di sini kita coba bersihin non-digit dan ambil 4 digit terakhir sebagai fallback.
+            const cleanDigits = inputVal.replace(/\D/g, '');
+            const potentialId = parseInt(cleanDigits.slice(-4));
+
             const { data: order, error: orderErr } = await supabase
                 .from('orders')
                 .select('*')
-                .eq('id', cleanId)
+                .eq('id', potentialId) // Fallback ke ID database
                 .maybeSingle();
 
             if (orderErr) throw orderErr;
 
             if (!order) {
-                setError("Pesanan ga ketemu, Bos. Coba cek lagi Order ID di WhatsApp lo.");
+                setError("Pesanan ga ketemu, Bos. Cek lagi kodenya di WA.");
             } else {
-                // 2. Fetch Order Items
                 const { data: items, error: itemsErr } = await supabase
                     .from('order_items')
                     .select('*')
                     .eq('order_id', order.id);
                 
                 if (itemsErr) console.error("Items Error:", itemsErr);
-
                 setResult({ order, items: items || [] });
             }
         } catch (err: any) {
-            console.error("Catch Error:", err);
-            if (err.message && err.message.includes('invalid input syntax')) {
-                setError("Format ID salah. ID harusnya angka doang.");
-            } else {
-                setError("Gagal loading data. Sinyal lo jelek atau server gue yang lagi bengong.");
-            }
+            console.error("Tracking Error:", err);
+            setError("Gagal narik data. Server lagi overload, coba 1 menit lagi.");
         } finally {
             setLoading(false);
         }

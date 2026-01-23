@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../../utils';
+import { supabase, parseOrderId, formatOrderId } from '../../utils';
 import { RMATicket, RMAStatus } from './types';
 
 export const useRMALogic = () => {
@@ -31,7 +31,7 @@ export const useRMALogic = () => {
 
     const updateStatus = async (id: number, status: RMAStatus) => {
         if (!supabase) return;
-        if (!confirm(`Ubah status tiket #${id} jadi ${status.toUpperCase()}?`)) return;
+        if (!confirm(`Ubah status tiket #${formatOrderId(id, 'RMA')} jadi ${status.toUpperCase()}?`)) return;
 
         try {
             const { error } = await supabase.from('rma_tickets').update({ status }).eq('id', id);
@@ -63,10 +63,15 @@ export const useRMALogic = () => {
     };
 
     const filteredTickets = useMemo(() => {
+        // Convert search term for numeric comparison if possible
+        const parsedSearchId = parseOrderId(searchTerm);
+
         return tickets.filter(t => {
-            const matchSearch = t.order_id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            const matchSearch = (t.order_id || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
                                 t.customer_phone.includes(searchTerm) ||
-                                t.serial_number.toLowerCase().includes(searchTerm.toLowerCase());
+                                (t.serial_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                t.id === parsedSearchId;
+                                
             const matchStatus = selectedStatus === 'all' || t.status === selectedStatus;
             return matchSearch && matchStatus;
         });
@@ -74,7 +79,8 @@ export const useRMALogic = () => {
 
     // WA Link Generator
     const getWaLink = (ticket: RMATicket) => {
-        const text = `Halo Kak, update untuk Tiket Klaim #${ticket.id} (Order: ${ticket.order_id}). Status saat ini: ${ticket.status.toUpperCase()}.`;
+        const displayId = formatOrderId(ticket.id, 'RMA');
+        const text = `Halo Kak, update untuk Tiket Klaim #${displayId} (Ref: ${ticket.order_id}). Status saat ini: ${ticket.status.toUpperCase()}.`;
         return `https://wa.me/${ticket.customer_phone}?text=${encodeURIComponent(text)}`;
     };
 

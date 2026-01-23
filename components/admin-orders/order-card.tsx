@@ -2,7 +2,7 @@
 import React from 'react';
 import { Package, Copy, Truck, Clock, ChevronDown, ChevronUp, User } from 'lucide-react';
 import { Order, OrderItem, SiteConfig } from '../../types';
-import { formatRupiah } from '../../utils';
+import { formatRupiah, formatOrderId } from '../../utils';
 import { StatusBadge } from './atoms';
 import { OrderDetail } from './order-detail';
 
@@ -19,9 +19,11 @@ interface OrderCardProps {
 export const OrderCard: React.FC<OrderCardProps> = ({ 
     order, expanded, onToggle, items, onStatusUpdate, onShippingUpdate, config 
 }) => {
+    const displayId = formatOrderId(order.id);
+    
     const copyId = (e: React.MouseEvent) => {
         e.stopPropagation();
-        navigator.clipboard.writeText(order.id.toString());
+        navigator.clipboard.writeText(displayId);
         alert("ID Pesanan disalin!");
     };
 
@@ -35,7 +37,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
                     <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-bold text-white text-base flex items-center gap-2">
-                                #{order.id}
+                                #{displayId}
                                 <button onClick={copyId} className="text-gray-600 hover:text-white transition-colors p-1" title="Salin ID"><Copy size={14} /></button>
                             </h4>
                             {order.tracking_number && (

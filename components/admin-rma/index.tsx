@@ -4,6 +4,7 @@ import { Search, RefreshCw, Filter, Video, FileText, CheckCircle, XCircle, Truck
 import { useRMALogic } from './logic';
 import { RMAStatus, RMA_STATUS_CONFIG } from './types';
 import { LoadingSpinner, Button, TextArea } from '../ui';
+import { formatOrderId } from '../../utils';
 
 const StatusChip = ({ status }: { status: RMAStatus }) => {
     const config = RMA_STATUS_CONFIG[status];
@@ -28,7 +29,7 @@ export const AdminRMA = () => {
                         <input 
                             value={state.searchTerm}
                             onChange={(e) => actions.setSearchTerm(e.target.value)}
-                            placeholder="Cari Order ID / SN / WA..."
+                            placeholder="Cari ID Tiket / Order / SN..."
                             className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:border-brand-orange outline-none"
                         />
                     </div>
@@ -64,7 +65,7 @@ export const AdminRMA = () => {
                                 className="bg-brand-card border border-white/5 hover:border-brand-orange/50 p-4 rounded-xl cursor-pointer group transition-all relative overflow-hidden"
                             >
                                 <div className="flex justify-between items-start mb-3">
-                                    <span className="font-mono text-[10px] text-gray-500">#{ticket.id}</span>
+                                    <span className="font-mono text-[10px] text-gray-500 font-bold">#{formatOrderId(ticket.id)}</span>
                                     <StatusChip status={ticket.status} />
                                 </div>
                                 <h4 className="text-sm font-bold text-white mb-1 group-hover:text-brand-orange transition-colors">{ticket.issue_type}</h4>
@@ -86,7 +87,7 @@ export const AdminRMA = () => {
                     {/* Modal Header */}
                     <div className="p-5 border-b border-white/10 flex justify-between items-center bg-brand-dark shrink-0">
                         <div>
-                            <h3 className="text-lg font-bold text-white">Tiket #{state.selectedTicket.id}</h3>
+                            <h3 className="text-lg font-bold text-white">Tiket #{formatOrderId(state.selectedTicket.id)}</h3>
                             <p className="text-xs text-gray-500 font-mono">Order ID: {state.selectedTicket.order_id}</p>
                         </div>
                         <button onClick={actions.closeDetail} className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white"><X size={20}/></button>

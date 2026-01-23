@@ -1,13 +1,13 @@
 
 import { Order, OrderItem, SiteConfig } from '../../types';
-import { formatRupiah } from '../../utils';
+import { formatRupiah, formatOrderId } from '../../utils';
 
 export const getStatusColor = (status: string) => {
     switch(status) {
         case 'pending': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
         case 'paid': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
         case 'processed': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-        case 'completed': return 'bg-green-500/10 text-green-500 border-green-500/20';
+        case 'completed': return 'bg-green-500/10 text-green-400 border-green-500/20';
         case 'cancelled': return 'bg-red-500/10 text-red-500 border-red-500/20';
         default: return 'bg-gray-500/10 text-gray-500';
     }
@@ -22,13 +22,14 @@ export const handlePrintInvoice = (order: Order, items: OrderItem[], config: Sit
     const companyAddress = config.address_solo || "Perum Graha Tiara 2 B1, Kartasura, Sukoharjo";
     const companyPhone = config.whatsapp_number ? (config.whatsapp_number.startsWith('62') ? '+' + config.whatsapp_number : config.whatsapp_number) : "+62 823 2510 3336";
     const companyEmail = config.email_address || "admin@kasirsolo.my.id";
+    const displayId = formatOrderId(order.id);
 
     const html = `
     <!DOCTYPE html>
     <html lang="id">
     <head>
         <meta charset="UTF-8">
-        <title>Invoice #${order.id}</title>
+        <title>Invoice #${displayId}</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
@@ -140,7 +141,7 @@ export const handlePrintInvoice = (order: Order, items: OrderItem[], config: Sit
                     </div>
                     <div class="text-right">
                         <h2 class="text-5xl font-bold text-brand-orange leading-none" style="color: #FF5F1F">INVOICE</h2>
-                        <p class="text-sm font-bold text-white mt-2">ID NO : ${order.id}</p>
+                        <p class="text-sm font-bold text-white mt-2">ID NO : ${displayId}</p>
                     </div>
                 </div>
 
@@ -189,7 +190,7 @@ export const handlePrintInvoice = (order: Order, items: OrderItem[], config: Sit
                 <!-- FOOTER INFO -->
                 <div class="grid grid-cols-12 gap-8 mt-12">
                     <div class="col-span-7 space-y-8">
-                        <div class="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <div class="pill-label !mb-3">Payment Method :</div>
                                 <p class="text-[9pt] text-gray-500">Account No : <span class="text-gray-900 font-bold">5859 4594 0674 0414</span></p>

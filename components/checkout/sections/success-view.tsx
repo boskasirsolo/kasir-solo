@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CheckCircle2, MessageCircle } from 'lucide-react';
-import { formatRupiah } from '../../../utils';
+import { formatRupiah, formatOrderId } from '../../../utils';
 import { BankTransferCard } from '../ui-parts';
 import { OrderSuccessState } from '../types';
 import { SiteConfig } from '../../../types';
@@ -21,6 +21,7 @@ export const SuccessView = ({
     };
 
     const waNumber = config?.whatsapp_number || "628816566935";
+    const displayId = formatOrderId(order.id, 'ORD');
 
     // MERAKIT PESAN DETAIL UNTUK WHATSAPP
     const generateWAMessage = () => {
@@ -29,9 +30,9 @@ export const SuccessView = ({
         const text = 
             `*HALO ADMIN PT MESIN KASIR SOLO*%0A%0A` +
             `SAYA SUDAH TRANSFER UNTUK:%0A` +
-            `*Order ID:* #${order.id}%0A` +
-            `*Total:* ${formatRupiah(order.total)}%0A%0A` +
-            `*Rincian Barang:*%0A${itemLines}%0A%0A` +
+            `*ID PESANAN:* #${displayId}%0A` +
+            `*TOTAL:* ${formatRupiah(order.total)}%0A%0A` +
+            `*RINCIAN:*%0A${itemLines}%0A%0A` +
             `Berikut saya lampirkan bukti transfernya. Mohon segera diproses ya Bos!`;
             
         return text;
@@ -49,7 +50,7 @@ export const SuccessView = ({
                 
                 <h2 className="text-3xl font-display font-bold text-white mb-2">Order Terkirim!</h2>
                 <p className="text-gray-400 mb-8">
-                    Order ID: <span className="text-brand-orange font-mono text-xl md:text-2xl font-bold tracking-wider">#{order.id}</span>
+                    Simpan ID Pesanan lo: <span className="text-brand-orange font-mono text-xl md:text-2xl font-bold tracking-wider">#{displayId}</span>
                 </p>
 
                 <div className="bg-white/5 p-6 rounded-xl border border-white/10 mb-8 text-left">
@@ -62,7 +63,7 @@ export const SuccessView = ({
                 </div>
 
                 <p className="text-gray-400 text-sm mb-8 leading-relaxed max-w-md mx-auto">
-                    Terakhir Bos: Silakan transfer, terus klik tombol di bawah buat kirim bukti pembayaran ke WhatsApp. Tanpa bukti transfer, pesanan gak bakal kita rakit.
+                    PENTING: Silakan transfer sesuai nominal, lalu klik tombol di bawah buat kirim bukti pembayaran ke WhatsApp Admin. 
                 </p>
 
                 <div className="flex flex-col gap-4">

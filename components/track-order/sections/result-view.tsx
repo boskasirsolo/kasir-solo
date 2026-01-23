@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Copy, Truck } from 'lucide-react';
-import { formatRupiah } from '../../../utils';
+import { formatRupiah, formatOrderId } from '../../../utils';
 import { OrderResult } from '../types';
 import { getStatusLabel } from '../utils';
 import { Timeline } from '../ui-parts';
@@ -15,6 +15,7 @@ interface ResultViewProps {
 export const ResultView = ({ result, onCopy, waNumber }: ResultViewProps) => {
     const { order, items } = result;
     const targetWa = waNumber || "6282325103336";
+    const displayId = formatOrderId(order.id);
 
     return (
         <div className="bg-brand-dark border border-white/10 rounded-2xl overflow-hidden animate-fade-in shadow-2xl">
@@ -29,11 +30,11 @@ export const ResultView = ({ result, onCopy, waNumber }: ResultViewProps) => {
                 <div className="text-right">
                     <p className="text-gray-500 text-xs">Order ID</p>
                     <button 
-                        onClick={() => onCopy(order.id.toString(), 'Order ID')}
+                        onClick={() => onCopy(displayId, 'Order ID')}
                         className="flex items-center justify-end gap-2 text-brand-orange font-mono font-bold text-lg hover:text-white transition-colors group"
                         title="Klik untuk menyalin"
                     >
-                        #{order.id} 
+                        #{displayId} 
                         <Copy size={14} className="opacity-50 group-hover:opacity-100 transition-opacity"/>
                     </button>
                 </div>

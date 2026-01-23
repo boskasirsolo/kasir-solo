@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Phone, Calendar, Search, Filter, Trash2, Printer, Download, Eye, ArrowRight, User, BadgeCheck, ExternalLink, RefreshCw, Zap, ShieldCheck } from 'lucide-react';
 import { ServiceSimulation, SiteConfig } from '../../types';
-import { supabase, formatRupiah } from '../../utils';
+import { supabase, formatRupiah, formatOrderId } from '../../utils';
 import { LoadingSpinner, Button } from '../ui';
 
 // --- PROPOSAL GENERATOR HELPER ---
@@ -12,6 +12,7 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
 
     const companyName = config.company_legal_name || "PT MESIN KASIR SOLO";
     const dateStr = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+    const displayId = formatOrderId(sim.id, 'SIM');
     
     // Grouping for PDF
     const basicAddons = sim.selected_addons?.filter((a: any) => !a.tier || a.tier === 'basic') || [];
@@ -41,7 +42,7 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
             </div>
             <div class="text-right">
                 <h2 class="text-2xl font-bold">PROPOSAL SOLUSI</h2>
-                <p class="text-sm text-gray-600">Ref: PROP-${sim.id}-${new Date().getTime().toString().slice(-4)}</p>
+                <p class="text-sm text-gray-600">Ref: ${displayId}-${new Date().getTime().toString().slice(-4)}</p>
                 <p class="text-sm text-gray-600">${dateStr}</p>
             </div>
         </div>
@@ -172,7 +173,8 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
 
     const filtered = sims.filter(s => 
         s.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        s.customer_phone.includes(searchTerm)
+        s.customer_phone.includes(searchTerm) ||
+        formatOrderId(s.id, 'SIM').includes(searchTerm)
     );
 
     if (loading) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
@@ -185,7 +187,7 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
                     <input 
                         value={searchTerm} 
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Cari nama atau nomor WA..." 
+                        placeholder="Cari nama, WA, atau ID..." 
                         className="w-full bg-brand-dark border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white focus:border-brand-orange"
                     />
                 </div>
@@ -219,6 +221,7 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
                                                 {sim.service_name.toUpperCase()}
                                             </span>
                                             <span className="text-[10px] text-gray-500 flex items-center gap-1"><Calendar size={10}/> {new Date(sim.created_at).toLocaleString('id-ID')}</span>
+                                            <span className="text-[10px] text-gray-600 font-mono ml-auto">ID: #{formatOrderId(sim.id, 'SIM')}</span>
                                         </div>
                                         <h4 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
                                             <User size={16} className="text-gray-500"/> {sim.customer_name}

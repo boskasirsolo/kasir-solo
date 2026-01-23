@@ -2,7 +2,7 @@
 import React from 'react';
 import { Package, User, Phone, MapPin, DollarSign, Calendar, MessageCircle, ArrowRight } from 'lucide-react';
 import { Order, Lead } from '../../types';
-import { formatRupiah } from '../../utils';
+import { formatRupiah, formatOrderId } from '../../utils';
 import { CmdBadge, CmdButton } from '../admin/ui-shared/atoms';
 
 // --- MOLEKUL: KARTU PESANAN RINGKAS ---
@@ -26,7 +26,7 @@ export const OrderMiniCard = ({
     <div className="flex justify-between items-start mb-3">
       <div className="flex items-center gap-2">
         <Package size={14} className={isActive ? 'text-brand-orange' : 'text-gray-600'} />
-        <span className="font-mono text-[10px] text-gray-400">#{order.id}</span>
+        <span className="font-mono text-[10px] text-gray-400">#{formatOrderId(order.id, 'ORD')}</span>
       </div>
       <CmdBadge 
         label={order.status} 
@@ -69,7 +69,7 @@ export const LeadMiniCard = ({
     </div>
     
     <div className="bg-black/30 p-2 rounded-lg border border-white/5 mb-4">
-      <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">Minat:</p>
+      <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">ID LEAD: #{formatOrderId(lead.id, 'LED')}</p>
       <p className="text-[10px] text-gray-400 italic line-clamp-1">{lead.interest || 'Umum'}</p>
     </div>
 

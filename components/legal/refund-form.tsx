@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ShieldAlert, CheckSquare, Square, ChevronDown, UploadCloud, Send, Loader2, ArrowLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Input, TextArea, Button } from '../ui';
-import { supabase } from '../../utils';
+import { supabase, formatOrderId } from '../../utils';
 
 export const RefundForm = ({ waNumber }: { waNumber?: string }) => {
     // STATE: GATEKEEPER
@@ -73,9 +73,10 @@ export const RefundForm = ({ waNumber }: { waNumber?: string }) => {
 
             if (error) throw error;
 
-            setTicketId(data.id);
-            // Auto WA Notif Logic Here (Optional Client Side)
-            const text = `*TIKET KLAIM BARU #${data.id}*\n\nOrder ID: ${form.order_id}\nSN: ${form.serial_number}\nMasalah: ${form.issue_type}\n\nMohon segera diproses admin.`;
+            setTicketId(formatOrderId(data.id));
+            
+            // Auto WA Notif Logic
+            const text = `*TIKET KLAIM BARU #${formatOrderId(data.id)}*\n\nOrder ID: ${form.order_id}\nSN: ${form.serial_number}\nMasalah: ${form.issue_type}\n\nMohon segera diproses admin.`;
             window.open(`https://wa.me/${targetWa}?text=${encodeURIComponent(text)}`, '_blank');
 
         } catch (e: any) {
@@ -180,7 +181,7 @@ export const RefundForm = ({ waNumber }: { waNumber?: string }) => {
                                 <Input 
                                     value={form.order_id} 
                                     onChange={e => setForm({...form, order_id: e.target.value})} 
-                                    placeholder="Cth: MKS-1024"
+                                    placeholder="Cth: 10000001"
                                 />
                             </div>
                             <div>

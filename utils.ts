@@ -8,7 +8,8 @@ export { getEnv, CONFIG } from './config/env';
 export { supabase } from './lib/supabase-client';
 
 // Core Libs
-export { formatRupiah, formatNumberInput, cleanNumberInput, slugify, renameFile, normalizePhone, generateUtmUrl } from './lib/formatters';
+// FIX: Added formatOrderId and parseOrderId to exports from lib/formatters
+export { formatRupiah, formatNumberInput, cleanNumberInput, slugify, renameFile, normalizePhone, generateUtmUrl, formatOrderId, parseOrderId } from './lib/formatters';
 export { optimizeImage, addWatermarkToFile } from './lib/image-processing';
 export { injectGoogleTags, sanitizeHtml } from './lib/dom-utils'; // Updated
 export { getTimezoneOffset, convertLocalToUTC, convertUTCToLocal } from './lib/date-utils';
