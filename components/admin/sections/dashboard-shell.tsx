@@ -11,7 +11,7 @@ export const DashboardShell = (props: DashboardProps) => {
     const { activeTab, setActiveTab, storeSubTab, setStoreSubTab } = useAdminDashboard();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isGlobalLoading, setIsGlobalLoading] = useState(false);
-    const [headerSearch, setHeaderSearch] = useState('');
+    const [globalSearch, setGlobalSearch] = useState('');
 
     // Listener untuk sinkronisasi loading state dari modul
     useEffect(() => {
@@ -20,15 +20,15 @@ export const DashboardShell = (props: DashboardProps) => {
         return () => window.removeEventListener('mks:loading', handleLoading);
     }, []);
 
-    const handleRefreshTrigger = () => {
-        // Broadcast event refresh ke modul yang sedang aktif
-        window.dispatchEvent(new CustomEvent('mks:refresh'));
+    const handleModuleRefresh = () => {
+        // Broadcast event refresh khusus untuk modul yang sedang dilihat
+        window.dispatchEvent(new CustomEvent('mks:refresh-module', { detail: { tab: activeTab } }));
     };
 
-    const handleGlobalSearch = (val: string) => {
-        setHeaderSearch(val);
-        // Broadcast event search agar modul yang aktif bisa memfilter data
-        window.dispatchEvent(new CustomEvent('mks:search', { detail: val }));
+    const onGlobalSearch = (val: string) => {
+        setGlobalSearch(val);
+        // Bisa dihubungkan ke modal pencarian global nantinya
+        console.debug("Global Search Scanning:", val);
     };
 
     return (
@@ -68,14 +68,14 @@ export const DashboardShell = (props: DashboardProps) => {
                                     {LABEL_MAP[activeTab]?.toUpperCase() || 'DASHBOARD'}
                                 </h1>
                                 
-                                {/* GLOBAL TACTICAL SEARCH */}
+                                {/* GLOBAL ECOSYSTEM SEARCH (Berbeda dengan Internal) */}
                                 <div className="relative group max-w-md w-full sm:ml-4">
                                     <Search size={14} className="absolute left-3 top-2.5 text-gray-600 group-focus-within:text-brand-orange transition-colors" />
                                     <input 
                                         type="text"
-                                        value={headerSearch}
-                                        onChange={(e) => handleGlobalSearch(e.target.value)}
-                                        placeholder={`Cari di ${LABEL_MAP[activeTab]}...`}
+                                        value={globalSearch}
+                                        onChange={(e) => onGlobalSearch(e.target.value)}
+                                        placeholder="Pencarian Global (Ecosystem)..."
                                         className="w-full bg-brand-card border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 shadow-inner"
                                     />
                                 </div>
@@ -85,12 +85,12 @@ export const DashboardShell = (props: DashboardProps) => {
                         <div className="flex gap-3 items-center">
                              <SystemHealthWidget horizontal />
 
-                             {/* TOMBOL REFRESH GLOBAL */}
+                             {/* TOMBOL REFRESH AKTIF MODUL */}
                              <button 
-                                onClick={handleRefreshTrigger}
+                                onClick={handleModuleRefresh}
                                 disabled={isGlobalLoading}
                                 className="bg-brand-card/80 backdrop-blur-md border border-white/10 p-2.5 rounded-2xl flex items-center justify-center shadow-xl group hover:border-brand-orange/30 transition-all active:scale-90 disabled:opacity-50"
-                                title="Refresh Modul Aktif"
+                                title={`Refresh Modul ${LABEL_MAP[activeTab]}`}
                              >
                                 <RefreshCw size={18} className={`text-gray-400 group-hover:text-brand-orange transition-colors ${isGlobalLoading ? 'animate-spin text-brand-orange' : ''}`} />
                              </button>

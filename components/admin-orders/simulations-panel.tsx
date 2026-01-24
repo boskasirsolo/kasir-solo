@@ -141,27 +141,31 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
 
     useEffect(() => { fetchSims(); }, []);
 
-    // Sinyal Refresh dan Search dari Header Utama
+    // Sinyal Refresh dari Header Utama (Logic Spesifik Modul)
     useEffect(() => {
-        const onGlobalRefresh = () => fetchSims();
-        const onGlobalSearch = (e: any) => setSearchTerm(e.detail || '');
-
-        window.addEventListener('mks:refresh', onGlobalRefresh);
-        window.addEventListener('mks:search', onGlobalSearch);
-        
-        return () => {
-            window.removeEventListener('mks:refresh', onGlobalRefresh);
-            window.removeEventListener('mks:search', onGlobalSearch);
+        const onHeaderRefresh = (e: any) => {
+            // Modul ini berada di bawah tab 'sales'
+            if (e.detail.tab === 'sales') {
+                fetchSims();
+            }
         };
+
+        window.addEventListener('mks:refresh-module', onHeaderRefresh);
+        return () => window.removeEventListener('mks:refresh-module', onHeaderRefresh);
     }, []);
 
     const fetchSims = async () => {
         if (!supabase) return;
         setLoading(true);
+        // Dispatch loading ke header
+        window.dispatchEvent(new CustomEvent('mks:loading', { detail: true }));
         try {
             const { data } = await supabase.from('service_simulations').select('*').order('created_at', { ascending: false });
             if (data) setSims(data);
-        } catch (e) { console.error(e); } finally { setLoading(false); }
+        } catch (e) { console.error(e); } finally { 
+            setLoading(false); 
+            window.dispatchEvent(new CustomEvent('mks:loading', { detail: false }));
+        }
     };
 
     const updateStatus = async (id: number, status: string) => {
@@ -184,13 +188,27 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
         formatOrderId(s.id, 'SIM').includes(searchTerm)
     );
 
-    if (loading) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
+    if (loading && sims.length === 0) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
 
     return (
         <div className="space-y-4">
+            {/* SEARCH BAR INTERNAL (Khusus Simulasi) */}
+            <div className="flex justify-end px-2 mb-2">
+                <div className="relative group w-full md:w-80">
+                    <Search size={14} className="absolute left-3 top-2.5 text-gray-600 group-focus-within:text-brand-orange transition-colors" />
+                    <input 
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Filter simulasi (Nama/HP/ID)..."
+                        className="w-full bg-brand-card/50 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 shadow-inner"
+                    />
+                </div>
+            </div>
+
             {filtered.length === 0 ? (
                 <div className="p-20 text-center text-gray-600 bg-black/20 rounded-2xl border-2 border-dashed border-white/5">
-                    Belum ada simulasi yang sesuai kriteria radar.
+                    Belum ada simulasi yang sesuai kriteria pencarian.
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4">

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCRMLogic } from './logic';
 import { LeadStatus } from './types';
-import { RefreshCw, ShoppingCart, X, LayoutDashboard, Sparkles, Ghost, Database, Cpu } from 'lucide-react';
+import { RefreshCw, ShoppingCart, X, LayoutDashboard, Sparkles, Ghost, Database, Cpu, Search } from 'lucide-react';
 import { LoadingSpinner } from '../ui';
 import { SimpleMarkdown } from '../admin-articles/markdown';
 
@@ -30,19 +30,18 @@ export const AdminCRM = ({ config }: { config: any }) => {
 
     const [activeSubTab, setActiveSubTab] = useState<'shadow' | 'simulations' | 'pipeline' | 'orders' | 'list'>('shadow');
 
-    // Menerima signal refresh dan search dari header utama
+    // Menerima signal refresh dari header utama
     useEffect(() => {
-        const onGlobalRefresh = () => refresh();
-        const onGlobalSearch = (e: any) => setSearchTerm(e.detail || '');
-
-        window.addEventListener('mks:refresh', onGlobalRefresh);
-        window.addEventListener('mks:search', onGlobalSearch);
-        
-        return () => {
-            window.removeEventListener('mks:refresh', onGlobalRefresh);
-            window.removeEventListener('mks:search', onGlobalSearch);
+        const onHeaderRefresh = (e: any) => {
+            // Cek apakah tab yang refresh memang SALES (War Room)
+            if (e.detail.tab === 'sales') {
+                refresh();
+            }
         };
-    }, [refresh, setSearchTerm]);
+
+        window.addEventListener('mks:refresh-module', onHeaderRefresh);
+        return () => window.removeEventListener('mks:refresh-module', onHeaderRefresh);
+    }, [refresh]);
 
     const handleStatusUpdate = (phone: string, status: LeadStatus) => {
         updateStatus(phone, status);
@@ -99,14 +98,26 @@ export const AdminCRM = ({ config }: { config: any }) => {
                 </div>
             )}
 
-            {/* WAR ROOM NAVIGATION */}
+            {/* WAR ROOM NAVIGATION & INTERNAL SEARCH */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-brand-card/30 p-4 rounded-2xl border border-white/5 shadow-lg">
-                <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 w-full overflow-x-auto custom-scrollbar-hide">
+                <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 flex-1 overflow-x-auto custom-scrollbar-hide">
                     <NavTabButton active={activeSubTab === 'shadow'} onClick={() => setActiveSubTab('shadow')} icon={Ghost} label="SHADOW" />
                     <NavTabButton active={activeSubTab === 'simulations'} onClick={() => setActiveSubTab('simulations')} icon={Cpu} label="SIMULASI" />
                     <NavTabButton active={activeSubTab === 'pipeline'} onClick={() => setActiveSubTab('pipeline')} icon={LayoutDashboard} label="PIPELINE" />
                     <NavTabButton active={activeSubTab === 'orders'} onClick={() => setActiveSubTab('orders')} icon={ShoppingCart} label="TRANSAKSI" />
-                    <NavTabButton active={activeSubTab === 'list'} onClick={() => setActiveSubTab('list')} icon={Database} label="DATABASE" />
+                    <NavTabButton active={activeSubTab === 'list'} onClick={() => setActiveSubTab('list'} icon={Database} label="DATABASE" />
+                </div>
+
+                {/* INTERNAL SEARCH MODUL */}
+                <div className="relative group w-full md:w-64">
+                    <Search size={14} className="absolute left-3 top-2.5 text-gray-600 group-focus-within:text-brand-orange transition-colors" />
+                    <input 
+                        type="text"
+                        value={state.searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Cari di War Room..."
+                        className="w-full bg-brand-dark border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 shadow-inner"
+                    />
                 </div>
             </div>
 
