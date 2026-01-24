@@ -33,13 +33,9 @@ export interface Customer {
     ai_probability?: number; // 0 - 100
     ai_closing_strategy?: string;
     ai_buyer_persona?: string;
-}
-
-export interface CRMState {
-    customers: Customer[];
-    loading: boolean;
-    searchTerm: string;
-    activeView: 'pipeline' | 'list';
+    // NEW FIELDS FROM RADAR VIEW
+    source_origin?: 'shadow' | 'simulasi' | 'kontak';
+    detected_category?: 'web' | 'webapp' | 'seo' | 'hardware';
 }
 
 export const PIPELINE_STAGES: { id: LeadStatus; label: string; color: string }[] = [

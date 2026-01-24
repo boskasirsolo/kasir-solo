@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../../../utils';
 import { Customer } from '../types';
@@ -10,51 +11,41 @@ export const useCRMData = () => {
         if (!supabase) return;
         setLoading(true);
         try {
-            // Kita coba tarik dari VIEW radar yang barusan kita benerin SQL-nya
+            // Tarik data dari VIEW intelijen yang sudah mencakup deteksi otomatis
             const { data, error } = await supabase
                 .from('crm_intelligence_radar')
                 .select('*')
                 .order('updated_at', { ascending: false });
             
             if (error) {
-                // FALLBACK: Kalau view masih error (amit-amit), tarik dari tabel mentah
-                console.warn("View access failed, falling back to raw table:", error);
+                console.warn("View radar access failed, falling back to raw profiles:", error);
                 const { data: rawData, error: rawError } = await supabase
                     .from('crm_profiles')
                     .select('*')
                     .order('updated_at', { ascending: false });
                 
                 if (rawError) throw rawError;
-                
-                const fallbackMapped = (rawData || []).map((p: any) => ({
-                    ...p,
-                    intelligence: {
-                        most_visited_path: p.last_notes?.includes('checkout') ? '/checkout' : 'General',
-                        total_views: 0, 
-                        last_activity_desc: 'Captured via Raw Table',
-                        avg_engagement_sec: 0,
-                        top_category: 'Hardware'
-                    }
-                } as Customer));
-                setCustomers(fallbackMapped);
+                setCustomers(rawData || []);
                 return;
             }
 
-            // Sukses dari View: Mapping data intelijennya
+            // Map data dari view ke format Customer
             const mapped = (data || []).map((p: any) => ({
                 ...p,
+                source_origin: p.source_origin,
+                detected_category: p.detected_category,
                 intelligence: {
                     most_visited_path: p.obsession_page || 'Home',
                     total_views: p.total_views || 0,
-                    last_activity_desc: 'Detected via Radar',
+                    last_activity_desc: `Source: ${p.source_origin || 'Direct'}`,
                     avg_engagement_sec: 0, 
-                    top_category: 'Hardware'
+                    top_category: p.detected_category === 'hardware' ? 'Hardware' : 'Software'
                 }
             } as Customer));
 
             setCustomers(mapped);
         } catch (e) {
-            console.error("CRM Data Sync Failed:", e);
+            console.error("CRM Radar Sync Failed:", e);
         } finally {
             setLoading(false);
         }
