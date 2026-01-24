@@ -10,22 +10,45 @@ export const useCRMData = () => {
         if (!supabase) return;
         setLoading(true);
         try {
-            // Tarik data dari View Pintar 'crm_intelligence_radar'
+            // Kita coba tarik dari VIEW radar yang barusan kita benerin SQL-nya
             const { data, error } = await supabase
                 .from('crm_intelligence_radar')
-                .select('*');
+                .select('*')
+                .order('updated_at', { ascending: false });
             
-            if (error) throw error;
+            if (error) {
+                // FALLBACK: Kalau view masih error (amit-amit), tarik dari tabel mentah
+                console.warn("View access failed, falling back to raw table:", error);
+                const { data: rawData, error: rawError } = await supabase
+                    .from('crm_profiles')
+                    .select('*')
+                    .order('updated_at', { ascending: false });
+                
+                if (rawError) throw rawError;
+                
+                const fallbackMapped = (rawData || []).map((p: any) => ({
+                    ...p,
+                    intelligence: {
+                        most_visited_path: p.last_notes?.includes('checkout') ? '/checkout' : 'General',
+                        total_views: 0, 
+                        last_activity_desc: 'Captured via Raw Table',
+                        avg_engagement_sec: 0,
+                        top_category: 'Hardware'
+                    }
+                } as Customer));
+                setCustomers(fallbackMapped);
+                return;
+            }
 
+            // Sukses dari View: Mapping data intelijennya
             const mapped = (data || []).map((p: any) => ({
                 ...p,
                 intelligence: {
-                    most_visited_path: p.obsession_page,
-                    total_views: p.total_views || 0, 
-                    last_activity_desc: p.obsession_page,
-                    avg_engagement_sec: (p.total_engagement_minutes || 0) * 60,
-                    top_category: (p.obsession_page || '').includes('/shop') ? 'Hardware' : 
-                                  (p.obsession_page || '').includes('/services') ? 'Service' : 'Unknown'
+                    most_visited_path: p.obsession_page || 'Home',
+                    total_views: p.total_views || 0,
+                    last_activity_desc: 'Detected via Radar',
+                    avg_engagement_sec: 0, 
+                    top_category: 'Hardware'
                 }
             } as Customer));
 

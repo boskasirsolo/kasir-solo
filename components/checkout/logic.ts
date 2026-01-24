@@ -27,6 +27,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             if (!cleanPhone || !supabase) return;
 
             const itemsList = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
+            // Standardized format for the parser
             const report = 
                 `📦PAKET: ${itemsList}\n` +
                 `📍ALAMAT: ${formData.address || '-'}\n` +
@@ -35,17 +36,17 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                 `SOURCE: checkout_shadow`;
 
             try {
-                // UPDATE: Tembak ke crm_profiles biar sinkron sama Intelligence Radar
+                // Upsert ke crm_profiles
                 await supabase.from('crm_profiles').upsert([{
                     phone: cleanPhone,
                     name: formData.name,
                     last_notes: report,
                     lead_status: 'new',
-                    lead_temperature: 'hot', // Intent tinggi karena sudah di checkout
+                    lead_temperature: 'hot',
                     updated_at: new Date().toISOString()
                 }], { onConflict: 'phone' });
                 
-                console.log("Shadow Intel Captured for:", cleanPhone);
+                console.log("Shadow Intel Captured:", cleanPhone);
             } catch (e) {
                 console.error("Shadow capture sync failed", e);
             }
@@ -109,7 +110,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             const orderItems = cart.map(item => ({ order_id: order.id, product_id: item.id, product_name: item.name, quantity: item.quantity, price: item.price }));
             await supabase!.from('order_items').insert(orderItems);
             
-            // Mark as 'closed' in CRM if order submitted
+            // Finalize status in CRM
             await supabase!.from('crm_profiles').update({ lead_status: 'closed' }).eq('phone', cleanPhone);
             
             const cartSnapshot = [...cart];
