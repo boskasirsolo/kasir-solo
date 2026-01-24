@@ -17,7 +17,18 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
     const uniqueVisitors = new Set(logs.map(l => l.visitor_id)).size;
     const totalViews = logs.filter(l => l.event_type === 'page_view').length;
     
+    // --- STEP 1: INISIALISASI TIMELINE (KABEL GRAFIK) ---
     const trafficByDate: Record<string, number> = {};
+    const today = new Date();
+    
+    // Buat slot kosong dulu buat semua hari dalam periode biar grafik rapi gak bolong-bolong
+    for (let i = period - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(today.getDate() - i);
+        const dateKey = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+        trafficByDate[dateKey] = 0;
+    }
+    
     const pageViews: Record<string, number> = {};
     const devices = { mobile: 0, desktop: 0, tablet: 0 };
     const osDist: Record<string, number> = {};
@@ -37,14 +48,21 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         action: new Set<string>() 
     };
 
-    // 1. PHASE ONE: Aggregation & Distribution
+    // --- STEP 2: DISTRIBUSI DATA DARI LOGS ---
     logs.forEach(log => {
         if (!visitorSessions[log.visitor_id]) visitorSessions[log.visitor_id] = [];
         visitorSessions[log.visitor_id].push(log);
 
         if (log.event_type === 'page_view') {
-            const h = new Date(log.created_at!).getHours();
+            const logDate = new Date(log.created_at!);
+            const h = logDate.getHours();
             const p = log.page_path.split('?')[0];
+            
+            // Masukkan data ke timeline grafik
+            const dateKey = logDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+            if (trafficByDate[dateKey] !== undefined) {
+                trafficByDate[dateKey]++;
+            }
 
             osDist[(log as any).os_name || 'Lainnya'] = (osDist[(log as any).os_name || 'Lainnya'] || 0) + 1;
             cities[(log as any).location_city || 'Unknown'] = (cities[(log as any).location_city || 'Unknown'] || 0) + 1;
@@ -57,7 +75,6 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
             pageViews[p] = (pageViews[p] || 0) + 1;
 
             let ref = log.referrer || 'direct';
-            // Clean referrer
             if (ref.includes('google')) ref = 'Google Search';
             else if (ref.includes('facebook') || ref.includes('fb.me')) ref = 'Facebook';
             else if (ref.includes('instagram')) ref = 'Instagram';
@@ -67,20 +84,17 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         }
     });
 
-    // --- SAMBUNG KABEL JALUR PALING CUAN (PATH ANALYSIS) ---
+    // --- STEP 3: ANALISA JALUR CUAN & FUNNEL ---
     const pathSequences: Record<string, number> = {};
 
-    // 2. PHASE TWO: Session & Funnel Analysis
     Object.entries(visitorSessions).forEach(([vid, sLogs]) => {
-        // Urutkan berdasarkan waktu kejadian
         sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
         
-        // Pelacakan Jalur Per User
         const sequence = sLogs
             .filter(l => l.event_type === 'page_view')
             .map(l => l.page_path.split('?')[0])
-            .filter((p, i, arr) => p !== arr[i-1]) // Hapus duplikat berturut-turut (misal: refresh page)
-            .slice(0, 4) // Ambil 4 langkah pertama biar gak kepanjangan
+            .filter((p, i, arr) => p !== arr[i-1])
+            .slice(0, 4)
             .join(' → ');
         
         if (sequence) {
@@ -90,13 +104,11 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         sLogs.forEach((l, idx) => {
             const p = l.page_path.split('?')[0];
             
-            // Funnel mapping
             if (p === '/' || p.includes('/jual-mesin-kasir-di')) funnelCounts.awareness.add(vid);
             if (p.includes('/articles/') || p.includes('/gallery/')) funnelCounts.interest.add(vid);
             if (p.includes('/shop') || p.includes('/services/')) funnelCounts.intent.add(vid);
             if (l.event_type === 'contact_wa' || l.event_type === 'click_action' || p.includes('/checkout')) funnelCounts.action.add(vid);
 
-            // Time on page calculation
             if (l.event_type === 'page_view') {
                 const next = sLogs[idx+1];
                 if (next) {
@@ -112,7 +124,6 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         });
     });
 
-    // 3. PHASE THREE: Result Consolidation
     const funnelStages: FunnelStage[] = [
         { label: 'TAMU', count: funnelCounts.awareness.size, percentage: 100, dropOff: 0, icon: Search, color: 'text-blue-400' },
         { label: 'KEPO', count: funnelCounts.interest.size, percentage: 0, dropOff: 0, icon: BookOpen, color: 'text-purple-400' },
@@ -130,12 +141,6 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5)
         .map(([path, count]) => ({ path, count }));
-
-    const today = new Date();
-    for (let i = period - 1; i >= 0; i--) {
-        const d = new Date(); d.setDate(today.getDate() - i);
-        trafficByDate[d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })] = 0;
-    }
 
     return { 
         totalViews, uniqueVisitors, totalActions: funnelCounts.action.size, 
