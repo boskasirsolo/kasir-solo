@@ -8,7 +8,7 @@ export const TopPagesTable = ({
     pages: { path: string; hits: number; avgTime: string }[], 
     onPageClick: (path: string) => void 
 }) => {
-    const ITEMS_PER_PAGE = 8;
+    const ITEMS_PER_PAGE = 10;
     const [currentPage, setCurrentPage] = useState(1);
 
     const totalPages = Math.ceil(pages.length / ITEMS_PER_PAGE);
@@ -23,7 +23,7 @@ export const TopPagesTable = ({
     };
 
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col h-full shadow-2xl relative overflow-hidden min-h-[750px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col h-full shadow-2xl relative overflow-hidden min-h-[850px]">
             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><Eye size={120}/></div>
             
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-white/5 pb-5 gap-4 relative z-10">
@@ -108,22 +108,38 @@ export const TopPagesTable = ({
 };
 
 export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
+    const ITEMS_PER_PAGE = 5;
+    const [currentPage, setCurrentPage] = useState(1);
+    
+    const totalPages = Math.ceil(pages.length / ITEMS_PER_PAGE);
+    const currentData = pages.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
     const maxExit = Math.max(...pages.map(([, count]) => count), 1);
     
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden group flex flex-col h-full">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden group flex flex-col h-full min-h-[400px]">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform"><LogOut size={60}/></div>
-            <h4 className="text-white font-black text-xs mb-4 flex items-center gap-2 uppercase tracking-widest relative z-10">
-                <LogOut size={14} className="text-red-500"/> Exit Points (Titik Pamit)
-            </h4>
-            <p className="text-[9px] text-gray-600 mb-6 font-bold uppercase tracking-widest relative z-10">Halaman terakhir sebelum kabur:</p>
-            <div className="space-y-5 relative z-10 flex-1 overflow-y-auto custom-scrollbar pr-1">
-                {pages.map(([page, count], idx) => {
+            <div className="flex justify-between items-start relative z-10 mb-4">
+                <div>
+                    <h4 className="text-white font-black text-xs flex items-center gap-2 uppercase tracking-widest">
+                        <LogOut size={14} className="text-red-500"/> Exit Points (Titik Pamit)
+                    </h4>
+                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mt-1">Halaman terakhir sebelum kabur:</p>
+                </div>
+                {totalPages > 1 && (
+                    <div className="flex gap-2">
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1 rounded bg-white/5 hover:bg-white/10 disabled:opacity-20 transition-colors border border-white/10"><ChevronLeft size={14}/></button>
+                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1 rounded bg-white/5 hover:bg-white/10 disabled:opacity-20 transition-colors border border-white/10"><ChevronRight size={14}/></button>
+                    </div>
+                )}
+            </div>
+
+            <div className="space-y-4 relative z-10 flex-1 overflow-y-auto custom-scrollbar pr-1">
+                {currentData.map(([page, count], idx) => {
                     const percent = Math.round((count / maxExit) * 100);
                     return (
                         <div key={idx} className="group/item">
                             <div className="flex justify-between items-center text-[10px] mb-2 font-mono">
-                                <span className="text-gray-400 truncate max-w-[180px] group-hover/item:text-white transition-colors">{page}</span>
+                                <span className="text-gray-400 truncate max-w-[220px] group-hover/item:text-white transition-colors">{page}</span>
                                 <span className="text-red-500 font-black">{count}</span>
                             </div>
                             <div className="w-full bg-red-500/5 h-1.5 rounded-full overflow-hidden border border-white/5">
@@ -137,7 +153,8 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
                 })}
                 {pages.length === 0 && <p className="text-[10px] text-gray-700 italic text-center py-10 uppercase font-bold tracking-widest">Aman, Belum ada exit.</p>}
             </div>
-            <div className="mt-6 p-3 bg-red-500/5 border border-red-500/10 rounded-xl flex gap-3 items-center shrink-0">
+            
+            <div className="mt-6 p-3 bg-red-500/5 border border-red-500/10 rounded-xl flex gap-3 items-center shrink-0 relative z-10">
                 <AlertTriangle size={14} className="text-red-500 shrink-0" />
                 <p className="text-[8px] text-gray-600 leading-relaxed italic uppercase font-bold">Analisa halaman ini. Mungkin copy atau UI-nya kurang nge-hook.</p>
             </div>
