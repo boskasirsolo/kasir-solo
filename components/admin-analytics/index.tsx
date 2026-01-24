@@ -18,7 +18,7 @@ import { CityDistribution, OSDistribution, DemographicEstimator } from './ui-dem
 import { PageAnalyticsModal } from './page-analytics-modal';
 import { AIInsights } from './ai-insights';
 
-type AnalyticsTab = 'radar' | 'audience' | 'content' | 'acquisition';
+type AnalyticsTab = 'radar' | 'audience' | 'content';
 
 export const AnalyticsDashboard = () => {
   const { stats, loading, period, setPeriod, refresh } = useAnalyticsData();
@@ -38,7 +38,6 @@ export const AnalyticsDashboard = () => {
     { id: 'radar', label: 'Radar Utama', icon: LayoutDashboard, desc: 'Helicopter View' },
     { id: 'audience', label: 'Profil Juragan', icon: Users, desc: 'Insight Pengunjung' },
     { id: 'content', label: 'Performa Konten', icon: FileText, desc: 'Cek Kualitas Page' },
-    { id: 'acquisition', label: 'Pintu Masuk', icon: Globe, desc: 'Asal Trafik' },
   ];
 
   return (
@@ -119,12 +118,6 @@ export const AnalyticsDashboard = () => {
                 <QualityScorePanel bounceRate={stats.bounceRate} avgPages={stats.avgPagesPerSession} />
                 <ExitPagesList pages={stats.sortedExitPages} />
             </div>
-          </div>
-        )}
-
-        {activeTab === 'acquisition' && (
-          <div className="animate-fade-in">
-            <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} />
           </div>
         )}
       </div>
