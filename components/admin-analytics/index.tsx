@@ -139,7 +139,7 @@ export const AnalyticsDashboard = () => {
                 <div className="flex flex-col">
                     <TopPagesTable pages={stats.sortedPages} onPageClick={(path) => setSelectedPagePath(path)} />
                 </div>
-                <div className="flex flex-col gap-6 h-full">
+                <div className="flex flex-col gap-8 h-full"> {/* Gap ditingkatkan ke 8 */}
                     <div className="flex-1 min-h-0">
                         <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews.value as number} />
                     </div>

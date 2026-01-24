@@ -1,4 +1,3 @@
-
 import { AnalyticsLog } from '../../types';
 import { AnalyticsStats, FunnelStage, MetricTrend } from './types';
 import { Search, BookOpen, ShoppingBag, DollarSign } from 'lucide-react';
@@ -17,7 +16,7 @@ const calculateTrend = (current: number, previous: number): number => {
 };
 
 /**
- * RADAR PROCESSOR V3: Menghitung trend perbandingan periode.
+ * RADAR PROCESSOR V3.1: Audit kabel data Exit Points & Retention
  */
 export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): AnalyticsStats => {
     const now = new Date();
@@ -39,7 +38,7 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
     const currKPI = getKPI(currentLogs);
     const prevKPI = getKPI(prevLogs);
 
-    // --- AGGREGASI DATA VISUAL (Cuma pake periode sekarang) ---
+    // --- AGGREGASI DATA VISUAL ---
     const trafficByDate: Record<string, number> = {};
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date();
@@ -49,6 +48,7 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
     }
 
     const pageViews: Record<string, number> = {};
+    const exitCounts: Record<string, number> = {};
     const devices = { mobile: 0, desktop: 0, tablet: 0 };
     const osDist: Record<string, number> = {};
     const cities: Record<string, number> = {};
@@ -91,28 +91,21 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         }
     });
 
-    // Bounce Rate Logic (10s threshold)
-    let trueBouncers = 0;
-    let totalPageDepth = 0;
-    const BOUNCE_THRESHOLD = 10;
-
+    // --- LOGIC AUDIT EXIT PAGES ---
     Object.entries(visitorSessions).forEach(([vid, sLogs]) => {
+        // Urutkan berdasarkan waktu buat cari yang terakhir
         sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
         const views = sLogs.filter(l => l.event_type === 'page_view');
-        const uniquePages = new Set(views.map(v => v.page_path.split('?')[0]));
-        totalPageDepth += uniquePages.size;
-
-        if (uniquePages.size === 1) {
-            const firstView = views[0];
-            const leave = sLogs.find(l => l.event_type === 'page_leave' && l.page_path === firstView.page_path);
-            if (leave) {
-                const diff = (new Date(leave.created_at!).getTime() - new Date(firstView.created_at!).getTime()) / 1000;
-                if (diff < BOUNCE_THRESHOLD) trueBouncers++;
-            } else {
-                trueBouncers++;
-            }
+        
+        if (views.length > 0) {
+            const lastView = views[views.length - 1];
+            const exitPath = lastView.page_path.split('?')[0];
+            exitCounts[exitPath] = (exitCounts[exitPath] || 0) + 1;
         }
 
+        const uniquePages = new Set(views.map(v => v.page_path.split('?')[0]));
+        
+        // Funnel Mapping
         sLogs.forEach(l => {
             const p = l.page_path.split('?')[0];
             if (p === '/' || p.includes('/jual-mesin-kasir-di')) funnelCounts.awareness.add(vid);
@@ -160,11 +153,12 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
             path, hits, 
             avgTime: formatDuration((pageDurations[path] || []).reduce((a, b) => a + b, 0) / (pageDurations[path]?.length || 1)) 
         })).sort((a, b) => b.hits - a.hits),
-        sortedReferrers: Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 10), 
+        sortedReferrers: Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 15), 
         hours, newVisitors: 0, returningVisitors: 0, 
-        bounceRate: currKPI.visitors > 0 ? Math.round((trueBouncers / currKPI.visitors) * 100) : 0, 
-        avgPagesPerSession: currKPI.visitors > 0 ? (totalPageDepth / currKPI.visitors).toFixed(1) : "0",
-        sortedExitPages: [], avgEngagementTime: formatDuration(totalEngagementSeconds / (engagementCount || 1)),
+        bounceRate: currKPI.visitors > 0 ? Math.round((currKPI.visitors - funnelCounts.interest.size) / currKPI.visitors * 100) : 0, 
+        avgPagesPerSession: currKPI.visitors > 0 ? (Object.keys(pageViews).length / currKPI.visitors).toFixed(1) : "0",
+        sortedExitPages: Object.entries(exitCounts).sort(([,a], [,b]) => b - a).slice(0, 15), 
+        avgEngagementTime: formatDuration(totalEngagementSeconds / (engagementCount || 1)),
         funnel: { stages: funnelStages, topPaths: [], conversionRate: currKPI.visitors > 0 ? (currKPI.actions / currKPI.visitors) * 100 : 0 }
     };
 };
