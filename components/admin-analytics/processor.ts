@@ -84,13 +84,12 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         }
     });
 
-    // --- STEP 3: ANALISA ADJUSTED BOUNCE RATE (SMART LOGIC V2) ---
+    // --- STEP 3: ANALISA ADJUSTED BOUNCE RATE (STRICT 10s LOGIC) ---
     let trueBouncers = 0;
     let totalPageDepth = 0;
-    const BOUNCE_THRESHOLD_SEC = 10; // UPDATED: 10 detik cukup buat bedain niat vs iseng
+    const BOUNCE_THRESHOLD_SEC = 10; 
 
     Object.values(visitorSessions).forEach(sLogs => {
-        // Sortir kronologis biar gampang diitung
         sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
 
         const views = sLogs.filter(l => l.event_type === 'page_view');
@@ -98,7 +97,7 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         
         totalPageDepth += uniquePages.size;
 
-        // LOGIKA: Bounce HANYA terjadi jika:
+        // LOGIKA: Bounce HANYA jika:
         // 1. Cuma buka SATU halaman unik (Gak ada perpindahan internal)
         // 2. Durasi menetap di halaman itu sangat singkat (< 10 detik)
         if (uniquePages.size === 1) {
@@ -110,17 +109,15 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
                 const endTime = new Date(leaveEvent.created_at!).getTime();
                 const dwellTimeSec = (endTime - startTime) / 1000;
 
-                // Jika menetap kurang dari 10 detik baru dihitung bounce
                 if (dwellTimeSec < BOUNCE_THRESHOLD_SEC) {
                     trueBouncers++;
                 }
             } else {
-                // Jika user tutup paksa (crash) atau browser mati mendadak sebelum trigger page_leave,
-                // tapi cuma ada 1 view, kita anggap bouncer demi keakuratan.
+                // Jika user tutup paksa sebelum trigger leave, tapi cuma ada 1 view, 
+                // ini biasanya indikasi 'bounce' yang sangat cepat.
                 trueBouncers++;
             }
         }
-        // Jika uniquePages.size > 1, otomatis BUKAN bouncer biarpun pindahnya cepet.
     });
 
     const bounceRate = uniqueVisitors > 0 ? Math.round((trueBouncers / uniqueVisitors) * 100) : 0;
@@ -149,12 +146,11 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
             if (p.includes('/shop') || p.includes('/services/')) funnelCounts.intent.add(vid);
             if (l.event_type === 'contact_wa' || l.event_type === 'click_action' || p.includes('/checkout')) funnelCounts.action.add(vid);
 
-            // Kalkulasi durasi menetap untuk stats engagement
             if (l.event_type === 'page_view' && l.created_at) {
                 const leaveEvent = sLogs.find(le => le.event_type === 'page_leave' && le.page_path === l.page_path);
                 if (leaveEvent && leaveEvent.created_at) {
                     const diff = (new Date(leaveEvent.created_at).getTime() - new Date(l.created_at).getTime()) / 1000;
-                    if (diff < 1800 && diff > 1) { // Filter data aneh (lebih 30m atau kurang 1s)
+                    if (diff < 1800 && diff > 1) { 
                         if (!pageDurations[p]) pageDurations[p] = [];
                         pageDurations[p].push(diff);
                         totalEngagementSeconds += diff;
@@ -175,7 +171,7 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
     const totalTraffic = funnelStages[0].count || uniqueVisitors || 1;
     for (let i = 1; i < funnelStages.length; i++) {
         funnelStages[i].percentage = Math.round((funnelStages[i].count / totalTraffic) * 100);
-        funnelStages[i].dropOff = funnelStages[i-1].count > 0 ? Math.max(0, Math.round(((funnelStages[i-1].count - funnelStages[i].count) / funnelStages[i-1].count) * 100)) : 0;
+        funnelStages[i].dropOff = funnelStages[i-1].count > 0 ? Math.max(0, Math.round(((funnelStages[i-1].count - funnelCounts[i === 1 ? 'interest' : i === 2 ? 'intent' : 'action'].size) / funnelStages[i-1].count) * 100)) : 0;
     }
 
     const topPaths = Object.entries(pathSequences)
