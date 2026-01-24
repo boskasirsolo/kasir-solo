@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
     LayoutDashboard, 
@@ -110,7 +111,11 @@ export const AnalyticsDashboard = () => {
                </div>
 
                <div className="lg:col-span-4 flex flex-col h-full">
-                  <QualityScorePanel bounceRate={stats.bounceRate} avgPages={stats.avgPagesPerSession} />
+                  <QualityScorePanel 
+                    bounceRate={stats.bounceRate} 
+                    avgPages={stats.avgPagesPerSession} 
+                    onAction={() => setActiveTab('content')}
+                  />
                </div>
                <div className="lg:col-span-8 flex flex-col h-full">
                   <PeakHoursHeatmap hours={stats.hours} />
@@ -139,7 +144,7 @@ export const AnalyticsDashboard = () => {
                 <div className="flex flex-col">
                     <TopPagesTable pages={stats.sortedPages} onPageClick={(path) => setSelectedPagePath(path)} />
                 </div>
-                <div className="flex flex-col gap-6 h-full"> {/* Gap diatur ke 6 agar lebih presisi */}
+                <div className="flex flex-col gap-6 h-full">
                     <div className="flex-1 min-h-0">
                         <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews.value as number} />
                     </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Calendar, Activity, Flame, TrendingUp } from 'lucide-react';
 
@@ -6,7 +7,7 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
     const maxValue = Math.max(...values, 1); 
   
     return (
-      <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl">
+      <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl min-h-[420px]">
         <div className="absolute top-0 right-0 p-4 opacity-5"><Activity size={80}/></div>
         
         <div className="flex justify-between items-start mb-6 relative z-10">
@@ -23,7 +24,7 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
         </div>
         
         <div className="bg-black/20 rounded-2xl p-4 border border-white/5 overflow-x-auto custom-scrollbar flex-1">
-            <div className="min-w-[600px] h-64 flex items-end justify-between gap-1.5 pt-10 pb-2 relative">
+            <div className="min-w-[600px] h-56 flex items-end justify-between gap-1.5 pt-10 pb-2 relative">
                 {/* Horizontal Grid Lines */}
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-5 z-0 pb-10">
                     {[...Array(5)].map((_, i) => (
@@ -94,7 +95,7 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
 export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
     const maxVal = Math.max(...hours, 1);
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl min-h-[480px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl min-h-[420px]">
             <div className="absolute top-0 right-0 p-4 opacity-5"><Flame size={80} /></div>
             <h4 className="text-white font-bold text-sm mb-6 flex items-center gap-2">
                 <Flame size={16} className="text-red-500"/> Jam Sibuk Pasar (WIB)

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { LogOut, Eye, Sparkles, AlertTriangle, Zap, ArrowLeft, ArrowRight } from 'lucide-react';
 import { PageHitsRow, ExitSourceRow, AnalyticsPagination, QualityScoreBox } from './ui-molecules';
@@ -129,8 +130,17 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
 
 /**
  * Organisme: Panel Skor Kualitas
+ * Kalibrasi: min-h 420px, merapatkan layout, menambahkan tombol navigasi.
  */
-export const QualityScorePanel = ({ bounceRate, avgPages }: { bounceRate: number, avgPages: string }) => {
+export const QualityScorePanel = ({ 
+    bounceRate, 
+    avgPages,
+    onAction
+}: { 
+    bounceRate: number, 
+    avgPages: string,
+    onAction?: () => void
+}) => {
     const getBounceStatus = () => {
         if (bounceRate < 40) return { label: 'LOW', color: 'bg-green-500/20 text-green-400 border-green-500/30' };
         if (bounceRate < 70) return { label: 'NORMAL', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-400/30' };
@@ -140,13 +150,14 @@ export const QualityScorePanel = ({ bounceRate, avgPages }: { bounceRate: number
     const status = getBounceStatus();
 
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 flex flex-col justify-center shadow-2xl relative overflow-hidden min-h-[400px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-5 flex flex-col justify-between shadow-2xl relative overflow-hidden min-h-[420px]">
             <div className="absolute bottom-0 right-0 p-4 opacity-5 pointer-events-none"><Zap size={100}/></div>
-            <h4 className="text-white font-black text-xs mb-8 flex items-center gap-2 uppercase tracking-widest relative z-10">
+            
+            <h4 className="text-white font-black text-xs mb-6 flex items-center gap-2 uppercase tracking-widest relative z-10">
                 <Zap size={14} className="text-yellow-400"/> Quality Score
             </h4>
             
-            <div className="space-y-5 relative z-10">
+            <div className="space-y-3 relative z-10">
                 <QualityScoreBox 
                     label="Boncos Rate (Bounce)" 
                     value={bounceRate} 
@@ -160,6 +171,13 @@ export const QualityScorePanel = ({ bounceRate, avgPages }: { bounceRate: number
                     unit="Hal / Visit" 
                 />
             </div>
+
+            <button 
+                onClick={onAction}
+                className="w-full mt-6 py-2.5 bg-brand-orange/10 hover:bg-brand-orange text-brand-orange hover:text-white border border-brand-orange/30 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group relative z-10 active:scale-95"
+            >
+                Audit Performa Konten <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </button>
         </div>
     );
 };

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getPageContext } from './ui-utils';
@@ -112,7 +113,7 @@ export const AnalyticsPagination: React.FC<{
     );
 };
 
-// FIX: Padding dikurangi dari p-8 ke p-6
+// FIX: Padding dikurangi dari p-6 ke p-4 agar lebih compact
 export const QualityScoreBox: React.FC<{ 
     label: string; 
     value: string | number; 
@@ -126,16 +127,16 @@ export const QualityScoreBox: React.FC<{
     badgeColor, 
     unit 
 }) => (
-    <div className="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-white/20 transition-all group/box shadow-inner">
-        <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-1">{label}</p>
+    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-white/20 transition-all group/box shadow-inner">
+        <p className="text-[8px] text-gray-600 font-black uppercase tracking-widest mb-1">{label}</p>
         <div className="flex justify-between items-end">
-            <h3 className="text-3xl font-display font-black text-white transition-colors">{value}{unit === '%' && '%'}</h3>
+            <h3 className="text-2xl font-display font-black text-white transition-colors">{value}{unit === '%' && '%'}</h3>
             {badgeLabel ? (
                 <div className={`text-[8px] px-2 py-0.5 rounded font-black uppercase border ${badgeColor}`}>
                     {badgeLabel}
                 </div>
             ) : unit && (
-                <span className="text-[8px] text-gray-600 font-black uppercase mb-1">{unit}</span>
+                <span className="text-[8px] text-gray-700 font-black uppercase mb-1">{unit}</span>
             )}
         </div>
     </div>
