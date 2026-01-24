@@ -16,17 +16,19 @@ import { AIInsights } from './ai-insights';
 
 type AnalyticsTab = 'radar' | 'audience' | 'content';
 
+/**
+ * Integration Layer (Page Template)
+ * Koordinasi antara Logic (Hook) dan Organisme (UI Tables/Charts)
+ */
 export const AnalyticsDashboard = () => {
   const { stats, loading, period, setPeriod, refresh } = useAnalyticsData();
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('radar');
   const [selectedPagePath, setSelectedPagePath] = useState<string | null>(null);
 
-  // Efek untuk sinkronisasi dengan Header Global di DashboardShell
+  // Sync dengan Global Command Center (Dashboard Shell)
   useEffect(() => {
     const onGlobalRefresh = () => refresh();
     window.addEventListener('mks:refresh', onGlobalRefresh);
-    
-    // Broadcast status loading ke header shell
     window.dispatchEvent(new CustomEvent('mks:loading', { detail: loading }));
 
     return () => {
@@ -51,6 +53,7 @@ export const AnalyticsDashboard = () => {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 relative">
+      {/* Sticky Tab Navigator */}
       <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md py-2.5 -mx-4 px-4 border-b border-white/5 shadow-xl transition-all">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
@@ -92,13 +95,13 @@ export const AnalyticsDashboard = () => {
         </div>
       </div>
 
+      {/* Main Container Layer */}
       <div className="space-y-6 min-h-[600px] relative">
         {activeTab === 'radar' && (
           <div className="space-y-6 animate-fade-in">
             <KPIGrid stats={stats} />
             
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-               {/* RADAR CORONG & TRAFFIC CHART */}
                <div className="lg:col-span-4 flex flex-col h-full">
                   <FunnelVisual data={stats.funnel} />
                </div>
@@ -106,7 +109,6 @@ export const AnalyticsDashboard = () => {
                   <TrafficChart data={stats.trafficByDate} period={period} />
                </div>
 
-               {/* QUALITY SCORE & PEAK HOURS */}
                <div className="lg:col-span-4 flex flex-col h-full">
                   <QualityScorePanel bounceRate={stats.bounceRate} avgPages={stats.avgPagesPerSession} />
                </div>
@@ -120,13 +122,8 @@ export const AnalyticsDashboard = () => {
         {activeTab === 'audience' && (
           <div className="animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-                {/* 1. KOTA */}
                 <CityDistribution cities={stats.sortedCities} total={stats.totalViews.value as number} />
-
-                {/* 2. PROFILING */}
                 <DemographicEstimator data={stats.demographics} />
-
-                {/* 3. TEKNOLOGI (COMBINED) */}
                 <TechIntelligence 
                     devices={stats.devices} 
                     osData={stats.osDist} 
@@ -139,12 +136,9 @@ export const AnalyticsDashboard = () => {
         {activeTab === 'content' && (
           <div className="animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-                {/* 1. TABEL KONTEN (TINGGI PENUH, LEBAR 50%) */}
                 <div className="flex flex-col">
                     <TopPagesTable pages={stats.sortedPages} onPageClick={(path) => setSelectedPagePath(path)} />
                 </div>
-
-                {/* 2. REFERRER & EXIT (DITUMPUK VERTIKAL 50:50, LEBAR 50%) */}
                 <div className="flex flex-col gap-6 h-full">
                     <div className="flex-1 min-h-0">
                         <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews.value as number} />
@@ -158,6 +152,7 @@ export const AnalyticsDashboard = () => {
         )}
       </div>
 
+      {/* Modal Page Intel (Drill-down) */}
       {selectedPagePath && <PageAnalyticsModal pagePath={selectedPagePath} onClose={() => setSelectedPagePath(null)} />}
     </div>
   );
