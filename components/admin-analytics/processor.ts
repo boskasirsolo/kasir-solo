@@ -53,21 +53,26 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         if (!visitorSessions[log.visitor_id]) visitorSessions[log.visitor_id] = [];
         visitorSessions[log.visitor_id].push(log);
 
-        if (log.event_type === 'page_view') {
-            const logDate = new Date(log.created_at!);
+        if (log.event_type === 'page_view' && log.created_at) {
+            const logDate = new Date(log.created_at);
+            // Safety check: skip if date is invalid
+            if (isNaN(logDate.getTime())) return;
+
             const h = logDate.getHours();
             const p = log.page_path.split('?')[0];
             
-            // Masukkan data ke timeline grafik
+            // Masukkan data ke timeline grafik harian
             const dateKey = logDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
             if (trafficByDate[dateKey] !== undefined) {
                 trafficByDate[dateKey]++;
             }
 
+            // Masukkan data ke jam sibuk (heatmap)
+            hours[h]++;
+
             osDist[(log as any).os_name || 'Lainnya'] = (osDist[(log as any).os_name || 'Lainnya'] || 0) + 1;
             cities[(log as any).location_city || 'Unknown'] = (cities[(log as any).location_city || 'Unknown'] || 0) + 1;
             
-            hours[h]++;
             if (log.device_type === 'mobile') devices.mobile++;
             else if (log.device_type === 'desktop') devices.desktop++;
             else devices.tablet++;
@@ -109,10 +114,10 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
             if (p.includes('/shop') || p.includes('/services/')) funnelCounts.intent.add(vid);
             if (l.event_type === 'contact_wa' || l.event_type === 'click_action' || p.includes('/checkout')) funnelCounts.action.add(vid);
 
-            if (l.event_type === 'page_view') {
+            if (l.event_type === 'page_view' && l.created_at) {
                 const next = sLogs[idx+1];
-                if (next) {
-                    const diff = (new Date(next.created_at!).getTime() - new Date(l.created_at!).getTime()) / 1000;
+                if (next && next.created_at) {
+                    const diff = (new Date(next.created_at).getTime() - new Date(l.created_at).getTime()) / 1000;
                     if (diff < 1800 && diff > 2) { 
                         if (!pageDurations[p]) pageDurations[p] = [];
                         pageDurations[p].push(diff);

@@ -67,22 +67,35 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
     const maxVal = Math.max(...hours, 1);
     return (
         <div className="mt-6 pt-6 border-t border-white/5 relative">
-            <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
+            <h4 className="text-white font-bold text-xs mb-3 flex items-center gap-2">
                 <Flame size={14} className="text-red-500"/> Jam Sibuk Pasar (WIB)
             </h4>
             <div className="bg-black/40 rounded-2xl p-4 border border-white/5 overflow-x-auto custom-scrollbar-hide">
-                <div className="min-w-[500px] flex items-end gap-1 h-20">
-                    {hours.map((count, h) => (
-                        <div 
-                            key={h} 
-                            className="flex-1 bg-white/5 rounded-t-sm group relative"
-                            style={{ height: `${Math.max((count/maxVal)*100, 5)}%`, opacity: 0.3 + ((count/maxVal)*0.7) }}
-                        >
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 bg-white text-black text-[8px] px-1 rounded font-bold">{h}:00</div>
-                        </div>
-                    ))}
+                <div className="min-w-[500px] flex items-end gap-1.5 h-32">
+                    {hours.map((count, h) => {
+                        const intensity = count / maxVal;
+                        return (
+                            <div 
+                                key={h} 
+                                className="flex-1 rounded-t-md group relative transition-all duration-500"
+                                style={{ 
+                                    height: `${Math.max(intensity * 100, 4)}%`, 
+                                    backgroundColor: count > 0 ? '#FF5F1F' : 'rgba(255,255,255,0.05)',
+                                    opacity: count > 0 ? 0.3 + (intensity * 0.7) : 0.2
+                                }}
+                            >
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 bg-white text-black text-[9px] px-2 py-1 rounded shadow-xl font-black whitespace-nowrap z-50 transition-all pointer-events-none">
+                                    {h}:00 - {count} View
+                                </div>
+                                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[7px] text-gray-600 font-bold group-hover:text-brand-orange transition-colors">
+                                    {h.toString().padStart(2, '0')}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
+            <p className="text-[9px] text-gray-500 mt-8 text-center italic uppercase tracking-widest">Waktu dihitung berdasarkan Zona Waktu Lokal (Local Browser Time)</p>
         </div>
     );
 };
