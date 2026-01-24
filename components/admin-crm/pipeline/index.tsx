@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { PIPELINE_STAGES, Customer, LeadStatus } from '../types';
-import { Zap, Activity, Ghost, Box, MessageSquare, Sparkles, Loader2 } from 'lucide-react';
+import { Zap, Activity, Ghost, Box, MessageSquare, Sparkles, Loader2, Clock, DollarSign, Building2 } from 'lucide-react';
 import { parseIntel } from '../shared/utils';
 
 const LeadCard: React.FC<{ 
@@ -30,7 +30,21 @@ const LeadCard: React.FC<{
                 </div>
             );
         }
-        return null;
+        return (
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/30 text-green-400 text-[8px] font-black uppercase">
+                <MessageSquare size={8} /> KONTAK
+            </div>
+        );
+    };
+
+    const timeSince = (dateStr: string) => {
+        const diff = Date.now() - new Date(dateStr).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return "Baru saja";
+        if (mins < 60) return `${mins}m lalu`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}j lalu`;
+        return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
     };
 
     return (
@@ -39,41 +53,54 @@ const LeadCard: React.FC<{
             <div className="flex justify-between items-start mb-2">
                 <div className="flex flex-wrap gap-1">
                     {renderSourceBadge()}
-                    {customer.detected_category && (
-                        <span className="bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-[8px] text-gray-500 font-bold uppercase tracking-tighter">{customer.detected_category}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[8px] text-gray-600 font-mono font-bold uppercase tracking-tighter">{timeSince(customer.updated_at)}</span>
+                    {customer.is_indecisive_buyer && (
+                        <div className="bg-red-500/20 text-red-500 p-1 rounded border border-red-500/30 animate-pulse shadow-neon-text/20">
+                            <Zap size={10} />
+                        </div>
                     )}
                 </div>
-                {customer.is_indecisive_buyer && (
-                    <div className="bg-red-500/20 text-red-500 p-1 rounded border border-red-500/30 animate-pulse shadow-neon-text/20">
-                        <Zap size={10} />
-                    </div>
-                )}
             </div>
 
             {/* CUSTOMER IDENTITY */}
-            <h5 className="font-bold text-white text-sm truncate mb-0.5 pr-4 group-hover:text-brand-orange transition-colors">{customer.name}</h5>
-            <p className="text-[9px] text-gray-600 font-mono mb-3">{customer.phone}</p>
+            <div className="mb-3">
+                <h5 className="font-bold text-white text-sm truncate mb-0.5 pr-4 group-hover:text-brand-orange transition-colors">{customer.name}</h5>
+                <p className="text-[9px] text-gray-500 font-mono">{customer.phone}</p>
+            </div>
+
+            {/* INTEL BLOCK (USAHA & BUDGET) */}
+            {(intel.usaha || intel.estimasi) && (
+                <div className="mb-3 space-y-1.5">
+                    {intel.usaha && (
+                        <div className="flex items-center gap-2 text-brand-orange font-bold">
+                            <Building2 size={10} />
+                            <span className="text-[10px] truncate uppercase tracking-tighter">{intel.usaha}</span>
+                        </div>
+                    )}
+                    {intel.estimasi && (
+                        <div className="flex items-center gap-2 text-green-400 font-black font-mono">
+                            <DollarSign size={10} />
+                            <span className="text-[11px]">{intel.estimasi}</span>
+                        </div>
+                    )}
+                </div>
+            )}
             
             {/* RADAR PATH INTEL */}
             {radar && radar.most_visited_path && (
-                <div className="mb-3 px-2 py-1.5 bg-black/40 border border-white/5 rounded-xl">
+                <div className="mb-4 px-2 py-1.5 bg-black/40 border border-white/5 rounded-xl">
                     <p className="text-[7px] text-gray-500 font-black uppercase tracking-[0.2em] mb-1 flex items-center gap-1">
-                        <Activity size={8} className="text-blue-400"/> Monitoring Path
+                        <Activity size={8} className="text-blue-400"/> Radar Path
                     </p>
                     <p className="text-[9px] text-gray-400 line-clamp-1 italic font-medium">
-                        {radar.most_visited_path.split('/').pop() || 'Home'}
+                        /{radar.most_visited_path.split('/').pop() || 'Home'}
                     </p>
                 </div>
             )}
 
-            {/* PACKAGE INTEL */}
-            {intel.paket && (
-                <div className="bg-white/5 p-2 rounded-xl border border-white/5 mb-4 text-[10px] text-gray-400 italic line-clamp-2 leading-relaxed">
-                    "{intel.paket}"
-                </div>
-            )}
-
-            {/* ACTION AREA: SAPA AI & STATUS */}
+            {/* ACTION AREA */}
             <div className="space-y-3">
                 <button 
                     onClick={(e) => { e.stopPropagation(); onRescue(customer); }}
