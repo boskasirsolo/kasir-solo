@@ -94,6 +94,8 @@ export const AnalyticsDashboard = () => {
 
             <div className="bg-brand-dark/50 border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
                 <TrafficChart data={stats.trafficByDate} period={period} />
+                {/* BALIKIN GRAFIK JAM SIBUK DI SINI */}
+                <PeakHoursHeatmap hours={stats.hours} />
             </div>
           </div>
         )}

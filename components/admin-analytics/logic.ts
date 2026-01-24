@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../utils';
 import { AnalyticsStats } from './types';
 import { Search, BookOpen, ShoppingBag, DollarSign } from 'lucide-react';
-import { processAnalyticsLogs } from './processor'; // SAMBUNG KABEL KE PROCESSOR
+import { processAnalyticsLogs } from './processor';
 
 const INITIAL_STATS: AnalyticsStats = {
     totalViews: 0,
@@ -42,7 +42,8 @@ const INITIAL_STATS: AnalyticsStats = {
 export const useAnalyticsData = () => {
   const [stats, setStats] = useState<AnalyticsStats>(INITIAL_STATS);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState(30);
+  // DEFAULT DIUBAH KE 7 HARI SESUAI REQUEST
+  const [period, setPeriod] = useState(7);
 
   const fetchStats = async () => {
     if (!supabase) {
@@ -52,7 +53,6 @@ export const useAnalyticsData = () => {
     
     setLoading(true);
     try {
-        // --- AUDIT KABEL: TARIK DATA MENTAH DARI TABEL SESUAI SKEMA ---
         const dateThreshold = new Date();
         dateThreshold.setDate(dateThreshold.getDate() - period);
         
@@ -64,7 +64,6 @@ export const useAnalyticsData = () => {
         if (error) throw error;
 
         if (logs && logs.length > 0) {
-            // --- SAMBUNG KE MESIN PENGOLAH (PROCESSOR) ---
             const processedStats = processAnalyticsLogs(logs, period);
             setStats(processedStats);
         } else {
