@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AdminTabId } from './types';
 import { ChevronRight, Activity, ShieldCheck, Zap, Ghost, Check, Copy } from 'lucide-react';
@@ -23,25 +22,20 @@ export const GhostModeBtn = () => {
     return (
         <button 
             onClick={copyLink}
-            className={`flex items-center gap-2 px-3 py-2 rounded-2xl border transition-all shadow-xl group ${
+            className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all group ${
                 isGhost 
                 ? 'bg-green-600/10 border-green-500/30 text-green-400' 
-                : 'bg-brand-card/80 border-white/10 text-gray-500 hover:text-white hover:border-brand-orange/30'
+                : 'bg-white/5 border-white/5 text-gray-500 hover:text-white hover:border-brand-orange/30 hover:bg-brand-orange/5'
             }`}
             title="Salin Link Akses Tanpa Tracking (Ghost Mode)"
         >
             <div className="relative">
-                <Ghost size={16} className={isGhost ? 'animate-pulse' : 'group-hover:text-brand-orange'} />
+                <Ghost size={14} className={isGhost ? 'animate-pulse' : 'group-hover:text-brand-orange'} />
                 {isGhost && <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></div>}
             </div>
-            <div className="text-left hidden sm:block">
-                <span className="text-[8px] font-black uppercase tracking-widest block leading-none mb-0.5">
-                    {isGhost ? 'Ghost Mode' : 'Stealth Link'}
-                </span>
-                <span className="text-[7px] font-mono uppercase tracking-tighter block leading-none flex items-center gap-1">
-                    {copied ? <><Check size={8}/> COPIED</> : <><Copy size={8}/> SALIN LINK</>}
-                </span>
-            </div>
+            <span className="text-[8px] font-black uppercase tracking-widest block leading-none">
+                {copied ? 'COPIED!' : isGhost ? 'STEALTH ON' : 'STEALTH LINK'}
+            </span>
         </button>
     );
 };

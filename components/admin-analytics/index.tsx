@@ -3,8 +3,6 @@ import {
     LayoutDashboard, 
     Users, 
     FileText, 
-    Globe, 
-    Zap 
 } from 'lucide-react';
 import { useAnalyticsData } from './logic';
 import { LoadingSpinner } from '../ui';
@@ -42,33 +40,48 @@ export const AnalyticsDashboard = () => {
   return (
     <div className="space-y-6 animate-fade-in pb-20 relative">
       <DashboardHeader 
-        period={period} 
-        setPeriod={setPeriod} 
         onRefresh={refresh} 
         isRefreshing={loading}
-        aiInsights={<AIInsights stats={stats} />}
       />
 
       <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md py-2.5 -mx-4 px-4 border-b border-white/5 shadow-xl transition-all">
-        <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as AnalyticsTab)}
-                className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all shrink-0 group ${
-                  isActive ? 'bg-brand-orange border-brand-orange text-white shadow-neon' : 'bg-brand-card/50 border-white/5 text-gray-500 hover:text-white hover:border-white/20'
-                }`}
-              >
-                <tab.icon size={16} className={isActive ? 'text-white' : 'text-gray-600 group-hover:text-brand-orange'} />
-                <div className="text-left">
-                  <p className="text-[9px] font-black uppercase tracking-widest leading-none">{tab.label}</p>
-                  <p className={`text-[8px] mt-0.5 font-bold ${isActive ? 'text-white/60' : 'text-gray-700'}`}>{tab.desc}</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
+            {TABS.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as AnalyticsTab)}
+                    className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all shrink-0 group ${
+                    isActive ? 'bg-brand-orange border-brand-orange text-white shadow-neon' : 'bg-brand-card/50 border-white/5 text-gray-500 hover:text-white hover:border-white/20'
+                    }`}
+                >
+                    <tab.icon size={16} className={isActive ? 'text-white' : 'text-gray-600 group-hover:text-brand-orange'} />
+                    <div className="text-left">
+                    <p className="text-[9px] font-black uppercase tracking-widest leading-none">{tab.label}</p>
+                    <p className={`text-[8px] mt-0.5 font-bold ${isActive ? 'text-white/60' : 'text-gray-700'}`}>{tab.desc}</p>
+                    </div>
+                </button>
+                );
+            })}
+            </div>
+
+            <div className="flex items-center gap-3 self-end md:self-auto">
+                <AIInsights stats={stats} />
+                
+                <div className="bg-black/40 rounded-xl p-1 border border-white/10 flex">
+                    {[7, 30].map(d => (
+                        <button 
+                            key={d}
+                            onClick={() => setPeriod(d)}
+                            className={`px-4 py-2 text-[10px] font-bold rounded-lg transition-all ${period === d ? 'bg-brand-orange text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
+                        >
+                            {d}D
+                        </button>
+                    ))}
                 </div>
-              </button>
-            );
-          })}
+            </div>
         </div>
       </div>
 

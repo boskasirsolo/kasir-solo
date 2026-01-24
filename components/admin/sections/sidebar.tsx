@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
     ShoppingBag, Package, LayoutGrid, Image, Settings, 
@@ -7,7 +6,7 @@ import {
     Bot, BookOpen, Users, X, Box, Zap, Wrench, ArrowUpRight, Database, Quote, TrendingUp
 } from 'lucide-react';
 import { AdminTabId, MenuCategory } from '../types';
-import { SidebarTabButton, SidebarGroupHeader, SystemHealthWidget } from '../ui-parts';
+import { SidebarTabButton, SidebarGroupHeader, SystemHealthWidget, GhostModeBtn } from '../ui-parts';
 
 export const MENU_GROUPS: MenuCategory[] = [
     { id: 'radar', label: 'Intelligence', items: ['analytics', 'sales', 'seo'] },
@@ -59,13 +58,10 @@ export const Sidebar = ({ isOpen, onClose, activeTab, onTabChange, onLogout }: S
             </div>
             
             <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => window.open('/', '_blank')} className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-brand-orange/30 hover:bg-brand-orange/5 transition-all group">
-                    <ArrowUpRight size={14} className="text-brand-orange group-hover:scale-110 transition-transform" />
-                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest group-hover:text-white">Web</span>
-                </button>
-                <button onClick={onLogout} className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-red-500/5 border border-red-500/10 hover:bg-red-500/10 transition-all group">
+                <GhostModeBtn />
+                <button onClick={onLogout} className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-red-500/5 border border-red-500/10 hover:bg-red-500 hover:text-white hover:bg-red-500/10 transition-all group">
                     <LogOut size={14} className="text-red-500 group-hover:scale-110 transition-transform" />
-                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest group-hover:text-red-400">Exit</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest group-hover:text-red-400">Exit</span>
                 </button>
             </div>
         </div>
