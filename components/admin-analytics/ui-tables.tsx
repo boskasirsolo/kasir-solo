@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { LogOut, Zap, Clock, ShoppingBag, ImageIcon, FileText, Layout, ChevronLeft, ChevronRight, Eye, ArrowRight, Sparkles } from 'lucide-react';
 
@@ -132,26 +131,26 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => (
 );
 
 export const QualityScorePanel = ({ bounceRate, avgPages }: { bounceRate: number, avgPages: string }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+    <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden min-h-[480px]">
         <div className="absolute bottom-0 right-0 p-4 opacity-5 pointer-events-none"><Zap size={100}/></div>
-        <div>
-            <h4 className="text-white font-black text-xs mb-6 flex items-center gap-2 uppercase tracking-widest relative z-10">
+        <div className="h-full flex flex-col justify-center">
+            <h4 className="text-white font-black text-xs mb-8 flex items-center gap-2 uppercase tracking-widest relative z-10">
                 <Zap size={14} className="text-yellow-400"/> Quality Score
             </h4>
-            <div className="space-y-4 relative z-10">
-                <div className="p-5 bg-white/5 rounded-2xl border border-white/5 hover:border-yellow-500/30 transition-all group/box">
+            <div className="space-y-6 relative z-10">
+                <div className="p-8 bg-white/5 rounded-2xl border border-white/5 hover:border-yellow-500/30 transition-all group/box shadow-inner">
                     <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Boncos Rate (Bounce)</p>
                     <div className="flex justify-between items-end">
-                        <h3 className="text-3xl font-display font-black text-white group-hover/box:text-yellow-400 transition-colors">{bounceRate}%</h3>
+                        <h3 className="text-4xl font-display font-black text-white group-hover/box:text-yellow-400 transition-colors">{bounceRate}%</h3>
                         <div className={`text-[9px] px-2 py-0.5 rounded font-black uppercase border ${bounceRate < 40 ? 'bg-green-500/20 text-green-400 border-green-500/30' : bounceRate < 70 ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : 'bg-red-500/20 text-red-500 border-red-500/30'}`}>
                             {bounceRate < 40 ? 'LOW' : bounceRate < 70 ? 'NORMAL' : 'HIGH'}
                         </div>
                     </div>
                 </div>
-                <div className="p-5 bg-white/5 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all group/box">
+                <div className="p-8 bg-white/5 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all group/box shadow-inner">
                     <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Kedalaman Jelajah</p>
                     <div className="flex justify-between items-end">
-                        <h3 className="text-3xl font-display font-black text-white group-hover/box:text-blue-400 transition-colors">{avgPages}</h3>
+                        <h3 className="text-4xl font-display font-black text-white group-hover/box:text-blue-400 transition-colors">{avgPages}</h3>
                         <span className="text-[9px] text-gray-600 font-black uppercase mb-1">Hal / Visit</span>
                     </div>
                 </div>

@@ -94,20 +94,20 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
 export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
     const maxVal = Math.max(...hours, 1);
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl min-h-[480px]">
             <div className="absolute top-0 right-0 p-4 opacity-5"><Flame size={80} /></div>
             <h4 className="text-white font-bold text-sm mb-6 flex items-center gap-2">
                 <Flame size={16} className="text-red-500"/> Jam Sibuk Pasar (WIB)
             </h4>
-            <div className="bg-black/40 rounded-2xl p-4 border border-white/5 overflow-x-auto custom-scrollbar-hide flex-1">
-                <div className="min-w-[500px] flex items-end gap-1.5 h-full pt-10">
+            <div className="bg-black/40 rounded-2xl p-4 border border-white/5 flex-1 flex flex-col overflow-hidden">
+                <div className="w-full flex items-end gap-1 h-full pt-10 pb-2">
                     {hours.map((count, h) => {
                         const intensity = count / maxVal;
                         const isHighest = count === maxVal && count > 0;
                         return (
                             <div 
                                 key={h} 
-                                className={`flex-1 rounded-t-md group relative transition-all duration-500 ${isHighest ? 'shadow-[0_0_10px_rgba(255,95,31,0.3)]' : ''}`}
+                                className={`flex-1 rounded-t-sm group relative transition-all duration-500 ${isHighest ? 'shadow-[0_0_10px_rgba(255,95,31,0.3)]' : ''}`}
                                 style={{ 
                                     height: `${Math.max(intensity * 100, 4)}%`, 
                                     backgroundColor: count > 0 ? '#FF5F1F' : 'rgba(255,255,255,0.05)',
