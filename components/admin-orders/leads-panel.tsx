@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Target, Phone, MessageCircle, Building, Package, Clock, Trash2, Cpu, ChevronDown, ChevronUp, User, MapPin, Tag, BarChart3, Zap, ShoppingBag, MousePointer2 } from 'lucide-react';
 import { LoadingSpinner } from '../ui';
 import { useLeadLogic } from './logic';
@@ -122,7 +122,7 @@ const ServiceLeadCard: React.FC<{
     );
 };
 
-export const LeadsPanel = ({ refreshKey }: { refreshKey?: number }) => {
+export const LeadsPanel = ({ refreshKey, searchTerm = '' }: { refreshKey?: number, searchTerm?: string }) => {
     const { state, fetchLeads, deleteLead } = useLeadLogic();
     const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -131,14 +131,21 @@ export const LeadsPanel = ({ refreshKey }: { refreshKey?: number }) => {
         if (refreshKey !== undefined && refreshKey > 0) {
             fetchLeads();
         }
-    }, [refreshKey]);
+    }, [refreshKey, fetchLeads]);
 
-    if (state.loading) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
+    const filteredLeads = useMemo(() => {
+        return state.leads.filter(l => 
+            (l.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+            (l.phone || '').includes(searchTerm) ||
+            (l.notes || '').toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [state.leads, searchTerm]);
 
-    // Filter leads dengan pengecekan safety untuk source yang null/undefined
-    const hardwareLeads = state.leads.filter(l => (l.source || '').includes('checkout'));
-    const serviceLeads = state.leads.filter(l => (l.source || '').includes('sim_shadow'));
-    const contactLeads = state.leads.filter(l => (l.source || '').includes('contact_form'));
+    if (state.loading && state.leads.length === 0) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
+
+    const hardwareLeads = filteredLeads.filter(l => (l.source || '').includes('checkout'));
+    const serviceLeads = filteredLeads.filter(l => (l.source || '').includes('sim_shadow'));
+    const contactLeads = filteredLeads.filter(l => (l.source || '').includes('contact_form'));
 
     return (
         <div className="space-y-8 animate-fade-in pb-20">
@@ -149,7 +156,7 @@ export const LeadsPanel = ({ refreshKey }: { refreshKey?: number }) => {
                         <div className="flex items-center gap-2"><ShoppingBag size={16} className="text-brand-orange"/><h3 className="text-xs font-black text-white uppercase tracking-widest">Hardware Arsenal</h3></div>
                         <span className="text-[10px] text-brand-orange font-mono bg-brand-orange/10 px-2 py-0.5 rounded">{hardwareLeads.length} Prospek</span>
                     </div>
-                    {hardwareLeads.length === 0 ? <div className="py-20 text-center text-gray-700 border border-dashed border-white/5 rounded-xl bg-black/20 text-xs">Belum ada jejak checkout.</div> : 
+                    {hardwareLeads.length === 0 ? <div className="py-20 text-center text-gray-700 border border-dashed border-white/5 rounded-xl bg-black/20 text-xs">No records.</div> : 
                         hardwareLeads.map(l => <HardwareLeadCard key={l.id} lead={l} onDelete={deleteLead} isExpanded={expandedId === l.id} onToggle={() => setExpandedId(expandedId === l.id ? null : l.id)} />)
                     }
                 </div>
@@ -160,7 +167,7 @@ export const LeadsPanel = ({ refreshKey }: { refreshKey?: number }) => {
                         <div className="flex items-center gap-2"><Cpu size={16} className="text-blue-400"/><h3 className="text-xs font-black text-white uppercase tracking-widest">Digital Solutions</h3></div>
                         <span className="text-[10px] text-blue-400 font-mono bg-blue-500/10 px-2 py-0.5 rounded">{serviceLeads.length} Blueprint</span>
                     </div>
-                    {serviceLeads.length === 0 ? <div className="py-20 text-center text-gray-700 border border-dashed border-white/5 rounded-xl bg-black/20 text-xs">Belum ada simulasi masuk.</div> : 
+                    {serviceLeads.length === 0 ? <div className="py-20 text-center text-gray-700 border border-dashed border-white/5 rounded-xl bg-black/20 text-xs">No records.</div> : 
                         serviceLeads.map(l => <ServiceLeadCard key={l.id} lead={l} onDelete={deleteLead} isExpanded={expandedId === l.id} onToggle={() => setExpandedId(expandedId === l.id ? null : l.id)} />)
                     }
                 </div>

@@ -19,6 +19,7 @@ import { DatabaseModule } from './database';
 // Global Shared Admin Features
 import { OrdersPanel } from '../admin-orders/orders-panel';
 import { SimulationsPanel } from '../admin-orders/simulations-panel';
+import { LeadsPanel } from '../admin-orders/leads-panel';
 
 export const AdminCRM = ({ config }: { config: any }) => {
     const { 
@@ -89,7 +90,7 @@ export const AdminCRM = ({ config }: { config: any }) => {
                 <div className="bg-brand-orange/10 border border-brand-orange/30 p-6 rounded-3xl relative animate-fade-in shadow-neon-text/5">
                     <button onClick={() => setAiRecommendation(null)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"><X size={18}/></button>
                     <div className="flex items-center gap-3 mb-4">
-                        <Sparkles className="text-brand-orange" size={24} />
+                        <span className="p-2 bg-brand-orange/10 rounded-xl border border-brand-orange/30"><Sparkles className="text-brand-orange" size={20} /></span>
                         <h3 className="text-white font-black text-sm uppercase tracking-widest">Radar Strategic SIBOS</h3>
                     </div>
                     <div className="prose prose-invert prose-sm max-w-none">
@@ -108,14 +109,14 @@ export const AdminCRM = ({ config }: { config: any }) => {
                     <NavTabButton active={activeSubTab === 'list'} onClick={() => setActiveSubTab('list')} icon={Database} label="DATABASE" />
                 </div>
 
-                {/* INTERNAL SEARCH MODUL (Independent from Global Search) */}
-                <div className="relative group w-full md:w-64">
+                {/* ITEM 2: INTERNAL SEARCH MODUL (Dinamis sesuai Tab) */}
+                <div className="relative group w-full md:w-80">
                     <Search size={14} className="absolute left-3 top-2.5 text-gray-600 group-focus-within:text-brand-orange transition-colors" />
                     <input 
                         type="text"
                         value={state.searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Filter di War Room..."
+                        placeholder={`Filter data ${activeSubTab}...`}
                         className="w-full bg-brand-dark border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 shadow-inner"
                     />
                 </div>
@@ -130,12 +131,15 @@ export const AdminCRM = ({ config }: { config: any }) => {
                 <div className="animate-fade-in">
                     {activeSubTab === 'shadow' && (
                         <ShadowModule 
-                            leads={abandonedLeads} 
+                            leads={abandonedLeads.filter(c => 
+                                (c.name || '').toLowerCase().includes(state.searchTerm.toLowerCase()) || 
+                                (c.phone || '').includes(state.searchTerm)
+                            )} 
                             onRescue={runRecoveryAI} 
                             isRescuingId={isGeneratingScript} 
                         />
                     )}
-                    {activeSubTab === 'simulations' && <SimulationsPanel config={config} />}
+                    {activeSubTab === 'simulations' && <SimulationsPanel config={config} searchTerm={state.searchTerm} />}
                     {activeSubTab === 'pipeline' && (
                         <PipelineModule 
                             customers={filteredCustomers} 
@@ -143,7 +147,7 @@ export const AdminCRM = ({ config }: { config: any }) => {
                             onStatusUpdate={handleStatusUpdate} 
                         />
                     )}
-                    {activeSubTab === 'orders' && <OrdersPanel config={config} />}
+                    {activeSubTab === 'orders' && <OrdersPanel config={config} searchTerm={state.searchTerm} />}
                     {activeSubTab === 'list' && (
                         <DatabaseModule 
                             customers={filteredCustomers} 

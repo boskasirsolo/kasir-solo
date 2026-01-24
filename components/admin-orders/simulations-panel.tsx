@@ -89,11 +89,9 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
     printWindow.document.close();
 };
 
-// FIX: Added refreshKey to props definition to fix TypeScript error in index.tsx
-export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, refreshKey?: number }) => {
+export const SimulationsPanel = ({ config, refreshKey, searchTerm = '' }: { config: SiteConfig, refreshKey?: number, searchTerm?: string }) => {
     const [sims, setSims] = useState<ServiceSimulation[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchSims = useCallback(async () => {
         if (!supabase) return;
@@ -110,18 +108,15 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
 
     useEffect(() => { fetchSims(); }, [fetchSims]);
 
-    // FIX: Added explicit useEffect to handle refresh signal from parent via refreshKey
     useEffect(() => {
         if (refreshKey !== undefined && refreshKey > 0) {
             fetchSims();
         }
     }, [refreshKey, fetchSims]);
 
-    // Listener Refresh dari Header Global
     useEffect(() => {
         const onHeaderRefresh = (e: any) => {
-            // Modul ini di bawah tab 'sales'
-            if (e.detail && e.detail.tab === 'sales') {
+            if (e.detail && (e.detail.tab === 'sales' || e.detail.tab === 'store')) {
                 fetchSims();
             }
         };
@@ -144,32 +139,19 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
     };
 
     const filtered = sims.filter(s => 
-        s.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        s.customer_phone.includes(searchTerm) ||
-        formatOrderId(s.id, 'SIM').includes(searchTerm.toUpperCase())
+        (s.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (s.customer_phone || '').includes(searchTerm) ||
+        formatOrderId(s.id, 'SIM').includes(searchTerm.toUpperCase()) ||
+        (s.service_name || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (loading && sims.length === 0) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
+    if (loading && sims.length === 0) return <div className="flex justify-center p-10"><LoadingSpinner size={32} /></div>;
 
     return (
         <div className="space-y-4">
-            {/* SEARCH BAR INTERNAL (Hanya filter modul ini) */}
-            <div className="flex justify-end px-2 mb-2">
-                <div className="relative group w-full md:w-80">
-                    <Search size={14} className="absolute left-3 top-2.5 text-gray-600 group-focus-within:text-brand-orange transition-colors" />
-                    <input 
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Cari simulasi..."
-                        className="w-full bg-brand-card/50 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 shadow-inner"
-                    />
-                </div>
-            </div>
-
             {filtered.length === 0 ? (
                 <div className="p-20 text-center text-gray-600 bg-black/20 rounded-2xl border-2 border-dashed border-white/5">
-                    Belum ada simulasi yang sesuai kriteria.
+                    {searchTerm ? `Pencarian "${searchTerm}" tidak ditemukan.` : 'Belum ada simulasi masuk.'}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
@@ -204,12 +186,18 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
                                                         <div className="space-y-1">{basicAddons.map((a: any, i: number) => (<div key={i} className="flex justify-between text-[10px] text-gray-400"><span>{a.label}</span></div>))}</div>
                                                     </div>
                                                 )}
+                                                {advancedAddons.length > 0 && (
+                                                     <div>
+                                                        <span className="text-[9px] text-brand-orange font-black uppercase tracking-widest flex items-center gap-1 mb-2"><Zap size={10}/> Advanced</span>
+                                                        <div className="space-y-1">{advancedAddons.map((a: any, i: number) => (<div key={i} className="flex justify-between text-[10px] text-gray-400"><span>{a.label}</span></div>))}</div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="lg:w-64 shrink-0 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-6 text-right">
                                         <div>
-                                            <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Estimasi Budget</p>
+                                            <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mb-1">Estimasi Budget</p>
                                             <p className="text-2xl font-display font-bold text-brand-orange">{formatRupiah(sim.total_min)}</p>
                                         </div>
                                         <div className="space-y-2 mt-6">
