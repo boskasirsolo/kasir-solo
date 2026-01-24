@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase, callGeminiWithRotation, normalizePhone } from '../../utils';
 import { Customer, CRMState, LeadStatus, BehavioralIntel } from './types';
@@ -31,11 +30,28 @@ export const useCRMLogic = () => {
     const [isGeneratingScript, setIsGeneratingScript] = useState<string | null>(null);
     const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
 
+    // --- STRATEGIC ACTION: SURVEILLANCE ALERT ---
+    const generateSurveillanceAlert = async (targets: Customer[]) => {
+        if (targets.length === 0) return;
+        
+        const targetList = targets.map(t => `- ${t.name} (${t.phone}) di halaman ${t.intelligence?.most_visited_path}`).join('\n');
+        const prompt = `
+            RADAR SURVEILLANCE AKTIF! Bos, ada beberapa calon pembeli yang stuck di checkout/layanan:
+            ${targetList}
+            
+            TUGAS: Kasih instruksi strategi "Sikat Sekarang" buat Admin. Sebutkan siapa yang paling prioritas diselamatkan cuannya.
+        `;
+        
+        try {
+            const res = await SibosAI.getQuickInsight(prompt);
+            setAiRecommendation(res || null);
+        } catch(e) {}
+    };
+
     const fetchCustomers = useCallback(async () => {
         if (!supabase) { setState(p => ({ ...p, loading: false })); return; }
         setState(p => ({ ...p, loading: true }));
         try {
-            // Gunakan View Radar yang sakti dari Supabase
             const { data: radarData, error } = await supabase
                 .from('crm_intelligence_radar')
                 .select('*');
@@ -46,7 +62,7 @@ export const useCRMLogic = () => {
                 ...p,
                 intelligence: {
                     most_visited_path: p.obsession_page,
-                    total_views: 0, // Placeholder
+                    total_views: 0, 
                     last_activity_desc: p.obsession_page,
                     avg_engagement_sec: (p.total_engagement_minutes || 0) * 60,
                     top_category: (p.obsession_page || '').includes('/shop') ? 'Hardware' : 
@@ -55,6 +71,12 @@ export const useCRMLogic = () => {
             } as Customer));
 
             setState(p => ({ ...p, customers: mappedCustomers, loading: false }));
+
+            // Trigger Surveillance Alert if any indecisive buyers found
+            const indecisive = mappedCustomers.filter(c => c.is_indecisive_buyer && c.lead_status === 'new');
+            if (indecisive.length > 0) {
+                generateSurveillanceAlert(indecisive);
+            }
         } catch (e) {
             console.error("CRM Fetch Error:", e);
             setState(p => ({ ...p, loading: false }));
@@ -69,7 +91,7 @@ export const useCRMLogic = () => {
         
         // Behavioral context injection
         const behaviorContext = customer.intelligence 
-            ? `Baru saja mampir di ${customer.intelligence.most_visited_path}. Total engagement: ${Math.round(customer.intelligence.avg_engagement_sec / 60)} menit.` 
+            ? `Tadi dia mantengin halaman ${customer.intelligence.most_visited_path} selama ${Math.round(customer.intelligence.avg_engagement_sec / 60)} menit tapi belum bayar.` 
             : "";
 
         try {
@@ -77,7 +99,8 @@ export const useCRMLogic = () => {
                 customer.name, 
                 intel.paket || "Perangkat Kasir", 
                 intel.alamat || "Indonesia",
-                behaviorContext
+                behaviorContext,
+                customer.is_indecisive_buyer // PASSING FLAG STEP 3
             );
             window.open(`https://wa.me/${customer.phone}?text=${encodeURIComponent(script)}`, '_blank');
         } catch (e) {
@@ -107,7 +130,7 @@ export const useCRMLogic = () => {
 
     const abandonedLeads = useMemo(() => {
         return state.customers.filter(c => 
-            (c.last_notes || '').includes('checkout_shadow') && 
+            ((c.last_notes || '').includes('checkout_shadow') || c.is_indecisive_buyer) && 
             c.lead_status !== 'closed' && 
             c.lead_status !== 'lost'
         );

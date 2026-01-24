@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { X, User, Phone, MapPin, Building, Calendar, History, Sparkles, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
+import { X, User, Phone, MapPin, Building, Calendar, History, Sparkles, Zap, ArrowRight, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { Customer } from './types';
 import { formatRupiah } from '../../utils';
 
@@ -21,12 +20,15 @@ export const CustomerDetailModal = ({ customer, onClose }: { customer: Customer,
                             {customer.name.charAt(0)}
                         </div>
                         <div>
-                            <h2 className="text-2xl font-display font-black text-white">{customer.name}</h2>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h2 className="text-2xl font-display font-black text-white">{customer.name}</h2>
+                                {customer.is_indecisive_buyer && <div className="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>}
+                            </div>
                             <p className="text-gray-500 font-mono text-sm">{customer.phone}</p>
                             <div className="flex gap-2 mt-3">
                                 <span className={`px-2 py-0.5 rounded text-[9px] font-black border ${
-                                    customer.lead_temperature === 'hot' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                } uppercase tracking-widest`}>{customer.lead_temperature}</span>
+                                    customer.lead_temperature === 'hot' || customer.is_indecisive_buyer ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                } uppercase tracking-widest`}>{customer.is_indecisive_buyer ? 'URGENT' : customer.lead_temperature}</span>
                                 <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 uppercase tracking-widest">{customer.lead_status}</span>
                             </div>
                         </div>
@@ -36,6 +38,20 @@ export const CustomerDetailModal = ({ customer, onClose }: { customer: Customer,
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-10">
                     
+                    {/* SURVEILLANCE ALERT */}
+                    {customer.is_indecisive_buyer && (
+                        <div className="bg-red-600/10 border border-red-600/30 p-6 rounded-2xl relative overflow-hidden animate-pulse">
+                            <div className="absolute top-0 right-0 p-4 opacity-10"><AlertTriangle size={80} /></div>
+                            <h4 className="text-red-500 font-black text-[10px] uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
+                                <Zap size={14} /> Surveillance Intel
+                            </h4>
+                            <p className="text-sm text-gray-300 font-bold leading-relaxed mb-2">
+                                "Bos, juragan ini udah nongkrong lama di checkout tapi belum bayar. Sepertinya butuh dorongan chat dari lo."
+                            </p>
+                            <span className="text-[10px] text-gray-500 font-mono italic">Detected: Stationary on /checkout for 3m+</span>
+                        </div>
+                    )}
+
                     {/* Intelligence Section */}
                     {customer.ai_probability && (
                         <div className="bg-brand-orange/5 border border-brand-orange/20 rounded-2xl p-6 relative overflow-hidden animate-fade-in">

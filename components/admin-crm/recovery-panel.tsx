@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { ShoppingCart, Ghost, Zap, MessageCircle, MapPin, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Ghost, Zap, MessageCircle, MapPin, Loader2, Sparkles, AlertCircle, Eye } from 'lucide-react';
 import { Customer } from './types';
 import { parseIntel } from './logic';
 import { formatRupiah } from '../../utils';
@@ -23,20 +22,20 @@ export const RecoveryPanel = ({ leads, onRescue, isRescuingId }: { leads: Custom
                 </div>
                 <div>
                     <h3 className="text-white font-bold text-sm">Abandoned Carts (Penyelamatan Cuan)</h3>
-                    <p className="text-[10px] text-gray-500 uppercase font-black">Data Juragan yang batal checkout tengah jalan</p>
+                    <p className="text-[10px] text-gray-500 uppercase font-black">Data Juragan yang batal checkout atau stuck di radar</p>
                 </div>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {leads.map(lead => {
                     const intel = parseIntel(lead.last_notes);
-                    const isHot = lead.lead_temperature === 'hot';
+                    const isHot = lead.lead_temperature === 'hot' || lead.is_indecisive_buyer;
 
                     return (
                         <div key={lead.phone} className={`bg-brand-card border rounded-2xl p-5 relative overflow-hidden transition-all hover:shadow-neon-strong group ${isHot ? 'border-red-600/40 bg-red-600/5' : 'border-white/5'}`}>
-                            {isHot && (
-                                <div className="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-bl-lg animate-pulse">
-                                    HOT LEAD
+                            {lead.is_indecisive_buyer && (
+                                <div className="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] font-black px-2 py-1 rounded-bl-lg animate-pulse flex items-center gap-1">
+                                    <Eye size={8} /> RADAR_STUCK
                                 </div>
                             )}
 
@@ -45,18 +44,20 @@ export const RecoveryPanel = ({ leads, onRescue, isRescuingId }: { leads: Custom
                                     <h4 className="text-white font-bold text-sm truncate">{lead.name}</h4>
                                     <p className="text-[10px] text-gray-500 font-mono mt-0.5">{lead.phone}</p>
                                 </div>
-                                <div className="p-2 bg-black/40 rounded-lg text-gray-600">
+                                <div className={`p-2 rounded-lg ${lead.is_indecisive_buyer ? 'bg-blue-500/20 text-blue-400' : 'bg-black/40 text-gray-600'}`}>
                                     <ShoppingCart size={14} />
                                 </div>
                             </div>
 
                             <div className="space-y-3 mb-6">
                                 <div className="p-3 bg-black/40 rounded-xl border border-white/5">
-                                    <p className="text-[9px] text-gray-500 uppercase font-bold mb-1">Barang Yang Ditinggal:</p>
+                                    <p className="text-[9px] text-gray-500 uppercase font-bold mb-1">Status Terakhir:</p>
                                     <p className="text-xs text-white font-medium line-clamp-2 leading-relaxed">
-                                        {intel.paket || "Cek Detail..."}
+                                        {lead.is_indecisive_buyer 
+                                            ? `Diem di ${lead.intelligence?.most_visited_path?.split('/').pop()} > 3 menit.` 
+                                            : (intel.paket || "Lirik-lirik produk...")}
                                     </p>
-                                    <p className="text-[10px] text-brand-orange font-bold mt-2">{intel.estimasi}</p>
+                                    <p className="text-[10px] text-brand-orange font-bold mt-2">{intel.estimasi || `${Math.round((lead.intelligence?.avg_engagement_sec || 0)/60)} menit aktif`}</p>
                                 </div>
                                 
                                 <div className="flex items-center gap-2 text-[10px] text-gray-500">
@@ -68,9 +69,9 @@ export const RecoveryPanel = ({ leads, onRescue, isRescuingId }: { leads: Custom
                             <button 
                                 onClick={() => onRescue(lead)}
                                 disabled={isRescuingId === lead.phone}
-                                className="w-full py-3 bg-brand-orange hover:bg-brand-action text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-neon transition-all"
+                                className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-neon transition-all ${lead.is_indecisive_buyer ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-brand-orange hover:bg-brand-action text-white'}`}
                             >
-                                {isRescuingId === lead.phone ? <Loader2 size={14} className="animate-spin"/> : <><Sparkles size={14}/> RESCUE WITH AI</>}
+                                {isRescuingId === lead.phone ? <Loader2 size={14} className="animate-spin"/> : <><Sparkles size={14}/> {lead.is_indecisive_buyer ? 'SURVEILLANCE RESCUE' : 'RESCUE WITH AI'}</>}
                             </button>
                         </div>
                     );
@@ -80,7 +81,7 @@ export const RecoveryPanel = ({ leads, onRescue, isRescuingId }: { leads: Custom
             <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex gap-4 items-center">
                  <Zap size={20} className="text-brand-orange animate-pulse" />
                  <p className="text-[10px] text-gray-400 leading-relaxed italic">
-                    <strong>Tips Penyelamatan:</strong> Jangan tunda lebih dari 2x24 jam. Biasanya mereka cuma butuh "disapa" dan dikasih diskon ongkir biar berani transfer.
+                    <strong>Surveillance Mode:</strong> SIBOS AI sekarang memantau orang yang 'bertapa' terlalu lama di checkout. Langsung sapa pake jurus maut (Diskon tipis) biar mereka gak kabur ke toko sebelah.
                  </p>
             </div>
         </div>
