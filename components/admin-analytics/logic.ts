@@ -5,11 +5,12 @@ import { AnalyticsStats } from './types';
 import { Search, BookOpen, ShoppingBag, DollarSign } from 'lucide-react';
 import { processAnalyticsLogs } from './processor';
 
+// Fix: Updated INITIAL_STATS to match AnalyticsStats interface with MetricTrend objects
 const INITIAL_STATS: AnalyticsStats = {
-    totalViews: 0,
-    uniqueVisitors: 0,
-    totalActions: 0,
-    conversionRate: '0.0',
+    totalViews: { value: 0, percentage: 0 },
+    uniqueVisitors: { value: 0, percentage: 0 },
+    totalActions: { value: 0, percentage: 0 },
+    conversionRate: { value: '0.0', percentage: 0 },
     trafficByDate: {},
     sortedPages: [],
     devices: { mobile: 0, desktop: 0, tablet: 0 },

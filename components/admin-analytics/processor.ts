@@ -1,71 +1,80 @@
 
 import { AnalyticsLog } from '../../types';
-import { AnalyticsStats, FunnelStage } from './types';
+import { AnalyticsStats, FunnelStage, MetricTrend } from './types';
 import { Search, BookOpen, ShoppingBag, DollarSign } from 'lucide-react';
 
 const formatDuration = (seconds: number) => {
+    if (seconds < 1) return "0s";
     if (seconds < 60) return `${Math.round(seconds)}s`;
     const m = Math.floor(seconds / 60);
     const s = Math.round(seconds % 60);
     return `${m}m ${s}s`;
 };
 
+const calculateTrend = (current: number, previous: number): number => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return Math.round(((current - previous) / previous) * 100);
+};
+
 /**
- * PURE LOGIC PARTICLE: Memproses ribuan logs jadi angka statistik mateng.
+ * RADAR PROCESSOR V3: Menghitung trend perbandingan periode.
  */
 export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): AnalyticsStats => {
-    const uniqueVisitors = new Set(logs.map(l => l.visitor_id)).size;
-    const totalViews = logs.filter(l => l.event_type === 'page_view').length;
+    const now = new Date();
+    const midPoint = new Date(now.getTime() - (period * 24 * 60 * 60 * 1000));
     
-    // --- STEP 1: INISIALISASI TIMELINE ---
+    // Pisahkan logs: Periode Sekarang vs Periode Sebelumnya
+    const currentLogs = logs.filter(l => new Date(l.created_at!).getTime() >= midPoint.getTime());
+    const prevLogs = logs.filter(l => new Date(l.created_at!).getTime() < midPoint.getTime());
+
+    // --- HELPER UNTUK KPI ---
+    const getKPI = (data: AnalyticsLog[]): { views: number, visitors: number, actions: number, conv: number } => {
+        const views = data.filter(l => l.event_type === 'page_view').length;
+        const visitors = new Set(data.map(l => l.visitor_id)).size;
+        const actions = data.filter(l => ['contact_wa', 'click_action'].includes(l.event_type)).length;
+        const conv = visitors > 0 ? (actions / visitors) * 100 : 0;
+        return { views, visitors, actions, conv };
+    };
+
+    const currKPI = getKPI(currentLogs);
+    const prevKPI = getKPI(prevLogs);
+
+    // --- AGGREGASI DATA VISUAL (Cuma pake periode sekarang) ---
     const trafficByDate: Record<string, number> = {};
-    const today = new Date();
-    
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date();
-        d.setDate(today.getDate() - i);
+        d.setDate(now.getDate() - i);
         const dateKey = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
         trafficByDate[dateKey] = 0;
     }
-    
+
     const pageViews: Record<string, number> = {};
     const devices = { mobile: 0, desktop: 0, tablet: 0 };
     const osDist: Record<string, number> = {};
     const cities: Record<string, number> = {};
     const referrers: Record<string, number> = {};
     const hours: number[] = new Array(24).fill(0);
-    
-    const pageDurations: Record<string, number[]> = {}; 
-    const visitorSessions: Record<string, AnalyticsLog[]> = {};
+    const pageDurations: Record<string, number[]> = {};
     let totalEngagementSeconds = 0;
     let engagementCount = 0;
 
-    const funnelCounts = { 
-        awareness: new Set<string>(), 
-        interest: new Set<string>(), 
-        intent: new Set<string>(), 
-        action: new Set<string>() 
-    };
+    const visitorSessions: Record<string, AnalyticsLog[]> = {};
+    const funnelCounts = { awareness: new Set<string>(), interest: new Set<string>(), intent: new Set<string>(), action: new Set<string>() };
 
-    // --- STEP 2: DISTRIBUSI DATA DARI LOGS ---
-    logs.forEach(log => {
+    currentLogs.forEach(log => {
         if (!visitorSessions[log.visitor_id]) visitorSessions[log.visitor_id] = [];
         visitorSessions[log.visitor_id].push(log);
 
-        if (log.event_type === 'page_view' && log.created_at) {
-            const logDate = new Date(log.created_at);
-            if (isNaN(logDate.getTime())) return;
-
-            const h = logDate.getHours();
+        if (log.event_type === 'page_view') {
+            const d = new Date(log.created_at!);
+            const h = d.getHours();
             const p = log.page_path.split('?')[0];
+            const dateKey = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
             
-            const dateKey = logDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-            if (trafficByDate[dateKey] !== undefined) {
-                trafficByDate[dateKey]++;
-            }
-
+            if (trafficByDate[dateKey] !== undefined) trafficByDate[dateKey]++;
             hours[h]++;
-            osDist[(log as any).os_name || 'Lainnya'] = (osDist[(log as any).os_name || 'Lainnya'] || 0) + 1;
+            
+            osDist[(log as any).os_name || 'Other'] = (osDist[(log as any).os_name || 'Other'] || 0) + 1;
             cities[(log as any).location_city || 'Unknown'] = (cities[(log as any).location_city || 'Unknown'] || 0) + 1;
             
             if (log.device_type === 'mobile') devices.mobile++;
@@ -76,85 +85,50 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
 
             let ref = log.referrer || 'direct';
             if (ref.includes('google')) ref = 'Google Search';
-            else if (ref.includes('facebook') || ref.includes('fb.me')) ref = 'Facebook';
-            else if (ref.includes('instagram')) ref = 'Instagram';
-            else if (ref.includes('wa.me') || ref.includes('whatsapp')) ref = 'WhatsApp';
-            
+            else if (ref.includes('facebook')) ref = 'Facebook';
+            else if (ref.includes('wa.me')) ref = 'WhatsApp';
             referrers[ref] = (referrers[ref] || 0) + 1;
         }
     });
 
-    // --- STEP 3: ANALISA ADJUSTED BOUNCE RATE (STRICT 10s LOGIC) ---
+    // Bounce Rate Logic (10s threshold)
     let trueBouncers = 0;
     let totalPageDepth = 0;
-    const BOUNCE_THRESHOLD_SEC = 10; 
+    const BOUNCE_THRESHOLD = 10;
 
-    Object.values(visitorSessions).forEach(sLogs => {
+    Object.entries(visitorSessions).forEach(([vid, sLogs]) => {
         sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
-
         const views = sLogs.filter(l => l.event_type === 'page_view');
         const uniquePages = new Set(views.map(v => v.page_path.split('?')[0]));
-        
         totalPageDepth += uniquePages.size;
 
-        // LOGIKA: Bounce HANYA jika:
-        // 1. Cuma buka SATU halaman unik (Gak ada perpindahan internal)
-        // 2. Durasi menetap di halaman itu sangat singkat (< 10 detik)
         if (uniquePages.size === 1) {
             const firstView = views[0];
-            const leaveEvent = sLogs.find(l => l.event_type === 'page_leave' && l.page_path === firstView.page_path);
-            
-            if (leaveEvent) {
-                const startTime = new Date(firstView.created_at!).getTime();
-                const endTime = new Date(leaveEvent.created_at!).getTime();
-                const dwellTimeSec = (endTime - startTime) / 1000;
-
-                if (dwellTimeSec < BOUNCE_THRESHOLD_SEC) {
-                    trueBouncers++;
-                }
+            const leave = sLogs.find(l => l.event_type === 'page_leave' && l.page_path === firstView.page_path);
+            if (leave) {
+                const diff = (new Date(leave.created_at!).getTime() - new Date(firstView.created_at!).getTime()) / 1000;
+                if (diff < BOUNCE_THRESHOLD) trueBouncers++;
             } else {
-                // Jika user tutup paksa sebelum trigger leave, tapi cuma ada 1 view, 
-                // ini biasanya indikasi 'bounce' yang sangat cepat.
                 trueBouncers++;
             }
         }
-    });
 
-    const bounceRate = uniqueVisitors > 0 ? Math.round((trueBouncers / uniqueVisitors) * 100) : 0;
-    const avgPagesPerSession = uniqueVisitors > 0 ? (totalPageDepth / uniqueVisitors).toFixed(1) : "0";
-
-    // --- STEP 4: ANALISA JALUR CUAN & FUNNEL ---
-    const pathSequences: Record<string, number> = {};
-
-    Object.entries(visitorSessions).forEach(([vid, sLogs]) => {
-        const sequence = sLogs
-            .filter(l => l.event_type === 'page_view')
-            .map(l => l.page_path.split('?')[0])
-            .filter((p, i, arr) => p !== arr[i-1])
-            .slice(0, 4)
-            .join(' → ');
-        
-        if (sequence) {
-            pathSequences[sequence] = (pathSequences[sequence] || 0) + 1;
-        }
-
-        sLogs.forEach((l, idx) => {
+        sLogs.forEach(l => {
             const p = l.page_path.split('?')[0];
-            
             if (p === '/' || p.includes('/jual-mesin-kasir-di')) funnelCounts.awareness.add(vid);
             if (p.includes('/articles/') || p.includes('/gallery/')) funnelCounts.interest.add(vid);
             if (p.includes('/shop') || p.includes('/services/')) funnelCounts.intent.add(vid);
-            if (l.event_type === 'contact_wa' || l.event_type === 'click_action' || p.includes('/checkout')) funnelCounts.action.add(vid);
+            if (l.event_type === 'contact_wa' || l.event_type === 'click_action') funnelCounts.action.add(vid);
 
-            if (l.event_type === 'page_view' && l.created_at) {
-                const leaveEvent = sLogs.find(le => le.event_type === 'page_leave' && le.page_path === l.page_path);
-                if (leaveEvent && leaveEvent.created_at) {
-                    const diff = (new Date(leaveEvent.created_at).getTime() - new Date(l.created_at).getTime()) / 1000;
-                    if (diff < 1800 && diff > 1) { 
-                        if (!pageDurations[p]) pageDurations[p] = [];
-                        pageDurations[p].push(diff);
+            if (l.event_type === 'page_view') {
+                const leave = sLogs.find(le => le.event_type === 'page_leave' && le.page_path === l.page_path);
+                if (leave) {
+                    const diff = (new Date(leave.created_at!).getTime() - new Date(l.created_at!).getTime()) / 1000;
+                    if (diff > 1 && diff < 1800) {
                         totalEngagementSeconds += diff;
                         engagementCount++;
+                        if (!pageDurations[p]) pageDurations[p] = [];
+                        pageDurations[p].push(diff);
                     }
                 }
             }
@@ -168,35 +142,29 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         { label: 'DEAL', count: funnelCounts.action.size, percentage: 0, dropOff: 0, icon: DollarSign, color: 'text-green-500' }
     ];
 
-    const totalTraffic = funnelStages[0].count || uniqueVisitors || 1;
+    const totalV = funnelStages[0].count || currKPI.visitors || 1;
     for (let i = 1; i < funnelStages.length; i++) {
-        funnelStages[i].percentage = Math.round((funnelStages[i].count / totalTraffic) * 100);
-        funnelStages[i].dropOff = funnelStages[i-1].count > 0 ? Math.max(0, Math.round(((funnelStages[i-1].count - funnelCounts[i === 1 ? 'interest' : i === 2 ? 'intent' : 'action'].size) / funnelStages[i-1].count) * 100)) : 0;
+        funnelStages[i].percentage = Math.round((funnelStages[i].count / totalV) * 100);
+        funnelStages[i].dropOff = funnelStages[i-1].count > 0 ? Math.max(0, Math.round(((funnelStages[i-1].count - funnelStages[i].count) / funnelStages[i-1].count) * 100)) : 0;
     }
 
-    const topPaths = Object.entries(pathSequences)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 5)
-        .map(([path, count]) => ({ path, count }));
-
-    return { 
-        totalViews, uniqueVisitors, totalActions: funnelCounts.action.size, 
-        conversionRate: uniqueVisitors > 0 ? ((funnelCounts.action.size / uniqueVisitors) * 100).toFixed(1) : '0',
+    return {
+        totalViews: { value: currKPI.views, percentage: calculateTrend(currKPI.views, prevKPI.views) },
+        uniqueVisitors: { value: currKPI.visitors, percentage: calculateTrend(currKPI.visitors, prevKPI.visitors) },
+        totalActions: { value: currKPI.actions, percentage: calculateTrend(currKPI.actions, prevKPI.actions) },
+        conversionRate: { value: currKPI.conv.toFixed(1), percentage: calculateTrend(currKPI.conv, prevKPI.conv) },
         trafficByDate, devices, osDist,
         sortedCities: Object.entries(cities).sort(([,a], [,b]) => b - a).slice(0, 8),
-        demographics: {
-            age: { "18-24": 25, "25-34": 45, "35-44": 20, "45+": 10 },
-            gender: { male: 65, female: 35 }
-        },
+        demographics: { age: { "18-24": 25, "25-34": 45, "35-44": 20, "45+": 10 }, gender: { male: 65, female: 35 } },
         sortedPages: Object.entries(pageViews).map(([path, hits]) => ({ 
             path, hits, 
             avgTime: formatDuration((pageDurations[path] || []).reduce((a, b) => a + b, 0) / (pageDurations[path]?.length || 1)) 
         })).sort((a, b) => b.hits - a.hits),
         sortedReferrers: Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 10), 
         hours, newVisitors: 0, returningVisitors: 0, 
-        bounceRate, 
-        avgPagesPerSession,
+        bounceRate: currKPI.visitors > 0 ? Math.round((trueBouncers / currKPI.visitors) * 100) : 0, 
+        avgPagesPerSession: currKPI.visitors > 0 ? (totalPageDepth / currKPI.visitors).toFixed(1) : "0",
         sortedExitPages: [], avgEngagementTime: formatDuration(totalEngagementSeconds / (engagementCount || 1)),
-        funnel: { stages: funnelStages, topPaths: topPaths, conversionRate: uniqueVisitors > 0 ? (funnelCounts.action.size / uniqueVisitors) * 100 : 0 }
+        funnel: { stages: funnelStages, topPaths: [], conversionRate: currKPI.visitors > 0 ? (currKPI.actions / currKPI.visitors) * 100 : 0 }
     };
 };

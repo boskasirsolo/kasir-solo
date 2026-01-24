@@ -25,7 +25,8 @@ export const AnalyticsDashboard = () => {
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('radar');
   const [selectedPagePath, setSelectedPagePath] = useState<string | null>(null);
 
-  if (loading && (!stats || stats.totalViews === 0)) {
+  // Fix: Check .value of totalViews which is now part of MetricTrend
+  if (loading && (!stats || stats.totalViews.value === 0)) {
     return (
         <div className="flex flex-col items-center justify-center p-24 gap-4 animate-fade-in">
             <LoadingSpinner size={32} className="text-brand-orange" />
@@ -80,7 +81,8 @@ export const AnalyticsDashboard = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
                <div className="flex flex-col h-full">
-                  <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews} />
+                  {/* Fix: Pass .value as number to ReferrerList */}
+                  <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews.value as number} />
                </div>
                
                <div className="flex flex-col h-full">
@@ -102,11 +104,13 @@ export const AnalyticsDashboard = () => {
         {activeTab === 'audience' && (
           <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-4"><CityDistribution cities={stats.sortedCities} total={stats.totalViews} /></div>
+                {/* Fix: Pass .value as number to CityDistribution */}
+                <div className="lg:col-span-4"><CityDistribution cities={stats.sortedCities} total={stats.totalViews.value as number} /></div>
                 <div className="lg:col-span-4"><DemographicEstimator data={stats.demographics} /></div>
                 <div className="lg:col-span-4 space-y-6">
                     <OSDistribution data={stats.osDist} />
-                    <DeviceStats devices={stats.devices} totalViews={stats.totalViews} />
+                    {/* Fix: Pass .value as number to DeviceStats */}
+                    <DeviceStats devices={stats.devices} totalViews={stats.totalViews.value as number} />
                 </div>
             </div>
           </div>

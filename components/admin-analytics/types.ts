@@ -14,17 +14,22 @@ export interface FunnelStats {
     conversionRate: number;
 }
 
+export interface MetricTrend {
+    value: string | number;
+    percentage: number;
+}
+
 export interface AnalyticsStats {
-    totalViews: number;
-    uniqueVisitors: number;
-    totalActions: number;
-    conversionRate: string;
+    totalViews: MetricTrend;
+    uniqueVisitors: MetricTrend;
+    totalActions: MetricTrend;
+    conversionRate: MetricTrend;
     trafficByDate: Record<string, number>;
     sortedPages: { path: string; hits: number; avgTime: string }[]; 
     devices: { mobile: number; desktop: number; tablet: number };
-    osDist: Record<string, number>; // NEW
-    sortedCities: [string, number][]; // NEW
-    demographics: { // NEW (SIMULATED)
+    osDist: Record<string, number>;
+    sortedCities: [string, number][];
+    demographics: {
         age: Record<string, number>;
         gender: { male: number; female: number };
     };
