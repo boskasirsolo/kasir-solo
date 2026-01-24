@@ -5,7 +5,6 @@ import { PageHitsRow, ExitSourceRow, AnalyticsPagination, QualityScoreBox } from
 /**
  * Organisme: Tabel Konten Terlaris
  * Assembly: PageHitsRow + AnalyticsPagination
- * Dioptimasi: 5 item per halaman, no-scroll, tight container.
  */
 export const TopPagesTable = ({ 
     pages, 
@@ -14,16 +13,16 @@ export const TopPagesTable = ({
     pages: { path: string; hits: number; avgTime: string }[], 
     onPageClick: (path: string) => void 
 }) => {
-    const ITEMS_PER_PAGE = 5; // Diubah dari 10 ke 5 sesuai request
+    const ITEMS_PER_PAGE = 10;
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.ceil(pages.length / ITEMS_PER_PAGE);
     const currentData = pages.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col h-full shadow-2xl relative overflow-hidden min-h-[580px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col h-full shadow-2xl relative overflow-hidden min-h-[1064px]">
             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><Eye size={120}/></div>
             
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-white/5 pb-5 gap-4 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-white/5 pb-5 gap-4 relative z-10">
                 <div>
                     <h4 className="text-white font-black text-lg uppercase tracking-wider flex items-center gap-2">
                         <Sparkles size={18} className="text-brand-orange animate-pulse"/> Konten Paling Cuan
@@ -35,8 +34,7 @@ export const TopPagesTable = ({
                 </div>
             </div>
             
-            {/* Hilangkan overflow-y-auto dan scrollbar agar konten memenuhi area container tanpa scroll */}
-            <div className="space-y-3 flex-1 relative z-10">
+            <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar relative z-10 pr-2">
                 {currentData.map((item, idx) => (
                     <PageHitsRow 
                         key={idx} 
@@ -46,23 +44,14 @@ export const TopPagesTable = ({
                     />
                 ))}
                 {pages.length === 0 && <p className="text-center py-20 text-gray-600 italic text-xs">Belum ada jejak konten...</p>}
-                
-                {/* Filler untuk menjaga tinggi container tetap konsisten jika item < 5 */}
-                {currentData.length > 0 && currentData.length < ITEMS_PER_PAGE && (
-                    Array.from({ length: ITEMS_PER_PAGE - currentData.length }).map((_, i) => (
-                        <div key={`empty-${i}`} className="h-[74px] border border-white/[0.02] rounded-2xl"></div>
-                    ))
-                )}
             </div>
 
-            <div className="mt-auto pt-6">
-                <AnalyticsPagination 
-                    currentPage={currentPage} 
-                    totalPages={totalPages} 
-                    onPrev={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                    onNext={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
-                />
-            </div>
+            <AnalyticsPagination 
+                currentPage={currentPage} 
+                totalPages={totalPages} 
+                onPrev={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                onNext={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+            />
         </div>
     );
 };
