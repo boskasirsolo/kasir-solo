@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Users, TrendingUp, Smartphone, Monitor, Tablet, Globe, Zap } from 'lucide-react';
+import { Eye, Users, TrendingUp, Globe, Zap } from 'lucide-react';
 import { AnalyticsStats } from './types';
 import { MetricBlock } from './ui-parts';
 
@@ -35,35 +35,6 @@ export const KPIGrid = ({ stats }: { stats: AnalyticsStats }) => (
         />
     </div>
 );
-
-export const DeviceStats = ({ devices, totalViews }: { devices: { mobile: number, desktop: number, tablet: number }, totalViews: number }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 flex flex-col h-full shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Smartphone size={80}/></div>
-        <h4 className="text-white font-black text-sm mb-8 flex items-center gap-3 uppercase tracking-widest relative z-10">
-            <Smartphone size={18} className="text-brand-orange animate-bounce"/> Perangkat Juragan
-        </h4>
-        <div className="space-y-6 relative z-10">
-            <DeviceBar label="HP (Mobile)" count={devices.mobile} total={totalViews} icon={Smartphone} color="bg-brand-orange" />
-            <DeviceBar label="PC (Desktop)" count={devices.desktop} total={totalViews} icon={Monitor} color="bg-blue-500" />
-            <DeviceBar label="Tablet" count={devices.tablet} total={totalViews} icon={Tablet} color="bg-purple-500" />
-        </div>
-    </div>
-);
-
-const DeviceBar = ({ label, count, total, icon: Icon, color }: any) => {
-    const percent = total > 0 ? Math.round((count / total) * 100) : 0;
-    return (
-        <div className="group">
-            <div className="flex justify-between items-center text-[10px] font-black uppercase mb-2 tracking-wider">
-                <span className="text-gray-500 flex items-center gap-2 group-hover:text-white transition-colors"><Icon size={14}/> {label}</span>
-                <span className="text-white font-mono">{percent}%</span>
-            </div>
-            <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
-                <div className={`${color} h-full transition-all duration-1000 shadow-neon`} style={{ width: `${percent}%` }}></div>
-            </div>
-        </div>
-    );
-};
 
 export const ReferrerList = ({ referrers, totalViews }: { referrers: [string, number][], totalViews: number }) => (
     <div className="bg-brand-dark border border-white/5 rounded-2xl p-6 flex flex-col h-full shadow-xl relative overflow-hidden">

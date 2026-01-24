@@ -6,11 +6,11 @@ import {
 } from 'lucide-react';
 import { useAnalyticsData } from './logic';
 import { LoadingSpinner } from '../ui';
-import { KPIGrid, DeviceStats, ReferrerList } from './ui-cards';
+import { KPIGrid, ReferrerList } from './ui-cards';
 import { TrafficChart, PeakHoursHeatmap } from './ui-charts';
 import { TopPagesTable, ExitPagesList, QualityScorePanel } from './ui-tables';
 import { FunnelVisual } from './funnel-radar';
-import { CityDistribution, OSDistribution, DemographicEstimator } from './ui-demographics';
+import { CityDistribution, TechIntelligence, DemographicEstimator } from './ui-demographics';
 import { PageAnalyticsModal } from './page-analytics-modal';
 import { AIInsights } from './ai-insights';
 
@@ -118,14 +118,20 @@ export const AnalyticsDashboard = () => {
         )}
 
         {activeTab === 'audience' && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-4"><CityDistribution cities={stats.sortedCities} total={stats.totalViews.value as number} /></div>
-                <div className="lg:col-span-4"><DemographicEstimator data={stats.demographics} /></div>
-                <div className="lg:col-span-4 space-y-6">
-                    <OSDistribution data={stats.osDist} />
-                    <DeviceStats devices={stats.devices} totalViews={stats.totalViews.value as number} />
-                </div>
+          <div className="animate-fade-in">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+                {/* 1. KOTA */}
+                <CityDistribution cities={stats.sortedCities} total={stats.totalViews.value as number} />
+
+                {/* 2. PROFILING */}
+                <DemographicEstimator data={stats.demographics} />
+
+                {/* 3. TEKNOLOGI (COMBINED) */}
+                <TechIntelligence 
+                    devices={stats.devices} 
+                    osData={stats.osDist} 
+                    totalViews={stats.totalViews.value as number} 
+                />
             </div>
           </div>
         )}

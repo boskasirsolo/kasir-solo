@@ -1,28 +1,28 @@
 import React from 'react';
-import { MapPin, Monitor, Users, Shield, Target, Award, UserCheck } from 'lucide-react';
+import { MapPin, Monitor, Users, Shield, Target, Award, UserCheck, Smartphone, Tablet, Cpu } from 'lucide-react';
 
 export const CityDistribution = ({ cities, total }: { cities: [string, number][], total: number }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden">
+    <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden min-h-[600px]">
         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><MapPin size={80}/></div>
         <h4 className="text-white font-black text-sm mb-8 flex items-center gap-3 uppercase tracking-widest relative z-10">
             <MapPin size={18} className="text-brand-orange animate-pulse"/> Peta Kandang (Kota Asal)
         </h4>
-        <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar pr-1 relative z-10">
+        <div className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2 relative z-10">
             {cities.map(([city, count], idx) => {
                 const percent = Math.round((count / total) * 100);
-                const isTop = idx === 0;
+                const isTop = idx < 3;
                 return (
                     <div key={idx} className="group">
                         <div className="flex justify-between items-center text-xs mb-2">
                             <div className="flex items-center gap-2">
-                                {isTop ? <Award size={12} className="text-yellow-500" /> : <span className="text-[9px] font-mono text-gray-600">{idx + 1}.</span>}
-                                <span className={`font-bold transition-colors ${isTop ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{city}</span>
+                                {idx === 0 ? <Award size={12} className="text-yellow-500" /> : <span className="text-[9px] font-mono text-gray-600">{idx + 1}.</span>}
+                                <span className={`font-bold transition-colors ${idx === 0 ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{city}</span>
                             </div>
                             <span className="text-[10px] text-gray-500 font-mono font-bold">{count} Hits</span>
                         </div>
                         <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
                             <div 
-                                className={`h-full rounded-full transition-all duration-1000 ${isTop ? 'bg-brand-orange shadow-neon' : 'bg-gray-700'}`} 
+                                className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-brand-orange shadow-neon' : idx === 1 ? 'bg-blue-500' : idx === 2 ? 'bg-purple-500' : 'bg-gray-700'}`} 
                                 style={{ width: `${percent}%` }}
                             ></div>
                         </div>
@@ -31,12 +31,20 @@ export const CityDistribution = ({ cities, total }: { cities: [string, number][]
             })}
             {cities.length === 0 && <p className="text-center py-10 text-gray-600 italic text-xs">Belum ada jejak kota...</p>}
         </div>
-        <p className="text-[9px] text-gray-700 mt-6 font-bold uppercase tracking-widest text-center italic">Berdasarkan Audit IP Geolocation</p>
+        <p className="text-[9px] text-gray-700 mt-6 font-bold uppercase tracking-widest text-center italic">Audit IP Geolocation Berhasil</p>
     </div>
 );
 
-export const OSDistribution = ({ data }: { data: Record<string, number> }) => {
-    const total = Object.values(data).reduce((a, b) => a + b, 0);
+export const TechIntelligence = ({ 
+    devices, 
+    osData, 
+    totalViews 
+}: { 
+    devices: { mobile: number, desktop: number, tablet: number }, 
+    osData: Record<string, number>,
+    totalViews: number 
+}) => {
+    const totalOS = Object.values(osData).reduce((a, b) => a + b, 0);
     const getOSColor = (os: string) => {
         if (os.includes('Android')) return 'text-green-400 border-green-500/20 bg-green-500/10';
         if (os.includes('Windows')) return 'text-blue-400 border-blue-500/20 bg-blue-500/10';
@@ -45,23 +53,65 @@ export const OSDistribution = ({ data }: { data: Record<string, number> }) => {
     };
 
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-            <h4 className="text-white font-black text-sm mb-6 flex items-center gap-3 uppercase tracking-widest relative z-10">
-                <Monitor size={18} className="text-blue-400"/> Amunisi Gadget (OS)
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden min-h-[600px]">
+            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Cpu size={80}/></div>
+            
+            <h4 className="text-white font-black text-sm mb-8 flex items-center gap-3 uppercase tracking-widest relative z-10">
+                <Cpu size={18} className="text-blue-400"/> Teknologi Juragan
             </h4>
-            <div className="grid grid-cols-2 gap-3 relative z-10">
-                {Object.entries(data).map(([os, count], idx) => {
-                    const percent = total > 0 ? Math.round((count / total) * 100) : 0;
-                    return (
-                        <div key={idx} className={`p-3 rounded-2xl border transition-all hover:scale-[1.02] ${getOSColor(os)}`}>
-                            <p className="text-[9px] font-black uppercase mb-1 tracking-tighter opacity-70">{os}</p>
-                            <div className="flex justify-between items-end">
-                                <h3 className="text-xl font-display font-black leading-none">{percent}%</h3>
-                                <span className="text-[8px] font-mono opacity-50">{count}</span>
-                            </div>
-                        </div>
-                    );
-                })}
+
+            <div className="space-y-8 flex-1 relative z-10">
+                {/* DEVICE SECTION */}
+                <div>
+                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Smartphone size={12}/> Hardware Stats
+                    </p>
+                    <div className="space-y-5">
+                        <DeviceBar label="HP (Mobile)" count={devices.mobile} total={totalViews} icon={Smartphone} color="bg-brand-orange" />
+                        <DeviceBar label="PC (Desktop)" count={devices.desktop} total={totalViews} icon={Monitor} color="bg-blue-500" />
+                        <DeviceBar label="Tablet" count={devices.tablet} total={totalViews} icon={Tablet} color="bg-purple-500" />
+                    </div>
+                </div>
+
+                <div className="h-px bg-white/5"></div>
+
+                {/* OS SECTION */}
+                <div>
+                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Monitor size={12}/> Amunisi Gadget (OS)
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                        {Object.entries(osData).slice(0, 4).map(([os, count], idx) => {
+                            const percent = totalOS > 0 ? Math.round((count / totalOS) * 100) : 0;
+                            return (
+                                <div key={idx} className={`p-3 rounded-2xl border transition-all hover:scale-[1.02] ${getOSColor(os)}`}>
+                                    <p className="text-[9px] font-black uppercase mb-1 tracking-tighter opacity-70 truncate">{os}</p>
+                                    <div className="flex justify-between items-end">
+                                        <h3 className="text-xl font-display font-black leading-none">{percent}%</h3>
+                                        <span className="text-[8px] font-mono opacity-50">{count}</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+            
+            <p className="text-[9px] text-gray-700 mt-6 font-bold uppercase tracking-widest text-center italic">Metadata Browser Captured</p>
+        </div>
+    );
+};
+
+const DeviceBar = ({ label, count, total, icon: Icon, color }: any) => {
+    const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+    return (
+        <div className="group">
+            <div className="flex justify-between items-center text-[10px] font-black uppercase mb-2 tracking-wider">
+                <span className="text-gray-500 flex items-center gap-2 group-hover:text-white transition-colors"><Icon size={14}/> {label}</span>
+                <span className="text-white font-mono">{percent}%</span>
+            </div>
+            <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                <div className={`${color} h-full transition-all duration-1000 shadow-neon`} style={{ width: `${percent}%` }}></div>
             </div>
         </div>
     );
@@ -73,7 +123,7 @@ export const DemographicEstimator = ({ data }: { data: any }) => {
     const femalePercent = totalGender > 0 ? (data.gender.female / totalGender) * 100 : 0;
 
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden min-h-[600px]">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><UserCheck size={80}/></div>
             
             <div className="flex justify-between items-start mb-8 relative z-10">
@@ -86,7 +136,7 @@ export const DemographicEstimator = ({ data }: { data: any }) => {
                 <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20 shadow-neon-text/5"><Shield size={14} className="text-purple-400"/></div>
             </div>
 
-            <div className="space-y-10 flex-1 relative z-10">
+            <div className="space-y-10 flex-1 relative z-10 flex flex-col justify-center">
                 {/* GENDER PROFILING */}
                 <div>
                     <div className="flex justify-between text-[10px] font-black uppercase mb-3 tracking-[0.2em]">
@@ -104,20 +154,19 @@ export const DemographicEstimator = ({ data }: { data: any }) => {
                     <h5 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2">
                         <Target size={12}/> Estimasi Rentang Usia
                     </h5>
-                    <div className="grid grid-cols-4 gap-3 items-end h-32">
+                    <div className="grid grid-cols-4 gap-4 items-end h-44">
                         {Object.entries(data.age).map(([range, count]: [string, any], i) => {
-                            // Find the max count for scaling the height visually
                             const maxAgeCount = Math.max(...Object.values(data.age) as number[], 1);
                             const heightPercent = (count / maxAgeCount) * 100;
                             
                             return (
                                 <div key={i} className="flex flex-col items-center h-full group">
-                                    <div className="flex-1 w-full bg-white/5 rounded-t-xl relative flex items-end justify-center overflow-hidden border-x border-t border-white/5 transition-all group-hover:bg-white/10">
+                                    <div className="flex-1 w-full bg-white/5 rounded-2xl relative flex items-end justify-center overflow-hidden border border-white/5 transition-all group-hover:bg-white/10 shadow-inner">
                                         <div 
-                                            className="bg-brand-orange w-full transition-all duration-1000 shadow-neon" 
-                                            style={{ height: `${heightPercent}%`, opacity: 0.7 }}
+                                            className="bg-brand-orange w-full transition-all duration-1000 shadow-neon opacity-60 group-hover:opacity-100" 
+                                            style={{ height: `${Math.max(heightPercent, 10)}%` }}
                                         ></div>
-                                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="absolute bottom-2 inset-x-0 flex items-center justify-center text-[10px] font-mono font-black text-white group-hover:scale-110 transition-transform">
                                             {count}
                                         </span>
                                     </div>
@@ -131,7 +180,7 @@ export const DemographicEstimator = ({ data }: { data: any }) => {
             
             <div className="mt-8 p-4 bg-brand-orange/5 border border-brand-orange/20 rounded-2xl">
                  <p className="text-[9px] text-gray-500 leading-relaxed italic text-center">
-                    Data ini adalah **Prediksi Estimasi** berdasarkan pola interaksi dan metadata browser. Tingkat akurasi ~85%.
+                    Data adalah **Prediksi Estimasi** berdasarkan pola interaksi dan metadata browser. Akurasi tinggi.
                  </p>
             </div>
         </div>
