@@ -52,7 +52,6 @@
     <style>
       body { background-color: #050505; margin: 0; color: #fff; font-family: 'Outfit', system-ui, sans-serif; overflow-x: hidden; }
       
-      /* --- PT MESIN KASIR SOLO - FUTURISTIC SCANNER LOADER V2 --- */
       #mks-initial-loader {
         position: fixed; inset: 0; background: #050505; 
         display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -64,102 +63,6 @@
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
-      }
-
-      /* Scanner Frame Box */
-      .scanner-container {
-        position: relative;
-        width: 200px;
-        height: 200px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 40px;
-        background: radial-gradient(circle at center, rgba(255, 95, 31, 0.05) 0%, transparent 70%);
-      }
-
-      /* Siku di tiap pojok */
-      .corner {
-        position: absolute;
-        width: 30px;
-        height: 30px;
-        border: 3px solid rgba(255, 255, 255, 0.5);
-        animation: cornerPulse 2s infinite ease-in-out;
-      }
-      .corner-tl { top: 0; left: 0; border-right: none; border-bottom: none; }
-      .corner-tr { top: 0; right: 0; border-left: none; border-bottom: none; }
-      .corner-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
-      .corner-br { bottom: 0; right: 0; border-left: none; border-top: none; }
-
-      @keyframes cornerPulse {
-        0%, 100% { opacity: 0.5; transform: scale(1); border-color: rgba(255, 255, 255, 0.5); }
-        50% { opacity: 1; border-color: #FF5F1F; transform: scale(1.05); }
-      }
-
-      /* Barcode Vertical Lines (HIGH CONTRAST) */
-      .barcode-area {
-        width: 140px;
-        height: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        opacity: 0.8; /* Dinaikin biar kontras */
-        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.1));
-      }
-      .barcode-line {
-        height: 100%;
-        background: #fff;
-        border-radius: 1px;
-        transition: all 0.3s ease;
-      }
-
-      /* Scanning Laser Beam (STRONG NEON) */
-      .laser-beam {
-        position: absolute;
-        left: 5px;
-        right: 5px;
-        height: 3px;
-        background: #FF5F1F;
-        box-shadow: 0 0 25px #FF5F1F, 0 0 10px #FF5F1F, 0 0 50px rgba(255, 95, 31, 0.3);
-        z-index: 10;
-        animation: scanMove 3s infinite ease-in-out;
-      }
-
-      @keyframes scanMove {
-        0%, 100% { top: 10px; opacity: 0.8; transform: translateY(0); }
-        50% { top: 185px; opacity: 1; transform: translateY(0); }
-      }
-
-      /* Process Text Animation */
-      .process-text-container {
-        height: 24px;
-        overflow: hidden;
-        text-align: center;
-      }
-
-      .process-text {
-        color: #FF5F1F;
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.4em;
-        position: relative;
-      }
-
-      .process-text::after {
-        content: "INITIALIZING...";
-        animation: contentChange 10s infinite step-end;
-      }
-
-      @keyframes contentChange {
-        0% { content: "BOOTING SIBOS KERNEL..."; }
-        15% { content: "CALIBRATING LASER..."; }
-        30% { content: "SCANNING ASSETS..."; }
-        45% { content: "SYNCING DATABASE..."; }
-        60% { content: "ENCRYPTING CONNECTION..."; }
-        75% { content: "HARDWARE CHECK OK..."; }
-        90% { content: "WELCOME, JURAGAN!"; }
       }
 
       .loader-ping {
@@ -203,37 +106,39 @@
     <div id="mks-initial-loader">
         <div class="loader-ping"></div>
         
-        <div class="scanner-container">
-          <!-- Pojok Siku -->
-          <div class="corner corner-tl"></div>
-          <div class="corner corner-tr"></div>
-          <div class="corner corner-bl"></div>
-          <div class="corner corner-br"></div>
-          
-          <!-- Neon Laser Beam -->
-          <div class="laser-beam"></div>
-          
-          <!-- Barcode Lines (High Contrast) -->
-          <div class="barcode-area">
-             <div class="barcode-line" style="width: 3px"></div>
-             <div class="barcode-line" style="width: 1px"></div>
-             <div class="barcode-line" style="width: 6px"></div>
-             <div class="barcode-line" style="width: 2px"></div>
-             <div class="barcode-line" style="width: 1px"></div>
-             <div class="barcode-line" style="width: 8px"></div>
-             <div class="barcode-line" style="width: 4px"></div>
-             <div class="barcode-line" style="width: 2px"></div>
-             <div class="barcode-line" style="width: 10px"></div>
-             <div class="barcode-line" style="width: 1px"></div>
-             <div class="barcode-line" style="width: 5px"></div>
-             <div class="barcode-line" style="width: 2px"></div>
-             <div class="barcode-line" style="width: 7px"></div>
-             <div class="barcode-line" style="width: 1px"></div>
+        <div class="mks-scanner-wrapper">
+          <div class="scanner-container">
+            <!-- Pojok Siku -->
+            <div class="corner corner-tl"></div>
+            <div class="corner corner-tr"></div>
+            <div class="corner corner-bl"></div>
+            <div class="corner corner-br"></div>
+            
+            <!-- Neon Laser Beam -->
+            <div class="laser-beam"></div>
+            
+            <!-- Barcode Lines (High Contrast) -->
+            <div class="barcode-area">
+               <div class="barcode-line" style="width: 3px"></div>
+               <div class="barcode-line" style="width: 1px"></div>
+               <div class="barcode-line" style="width: 6px"></div>
+               <div class="barcode-line" style="width: 2px"></div>
+               <div class="barcode-line" style="width: 1px"></div>
+               <div class="barcode-line" style="width: 8px"></div>
+               <div class="barcode-line" style="width: 4px"></div>
+               <div class="barcode-line" style="width: 2px"></div>
+               <div class="barcode-line" style="width: 10px"></div>
+               <div class="barcode-line" style="width: 1px"></div>
+               <div class="barcode-line" style="width: 5px"></div>
+               <div class="barcode-line" style="width: 2px"></div>
+               <div class="barcode-line" style="width: 7px"></div>
+               <div class="barcode-line" style="width: 1px"></div>
+            </div>
           </div>
-        </div>
 
-        <div class="process-text-container">
-           <p class="process-text"></p>
+          <div class="process-text-container">
+             <p class="process-text"></p>
+          </div>
         </div>
     </div>
 

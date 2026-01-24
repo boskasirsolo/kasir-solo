@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
@@ -5,7 +6,6 @@ import { HelmetProvider } from 'react-helmet-async';
 import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS, INITIAL_JOBS, injectGoogleTags } from './utils';
 import { Product, Article, GalleryItem, SiteConfig, Testimonial, JobOpening } from './types';
 import { CartProvider } from './context/cart-context';
-import { LoadingSpinner } from './components/ui';
 import { MaintenancePage } from './pages/maintenance'; 
 import './index.css'; 
 
@@ -41,15 +41,36 @@ const MaintenanceServicePage = lazy(() => import('./pages/services').then(module
 const NotFoundPage = lazy(() => import('./pages/not-found').then(module => ({ default: module.NotFoundPage })));
 
 /**
- * PageLoader sekarang cuma dipake buat transisi Suspense (pindah halaman).
- * Untuk loading pertama kali, kita pake HTML loader di index.html.
+ * PageLoader - MKS Tactical Scanner UI
+ * Muncul saat transisi Suspense (pindah halaman).
  */
 const PageLoader = () => (
-  <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 animate-fade-in">
-      <div className="relative">
-          <LoadingSpinner size={32} className="text-brand-orange" />
+  <div className="min-h-[70vh] flex flex-col items-center justify-center animate-fade-in py-20">
+      <div className="mks-scanner-wrapper scale-75 md:scale-90">
+          <div className="scanner-container">
+            <div className="corner corner-tl"></div>
+            <div className="corner corner-tr"></div>
+            <div className="corner corner-bl"></div>
+            <div className="corner corner-br"></div>
+            <div className="laser-beam"></div>
+            <div className="barcode-area">
+               <div className="barcode-line" style={{width: '3px'}}></div>
+               <div className="barcode-line" style={{width: '1px'}}></div>
+               <div className="barcode-line" style={{width: '6px'}}></div>
+               <div className="barcode-line" style={{width: '2px'}}></div>
+               <div className="barcode-line" style={{width: '1px'}}></div>
+               <div className="barcode-line" style={{width: '8px'}}></div>
+               <div className="barcode-line" style={{width: '4px'}}></div>
+               <div className="barcode-line" style={{width: '2px'}}></div>
+               <div className="barcode-line" style={{width: '10px'}}></div>
+               <div className="barcode-line" style={{width: '1px'}}></div>
+               <div className="barcode-line" style={{width: '5px'}}></div>
+            </div>
+          </div>
+          <div className="process-text-container">
+             <p className="process-text"></p>
+          </div>
       </div>
-      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-700 animate-pulse">Syncing Logic...</p>
   </div>
 );
 

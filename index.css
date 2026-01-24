@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,6 +12,110 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
   }
+}
+
+/* --- MKS TACTICAL SCANNER ANIMATION CORE --- */
+
+.mks-scanner-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.scanner-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  background: radial-gradient(circle at center, rgba(255, 95, 31, 0.05) 0%, transparent 70%);
+}
+
+/* Siku di tiap pojok */
+.corner {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  animation: cornerPulse 2s infinite ease-in-out;
+}
+.corner-tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+.corner-tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+.corner-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+.corner-br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+@keyframes cornerPulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); border-color: rgba(255, 255, 255, 0.4); }
+  50% { opacity: 1; border-color: #FF5F1F; transform: scale(1.05); }
+}
+
+/* Barcode Vertical Lines (HIGH CONTRAST) */
+.barcode-area {
+  width: 130px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.1));
+}
+.barcode-line {
+  height: 100%;
+  background: #fff;
+  border-radius: 1px;
+}
+
+/* Scanning Laser Beam (STRONG NEON) */
+.laser-beam {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  height: 3px;
+  background: #FF5F1F;
+  box-shadow: 0 0 25px #FF5F1F, 0 0 10px #FF5F1F, 0 0 50px rgba(255, 95, 31, 0.3);
+  z-index: 10;
+  animation: scanMove 3s infinite ease-in-out;
+}
+
+@keyframes scanMove {
+  0%, 100% { top: 10px; opacity: 0.7; }
+  50% { top: 165px; opacity: 1; }
+}
+
+/* Process Text Animation */
+.process-text-container {
+  height: 20px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.process-text {
+  color: #FF5F1F;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  position: relative;
+}
+
+.process-text::after {
+  content: "INITIALIZING...";
+  animation: contentChange 10s infinite step-end;
+}
+
+@keyframes contentChange {
+  0% { content: "BOOTING SIBOS KERNEL..."; }
+  15% { content: "CALIBRATING LASER..."; }
+  30% { content: "SCANNING ASSETS..."; }
+  45% { content: "SYNCING DATABASE..."; }
+  60% { content: "DECRYPTING LOGIC..."; }
+  75% { content: "HARDWARE CHECK OK..."; }
+  90% { content: "WELCOME, JURAGAN!"; }
 }
 
 /* --- LUXURY DARK UTILITIES --- */
