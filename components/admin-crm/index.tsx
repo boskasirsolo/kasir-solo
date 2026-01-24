@@ -43,7 +43,6 @@ export const AdminCRM = ({ config }: { config: any }) => {
         updateStatus(phone, status);
     };
 
-    // DEFINISI TAB ALA RADAR TRAFIK
     const TABS = [
         { 
             id: 'pipeline', 
@@ -86,9 +85,9 @@ export const AdminCRM = ({ config }: { config: any }) => {
                 </div>
             )}
 
-            {/* NEW TACTICAL NAVIGATION (RADAR STYLE) */}
-            <div className="flex flex-col md:flex-row justify-between items-end gap-6 bg-brand-black/40 p-4 rounded-3xl border border-white/5 shadow-xl backdrop-blur-md">
-                <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
+            {/* STICKY NAV BAR (RADAR STYLE - NO CONTAINER) */}
+            <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md py-3 -mx-4 px-4 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full">
                     {TABS.map((tab) => {
                         const isActive = activeSubTab === tab.id;
                         return (
@@ -117,7 +116,7 @@ export const AdminCRM = ({ config }: { config: any }) => {
                         type="text"
                         value={state.searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder={`Cari di ${currentTabInfo?.label}...`}
+                        placeholder={`Filter data ${activeSubTab}...`}
                         className="w-full bg-brand-dark border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 shadow-inner"
                     />
                 </div>
