@@ -79,12 +79,7 @@ export const AnalyticsDashboard = () => {
           <div className="space-y-6 animate-fade-in">
             <KPIGrid stats={stats} />
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-               <div className="flex flex-col h-full">
-                  {/* Fix: Pass .value as number to ReferrerList */}
-                  <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews.value as number} />
-               </div>
-               
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                <div className="flex flex-col h-full">
                   <FunnelVisual data={stats.funnel} />
                </div>
@@ -122,7 +117,8 @@ export const AnalyticsDashboard = () => {
                 <TopPagesTable pages={stats.sortedPages} onPageClick={(path) => setSelectedPagePath(path)} />
             </div>
             <div className="lg:col-span-1 space-y-8">
-                <GoldenPathsVisual data={stats.funnel} />
+                {/* Kartu Pintu Masuk dipindahkan ke sini */}
+                <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews.value as number} />
                 <ExitPagesList pages={stats.sortedExitPages} />
             </div>
           </div>
