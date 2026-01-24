@@ -12,7 +12,6 @@ const formatDuration = (seconds: number) => {
 
 /**
  * PURE LOGIC PARTICLE: Memproses ribuan logs jadi angka statistik mateng.
- * Gak ada urusan sama React, murni Javascript/TS.
  */
 export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): AnalyticsStats => {
     const uniqueVisitors = new Set(logs.map(l => l.visitor_id)).size;
@@ -58,14 +57,36 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
             pageViews[p] = (pageViews[p] || 0) + 1;
 
             let ref = log.referrer || 'direct';
+            // Clean referrer
+            if (ref.includes('google')) ref = 'Google Search';
+            else if (ref.includes('facebook') || ref.includes('fb.me')) ref = 'Facebook';
+            else if (ref.includes('instagram')) ref = 'Instagram';
+            else if (ref.includes('wa.me') || ref.includes('whatsapp')) ref = 'WhatsApp';
+            
             referrers[ref] = (referrers[ref] || 0) + 1;
         }
     });
 
+    // --- SAMBUNG KABEL JALUR PALING CUAN (PATH ANALYSIS) ---
+    const pathSequences: Record<string, number> = {};
+
     // 2. PHASE TWO: Session & Funnel Analysis
     Object.entries(visitorSessions).forEach(([vid, sLogs]) => {
+        // Urutkan berdasarkan waktu kejadian
         sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
         
+        // Pelacakan Jalur Per User
+        const sequence = sLogs
+            .filter(l => l.event_type === 'page_view')
+            .map(l => l.page_path.split('?')[0])
+            .filter((p, i, arr) => p !== arr[i-1]) // Hapus duplikat berturut-turut (misal: refresh page)
+            .slice(0, 4) // Ambil 4 langkah pertama biar gak kepanjangan
+            .join(' → ');
+        
+        if (sequence) {
+            pathSequences[sequence] = (pathSequences[sequence] || 0) + 1;
+        }
+
         sLogs.forEach((l, idx) => {
             const p = l.page_path.split('?')[0];
             
@@ -105,6 +126,11 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         funnelStages[i].dropOff = funnelStages[i-1].count > 0 ? Math.max(0, Math.round(((funnelStages[i-1].count - funnelStages[i].count) / funnelStages[i-1].count) * 100)) : 0;
     }
 
+    const topPaths = Object.entries(pathSequences)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([path, count]) => ({ path, count }));
+
     const today = new Date();
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date(); d.setDate(today.getDate() - i);
@@ -117,7 +143,7 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         trafficByDate, devices, osDist,
         sortedCities: Object.entries(cities).sort(([,a], [,b]) => b - a).slice(0, 8),
         demographics: {
-            age: { "18-24": 25, "25-34": 45, "35-44": 20, "45+": 10 }, // Simulated based on logs
+            age: { "18-24": 25, "25-34": 45, "35-44": 20, "45+": 10 },
             gender: { male: 65, female: 35 }
         },
         sortedPages: Object.entries(pageViews).map(([path, hits]) => ({ 
@@ -127,6 +153,6 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         sortedReferrers: Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 10), 
         hours, newVisitors: 0, returningVisitors: 0, bounceRate: 0, avgPagesPerSession: "0",
         sortedExitPages: [], avgEngagementTime: formatDuration(totalEngagementSeconds / (engagementCount || 1)),
-        funnel: { stages: funnelStages, topPaths: [], conversionRate: uniqueVisitors > 0 ? (funnelCounts.action.size / uniqueVisitors) * 100 : 0 }
+        funnel: { stages: funnelStages, topPaths: topPaths, conversionRate: uniqueVisitors > 0 ? (funnelCounts.action.size / uniqueVisitors) * 100 : 0 }
     };
 };
