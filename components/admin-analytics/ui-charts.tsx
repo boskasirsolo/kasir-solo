@@ -1,30 +1,19 @@
 import React from 'react';
-import { Calendar, Activity, Flame, TrendingUp } from 'lucide-react';
+import { Calendar, Activity, Flame } from 'lucide-react';
 
 export const TrafficChart = ({ data, period }: { data: Record<string, number>, period: number }) => {
     const values = Object.values(data);
-    const maxValue = Math.max(...values, 1); 
+    const maxValue = Math.max(...values, 10); 
   
     return (
       <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl">
         <div className="absolute top-0 right-0 p-4 opacity-5"><Activity size={80}/></div>
-        
-        <div className="flex justify-between items-start mb-6 relative z-10">
-            <div>
-                <h4 className="text-white font-bold text-sm flex items-center gap-2">
-                    <Calendar size={16} className="text-brand-orange"/> Grafik Gentayangan
-                </h4>
-                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mt-1">Audit Intensitas {period} Hari Terakhir</p>
-            </div>
-            <div className="flex items-center gap-2 bg-brand-orange/10 px-3 py-1 rounded-full border border-brand-orange/20">
-                <Flame size={12} className="text-brand-orange animate-pulse" />
-                <span className="text-[9px] font-black text-brand-orange uppercase tracking-tighter">Heatmap Mode Active</span>
-            </div>
-        </div>
+        <h4 className="text-white font-bold text-sm mb-6 flex items-center gap-2">
+            <Calendar size={16} className="text-brand-orange"/> Grafik Gentayangan ({period} Hari)
+        </h4>
         
         <div className="bg-black/20 rounded-2xl p-4 border border-white/5 overflow-x-auto custom-scrollbar flex-1">
-            <div className="min-w-[600px] h-64 flex items-end justify-between gap-1.5 pt-10 pb-2 relative">
-                {/* Horizontal Grid Lines */}
+            <div className="min-w-[500px] h-64 flex items-end justify-between gap-2 pt-10 pb-2 relative">
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-5 z-0 pb-10">
                     {[...Array(5)].map((_, i) => (
                         <div key={i} className="w-full h-px border-t border-dashed border-white"></div>
@@ -32,60 +21,37 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
                 </div>
         
                 {Object.entries(data).map(([date, count], idx) => {
-                    const intensity = count / maxValue;
-                    const isPeak = count === maxValue && count > 0;
+                    const heightPercent = (count / maxValue) * 100;
                     const isZero = count === 0;
-                    const barHeight = isZero ? '4px' : `${Math.max(intensity * 100, 8)}%`;
+                    const barHeight = isZero ? '4px' : `${Math.max(heightPercent, 8)}%`;
                     
                     return (
-                        <div key={idx} className="flex-1 group h-full flex flex-col justify-end min-w-[35px] cursor-pointer z-10">
-                            <div className="w-full px-0.5 h-full flex items-end relative">
-                                {/* Hover Tooltip */}
+                        <div key={idx} className="flex-1 group h-full flex flex-col justify-end min-w-[30px] cursor-pointer z-10">
+                            <div className="w-full px-1 h-full flex items-end relative">
                                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-all duration-150 z-50 pointer-events-none">
-                                    <div className="bg-white text-black text-[10px] font-black px-2 py-1 rounded shadow-neon whitespace-nowrap">
-                                        {date}: {count} Hits
+                                    <div className="bg-brand-orange text-white text-[10px] font-black px-2 py-1 rounded shadow-neon whitespace-nowrap">
+                                        {count} Hits
                                     </div>
-                                    <div className="w-1.5 h-1.5 bg-white rotate-45 mx-auto -mt-1"></div>
+                                    <div className="w-1.5 h-1.5 bg-brand-orange rotate-45 mx-auto -mt-1"></div>
                                 </div>
 
-                                {/* Peak Indicator */}
-                                {isPeak && (
-                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 animate-bounce">
-                                        <TrendingUp size={12} className="text-brand-orange" />
-                                    </div>
-                                )}
-
-                                {/* Main Bar with Intensity Color */}
                                 <div 
-                                    className={`w-full rounded-t-md transition-all duration-700 relative ${
-                                        isPeak ? 'shadow-[0_0_15px_rgba(255,95,31,0.5)]' : ''
+                                    className={`w-full rounded-t-sm transition-all duration-700 relative ${
+                                        isZero 
+                                        ? 'bg-white/5' 
+                                        : 'bg-gradient-to-t from-brand-orange/20 to-brand-orange border-t border-brand-orange shadow-neon'
                                     }`}
-                                    style={{ 
-                                        height: barHeight,
-                                        backgroundColor: !isZero ? '#FF5F1F' : 'rgba(255,255,255,0.05)',
-                                        opacity: !isZero ? (0.2 + (intensity * 0.8)) : 0.1,
-                                        borderTop: !isZero ? `2px solid rgba(255, 255, 255, ${intensity})` : 'none'
-                                    }}
-                                >
-                                    {isPeak && (
-                                        <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20 rounded-t-md"></div>
-                                    )}
-                                </div>
+                                    style={{ height: barHeight }}
+                                ></div>
                             </div>
 
-                            <span className={`text-[8px] mt-3 truncate w-full text-center font-bold uppercase tracking-tighter transition-colors ${isPeak ? 'text-brand-orange' : 'text-gray-600 group-hover:text-white'}`}>
+                            <span className="text-[8px] md:text-[9px] text-gray-600 mt-2 truncate w-full text-center font-bold uppercase tracking-tighter group-hover:text-white transition-colors">
                                 {date}
                             </span>
                         </div>
                     );
                 })}
             </div>
-        </div>
-        
-        <div className="mt-4 flex justify-center gap-6 text-[8px] font-black uppercase tracking-widest text-gray-700">
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-brand-orange opacity-20"></div> Low Traffic</div>
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-brand-orange opacity-60"></div> Normal Traffic</div>
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-brand-orange opacity-100 shadow-neon"></div> Peak Day</div>
         </div>
       </div>
     );
@@ -103,11 +69,10 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
                 <div className="min-w-[500px] flex items-end gap-1.5 h-full pt-10">
                     {hours.map((count, h) => {
                         const intensity = count / maxVal;
-                        const isHighest = count === maxVal && count > 0;
                         return (
                             <div 
                                 key={h} 
-                                className={`flex-1 rounded-t-md group relative transition-all duration-500 ${isHighest ? 'shadow-[0_0_10px_rgba(255,95,31,0.3)]' : ''}`}
+                                className="flex-1 rounded-t-md group relative transition-all duration-500"
                                 style={{ 
                                     height: `${Math.max(intensity * 100, 4)}%`, 
                                     backgroundColor: count > 0 ? '#FF5F1F' : 'rgba(255,255,255,0.05)',
