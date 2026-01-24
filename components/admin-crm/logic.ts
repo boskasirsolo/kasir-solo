@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase, callGeminiWithRotation, normalizePhone } from '../../utils';
 import { Customer, CRMState, LeadStatus, BehavioralIntel } from './types';
@@ -13,6 +14,7 @@ export const parseIntel = (notes?: string) => {
         if (line.includes('💰ESTIMASI:')) data.estimasi = line.split('💰ESTIMASI:')[1]?.trim();
         if (line.includes('🚀ADDONS:')) data.addons = line.split('🚀ADDONS:')[1]?.trim();
         if (line.includes('📍ALAMAT:')) data.alamat = line.split('📍ALAMAT:')[1]?.trim();
+        if (line.includes('SOURCE:')) data.source = line.split('SOURCE:')[1]?.trim();
     });
     return data;
 };
@@ -25,7 +27,6 @@ export const useCRMLogic = () => {
         activeView: 'pipeline'
     });
 
-    const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [isGeneratingScript, setIsGeneratingScript] = useState<string | null>(null);
     const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export const useCRMLogic = () => {
         if (!supabase) { setState(p => ({ ...p, loading: false })); return; }
         setState(p => ({ ...p, loading: true }));
         try {
+            // SINKRONISASI KABEL: Pakai View crm_intelligence_radar buat dapetin digital footprint
             const { data: radarData, error } = await supabase
                 .from('crm_intelligence_radar')
                 .select('*');
@@ -62,7 +64,7 @@ export const useCRMLogic = () => {
                 ...p,
                 intelligence: {
                     most_visited_path: p.obsession_page,
-                    total_views: 0, 
+                    total_views: p.total_views || 0, 
                     last_activity_desc: p.obsession_page,
                     avg_engagement_sec: (p.total_engagement_minutes || 0) * 60,
                     top_category: (p.obsession_page || '').includes('/shop') ? 'Hardware' : 
@@ -78,7 +80,7 @@ export const useCRMLogic = () => {
                 generateSurveillanceAlert(indecisive);
             }
         } catch (e) {
-            console.error("CRM Fetch Error:", e);
+            console.error("CRM Sync Error:", e);
             setState(p => ({ ...p, loading: false }));
         }
     }, []);
@@ -89,7 +91,6 @@ export const useCRMLogic = () => {
         setIsGeneratingScript(customer.phone);
         const intel = parseIntel(customer.last_notes);
         
-        // Behavioral context injection
         const behaviorContext = customer.intelligence 
             ? `Tadi dia mantengin halaman ${customer.intelligence.most_visited_path} selama ${Math.round(customer.intelligence.avg_engagement_sec / 60)} menit tapi belum bayar.` 
             : "";
@@ -100,7 +101,7 @@ export const useCRMLogic = () => {
                 intel.paket || "Perangkat Kasir", 
                 intel.alamat || "Indonesia",
                 behaviorContext,
-                customer.is_indecisive_buyer // PASSING FLAG STEP 3
+                customer.is_indecisive_buyer 
             );
             window.open(`https://wa.me/${customer.phone}?text=${encodeURIComponent(script)}`, '_blank');
         } catch (e) {
@@ -128,6 +129,7 @@ export const useCRMLogic = () => {
         );
     }, [state.customers, state.searchTerm]);
 
+    // FILTER KHUSUS SHADOW (Tangkapan Radar)
     const abandonedLeads = useMemo(() => {
         return state.customers.filter(c => 
             ((c.last_notes || '').includes('checkout_shadow') || c.is_indecisive_buyer) && 
