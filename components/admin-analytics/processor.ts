@@ -17,11 +17,10 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
     const uniqueVisitors = new Set(logs.map(l => l.visitor_id)).size;
     const totalViews = logs.filter(l => l.event_type === 'page_view').length;
     
-    // --- STEP 1: INISIALISASI TIMELINE (KABEL GRAFIK) ---
+    // --- STEP 1: INISIALISASI TIMELINE ---
     const trafficByDate: Record<string, number> = {};
     const today = new Date();
     
-    // Buat slot kosong dulu buat semua hari dalam periode biar grafik rapi gak bolong-bolong
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(today.getDate() - i);
@@ -55,21 +54,17 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
 
         if (log.event_type === 'page_view' && log.created_at) {
             const logDate = new Date(log.created_at);
-            // Safety check: skip if date is invalid
             if (isNaN(logDate.getTime())) return;
 
             const h = logDate.getHours();
             const p = log.page_path.split('?')[0];
             
-            // Masukkan data ke timeline grafik harian
             const dateKey = logDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
             if (trafficByDate[dateKey] !== undefined) {
                 trafficByDate[dateKey]++;
             }
 
-            // Masukkan data ke jam sibuk (heatmap)
             hours[h]++;
-
             osDist[(log as any).os_name || 'Lainnya'] = (osDist[(log as any).os_name || 'Lainnya'] || 0) + 1;
             cities[(log as any).location_city || 'Unknown'] = (cities[(log as any).location_city || 'Unknown'] || 0) + 1;
             
@@ -89,12 +84,52 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         }
     });
 
-    // --- STEP 3: ANALISA JALUR CUAN & FUNNEL ---
+    // --- STEP 3: ANALISA ADJUSTED BOUNCE RATE (SMART LOGIC V2) ---
+    let trueBouncers = 0;
+    let totalPageDepth = 0;
+    const BOUNCE_THRESHOLD_SEC = 10; // UPDATED: 10 detik cukup buat bedain niat vs iseng
+
+    Object.values(visitorSessions).forEach(sLogs => {
+        // Sortir kronologis biar gampang diitung
+        sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
+
+        const views = sLogs.filter(l => l.event_type === 'page_view');
+        const uniquePages = new Set(views.map(v => v.page_path.split('?')[0]));
+        
+        totalPageDepth += uniquePages.size;
+
+        // LOGIKA: Bounce HANYA terjadi jika:
+        // 1. Cuma buka SATU halaman unik (Gak ada perpindahan internal)
+        // 2. Durasi menetap di halaman itu sangat singkat (< 10 detik)
+        if (uniquePages.size === 1) {
+            const firstView = views[0];
+            const leaveEvent = sLogs.find(l => l.event_type === 'page_leave' && l.page_path === firstView.page_path);
+            
+            if (leaveEvent) {
+                const startTime = new Date(firstView.created_at!).getTime();
+                const endTime = new Date(leaveEvent.created_at!).getTime();
+                const dwellTimeSec = (endTime - startTime) / 1000;
+
+                // Jika menetap kurang dari 10 detik baru dihitung bounce
+                if (dwellTimeSec < BOUNCE_THRESHOLD_SEC) {
+                    trueBouncers++;
+                }
+            } else {
+                // Jika user tutup paksa (crash) atau browser mati mendadak sebelum trigger page_leave,
+                // tapi cuma ada 1 view, kita anggap bouncer demi keakuratan.
+                trueBouncers++;
+            }
+        }
+        // Jika uniquePages.size > 1, otomatis BUKAN bouncer biarpun pindahnya cepet.
+    });
+
+    const bounceRate = uniqueVisitors > 0 ? Math.round((trueBouncers / uniqueVisitors) * 100) : 0;
+    const avgPagesPerSession = uniqueVisitors > 0 ? (totalPageDepth / uniqueVisitors).toFixed(1) : "0";
+
+    // --- STEP 4: ANALISA JALUR CUAN & FUNNEL ---
     const pathSequences: Record<string, number> = {};
 
     Object.entries(visitorSessions).forEach(([vid, sLogs]) => {
-        sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
-        
         const sequence = sLogs
             .filter(l => l.event_type === 'page_view')
             .map(l => l.page_path.split('?')[0])
@@ -114,11 +149,12 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
             if (p.includes('/shop') || p.includes('/services/')) funnelCounts.intent.add(vid);
             if (l.event_type === 'contact_wa' || l.event_type === 'click_action' || p.includes('/checkout')) funnelCounts.action.add(vid);
 
+            // Kalkulasi durasi menetap untuk stats engagement
             if (l.event_type === 'page_view' && l.created_at) {
-                const next = sLogs[idx+1];
-                if (next && next.created_at) {
-                    const diff = (new Date(next.created_at).getTime() - new Date(l.created_at).getTime()) / 1000;
-                    if (diff < 1800 && diff > 2) { 
+                const leaveEvent = sLogs.find(le => le.event_type === 'page_leave' && le.page_path === l.page_path);
+                if (leaveEvent && leaveEvent.created_at) {
+                    const diff = (new Date(leaveEvent.created_at).getTime() - new Date(l.created_at).getTime()) / 1000;
+                    if (diff < 1800 && diff > 1) { // Filter data aneh (lebih 30m atau kurang 1s)
                         if (!pageDurations[p]) pageDurations[p] = [];
                         pageDurations[p].push(diff);
                         totalEngagementSeconds += diff;
@@ -161,7 +197,9 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
             avgTime: formatDuration((pageDurations[path] || []).reduce((a, b) => a + b, 0) / (pageDurations[path]?.length || 1)) 
         })).sort((a, b) => b.hits - a.hits),
         sortedReferrers: Object.entries(referrers).sort(([,a], [,b]) => b - a).slice(0, 10), 
-        hours, newVisitors: 0, returningVisitors: 0, bounceRate: 0, avgPagesPerSession: "0",
+        hours, newVisitors: 0, returningVisitors: 0, 
+        bounceRate, 
+        avgPagesPerSession,
         sortedExitPages: [], avgEngagementTime: formatDuration(totalEngagementSeconds / (engagementCount || 1)),
         funnel: { stages: funnelStages, topPaths: topPaths, conversionRate: uniqueVisitors > 0 ? (funnelCounts.action.size / uniqueVisitors) * 100 : 0 }
     };
