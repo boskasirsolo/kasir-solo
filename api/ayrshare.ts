@@ -12,7 +12,7 @@ export default async function handler(req: any, res: any) {
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
-    res.setHeader('Access-Control-Allow-Origin', 'https://kasirsolo.my.id');
+    res.setHeader('Access-Control-Allow-Origin', 'https://www.kasirsolo.my.id');
   }
 
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -25,11 +25,6 @@ export default async function handler(req: any, res: any) {
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
-  }
-
-  // Layer 2 Security check
-  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
-     return res.status(403).json({ error: 'Forbidden: Unauthorized access to Social API.' });
   }
 
   if (req.method !== 'POST') {
@@ -74,6 +69,6 @@ export default async function handler(req: any, res: any) {
 
   } catch (error: any) {
     console.error('[Broadcaster Error]', error.message);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
 }

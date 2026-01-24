@@ -12,10 +12,12 @@ const ALLOWED_ORIGINS = [
 export default async function handler(req: any, res: any) {
   const origin = req.headers.origin;
   
+  // Robust CORS Handling
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
-    res.setHeader('Access-Control-Allow-Origin', 'https://kasirsolo.my.id');
+    // Default fallback to the main production origin
+    res.setHeader('Access-Control-Allow-Origin', 'https://www.kasirsolo.my.id');
   }
 
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -28,10 +30,6 @@ export default async function handler(req: any, res: any) {
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
-  }
-
-  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
-     return res.status(403).json({ error: 'Forbidden: Unauthorized API access.' });
   }
 
   if (req.method !== 'POST') {
@@ -55,28 +53,34 @@ export default async function handler(req: any, res: any) {
       throw new Error('Konfigurasi Gawat: Gak nemu API Key 1-7 di Vercel.');
     }
 
-    // Ambil acak dari 7 key yang ada
+    // Ambil acak dari key yang tersedia
     const selectedKey = keys[Math.floor(Math.random() * keys.length)];
     const ai = new GoogleGenAI({ apiKey: selectedKey });
     
     // Eksekusi langsung sesuai Guideline
     const response = await ai.models.generateContent({
-      model: model,
+      model: model || 'gemini-3-flash-preview',
       contents: contents,
       config: config
     });
 
+    if (!response || !response.text) {
+        throw new Error("Gemini returned an empty response. Check safety settings or quota.");
+    }
+
     return res.status(200).json({
-      text: response.text || "",
+      text: response.text,
       candidates: response.candidates ? JSON.parse(JSON.stringify(response.candidates)) : [],
       usageMetadata: response.usageMetadata
     });
 
   } catch (error: any) {
     console.error('[Gemini-Bridge-Error]', error.message);
+    // Kirim detail error agar Admin tau apa yang salah (quota/auth/limit)
     return res.status(500).json({ 
       error: 'AI Generation Failed', 
-      details: error.message 
+      message: error.message,
+      code: error.code || 'UNKNOWN'
     });
   }
 }

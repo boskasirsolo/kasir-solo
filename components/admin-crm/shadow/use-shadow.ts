@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from 'react';
 import { Customer } from '../types';
 import { SibosAI } from '../../../services/ai/sibos';
@@ -40,9 +41,13 @@ export const useShadowLogic = (customers: Customer[]) => {
                 behaviorContext,
                 customer.is_indecisive_buyer 
             );
+            
+            if (!script) throw new Error("AI returned empty script.");
+            
             window.open(`https://wa.me/${customer.phone}?text=${encodeURIComponent(script)}`, '_blank');
-        } catch (e) {
-            alert("Gagal merakit pesan pancingan.");
+        } catch (e: any) {
+            console.error("Rescue Error:", e);
+            alert(`Waduh Bos, Gagal merakit pesan: ${e.message || 'Cek koneksi atau kuota API'}`);
         } finally {
             setIsRescuing(null);
         }
