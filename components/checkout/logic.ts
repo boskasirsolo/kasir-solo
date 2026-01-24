@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../../context/cart-context';
 import { supabase, normalizePhone, formatRupiah } from '../../utils';
@@ -17,7 +16,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
 
     const captureTimeout = useRef<any>(null);
 
-    // REAL-TIME SHADOW CAPTURE
+    // REAL-TIME SHADOW CAPTURE (SINKRON DENGAN CRM RADAR)
     useEffect(() => {
         if (!formData.name || !formData.phone || formData.phone.length < 9 || cart.length === 0) return;
 
@@ -36,15 +35,20 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                 `SOURCE: checkout_shadow`;
 
             try {
-                await supabase.from('leads').upsert([{
-                    name: formData.name,
+                // UPDATE: Tembak ke crm_profiles biar sinkron sama Intelligence Radar
+                await supabase.from('crm_profiles').upsert([{
                     phone: cleanPhone,
-                    source: 'checkout_shadow',
-                    interest: 'Hardware Purchase Intent',
-                    notes: report,
-                    status: 'new'
+                    name: formData.name,
+                    last_notes: report,
+                    lead_status: 'new',
+                    lead_temperature: 'hot', // Intent tinggi karena sudah di checkout
+                    updated_at: new Date().toISOString()
                 }], { onConflict: 'phone' });
-            } catch (e) {}
+                
+                console.log("Shadow Intel Captured for:", cleanPhone);
+            } catch (e) {
+                console.error("Shadow capture sync failed", e);
+            }
         }, 2000);
 
         return () => clearTimeout(captureTimeout.current);
@@ -105,7 +109,9 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             const orderItems = cart.map(item => ({ order_id: order.id, product_id: item.id, product_name: item.name, quantity: item.quantity, price: item.price }));
             await supabase!.from('order_items').insert(orderItems);
             
-            // Simpan snapshot cart ke success state sebelum clear
+            // Mark as 'closed' in CRM if order submitted
+            await supabase!.from('crm_profiles').update({ lead_status: 'closed' }).eq('phone', cleanPhone);
+            
             const cartSnapshot = [...cart];
             setOrderSuccess({ id: order.id, total: totalPrice, items: cartSnapshot });
             

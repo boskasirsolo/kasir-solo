@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { supabase, normalizePhone } from '../../utils';
 import { ContactFormState } from './types';
@@ -23,18 +22,19 @@ export const useContactLogic = (config: SiteConfig) => {
         if (!supabase) return;
 
         try {
-            // Audit: Ganti 'leads' ke 'customers' sesuai dump lo
-            await supabase.from('customers').insert([{
+            // Audit: Tembak ke crm_profiles agar data terpusat
+            await supabase.from('crm_profiles').upsert([{
                 name: form.name,
                 phone: cleanPhone,
-                source: 'contact_form',
-                notes: `Topik: ${form.category}. Pesan: ${form.message.substring(0, 100)}...`,
+                last_notes: `Topik: ${form.category}. Pesan Awal: ${form.message.substring(0, 100)}...`,
                 lead_status: 'new',
-                lead_temperature: 'cold'
-            }]);
+                lead_temperature: 'cold',
+                updated_at: new Date().toISOString()
+            }], { onConflict: 'phone' });
+            
             lastCapturedPhone.current = cleanPhone;
         } catch (e) {
-            console.error("Shadow capture failed", e);
+            console.error("Contact shadow capture sync failed", e);
         }
     };
 
