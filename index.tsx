@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { Analytics } from '@vercel/analytics/react';
 import { supabase, INITIAL_PRODUCTS, INITIAL_GALLERY, INITIAL_ARTICLES, INITIAL_TESTIMONIALS, INITIAL_JOBS, injectGoogleTags } from './utils';
 import { Product, Article, GalleryItem, SiteConfig, Testimonial, JobOpening } from './types';
 import { CartProvider } from './context/cart-context';
@@ -246,6 +247,7 @@ const App = () => (
   <HelmetProvider>
     <BrowserRouter>
       <AppContent />
+      <Analytics />
     </BrowserRouter>
   </HelmetProvider>
 );
