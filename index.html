@@ -52,7 +52,7 @@
     <style>
       body { background-color: #050505; margin: 0; color: #fff; font-family: 'Outfit', system-ui, sans-serif; overflow-x: hidden; }
       
-      /* --- PT MESIN KASIR SOLO - ULTRA PREMIUM LOADER --- */
+      /* --- PT MESIN KASIR SOLO - FUTURISTIC SCANNER LOADER V2 --- */
       #mks-initial-loader {
         position: fixed; inset: 0; background: #050505; 
         display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -66,65 +66,109 @@
         pointer-events: none;
       }
 
-      .printer-slot {
-        width: 220px; height: 12px; background: #1a1a1a;
-        border-radius: 4px; position: relative;
-        box-shadow: 0 0 20px rgba(255, 95, 31, 0.2);
+      /* Scanner Frame Box */
+      .scanner-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 40px;
+        background: radial-gradient(circle at center, rgba(255, 95, 31, 0.05) 0%, transparent 70%);
+      }
+
+      /* Siku di tiap pojok */
+      .corner {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(255, 255, 255, 0.5);
+        animation: cornerPulse 2s infinite ease-in-out;
+      }
+      .corner-tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+      .corner-tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+      .corner-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+      .corner-br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+      @keyframes cornerPulse {
+        0%, 100% { opacity: 0.5; transform: scale(1); border-color: rgba(255, 255, 255, 0.5); }
+        50% { opacity: 1; border-color: #FF5F1F; transform: scale(1.05); }
+      }
+
+      /* Barcode Vertical Lines (HIGH CONTRAST) */
+      .barcode-area {
+        width: 140px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        opacity: 0.8; /* Dinaikin biar kontras */
+        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.1));
+      }
+      .barcode-line {
+        height: 100%;
+        background: #fff;
+        border-radius: 1px;
+        transition: all 0.3s ease;
+      }
+
+      /* Scanning Laser Beam (STRONG NEON) */
+      .laser-beam {
+        position: absolute;
+        left: 5px;
+        right: 5px;
+        height: 3px;
+        background: #FF5F1F;
+        box-shadow: 0 0 25px #FF5F1F, 0 0 10px #FF5F1F, 0 0 50px rgba(255, 95, 31, 0.3);
         z-index: 10;
+        animation: scanMove 3s infinite ease-in-out;
       }
 
-      .receipt-paper {
-        width: 180px; background: #fff; margin: 0 auto;
-        position: relative; top: -6px; height: 0;
-        animation: printReceipt 2.2s ease-out forwards;
-        overflow: hidden; padding: 0 10px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        clip-path: polygon(0 0, 100% 0, 100% 95%, 95% 100%, 90% 95%, 85% 100%, 80% 95%, 75% 100%, 70% 95%, 65% 100%, 60% 95%, 55% 100%, 50% 95%, 45% 100%, 40% 95%, 35% 100%, 30% 95%, 25% 100%, 20% 95%, 15% 100%, 10% 95%, 5% 100%, 0 95%);
+      @keyframes scanMove {
+        0%, 100% { top: 10px; opacity: 0.8; transform: translateY(0); }
+        50% { top: 185px; opacity: 1; transform: translateY(0); }
       }
 
-      .receipt-text {
-        color: #000; font-family: 'Courier New', Courier, monospace;
-        font-size: 8px; font-weight: 900; line-height: 1.5;
-        padding-top: 10px; opacity: 0;
-        animation: showText 0.5s step-end 0.6s forwards;
+      /* Process Text Animation */
+      .process-text-container {
+        height: 24px;
+        overflow: hidden;
+        text-align: center;
       }
 
-      @keyframes printReceipt {
-        0% { height: 0; }
-        100% { height: 140px; }
-      }
-
-      @keyframes showText {
-        to { opacity: 1; }
-      }
-
-      .mks-loading-bar {
-        width: 180px; height: 2px; background: rgba(255,255,255,0.05);
-        margin-top: 20px; border-radius: 10px; overflow: hidden;
-      }
-
-      .mks-progress {
-        width: 0%; height: 100%; background: #FF5F1F;
-        box-shadow: 0 0 10px #FF5F1F;
-        animation: growProgress 2.5s ease-in-out forwards;
-      }
-
-      @keyframes growProgress {
-        to { width: 100%; }
-      }
-
-      .loader-label {
-        color: #444; font-size: 9px; margin-top: 12px; font-weight: bold; letter-spacing: 2px;
+      .process-text {
+        color: #FF5F1F;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
         text-transform: uppercase;
+        letter-spacing: 0.4em;
+        position: relative;
+      }
+
+      .process-text::after {
+        content: "INITIALIZING...";
+        animation: contentChange 10s infinite step-end;
+      }
+
+      @keyframes contentChange {
+        0% { content: "BOOTING SIBOS KERNEL..."; }
+        15% { content: "CALIBRATING LASER..."; }
+        30% { content: "SCANNING ASSETS..."; }
+        45% { content: "SYNCING DATABASE..."; }
+        60% { content: "ENCRYPTING CONNECTION..."; }
+        75% { content: "HARDWARE CHECK OK..."; }
+        90% { content: "WELCOME, JURAGAN!"; }
       }
 
       .loader-ping {
-        position: absolute; width: 300px; height: 300px; border-radius: 50%;
-        background: rgba(255, 95, 31, 0.05); filter: blur(60px);
-        z-index: -1; animation: pulse 3s infinite;
+        position: absolute; width: 500px; height: 500px; border-radius: 50%;
+        background: rgba(255, 95, 31, 0.04); filter: blur(100px);
+        z-index: -1; animation: ambientPulse 5s infinite;
       }
 
-      @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.2); opacity: 0.6; } }
+      @keyframes ambientPulse { 0%, 100% { transform: scale(1); opacity: 0.2; } 50% { transform: scale(1.2); opacity: 0.5; } }
     </style>
 
     <!-- Error Handler -->
@@ -155,28 +199,42 @@
 </script>
 </head>
   <body>
-    <!-- --- THERMAL PRINTER LOADER (DI LUAR ROOT) --- -->
+    <!-- --- MKS TACTICAL SCANNER LOADER V2 --- -->
     <div id="mks-initial-loader">
         <div class="loader-ping"></div>
-        <div class="printer-slot">
-          <div class="receipt-paper">
-            <div class="receipt-text">
-              PT MESIN KASIR SOLO<br>
-              ------------------<br>
-              BOOT: OK<br>
-              SIBOS: SYNCING...<br>
-              DB: CONNECTED<br>
-              SCANNER: READY<br>
-              FOUNDER: AMIN_M<br>
-              ------------------<br>
-              WELCOME JURAGAN!
-            </div>
+        
+        <div class="scanner-container">
+          <!-- Pojok Siku -->
+          <div class="corner corner-tl"></div>
+          <div class="corner corner-tr"></div>
+          <div class="corner corner-bl"></div>
+          <div class="corner corner-br"></div>
+          
+          <!-- Neon Laser Beam -->
+          <div class="laser-beam"></div>
+          
+          <!-- Barcode Lines (High Contrast) -->
+          <div class="barcode-area">
+             <div class="barcode-line" style="width: 3px"></div>
+             <div class="barcode-line" style="width: 1px"></div>
+             <div class="barcode-line" style="width: 6px"></div>
+             <div class="barcode-line" style="width: 2px"></div>
+             <div class="barcode-line" style="width: 1px"></div>
+             <div class="barcode-line" style="width: 8px"></div>
+             <div class="barcode-line" style="width: 4px"></div>
+             <div class="barcode-line" style="width: 2px"></div>
+             <div class="barcode-line" style="width: 10px"></div>
+             <div class="barcode-line" style="width: 1px"></div>
+             <div class="barcode-line" style="width: 5px"></div>
+             <div class="barcode-line" style="width: 2px"></div>
+             <div class="barcode-line" style="width: 7px"></div>
+             <div class="barcode-line" style="width: 1px"></div>
           </div>
         </div>
-        <div class="mks-loading-bar">
-          <div class="mks-progress"></div>
+
+        <div class="process-text-container">
+           <p class="process-text"></p>
         </div>
-        <p class="loader-label">Calibrating System...</p>
     </div>
 
     <!-- ROOT DIV (TEMPAT REACT MOUNTING) -->
