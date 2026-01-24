@@ -29,6 +29,7 @@ export interface Customer {
     visitor_id?: string;
     // AI & RADAR ENHANCEMENTS
     intelligence?: BehavioralIntel;
+    is_indecisive_buyer?: boolean;
     ai_probability?: number; // 0 - 100
     ai_closing_strategy?: string;
     ai_buyer_persona?: string;
