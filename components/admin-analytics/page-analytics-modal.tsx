@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, ExternalLink, Eye, Users, MousePointer, TrendingUp, Calendar, Globe, Smartphone, Monitor } from 'lucide-react';
 import { supabase } from '../../utils';
 import { AnalyticsLog } from '../../types';
@@ -37,8 +37,8 @@ const processPageData = (logs: AnalyticsLog[]) => {
             if (lowerRef.includes('google')) ref = 'Google';
             else if (lowerRef.includes('facebook') || lowerRef.includes('fb')) ref = 'Facebook';
             else if (lowerRef.includes('instagram')) ref = 'Instagram';
-            else if (lowerRef.includes('whatsapp') || lowerRef.includes('wa.me')) ref = 'WhatsApp'; // Separate WA
-            else if (lowerRef.includes('direct') || ref === '') ref = 'Direct Traffic'; // Separate Direct
+            else if (lowerRef.includes('whatsapp') || lowerRef.includes('wa.me')) ref = 'WhatsApp'; 
+            else if (lowerRef.includes('direct') || ref === '') ref = 'Direct Traffic'; 
             else {
                 try { ref = new URL(ref).hostname.replace('www.', ''); } catch(e) {}
             }
@@ -59,19 +59,26 @@ const processPageData = (logs: AnalyticsLog[]) => {
 export const PageAnalyticsModal = ({ pagePath, onClose }: { pagePath: string, onClose: () => void }) => {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<AnalyticsLog[]>([]);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // --- AUTO SCROLL TO TOP LOGIC ---
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = 0;
+        }
+    }, [pagePath]);
 
     useEffect(() => {
         const fetchData = async () => {
             if (!supabase) return;
             setLoading(true);
             
-            // Clean path for query (remove params if any, though usually passed clean)
             const cleanPath = pagePath.split('?')[0];
 
             const { data: logs, error } = await supabase
                 .from('analytics_logs')
                 .select('*')
-                .ilike('page_path', `${cleanPath}%`) // Match exact or with query params
+                .ilike('page_path', `${cleanPath}%`) 
                 .order('created_at', { ascending: true });
 
             if (!error && logs) {
@@ -118,7 +125,10 @@ export const PageAnalyticsModal = ({ pagePath, onClose }: { pagePath: string, on
                 </div>
 
                 {/* CONTENT */}
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-black/20">
+                <div 
+                    ref={scrollContainerRef}
+                    className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-black/20"
+                >
                     {loading ? (
                         <div className="h-64 flex items-center justify-center"><LoadingSpinner size={40}/></div>
                     ) : (
@@ -163,7 +173,6 @@ export const PageAnalyticsModal = ({ pagePath, onClose }: { pagePath: string, on
                                         <TrendingUp size={16} className="text-brand-orange"/> Tren Kunjungan (7 Hari Terakhir)
                                     </h4>
                                     <div className="h-40 flex items-end justify-between gap-2 relative">
-                                        {/* Grid Lines */}
                                         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10">
                                             <div className="border-t border-white w-full"></div>
                                             <div className="border-t border-white w-full"></div>
