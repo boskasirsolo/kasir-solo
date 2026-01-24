@@ -4,7 +4,7 @@ import { PageHitsRow, ExitSourceRow, AnalyticsPagination, QualityScoreBox } from
 
 /**
  * Organisme: Tabel Konten Terlaris
- * Dioptimasi: 10 item, min-h 960px, filler h-16
+ * Dioptimasi: 10 item, min-h 820px (Sejajar dengan sisi kanan), filler h-56
  */
 export const TopPagesTable = ({ 
     pages, 
@@ -19,7 +19,7 @@ export const TopPagesTable = ({
     const currentData = pages.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 md:p-7 flex flex-col h-full shadow-2xl relative overflow-hidden min-h-[960px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 md:p-7 flex flex-col h-full shadow-2xl relative overflow-hidden min-h-[820px]">
             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><Eye size={120}/></div>
             
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-white/5 pb-4 gap-4 relative z-10">
@@ -34,7 +34,7 @@ export const TopPagesTable = ({
                 </div>
             </div>
             
-            <div className="space-y-1.5 flex-1 relative z-10">
+            <div className="space-y-1.5 flex-1 relative z-10 flex flex-col justify-between">
                 {currentData.map((item, idx) => (
                     <PageHitsRow 
                         key={idx} 
@@ -45,9 +45,10 @@ export const TopPagesTable = ({
                 ))}
                 {pages.length === 0 && <p className="text-center py-20 text-gray-600 italic text-xs">Belum ada jejak konten...</p>}
                 
+                {/* Filler h-56 pas untuk mengisi min-h 820px */}
                 {currentData.length > 0 && currentData.length < ITEMS_PER_PAGE && (
                     Array.from({ length: ITEMS_PER_PAGE - currentData.length }).map((_, i) => (
-                        <div key={`empty-${i}`} className="h-[62px] border border-white/[0.01] rounded-2xl"></div>
+                        <div key={`empty-${i}`} className="h-[56px] border border-white/[0.01] rounded-2xl"></div>
                     ))
                 )}
             </div>
@@ -66,7 +67,7 @@ export const TopPagesTable = ({
 
 /**
  * Organisme: List Titik Pamit (Exit Points)
- * Dioptimasi: 5 item, min-h 465px, filler h-11
+ * Dioptimasi: 5 item, min-h 398px, space-y pas mengisi ruang kartu.
  */
 export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
     const ITEMS_PER_PAGE = 5;
@@ -77,39 +78,27 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
     const maxExit = Math.max(...pages.map(([, count]) => count), 1);
     
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden group flex flex-col h-full min-h-[465px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden group flex flex-col h-full min-h-[398px]">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform"><LogOut size={80}/></div>
             
-            <div className="flex justify-between items-start relative z-10 mb-6">
+            <div className="flex justify-between items-start relative z-10 mb-5">
                 <div>
                     <h4 className="text-white font-black text-sm flex items-center gap-2 uppercase tracking-widest">
-                        <LogOut size={16} className="text-red-500"/> Exit Points (Titik Pamit)
+                        <LogOut size={16} className="text-red-500"/> Exit Points
                     </h4>
-                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Halaman terakhir sebelum kabur:</p>
+                    <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">Halaman terakhir sebelum kabur:</p>
                 </div>
                 
                 {totalPages > 1 && (
                     <div className="flex items-center gap-2">
-                        <button 
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                            disabled={currentPage === 1}
-                            className="p-1 rounded-lg bg-white/5 border border-white/10 text-gray-500 hover:text-white disabled:opacity-20 transition-all"
-                        >
-                            <ArrowLeft size={14} />
-                        </button>
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-1 rounded bg-white/5 border border-white/10 text-gray-500 hover:text-white disabled:opacity-20 transition-all"><ArrowLeft size={14}/></button>
                         <span className="text-[8px] font-mono text-gray-600">{currentPage}/{totalPages}</span>
-                        <button 
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
-                            disabled={currentPage === totalPages}
-                            className="p-1 rounded-lg bg-white/5 border border-white/10 text-gray-500 hover:text-white disabled:opacity-20 transition-all"
-                        >
-                            <ArrowRight size={14} />
-                        </button>
+                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-1 rounded bg-white/5 border border-white/10 text-gray-500 hover:text-white disabled:opacity-20 transition-all"><ArrowRight size={14}/></button>
                     </div>
                 )}
             </div>
 
-            <div className="space-y-4 relative z-10 flex-1">
+            <div className="space-y-4.5 relative z-10 flex-1 flex flex-col justify-between">
                 {currentData.map(([page, count], idx) => (
                     <ExitSourceRow 
                         key={idx} 
@@ -119,19 +108,18 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
                     />
                 ))}
                 {pages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-10 opacity-20 uppercase tracking-widest">
-                        <p className="text-xs italic font-bold">Aman, Belum ada exit.</p>
-                    </div>
+                    <div className="flex flex-col items-center justify-center py-10 opacity-20 uppercase tracking-widest"><p className="text-xs italic font-bold">Aman, Belum ada exit.</p></div>
                 )}
 
+                {/* Filler h-42 pas untuk mengisi min-h 398px */}
                 {currentData.length > 0 && currentData.length < ITEMS_PER_PAGE && (
                     Array.from({ length: ITEMS_PER_PAGE - currentData.length }).map((_, i) => (
-                        <div key={`empty-exit-${i}`} className="h-[46px] border border-white/[0.01] rounded-xl"></div>
+                        <div key={`empty-exit-${i}`} className="h-[42px] border border-white/[0.01] rounded-xl"></div>
                     ))
                 )}
             </div>
             
-            <div className="mt-4 p-3 bg-red-500/5 border border-red-500/10 rounded-xl flex gap-3 items-center shrink-0 relative z-10">
+            <div className="mt-5 p-3 bg-red-500/5 border border-red-500/10 rounded-xl flex gap-3 items-center shrink-0 relative z-10">
                 <AlertTriangle size={14} className="text-red-500 shrink-0" />
                 <p className="text-[8px] text-gray-500 leading-relaxed italic uppercase font-bold">Analisa halaman ini. Mungkin copy kurang nge-hook.</p>
             </div>
