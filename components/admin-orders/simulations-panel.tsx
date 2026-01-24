@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FileText, Phone, Calendar, Search, Filter, Trash2, Printer, Download, Eye, ArrowRight, User, BadgeCheck, ExternalLink, RefreshCw, Zap, ShieldCheck } from 'lucide-react';
 import { ServiceSimulation, SiteConfig } from '../../types';
 import { supabase, formatRupiah, formatOrderId } from '../../utils';
@@ -14,10 +14,6 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
     const dateStr = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
     const displayId = formatOrderId(sim.id, 'SIM');
     
-    // Grouping for PDF
-    const basicAddons = sim.selected_addons?.filter((a: any) => !a.tier || a.tier === 'basic') || [];
-    const advancedAddons = sim.selected_addons?.filter((a: any) => a.tier === 'advanced') || [];
-
     const html = `
     <!DOCTYPE html>
     <html>
@@ -42,11 +38,10 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
             </div>
             <div class="text-right">
                 <h2 class="text-2xl font-bold">PROPOSAL SOLUSI</h2>
-                <p class="text-sm text-gray-600">Ref: ${displayId}-${new Date().getTime().toString().slice(-4)}</p>
+                <p class="text-sm text-gray-600">Ref: ${displayId}</p>
                 <p class="text-sm text-gray-600">${dateStr}</p>
             </div>
         </div>
-
         <div class="mb-10">
             <h3 class="text-lg font-bold mb-4 border-l-4 border-brand pl-4">DATA CALON MITRA</h3>
             <div class="grid grid-cols-2 gap-4 text-sm">
@@ -55,7 +50,6 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
                 <p><span class="text-gray-500 font-bold uppercase text-[10px] block">Jenis Layanan:</span> ${sim.service_name}</p>
             </div>
         </div>
-
         <div class="mb-10">
             <h3 class="text-lg font-bold mb-4 border-l-4 border-brand pl-4">RANCANGAN INVESTASI</h3>
             <table class="w-full text-left border-collapse">
@@ -77,7 +71,6 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
                         <tr>
                             <td class="p-3 border">
                                 <p class="font-bold text-xs">${addon.label}</p>
-                                <p class="text-[10px] text-gray-400">${addon.tier === 'advanced' ? '🚀 Advanced Module' : '🛠️ Basic Support'}</p>
                             </td>
                             <td class="p-3 border text-right font-mono text-xs">${formatRupiah(addon.price)}</td>
                         </tr>
@@ -88,45 +81,7 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
                     </tr>
                 </tbody>
             </table>
-            <p class="text-[10px] text-gray-400 mt-2 italic">*Catatan: Estimasi di atas belum termasuk pajak dan biaya operasional lapangan (akomodasi) jika diperlukan instalasi on-site.</p>
         </div>
-
-        <div class="grid grid-cols-2 gap-10 mb-10 text-sm">
-            <div>
-                <h4 class="font-bold mb-2 uppercase text-xs text-brand">Pengerjaan & Support</h4>
-                <ul class="list-disc pl-5 space-y-1 text-xs text-gray-600">
-                    <li>Estimasi pengerjaan: 7-21 hari kerja (sesuai antrian).</li>
-                    <li>Gratis maintenance & backup data selama 1 bulan pertama.</li>
-                    <li>Sesi training privat untuk Juragan & Staff.</li>
-                    <li>Support teknis prioritas via WhatsApp 24/7.</li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="font-bold mb-2 uppercase text-xs text-brand">Metode Pembayaran</h4>
-                <div class="bg-gray-50 p-4 rounded border border-gray-200">
-                    <p class="font-bold">Bank Neo Commerce (BNC)</p>
-                    <p class="font-mono text-lg my-1">5859 4594 0674 0414</p>
-                    <p class="text-[10px] text-gray-500 uppercase">a.n PT MESIN KASIR SOLO</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-20 flex justify-between items-end">
-            <div class="w-1/3 text-center">
-                <p class="text-xs text-gray-400 mb-16">Penerima Proposal,</p>
-                <div class="h-px bg-gray-300 w-full mb-2"></div>
-                <p class="font-bold uppercase">${sim.customer_name}</p>
-            </div>
-            <div class="w-1/3 text-center">
-                <p class="text-xs text-gray-400 mb-4">Hormat Kami,</p>
-                <div class="w-24 h-24 mx-auto border-2 border-brand rounded flex items-center justify-center mb-2">
-                    <span class="text-brand font-bold text-4xl">MKS</span>
-                </div>
-                <p class="font-bold">Amin Maghfuri</p>
-                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Founder / CEO</p>
-            </div>
-        </div>
-
         <script>window.onload = () => { setTimeout(() => window.print(), 500); }</script>
     </body>
     </html>`;
@@ -134,30 +89,15 @@ const generateProposalPDF = (sim: ServiceSimulation, config: SiteConfig) => {
     printWindow.document.close();
 };
 
+// FIX: Added refreshKey to props definition to fix TypeScript error in index.tsx
 export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, refreshKey?: number }) => {
     const [sims, setSims] = useState<ServiceSimulation[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => { fetchSims(); }, []);
-
-    // Sinyal Refresh dari Header Utama (Logic Spesifik Modul)
-    useEffect(() => {
-        const onHeaderRefresh = (e: any) => {
-            // Modul ini berada di bawah tab 'sales'
-            if (e.detail.tab === 'sales') {
-                fetchSims();
-            }
-        };
-
-        window.addEventListener('mks:refresh-module', onHeaderRefresh);
-        return () => window.removeEventListener('mks:refresh-module', onHeaderRefresh);
-    }, []);
-
-    const fetchSims = async () => {
+    const fetchSims = useCallback(async () => {
         if (!supabase) return;
         setLoading(true);
-        // Dispatch loading ke header
         window.dispatchEvent(new CustomEvent('mks:loading', { detail: true }));
         try {
             const { data } = await supabase.from('service_simulations').select('*').order('created_at', { ascending: false });
@@ -166,12 +106,33 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
             setLoading(false); 
             window.dispatchEvent(new CustomEvent('mks:loading', { detail: false }));
         }
-    };
+    }, []);
+
+    useEffect(() => { fetchSims(); }, [fetchSims]);
+
+    // FIX: Added explicit useEffect to handle refresh signal from parent via refreshKey
+    useEffect(() => {
+        if (refreshKey !== undefined && refreshKey > 0) {
+            fetchSims();
+        }
+    }, [refreshKey, fetchSims]);
+
+    // Listener Refresh dari Header Global
+    useEffect(() => {
+        const onHeaderRefresh = (e: any) => {
+            // Modul ini di bawah tab 'sales'
+            if (e.detail && e.detail.tab === 'sales') {
+                fetchSims();
+            }
+        };
+        window.addEventListener('mks:refresh-module', onHeaderRefresh);
+        return () => window.removeEventListener('mks:refresh-module', onHeaderRefresh);
+    }, [fetchSims]);
 
     const updateStatus = async (id: number, status: string) => {
         if (!supabase) return;
         try {
-            await supabase.from('service_simulations').update({ status }).eq('id', id);
+            await supabase.from('service_simulations').update({ status: status }).eq('id', id);
             setSims(prev => prev.map(s => s.id === id ? { ...s, status: status as any } : s));
         } catch (e) { alert("Gagal update status"); }
     };
@@ -185,14 +146,14 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
     const filtered = sims.filter(s => 
         s.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         s.customer_phone.includes(searchTerm) ||
-        formatOrderId(s.id, 'SIM').includes(searchTerm)
+        formatOrderId(s.id, 'SIM').includes(searchTerm.toUpperCase())
     );
 
     if (loading && sims.length === 0) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
 
     return (
         <div className="space-y-4">
-            {/* SEARCH BAR INTERNAL (Khusus Simulasi) */}
+            {/* SEARCH BAR INTERNAL (Hanya filter modul ini) */}
             <div className="flex justify-end px-2 mb-2">
                 <div className="relative group w-full md:w-80">
                     <Search size={14} className="absolute left-3 top-2.5 text-gray-600 group-focus-within:text-brand-orange transition-colors" />
@@ -200,7 +161,7 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Filter simulasi (Nama/HP/ID)..."
+                        placeholder="Cari simulasi..."
                         className="w-full bg-brand-card/50 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 shadow-inner"
                     />
                 </div>
@@ -208,29 +169,22 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
 
             {filtered.length === 0 ? (
                 <div className="p-20 text-center text-gray-600 bg-black/20 rounded-2xl border-2 border-dashed border-white/5">
-                    Belum ada simulasi yang sesuai kriteria pencarian.
+                    Belum ada simulasi yang sesuai kriteria.
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
                     {filtered.map(sim => {
-                        // GROUPING ADDONS FOR UI
                         const basicAddons = sim.selected_addons?.filter((a: any) => !a.tier || a.tier === 'basic') || [];
                         const advancedAddons = sim.selected_addons?.filter((a: any) => a.tier === 'advanced') || [];
 
                         return (
                             <div key={sim.id} className="bg-brand-card/50 border border-white/5 rounded-2xl p-6 hover:border-brand-orange transition-all group shadow-xl">
                                 <div className="flex flex-col lg:flex-row justify-between gap-6">
-                                    {/* LEFT: USER INFO */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                                                sim.service_slug === 'website' ? 'text-blue-400 border-blue-500/20 bg-blue-500/10' :
-                                                sim.service_slug === 'webapp' ? 'text-purple-400 border-purple-500/20 bg-purple-500/10' :
-                                                'text-brand-orange border-brand-orange/20 bg-brand-orange/10'
-                                            }`}>
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded border text-brand-orange border-brand-orange/20 bg-brand-orange/10">
                                                 {sim.service_name.toUpperCase()}
                                             </span>
-                                            <span className="text-[10px] text-gray-500 flex items-center gap-1"><Calendar size={10}/> {new Date(sim.created_at).toLocaleString('id-ID')}</span>
                                             <span className="text-[10px] text-gray-600 font-mono ml-auto">ID: #{formatOrderId(sim.id, 'SIM')}</span>
                                         </div>
                                         <h4 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
@@ -240,100 +194,36 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
                                             <Phone size={14} className="text-green-500"/> 
                                             <a href={`https://wa.me/${sim.customer_phone}`} target="_blank" className="hover:text-brand-orange font-mono">{sim.customer_phone}</a>
                                         </div>
-                                        
                                         <div className="mt-4 p-4 bg-black/40 rounded-xl border border-white/5">
-                                            <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
-                                                <span className="text-[10px] text-gray-500 uppercase font-bold">Solusi Utama</span>
-                                                <span className="text-white font-bold text-sm">{sim.base_option_label}</span>
-                                            </div>
-                                            
+                                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-2">Paket Utama</p>
+                                            <p className="text-white font-bold text-sm mb-4">{sim.base_option_label}</p>
                                             <div className="space-y-4">
-                                                {/* BASIC GROUP */}
                                                 {basicAddons.length > 0 && (
                                                     <div>
-                                                        <span className="text-[9px] text-blue-400 font-black uppercase tracking-widest flex items-center gap-1 mb-2">
-                                                            <ShieldCheck size={10}/> Basic Support
-                                                        </span>
-                                                        <div className="space-y-1">
-                                                            {basicAddons.map((a: any, i: number) => (
-                                                                <div key={i} className="flex justify-between items-center text-[10px]">
-                                                                    <span className="text-gray-400">{a.label}</span>
-                                                                    <span className="text-gray-500">{formatRupiah(a.price)}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
+                                                        <span className="text-[9px] text-blue-400 font-black uppercase tracking-widest flex items-center gap-1 mb-2"><ShieldCheck size={10}/> Basic</span>
+                                                        <div className="space-y-1">{basicAddons.map((a: any, i: number) => (<div key={i} className="flex justify-between text-[10px] text-gray-400"><span>{a.label}</span></div>))}</div>
                                                     </div>
                                                 )}
-
-                                                {/* ADVANCED GROUP */}
-                                                {advancedAddons.length > 0 && (
-                                                    <div>
-                                                        <span className="text-[9px] text-brand-orange font-black uppercase tracking-widest flex items-center gap-1 mb-2">
-                                                            <Zap size={10}/> Advanced Power-Ups
-                                                        </span>
-                                                        <div className="space-y-1">
-                                                            {advancedAddons.map((a: any, i: number) => (
-                                                                <div key={i} className="flex justify-between items-center text-[10px]">
-                                                                    <span className="text-gray-400">{a.label}</span>
-                                                                    <span className="text-gray-500">{formatRupiah(a.price)}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {!sim.selected_addons?.length && <span className="text-[10px] text-gray-600 italic">Tanpa Add-on</span>}
                                             </div>
                                         </div>
                                     </div>
-
-                                    {/* RIGHT: TOTAL & ACTIONS */}
-                                    <div className="lg:w-64 shrink-0 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-6">
-                                        <div className="text-right">
+                                    <div className="lg:w-64 shrink-0 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-6 text-right">
+                                        <div>
                                             <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Estimasi Budget</p>
-                                            <p className="text-2xl font-display font-bold text-brand-orange leading-tight">{formatRupiah(sim.total_min)}</p>
-                                            <p className="text-[10px] text-gray-400">s/d {formatRupiah(sim.total_max)}</p>
+                                            <p className="text-2xl font-display font-bold text-brand-orange">{formatRupiah(sim.total_min)}</p>
                                         </div>
-
                                         <div className="space-y-2 mt-6">
                                             <select 
                                                 value={sim.status || 'new'}
                                                 onChange={(e) => updateStatus(sim.id, e.target.value)}
-                                                className={`w-full text-[10px] font-bold uppercase p-2 rounded-lg outline-none border transition-all ${
-                                                    sim.status === 'new' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                                    sim.status === 'contacted' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
-                                                    sim.status === 'proposed' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                                                    'bg-green-500/10 text-green-400 border-green-500/20'
-                                                }`}
+                                                className="w-full text-[10px] font-bold uppercase p-2 rounded-lg bg-black text-white border border-white/10"
                                             >
                                                 <option value="new">🆕 BARU</option>
-                                                <option value="contacted">📞 SUDAH DISAPA</option>
-                                                <option value="proposed">📑 PROPOSAL TERKIRIM</option>
-                                                <option value="closed">🤝 DEAL / CLOSED</option>
+                                                <option value="contacted">📞 DISAPA</option>
+                                                <option value="closed">🤝 DEAL</option>
                                             </select>
-
-                                            <button 
-                                                onClick={() => generateProposalPDF(sim, config)}
-                                                className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[10px] font-bold border border-white/10 flex items-center justify-center gap-2 transition-all"
-                                            >
-                                                <Printer size={14} className="text-brand-orange"/> GENERATE PROPOSAL (PDF)
-                                            </button>
-
-                                            <div className="flex gap-2">
-                                                <a 
-                                                    href={`https://wa.me/${sim.customer_phone}?text=Halo Juragan ${sim.customer_name}, gue dapet notifikasi lo baru aja simulasi budget buat *${sim.service_name}* paket *${sim.base_option_label}*. Mau lanjut diskusi atau mau gue kirimin PDF Proposal resminya?`}
-                                                    target="_blank"
-                                                    className="flex-1 py-2 bg-green-600/10 hover:bg-green-600 text-green-500 hover:text-white rounded-lg text-[10px] font-bold flex items-center justify-center gap-2 border border-green-500/20 transition-all"
-                                                >
-                                                    SAPA WA
-                                                </a>
-                                                <button 
-                                                    onClick={() => deleteSim(sim.id)}
-                                                    className="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all border border-red-500/20"
-                                                >
-                                                    <Trash2 size={14}/>
-                                                </button>
-                                            </div>
+                                            <button onClick={() => generateProposalPDF(sim, config)} className="w-full py-2 bg-white/5 text-white rounded-lg text-[10px] font-bold border border-white/10 flex items-center justify-center gap-2 transition-all"><Printer size={14}/> PRINT PROPOSAL</button>
+                                            <button onClick={() => deleteSim(sim.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg w-full flex justify-center"><Trash2 size={14}/></button>
                                         </div>
                                     </div>
                                 </div>

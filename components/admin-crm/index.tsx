@@ -30,11 +30,11 @@ export const AdminCRM = ({ config }: { config: any }) => {
 
     const [activeSubTab, setActiveSubTab] = useState<'shadow' | 'simulations' | 'pipeline' | 'orders' | 'list'>('shadow');
 
-    // Menerima signal refresh dari header utama
+    // Menerima signal refresh KHUSUS dari header utama
     useEffect(() => {
         const onHeaderRefresh = (e: any) => {
-            // Cek apakah tab yang refresh memang SALES (War Room)
-            if (e.detail.tab === 'sales') {
+            // Hanya refresh jika modul aktif adalah 'sales' (War Room)
+            if (e.detail && e.detail.tab === 'sales') {
                 refresh();
             }
         };
@@ -105,17 +105,17 @@ export const AdminCRM = ({ config }: { config: any }) => {
                     <NavTabButton active={activeSubTab === 'simulations'} onClick={() => setActiveSubTab('simulations')} icon={Cpu} label="SIMULASI" />
                     <NavTabButton active={activeSubTab === 'pipeline'} onClick={() => setActiveSubTab('pipeline')} icon={LayoutDashboard} label="PIPELINE" />
                     <NavTabButton active={activeSubTab === 'orders'} onClick={() => setActiveSubTab('orders')} icon={ShoppingCart} label="TRANSAKSI" />
-                    <NavTabButton active={activeSubTab === 'list'} onClick={() => setActiveSubTab('list'} icon={Database} label="DATABASE" />
+                    <NavTabButton active={activeSubTab === 'list'} onClick={() => setActiveSubTab('list')} icon={Database} label="DATABASE" />
                 </div>
 
-                {/* INTERNAL SEARCH MODUL */}
+                {/* INTERNAL SEARCH MODUL (Independent from Global Search) */}
                 <div className="relative group w-full md:w-64">
                     <Search size={14} className="absolute left-3 top-2.5 text-gray-600 group-focus-within:text-brand-orange transition-colors" />
                     <input 
                         type="text"
                         value={state.searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Cari di War Room..."
+                        placeholder="Filter di War Room..."
                         className="w-full bg-brand-dark border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 shadow-inner"
                     />
                 </div>
