@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import { X, ExternalLink, Eye, Users, MousePointer, TrendingUp, Calendar, Globe, Smartphone, Monitor } from 'lucide-react';
 import { supabase } from '../../utils';
 import { AnalyticsLog } from '../../types';
@@ -61,11 +61,27 @@ export const PageAnalyticsModal = ({ pagePath, onClose }: { pagePath: string, on
     const [data, setData] = useState<AnalyticsLog[]>([]);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // --- AUTO SCROLL TO TOP LOGIC ---
-    useEffect(() => {
+    // --- FORCED AUTO SCROLL TO TOP & BODY LOCK ---
+    useLayoutEffect(() => {
+        // Lock body scroll
+        document.body.style.overflow = 'hidden';
+        
+        // Reset modal scroll container
         if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollTop = 0;
         }
+
+        // Double check after frame paint (Extra insurance)
+        const rafId = requestAnimationFrame(() => {
+            if (scrollContainerRef.current) {
+                scrollContainerRef.current.scrollTo(0, 0);
+            }
+        });
+
+        return () => {
+            document.body.style.overflow = 'auto';
+            cancelAnimationFrame(rafId);
+        };
     }, [pagePath]);
 
     useEffect(() => {
