@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TrendingUp, ArrowDown, Target, Zap } from 'lucide-react';
 import { FunnelStats } from './types';
@@ -6,7 +5,7 @@ import { FunnelStats } from './types';
 export const FunnelVisual = ({ data }: { data: FunnelStats }) => {
     if (!data) return null;
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 md:p-7 shadow-2xl relative overflow-hidden h-full flex flex-col min-h-[420px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 md:p-7 shadow-2xl relative overflow-hidden h-full flex flex-col min-h-[360px]">
             {/* Background Decoration: Target Circles */}
             <div className="absolute -top-10 -right-10 opacity-[0.03] pointer-events-none">
                 <div className="relative flex items-center justify-center">
@@ -16,7 +15,7 @@ export const FunnelVisual = ({ data }: { data: FunnelStats }) => {
                 </div>
             </div>
             
-            <h4 className="text-white font-black text-xs mb-6 flex items-center gap-2 uppercase tracking-widest relative z-10">
+            <h4 className="text-white font-black text-xs mb-4 flex items-center gap-2 uppercase tracking-widest relative z-10">
                 <TrendingUp size={16} className="text-brand-orange animate-pulse"/> Radar Corong
             </h4>
 
@@ -73,7 +72,7 @@ export const FunnelVisual = ({ data }: { data: FunnelStats }) => {
             </div>
 
             {/* Bottom Status Summary */}
-            <div className="mt-6 p-4 bg-brand-orange/5 border border-brand-orange/20 rounded-2xl flex justify-between items-center shrink-0 shadow-inner group hover:border-brand-orange/40 transition-colors">
+            <div className="mt-4 p-3 bg-brand-orange/5 border border-brand-orange/20 rounded-2xl flex justify-between items-center shrink-0 shadow-inner group hover:border-brand-orange/40 transition-colors">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-brand-orange/20 flex items-center justify-center text-brand-orange border border-brand-orange/30">
                         <Zap size={16} className="animate-pulse" />

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Calendar, Activity, Flame, TrendingUp } from 'lucide-react';
 
@@ -7,7 +6,7 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
     const maxValue = Math.max(...values, 1); 
   
     return (
-      <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl min-h-[420px]">
+      <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl min-h-[360px]">
         <div className="absolute top-0 right-0 p-4 opacity-5"><Activity size={80}/></div>
         
         <div className="flex justify-between items-start mb-6 relative z-10">
@@ -23,8 +22,8 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
             </div>
         </div>
         
-        <div className="bg-black/20 rounded-2xl p-4 border border-white/5 overflow-x-auto custom-scrollbar flex-1">
-            <div className="min-w-[600px] h-56 flex items-end justify-between gap-1.5 pt-10 pb-2 relative">
+        <div className={`bg-black/20 rounded-2xl p-4 border border-white/5 flex-1 ${period > 7 ? 'overflow-x-auto custom-scrollbar' : 'overflow-hidden'}`}>
+            <div className={`h-40 flex items-end justify-between gap-1.5 pt-10 pb-2 relative ${period > 7 ? 'min-w-[600px]' : 'w-full min-w-0'}`}>
                 {/* Horizontal Grid Lines */}
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-5 z-0 pb-10">
                     {[...Array(5)].map((_, i) => (
@@ -39,7 +38,7 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
                     const barHeight = isZero ? '4px' : `${Math.max(intensity * 100, 8)}%`;
                     
                     return (
-                        <div key={idx} className="flex-1 group h-full flex flex-col justify-end min-w-[35px] cursor-pointer z-10">
+                        <div key={idx} className="flex-1 group h-full flex flex-col justify-end min-w-0 cursor-pointer z-10">
                             <div className="w-full px-0.5 h-full flex items-end relative">
                                 {/* Hover Tooltip */}
                                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-all duration-150 z-50 pointer-events-none">
@@ -84,9 +83,8 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
         </div>
         
         <div className="mt-4 flex justify-center gap-6 text-[8px] font-black uppercase tracking-widest text-gray-700">
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-brand-orange opacity-20"></div> Low Traffic</div>
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-brand-orange opacity-60"></div> Normal Traffic</div>
-            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-brand-orange opacity-100 shadow-neon"></div> Peak Day</div>
+            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-brand-orange opacity-20"></div> Low</div>
+            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-brand-orange opacity-100 shadow-neon"></div> Peak</div>
         </div>
       </div>
     );
@@ -95,7 +93,7 @@ export const TrafficChart = ({ data, period }: { data: Record<string, number>, p
 export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
     const maxVal = Math.max(...hours, 1);
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl min-h-[420px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden h-full flex flex-col shadow-2xl min-h-[360px]">
             <div className="absolute top-0 right-0 p-4 opacity-5"><Flame size={80} /></div>
             <h4 className="text-white font-bold text-sm mb-6 flex items-center gap-2">
                 <Flame size={16} className="text-red-500"/> Jam Sibuk Pasar (WIB)
@@ -126,7 +124,7 @@ export const PeakHoursHeatmap = ({ hours }: { hours: number[] }) => {
                     })}
                 </div>
             </div>
-            <p className="text-[9px] text-gray-700 mt-8 text-center italic uppercase tracking-widest font-bold">Waktu Lokal Browser (Local Browser Time)</p>
+            <p className="text-[9px] text-gray-700 mt-6 text-center italic uppercase tracking-widest font-bold">Waktu Lokal Browser (Local Browser Time)</p>
         </div>
     );
 };

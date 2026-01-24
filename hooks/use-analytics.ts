@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils';
@@ -48,11 +47,13 @@ export const useAnalytics = () => {
   }, [location.search, navigate, location.pathname]);
 
   useEffect(() => {
-    const timer = setTimeout(async () => {
-        const isGhost = localStorage.getItem(GHOST_KEY) === 'true';
-        const isAdminRoute = location.pathname.startsWith('/admin');
+    const isGhost = localStorage.getItem(GHOST_KEY) === 'true';
+    const isAdminRoute = location.pathname.startsWith('/admin');
+    
+    // CRITICAL: Exit early if ghost
+    if (isGhost || isAdminRoute || !supabase) return;
 
-        if (isGhost || isAdminRoute || !supabase) return;
+    const timer = setTimeout(async () => {
         if (trackedPath.current === location.pathname) return;
         trackedPath.current = location.pathname;
 
@@ -79,39 +80,41 @@ export const useAnalytics = () => {
         else if (!finalReferrer) finalReferrer = 'direct';
 
         // A. TRACK PAGE VIEW (ENTRY)
-        const trackPageView = async () => {
-            try {
-                await supabase.from('analytics_logs').insert([{
-                    visitor_id: visitorId,
-                    event_type: 'page_view',
-                    page_path: currentPath,
-                    device_type: deviceType,
-                    referrer: finalReferrer,
-                    // NEW DATA FIELDS (Pastikan kolom ini ada di Supabase!)
-                    location_city: city,
-                    os_name: osName
-                }]);
-            } catch (e) { console.error("Analytics Error", e); }
-        };
-
-        trackPageView();
-
-        return () => {
-            if (isGhost || isAdminRoute || !supabase) return;
-            supabase.from('analytics_logs').insert([{
+        try {
+            await supabase.from('analytics_logs').insert([{
                 visitor_id: visitorId,
-                event_type: 'page_leave',
+                event_type: 'page_view',
                 page_path: currentPath,
                 device_type: deviceType,
-                referrer: 'internal_exit',
+                referrer: finalReferrer,
                 location_city: city,
                 os_name: osName
-            }]).then(() => {}); 
-        };
+            }]);
+        } catch (e) { console.error("Analytics Error", e); }
 
     }, 1000); 
 
-    return () => clearTimeout(timer);
+    // B. CLEANUP TRACKING (LEAVE)
+    return () => {
+        clearTimeout(timer);
+        // CRITICAL: Double check ghost mode before cleanup execution
+        const ghostActive = localStorage.getItem(GHOST_KEY) === 'true';
+        if (ghostActive || isAdminRoute || !supabase) return;
+
+        const currentPath = location.pathname;
+        const visitorId = getVisitorId();
+        const deviceType = getDeviceType();
+        const osName = getOS();
+
+        supabase.from('analytics_logs').insert([{
+            visitor_id: visitorId,
+            event_type: 'page_leave',
+            page_path: currentPath,
+            device_type: deviceType,
+            referrer: 'internal_exit',
+            os_name: osName
+        }]).then(() => {}); 
+    };
   }, [location.pathname]);
 
   const trackEvent = async (eventName: 'click_action' | 'contact_wa', details?: string) => {

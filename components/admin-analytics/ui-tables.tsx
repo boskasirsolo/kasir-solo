@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { LogOut, Eye, Sparkles, AlertTriangle, Zap, ArrowLeft, ArrowRight } from 'lucide-react';
 import { PageHitsRow, ExitSourceRow, AnalyticsPagination, QualityScoreBox } from './ui-molecules';
@@ -46,7 +45,6 @@ export const TopPagesTable = ({
                 ))}
                 {pages.length === 0 && <p className="text-center py-20 text-gray-600 italic text-xs">Belum ada jejak konten...</p>}
                 
-                {/* Filler h-56 pas untuk mengisi min-h 820px */}
                 {currentData.length > 0 && currentData.length < ITEMS_PER_PAGE && (
                     Array.from({ length: ITEMS_PER_PAGE - currentData.length }).map((_, i) => (
                         <div key={`empty-${i}`} className="h-[56px] border border-white/[0.01] rounded-2xl"></div>
@@ -68,7 +66,6 @@ export const TopPagesTable = ({
 
 /**
  * Organisme: List Titik Pamit (Exit Points)
- * Dioptimasi: 5 item, min-h 398px, space-y pas mengisi ruang kartu.
  */
 export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
     const ITEMS_PER_PAGE = 5;
@@ -112,7 +109,6 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
                     <div className="flex flex-col items-center justify-center py-10 opacity-20 uppercase tracking-widest"><p className="text-xs italic font-bold">Aman, Belum ada exit.</p></div>
                 )}
 
-                {/* Filler h-42 pas untuk mengisi min-h 398px */}
                 {currentData.length > 0 && currentData.length < ITEMS_PER_PAGE && (
                     Array.from({ length: ITEMS_PER_PAGE - currentData.length }).map((_, i) => (
                         <div key={`empty-exit-${i}`} className="h-[42px] border border-white/[0.01] rounded-xl"></div>
@@ -130,7 +126,7 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
 
 /**
  * Organisme: Panel Skor Kualitas
- * Kalibrasi: min-h 420px, merapatkan layout, menambahkan tombol navigasi.
+ * Kalibrasi: min-h 360px, merapatkan layout, padding disesuaikan.
  */
 export const QualityScorePanel = ({ 
     bounceRate, 
@@ -150,14 +146,14 @@ export const QualityScorePanel = ({
     const status = getBounceStatus();
 
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-5 flex flex-col justify-between shadow-2xl relative overflow-hidden min-h-[420px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-5 flex flex-col justify-between shadow-2xl relative overflow-hidden min-h-[360px]">
             <div className="absolute bottom-0 right-0 p-4 opacity-5 pointer-events-none"><Zap size={100}/></div>
             
-            <h4 className="text-white font-black text-xs mb-6 flex items-center gap-2 uppercase tracking-widest relative z-10">
+            <h4 className="text-white font-black text-xs mb-4 flex items-center gap-2 uppercase tracking-widest relative z-10">
                 <Zap size={14} className="text-yellow-400"/> Quality Score
             </h4>
             
-            <div className="space-y-3 relative z-10">
+            <div className="space-y-2 relative z-10">
                 <QualityScoreBox 
                     label="Boncos Rate (Bounce)" 
                     value={bounceRate} 
@@ -174,7 +170,7 @@ export const QualityScorePanel = ({
 
             <button 
                 onClick={onAction}
-                className="w-full mt-6 py-2.5 bg-brand-orange/10 hover:bg-brand-orange text-brand-orange hover:text-white border border-brand-orange/30 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group relative z-10 active:scale-95"
+                className="w-full mt-4 py-2.5 bg-brand-orange/10 hover:bg-brand-orange text-brand-orange hover:text-white border border-brand-orange/30 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group relative z-10 active:scale-95"
             >
                 Audit Performa Konten <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </button>
