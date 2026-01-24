@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     LayoutDashboard, 
     Users, 
@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { useAnalyticsData } from './logic';
 import { LoadingSpinner } from '../ui';
-import { DashboardHeader } from './ui-controls';
 import { KPIGrid, DeviceStats, ReferrerList } from './ui-cards';
 import { TrafficChart, PeakHoursHeatmap } from './ui-charts';
 import { TopPagesTable, ExitPagesList, QualityScorePanel } from './ui-tables';
@@ -21,6 +20,19 @@ export const AnalyticsDashboard = () => {
   const { stats, loading, period, setPeriod, refresh } = useAnalyticsData();
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('radar');
   const [selectedPagePath, setSelectedPagePath] = useState<string | null>(null);
+
+  // Efek untuk sinkronisasi dengan Header Global di DashboardShell
+  useEffect(() => {
+    const onGlobalRefresh = () => refresh();
+    window.addEventListener('mks:refresh', onGlobalRefresh);
+    
+    // Broadcast status loading ke header shell
+    window.dispatchEvent(new CustomEvent('mks:loading', { detail: loading }));
+
+    return () => {
+        window.removeEventListener('mks:refresh', onGlobalRefresh);
+    };
+  }, [loading, refresh]);
 
   if (loading && (!stats || stats.totalViews.value === 0)) {
     return (
@@ -39,11 +51,6 @@ export const AnalyticsDashboard = () => {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 relative">
-      <DashboardHeader 
-        onRefresh={refresh} 
-        isRefreshing={loading}
-      />
-
       <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md py-2.5 -mx-4 px-4 border-b border-white/5 shadow-xl transition-all">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">

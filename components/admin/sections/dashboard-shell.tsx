@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Terminal, Menu, X, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Terminal, Menu, X, Zap, RefreshCw } from 'lucide-react';
 import { DashboardProps } from '../types';
 import { useAdminDashboard } from '../logic';
 import { SystemHealthWidget } from '../ui-parts';
@@ -9,6 +9,19 @@ import { ModuleRenderer } from './module-renderer';
 export const DashboardShell = (props: DashboardProps) => {
     const { activeTab, setActiveTab, storeSubTab, setStoreSubTab } = useAdminDashboard();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+
+    // Listener untuk sinkronisasi loading state dari modul (seperti Analytics)
+    useEffect(() => {
+        const handleLoading = (e: any) => setIsGlobalLoading(!!e.detail);
+        window.addEventListener('mks:loading', handleLoading);
+        return () => window.removeEventListener('mks:loading', handleLoading);
+    }, []);
+
+    const handleRefreshTrigger = () => {
+        // Broadcast event refresh ke modul yang sedang aktif
+        window.dispatchEvent(new CustomEvent('mks:refresh'));
+    };
 
     return (
         <div className="h-screen bg-brand-black flex flex-col lg:flex-row relative overflow-hidden selection:bg-brand-orange selection:text-white">
@@ -49,6 +62,16 @@ export const DashboardShell = (props: DashboardProps) => {
                         
                         <div className="flex gap-3 items-center">
                              <SystemHealthWidget horizontal />
+
+                             {/* TOMBOL REFRESH GLOBAL */}
+                             <button 
+                                onClick={handleRefreshTrigger}
+                                disabled={isGlobalLoading}
+                                className="bg-brand-card/80 backdrop-blur-md border border-white/10 p-2.5 rounded-2xl flex items-center justify-center shadow-xl group hover:border-brand-orange/30 transition-all active:scale-90 disabled:opacity-50"
+                                title="Refresh Modul Aktif"
+                             >
+                                <RefreshCw size={18} className={`text-gray-400 group-hover:text-brand-orange transition-colors ${isGlobalLoading ? 'animate-spin text-brand-orange' : ''}`} />
+                             </button>
                              
                              <div className="bg-brand-card/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-3 shadow-xl group hover:border-brand-orange/30 transition-all cursor-help">
                                 <div className="relative">
