@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '../../utils';
 import { AnalyticsStats } from './types';
@@ -50,6 +51,7 @@ export const useAnalyticsData = () => {
     
     setLoading(true);
     try {
+        // Panggil fungsi radar utama di database
         const { data, error } = await supabase.rpc('get_analytics_summary', { p_days: period });
         
         if (error) throw error;
@@ -59,21 +61,46 @@ export const useAnalyticsData = () => {
             const conversions = Number(data.total_conversions || 0);
             const convRate = visitors > 0 ? ((conversions / visitors) * 100).toFixed(1) : '0.0';
 
+            // --- AUDIT KABEL DATABASE: MAPPING START ---
             setStats({
                 ...INITIAL_STATS,
                 totalViews: Number(data.total_views || 0),
                 uniqueVisitors: visitors,
                 totalActions: conversions,
                 conversionRate: convRate,
+                
+                // Kabel Grafik Jalur Trafik
+                trafficByDate: data.traffic_by_date || {},
+                
+                // Kabel Konten Paling Cuan
+                sortedPages: data.top_pages || [],
+                
+                // Kabel PINTU MASUK (Referrer) - Disortir dari yang paling rame
+                sortedReferrers: Object.entries(data.referrer_stats || {})
+                    .sort(([, a], [, b]) => (b as number) - (a as number)) as [string, number][],
+                
+                // Kabel Device & OS
                 devices: {
                     mobile: Number(data.device_stats?.mobile || 0),
                     desktop: Number(data.device_stats?.desktop || 0),
                     tablet: Number(data.device_stats?.tablet || 0)
-                }
+                },
+                osDist: data.os_stats || INITIAL_STATS.osDist,
+                
+                // Kabel Peta Kandang (Kota)
+                sortedCities: Object.entries(data.city_stats || {})
+                    .sort(([, a], [, b]) => (b as number) - (a as number))
+                    .slice(0, 8) as [string, number][],
+                
+                avgEngagementTime: data.avg_engagement || "0s",
+                
+                // Kabel Funnel (Jika RPC mendukung)
+                funnel: data.funnel_data || INITIAL_STATS.funnel
             } as any);
+            // --- AUDIT KABEL DATABASE: MAPPING END ---
         }
     } catch (e) {
-        console.warn("Analytics Radar Gagal:", e);
+        console.warn("Audit Kabel Database Gagal:", e);
         setStats(INITIAL_STATS);
     } finally {
         setLoading(false);
