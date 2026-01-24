@@ -5,13 +5,13 @@ import { supabase } from '../utils';
 const GHOST_KEY = 'mks_ghost_mode';
 const VISITOR_KEY = 'mks_visitor_id';
 
-// --- HELPER: DETEKSI OS ---
+// --- HELPER: DETEKSI OS (PRECISION) ---
 const getOS = () => {
   const ua = navigator.userAgent;
   if (/android/i.test(ua)) return 'Android';
   if (/iPad|iPhone|iPod/.test(ua)) return 'iOS';
   if (/Windows/i.test(ua)) return 'Windows';
-  if (/Mac/i.test(ua)) return 'MacOS';
+  if (/Macintosh|Mac OS X/i.test(ua)) return 'MacOS';
   if (/Linux/i.test(ua)) return 'Linux';
   return 'Lainnya';
 };
@@ -62,12 +62,20 @@ export const useAnalytics = () => {
         const osName = getOS();
         const currentPath = location.pathname;
 
-        // --- GEO LOCATION DETECTION (IP-BASED) ---
+        // --- GEO LOCATION DETECTION (IP-BASED WITH FALLBACK) ---
         let city = 'Unknown';
         try {
+            // Service 1: ipapi.co
             const geoRes = await fetch('https://ipapi.co/json/');
             const geoData = await geoRes.json();
             city = geoData.city || 'Unknown';
+            
+            // Service 2 Fallback: ip-api.com (if Service 1 fails)
+            if (city === 'Unknown') {
+               const fallbackRes = await fetch('http://ip-api.com/json/');
+               const fallbackData = await fallbackRes.json();
+               city = fallbackData.city || 'Unknown';
+            }
         } catch (e) {
             console.warn("Geo lookup failed, using fallback.");
         }
@@ -97,7 +105,6 @@ export const useAnalytics = () => {
     // B. CLEANUP TRACKING (LEAVE)
     return () => {
         clearTimeout(timer);
-        // CRITICAL: Double check ghost mode before cleanup execution
         const ghostActive = localStorage.getItem(GHOST_KEY) === 'true';
         if (ghostActive || isAdminRoute || !supabase) return;
 

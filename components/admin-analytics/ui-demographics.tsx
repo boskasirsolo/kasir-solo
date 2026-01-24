@@ -2,7 +2,7 @@ import React from 'react';
 import { MapPin, Monitor, Users, Shield, Target, Award, UserCheck, Smartphone, Tablet, Cpu } from 'lucide-react';
 
 export const CityDistribution = ({ cities, total }: { cities: [string, number][], total: number }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden min-h-[600px]">
+    <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden min-h-[520px]">
         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><MapPin size={80}/></div>
         <h4 className="text-white font-black text-sm mb-8 flex items-center gap-3 uppercase tracking-widest relative z-10">
             <MapPin size={18} className="text-brand-orange animate-pulse"/> Peta Kandang (Kota Asal)
@@ -16,7 +16,7 @@ export const CityDistribution = ({ cities, total }: { cities: [string, number][]
                         <div className="flex justify-between items-center text-xs mb-2">
                             <div className="flex items-center gap-2">
                                 {idx === 0 ? <Award size={12} className="text-yellow-500" /> : <span className="text-[9px] font-mono text-gray-600">{idx + 1}.</span>}
-                                <span className={`font-bold transition-colors ${idx === 0 ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{city}</span>
+                                <span className={`font-bold transition-colors ${idx === 0 ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{city === 'Unknown' ? 'Radar Terbatas' : city}</span>
                             </div>
                             <span className="text-[10px] text-gray-500 font-mono font-bold">{count} Hits</span>
                         </div>
@@ -52,8 +52,15 @@ export const TechIntelligence = ({
         return 'text-gray-400 border-white/10 bg-white/5';
     };
 
+    // Filter "Lainnya" agar selalu di posisi terakhir
+    const osEntries = Object.entries(osData).sort(([a], [b]) => {
+        if (a === 'Lainnya') return 1;
+        if (b === 'Lainnya') return -1;
+        return 0;
+    });
+
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden min-h-[600px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden min-h-[520px]">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Cpu size={80}/></div>
             
             <h4 className="text-white font-black text-sm mb-8 flex items-center gap-3 uppercase tracking-widest relative z-10">
@@ -66,7 +73,7 @@ export const TechIntelligence = ({
                     <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Smartphone size={12}/> Hardware Stats
                     </p>
-                    <div className="space-y-5">
+                    <div className="space-y-4">
                         <DeviceBar label="HP (Mobile)" count={devices.mobile} total={totalViews} icon={Smartphone} color="bg-brand-orange" />
                         <DeviceBar label="PC (Desktop)" count={devices.desktop} total={totalViews} icon={Monitor} color="bg-blue-500" />
                         <DeviceBar label="Tablet" count={devices.tablet} total={totalViews} icon={Tablet} color="bg-purple-500" />
@@ -80,15 +87,15 @@ export const TechIntelligence = ({
                     <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Monitor size={12}/> Amunisi Gadget (OS)
                     </p>
-                    <div className="grid grid-cols-2 gap-3">
-                        {Object.entries(osData).slice(0, 4).map(([os, count], idx) => {
+                    <div className="grid grid-cols-2 gap-2.5">
+                        {osEntries.slice(0, 4).map(([os, count], idx) => {
                             const percent = totalOS > 0 ? Math.round((count / totalOS) * 100) : 0;
                             return (
-                                <div key={idx} className={`p-3 rounded-2xl border transition-all hover:scale-[1.02] ${getOSColor(os)}`}>
-                                    <p className="text-[9px] font-black uppercase mb-1 tracking-tighter opacity-70 truncate">{os}</p>
+                                <div key={idx} className={`p-2.5 rounded-2xl border transition-all hover:scale-[1.02] ${getOSColor(os)}`}>
+                                    <p className="text-[8px] font-black uppercase mb-1 tracking-tighter opacity-70 truncate">{os}</p>
                                     <div className="flex justify-between items-end">
-                                        <h3 className="text-xl font-display font-black leading-none">{percent}%</h3>
-                                        <span className="text-[8px] font-mono opacity-50">{count}</span>
+                                        <h3 className="text-lg font-display font-black leading-none">{percent}%</h3>
+                                        <span className="text-[7px] font-mono opacity-50">{count}</span>
                                     </div>
                                 </div>
                             );
@@ -106,11 +113,11 @@ const DeviceBar = ({ label, count, total, icon: Icon, color }: any) => {
     const percent = total > 0 ? Math.round((count / total) * 100) : 0;
     return (
         <div className="group">
-            <div className="flex justify-between items-center text-[10px] font-black uppercase mb-2 tracking-wider">
+            <div className="flex justify-between items-center text-[10px] font-black uppercase mb-1.5 tracking-wider">
                 <span className="text-gray-500 flex items-center gap-2 group-hover:text-white transition-colors"><Icon size={14}/> {label}</span>
                 <span className="text-white font-mono">{percent}%</span>
             </div>
-            <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
+            <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden border border-white/5 shadow-inner">
                 <div className={`${color} h-full transition-all duration-1000 shadow-neon`} style={{ width: `${percent}%` }}></div>
             </div>
         </div>
@@ -123,10 +130,10 @@ export const DemographicEstimator = ({ data }: { data: any }) => {
     const femalePercent = totalGender > 0 ? (data.gender.female / totalGender) * 100 : 0;
 
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden min-h-[600px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden min-h-[520px]">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><UserCheck size={80}/></div>
             
-            <div className="flex justify-between items-start mb-8 relative z-10">
+            <div className="flex justify-between items-start mb-6 relative z-10">
                 <div>
                     <h4 className="text-white font-black text-sm flex items-center gap-3 uppercase tracking-widest">
                         <Users size={18} className="text-purple-500 animate-pulse"/> Profiling Juragan
@@ -136,25 +143,25 @@ export const DemographicEstimator = ({ data }: { data: any }) => {
                 <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20 shadow-neon-text/5"><Shield size={14} className="text-purple-400"/></div>
             </div>
 
-            <div className="space-y-10 flex-1 relative z-10 flex flex-col justify-center">
-                {/* GENDER PROFILING */}
+            <div className="space-y-8 flex-1 relative z-10 flex flex-col justify-center">
+                {/* GENDER PROFILING - TALLER BAR */}
                 <div>
-                    <div className="flex justify-between text-[10px] font-black uppercase mb-3 tracking-[0.2em]">
+                    <div className="flex justify-between text-[10px] font-black uppercase mb-2 tracking-[0.2em]">
                         <span className="text-blue-400">Pria ({Math.round(malePercent)}%)</span>
                         <span className="text-pink-400">Wanita ({Math.round(femalePercent)}%)</span>
                     </div>
-                    <div className="w-full h-4 bg-black rounded-full overflow-hidden flex border border-white/5 shadow-inner">
-                        <div className="bg-blue-500 h-full transition-all duration-1000 shadow-[0_0_15px_rgba(59,130,246,0.4)]" style={{ width: `${malePercent}%` }}></div>
-                        <div className="bg-pink-500 h-full transition-all duration-1000 shadow-[0_0_15px_rgba(236,72,153,0.4)]" style={{ width: `${femalePercent}%` }}></div>
+                    <div className="w-full h-8 bg-black rounded-2xl overflow-hidden flex border border-white/5 shadow-inner p-1">
+                        <div className="bg-blue-500 h-full rounded-l-xl transition-all duration-1000 shadow-[0_0_15px_rgba(59,130,246,0.4)]" style={{ width: `${malePercent}%` }}></div>
+                        <div className="bg-pink-500 h-full rounded-r-xl transition-all duration-1000 shadow-[0_0_15px_rgba(236,72,153,0.4)]" style={{ width: `${femalePercent}%` }}></div>
                     </div>
                 </div>
 
-                {/* AGE RANGE PROFILING */}
+                {/* AGE RANGE PROFILING - COMPACT H-36 */}
                 <div>
-                    <h5 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <h5 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Target size={12}/> Estimasi Rentang Usia
                     </h5>
-                    <div className="grid grid-cols-4 gap-4 items-end h-44">
+                    <div className="grid grid-cols-4 gap-3 items-end h-36">
                         {Object.entries(data.age).map(([range, count]: [string, any], i) => {
                             const maxAgeCount = Math.max(...Object.values(data.age) as number[], 1);
                             const heightPercent = (count / maxAgeCount) * 100;
@@ -170,7 +177,7 @@ export const DemographicEstimator = ({ data }: { data: any }) => {
                                             {count}
                                         </span>
                                     </div>
-                                    <p className="text-[9px] font-black text-gray-600 mt-3 uppercase tracking-tighter group-hover:text-brand-orange transition-colors">{range}</p>
+                                    <p className="text-[9px] font-black text-gray-600 mt-2 uppercase tracking-tighter group-hover:text-brand-orange transition-colors">{range}</p>
                                 </div>
                             );
                         })}
@@ -178,8 +185,8 @@ export const DemographicEstimator = ({ data }: { data: any }) => {
                 </div>
             </div>
             
-            <div className="mt-8 p-4 bg-brand-orange/5 border border-brand-orange/20 rounded-2xl">
-                 <p className="text-[9px] text-gray-500 leading-relaxed italic text-center">
+            <div className="mt-4 p-4 bg-brand-orange/5 border border-brand-orange/20 rounded-2xl shadow-inner">
+                 <p className="text-[11px] text-gray-400 leading-relaxed italic text-center font-medium">
                     Data adalah **Prediksi Estimasi** berdasarkan pola interaksi dan metadata browser. Akurasi tinggi.
                  </p>
             </div>

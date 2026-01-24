@@ -16,17 +16,15 @@ const calculateTrend = (current: number, previous: number): number => {
 };
 
 /**
- * RADAR PROCESSOR V3.1: Audit kabel data Exit Points & Retention
+ * RADAR PROCESSOR V3.2: Normalisasi OS & City Detection
  */
 export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): AnalyticsStats => {
     const now = new Date();
     const midPoint = new Date(now.getTime() - (period * 24 * 60 * 60 * 1000));
     
-    // Pisahkan logs: Periode Sekarang vs Periode Sebelumnya
     const currentLogs = logs.filter(l => new Date(l.created_at!).getTime() >= midPoint.getTime());
     const prevLogs = logs.filter(l => new Date(l.created_at!).getTime() < midPoint.getTime());
 
-    // --- HELPER UNTUK KPI ---
     const getKPI = (data: AnalyticsLog[]): { views: number, visitors: number, actions: number, conv: number } => {
         const views = data.filter(l => l.event_type === 'page_view').length;
         const visitors = new Set(data.map(l => l.visitor_id)).size;
@@ -38,7 +36,6 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
     const currKPI = getKPI(currentLogs);
     const prevKPI = getKPI(prevLogs);
 
-    // --- AGGREGASI DATA VISUAL ---
     const trafficByDate: Record<string, number> = {};
     for (let i = period - 1; i >= 0; i--) {
         const d = new Date();
@@ -52,8 +49,8 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
     const devices = { mobile: 0, desktop: 0, tablet: 0 };
     const osDist: Record<string, number> = {};
     const cities: Record<string, number> = {};
-    const referrers: Record<string, number> = {};
     const hours: number[] = new Array(24).fill(0);
+    const referrers: Record<string, number> = {};
     const pageDurations: Record<string, number[]> = {};
     let totalEngagementSeconds = 0;
     let engagementCount = 0;
@@ -74,8 +71,13 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
             if (trafficByDate[dateKey] !== undefined) trafficByDate[dateKey]++;
             hours[h]++;
             
-            osDist[(log as any).os_name || 'Other'] = (osDist[(log as any).os_name || 'Other'] || 0) + 1;
-            cities[(log as any).location_city || 'Unknown'] = (cities[(log as any).location_city || 'Unknown'] || 0) + 1;
+            // OS Normalization: Unify Other/Unknown
+            const rawOS = (log as any).os_name || 'Lainnya';
+            const normalizedOS = (rawOS === 'Other' || rawOS === 'Unknown') ? 'Lainnya' : rawOS;
+            osDist[normalizedOS] = (osDist[normalizedOS] || 0) + 1;
+
+            const cityLabel = (log as any).location_city || 'Unknown';
+            cities[cityLabel] = (cities[cityLabel] || 0) + 1;
             
             if (log.device_type === 'mobile') devices.mobile++;
             else if (log.device_type === 'desktop') devices.desktop++;
@@ -91,9 +93,7 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
         }
     });
 
-    // --- LOGIC AUDIT EXIT PAGES ---
     Object.entries(visitorSessions).forEach(([vid, sLogs]) => {
-        // Urutkan berdasarkan waktu buat cari yang terakhir
         sLogs.sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
         const views = sLogs.filter(l => l.event_type === 'page_view');
         
@@ -103,9 +103,6 @@ export const processAnalyticsLogs = (logs: AnalyticsLog[], period: number): Anal
             exitCounts[exitPath] = (exitCounts[exitPath] || 0) + 1;
         }
 
-        const uniquePages = new Set(views.map(v => v.page_path.split('?')[0]));
-        
-        // Funnel Mapping
         sLogs.forEach(l => {
             const p = l.page_path.split('?')[0];
             if (p === '/' || p.includes('/jual-mesin-kasir-di')) funnelCounts.awareness.add(vid);
