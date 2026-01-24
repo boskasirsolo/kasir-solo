@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useCRMLogic } from './logic';
 import { LeadStatus } from './types';
 import { RefreshCw, ShoppingCart, X, LayoutDashboard, Sparkles, Ghost, Database, Cpu } from 'lucide-react';
@@ -6,7 +7,7 @@ import { LoadingSpinner } from '../ui';
 import { SimpleMarkdown } from '../admin-articles/markdown';
 
 // Shared Components
-import { NavTabButton, SearchBar } from './shared/atoms';
+import { NavTabButton } from './shared/atoms';
 import { BriefingHeader } from './shared/briefing-header';
 
 // Feature Modules (Now Modular)
@@ -28,6 +29,20 @@ export const AdminCRM = ({ config }: { config: any }) => {
     } = useCRMLogic();
 
     const [activeSubTab, setActiveSubTab] = useState<'shadow' | 'simulations' | 'pipeline' | 'orders' | 'list'>('shadow');
+
+    // Menerima signal refresh dan search dari header utama
+    useEffect(() => {
+        const onGlobalRefresh = () => refresh();
+        const onGlobalSearch = (e: any) => setSearchTerm(e.detail || '');
+
+        window.addEventListener('mks:refresh', onGlobalRefresh);
+        window.addEventListener('mks:search', onGlobalSearch);
+        
+        return () => {
+            window.removeEventListener('mks:refresh', onGlobalRefresh);
+            window.removeEventListener('mks:search', onGlobalSearch);
+        };
+    }, [refresh, setSearchTerm]);
 
     const handleStatusUpdate = (phone: string, status: LeadStatus) => {
         updateStatus(phone, status);
@@ -92,11 +107,6 @@ export const AdminCRM = ({ config }: { config: any }) => {
                     <NavTabButton active={activeSubTab === 'pipeline'} onClick={() => setActiveSubTab('pipeline')} icon={LayoutDashboard} label="PIPELINE" />
                     <NavTabButton active={activeSubTab === 'orders'} onClick={() => setActiveSubTab('orders')} icon={ShoppingCart} label="TRANSAKSI" />
                     <NavTabButton active={activeSubTab === 'list'} onClick={() => setActiveSubTab('list')} icon={Database} label="DATABASE" />
-                </div>
-                
-                <div className="flex items-center gap-3 shrink-0">
-                    <SearchBar value={state.searchTerm} onChange={setSearchTerm} />
-                    <button onClick={refresh} className="p-2 bg-white/5 rounded-lg border border-white/5 text-gray-500 hover:text-white transition-all active:rotate-180 duration-500"><RefreshCw size={16}/></button>
                 </div>
             </div>
 

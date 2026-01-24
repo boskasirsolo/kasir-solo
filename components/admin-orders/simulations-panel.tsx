@@ -141,12 +141,19 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
 
     useEffect(() => { fetchSims(); }, []);
 
-    // Sinyal Refresh dari Parent
+    // Sinyal Refresh dan Search dari Header Utama
     useEffect(() => {
-        if (refreshKey !== undefined && refreshKey > 0) {
-            fetchSims();
-        }
-    }, [refreshKey]);
+        const onGlobalRefresh = () => fetchSims();
+        const onGlobalSearch = (e: any) => setSearchTerm(e.detail || '');
+
+        window.addEventListener('mks:refresh', onGlobalRefresh);
+        window.addEventListener('mks:search', onGlobalSearch);
+        
+        return () => {
+            window.removeEventListener('mks:refresh', onGlobalRefresh);
+            window.removeEventListener('mks:search', onGlobalSearch);
+        };
+    }, []);
 
     const fetchSims = async () => {
         if (!supabase) return;
@@ -181,24 +188,9 @@ export const SimulationsPanel = ({ config, refreshKey }: { config: SiteConfig, r
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="relative flex-1 w-full">
-                    <Search size={16} className="absolute left-3 top-3 text-gray-500" />
-                    <input 
-                        value={searchTerm} 
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Cari nama, WA, atau ID..." 
-                        className="w-full bg-brand-dark border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white focus:border-brand-orange"
-                    />
-                </div>
-                <button onClick={fetchSims} className="p-2 text-gray-400 hover:text-white bg-white/5 rounded-lg border border-white/5 transition-all">
-                    <RefreshCw size={18} />
-                </button>
-            </div>
-
             {filtered.length === 0 ? (
                 <div className="p-20 text-center text-gray-600 bg-black/20 rounded-2xl border-2 border-dashed border-white/5">
-                    Belum ada simulasi masuk.
+                    Belum ada simulasi yang sesuai kriteria radar.
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4">

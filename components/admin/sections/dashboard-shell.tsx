@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Terminal, Menu, X, Zap, RefreshCw } from 'lucide-react';
+import { Terminal, Menu, X, Zap, RefreshCw, Search } from 'lucide-react';
 import { DashboardProps } from '../types';
 import { useAdminDashboard } from '../logic';
 import { SystemHealthWidget } from '../ui-parts';
@@ -10,8 +11,9 @@ export const DashboardShell = (props: DashboardProps) => {
     const { activeTab, setActiveTab, storeSubTab, setStoreSubTab } = useAdminDashboard();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+    const [headerSearch, setHeaderSearch] = useState('');
 
-    // Listener untuk sinkronisasi loading state dari modul (seperti Analytics)
+    // Listener untuk sinkronisasi loading state dari modul
     useEffect(() => {
         const handleLoading = (e: any) => setIsGlobalLoading(!!e.detail);
         window.addEventListener('mks:loading', handleLoading);
@@ -21,6 +23,12 @@ export const DashboardShell = (props: DashboardProps) => {
     const handleRefreshTrigger = () => {
         // Broadcast event refresh ke modul yang sedang aktif
         window.dispatchEvent(new CustomEvent('mks:refresh'));
+    };
+
+    const handleGlobalSearch = (val: string) => {
+        setHeaderSearch(val);
+        // Broadcast event search agar modul yang aktif bisa memfilter data
+        window.dispatchEvent(new CustomEvent('mks:search', { detail: val }));
     };
 
     return (
@@ -50,14 +58,28 @@ export const DashboardShell = (props: DashboardProps) => {
                 
                 <div className="max-w-[1600px] mx-auto">
                     <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/5 pb-4">
-                        <div className="space-y-1">
+                        <div className="space-y-1 flex-1">
                             <div className="flex items-center gap-3 text-[9px] font-black text-gray-500 uppercase tracking-[0.4em] mb-0.5">
                                 <span className="p-1 bg-brand-orange/10 rounded border border-brand-orange/30"><Zap size={10} className="text-brand-orange" /></span>
                                 Command &gt; {activeTab}
                             </div>
-                            <h1 className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter leading-none">
-                                {LABEL_MAP[activeTab]?.toUpperCase() || 'DASHBOARD'}
-                            </h1>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                <h1 className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter leading-none shrink-0">
+                                    {LABEL_MAP[activeTab]?.toUpperCase() || 'DASHBOARD'}
+                                </h1>
+                                
+                                {/* GLOBAL TACTICAL SEARCH */}
+                                <div className="relative group max-w-md w-full sm:ml-4">
+                                    <Search size={14} className="absolute left-3 top-2.5 text-gray-600 group-focus-within:text-brand-orange transition-colors" />
+                                    <input 
+                                        type="text"
+                                        value={headerSearch}
+                                        onChange={(e) => handleGlobalSearch(e.target.value)}
+                                        placeholder={`Cari di ${LABEL_MAP[activeTab]}...`}
+                                        className="w-full bg-brand-card border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 shadow-inner"
+                                    />
+                                </div>
+                            </div>
                         </div>
                         
                         <div className="flex gap-3 items-center">
