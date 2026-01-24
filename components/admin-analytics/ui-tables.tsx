@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { LogOut, Eye, Sparkles, AlertTriangle, Zap, ArrowLeft, ArrowRight } from 'lucide-react';
 import { PageHitsRow, ExitSourceRow, AnalyticsPagination, QualityScoreBox } from './ui-molecules';
@@ -5,7 +6,7 @@ import { PageHitsRow, ExitSourceRow, AnalyticsPagination, QualityScoreBox } from
 /**
  * Organisme: Tabel Konten Terlaris
  * Assembly: PageHitsRow + AnalyticsPagination
- * Dioptimasi: 5 item per halaman, no-scroll, tight container.
+ * Dioptimasi: 10 item per halaman, no-scroll, ultra-tight container.
  */
 export const TopPagesTable = ({ 
     pages, 
@@ -14,13 +15,13 @@ export const TopPagesTable = ({
     pages: { path: string; hits: number; avgTime: string }[], 
     onPageClick: (path: string) => void 
 }) => {
-    const ITEMS_PER_PAGE = 5;
+    const ITEMS_PER_PAGE = 10; // Dinaikkan jadi 10 sesuai request
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.ceil(pages.length / ITEMS_PER_PAGE);
     const currentData = pages.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     return (
-        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col h-full shadow-2xl relative overflow-hidden min-h-[580px]">
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col h-full shadow-2xl relative overflow-hidden min-h-[1020px]">
             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none"><Eye size={120}/></div>
             
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-white/5 pb-5 gap-4 relative z-10">
@@ -35,7 +36,8 @@ export const TopPagesTable = ({
                 </div>
             </div>
             
-            <div className="space-y-3 flex-1 relative z-10">
+            {/* Jarak antar baris dirapatkan (space-y-2) untuk muat 10 item */}
+            <div className="space-y-2 flex-1 relative z-10">
                 {currentData.map((item, idx) => (
                     <PageHitsRow 
                         key={idx} 
@@ -46,14 +48,15 @@ export const TopPagesTable = ({
                 ))}
                 {pages.length === 0 && <p className="text-center py-20 text-gray-600 italic text-xs">Belum ada jejak konten...</p>}
                 
+                {/* Filler item disesuaikan agar tinggi kartu tetap konsisten meski data kurang dari 10 */}
                 {currentData.length > 0 && currentData.length < ITEMS_PER_PAGE && (
                     Array.from({ length: ITEMS_PER_PAGE - currentData.length }).map((_, i) => (
-                        <div key={`empty-${i}`} className="h-[74px] border border-white/[0.02] rounded-2xl"></div>
+                        <div key={`empty-${i}`} className="h-[74px] border border-white/[0.01] rounded-2xl"></div>
                     ))
                 )}
             </div>
 
-            <div className="mt-auto pt-6">
+            <div className="mt-auto pt-6 border-t border-white/5">
                 <AnalyticsPagination 
                     currentPage={currentPage} 
                     totalPages={totalPages} 
@@ -68,10 +71,9 @@ export const TopPagesTable = ({
 /**
  * Organisme: List Titik Pamit (Exit Points)
  * Assembly: ExitSourceRow + Custom Navigation
- * Dioptimasi: 5 item per halaman, jarak rapat (space-y-7), no-scroll.
  */
 export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
-    const ITEMS_PER_PAGE = 5; // Diatur maksimal 5
+    const ITEMS_PER_PAGE = 5;
     const [currentPage, setCurrentPage] = useState(1);
     
     const totalPages = Math.ceil(pages.length / ITEMS_PER_PAGE);
@@ -111,7 +113,6 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
                 )}
             </div>
 
-            {/* Hilangkan overflow-y-auto, atur space-y-7 agar memenuhi min-h tanpa scroll */}
             <div className="space-y-7 relative z-10 flex-1">
                 {currentData.map(([page, count], idx) => (
                     <ExitSourceRow 
@@ -127,7 +128,6 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
                     </div>
                 )}
 
-                {/* Filler item disesuaikan tingginya (h-[54px]) agar container tetap kokoh saat item < 5 */}
                 {currentData.length > 0 && currentData.length < ITEMS_PER_PAGE && (
                     Array.from({ length: ITEMS_PER_PAGE - currentData.length }).map((_, i) => (
                         <div key={`empty-exit-${i}`} className="h-[54px] border border-white/[0.01] rounded-xl"></div>
@@ -145,7 +145,6 @@ export const ExitPagesList = ({ pages }: { pages: [string, number][] }) => {
 
 /**
  * Organisme: Panel Skor Kualitas
- * Assembly: QualityScoreBox
  */
 export const QualityScorePanel = ({ bounceRate, avgPages }: { bounceRate: number, avgPages: string }) => {
     const getBounceStatus = () => {
