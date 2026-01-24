@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
     LayoutDashboard, 
@@ -78,18 +77,22 @@ export const AnalyticsDashboard = () => {
           <div className="space-y-6 animate-fade-in">
             <KPIGrid stats={stats} />
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-               <div className="flex flex-col h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+               {/* RADAR CORONG & TRAFFIC CHART */}
+               <div className="lg:col-span-4 flex flex-col h-full">
                   <FunnelVisual data={stats.funnel} />
                </div>
-               <div className="flex flex-col h-full">
+               <div className="lg:col-span-8 flex flex-col h-full">
+                  <TrafficChart data={stats.trafficByDate} period={period} />
+               </div>
+
+               {/* QUALITY SCORE & PEAK HOURS */}
+               <div className="lg:col-span-4 flex flex-col h-full">
                   <QualityScorePanel bounceRate={stats.bounceRate} avgPages={stats.avgPagesPerSession} />
                </div>
-            </div>
-
-            <div className="bg-brand-dark/50 border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-                <TrafficChart data={stats.trafficByDate} period={period} />
-                <PeakHoursHeatmap hours={stats.hours} />
+               <div className="lg:col-span-8 flex flex-col h-full">
+                  <PeakHoursHeatmap hours={stats.hours} />
+               </div>
             </div>
           </div>
         )}
