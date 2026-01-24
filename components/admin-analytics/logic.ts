@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../utils';
 import { AnalyticsStats } from './types';
 import { Search, BookOpen, ShoppingBag, DollarSign } from 'lucide-react';
+import { processAnalyticsLogs } from './processor'; // SAMBUNG KABEL KE PROCESSOR
 
 const INITIAL_STATS: AnalyticsStats = {
     totalViews: 0,
@@ -12,7 +13,7 @@ const INITIAL_STATS: AnalyticsStats = {
     trafficByDate: {},
     sortedPages: [],
     devices: { mobile: 0, desktop: 0, tablet: 0 },
-    osDist: { "Windows": 0, "Android": 0, "iOS": 0 },
+    osDist: {},
     sortedCities: [],
     demographics: {
         age: { "18-24": 0, "25-34": 0, "35-44": 0, "45+": 0 },
@@ -51,56 +52,26 @@ export const useAnalyticsData = () => {
     
     setLoading(true);
     try {
-        // Panggil fungsi radar utama di database
-        const { data, error } = await supabase.rpc('get_analytics_summary', { p_days: period });
+        // --- AUDIT KABEL: TARIK DATA MENTAH DARI TABEL SESUAI SKEMA ---
+        const dateThreshold = new Date();
+        dateThreshold.setDate(dateThreshold.getDate() - period);
+        
+        const { data: logs, error } = await supabase
+            .from('analytics_logs')
+            .select('*')
+            .gte('created_at', dateThreshold.toISOString());
         
         if (error) throw error;
 
-        if (data) {
-            const visitors = Number(data.unique_visitors || 0);
-            const conversions = Number(data.total_conversions || 0);
-            const convRate = visitors > 0 ? ((conversions / visitors) * 100).toFixed(1) : '0.0';
-
-            // --- AUDIT KABEL DATABASE: MAPPING START ---
-            setStats({
-                ...INITIAL_STATS,
-                totalViews: Number(data.total_views || 0),
-                uniqueVisitors: visitors,
-                totalActions: conversions,
-                conversionRate: convRate,
-                
-                // Kabel Grafik Jalur Trafik
-                trafficByDate: data.traffic_by_date || {},
-                
-                // Kabel Konten Paling Cuan
-                sortedPages: data.top_pages || [],
-                
-                // Kabel PINTU MASUK (Referrer) - Disortir dari yang paling rame
-                sortedReferrers: Object.entries(data.referrer_stats || {})
-                    .sort(([, a], [, b]) => (b as number) - (a as number)) as [string, number][],
-                
-                // Kabel Device & OS
-                devices: {
-                    mobile: Number(data.device_stats?.mobile || 0),
-                    desktop: Number(data.device_stats?.desktop || 0),
-                    tablet: Number(data.device_stats?.tablet || 0)
-                },
-                osDist: data.os_stats || INITIAL_STATS.osDist,
-                
-                // Kabel Peta Kandang (Kota)
-                sortedCities: Object.entries(data.city_stats || {})
-                    .sort(([, a], [, b]) => (b as number) - (a as number))
-                    .slice(0, 8) as [string, number][],
-                
-                avgEngagementTime: data.avg_engagement || "0s",
-                
-                // Kabel Funnel (Jika RPC mendukung)
-                funnel: data.funnel_data || INITIAL_STATS.funnel
-            } as any);
-            // --- AUDIT KABEL DATABASE: MAPPING END ---
+        if (logs && logs.length > 0) {
+            // --- SAMBUNG KE MESIN PENGOLAH (PROCESSOR) ---
+            const processedStats = processAnalyticsLogs(logs, period);
+            setStats(processedStats);
+        } else {
+            setStats(INITIAL_STATS);
         }
     } catch (e) {
-        console.warn("Audit Kabel Database Gagal:", e);
+        console.error("Audit Kabel Gagal, Jalur Putus:", e);
         setStats(INITIAL_STATS);
     } finally {
         setLoading(false);
