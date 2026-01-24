@@ -87,7 +87,7 @@ export const AdminCRM = ({ config }: { config: any }) => {
                 <div className="flex bg-black/40 p-1 rounded-xl border border-white/10 flex-1 overflow-x-auto custom-scrollbar-hide">
                     <NavTabButton active={activeSubTab === 'pipeline'} onClick={() => setActiveSubTab('pipeline')} icon={LayoutDashboard} label="PIPELINE" />
                     <NavTabButton active={activeSubTab === 'orders'} onClick={() => setActiveSubTab('orders')} icon={ShoppingCart} label="TRANSAKSI" />
-                    <NavTabButton active={activeSubTab === 'list'} onClick={() => setActiveSubTab('list'} icon={Database} label="DATABASE" />
+                    <NavTabButton active={activeSubTab === 'list'} onClick={() => setActiveSubTab('list')} icon={Database} label="DATABASE" />
                 </div>
 
                 <div className="relative group w-full md:w-80">
