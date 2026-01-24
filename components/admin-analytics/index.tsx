@@ -137,13 +137,22 @@ export const AnalyticsDashboard = () => {
         )}
 
         {activeTab === 'content' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-            <div className="lg:col-span-2">
-                <TopPagesTable pages={stats.sortedPages} onPageClick={(path) => setSelectedPagePath(path)} />
-            </div>
-            <div className="lg:col-span-1 space-y-8">
-                <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews.value as number} />
-                <ExitPagesList pages={stats.sortedExitPages} />
+          <div className="animate-fade-in">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+                {/* 1 & 2. TABEL KONTEN (TINGGI PENUH, LEBAR 2/3) */}
+                <div className="lg:col-span-2 flex flex-col">
+                    <TopPagesTable pages={stats.sortedPages} onPageClick={(path) => setSelectedPagePath(path)} />
+                </div>
+
+                {/* 3. REFERRER & EXIT (TINGGI PENUH, LEBAR 1/3) */}
+                <div className="lg:col-span-1 flex flex-col gap-6">
+                    <div className="flex-1">
+                        <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews.value as number} />
+                    </div>
+                    <div className="flex-1">
+                        <ExitPagesList pages={stats.sortedExitPages} />
+                    </div>
+                </div>
             </div>
           </div>
         )}

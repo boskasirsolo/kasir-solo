@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Users, TrendingUp, Globe, Zap } from 'lucide-react';
+import { Eye, Users, TrendingUp, Globe, Zap, ExternalLink } from 'lucide-react';
 import { AnalyticsStats } from './types';
 import { MetricBlock } from './ui-parts';
 
@@ -36,34 +36,45 @@ export const KPIGrid = ({ stats }: { stats: AnalyticsStats }) => (
     </div>
 );
 
-export const ReferrerList = ({ referrers, totalViews }: { referrers: [string, number][], totalViews: number }) => (
-    <div className="bg-brand-dark border border-white/5 rounded-2xl p-6 flex flex-col h-full shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-5"><Globe size={100} /></div>
-        
-        <h4 className="text-white font-bold text-sm mb-6 flex items-center gap-2 relative z-10">
-            <Globe size={16} className="text-blue-400"/> Pintu Masuk
-        </h4>
-        
-        <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-1 relative z-10">
-            {referrers.map(([ref, count], idx) => {
-                const percent = totalViews > 0 ? ((count / totalViews) * 100).toFixed(1) : "0";
-                return (
-                    <div key={idx} className="flex flex-col p-2.5 bg-white/[0.02] rounded-lg border border-white/5 hover:border-blue-500/30 transition-all group">
-                        <div className="flex justify-between items-center mb-1.5">
-                             <span className="text-[10px] text-gray-400 truncate font-bold group-hover:text-white transition-colors">{ref}</span>
-                             <span className="text-[10px] font-bold text-white font-mono">{count}</span>
+export const ReferrerList = ({ referrers, totalViews }: { referrers: [string, number][], totalViews: number }) => {
+    const maxCount = Math.max(...referrers.map(([, count]) => count), 1);
+
+    return (
+        <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 flex flex-col h-full shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform"><Globe size={80} /></div>
+            
+            <h4 className="text-white font-black text-xs mb-4 flex items-center gap-2 uppercase tracking-widest relative z-10">
+                <Globe size={14} className="text-blue-400"/> Pintu Masuk (Traffic)
+            </h4>
+            <p className="text-[9px] text-gray-600 mb-6 font-bold uppercase tracking-widest relative z-10">Darimana calon juragan dateng:</p>
+            
+            <div className="space-y-5 flex-1 overflow-y-auto custom-scrollbar pr-1 relative z-10">
+                {referrers.map(([ref, count], idx) => {
+                    const percent = Math.round((count / maxCount) * 100);
+                    return (
+                        <div key={idx} className="group/item">
+                            <div className="flex justify-between items-center text-[10px] mb-2 font-mono">
+                                 <span className="text-gray-400 truncate max-w-[180px] group-hover/item:text-white transition-colors flex items-center gap-1.5">
+                                    <ExternalLink size={10} className="text-gray-600" /> {ref}
+                                 </span>
+                                 <span className="text-blue-400 font-black">{count}</span>
+                            </div>
+                            <div className="w-full bg-blue-500/5 h-1.5 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                                <div 
+                                    className="h-full bg-blue-500 rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(59,130,246,0.4)]" 
+                                    style={{ width: `${percent}%` }}
+                                ></div>
+                            </div>
                         </div>
-                        <div className="w-full bg-black/40 h-[2px] rounded-full overflow-hidden">
-                            <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
-                        </div>
+                    );
+                })}
+                {referrers.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-10 opacity-20 uppercase tracking-widest">
+                        <p className="text-[10px] italic font-bold">No signals detected.</p>
                     </div>
-                );
-            })}
-            {referrers.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-10 opacity-20">
-                    <p className="text-[10px] italic font-bold uppercase tracking-widest">No signals detected.</p>
-                </div>
-            )}
+                )}
+            </div>
+            <p className="text-[9px] text-gray-700 mt-6 font-bold uppercase tracking-widest text-center italic shrink-0">Berdasarkan HTTP Referer & UTM Audit</p>
         </div>
-    </div>
-);
+    );
+};
