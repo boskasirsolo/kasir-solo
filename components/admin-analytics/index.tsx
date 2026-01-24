@@ -13,7 +13,7 @@ import { DashboardHeader } from './ui-controls';
 import { KPIGrid, DeviceStats, ReferrerList } from './ui-cards';
 import { TrafficChart, PeakHoursHeatmap } from './ui-charts';
 import { TopPagesTable, ExitPagesList, QualityScorePanel } from './ui-tables';
-import { FunnelVisual, GoldenPathsVisual } from './funnel-radar';
+import { FunnelVisual } from './funnel-radar';
 import { CityDistribution, OSDistribution, DemographicEstimator } from './ui-demographics';
 import { PageAnalyticsModal } from './page-analytics-modal';
 import { AIInsights } from './ai-insights';
@@ -25,7 +25,6 @@ export const AnalyticsDashboard = () => {
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('radar');
   const [selectedPagePath, setSelectedPagePath] = useState<string | null>(null);
 
-  // Fix: Check .value of totalViews which is now part of MetricTrend
   if (loading && (!stats || stats.totalViews.value === 0)) {
     return (
         <div className="flex flex-col items-center justify-center p-24 gap-4 animate-fade-in">
@@ -83,7 +82,6 @@ export const AnalyticsDashboard = () => {
                <div className="flex flex-col h-full">
                   <FunnelVisual data={stats.funnel} />
                </div>
-               
                <div className="flex flex-col h-full">
                   <QualityScorePanel bounceRate={stats.bounceRate} avgPages={stats.avgPagesPerSession} />
                </div>
@@ -99,12 +97,10 @@ export const AnalyticsDashboard = () => {
         {activeTab === 'audience' && (
           <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Fix: Pass .value as number to CityDistribution */}
                 <div className="lg:col-span-4"><CityDistribution cities={stats.sortedCities} total={stats.totalViews.value as number} /></div>
                 <div className="lg:col-span-4"><DemographicEstimator data={stats.demographics} /></div>
                 <div className="lg:col-span-4 space-y-6">
                     <OSDistribution data={stats.osDist} />
-                    {/* Fix: Pass .value as number to DeviceStats */}
                     <DeviceStats devices={stats.devices} totalViews={stats.totalViews.value as number} />
                 </div>
             </div>
@@ -117,7 +113,6 @@ export const AnalyticsDashboard = () => {
                 <TopPagesTable pages={stats.sortedPages} onPageClick={(path) => setSelectedPagePath(path)} />
             </div>
             <div className="lg:col-span-1 space-y-8">
-                {/* Kartu Pintu Masuk dipindahkan ke sini */}
                 <ReferrerList referrers={stats.sortedReferrers} totalViews={stats.totalViews.value as number} />
                 <ExitPagesList pages={stats.sortedExitPages} />
             </div>

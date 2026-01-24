@@ -32,7 +32,7 @@ export const TopPagesTable = ({
                     <h4 className="text-white font-black text-lg uppercase tracking-wider flex items-center gap-2">
                         <Sparkles size={18} className="text-brand-orange animate-pulse"/> Konten Paling Cuan
                     </h4>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Audit Performa Halaman Website</p>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Audit Traffic & Durasi Tiap Halaman</p>
                 </div>
                 <div className="bg-black/40 px-3 py-1.5 rounded-full border border-white/5 text-[10px] font-mono text-gray-500">
                     Total: {pages.length} Assets
@@ -60,17 +60,18 @@ export const TopPagesTable = ({
                                         <span className={`text-[8px] px-2 py-0.5 rounded-full font-black border uppercase tracking-wider ${color}`}>
                                             {label}
                                         </span>
-                                        <div className="flex items-center gap-1 text-[10px] text-gray-600 font-mono">
-                                            <Clock size={10}/> {item.avgTime}
-                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <div className="flex items-center gap-6 shrink-0 ml-4">
                                 <div className="text-right hidden sm:block">
-                                    <p className="text-[10px] font-black text-white group-hover:text-brand-orange transition-colors">{item.hits}</p>
+                                    <p className="text-xs font-black text-white group-hover:text-brand-orange transition-colors">{item.hits}</p>
                                     <p className="text-[8px] text-gray-600 font-black uppercase tracking-tighter">Views</p>
+                                </div>
+                                <div className="text-right hidden sm:block border-l border-white/5 pl-6">
+                                    <p className="text-xs font-black text-blue-400 group-hover:text-white transition-colors">{item.avgTime}</p>
+                                    <p className="text-[8px] text-gray-600 font-black uppercase tracking-tighter">Durasi</p>
                                 </div>
                                 <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-600 group-hover:bg-brand-orange group-hover:text-white transition-all">
                                     <ArrowRight size={16} />
