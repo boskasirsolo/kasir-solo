@@ -11,6 +11,7 @@ export const useCRMLogic = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [tempFilter, setTempFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [sourceFilter, setSourceFilter] = useState<string>('all');
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
 
@@ -25,10 +26,11 @@ export const useCRMLogic = () => {
             
             const matchesTemp = tempFilter === 'all' || c.lead_temperature === tempFilter;
             const matchesStatus = statusFilter === 'all' || c.lead_status === statusFilter;
+            const matchesSource = sourceFilter === 'all' || c.detected_category === sourceFilter;
             
-            return matchesSearch && matchesTemp && matchesStatus;
+            return matchesSearch && matchesTemp && matchesStatus && matchesSource;
         });
-    }, [customers, searchTerm, tempFilter, statusFilter]);
+    }, [customers, searchTerm, tempFilter, statusFilter, sourceFilter]);
 
     const deleteCustomer = async (phone: string) => {
         if (!confirm("Hapus juragan ini dari database? Tindakan ini gak bisa dibatalin.")) return;
@@ -68,10 +70,11 @@ export const useCRMLogic = () => {
     };
 
     return {
-        state: { loading, searchTerm, tempFilter, statusFilter },
+        state: { loading, searchTerm, tempFilter, statusFilter, sourceFilter },
         setSearchTerm,
         setTempFilter,
         setStatusFilter,
+        setSourceFilter,
         refresh: refreshData,
         filteredCustomers,
         abandonedLeads: shadow.abandonedLeads,
