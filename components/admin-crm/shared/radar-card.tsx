@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, Cpu, MessageSquare, Zap, Clock, MapPin, DollarSign, Eye, Activity, Globe, Target } from 'lucide-react';
+import { ShoppingCart, Cpu, Globe, Zap, Clock, MapPin, DollarSign, Eye, Activity, Target, TrendingUp, Laptop } from 'lucide-react';
 import { Customer } from '../types';
 import { parseIntel } from './utils';
 
@@ -21,7 +21,7 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
             ? 'border-brand-orange/40 bg-gradient-to-br from-[#1a1005] to-[#050505] shadow-[0_10px_30px_rgba(255,95,31,0.05)]' 
             : 'border-white/10 bg-gradient-to-br from-[#0c0e12] to-[#050505]';
 
-    // 1. Progress Status Info Mapper
+    // 1. Progress Status Info Mapper (Sektor Kiri)
     const getStatusInfo = (status: string) => {
         switch (status) {
             case 'new': return { label: '🆕 BARU', color: 'text-blue-400 border-blue-400/30 bg-blue-400/5' };
@@ -33,18 +33,28 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
         }
     };
 
-    // 2. Source Origin Info Mapper
-    const getSourceInfo = (source: string) => {
-        switch (source) {
-            case 'shadow': return { label: 'SHADOW', color: 'text-red-400', icon: ShoppingCart };
-            case 'simulasi': return { label: 'SIMULASI', color: 'text-blue-400', icon: Cpu };
-            case 'kontak': return { label: 'KONTAK', color: 'text-green-400', icon: MessageSquare };
-            default: return { label: 'DIRECT', color: 'text-gray-500', icon: Globe };
+    // 2. Source Origin Info Mapper (Sektor Kanan - Rikues User)
+    const getSourceInfo = (source?: string, category?: string) => {
+        const val = (category || source || '').toLowerCase();
+        
+        if (val.includes('hardware') || val.includes('produk')) {
+            return { label: 'PRODUK', color: 'text-red-400', icon: ShoppingCart };
         }
+        if (val.includes('webapp')) {
+            return { label: 'WEBAPP', color: 'text-blue-400', icon: Laptop };
+        }
+        if (val.includes('seo')) {
+            return { label: 'SEO', color: 'text-purple-400', icon: TrendingUp };
+        }
+        if (val.includes('web') || val.includes('website')) {
+            return { label: 'WEBSITE', color: 'text-green-400', icon: Globe };
+        }
+        
+        return { label: 'DIRECT', color: 'text-gray-500', icon: Zap };
     };
 
     const statusInfo = getStatusInfo(customer.lead_status);
-    const sourceInfo = getSourceInfo(customer.source_origin || '');
+    const sourceInfo = getSourceInfo(customer.source_origin, customer.detected_category);
     const SourceIcon = sourceInfo.icon;
 
     return (
@@ -88,7 +98,7 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                 </div>
             </div>
 
-            {/* RADAR INTEL GRID (Micro Stats) */}
+            {/* RADAR INTEL GRID */}
             <div className="grid grid-cols-2 gap-3 mb-5">
                 <div className="bg-black/60 p-2.5 rounded-xl border border-white/[0.05] flex items-center justify-between">
                     <div className="flex items-center gap-2 overflow-hidden">
@@ -121,14 +131,14 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                 </div>
             )}
 
-            {/* FOOTER INFO (UPDATED BASED ON IMAGE) */}
+            {/* FOOTER INFO (KALIBRASI ASAL LEADS) */}
             <div className="mt-auto pt-4 border-t border-white/[0.08] flex justify-between items-center">
                 {/* 1. INFORMASI PROGRESS */}
                 <div className={`px-2 py-1 rounded-lg border text-[9px] font-black uppercase tracking-wider shadow-inner ${statusInfo.color}`}>
                     {statusInfo.label}
                 </div>
 
-                {/* 2. INFORMASI ASAL LEADS */}
+                {/* 2. INFORMASI ASAL LEADS (PRODUK, WEB, WEBAPP, SEO) */}
                 <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${sourceInfo.color} group-hover:scale-105 transition-transform`}>
                     <SourceIcon size={12} className="opacity-70" />
                     <span>{sourceInfo.label}</span>
