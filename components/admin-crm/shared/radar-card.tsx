@@ -1,7 +1,7 @@
-
 import React from 'react';
-import { ShoppingCart, Cpu, MessageSquare, Zap, Clock, MapPin } from 'lucide-react';
+import { ShoppingCart, Cpu, MessageSquare, Zap, Clock, MapPin, DollarSign } from 'lucide-react';
 import { Customer } from '../types';
+import { parseIntel } from './utils';
 
 interface RadarJuraganCardProps {
     customer: Customer;
@@ -11,6 +11,7 @@ interface RadarJuraganCardProps {
 export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, onClick }) => {
     const isHot = customer.lead_temperature === 'hot' || customer.is_indecisive_buyer;
     const isWarm = customer.lead_temperature === 'warm';
+    const intel = parseIntel(customer.last_notes);
     
     // Aura Glow Logic
     let auraClass = "border-white/5";
@@ -36,7 +37,7 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                 </div>
             )}
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-start gap-4">
                 {/* Avatar Bulat Inisial */}
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0 border transition-colors ${
                     isHot ? 'bg-red-500/20 border-red-500/40 text-red-500' : 
@@ -50,7 +51,7 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                     <h4 className="text-sm font-bold text-white truncate group-hover:text-brand-orange transition-colors">
                         {customer.name}
                     </h4>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] text-gray-500 font-mono">
                             **** {customer.phone.slice(-4)}
                         </span>
@@ -58,6 +59,13 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                             <Clock size={8} /> {customer.last_seen_label}
                         </span>
                     </div>
+                    
+                    {/* ESTIMASI NOMINAL (DI KARTU) */}
+                    {intel.estimasi && (
+                        <div className="mt-2 flex items-center gap-1 text-green-400 font-black text-[10px] font-mono">
+                            <DollarSign size={10} className="opacity-50" /> {intel.estimasi}
+                        </div>
+                    )}
                 </div>
             </div>
 

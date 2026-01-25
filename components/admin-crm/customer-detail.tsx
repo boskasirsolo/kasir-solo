@@ -1,9 +1,10 @@
-
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+// FIX: Added missing MessageCircle import from lucide-react and removed unused MessageSquare
 import { 
     X, Phone, MapPin, Building, History, Sparkles, Zap, 
-    ShieldCheck, AlertTriangle, Briefcase, Trash2, 
-    MessageSquare, Clock, Target, BarChart3, ChevronRight 
+    Trash2, MessageCircle, Clock, Target, BarChart3, 
+    Smartphone, Monitor, Eye, Activity, ShieldAlert
 } from 'lucide-react';
 import { Customer, LeadStatus, LeadTemperature, PIPELINE_STAGES } from './types';
 import { parseIntel } from './shared/utils';
@@ -20,186 +21,204 @@ export const CustomerDetailModal = ({ customer, onClose }: { customer: Customer,
     const { updateStatus, updateTemperature, deleteCustomer, runRecoveryAI, isGeneratingScript } = useCRMLogic();
     const intel = parseIntel(customer.last_notes);
     const radar = customer.intelligence;
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    useLayoutEffect(() => {
+        const originalStyle = window.getComputedStyle(document.body).overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = originalStyle; };
+    }, []);
 
     const handleWaDirect = () => {
         window.open(`https://wa.me/${customer.phone}`, '_blank');
     };
 
-    return (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div className="fixed inset-0 bg-black/90 backdrop-blur-md animate-fade-in" onClick={onClose}></div>
+    return createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-6 md:p-8">
+            {/* BACKDROP */}
+            <div className="fixed inset-0 bg-black/95 backdrop-blur-md animate-fade-in transition-all cursor-pointer" onClick={onClose}></div>
             
-            {/* Modal Dossier */}
-            <div className="relative w-full max-w-4xl bg-brand-dark border border-white/10 rounded-[2.5rem] shadow-2xl flex flex-col h-[90vh] overflow-hidden animate-scale-up">
+            {/* MODAL CONTAINER */}
+            <div className="relative w-full max-w-2xl bg-brand-dark border border-brand-orange/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col max-h-[90vh] overflow-hidden animate-fade-in">
                 
-                {/* --- A. HEADER: PROFIL TEMPUR --- */}
-                <div className="p-8 bg-brand-card border-b border-white/5 shrink-0">
-                    <button onClick={onClose} className="absolute top-8 right-8 p-2 text-gray-500 hover:text-white transition-colors">
-                        <X size={24} />
-                    </button>
-                    
-                    <div className="flex items-center gap-8">
-                        <div className={`w-24 h-24 rounded-full flex items-center justify-center font-black text-3xl shrink-0 border-4 transition-all ${
-                            customer.lead_temperature === 'hot' ? 'bg-red-500/20 border-red-500/40 text-red-500 shadow-neon-text/20' : 
-                            'bg-white/5 border-white/10 text-gray-500'
-                        }`}>
-                            {customer.name.charAt(0)}
+                {/* HEADER (Compact & Analytics Style) */}
+                <div className="p-4 border-b border-white/10 bg-brand-card flex justify-between items-center shrink-0">
+                    <div className="min-w-0 pr-4">
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shadow-neon ${
+                                customer.lead_temperature === 'hot' ? 'bg-red-600 text-white' : 'bg-brand-orange text-white'
+                            }`}>
+                                Juragan Intel
+                            </span>
                         </div>
-
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                                <h2 className="text-3xl font-display font-black text-white truncate">{customer.name}</h2>
-                                {customer.is_indecisive_buyer && (
-                                    <span className="bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-neon">
-                                        STUCK IN CHECKOUT
-                                    </span>
-                                )}
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-500 font-mono">
-                                <span className="flex items-center gap-1.5"><Phone size={14} className="text-brand-orange"/> {customer.phone}</span>
-                                <span className="flex items-center gap-1.5"><Clock size={14}/> Joined {new Date(customer.created_at).toLocaleDateString('id-ID')}</span>
-                            </div>
-                        </div>
+                        <h3 className="text-sm font-bold text-white truncate font-display opacity-80">{customer.name}</h3>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                        <button 
+                            onClick={handleWaDirect}
+                            className="p-2 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded-lg transition-all"
+                        >
+                            <MessageCircle size={14} />
+                        </button>
+                        <button 
+                            onClick={onClose} 
+                            className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-all"
+                        >
+                            <X size={14} />
+                        </button>
                     </div>
                 </div>
 
-                {/* --- B. BODY: INTELLIGENCE FILE (Scrollable) --- */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-black/20">
-                    <div className="grid md:grid-cols-2 gap-10">
+                {/* SCROLLABLE CONTENT */}
+                <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar bg-black/5">
+                    <div className="space-y-6">
                         
-                        {/* LEFT COL: RADAR & BEHAVIOR */}
-                        <div className="space-y-8">
-                            <div>
-                                <h4 className="text-white font-black text-[10px] uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
-                                    <Target size={14} className="text-brand-orange" /> Radar Intelligence
-                                </h4>
-                                <div className="bg-white/[0.03] border border-white/5 rounded-3xl p-6 space-y-4">
-                                    <div className="flex justify-between items-center pb-3 border-b border-white/[0.03]">
-                                        <span className="text-[10px] text-gray-500 font-bold uppercase">Halaman Terlama</span>
-                                        <span className="text-xs text-brand-orange font-bold font-mono">/{radar?.most_visited_path.split('/').pop()}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center pb-3 border-b border-white/[0.03]">
-                                        <span className="text-[10px] text-gray-500 font-bold uppercase">Total Klik</span>
-                                        <span className="text-xs text-white font-black">{radar?.total_views || 0} Aktivitas</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[10px] text-gray-500 font-bold uppercase">Lama Aktif</span>
-                                        <span className="text-xs text-blue-400 font-bold">{Math.round((radar?.avg_engagement_sec || 0)/60)} Menit</span>
-                                    </div>
+                        {/* KPI GRID (Radar Stats) */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <div className="bg-brand-card border border-white/5 p-3 rounded-xl shadow-inner">
+                                <span className="text-gray-600 text-[7px] font-black uppercase block mb-1.5">Views</span>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-lg font-display font-black text-white">{radar?.total_views || 0}</p>
+                                    <Eye size={12} className="text-blue-500 opacity-50"/>
                                 </div>
                             </div>
-
-                            <div>
-                                <h4 className="text-white font-black text-[10px] uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
-                                    <History size={14} className="text-gray-600" /> Digital Footprint
-                                </h4>
-                                <div className="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-px before:bg-white/5">
-                                    {(customer.interaction_history || []).length > 0 ? customer.interaction_history.map((event: any, i: number) => (
-                                        <div key={i} className="relative group">
-                                            <div className="absolute -left-[23px] top-1.5 w-3 h-3 rounded-full bg-brand-dark border-2 border-brand-orange group-hover:scale-110 transition-transform"></div>
-                                            <p className="text-[9px] text-gray-600 font-mono mb-1">{new Date(event.date).toLocaleTimeString('id-ID')}</p>
-                                            <div className="text-xs text-gray-300 font-medium">{event.event}</div>
-                                        </div>
-                                    )) : <p className="text-xs text-gray-700 italic">Belum ada jejak terekam...</p>}
+                            <div className="bg-brand-card border border-white/5 p-3 rounded-xl shadow-inner">
+                                <span className="text-gray-600 text-[7px] font-black uppercase block mb-1.5">Mins Active</span>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-lg font-display font-black text-white">{Math.round((radar?.avg_engagement_sec || 0)/60)}</p>
+                                    <Clock size={12} className="text-purple-500 opacity-50"/>
+                                </div>
+                            </div>
+                            <div className="bg-brand-card border border-white/5 p-3 rounded-xl shadow-inner">
+                                <span className="text-gray-600 text-[7px] font-black uppercase block mb-1.5">Probability</span>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-lg font-display font-black text-white">{customer.lead_temperature === 'hot' ? '90%' : '45%'}</p>
+                                    <Zap size={12} className="text-yellow-500 opacity-50"/>
+                                </div>
+                            </div>
+                            <div className="bg-brand-card border border-white/5 p-3 rounded-xl shadow-inner">
+                                <span className="text-gray-600 text-[7px] font-black uppercase block mb-1.5">ID Scramble</span>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-lg font-display font-black text-white">{customer.phone.slice(-4)}</p>
+                                    <Target size={12} className="text-brand-orange opacity-50"/>
                                 </div>
                             </div>
                         </div>
 
-                        {/* RIGHT COL: BUSINESS BLUEPRINT */}
-                        <div className="space-y-8">
-                            <div>
-                                <h4 className="text-white font-black text-[10px] uppercase tracking-[0.3em] mb-5 flex items-center gap-2">
-                                    <Briefcase size={14} className="text-blue-400" /> Business Blueprint
+                        {/* BEHAVIOR CHART & BLUEPRINT */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* RADAR INTEL */}
+                            <div className="bg-brand-card/40 border border-white/5 p-4 rounded-2xl">
+                                <h4 className="text-[8px] font-black text-gray-400 mb-5 flex items-center gap-2 uppercase tracking-widest">
+                                    <Activity size={10} className="text-brand-orange"/> Radar Perilaku
                                 </h4>
-                                <div className="bg-blue-500/[0.02] border border-blue-500/10 rounded-3xl p-6 space-y-5">
-                                    <div className="space-y-1">
-                                        <span className="text-[8px] text-gray-600 font-black uppercase">Usaha / Toko</span>
-                                        <p className="text-sm text-white font-bold">{intel.usaha || customer.company_name || '-'}</p>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-[7px] text-gray-600 font-black uppercase">Obsesi Halaman</label>
+                                        <p className="text-[10px] text-white font-mono truncate bg-black/40 p-2 rounded mt-1">{radar?.most_visited_path || '/'}</p>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <span className="text-[8px] text-gray-600 font-black uppercase">Skala</span>
-                                            <p className="text-xs text-blue-300 font-bold">{intel.skala || '-'}</p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+                                            <label className="text-[7px] text-gray-600 font-black uppercase block">Tipe Unit</label>
+                                            <span className="text-[10px] text-blue-400 font-bold">{radar?.top_category || 'General'}</span>
                                         </div>
-                                        <div className="space-y-1 text-right">
-                                            <span className="text-[8px] text-gray-600 font-black uppercase">Estimasi Budget</span>
-                                            <p className="text-xs text-green-400 font-black font-mono">{intel.estimasi || '-'}</p>
+                                        <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+                                            <label className="text-[7px] text-gray-600 font-black uppercase block">Entry Point</label>
+                                            <span className="text-[10px] text-green-400 font-bold">{customer.source_origin?.toUpperCase() || 'DIRECT'}</span>
                                         </div>
-                                    </div>
-                                    <div className="space-y-1 pt-4 border-t border-white/[0.03]">
-                                        <span className="text-[8px] text-gray-600 font-black uppercase">Target Paket</span>
-                                        <p className="text-xs text-gray-300 leading-relaxed italic">"{intel.paket || 'Belum pilih paket spesifik'}"</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <span className="text-[8px] text-gray-600 font-black uppercase">Lokasi</span>
-                                        <p className="text-xs text-gray-400 flex items-center gap-1.5"><MapPin size={10}/> {intel.alamat || customer.location || 'Indonesia'}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-5 bg-brand-orange/5 border border-brand-orange/20 rounded-2xl">
-                                <h5 className="text-brand-orange font-black text-[9px] uppercase tracking-widest mb-3 flex items-center gap-2"><Sparkles size={12}/> Strategy Insight</h5>
-                                <p className="text-xs text-gray-300 leading-relaxed">
-                                    {customer.is_indecisive_buyer 
-                                        ? "⚠️ Juragan ini lagi ragu di checkout. Kasih pancingan 'Diskon Ongkir' atau 'Bonus Kertas Roll' pasti luluh." 
-                                        : "Tawarin Paket Hardware PRO karena skala usahanya Menengah. Dia butuh printer dapur tambahan."}
-                                </p>
+                            {/* BUSINESS BLUEPRINT */}
+                            <div className="bg-brand-card/40 border border-white/5 p-4 rounded-2xl">
+                                <h4 className="text-[8px] font-black text-gray-400 mb-5 flex items-center gap-2 uppercase tracking-widest">
+                                    <BarChart3 size={10} className="text-blue-400"/> Business Blueprint
+                                </h4>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-[9px] border-b border-white/[0.03] pb-2">
+                                        <span className="text-gray-500 font-bold uppercase">Nama Toko</span>
+                                        <span className="text-white font-black">{intel.usaha || customer.company_name || '-'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[9px] border-b border-white/[0.03] pb-2">
+                                        <span className="text-gray-500 font-bold uppercase">Skala Unit</span>
+                                        <span className="text-blue-300 font-black">{intel.skala || '-'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[9px] border-b border-white/[0.03] pb-2">
+                                        <span className="text-gray-500 font-bold uppercase">Estimasi Cuan</span>
+                                        <span className="text-green-400 font-black font-mono">{intel.estimasi || '-'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[9px]">
+                                        <span className="text-gray-500 font-bold uppercase">Lokasi</span>
+                                        <span className="text-gray-300 max-w-[120px] truncate">{intel.alamat || customer.location || '-'}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        {/* DIGITAL FOOTPRINT (Simplified Timeline) */}
+                        <div className="bg-brand-card/40 border border-white/5 p-4 rounded-2xl">
+                            <h4 className="text-[8px] font-black text-gray-400 mb-5 flex items-center gap-2 uppercase tracking-widest">
+                                <History size={10} className="text-gray-500"/> Digital Footprint
+                            </h4>
+                            <div className="space-y-4 max-h-[150px] overflow-y-auto custom-scrollbar pr-2">
+                                {(customer.interaction_history || []).length > 0 ? customer.interaction_history.slice(0, 10).map((event: any, i: number) => (
+                                    <div key={i} className="flex gap-3 items-start border-l border-white/5 pl-3 relative">
+                                        <div className="absolute -left-1 top-1.5 w-2 h-2 rounded-full bg-brand-orange/40"></div>
+                                        <div className="flex-1">
+                                            <p className="text-[10px] text-gray-300 leading-tight">{event.event}</p>
+                                            <p className="text-[7px] text-gray-600 mt-1 font-mono">{new Date(event.date).toLocaleTimeString('id-ID')}</p>
+                                        </div>
+                                    </div>
+                                )) : <p className="text-[9px] text-gray-700 italic text-center py-4">Belum ada jejak terekam.</p>}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                {/* --- C. FOOTER: COMMAND CENTER (Sticky) --- */}
-                <div className="p-6 md:p-8 bg-brand-card border-t border-white/10 flex flex-col md:flex-row items-center gap-4 md:gap-6 shrink-0 z-20">
-                    
-                    {/* Status & Temp Controls */}
-                    <div className="flex gap-2 w-full md:w-auto">
+                {/* FOOTER ACTIONS (Command Center) */}
+                <div className="p-4 bg-brand-card border-t border-white/10 flex flex-col gap-3 shrink-0 z-50">
+                    <div className="flex gap-2">
                         <select 
                             value={customer.lead_status}
                             onChange={(e) => updateStatus(customer.phone, e.target.value as LeadStatus)}
-                            className="bg-black/40 border border-white/10 text-[10px] font-black uppercase rounded-xl px-4 py-3 outline-none focus:border-brand-orange transition-all text-white"
+                            className="flex-1 bg-black/40 border border-white/10 text-[9px] font-black uppercase rounded-lg px-3 py-2 outline-none text-white appearance-none"
                         >
                             {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
                         </select>
                         <select 
                             value={customer.lead_temperature}
                             onChange={(e) => updateTemperature(customer.phone, e.target.value as LeadTemperature)}
-                            className="bg-black/40 border border-white/10 text-[10px] font-black uppercase rounded-xl px-4 py-3 outline-none focus:border-brand-orange transition-all text-white"
+                            className="flex-1 bg-black/40 border border-white/10 text-[9px] font-black uppercase rounded-lg px-3 py-2 outline-none text-white appearance-none"
                         >
                             {TEMPERATURE_CONFIG.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                         </select>
                     </div>
-
-                    <div className="h-10 w-px bg-white/5 hidden md:block"></div>
-
-                    {/* Execution Actions */}
-                    <div className="flex-1 flex gap-3 w-full">
+                    
+                    <div className="flex gap-2">
                         <button 
                             onClick={() => runRecoveryAI(customer)}
                             disabled={isGeneratingScript === customer.phone}
-                            className="flex-1 bg-brand-gradient text-white rounded-xl py-4 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-neon-strong active:scale-95 transition-all disabled:opacity-50"
+                            className="flex-1 bg-brand-gradient text-white rounded-xl py-3 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-neon active:scale-95 disabled:opacity-50"
                         >
-                            {isGeneratingScript === customer.phone ? <LoadingSpinner size={16}/> : <><Sparkles size={18}/> SAPA SIBOS AI</>}
-                        </button>
-                        <button 
-                            onClick={handleWaDirect}
-                            className="bg-green-600/10 text-green-500 border-2 border-green-500/20 hover:bg-green-600 hover:text-white rounded-xl px-6 py-4 transition-all active:scale-95"
-                            title="WhatsApp Langsung"
-                        >
-                            <MessageSquare size={20} />
+                            {isGeneratingScript === customer.phone ? <LoadingSpinner size={12}/> : <><Sparkles size={14}/> SAPA SIBOS AI</>}
                         </button>
                         <button 
                             onClick={() => deleteCustomer(customer.phone)}
-                            className="bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white rounded-xl px-6 py-4 transition-all"
-                            title="Buang Lead"
+                            className="bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white rounded-xl px-4 py-3 transition-all"
                         >
-                            <Trash2 size={20} />
+                            <Trash2 size={16} />
                         </button>
                     </div>
                 </div>
-
+                
+                {/* SYSTEM ID */}
+                <div className="p-2 bg-brand-dark text-center shrink-0 border-t border-white/[0.02]">
+                    <p className="text-[6px] text-gray-800 font-black uppercase tracking-[0.4em]">Surveillance Dossier // PT MKS v3.2</p>
+                </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
