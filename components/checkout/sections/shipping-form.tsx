@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Ticket, Loader2, ArrowLeft, Search, MapPin, Truck, Check, Info } from 'lucide-react';
+import { Ticket, Loader2, ArrowLeft, Search, MapPin, Truck, Check, Info, MessageCircle, AlertCircle } from 'lucide-react';
 import { Input, TextArea, Button, LoadingSpinner, PhoneInput } from '../../ui';
 import { formatRupiah } from '../../../utils';
 
@@ -28,7 +27,6 @@ export const ShippingForm = ({
                         <PhoneInput value={formData.phone} onChange={(e: any) => onChange('phone', e.target.value)} onBlur={onBlur} placeholder="Nomor WhatsApp" />
                     </div>
 
-                    {/* BITESHIP AREA SEARCH */}
                     <div className="space-y-3">
                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1 flex items-center gap-2">
                             <MapPin size={12}/> Cari Kecamatan / Kota
@@ -48,7 +46,6 @@ export const ShippingForm = ({
                             )}
                         </div>
                         
-                        {/* AUTOCOMPLETE RESULTS */}
                         {area.results.length > 0 && !area.selected && (
                             <div className="bg-brand-card border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-48 overflow-y-auto custom-scrollbar animate-scale-up z-50">
                                 {area.results.map((res: any) => (
@@ -67,14 +64,13 @@ export const ShippingForm = ({
                         {area.selected && (
                             <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/30 p-2.5 rounded-lg text-green-400 text-[10px] font-bold animate-fade-in shadow-inner">
                                 <Check size={14}/> TERPILIH: {area.selected.name}
-                                <button type="button" onClick={() => { area.setSelected(null); area.setQuery(''); }} className="ml-auto underline decoration-dotted">Ubah</button>
+                                <button type="button" onClick={() => { area.setSelected(null); area.setQuery(''); shipping.setIsManual(false); }} className="ml-auto underline decoration-dotted">Ubah</button>
                             </div>
                         )}
                     </div>
 
                     <TextArea value={formData.address} onChange={(e: any) => onChange('address', e.target.value)} onBlur={onBlur} placeholder="Detail Alamat (Nama Jalan, No Rumah, RT/RW)..." className="h-20" />
 
-                    {/* COURIER SELECTOR */}
                     {area.selected && (
                         <div className="space-y-3 animate-fade-in">
                             <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1 flex items-center gap-2">
@@ -84,7 +80,31 @@ export const ShippingForm = ({
                             {shipping.isLoading ? (
                                 <div className="py-8 flex flex-col items-center justify-center bg-black/20 rounded-xl border border-dashed border-white/10">
                                     <LoadingSpinner size={24} />
-                                    <p className="text-[10px] text-gray-600 mt-2 font-bold uppercase tracking-widest">Nego Harga ke Kurir...</p>
+                                    <p className="text-[10px] text-gray-600 mt-2 font-bold uppercase tracking-widest">Menghitung Biaya Kirim...</p>
+                                </div>
+                            ) : shipping.isManual ? (
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-xl flex items-start gap-3">
+                                        <Info className="text-brand-orange shrink-0 mt-0.5" size={18} />
+                                        <div>
+                                            <p className="text-xs text-white font-bold">Pengiriman Khusus / Kargo</p>
+                                            <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
+                                                Lokasi Juragan butuh penanganan kurir kargo manual agar lebih murah dan aman (packing kayu). 
+                                                <strong> Lanjut bayar dulu</strong>, ongkir kargo akan kami hitungkan manual via WhatsApp.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="p-4 rounded-xl border border-brand-orange bg-brand-orange/20 shadow-neon-text/10 flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-full bg-brand-orange text-white flex items-center justify-center">
+                                            <MessageCircle size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="text-sm font-black text-white">Kurir Manual / Kargo Standar</p>
+                                            <p className="text-[10px] text-brand-orange font-bold uppercase tracking-tighter">Biaya: Nego via WhatsApp (Pasti Murah)</p>
+                                        </div>
+                                        <Check className="ml-auto text-brand-orange" size={20} />
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -92,7 +112,7 @@ export const ShippingForm = ({
                                         <button
                                             key={`${rate.courier_code}-${rate.service_code}`}
                                             type="button"
-                                            onClick={() => shipping.setSelected(rate)}
+                                            onClick={() => { shipping.setSelected(rate); shipping.setIsManual(false); }}
                                             className={`p-4 rounded-xl border transition-all text-left flex justify-between items-center group relative overflow-hidden ${
                                                 shipping.selected?.courier_code === rate.courier_code && shipping.selected?.service_code === rate.service_code
                                                 ? 'bg-brand-orange/10 border-brand-orange shadow-neon-text/5'
@@ -102,26 +122,12 @@ export const ShippingForm = ({
                                             <div className="min-w-0 z-10">
                                                 <p className="text-xs font-black text-white uppercase flex items-center gap-2">
                                                     {rate.courier_name}
-                                                    {rate.service_code === 'reg' && <span className="text-[7px] bg-blue-500 text-white px-1 rounded">Reguler</span>}
                                                 </p>
                                                 <p className="text-[10px] text-gray-500 truncate mt-0.5">Estimasi: {rate.shipment_duration_range} {rate.shipment_duration_unit}</p>
                                             </div>
                                             <p className="text-sm font-bold text-brand-orange z-10">{formatRupiah(rate.price)}</p>
-                                            {shipping.selected?.courier_code === rate.courier_code && shipping.selected?.service_code === rate.service_code && (
-                                                <div className="absolute -right-2 -bottom-2 opacity-10"><Truck size={40}/></div>
-                                            )}
                                         </button>
                                     ))}
-                                    {shipping.error && (
-                                        <div className="col-span-full p-4 text-center text-xs text-red-400 bg-red-900/10 border border-red-500/20 rounded-xl flex items-center gap-3">
-                                            <Info size={16}/> {shipping.error} Hubungi admin via WA.
-                                        </div>
-                                    )}
-                                    {!shipping.error && shipping.rates.length === 0 && (
-                                        <div className="col-span-full p-4 text-center text-xs text-red-400 bg-red-900/10 border border-red-500/20 rounded-xl flex items-center gap-3">
-                                            <Info size={16}/> Wilayah belum terjangkau kurir otomatis. Hubungi admin via WA.
-                                        </div>
-                                    )}
                                 </div>
                             )}
                         </div>
@@ -168,9 +174,13 @@ export const ShippingForm = ({
 
                     <div className="pt-6 border-t border-white/10 space-y-2">
                         <div className="flex justify-between text-xs"><span className="text-gray-500">Subtotal Barang</span><span className="text-white">{formatRupiah(subtotalPrice)}</span></div>
-                        {shipping.selected && (
+                        
+                        {shipping.selected ? (
                             <div className="flex justify-between text-xs"><span className="text-gray-500">Ongkir ({shipping.selected.courier_name})</span><span className="text-white">{formatRupiah(shipping.selected.price)}</span></div>
+                        ) : shipping.isManual && (
+                            <div className="flex justify-between text-xs"><span className="text-gray-500">Ongkir Kargo</span><span className="text-brand-orange font-bold italic">Nego via WA</span></div>
                         )}
+
                         {discount && (
                             <div className="flex justify-between text-xs text-green-400 font-bold">
                                 <span>Promo ({discount.code})</span>
@@ -179,9 +189,11 @@ export const ShippingForm = ({
                         )}
                         <div className="flex justify-between items-end pt-2">
                             <span className="text-white font-bold text-sm">TOTAL TAGIHAN</span>
-                            <span className="text-brand-orange font-display font-bold text-2xl">{formatRupiah(shipping.total)}</span>
+                            <span className="text-brand-orange font-display font-bold text-2xl">
+                                {formatRupiah(shipping.total)}
+                            </span>
                         </div>
-                        <Button type="submit" className="w-full py-4 shadow-neon mt-4" disabled={isSubmitting || !agreed || !shipping.selected}>
+                        <Button type="submit" className="w-full py-4 shadow-neon mt-4" disabled={isSubmitting || !agreed || (!shipping.selected && !shipping.isManual)}>
                             {isSubmitting ? <LoadingSpinner /> : "BAYAR SEKARANG"}
                         </Button>
                     </div>

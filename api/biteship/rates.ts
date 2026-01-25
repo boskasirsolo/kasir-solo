@@ -10,7 +10,7 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'Data pengiriman tidak lengkap.' });
   }
 
-  // Origin: Kartasura, Sukoharjo (Solo Raya HQ)
+  // Origin: Kartasura, Sukoharjo (IDNP3CL11666)
   const origin_area_id = 'IDNP3CL11666';
 
   try {
@@ -23,17 +23,17 @@ export default async function handler(req: any, res: any) {
       body: JSON.stringify({
         origin_area_id,
         destination_area_id,
-        // TIPS: Jangan hardcode couriers di sini agar API tidak error 400 jika salah satu kurir tidak cover rute.
-        // Kita tarik semua yang tersedia, nanti filter di frontend.
+        // Dikosongkan agar Biteship mengembalikan SEMUA yang tersedia tanpa proteksi berlebih
+        couriers: '', 
         items: items.map((item: any) => ({
-          name: item.name,
+          name: item.name.substring(0, 45), // Biteship sensitif sama panjang karakter
           description: item.description || '',
-          value: Number(item.value) || 0,
-          weight: Number(item.weight) || 1000,
+          value: Math.max(1000, Number(item.value) || 0),
+          weight: Math.max(100, Number(item.weight) || 1000),
           quantity: Number(item.quantity) || 1,
-          length: Number(item.length) || 20,
-          width: Number(item.width) || 20,
-          height: Number(item.height) || 20
+          length: Math.max(10, Number(item.length) || 20),
+          width: Math.max(10, Number(item.width) || 20),
+          height: Math.max(10, Number(item.height) || 20)
         }))
       })
     });
@@ -41,13 +41,12 @@ export default async function handler(req: any, res: any) {
     const data = await response.json();
     
     if (!response.ok) {
-        // Balikin error asli dari Biteship buat debugging kalau masih mental
         return res.status(response.status).json(data);
     }
 
     return res.status(200).json(data);
   } catch (error) {
-    console.error("Biteship API Error:", error);
-    return res.status(500).json({ error: 'Gagal terhubung ke sistem logistik.' });
+    console.error("Biteship API Critical Error:", error);
+    return res.status(500).json({ error: 'Sistem logistik pusat sedang sibuk.' });
   }
 }
