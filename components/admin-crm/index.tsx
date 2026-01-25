@@ -53,7 +53,7 @@ export const AdminCRM = () => {
                              (state.sourceFilter !== 'all' ? 1 : 0);
 
     return (
-        <div className="space-y-6 relative animate-fade-in">
+        <div className="space-y-6 relative animate-fade-in px-1">
             <BriefingRoom insight={aiRecommendation} onClear={() => setAiRecommendation(null)} />
             
             <TacticalToolbar 
@@ -65,23 +65,23 @@ export const AdminCRM = () => {
 
             {/* FILTER UI DRAWER/PANEL */}
             {isFilterOpen && (
-                <div className="animate-fade-in px-1 mb-6">
-                    <div className="bg-brand-card/20 p-5 rounded-3xl border border-white/10 shadow-inner flex flex-col gap-6">
-                        <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
+                <div className="animate-fade-in px-1 mb-8">
+                    <div className="bg-brand-card/30 p-6 rounded-[2.5rem] border border-white/10 shadow-[inner_0_0_20px_rgba(0,0,0,0.5)] flex flex-col gap-8">
+                        <div className="flex flex-col lg:flex-row gap-10 items-start lg:items-center">
                             {/* Status Filter Group */}
-                            <div className="space-y-2 flex-1">
-                                <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest ml-1 flex items-center gap-2">
-                                    <Zap size={10} className="text-blue-400" /> Filter Progres Prospek
+                            <div className="space-y-3 flex-1 w-full">
+                                <p className="text-xs text-gray-500 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                                    <Zap size={14} className="text-blue-400" /> Filter Progres Prospek
                                 </p>
-                                <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
+                                <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-2">
                                     {STATUS_OPTIONS.map(opt => (
                                         <button
                                             key={opt.id}
                                             onClick={() => setStatusFilter(opt.id)}
-                                            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap ${
+                                            className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border whitespace-nowrap active:scale-95 ${
                                                 state.statusFilter === opt.id
-                                                ? 'bg-white/10 text-white border-white/20 shadow-sm'
-                                                : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300'
+                                                ? 'bg-white/15 text-white border-white/30 shadow-md'
+                                                : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300 hover:bg-black/60'
                                             }`}
                                         >
                                             {opt.label}
@@ -90,22 +90,22 @@ export const AdminCRM = () => {
                                 </div>
                             </div>
 
-                            <div className="hidden md:block h-10 w-px bg-white/5"></div>
+                            <div className="hidden lg:block h-12 w-px bg-white/5"></div>
 
                             {/* Temperature Filter Group */}
-                            <div className="space-y-2 flex-1">
-                                <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest ml-1 flex items-center gap-2">
-                                    <MapPin size={10} className="text-brand-orange" /> Filter Suhu Radar
+                            <div className="space-y-3 flex-1 w-full">
+                                <p className="text-xs text-gray-500 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                                    <MapPin size={14} className="text-brand-orange" /> Filter Suhu Radar
                                 </p>
-                                <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
+                                <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-2">
                                     {TEMPERATURE_OPTIONS.map(opt => (
                                         <button
                                             key={opt.id}
                                             onClick={() => setTempFilter(opt.id)}
-                                            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap ${
+                                            className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border whitespace-nowrap active:scale-95 ${
                                                 state.tempFilter === opt.id
                                                 ? 'bg-brand-orange/20 text-brand-orange border-brand-orange/40 shadow-neon-text/5'
-                                                : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300'
+                                                : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300 hover:bg-black/60'
                                             }`}
                                         >
                                             {opt.label}
@@ -117,20 +117,20 @@ export const AdminCRM = () => {
 
                         <div className="h-px w-full bg-white/5"></div>
 
-                        {/* Source Origin Filter Group (NEW/RESTORED) */}
-                        <div className="space-y-2">
-                            <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest ml-1 flex items-center gap-2">
-                                <Globe size={10} className="text-green-500" /> Filter Asal Leads (Interest)
+                        {/* Source Origin Filter Group */}
+                        <div className="space-y-3">
+                            <p className="text-xs text-gray-500 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                                <Globe size={14} className="text-green-500" /> Filter Asal Leads (Interest)
                             </p>
-                            <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
+                            <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-2">
                                 {SOURCE_OPTIONS.map(opt => (
                                     <button
                                         key={opt.id}
                                         onClick={() => setSourceFilter(opt.id)}
-                                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap ${
+                                        className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border whitespace-nowrap active:scale-95 ${
                                             state.sourceFilter === opt.id
                                             ? 'bg-green-500/20 text-green-400 border-green-500/40 shadow-neon-text/5'
-                                            : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300'
+                                            : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300 hover:bg-black/60'
                                         }`}
                                     >
                                         {opt.label}
@@ -142,16 +142,19 @@ export const AdminCRM = () => {
                 </div>
             )}
 
-            <div className="min-h-[600px] px-1">
+            <div className="min-h-[600px] px-1 pb-20">
                 {state.loading ? (
-                    <div className="flex justify-center py-24"><LoadingSpinner size={32} /></div>
+                    <div className="flex flex-col items-center justify-center py-32 gap-4">
+                        <LoadingSpinner size={40} />
+                        <p className="text-xs font-black text-gray-600 uppercase tracking-[0.4em]">Menarik Data Intel...</p>
+                    </div>
                 ) : viewMode === 'radar' ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                         {filteredCustomers.length === 0 ? (
-                            <div className="col-span-full py-24 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-30">
-                                <Box size={48} className="mx-auto mb-4" />
-                                <p className="text-xs font-bold uppercase tracking-widest">
-                                    Radar Bersih, Bos. Tidak ada juragan yang cocok.
+                            <div className="col-span-full py-32 text-center border-2 border-dashed border-white/5 rounded-[3rem] opacity-30 flex flex-col items-center">
+                                <Box size={64} className="mb-6 text-gray-700" />
+                                <p className="text-sm font-black uppercase tracking-[0.3em] text-gray-500">
+                                    Radar Bersih, Bos. <br/> Gak nemu juragan yang pas.
                                 </p>
                             </div>
                         ) : filteredCustomers.map(c => <RadarJuraganCard key={c.phone} customer={c} onClick={() => setSelectedCustomer(c)} />)}
