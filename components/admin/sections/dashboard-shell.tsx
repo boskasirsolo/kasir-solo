@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Terminal, Menu, X, Zap, RefreshCw, Search } from 'lucide-react';
 import { DashboardProps } from '../types';
 import { useAdminDashboard } from '../logic';
-import { SystemHealthWidget } from '../ui-parts';
 import { Sidebar, LABEL_MAP } from './sidebar';
 import { ModuleRenderer } from './module-renderer';
 
@@ -11,7 +9,6 @@ export const DashboardShell = (props: DashboardProps) => {
     const { activeTab, setActiveTab, storeSubTab, setStoreSubTab } = useAdminDashboard();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isGlobalLoading, setIsGlobalLoading] = useState(false);
-    const [globalSearch, setGlobalSearch] = useState('');
 
     // Listener untuk sinkronisasi loading state dari modul
     useEffect(() => {
@@ -25,10 +22,12 @@ export const DashboardShell = (props: DashboardProps) => {
         window.dispatchEvent(new CustomEvent('mks:refresh-module', { detail: { tab: activeTab } }));
     };
 
-    const onGlobalSearch = (val: string) => {
-        setGlobalSearch(val);
-        // Bisa dihubungkan ke modal pencarian global nantinya
-        console.debug("Global Search Scanning:", val);
+    const handleGlobalSearchClick = () => {
+        const query = prompt("Cari apa di ekosistem MKS, Bos?");
+        if (query) {
+            console.debug("Scanning Ecosystem for:", query);
+            alert(`Mencari "${query}"... (Fitur pencarian dalam pengembangan)`);
+        }
     };
 
     return (
@@ -63,27 +62,20 @@ export const DashboardShell = (props: DashboardProps) => {
                                 <span className="p-1 bg-brand-orange/10 rounded border border-brand-orange/30"><Zap size={10} className="text-brand-orange" /></span>
                                 Command &gt; {activeTab}
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                                <h1 className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter leading-none shrink-0">
-                                    {LABEL_MAP[activeTab]?.toUpperCase() || 'DASHBOARD'}
-                                </h1>
-                                
-                                {/* GLOBAL ECOSYSTEM SEARCH (Berbeda dengan Internal) */}
-                                <div className="relative group max-w-md w-full sm:ml-4">
-                                    <Search size={14} className="absolute left-3 top-2.5 text-gray-600 group-focus-within:text-brand-orange transition-colors" />
-                                    <input 
-                                        type="text"
-                                        value={globalSearch}
-                                        onChange={(e) => onGlobalSearch(e.target.value)}
-                                        placeholder="Pencarian Global (Ecosystem)..."
-                                        className="w-full bg-brand-card border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700 shadow-inner"
-                                    />
-                                </div>
-                            </div>
+                            <h1 className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter leading-none shrink-0">
+                                {LABEL_MAP[activeTab]?.toUpperCase() || 'DASHBOARD'}
+                            </h1>
                         </div>
                         
-                        <div className="flex gap-3 items-center">
-                             <SystemHealthWidget horizontal />
+                        <div className="flex gap-2 items-center">
+                             {/* TOMBOL PENCARIAN GLOBAL (ICON) */}
+                             <button 
+                                onClick={handleGlobalSearchClick}
+                                className="bg-brand-card/80 backdrop-blur-md border border-white/10 p-2.5 rounded-2xl flex items-center justify-center shadow-xl group hover:border-brand-orange/30 transition-all active:scale-90"
+                                title="Pencarian Global"
+                             >
+                                <Search size={18} className="text-gray-400 group-hover:text-brand-orange transition-colors" />
+                             </button>
 
                              {/* TOMBOL REFRESH AKTIF MODUL */}
                              <button 

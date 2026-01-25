@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
     ShoppingBag, Package, LayoutGrid, Image, Settings, 
@@ -45,7 +44,7 @@ export const Sidebar = ({ isOpen, onClose, activeTab, onTabChange, onLogout }: S
             isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
     >
-        <div className="p-6 border-b border-white/5 bg-black/40 shrink-0 space-y-6">
+        <div className="p-6 border-b border-white/5 bg-black/40 shrink-0 space-y-4">
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-brand-gradient flex items-center justify-center text-white shadow-[0_0_15px_rgba(255,95,31,0.3)] shrink-0">
                     <Box size={20} />
@@ -65,6 +64,9 @@ export const Sidebar = ({ isOpen, onClose, activeTab, onTabChange, onLogout }: S
                     <span className="text-[8px] font-black uppercase tracking-widest group-hover:text-red-400">Exit</span>
                 </button>
             </div>
+
+            {/* STATUS ENGINE (SIBOS & DB) */}
+            <SystemHealthWidget />
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-1">
