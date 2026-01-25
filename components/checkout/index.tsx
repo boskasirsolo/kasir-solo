@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SectionHeader } from '../ui';
 import { useCheckoutLogic } from './logic';
@@ -51,7 +50,8 @@ export const CheckoutModule = ({ setPage, config }: { setPage: (p: string) => vo
         isSubmitting, submitOrder,
         orderSuccess, setOrderSuccess,
         subtotalPrice, discount, couponInput, setCouponInput, applyCoupon, isValidatingCoupon,
-        step, setStep
+        step, setStep,
+        area, shipping // Ambil state Biteship dari logic
     } = useCheckoutLogic(setPage);
 
     if (orderSuccess) {
@@ -101,6 +101,9 @@ export const CheckoutModule = ({ setPage, config }: { setPage: (p: string) => vo
                                     agreed={agreedToTerms}
                                     onToggleTerms={handleCheckboxToggle}
                                     onBack={() => setStep(1)}
+                                    // FIX: Sekarang area dan shipping sudah dioper ke form
+                                    area={area}
+                                    shipping={shipping}
                                 />
                             </div>
                         )}
