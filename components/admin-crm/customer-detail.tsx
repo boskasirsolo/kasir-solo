@@ -1,3 +1,4 @@
+
 import React, { useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -7,7 +8,6 @@ import {
 } from 'lucide-react';
 import { Customer, LeadStatus, LeadTemperature, PIPELINE_STAGES } from './types';
 import { parseIntel } from './shared/utils';
-import { useCRMLogic } from './logic';
 import { LoadingSpinner } from '../ui';
 
 const TEMPERATURE_CONFIG: { id: LeadTemperature; label: string; color: string }[] = [
@@ -16,8 +16,25 @@ const TEMPERATURE_CONFIG: { id: LeadTemperature; label: string; color: string }[
     { id: 'cold', label: '🔵 COLD', color: 'text-gray-400 border-white/10' }
 ];
 
-export const CustomerDetailModal = ({ customer, onClose }: { customer: Customer, onClose: () => void }) => {
-    const { updateStatus, updateTemperature, deleteCustomer, runRecoveryAI, isGeneratingScript } = useCRMLogic();
+interface CustomerDetailModalProps {
+    customer: Customer;
+    onClose: () => void;
+    updateStatus: (phone: string, status: LeadStatus) => Promise<void>;
+    updateTemperature: (phone: string, temp: LeadTemperature) => Promise<void>;
+    deleteCustomer: (phone: string) => Promise<void>;
+    runRecoveryAI: (customer: Customer) => Promise<void>;
+    isGeneratingScript: string | null;
+}
+
+export const CustomerDetailModal = ({ 
+    customer, 
+    onClose,
+    updateStatus,
+    updateTemperature,
+    deleteCustomer,
+    runRecoveryAI,
+    isGeneratingScript 
+}: CustomerDetailModalProps) => {
     const intel = parseIntel(customer.last_notes);
     const radar = customer.intelligence;
     const scrollContainerRef = useRef<HTMLDivElement>(null);

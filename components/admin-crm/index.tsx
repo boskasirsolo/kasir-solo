@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useCRMLogic } from './logic';
 import { Box, MapPin, Zap, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -36,7 +37,8 @@ export const AdminCRM = () => {
     const { 
         state, filteredCustomers, totalCount, aiRecommendation, setAiRecommendation, 
         selectedCustomer, setSelectedCustomer, setSearchTerm, 
-        setTempFilter, setStatusFilter, setSourceFilter, setPage, refresh 
+        setTempFilter, setStatusFilter, setSourceFilter, setPage, refresh,
+        updateStatus, updateTemperature, deleteCustomer, runRecoveryAI, isGeneratingScript 
     } = useCRMLogic();
     
     const [viewMode, setViewMode] = useState<'radar' | 'orders'>('radar');
@@ -185,7 +187,17 @@ export const AdminCRM = () => {
                 )}
             </div>
 
-            {selectedCustomer && <CustomerDetailModal customer={selectedCustomer} onClose={() => setSelectedCustomer(null)} />}
+            {selectedCustomer && (
+                <CustomerDetailModal 
+                    customer={selectedCustomer} 
+                    onClose={() => setSelectedCustomer(null)}
+                    updateStatus={updateStatus}
+                    updateTemperature={updateTemperature}
+                    deleteCustomer={deleteCustomer}
+                    runRecoveryAI={runRecoveryAI}
+                    isGeneratingScript={isGeneratingScript}
+                />
+            )}
         </div>
     );
 };
