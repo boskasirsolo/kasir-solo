@@ -178,9 +178,8 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                 destination_area_id: selectedArea.id
             };
 
-            // PENTING: Jika error "column status of crm_profiles" masih muncul, 
-            // artinya Trigger database di Supabase masih merujuk ke kolom 'status'.
-            // Pastikan Anda sudah menjalankan SQL RESET (DROP & CREATE) di Editor SQL Supabase.
+            // Jika error "column status of crm_profiles" masih muncul, 
+            // artinya SQL nuklir di editor Supabase belum dijalankan dengan benar.
             const { data: order, error } = await supabase!.from('orders').insert([orderPayload]).select().single();
             if (error) throw error;
 
