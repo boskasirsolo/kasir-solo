@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { useCRMData } from './shared/use-crm-data';
 import { useShadowLogic } from './shadow/use-shadow';
@@ -10,6 +9,8 @@ import { supabase } from '../../utils';
 export const useCRMLogic = () => {
     const { customers, loading, refreshData } = useCRMData();
     const [searchTerm, setSearchTerm] = useState('');
+    const [tempFilter, setTempFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
 
@@ -18,11 +19,16 @@ export const useCRMLogic = () => {
     const pipeline = usePipelineLogic(refreshData);
 
     const filteredCustomers = useMemo(() => {
-        return customers.filter(c => 
-            (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-            (c.phone || '').includes(searchTerm)
-        );
-    }, [customers, searchTerm]);
+        return customers.filter(c => {
+            const matchesSearch = (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                (c.phone || '').includes(searchTerm);
+            
+            const matchesTemp = tempFilter === 'all' || c.lead_temperature === tempFilter;
+            const matchesStatus = statusFilter === 'all' || c.lead_status === statusFilter;
+            
+            return matchesSearch && matchesTemp && matchesStatus;
+        });
+    }, [customers, searchTerm, tempFilter, statusFilter]);
 
     const deleteCustomer = async (phone: string) => {
         if (!confirm("Hapus juragan ini dari database? Tindakan ini gak bisa dibatalin.")) return;
@@ -62,8 +68,10 @@ export const useCRMLogic = () => {
     };
 
     return {
-        state: { loading, searchTerm },
+        state: { loading, searchTerm, tempFilter, statusFilter },
         setSearchTerm,
+        setTempFilter,
+        setStatusFilter,
         refresh: refreshData,
         filteredCustomers,
         abandonedLeads: shadow.abandonedLeads,
