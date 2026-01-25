@@ -105,7 +105,7 @@ export const useLeadLogic = () => {
             name: p.name,
             phone: p.phone,
             notes: p.last_notes || '',
-            status: p.lead_status,
+            status: p.lead_status, // Pastikan lead_status
             source: p.detected_category || p.source_origin || 'direct',
             created_at: p.created_at
         }));
