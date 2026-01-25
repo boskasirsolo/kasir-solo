@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '../../utils';
 import { Order, OrderItem, Lead } from '../../types';
@@ -86,7 +85,7 @@ export const useOrderLogic = () => {
     return { state, fetchOrders, fetchOrderItems, updateStatus, updateShipping, toggleExpand };
 };
 
-// --- LEAD LOGIC ---
+// --- LEAD LOGIC (SYNCED TO CRM) ---
 export const useLeadLogic = () => {
     const [state, setState] = useState<LeadState>({ leads: [], loading: true });
 
@@ -94,27 +93,43 @@ export const useLeadLogic = () => {
 
     const fetchLeads = async () => {
         if (!supabase) { setState(p => ({...p, loading: false})); return; }
-        const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
-        setState({ leads: data || [], loading: false });
+        
+        // Audit: Ambil data dari crm_profiles
+        const { data } = await supabase
+            .from('crm_profiles')
+            .select('phone, name, lead_status, last_notes, created_at, detected_category, source_origin')
+            .order('updated_at', { ascending: false });
+        
+        const mappedData = (data || []).map((p: any) => ({
+            id: p.phone, 
+            name: p.name,
+            phone: p.phone,
+            notes: p.last_notes || '',
+            status: p.lead_status,
+            source: p.detected_category || p.source_origin || 'direct',
+            created_at: p.created_at
+        }));
+
+        setState({ leads: mappedData as any, loading: false });
     };
 
-    const updateLeadStatus = async (id: number, status: string) => {
+    const updateLeadStatus = async (id: any, status: string) => {
         if (!supabase) return;
-        await supabase.from('leads').update({ status }).eq('id', id);
+        await supabase.from('crm_profiles').update({ lead_status: status }).eq('phone', id);
         setState(p => ({
             ...p,
             leads: p.leads.map(l => l.id === id ? { ...l, status: status as any } : l)
         }));
     };
 
-    const deleteLead = async (id: number) => {
-        if (!confirm("Hapus lead ini selamanya?")) return;
+    const deleteLead = async (id: any) => {
+        if (!confirm("Hapus juragan ini dari CRM?")) return;
         if (!supabase) return;
         try {
-            await supabase.from('leads').delete().eq('id', id);
+            await supabase.from('crm_profiles').delete().eq('phone', id);
             setState(p => ({ ...p, leads: p.leads.filter(l => l.id !== id) }));
         } catch (e) {
-            alert("Gagal hapus lead.");
+            alert("Gagal hapus data.");
         }
     };
 
