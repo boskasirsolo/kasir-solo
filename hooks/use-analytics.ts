@@ -62,19 +62,24 @@ export const useAnalytics = () => {
         const osName = getOS();
         const currentPath = location.pathname;
 
-        // --- GEO LOCATION DETECTION (IP-BASED WITH FALLBACK) ---
-        let city = 'Unknown';
+        // --- GEO LOCATION DETECTION (IP-BASED WITH COUNTRY INFO) ---
+        let locationLabel = 'Unknown';
         try {
             // Service 1: ipapi.co
             const geoRes = await fetch('https://ipapi.co/json/');
             const geoData = await geoRes.json();
-            city = geoData.city || 'Unknown';
+            
+            if (geoData.city) {
+                locationLabel = geoData.country_name ? `${geoData.city}, ${geoData.country_name}` : geoData.city;
+            }
             
             // Service 2 Fallback: ip-api.com (if Service 1 fails)
-            if (city === 'Unknown') {
+            if (locationLabel === 'Unknown') {
                const fallbackRes = await fetch('http://ip-api.com/json/');
                const fallbackData = await fallbackRes.json();
-               city = fallbackData.city || 'Unknown';
+               if (fallbackData.city) {
+                   locationLabel = fallbackData.country ? `${fallbackData.city}, ${fallbackData.country}` : fallbackData.city;
+               }
             }
         } catch (e) {
             console.warn("Geo lookup failed, using fallback.");
@@ -95,7 +100,7 @@ export const useAnalytics = () => {
                 page_path: currentPath,
                 device_type: deviceType,
                 referrer: finalReferrer,
-                location_city: city,
+                location_city: locationLabel, // Simpan format "Kota, Negara"
                 os_name: osName
             }]);
         } catch (e) { console.error("Analytics Error", e); }

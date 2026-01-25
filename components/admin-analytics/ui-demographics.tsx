@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Monitor, Users, Shield, Target, Award, UserCheck, Smartphone, Tablet, Cpu } from 'lucide-react';
+import { MapPin, Monitor, Users, Shield, Target, Award, UserCheck, Smartphone, Tablet, Cpu, Globe } from 'lucide-react';
 
 export const CityDistribution = ({ cities, total }: { cities: [string, number][], total: number }) => (
     <div className="bg-brand-dark border border-white/5 rounded-3xl p-6 shadow-2xl h-full flex flex-col relative overflow-hidden min-h-[520px]">
@@ -8,17 +8,31 @@ export const CityDistribution = ({ cities, total }: { cities: [string, number][]
             <MapPin size={18} className="text-brand-orange animate-pulse"/> Peta Kandang (Kota Asal)
         </h4>
         <div className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2 relative z-10">
-            {cities.map(([city, count], idx) => {
+            {cities.map(([locationLabel, count], idx) => {
                 const percent = Math.round((count / total) * 100);
-                const isTop = idx < 3;
+                
+                // Parsing format "Kota, Negara"
+                const [city, country] = locationLabel.includes(', ') 
+                    ? locationLabel.split(', ') 
+                    : [locationLabel, ''];
+
                 return (
                     <div key={idx} className="group">
-                        <div className="flex justify-between items-center text-xs mb-2">
-                            <div className="flex items-center gap-2">
-                                {idx === 0 ? <Award size={12} className="text-yellow-500" /> : <span className="text-[9px] font-mono text-gray-600">{idx + 1}.</span>}
-                                <span className={`font-bold transition-colors ${idx === 0 ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{city === 'Unknown' ? 'Radar Terbatas' : city}</span>
+                        <div className="flex justify-between items-start text-xs mb-2">
+                            <div className="flex flex-col gap-0.5">
+                                <div className="flex items-center gap-2">
+                                    {idx === 0 ? <Award size={12} className="text-yellow-500" /> : <span className="text-[9px] font-mono text-gray-600">{idx + 1}.</span>}
+                                    <span className={`font-bold transition-colors ${idx === 0 ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>
+                                        {city === 'Unknown' ? 'Radar Terbatas' : city}
+                                    </span>
+                                </div>
+                                {country && (
+                                    <div className="flex items-center gap-1.5 ml-5 text-[8px] font-black text-gray-600 uppercase tracking-widest">
+                                        <Globe size={8} /> {country}
+                                    </div>
+                                )}
                             </div>
-                            <span className="text-[10px] text-gray-500 font-mono font-bold">{count} Hits</span>
+                            <span className="text-[10px] text-gray-500 font-mono font-bold shrink-0">{count} Hits</span>
                         </div>
                         <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
                             <div 
@@ -52,7 +66,6 @@ export const TechIntelligence = ({
         return 'text-gray-400 border-white/10 bg-white/5';
     };
 
-    // Filter "Lainnya" agar selalu di posisi terakhir
     const osEntries = Object.entries(osData).sort(([a], [b]) => {
         if (a === 'Lainnya') return 1;
         if (b === 'Lainnya') return -1;
@@ -68,7 +81,6 @@ export const TechIntelligence = ({
             </h4>
 
             <div className="space-y-8 flex-1 relative z-10">
-                {/* DEVICE SECTION */}
                 <div>
                     <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Smartphone size={12}/> Hardware Stats
@@ -82,7 +94,6 @@ export const TechIntelligence = ({
 
                 <div className="h-px bg-white/5"></div>
 
-                {/* OS SECTION */}
                 <div>
                     <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Monitor size={12}/> Amunisi Gadget (OS)
@@ -144,7 +155,6 @@ export const DemographicEstimator = ({ data }: { data: any }) => {
             </div>
 
             <div className="space-y-8 flex-1 relative z-10 flex flex-col justify-center">
-                {/* GENDER PROFILING - TALLER BAR */}
                 <div>
                     <div className="flex justify-between text-[10px] font-black uppercase mb-2 tracking-[0.2em]">
                         <span className="text-blue-400">Pria ({Math.round(malePercent)}%)</span>
@@ -156,7 +166,6 @@ export const DemographicEstimator = ({ data }: { data: any }) => {
                     </div>
                 </div>
 
-                {/* AGE RANGE PROFILING - COMPACT H-36 */}
                 <div>
                     <h5 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Target size={12}/> Estimasi Rentang Usia
