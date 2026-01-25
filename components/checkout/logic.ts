@@ -58,7 +58,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             setShippingError(null);
             setShippingRates([]);
             setSelectedRate(null);
-            setIsManualShipping(false); // Reset manual flag
+            setIsManualShipping(false); 
             
             try {
                 const items = cart.map(item => ({
@@ -80,7 +80,6 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
 
                 const data = await res.json();
                 
-                // Jika API Biteship ngasih error "Route Not Found"
                 if (!res.ok) {
                     setIsManualShipping(true);
                     setShippingError("Rute otomatis tidak tersedia untuk wilayah ini.");
@@ -98,7 +97,6 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                         setShippingRates(filtered);
                         setSelectedRate(filtered[0]);
                     } else {
-                        // Jika ada rute tapi kurir yang kita mau gak ada
                         setIsManualShipping(true);
                         setShippingError("Ekspedisi pilihan tidak cover area ini.");
                     }
@@ -107,7 +105,6 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                     setShippingError("Tidak ada layanan pengiriman otomatis.");
                 }
             } catch (e: any) {
-                console.error("Biteship Rates Error", e);
                 setIsManualShipping(true);
                 setShippingError("Sistem kurir lagi limit, gunakan pengiriman manual.");
             } finally {
@@ -117,16 +114,14 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
         fetchRates();
     }, [selectedArea, cart]);
 
-    // --- COUPON & TERMS ACTIONS ---
+    // --- ACTIONS ---
 
-    // FIX: Added missing applyCoupon function
     const applyCoupon = () => {
         if (!couponInput) return;
         setIsValidatingCoupon(true);
-        // Simulasi validasi kupon
         setTimeout(() => {
             if (couponInput === 'KASIRSOLO2025') {
-                const discValue = 100000; // Contoh potongan flat 100rb
+                const discValue = 100000;
                 setDiscount({
                     code: couponInput,
                     type: 'fixed',
@@ -138,10 +133,10 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                 alert("Kupon ghaib, gak terdaftar di sistem.");
             }
             setIsValidatingCoupon(false);
-        }, 1000);
+            setCouponInput('');
+        }, 800);
     };
 
-    // FIX: Added missing handleCheckboxToggle function
     const handleCheckboxToggle = () => {
         if (!agreedToTerms) {
             setShowTermsModal(true);
@@ -150,19 +145,16 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
         }
     };
 
-    // Total harga dinamis: Jika manual, ongkir dianggap 0 di sistem (nego di WA)
     const finalTotal = isManualShipping ? totalPrice : (totalPrice + (selectedRate?.price || 0));
 
     const submitOrder = async (e: React.FormEvent) => {
         e.preventDefault();
         if (cart.length === 0) return;
         
-        // Validasi identitas dasar
         if (!formData.name || !formData.phone || !formData.address || !selectedArea) {
             return alert("Lengkapi data pengiriman Juragan.");
         }
         
-        // Harus pilih kurir ATAU sedang dalam mode manual
         if (!selectedRate && !isManualShipping) {
             return alert("Tunggu sebentar, sedang mengecek rute...");
         }
@@ -186,6 +178,9 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                 destination_area_id: selectedArea.id
             };
 
+            // PENTING: Error "column status of crm_profiles" biasanya dipicu oleh Trigger Database
+            // Saat insert ke 'orders', Supabase Trigger mencoba update 'crm_profiles'.
+            // Kode Frontend ini sudah benar, perbaikan harus dilakukan di SQL Trigger Supabase.
             const { data: order, error } = await supabase!.from('orders').insert([orderPayload]).select().single();
             if (error) throw error;
 

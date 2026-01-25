@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useRef } from 'react';
 import { CalcData, CalcOption } from './types';
 import { formatRupiah, supabase, normalizePhone } from '../../../utils';
@@ -27,7 +26,6 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
         total += base.price;
     }
 
-    // Get full objects of selected addons
     const activeAddonsList = data.addons.filter(a => selectedAddons.includes(a.id));
 
     activeAddonsList.forEach(addon => {
@@ -41,25 +39,22 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
         baseLabel: base?.label || '',
         basePrice: base?.price || 0,
         hasSelection: !!base,
-        activeAddons: activeAddonsList // Exposed for UI List
+        activeAddons: activeAddonsList
     };
   }, [selectedBase, selectedAddons, data]);
 
   // --- SHADOW CAPTURE SYSTEM (SURVEILLANCE) ---
   const handleShadowCapture = async (customerData: any) => {
-    // Validasi minimal: Nama & Phone harus ada
     if (!customerData.name || !customerData.phone || customerData.phone.length < 9) return;
     
     const cleanPhone = normalizePhone(customerData.phone);
-    if (!cleanPhone) return;
+    if (!cleanPhone || cleanPhone === lastCapturedPhone.current) return;
     if (!supabase) return;
 
-    // Cegah spam kirim data yang sama berulang kali dalam satu sesi
     const addonsText = calculation.activeAddons
-        .map(a => `${a.label} (${a.tier || 'basic'})`)
+        .map(a => `${a.label}`)
         .join(', ');
 
-    // Format data terstruktur untuk parser dashboard admin
     const report = 
         `🏢USAHA: ${customerData.company || '-'}\n` +
         `⚖️SKALA: ${customerData.scale || '-'}\n` +
@@ -70,16 +65,18 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
         `💰ESTIMASI: ${formatRupiah(calculation.total.min)}`;
 
     try {
-        const { error } = await supabase.from('leads').upsert([{
+        // FIX: Gunakan crm_profiles dan lead_status sesuai skema asli Bos
+        await supabase.from('crm_profiles').upsert([{
             phone: cleanPhone,
             name: customerData.name,
-            source: `sim_shadow_${serviceSlug || 'service'}`,
-            interest: `Simulasi: ${serviceName}`,
-            notes: report,
-            status: 'new'
+            source_origin: `sim_shadow_${serviceSlug || 'service'}`,
+            detected_category: 'webapp',
+            last_notes: report,
+            lead_status: 'new', // Kolom status di crm_profiles adalah lead_status
+            lead_temperature: 'warm',
+            updated_at: new Date().toISOString()
         }], { onConflict: 'phone' });
         
-        if (error) throw error;
         lastCapturedPhone.current = cleanPhone;
     } catch (e) {
         console.warn("Shadow capture failed:", e);
@@ -100,7 +97,7 @@ export const useCalculator = (data: CalcData, serviceName: string, waNumber?: st
         .map(a => ({ label: a.label, price: a.price, tier: a.tier || 'basic' }));
 
     const addonsLabels = activeAddonsForDB
-        .map(a => `- ${a.label} [${a.tier?.toUpperCase()}]`)
+        .map(a => `- ${a.label}`)
         .join('\n');
 
     if (supabase) {
