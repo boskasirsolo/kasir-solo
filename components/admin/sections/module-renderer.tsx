@@ -53,7 +53,7 @@ export const ModuleRenderer = ({
                             <div className="space-y-6">
                                 <div className="bg-brand-dark/40 p-1.5 rounded-2xl inline-flex border border-white/5 w-full mb-6 shadow-inner backdrop-blur-sm">
                                     <StoreSubTabBtn active={storeSubTab !== 'services'} onClick={() => setStoreSubTab('catalog')} icon={LayoutGrid} label="HARDWARE" />
-                                    <StoreSubTabBtn active={storeSubTab === 'services'} onClick={() => setStoreSubTab('services'} icon={Cpu} label="SERVICES" />
+                                    <StoreSubTabBtn active={storeSubTab === 'services'} onClick={() => setStoreSubTab('services')} icon={Cpu} label="SERVICES" />
                                 </div>
                                 <Suspense fallback={<ModuleLoader />}>
                                     {storeSubTab === 'services' ? <AdminServices config={props.config} /> : 
