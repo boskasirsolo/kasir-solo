@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ShoppingCart, Cpu, Globe, Zap, Clock, MapPin, DollarSign, Eye, Activity, Target, TrendingUp, Laptop } from 'lucide-react';
 import { Customer } from '../types';
@@ -33,7 +34,7 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
 
     const getSourceInfo = (source?: string, category?: string) => {
         const val = (category || source || '').toLowerCase();
-        if (val.includes('hardware') || val.includes('produk')) return { label: 'PRODUK', color: 'text-red-400', icon: ShoppingCart };
+        if (val.includes('hardware') || val.includes('produk') || val.includes('checkout')) return { label: 'PRODUK', color: 'text-red-400', icon: ShoppingCart };
         if (val.includes('webapp')) return { label: 'WEBAPP', color: 'text-blue-400', icon: Laptop };
         if (val.includes('seo')) return { label: 'SEO', color: 'text-purple-400', icon: TrendingUp };
         if (val.includes('web') || val.includes('website')) return { label: 'WEBSITE', color: 'text-green-400', icon: Globe };
@@ -49,7 +50,7 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
             onClick={onClick}
             className={`group relative p-5 rounded-[1.5rem] border backdrop-blur-md transition-all duration-300 cursor-pointer hover:border-brand-orange/50 flex flex-col h-full ${auraClass} shadow-xl active:scale-[0.98]`}
         >
-            {/* Header Badge: text-[10px] */}
+            {/* Header Badge */}
             <div className="flex justify-between items-start mb-4">
                 <div className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
                     isHot ? 'bg-red-500/10 border-red-500/20 text-red-400' : 
@@ -66,7 +67,7 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                 )}
             </div>
 
-            {/* Profile: Avatar 12, Name base (16px), Phone xs (12px) */}
+            {/* Profile */}
             <div className="flex items-center gap-3 mb-5">
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-black text-lg shrink-0 border transition-all ${
                     isHot ? 'bg-red-500/20 border-red-500/30 text-red-500' : 
@@ -79,13 +80,14 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                     <h4 className="text-sm font-bold text-white truncate group-hover:text-brand-orange transition-colors font-display tracking-tight leading-tight">
                         {customer.name}
                     </h4>
-                    <p className="text-[11px] text-gray-600 font-mono mt-0.5 uppercase">
-                        WA • {customer.phone.slice(-4)}
+                    {/* Tampilkan FULL PHONE dengan warna mencolok */}
+                    <p className="text-[11px] text-brand-orange font-mono font-black mt-0.5 uppercase tracking-tighter">
+                        WA • {customer.phone}
                     </p>
                 </div>
             </div>
 
-            {/* Intel Grid: text-[11px] and numbers sm (14px) */}
+            {/* Intel Grid */}
             <div className="grid grid-cols-2 gap-2 mb-5">
                 <div className="bg-black/40 p-2.5 rounded-xl border border-white/[0.03] flex flex-col justify-center">
                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -103,7 +105,7 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                 </div>
             </div>
 
-            {/* Mahar Box: text-[10px] & text-sm */}
+            {/* Mahar Box */}
             {intel.estimasi ? (
                 <div className={`mb-5 p-3 rounded-xl flex flex-col border ${
                     isHot ? 'bg-red-500/5 border-red-500/10' : 'bg-green-500/5 border-green-500/10'
@@ -118,7 +120,7 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                 </div>
             )}
 
-            {/* Footer: text-[10px] */}
+            {/* Footer */}
             <div className="mt-auto pt-4 border-t border-white/[0.05] flex justify-between items-center">
                 <div className={`px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-wider ${statusInfo.color}`}>
                     {statusInfo.label}

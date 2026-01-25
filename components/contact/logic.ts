@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { supabase, normalizePhone } from '../../utils';
 import { ContactFormState } from './types';
@@ -14,12 +15,15 @@ export const useContactLogic = (config: SiteConfig) => {
     const lastCapturedPhone = useRef<string>('');
 
     const handleShadowCapture = async () => {
-        if (!form.name || !form.phone || form.phone.length < 9) return;
+        // Filter input tidak lengkap atau nomor kependekan
+        if (!form.name || !form.phone || form.phone.length < 10) return;
         
         const cleanPhone = normalizePhone(form.phone);
         if (!cleanPhone || cleanPhone === lastCapturedPhone.current) return;
 
         if (!supabase) return;
+
+        const visitorId = localStorage.getItem('mks_visitor_id');
 
         try {
             // Audit: Tembak ke crm_profiles agar data terpusat
@@ -29,6 +33,9 @@ export const useContactLogic = (config: SiteConfig) => {
                 last_notes: `Topik: ${form.category}. Pesan Awal: ${form.message.substring(0, 100)}...`,
                 lead_status: 'new',
                 lead_temperature: 'cold',
+                visitor_id: visitorId,
+                source_origin: 'kontak',
+                detected_category: 'web',
                 updated_at: new Date().toISOString()
             }], { onConflict: 'phone' });
             

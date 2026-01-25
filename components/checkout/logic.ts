@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../../context/cart-context';
 import { supabase, normalizePhone, formatRupiah } from '../../utils';
@@ -18,7 +19,8 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
 
     // REAL-TIME SHADOW CAPTURE (SINKRON DENGAN CRM RADAR)
     useEffect(() => {
-        if (!formData.name || !formData.phone || formData.phone.length < 9 || cart.length === 0) return;
+        // VALIDASI KETAT: Cuma kirim kalau nama diisi dan nomor HP sudah mencapai panjang minimal HP Indo
+        if (!formData.name || !formData.phone || formData.phone.length < 10 || cart.length === 0) return;
 
         if (captureTimeout.current) clearTimeout(captureTimeout.current);
         
@@ -26,7 +28,9 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             const cleanPhone = normalizePhone(formData.phone);
             if (!cleanPhone || !supabase) return;
 
+            const visitorId = localStorage.getItem('mks_visitor_id');
             const itemsList = cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
+            
             // Standardized format for the parser
             const report = 
                 `📦PAKET: ${itemsList}\n` +
@@ -36,21 +40,24 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                 `SOURCE: checkout_shadow`;
 
             try {
-                // Upsert ke crm_profiles
+                // Upsert ke crm_profiles dengan Visitor ID biar History Link jalan
                 await supabase.from('crm_profiles').upsert([{
                     phone: cleanPhone,
                     name: formData.name,
                     last_notes: report,
                     lead_status: 'new',
                     lead_temperature: 'hot',
+                    visitor_id: visitorId, // KRUSIAL: Untuk link ke analytics_logs
+                    detected_category: 'hardware', // FIX: Paksa jadi hardware di halaman toko
+                    source_origin: 'shadow',
                     updated_at: new Date().toISOString()
                 }], { onConflict: 'phone' });
                 
-                console.log("Shadow Intel Captured:", cleanPhone);
+                console.log("Intel Captured & Synced:", cleanPhone);
             } catch (e) {
                 console.error("Shadow capture sync failed", e);
             }
-        }, 2000);
+        }, 1500); // Jedah sedikit lebih cepat biar responsif
 
         return () => clearTimeout(captureTimeout.current);
     }, [formData, cart, totalPrice]);

@@ -16,13 +16,14 @@ const TEMPERATURE_CONFIG: { id: LeadTemperature; label: string; color: string }[
     { id: 'cold', label: '🔵 COLD', color: 'text-gray-400 border-white/10' }
 ];
 
+// --- FIX: Added interface for props and removed internal useCRMLogic call to ensure prop matching ---
 interface CustomerDetailModalProps {
     customer: Customer;
     onClose: () => void;
-    updateStatus: (phone: string, status: LeadStatus) => Promise<void>;
-    updateTemperature: (phone: string, temp: LeadTemperature) => Promise<void>;
-    deleteCustomer: (phone: string) => Promise<void>;
-    runRecoveryAI: (customer: Customer) => Promise<void>;
+    updateStatus: (phone: string, status: LeadStatus) => void | Promise<void>;
+    updateTemperature: (phone: string, temp: LeadTemperature) => void | Promise<void>;
+    deleteCustomer: (phone: string) => void | Promise<void>;
+    runRecoveryAI: (customer: Customer) => void | Promise<void>;
     isGeneratingScript: string | null;
 }
 
@@ -33,7 +34,7 @@ export const CustomerDetailModal = ({
     updateTemperature,
     deleteCustomer,
     runRecoveryAI,
-    isGeneratingScript 
+    isGeneratingScript
 }: CustomerDetailModalProps) => {
     const intel = parseIntel(customer.last_notes);
     const radar = customer.intelligence;
@@ -55,13 +56,14 @@ export const CustomerDetailModal = ({
             
             <div className="relative w-full max-w-2xl bg-brand-dark border border-brand-orange/40 rounded-[2.5rem] shadow-[0_0_80px_rgba(0,0,0,0.9)] flex flex-col max-h-[90vh] overflow-hidden animate-fade-in">
                 
+                {/* MODAL HEADER */}
                 <div className="p-6 border-b border-white/10 bg-brand-card/50 flex justify-between items-center shrink-0 backdrop-blur-xl">
                     <div className="min-w-0 pr-6">
                         <div className="flex items-center gap-3 mb-2">
                             <span className={`text-[10px] font-black px-3 py-0.5 rounded-full uppercase tracking-[0.2em] shadow-neon ${
                                 customer.lead_temperature === 'hot' ? 'bg-red-600 text-white' : 'bg-brand-orange text-white'
                             }`}>
-                                Dossier # {customer.phone.slice(-4)}
+                                WA • {customer.phone}
                             </span>
                         </div>
                         <h3 className="text-xl md:text-2xl font-black text-white truncate font-display tracking-tight leading-none">{customer.name}</h3>
@@ -129,7 +131,7 @@ export const CustomerDetailModal = ({
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="bg-white/5 p-3 rounded-xl border border-white/5 text-center">
                                             <label className="text-[9px] text-gray-600 font-black uppercase block mb-1">Unit</label>
-                                            <span className="text-xs text-blue-400 font-black uppercase">{radar?.top_category || 'General'}</span>
+                                            <span className="text-xs text-blue-400 font-black uppercase">{customer.detected_category?.toUpperCase() || 'GENERAL'}</span>
                                         </div>
                                         <div className="bg-white/5 p-3 rounded-xl border border-white/5 text-center">
                                             <label className="text-[9px] text-gray-600 font-black uppercase block mb-1">Source</label>
@@ -145,12 +147,12 @@ export const CustomerDetailModal = ({
                                 </h4>
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center text-xs border-b border-white/[0.03] pb-3">
-                                        <span className="text-gray-500 font-bold uppercase tracking-wider">Usaha</span>
-                                        <span className="text-white font-black">{intel.usaha || customer.company_name || '-'}</span>
+                                        <span className="text-gray-500 font-bold uppercase tracking-wider">WhatsApp</span>
+                                        <span className="text-brand-orange font-black font-mono">{customer.phone}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-xs border-b border-white/[0.03] pb-3">
-                                        <span className="text-gray-500 font-bold uppercase tracking-wider">Skala</span>
-                                        <span className="text-blue-300 font-black">{intel.skala || '-'}</span>
+                                        <span className="text-gray-500 font-bold uppercase tracking-wider">Usaha</span>
+                                        <span className="text-white font-black">{intel.usaha || customer.company_name || '-'}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-xs border-b border-white/[0.03] pb-3">
                                         <span className="text-gray-500 font-bold uppercase tracking-wider">Mahar</span>
@@ -169,12 +171,14 @@ export const CustomerDetailModal = ({
                                 <History size={16} className="text-gray-500"/> Digital Footprint
                             </h4>
                             <div className="space-y-4 max-h-[250px] overflow-y-auto custom-scrollbar pr-4">
-                                {(customer.interaction_history || []).length > 0 ? customer.interaction_history.slice(0, 10).map((event: any, i: number) => (
+                                {(customer.interaction_history || []).length > 0 ? customer.interaction_history.slice(0, 15).map((event: any, i: number) => (
                                     <div key={i} className="flex gap-4 items-start border-l border-white/10 pl-4 relative group/event">
                                         <div className="absolute -left-[3px] top-1 w-1.5 h-1.5 rounded-full bg-brand-orange/40 group-hover/event:bg-brand-orange transition-colors"></div>
                                         <div className="flex-1">
                                             <p className="text-sm text-gray-400 leading-snug group-hover/event:text-white transition-colors">{event.event}</p>
-                                            <p className="text-[9px] text-gray-700 mt-1 font-mono uppercase font-bold tracking-tighter">{new Date(event.date).toLocaleTimeString('id-ID')} • SYNC_OK</p>
+                                            <p className="text-[9px] text-gray-700 mt-1 font-mono uppercase font-bold tracking-tighter">
+                                                {new Date(event.date).toLocaleTimeString('id-ID')} • {new Date(event.date).toLocaleDateString('id-ID')} • SYNC_OK
+                                            </p>
                                         </div>
                                     </div>
                                 )) : <p className="text-[10px] text-gray-700 italic text-center py-6 font-bold uppercase tracking-widest">Belum ada jejak terekam.</p>}
