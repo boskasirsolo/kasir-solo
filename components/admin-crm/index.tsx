@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCRMLogic } from './logic';
-import { Box, Filter as FilterIcon, MapPin, Zap, Globe } from 'lucide-react';
+import { Box, Filter as FilterIcon, MapPin, Zap, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LoadingSpinner } from '../ui';
 import { BriefingRoom } from './sections/briefing-room';
 import { TacticalToolbar } from './sections/tactical-toolbar';
@@ -34,9 +34,9 @@ const SOURCE_OPTIONS = [
 
 export const AdminCRM = () => {
     const { 
-        state, filteredCustomers, aiRecommendation, setAiRecommendation, 
+        state, filteredCustomers, totalCount, aiRecommendation, setAiRecommendation, 
         selectedCustomer, setSelectedCustomer, setSearchTerm, 
-        setTempFilter, setStatusFilter, setSourceFilter, refresh 
+        setTempFilter, setStatusFilter, setSourceFilter, setPage, refresh 
     } = useCRMLogic();
     
     const [viewMode, setViewMode] = useState<'radar' | 'orders'>('radar');
@@ -149,15 +149,40 @@ export const AdminCRM = () => {
                         <p className="text-xs font-black text-gray-600 uppercase tracking-[0.4em]">Menarik Data Intel...</p>
                     </div>
                 ) : viewMode === 'radar' ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                        {filteredCustomers.length === 0 ? (
-                            <div className="col-span-full py-32 text-center border-2 border-dashed border-white/5 rounded-[3rem] opacity-30 flex flex-col items-center">
-                                <Box size={64} className="mb-6 text-gray-700" />
-                                <p className="text-sm font-black uppercase tracking-[0.3em] text-gray-500">
-                                    Radar Bersih, Bos. <br/> Gak nemu juragan yang pas.
-                                </p>
+                    <div className="space-y-12">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {filteredCustomers.length === 0 ? (
+                                <div className="col-span-full py-32 text-center border-2 border-dashed border-white/5 rounded-[3rem] opacity-30 flex flex-col items-center">
+                                    <Box size={64} className="mb-6 text-gray-700" />
+                                    <p className="text-sm font-black uppercase tracking-[0.3em] text-gray-500">
+                                        Radar Bersih, Bos. <br/> Gak nemu juragan yang pas.
+                                    </p>
+                                </div>
+                            ) : filteredCustomers.map(c => <RadarJuraganCard key={c.phone} customer={c} onClick={() => setSelectedCustomer(c)} />)}
+                        </div>
+
+                        {/* PAGINATION UI */}
+                        {state.totalPages > 1 && (
+                            <div className="flex justify-center items-center gap-4 py-8 border-t border-white/5">
+                                <button 
+                                    onClick={() => setPage(Math.max(1, state.page - 1))}
+                                    disabled={state.page === 1}
+                                    className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white group"
+                                >
+                                    <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                                </button>
+                                <span className="text-brand-orange font-display font-bold px-4 py-2 bg-brand-orange/10 rounded-lg border border-brand-orange/20 text-xs">
+                                    HALAMAN {state.page} / {state.totalPages}
+                                </span>
+                                <button 
+                                    onClick={() => setPage(Math.min(state.totalPages, state.page + 1))}
+                                    disabled={state.page === state.totalPages}
+                                    className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 disabled:hover:border-white/10 transition-all text-white group"
+                                >
+                                    <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
+                                </button>
                             </div>
-                        ) : filteredCustomers.map(c => <RadarJuraganCard key={c.phone} customer={c} onClick={() => setSelectedCustomer(c)} />)}
+                        )}
                     </div>
                 ) : (
                     <OrdersPanel config={{ whatsapp_number: "628816566935" } as any} searchTerm={state.searchTerm} />

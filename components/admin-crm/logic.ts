@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useCRMData } from './shared/use-crm-data';
 import { useShadowLogic } from './shadow/use-shadow';
 import { usePipelineLogic } from './pipeline/use-pipeline';
@@ -6,18 +6,26 @@ import { Customer, LeadStatus, LeadTemperature } from './types';
 import { SibosAI } from '../../services/ai/sibos';
 import { supabase } from '../../utils';
 
+const ITEMS_PER_PAGE = 12;
+
 export const useCRMLogic = () => {
     const { customers, loading, refreshData } = useCRMData();
     const [searchTerm, setSearchTerm] = useState('');
     const [tempFilter, setTempFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [sourceFilter, setSourceFilter] = useState<string>('all');
+    const [page, setPage] = useState(1);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
 
     // Delegate specific logic to dedicated hooks
     const shadow = useShadowLogic(customers);
     const pipeline = usePipelineLogic(refreshData);
+
+    // Reset ke halaman 1 tiap kali filter berubah
+    useEffect(() => {
+        setPage(1);
+    }, [searchTerm, tempFilter, statusFilter, sourceFilter]);
 
     const filteredCustomers = useMemo(() => {
         return customers.filter(c => {
@@ -31,6 +39,13 @@ export const useCRMLogic = () => {
             return matchesSearch && matchesTemp && matchesStatus && matchesSource;
         });
     }, [customers, searchTerm, tempFilter, statusFilter, sourceFilter]);
+
+    const totalPages = Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE);
+    
+    const paginatedCustomers = useMemo(() => {
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        return filteredCustomers.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredCustomers, page]);
 
     const deleteCustomer = async (phone: string) => {
         if (!confirm("Hapus juragan ini dari database? Tindakan ini gak bisa dibatalin.")) return;
@@ -70,13 +85,15 @@ export const useCRMLogic = () => {
     };
 
     return {
-        state: { loading, searchTerm, tempFilter, statusFilter, sourceFilter },
+        state: { loading, searchTerm, tempFilter, statusFilter, sourceFilter, page, totalPages },
         setSearchTerm,
         setTempFilter,
         setStatusFilter,
         setSourceFilter,
+        setPage,
         refresh: refreshData,
-        filteredCustomers,
+        filteredCustomers: paginatedCustomers,
+        totalCount: filteredCustomers.length,
         abandonedLeads: shadow.abandonedLeads,
         runRecoveryAI: shadow.runRecoveryAI,
         isGeneratingScript: shadow.isRescuing,
