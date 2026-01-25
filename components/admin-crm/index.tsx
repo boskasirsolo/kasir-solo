@@ -54,10 +54,8 @@ export const AdminCRM = () => {
 
     return (
         <div className="space-y-6 relative animate-fade-in px-1">
-            {/* BRIEFING AI */}
             {aiRecommendation && <BriefingRoom insight={aiRecommendation} onClear={() => setAiRecommendation(null)} />}
             
-            {/* TOOLBAR UTAMA */}
             <TacticalToolbar 
                 viewMode={viewMode} setViewMode={setViewMode} 
                 searchTerm={state.searchTerm} setSearchTerm={setSearchTerm}
@@ -65,23 +63,21 @@ export const AdminCRM = () => {
                 filterCount={activeFilterCount}
             />
 
-            {/* PANEL FILTER ULTRA COMPACT (CALIBRATED) */}
             {isFilterOpen && (
-                <div className="animate-fade-in px-1 mb-6">
-                    <div className="bg-brand-card/60 p-4 rounded-[2rem] border border-white/10 shadow-[inner_0_0_20px_rgba(0,0,0,0.5)] flex flex-col gap-4">
-                        <div className="flex flex-col lg:flex-row gap-6 items-start">
+                <div className="animate-fade-in px-1 mb-8">
+                    <div className="bg-brand-card/60 p-6 rounded-[2.5rem] border border-white/10 shadow-[inner_0_0_20px_rgba(0,0,0,0.5)] flex flex-col gap-6">
+                        <div className="flex flex-col lg:flex-row gap-8 items-start">
                             
-                            {/* Progres Prospek */}
-                            <div className="space-y-1.5 flex-1 w-full">
-                                <p className="text-[8px] text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-1.5">
-                                    <Zap size={10} className="text-blue-400" /> Filter Progres
+                            <div className="space-y-3 flex-1 w-full">
+                                <p className="text-xs text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                                    <Zap size={14} className="text-blue-400" /> Filter Progres
                                 </p>
-                                <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full pb-1 px-1">
+                                <div className="flex flex-wrap gap-2 px-1">
                                     {STATUS_OPTIONS.map(opt => (
                                         <button
                                             key={opt.id}
                                             onClick={() => setStatusFilter(opt.id)}
-                                            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
+                                            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
                                                 state.statusFilter === opt.id
                                                 ? 'bg-white/15 text-white border-white/30 shadow-md'
                                                 : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300'
@@ -93,19 +89,18 @@ export const AdminCRM = () => {
                                 </div>
                             </div>
 
-                            <div className="hidden lg:block h-8 w-px bg-white/5 self-center"></div>
+                            <div className="hidden lg:block h-12 w-px bg-white/5 self-center"></div>
 
-                            {/* Suhu Radar */}
-                            <div className="space-y-1.5 flex-1 w-full">
-                                <p className="text-[8px] text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-1.5">
-                                    <MapPin size={10} className="text-brand-orange" /> Filter Suhu
+                            <div className="space-y-3 flex-1 w-full">
+                                <p className="text-xs text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                                    <MapPin size={14} className="text-brand-orange" /> Filter Suhu
                                 </p>
-                                <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full pb-1 px-1">
+                                <div className="flex flex-wrap gap-2 px-1">
                                     {TEMPERATURE_OPTIONS.map(opt => (
                                         <button
                                             key={opt.id}
                                             onClick={() => setTempFilter(opt.id)}
-                                            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
+                                            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
                                                 state.tempFilter === opt.id
                                                 ? 'bg-brand-orange/20 text-brand-orange border-brand-orange/40 shadow-neon-text/5'
                                                 : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300'
@@ -120,17 +115,16 @@ export const AdminCRM = () => {
 
                         <div className="h-px w-full bg-white/5 mx-2"></div>
 
-                        {/* Asal Leads */}
-                        <div className="space-y-1.5 pb-1">
-                            <p className="text-[8px] text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-1.5">
-                                <Globe size={10} className="text-green-500" /> Filter Asal Leads
+                        <div className="space-y-3 pb-2">
+                            <p className="text-xs text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                                <Globe size={14} className="text-green-500" /> Filter Asal Leads
                             </p>
-                            <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full px-1">
+                            <div className="flex flex-wrap gap-2 px-1">
                                 {SOURCE_OPTIONS.map(opt => (
                                     <button
                                         key={opt.id}
                                         onClick={() => setSourceFilter(opt.id)}
-                                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
+                                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
                                             state.sourceFilter === opt.id
                                             ? 'bg-green-500/20 text-green-400 border-green-500/40 shadow-neon-text/5'
                                             : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300'
@@ -145,12 +139,11 @@ export const AdminCRM = () => {
                 </div>
             )}
 
-            {/* KONTEN UTAMA */}
             <div className="min-h-[600px] px-1 pb-20">
                 {state.loading ? (
                     <div className="flex flex-col items-center justify-center py-32 gap-4">
-                        <LoadingSpinner size={40} />
-                        <p className="text-xs font-black text-gray-600 uppercase tracking-[0.4em]">Menarik Data Intel...</p>
+                        <LoadingSpinner size={48} />
+                        <p className="text-sm font-black text-gray-600 uppercase tracking-[0.4em]">Menarik Data Intel...</p>
                     </div>
                 ) : viewMode === 'radar' ? (
                     <div className="space-y-12">
@@ -158,32 +151,31 @@ export const AdminCRM = () => {
                             {filteredCustomers.length === 0 ? (
                                 <div className="col-span-full py-32 text-center border-2 border-dashed border-white/5 rounded-[3rem] opacity-30 flex flex-col items-center">
                                     <Box size={64} className="mb-6 text-gray-700" />
-                                    <p className="text-sm font-black uppercase tracking-[0.3em] text-gray-500">
+                                    <p className="text-base font-black uppercase tracking-[0.3em] text-gray-500">
                                         Radar Bersih, Bos. <br/> Gak nemu juragan yang pas.
                                     </p>
                                 </div>
                             ) : filteredCustomers.map(c => <RadarJuraganCard key={c.phone} customer={c} onClick={() => setSelectedCustomer(c)} />)}
                         </div>
 
-                        {/* PAGINATION */}
                         {state.totalPages > 1 && (
-                            <div className="flex justify-center items-center gap-4 py-8 border-t border-white/5">
+                            <div className="flex justify-center items-center gap-6 py-12 border-t border-white/5">
                                 <button 
                                     onClick={() => setPage(Math.max(1, state.page - 1))}
                                     disabled={state.page === 1}
-                                    className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 transition-all text-white group"
+                                    className="p-4 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 transition-all text-white group"
                                 >
-                                    <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                                    <ChevronLeft size={24} className="group-hover:-translate-x-0.5 transition-transform" />
                                 </button>
-                                <span className="text-brand-orange font-display font-bold px-4 py-2 bg-brand-orange/10 rounded-lg border border-brand-orange/20 text-xs">
+                                <span className="text-brand-orange font-display font-bold px-6 py-2 bg-brand-orange/10 rounded-xl border border-brand-orange/20 text-sm">
                                     HALAMAN {state.page} / {state.totalPages}
                                 </span>
                                 <button 
                                     onClick={() => setPage(Math.min(state.totalPages, state.page + 1))}
                                     disabled={state.page === state.totalPages}
-                                    className="p-3 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 transition-all text-white group"
+                                    className="p-4 rounded-full bg-brand-card border border-white/10 hover:border-brand-orange disabled:opacity-30 transition-all text-white group"
                                 >
-                                    <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
+                                    <ChevronRight size={24} className="group-hover:translate-x-0.5 transition-transform" />
                                 </button>
                             </div>
                         )}

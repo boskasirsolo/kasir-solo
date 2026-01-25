@@ -14,14 +14,12 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
     const intel = parseIntel(customer.last_notes);
     const radar = customer.intelligence;
     
-    // Status color mapping - High Contrast Tactical Mode
     const auraClass = isHot 
         ? 'border-red-500/40 bg-gradient-to-br from-[#1a0505] to-[#050505] shadow-[0_10px_30px_rgba(239,68,68,0.1)]' 
         : isWarm 
             ? 'border-brand-orange/40 bg-gradient-to-br from-[#1a1005] to-[#050505] shadow-[0_10px_30px_rgba(255,95,31,0.05)]' 
             : 'border-white/10 bg-gradient-to-br from-[#0c0e12] to-[#050505]';
 
-    // 1. Progress Status Info Mapper (Sektor Kiri)
     const getStatusInfo = (status: string) => {
         switch (status) {
             case 'new': return { label: '🆕 BARU', color: 'text-blue-400 border-blue-400/30 bg-blue-400/5' };
@@ -33,23 +31,12 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
         }
     };
 
-    // 2. Source Origin Info Mapper (Sektor Kanan - Rikues User)
     const getSourceInfo = (source?: string, category?: string) => {
         const val = (category || source || '').toLowerCase();
-        
-        if (val.includes('hardware') || val.includes('produk')) {
-            return { label: 'PRODUK', color: 'text-red-400', icon: ShoppingCart };
-        }
-        if (val.includes('webapp')) {
-            return { label: 'WEBAPP', color: 'text-blue-400', icon: Laptop };
-        }
-        if (val.includes('seo')) {
-            return { label: 'SEO', color: 'text-purple-400', icon: TrendingUp };
-        }
-        if (val.includes('web') || val.includes('website')) {
-            return { label: 'WEBSITE', color: 'text-green-400', icon: Globe };
-        }
-        
+        if (val.includes('hardware') || val.includes('produk')) return { label: 'PRODUK', color: 'text-red-400', icon: ShoppingCart };
+        if (val.includes('webapp')) return { label: 'WEBAPP', color: 'text-blue-400', icon: Laptop };
+        if (val.includes('seo')) return { label: 'SEO', color: 'text-purple-400', icon: TrendingUp };
+        if (val.includes('web') || val.includes('website')) return { label: 'WEBSITE', color: 'text-green-400', icon: Globe };
         return { label: 'DIRECT', color: 'text-gray-500', icon: Zap };
     };
 
@@ -60,11 +47,10 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
     return (
         <div 
             onClick={onClick}
-            className={`group relative p-5 rounded-[2rem] border backdrop-blur-md transition-all duration-300 cursor-pointer hover:scale-[1.02] active:scale-[0.98] flex flex-col h-full ${auraClass} hover:border-brand-orange shadow-2xl`}
+            className={`group relative p-6 rounded-[2rem] border backdrop-blur-md transition-all duration-300 cursor-pointer hover:scale-[1.02] active:scale-[0.98] flex flex-col h-full ${auraClass} hover:border-brand-orange shadow-2xl`}
         >
-            {/* TOP HEADER: STATUS & PING */}
-            <div className="flex justify-between items-start mb-5">
-                <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+            <div className="flex justify-between items-start mb-6">
+                <div className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border ${
                     isHot ? 'bg-red-500/20 border-red-500/40 text-red-400' : 
                     isWarm ? 'bg-brand-orange/20 border-brand-orange/40 text-brand-orange' :
                     'bg-white/5 border-white/10 text-gray-500'
@@ -72,16 +58,15 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                     {customer.lead_temperature === 'hot' ? '🔥 PRIORITY' : customer.lead_temperature.toUpperCase()}
                 </div>
                 {isHot && (
-                    <div className="flex h-2.5 w-2.5 relative">
+                    <div className="flex h-3 w-3 relative">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                     </div>
                 )}
             </div>
 
-            {/* CORE INFO */}
-            <div className="flex items-center gap-4 mb-5">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl shrink-0 border transition-all ${
+            <div className="flex items-center gap-4 mb-6">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl shrink-0 border transition-all ${
                     isHot ? 'bg-red-500/20 border-red-500/40 text-red-500 shadow-neon-text/10' : 
                     isWarm ? 'bg-brand-orange/20 border-brand-orange/40 text-brand-orange' : 
                     'bg-white/10 border-white/20 text-gray-400'
@@ -89,67 +74,60 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                     {customer.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                    <h4 className="text-base font-bold text-white truncate group-hover:text-brand-orange transition-colors font-display tracking-tight">
+                    <h4 className="text-lg font-bold text-white truncate group-hover:text-brand-orange transition-colors font-display tracking-tight">
                         {customer.name}
                     </h4>
-                    <p className="text-xs text-gray-500 font-mono mt-0.5 tracking-tighter">
+                    <p className="text-sm text-gray-500 font-mono mt-0.5">
                         **** {customer.phone.slice(-4)}
                     </p>
                 </div>
             </div>
 
-            {/* RADAR INTEL GRID */}
-            <div className="grid grid-cols-2 gap-3 mb-5">
-                <div className="bg-black/60 p-2.5 rounded-xl border border-white/[0.05] flex items-center justify-between">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                        <Eye size={12} className="text-blue-400 shrink-0" />
-                        <span className="text-xs font-black text-white">{radar?.total_views || 0}</span>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="bg-black/60 p-3 rounded-xl border border-white/[0.05] flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Eye size={14} className="text-blue-400 shrink-0" />
+                        <span className="text-xs font-black text-gray-500 uppercase tracking-widest">Views</span>
                     </div>
-                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-widest">Views</span>
+                    <span className="text-base font-black text-white ml-5">{radar?.total_views || 0}</span>
                 </div>
-                <div className="bg-black/60 p-2.5 rounded-xl border border-white/[0.05] flex items-center justify-between">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                        <Clock size={12} className="text-purple-400 shrink-0" />
-                        <span className="text-xs font-black text-white">{Math.round((radar?.avg_engagement_sec || 0)/60)}m</span>
+                <div className="bg-black/60 p-3 rounded-xl border border-white/[0.05] flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Clock size={14} className="text-purple-400 shrink-0" />
+                        <span className="text-xs font-black text-gray-500 uppercase tracking-widest">Time</span>
                     </div>
-                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-widest">Time</span>
+                    <span className="text-base font-black text-white ml-5">{Math.round((radar?.avg_engagement_sec || 0)/60)}m</span>
                 </div>
             </div>
 
-            {/* ESTIMATION BOX */}
             {intel.estimasi ? (
-                <div className={`mb-5 p-3 rounded-2xl flex items-center justify-between group-hover:border-opacity-100 transition-colors border ${
+                <div className={`mb-6 p-4 rounded-2xl flex flex-col group-hover:border-opacity-100 transition-colors border ${
                     isHot ? 'bg-red-500/10 border-red-500/20' : 'bg-green-500/5 border-green-500/10'
                 }`}>
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${isHot ? 'text-red-400' : 'text-green-600'}`}>Est. Mahar</span>
-                    <span className={`text-xs font-black font-mono ${isHot ? 'text-white' : 'text-green-400'}`}>{intel.estimasi}</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isHot ? 'text-red-400' : 'text-green-600'}`}>Est. Mahar</span>
+                    <span className={`text-base font-black font-mono ${isHot ? 'text-white' : 'text-green-400'}`}>{intel.estimasi}</span>
                 </div>
             ) : (
-                <div className="mb-5 p-3 bg-white/[0.03] border border-white/[0.05] rounded-2xl flex items-center justify-between italic">
-                    <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest">Interest</span>
-                    <span className="text-[10px] text-gray-500 truncate max-w-[100px]">Analyzing...</span>
+                <div className="mb-6 p-4 bg-white/[0.03] border border-white/[0.05] rounded-2xl flex items-center justify-between italic">
+                    <span className="text-xs font-black text-gray-700 uppercase tracking-widest">Interest</span>
+                    <span className="text-xs text-gray-500 truncate">Analyzing...</span>
                 </div>
             )}
 
-            {/* FOOTER INFO (KALIBRASI ASAL LEADS) */}
-            <div className="mt-auto pt-4 border-t border-white/[0.08] flex justify-between items-center">
-                {/* 1. INFORMASI PROGRESS */}
-                <div className={`px-2 py-1 rounded-lg border text-[9px] font-black uppercase tracking-wider shadow-inner ${statusInfo.color}`}>
+            <div className="mt-auto pt-5 border-t border-white/[0.08] flex justify-between items-center">
+                <div className={`px-3 py-1.5 rounded-lg border text-xs font-black uppercase tracking-wider shadow-inner ${statusInfo.color}`}>
                     {statusInfo.label}
                 </div>
-
-                {/* 2. INFORMASI ASAL LEADS (PRODUK, WEB, WEBAPP, SEO) */}
-                <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${sourceInfo.color} group-hover:scale-105 transition-transform`}>
-                    <SourceIcon size={12} className="opacity-70" />
+                <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest ${sourceInfo.color} group-hover:scale-105 transition-transform`}>
+                    <SourceIcon size={16} className="opacity-70" />
                     <span>{sourceInfo.label}</span>
                 </div>
             </div>
 
-            {/* STUCK DETECTION OVERLAY */}
             {customer.is_indecisive_buyer && (
-                <div className="absolute top-0 right-0 p-1.5">
-                    <div className="bg-blue-600 text-white p-1.5 rounded-bl-xl shadow-neon animate-pulse" title="Target Stuck di Checkout">
-                        <Activity size={12} />
+                <div className="absolute top-0 right-0 p-2">
+                    <div className="bg-blue-600 text-white p-2 rounded-bl-2xl shadow-neon animate-pulse" title="Target Stuck di Checkout">
+                        <Activity size={16} />
                     </div>
                 </div>
             )}
