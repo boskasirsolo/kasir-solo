@@ -14,12 +14,12 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
     const intel = parseIntel(customer.last_notes);
     const radar = customer.intelligence;
     
-    // Status color mapping
+    // Status color mapping - High Contrast Tactical Mode
     const auraClass = isHot 
-        ? 'border-red-500/30 bg-red-600/[0.03] shadow-[0_0_20px_rgba(239,68,68,0.15)]' 
+        ? 'border-red-500/40 bg-gradient-to-br from-[#1a0505] to-[#050505] shadow-[0_10px_30px_rgba(239,68,68,0.1)]' 
         : isWarm 
-            ? 'border-brand-orange/30 bg-brand-orange/[0.02]' 
-            : 'border-white/5 bg-white/[0.01]';
+            ? 'border-brand-orange/40 bg-gradient-to-br from-[#1a1005] to-[#050505] shadow-[0_10px_30px_rgba(255,95,31,0.05)]' 
+            : 'border-white/10 bg-gradient-to-br from-[#0c0e12] to-[#050505]';
 
     const getSourceIcon = () => {
         if (customer.source_origin === 'shadow') return <ShoppingCart size={12} />;
@@ -30,11 +30,15 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
     return (
         <div 
             onClick={onClick}
-            className={`group relative p-5 rounded-[2rem] border backdrop-blur-sm transition-all duration-300 cursor-pointer hover:scale-[1.02] active:scale-[0.98] flex flex-col h-full ${auraClass} hover:border-brand-orange/50 shadow-xl`}
+            className={`group relative p-5 rounded-[2rem] border backdrop-blur-md transition-all duration-300 cursor-pointer hover:scale-[1.02] active:scale-[0.98] flex flex-col h-full ${auraClass} hover:border-brand-orange shadow-2xl`}
         >
             {/* TOP HEADER: STATUS & PING */}
             <div className="flex justify-between items-start mb-5">
-                <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${isHot ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-black/40 border-white/10 text-gray-500'}`}>
+                <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                    isHot ? 'bg-red-500/20 border-red-500/40 text-red-400' : 
+                    isWarm ? 'bg-brand-orange/20 border-brand-orange/40 text-brand-orange' :
+                    'bg-white/5 border-white/10 text-gray-500'
+                }`}>
                     {customer.lead_temperature === 'hot' ? '🔥 PRIORITY' : customer.lead_temperature.toUpperCase()}
                 </div>
                 {isHot && (
@@ -50,7 +54,7 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl shrink-0 border transition-all ${
                     isHot ? 'bg-red-500/20 border-red-500/40 text-red-500 shadow-neon-text/10' : 
                     isWarm ? 'bg-brand-orange/20 border-brand-orange/40 text-brand-orange' : 
-                    'bg-white/5 border-white/10 text-gray-500'
+                    'bg-white/10 border-white/20 text-gray-400'
                 }`}>
                     {customer.name.charAt(0).toUpperCase()}
                 </div>
@@ -66,42 +70,44 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
 
             {/* RADAR INTEL GRID (Micro Stats) */}
             <div className="grid grid-cols-2 gap-3 mb-5">
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/[0.03] flex items-center justify-between">
+                <div className="bg-black/60 p-2.5 rounded-xl border border-white/[0.05] flex items-center justify-between">
                     <div className="flex items-center gap-2 overflow-hidden">
                         <Eye size={12} className="text-blue-400 shrink-0" />
                         <span className="text-xs font-black text-white">{radar?.total_views || 0}</span>
                     </div>
-                    <span className="text-[8px] text-gray-600 font-bold uppercase tracking-widest">Views</span>
+                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-widest">Views</span>
                 </div>
-                <div className="bg-black/40 p-2.5 rounded-xl border border-white/[0.03] flex items-center justify-between">
+                <div className="bg-black/60 p-2.5 rounded-xl border border-white/[0.05] flex items-center justify-between">
                     <div className="flex items-center gap-2 overflow-hidden">
                         <Clock size={12} className="text-purple-400 shrink-0" />
                         <span className="text-xs font-black text-white">{Math.round((radar?.avg_engagement_sec || 0)/60)}m</span>
                     </div>
-                    <span className="text-[8px] text-gray-600 font-bold uppercase tracking-widest">Time</span>
+                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-widest">Time</span>
                 </div>
             </div>
 
             {/* ESTIMATION BOX */}
             {intel.estimasi ? (
-                <div className="mb-5 p-3 bg-green-500/5 border border-green-500/10 rounded-2xl flex items-center justify-between group-hover:border-green-500/30 transition-colors">
-                    <span className="text-[9px] font-black text-green-600 uppercase tracking-widest">Est. Mahar</span>
-                    <span className="text-xs font-black text-green-400 font-mono">{intel.estimasi}</span>
+                <div className={`mb-5 p-3 rounded-2xl flex items-center justify-between group-hover:border-opacity-100 transition-colors border ${
+                    isHot ? 'bg-red-500/10 border-red-500/20' : 'bg-green-500/5 border-green-500/10'
+                }`}>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${isHot ? 'text-red-400' : 'text-green-600'}`}>Est. Mahar</span>
+                    <span className={`text-xs font-black font-mono ${isHot ? 'text-white' : 'text-green-400'}`}>{intel.estimasi}</span>
                 </div>
             ) : (
-                <div className="mb-5 p-3 bg-white/[0.02] border border-white/[0.05] rounded-2xl flex items-center justify-between italic">
+                <div className="mb-5 p-3 bg-white/[0.03] border border-white/[0.05] rounded-2xl flex items-center justify-between italic">
                     <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest">Interest</span>
                     <span className="text-[10px] text-gray-500 truncate max-w-[100px]">Analyzing...</span>
                 </div>
             )}
 
             {/* FOOTER INFO */}
-            <div className="mt-auto pt-4 border-t border-white/[0.05] flex justify-between items-center">
-                <div className="flex items-center gap-2 px-2 py-1 rounded bg-black/40 border border-white/5 text-[9px] font-black text-gray-500 uppercase tracking-[0.1em]">
+            <div className="mt-auto pt-4 border-t border-white/[0.08] flex justify-between items-center">
+                <div className="flex items-center gap-2 px-2 py-1 rounded bg-black/60 border border-white/5 text-[9px] font-black text-gray-400 uppercase tracking-[0.1em]">
                     {getSourceIcon()} {customer.source_origin || 'DIRECT'}
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-bold truncate max-w-[100px]">
-                    <MapPin size={10} className="text-gray-700" /> {customer.location || 'Unknown'}
+                <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold truncate max-w-[100px]">
+                    <MapPin size={10} className="text-gray-600" /> {customer.location || 'Unknown'}
                 </div>
             </div>
 
