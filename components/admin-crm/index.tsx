@@ -1,8 +1,8 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCRMLogic } from './logic';
 import { LeadStatus, LeadTemperature } from './types';
-import { LayoutGrid, Kanban, Sparkles, X, Filter, Package, Radar, Target, Box } from 'lucide-react';
+import { Kanban, Sparkles, X, Filter, Package, Radar, Target, Box, Search, ChevronDown, RefreshCw } from 'lucide-react';
 import { LoadingSpinner } from '../ui';
 import { SimpleMarkdown } from '../admin-articles/markdown';
 
@@ -20,12 +20,13 @@ export const AdminCRM = () => {
         updateStatus, runRecoveryAI, isGeneratingScript, 
         aiRecommendation, setAiRecommendation, 
         selectedCustomer, setSelectedCustomer,
-        refresh
+        setSearchTerm, refresh
     } = useCRMLogic();
 
     const [viewMode, setViewMode] = useState<CRMViewMode>('radar');
     const [tempFilter, setTempFilter] = useState<LeadTemperature | 'all'>('all');
     const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     const finalFiltered = useMemo(() => {
         return filteredCustomers.filter(c => {
@@ -35,6 +36,8 @@ export const AdminCRM = () => {
         });
     }, [filteredCustomers, tempFilter, statusFilter]);
 
+    const filterActiveCount = (tempFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0);
+
     const TABS = [
         { id: 'radar', label: 'Radar Juragan', desc: 'Helicopter View', icon: Radar },
         { id: 'board', label: 'Strategy Board', desc: 'Pipeline Progres', icon: Kanban },
@@ -43,74 +46,127 @@ export const AdminCRM = () => {
 
     return (
         <div className="space-y-6 relative">
-            {/* STICKY TACTICAL HEADER (MATCHING RADAR ANALYTICS) */}
-            <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md py-3 -mx-4 px-4 border-b border-white/5 shadow-xl transition-all">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    {/* View Switcher Cards */}
-                    <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
-                        {TABS.map((tab) => {
-                            const isActive = viewMode === tab.id;
-                            return (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setViewMode(tab.id as CRMViewMode)}
-                                    className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all shrink-0 group ${
-                                        isActive 
-                                            ? 'bg-brand-orange border-brand-orange text-white shadow-neon' 
-                                            : 'bg-brand-card/50 border-white/5 text-gray-500 hover:text-white hover:border-white/20'
-                                    }`}
-                                >
-                                    <tab.icon size={16} className={isActive ? 'text-white' : 'text-gray-600 group-hover:text-brand-orange'} />
-                                    <div className="text-left">
-                                        <p className="text-[9px] font-black uppercase tracking-widest leading-none">{tab.label}</p>
-                                        <p className={`text-[8px] mt-0.5 font-bold ${isActive ? 'text-white/60' : 'text-gray-700'}`}>{tab.desc}</p>
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* Quick Filters (Right Side) */}
-                    <div className="flex items-center gap-3 self-end md:self-auto">
-                        {viewMode !== 'orders' && (
-                            <div className="flex bg-black/40 p-1 rounded-xl border border-white/10">
-                                {['all', 'hot', 'warm', 'cold'].map((t) => (
+            {/* STICKY TACTICAL HEADER */}
+            <div className="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-md -mx-4 px-4 border-b border-white/5 shadow-xl transition-all">
+                <div className="py-3 flex flex-col gap-4">
+                    {/* TOP BAR: Navigation & Search */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        {/* View Switcher Cards */}
+                        <div className="flex gap-2 overflow-x-auto custom-scrollbar-hide shrink-0 pb-1">
+                            {TABS.map((tab) => {
+                                const isActive = viewMode === tab.id;
+                                return (
                                     <button
-                                        key={t}
-                                        onClick={() => setTempFilter(t as any)}
-                                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
-                                            tempFilter === t 
-                                                ? 'bg-brand-orange text-white shadow-sm' 
-                                                : 'text-gray-600 hover:text-white'
+                                        key={tab.id}
+                                        onClick={() => setViewMode(tab.id as CRMViewMode)}
+                                        className={`flex items-center gap-3 px-4 py-2 rounded-xl border transition-all shrink-0 group ${
+                                            isActive 
+                                                ? 'bg-brand-orange border-brand-orange text-white shadow-neon' 
+                                                : 'bg-brand-card/50 border-white/5 text-gray-500 hover:text-white hover:border-white/20'
                                         }`}
                                     >
-                                        {t === 'all' ? 'ALL' : t === 'hot' ? '🔥' : t === 'warm' ? '🟠' : '🔵'}
+                                        <tab.icon size={14} className={isActive ? 'text-white' : 'text-gray-600 group-hover:text-brand-orange'} />
+                                        <div className="text-left">
+                                            <p className="text-[9px] font-black uppercase tracking-widest leading-none">{tab.label}</p>
+                                        </div>
                                     </button>
-                                ))}
+                                );
+                            })}
+                        </div>
+
+                        {/* Search & Filter Trigger */}
+                        <div className="flex items-center gap-2 flex-1 md:max-w-md">
+                            <div className="relative flex-1 group">
+                                <Search size={14} className="absolute left-3 top-2.5 text-gray-600 group-focus-within:text-brand-orange transition-colors" />
+                                <input 
+                                    type="text"
+                                    value={state.searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Cari Nama/WA Juragan..."
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold text-white outline-none focus:border-brand-orange transition-all placeholder:text-gray-700"
+                                />
                             </div>
-                        )}
-                        
-                        {viewMode === 'orders' ? (
+                            
                             <button 
-                                onClick={refresh}
-                                className="flex items-center gap-2 px-4 py-2 bg-brand-orange/10 border border-brand-orange/30 rounded-lg text-[10px] font-black text-brand-orange hover:bg-brand-orange hover:text-white transition-all shadow-lg"
+                                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-black text-[9px] uppercase tracking-widest transition-all relative ${
+                                    isFilterOpen || filterActiveCount > 0
+                                    ? 'bg-brand-orange/10 border-brand-orange text-brand-orange shadow-neon-text/5' 
+                                    : 'bg-brand-card/50 border-white/5 text-gray-500 hover:text-white'
+                                }`}
                             >
-                                <RefreshCw size={14} /> REFRESH DATA
+                                <Filter size={14} />
+                                <span className="hidden sm:inline">Filter</span>
+                                {filterActiveCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-orange text-white rounded-full flex items-center justify-center text-[8px] shadow-neon">
+                                        {filterActiveCount}
+                                    </span>
+                                )}
+                                <ChevronDown size={12} className={`transition-transform duration-300 ${isFilterOpen ? 'rotate-180' : ''}`} />
                             </button>
-                        ) : (
-                            <select 
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value as any)}
-                                className="bg-black/60 border border-white/10 text-[9px] font-black uppercase rounded-xl px-4 py-2 outline-none focus:border-brand-orange text-white h-10"
-                            >
-                                <option value="all">SEMUA STATUS</option>
-                                <option value="new">🆕 BARU</option>
-                                <option value="contacted">📞 DISAPA</option>
-                                <option value="negotiating">📑 NEGO</option>
-                                <option value="closed">🤝 DEAL</option>
-                                <option value="lost">❌ BATAL</option>
-                            </select>
-                        )}
+
+                            {viewMode === 'orders' && (
+                                <button 
+                                    onClick={refresh}
+                                    className="p-2 bg-white/5 border border-white/10 rounded-xl text-gray-500 hover:text-brand-orange hover:border-brand-orange transition-all"
+                                    title="Refresh Data"
+                                >
+                                    <RefreshCw size={14} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ACCORDION FILTER PANEL */}
+                    <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isFilterOpen ? 'max-h-64 opacity-100 mb-2' : 'max-h-0 opacity-0'}`}>
+                        <div className="bg-brand-card/40 border border-white/5 rounded-2xl p-4 grid md:grid-cols-2 gap-6">
+                            {/* Temperature Filter */}
+                            <div className="space-y-3">
+                                <p className="text-[8px] font-black text-gray-600 uppercase tracking-[0.2em] px-1">Derajat Minat (Suhu)</p>
+                                <div className="flex gap-1.5 flex-wrap">
+                                    {['all', 'hot', 'warm', 'cold'].map((t) => (
+                                        <button
+                                            key={t}
+                                            onClick={() => setTempFilter(t as any)}
+                                            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all border ${
+                                                tempFilter === t 
+                                                    ? 'bg-brand-orange border-brand-orange text-white shadow-neon-text/10' 
+                                                    : 'bg-black/40 border-white/5 text-gray-500 hover:text-white hover:border-white/20'
+                                            }`}
+                                        >
+                                            {t === 'all' ? 'SEMUA SUHU' : t === 'hot' ? '🔥 HOT' : t === 'warm' ? '🟠 WARM' : '🔵 COLD'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Status Filter */}
+                            <div className="space-y-3">
+                                <p className="text-[8px] font-black text-gray-600 uppercase tracking-[0.2em] px-1">Tahapan Negosiasi (Status)</p>
+                                <div className="flex gap-1.5 flex-wrap">
+                                    {[
+                                        { id: 'all', label: 'SEMUA STATUS' },
+                                        { id: 'new', label: '🆕 BARU' },
+                                        { id: 'contacted', label: '📞 DISAPA' },
+                                        { id: 'negotiating', label: '📑 NEGO' },
+                                        { id: 'closed', label: '🤝 DEAL' },
+                                        { id: 'lost', label: '❌ BATAL' }
+                                    ].map((s) => (
+                                        <button
+                                            key={s.id}
+                                            onClick={() => setStatusFilter(s.id as any)}
+                                            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all border ${
+                                                statusFilter === s.id 
+                                                    ? 'bg-blue-600 border-blue-500 text-white shadow-neon-text/10' 
+                                                    : 'bg-black/40 border-white/5 text-gray-500 hover:text-white hover:border-white/20'
+                                            }`}
+                                        >
+                                            {s.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -138,7 +194,7 @@ export const AdminCRM = () => {
                         {finalFiltered.length === 0 ? (
                             <div className="col-span-full py-24 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-30">
                                 <Box size={48} className="mx-auto mb-4" />
-                                <p className="text-xs font-bold uppercase tracking-widest">Radar Bersih, Bos.</p>
+                                <p className="text-xs font-bold uppercase tracking-widest">Data Tidak Ditemukan, Bos.</p>
                             </div>
                         ) : finalFiltered.map(c => (
                             <RadarJuraganCard 
@@ -178,5 +234,3 @@ export const AdminCRM = () => {
         </div>
     );
 };
-
-import { RefreshCw } from 'lucide-react';
