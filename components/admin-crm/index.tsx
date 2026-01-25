@@ -63,22 +63,22 @@ export const AdminCRM = () => {
                 filterCount={activeFilterCount}
             />
 
-            {/* FILTER UI DRAWER/PANEL (CALIBRATED V3.3) */}
+            {/* FILTER UI DRAWER/PANEL (CALIBRATED V3.5 EXTREME COMPACT) */}
             {isFilterOpen && (
                 <div className="animate-fade-in px-1 mb-6">
-                    <div className="bg-brand-card/40 p-5 rounded-3xl border border-white/10 shadow-[inner_0_0_20px_rgba(0,0,0,0.5)] flex flex-col gap-5">
-                        <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-start">
+                    <div className="bg-brand-card/40 p-4 rounded-[2rem] border border-white/10 shadow-[inner_0_0_20px_rgba(0,0,0,0.5)] flex flex-col gap-4">
+                        <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-start">
                             {/* Status Filter Group */}
-                            <div className="space-y-2 flex-1 w-full">
-                                <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                                    <Zap size={10} className="text-blue-400" /> Filter Progres Prospek
+                            <div className="space-y-1.5 flex-1 w-full">
+                                <p className="text-[8px] text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                                    <Zap size={8} className="text-blue-400" /> Filter Progres Prospek
                                 </p>
-                                <div className="flex gap-1.5 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
+                                <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
                                     {STATUS_OPTIONS.map(opt => (
                                         <button
                                             key={opt.id}
                                             onClick={() => setStatusFilter(opt.id)}
-                                            className={`px-3.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
+                                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
                                                 state.statusFilter === opt.id
                                                 ? 'bg-white/15 text-white border-white/30 shadow-md'
                                                 : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300 hover:bg-black/60'
@@ -90,19 +90,19 @@ export const AdminCRM = () => {
                                 </div>
                             </div>
 
-                            <div className="hidden lg:block h-10 w-px bg-white/5 self-center"></div>
+                            <div className="hidden lg:block h-8 w-px bg-white/5 self-center"></div>
 
                             {/* Temperature Filter Group */}
-                            <div className="space-y-2 flex-1 w-full">
-                                <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                                    <MapPin size={10} className="text-brand-orange" /> Filter Suhu Radar
+                            <div className="space-y-1.5 flex-1 w-full">
+                                <p className="text-[8px] text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                                    <MapPin size={8} className="text-brand-orange" /> Filter Suhu Radar
                                 </p>
-                                <div className="flex gap-1.5 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
+                                <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
                                     {TEMPERATURE_OPTIONS.map(opt => (
                                         <button
                                             key={opt.id}
                                             onClick={() => setTempFilter(opt.id)}
-                                            className={`px-3.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
+                                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
                                                 state.tempFilter === opt.id
                                                 ? 'bg-brand-orange/20 text-brand-orange border-brand-orange/40 shadow-neon-text/5'
                                                 : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300 hover:bg-black/60'
@@ -118,16 +118,16 @@ export const AdminCRM = () => {
                         <div className="h-px w-full bg-white/5"></div>
 
                         {/* Source Origin Filter Group */}
-                        <div className="space-y-2">
-                            <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                                <Globe size={10} className="text-green-500" /> Filter Asal Leads (Interest)
+                        <div className="space-y-1.5">
+                            <p className="text-[8px] text-gray-600 font-black uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                                <Globe size={8} className="text-green-500" /> Filter Asal Leads (Interest)
                             </p>
-                            <div className="flex gap-1.5 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
+                            <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full pb-1">
                                 {SOURCE_OPTIONS.map(opt => (
                                     <button
                                         key={opt.id}
                                         onClick={() => setSourceFilter(opt.id)}
-                                        className={`px-3.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
+                                        className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap active:scale-95 ${
                                             state.sourceFilter === opt.id
                                             ? 'bg-green-500/20 text-green-400 border-green-500/40 shadow-neon-text/5'
                                             : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300 hover:bg-black/60'
