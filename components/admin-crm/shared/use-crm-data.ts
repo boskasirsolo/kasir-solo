@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../../../utils';
 import { Customer, LeadTemperature } from '../types';
@@ -22,7 +23,7 @@ const getTimeLabel = (dateStr: string) => {
 const detectTemperature = (customer: any): LeadTemperature => {
     // 1. Prioritas: Label Manual dari DB (Override)
     if (customer.lead_temperature === 'hot' || customer.lead_temperature === 'warm') {
-        return customer.lead_temperature;
+        return customer.lead_temperature as LeadTemperature;
     }
 
     // 2. Logic Radar: Jika interaksi tinggi atau terdeteksi galau di checkout
@@ -43,7 +44,7 @@ export const useCRMData = () => {
         if (!supabase) return;
         setLoading(true);
         try {
-            // Tarik data dari VIEW intelijen
+            // Tarik data dari VIEW intelijen yang baru dibuat
             const { data, error } = await supabase
                 .from('crm_intelligence_radar')
                 .select('*')
@@ -55,11 +56,12 @@ export const useCRMData = () => {
                 setCustomers((rawData || []).map(p => ({ 
                     ...p, 
                     lead_temperature: p.lead_temperature || 'cold',
+                    interaction_history: [],
                     intelligence: {
                         total_views: 0,
                         most_visited_path: 'Unknown',
                         avg_engagement_sec: 0,
-                        last_activity_desc: 'No radar data',
+                        last_activity_desc: 'Radar Offline',
                         top_category: 'Unknown',
                         last_seen_at: p.updated_at
                     }
@@ -68,22 +70,23 @@ export const useCRMData = () => {
             }
 
             const mapped = (data || []).map((p: any) => {
-                const customerObj = {
+                const customerObj: Customer = {
                     ...p,
                     is_indecisive_buyer: !!p.calculated_indecisive,
                     lead_temperature: detectTemperature(p),
                     last_seen_label: getTimeLabel(p.last_seen_at || p.updated_at),
+                    interaction_history: p.interaction_history || [],
                     intelligence: {
                         most_visited_path: p.obsession_page || 'Home',
                         total_views: p.total_views || 0,
-                        last_activity_desc: `Last seen at ${p.obsession_page || 'Home'}`,
+                        last_activity_desc: `Dilihat terakhir di ${p.obsession_page || 'Halaman Utama'}`,
                         avg_engagement_sec: p.avg_engagement_sec || 0, 
                         top_category: (p.obsession_page || '').includes('/shop') ? 'Hardware' : 'Software',
                         last_seen_at: p.last_seen_at || p.updated_at
                     }
                 };
                 
-                return customerObj as Customer;
+                return customerObj;
             });
 
             setCustomers(mapped);

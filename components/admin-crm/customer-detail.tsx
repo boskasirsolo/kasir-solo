@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { 
     X, Phone, MapPin, Building, History, Sparkles, Zap, 
     Trash2, MessageCircle, Clock, Target, BarChart3, 
-    Smartphone, Monitor, Eye, Activity, ShieldAlert
+    Smartphone, Monitor, Eye, Activity, ShieldAlert, Globe 
 } from 'lucide-react';
 import { Customer, LeadStatus, LeadTemperature, PIPELINE_STAGES } from './types';
 import { parseIntel } from './shared/utils';
@@ -16,7 +16,6 @@ const TEMPERATURE_CONFIG: { id: LeadTemperature; label: string; color: string }[
     { id: 'cold', label: '🔵 COLD', color: 'text-gray-400 border-white/10' }
 ];
 
-// --- FIX: Added interface for props and removed internal useCRMLogic call to ensure prop matching ---
 interface CustomerDetailModalProps {
     customer: Customer;
     onClose: () => void;
@@ -65,6 +64,9 @@ export const CustomerDetailModal = ({
                             }`}>
                                 WA • {customer.phone}
                             </span>
+                            {customer.is_indecisive_buyer && (
+                                <span className="bg-blue-600 text-white text-[8px] font-black px-2 py-1 rounded-full animate-pulse">GALAU_MODE</span>
+                            )}
                         </div>
                         <h3 className="text-xl md:text-2xl font-black text-white truncate font-display tracking-tight leading-none">{customer.name}</h3>
                     </div>
@@ -87,111 +89,110 @@ export const CustomerDetailModal = ({
                 <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-black/20">
                     <div className="space-y-8">
                         
+                        {/* KPI GRID */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div className="bg-brand-card border border-white/5 p-4 rounded-2xl shadow-inner group transition-all">
-                                <span className="text-gray-600 text-[10px] font-black uppercase tracking-widest block mb-2">Views</span>
+                                <span className="text-gray-600 text-[10px] font-black uppercase tracking-widest block mb-2">Total Hits</span>
                                 <div className="flex items-center justify-between">
                                     <p className="text-xl font-display font-black text-white group-hover:text-blue-400">{radar?.total_views || 0}</p>
                                     <Eye size={16} className="text-blue-500 opacity-40"/>
                                 </div>
                             </div>
                             <div className="bg-brand-card border border-white/5 p-4 rounded-2xl shadow-inner group transition-all">
-                                <span className="text-gray-600 text-[10px] font-black uppercase tracking-widest block mb-2">Mins</span>
+                                <span className="text-gray-600 text-[10px] font-black uppercase tracking-widest block mb-2">Asal Trafik</span>
                                 <div className="flex items-center justify-between">
-                                    <p className="text-xl font-display font-black text-white group-hover:text-purple-400">{Math.round((radar?.avg_engagement_sec || 0)/60)}</p>
-                                    <Clock size={16} className="text-purple-500 opacity-40"/>
+                                    <p className="text-sm font-black text-white truncate group-hover:text-purple-400 max-w-[60px]">{customer.source_origin?.toUpperCase() || 'DIRECT'}</p>
+                                    <Globe size={16} className="text-purple-500 opacity-40"/>
                                 </div>
                             </div>
                             <div className="bg-brand-card border border-white/5 p-4 rounded-2xl shadow-inner group transition-all">
-                                <span className="text-gray-600 text-[10px] font-black uppercase tracking-widest block mb-2">Confidence</span>
+                                <span className="text-gray-600 text-[10px] font-black uppercase tracking-widest block mb-2">Suhu Intel</span>
                                 <div className="flex items-center justify-between">
-                                    <p className="text-xl font-display font-black text-white group-hover:text-yellow-500">{customer.lead_temperature === 'hot' ? '90%' : '45%'}</p>
+                                    <p className="text-sm font-black text-white uppercase">{customer.lead_temperature}</p>
                                     <Zap size={16} className="text-yellow-500 opacity-40"/>
                                 </div>
                             </div>
                             <div className="bg-brand-card border border-white/5 p-4 rounded-2xl shadow-inner group transition-all">
-                                <span className="text-gray-600 text-[10px] font-black uppercase tracking-widest block mb-2">Sync</span>
+                                <span className="text-gray-600 text-[10px] font-black uppercase tracking-widest block mb-2">Status Radar</span>
                                 <div className="flex items-center justify-between">
-                                    <p className="text-xl font-display font-black text-brand-orange">OK</p>
+                                    <p className="text-sm font-black text-green-500">LIVE</p>
                                     <Target size={16} className="text-brand-orange opacity-40"/>
                                 </div>
                             </div>
                         </div>
 
+                        {/* ANALYTICS & DATA INPUT */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="bg-brand-card/40 border border-white/5 p-6 rounded-[2rem]">
                                 <h4 className="text-[11px] font-black text-gray-500 mb-6 flex items-center gap-2 uppercase tracking-[0.2em]">
-                                    <Activity size={16} className="text-brand-orange"/> Perilaku Digital
+                                    <Activity size={16} className="text-brand-orange"/> Analisa Perilaku
                                 </h4>
                                 <div className="space-y-5">
                                     <div>
-                                        <label className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Target Utama</label>
-                                        <p className="text-xs text-white font-mono truncate bg-black/40 p-3 rounded-xl mt-2 border border-white/5">{radar?.most_visited_path || '/'}</p>
+                                        <label className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Halaman Favorit</label>
+                                        <p className="text-xs text-white font-mono truncate bg-black/40 p-3 rounded-xl mt-2 border border-white/5" title={radar?.most_visited_path}>{radar?.most_visited_path || '/'}</p>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-white/5 p-3 rounded-xl border border-white/5 text-center">
-                                            <label className="text-[9px] text-gray-600 font-black uppercase block mb-1">Unit</label>
-                                            <span className="text-xs text-blue-400 font-black uppercase">{customer.detected_category?.toUpperCase() || 'GENERAL'}</span>
-                                        </div>
-                                        <div className="bg-white/5 p-3 rounded-xl border border-white/5 text-center">
-                                            <label className="text-[9px] text-gray-600 font-black uppercase block mb-1">Source</label>
-                                            <span className="text-xs text-green-400 font-black uppercase">{customer.source_origin?.toUpperCase() || 'DIRECT'}</span>
-                                        </div>
+                                    <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <label className="text-[9px] text-gray-600 font-black uppercase block mb-1">Niat Utama Terdeteksi</label>
+                                        <span className="text-xs text-blue-400 font-black uppercase">{customer.detected_category?.toUpperCase() || 'MENCARI SOLUSI'}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="bg-brand-card/40 border border-white/5 p-6 rounded-[2rem]">
                                 <h4 className="text-[11px] font-black text-gray-500 mb-6 flex items-center gap-2 uppercase tracking-[0.2em]">
-                                    <BarChart3 size={16} className="text-blue-400"/> Business Blueprint
+                                    <BarChart3 size={16} className="text-blue-400"/> Data Input (Form)
                                 </h4>
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center text-xs border-b border-white/[0.03] pb-3">
-                                        <span className="text-gray-500 font-bold uppercase tracking-wider">WhatsApp</span>
-                                        <span className="text-brand-orange font-black font-mono">{customer.phone}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-xs border-b border-white/[0.03] pb-3">
                                         <span className="text-gray-500 font-bold uppercase tracking-wider">Usaha</span>
-                                        <span className="text-white font-black">{intel.usaha || customer.company_name || '-'}</span>
+                                        <span className="text-white font-black">{intel.usaha || customer.company_name || 'N/A'}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-xs border-b border-white/[0.03] pb-3">
-                                        <span className="text-gray-500 font-bold uppercase tracking-wider">Mahar</span>
-                                        <span className="text-green-400 font-black font-mono text-sm">{intel.estimasi || '-'}</span>
+                                        <span className="text-gray-500 font-bold uppercase tracking-wider">Estimasi</span>
+                                        <span className="text-green-400 font-black font-mono text-sm">{intel.estimasi || 'Belum dihitung'}</span>
                                     </div>
-                                    <div className="flex justify-between items-start text-xs">
-                                        <span className="text-gray-500 font-bold uppercase tracking-wider shrink-0">Lokasi</span>
-                                        <span className="text-gray-300 text-right font-medium italic pl-4 leading-snug line-clamp-2">{intel.alamat || customer.location || '-'}</span>
+                                    <div className="flex flex-col gap-2">
+                                        <span className="text-gray-500 font-bold uppercase tracking-wider text-[10px]">Lokasi Juragan</span>
+                                        <span className="text-gray-300 font-medium italic bg-black/20 p-2 rounded leading-snug line-clamp-2">{intel.alamat || customer.location || 'Tidak tersedia'}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
+                        {/* LIVE CHRONOLOGY */}
                         <div className="bg-brand-card/40 border border-white/5 p-6 rounded-[2rem]">
                             <h4 className="text-[11px] font-black text-gray-500 mb-6 flex items-center gap-2 uppercase tracking-[0.2em]">
-                                <History size={16} className="text-gray-500"/> Digital Footprint
+                                <History size={16} className="text-gray-500"/> Kronologi Aktivitas (Live)
                             </h4>
-                            <div className="space-y-4 max-h-[250px] overflow-y-auto custom-scrollbar pr-4">
-                                {(customer.interaction_history || []).length > 0 ? customer.interaction_history.slice(0, 15).map((event: any, i: number) => (
+                            <div className="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-4">
+                                {(customer.interaction_history || []).length > 0 ? customer.interaction_history.map((event: any, i: number) => (
                                     <div key={i} className="flex gap-4 items-start border-l border-white/10 pl-4 relative group/event">
-                                        <div className="absolute -left-[3px] top-1 w-1.5 h-1.5 rounded-full bg-brand-orange/40 group-hover/event:bg-brand-orange transition-colors"></div>
+                                        <div className="absolute -left-[3px] top-1.5 w-1.5 h-1.5 rounded-full bg-brand-orange/40 group-hover/event:bg-brand-orange transition-colors"></div>
                                         <div className="flex-1">
                                             <p className="text-sm text-gray-400 leading-snug group-hover/event:text-white transition-colors">{event.event}</p>
                                             <p className="text-[9px] text-gray-700 mt-1 font-mono uppercase font-bold tracking-tighter">
-                                                {new Date(event.date).toLocaleTimeString('id-ID')} • {new Date(event.date).toLocaleDateString('id-ID')} • SYNC_OK
+                                                {new Date(event.date).toLocaleString('id-ID')}
                                             </p>
                                         </div>
                                     </div>
-                                )) : <p className="text-[10px] text-gray-700 italic text-center py-6 font-bold uppercase tracking-widest">Belum ada jejak terekam.</p>}
+                                )) : (
+                                    <div className="py-10 text-center opacity-30 flex flex-col items-center">
+                                        <History size={32} className="mb-2" />
+                                        <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada aktivitas terekam.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                     </div>
                 </div>
 
+                {/* MODAL FOOTER - ACTIONS */}
                 <div className="p-6 bg-brand-card border-t border-white/10 flex flex-col gap-4 shrink-0 z-50 backdrop-blur-xl">
                     <div className="flex gap-3">
                         <div className="flex-1 space-y-1.5">
-                            <label className="text-[10px] text-gray-600 font-black uppercase tracking-widest ml-1">Status Progres</label>
+                            <label className="text-[10px] text-gray-600 font-black uppercase tracking-widest ml-1">Status Negosiasi</label>
                             <select 
                                 value={customer.lead_status}
                                 onChange={(e) => updateStatus(customer.phone, e.target.value as LeadStatus)}
@@ -201,7 +202,7 @@ export const CustomerDetailModal = ({
                             </select>
                         </div>
                         <div className="flex-1 space-y-1.5">
-                            <label className="text-[10px] text-gray-600 font-black uppercase tracking-widest ml-1">Suhu Lead</label>
+                            <label className="text-[10px] text-gray-600 font-black uppercase tracking-widest ml-1">Label Prioritas</label>
                             <select 
                                 value={customer.lead_temperature}
                                 onChange={(e) => updateTemperature(customer.phone, e.target.value as LeadTemperature)}
@@ -218,7 +219,7 @@ export const CustomerDetailModal = ({
                             disabled={isGeneratingScript === customer.phone}
                             className="flex-1 bg-brand-gradient text-white rounded-xl py-3.5 font-black text-xs uppercase tracking-[0.1em] flex items-center justify-center gap-3 shadow-neon active:scale-95 disabled:opacity-50 transition-all"
                         >
-                            {isGeneratingScript === customer.phone ? <LoadingSpinner size={16}/> : <><Sparkles size={20}/> SAPA AI</>}
+                            {isGeneratingScript === customer.phone ? <LoadingSpinner size={16}/> : <><Sparkles size={20}/> RAKIT PESAN AI</>}
                         </button>
                         <button 
                             onClick={() => deleteCustomer(customer.phone)}
