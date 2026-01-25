@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,8 +15,28 @@
   }
 }
 
-/* --- MKS TACTICAL SCANNER ANIMATION CORE --- */
+/* --- MKS ANIMATION ENGINE V5.0 --- */
 
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-slide-in-right { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-scale-up { animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+/* --- MKS TACTICAL SCANNER ANIMATION CORE --- */
 .mks-scanner-wrapper {
   display: flex;
   flex-direction: column;
@@ -35,7 +56,6 @@
   background: radial-gradient(circle at center, rgba(255, 95, 31, 0.05) 0%, transparent 70%);
 }
 
-/* Siku di tiap pojok */
 .corner {
   position: absolute;
   width: 25px;
@@ -53,7 +73,6 @@
   50% { opacity: 1; border-color: #FF5F1F; transform: scale(1.05); }
 }
 
-/* Barcode Vertical Lines (HIGH CONTRAST) */
 .barcode-area {
   width: 130px;
   height: 90px;
@@ -61,7 +80,6 @@
   align-items: center;
   justify-content: space-between;
   opacity: 0.9;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.1));
 }
 .barcode-line {
   height: 100%;
@@ -69,7 +87,6 @@
   border-radius: 1px;
 }
 
-/* Scanning Laser Beam (STRONG NEON) */
 .laser-beam {
   position: absolute;
   left: 5px;
@@ -86,13 +103,6 @@
   50% { top: 165px; opacity: 1; }
 }
 
-/* Process Text Animation */
-.process-text-container {
-  height: 20px;
-  overflow: hidden;
-  text-align: center;
-}
-
 .process-text {
   color: #FF5F1F;
   font-family: 'Space Grotesk', sans-serif;
@@ -100,7 +110,6 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4em;
-  position: relative;
 }
 
 .process-text::after {
@@ -119,31 +128,19 @@
 }
 
 /* --- LUXURY DARK UTILITIES --- */
-
 .glass-v2 {
   @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
 }
 
-.neon-border-orange {
-  box-shadow: 0 0 0 1px rgba(255, 95, 31, 0.2), 0 0 20px rgba(255, 95, 31, 0.1);
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+  background: #222; 
+  border-radius: 10px; 
 }
-
-.text-mask-reveal {
-  background: linear-gradient(to right, #fff 20%, #FF5F1F 40%, #FF5F1F 60%, #fff 80%);
-  background-size: 200% auto;
-  color: #000;
-  background-clip: text;
-  text-fill-color: transparent;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shine 5s linear infinite;
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #FF5F1F;
 }
-
-@keyframes shine {
-  to { background-position: 200% center; }
-}
-
-/* --- PERFORMANCE TUNED ANIMATIONS --- */
 
 .reveal-on-scroll {
   opacity: 0;
@@ -156,26 +153,12 @@
   transform: translateY(0);
 }
 
-.hover-lift {
-  @apply transition-transform duration-300 hover:-translate-y-2 active:scale-95;
-}
-
-/* Custom Scrollbar (God Mode Dark) */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #050505; }
-::-webkit-scrollbar-thumb { 
-  background: linear-gradient(to bottom, transparent, #FF5F1F, transparent); 
-  border-radius: 10px; 
-}
-
-/* HIDE NUMBER INPUT SPINNERS */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* Map & Media Effects */
 .iframe-map-container iframe {
   filter: grayscale(100%) invert(95%) contrast(90%) brightness(95%);
 }

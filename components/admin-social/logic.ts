@@ -1,233 +1,60 @@
 
-import { useState, useEffect, useMemo } from 'react';
-import { slugify, uploadToCloudinary, generateUtmUrl } from '../../utils';
+import { useState } from 'react';
+import { useSourcePicker } from './hooks/use-source-picker';
+import { useComposer } from './hooks/use-composer';
 import { Product, Article, GalleryItem } from '../../types';
-import { SocialContentItem, PlatformState, CaptionState, ActiveTab, SOCIAL_TONES } from './types';
-import { SERVICE_CATALOG } from './data';
-import { SocialAI } from '../../services/ai/social';
+import { uploadToCloudinary, generateUtmUrl, slugify } from '../../utils';
+import { ActiveTab, CaptionState } from './types';
 
-const ITEMS_PER_PAGE = 7;
-
-export const useSocialStudio = (
-    products: Product[],
-    articles: Article[],
-    gallery: GalleryItem[]
-) => {
-    // --- STATE ---
-    const [selectedSourceType, setSelectedSourceType] = useState<'all' | 'product' | 'service' | 'article' | 'gallery'>('all');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [sourcePage, setSourcePage] = useState(1); 
+export const useSocialStudio = (products: Product[], articles: Article[], gallery: GalleryItem[]) => {
+    const source = useSourcePicker(products, articles, gallery);
+    const composer = useComposer();
     
-    // Selection State
-    const [selectedItem, setSelectedItem] = useState<SocialContentItem | null>(null);
-    
-    // Composer State
-    const [platforms, setPlatforms] = useState<PlatformState>({ 
-        instagram: true, facebook: true, linkedin: false,
-        tiktok: false, twitter: false, gmb: false,
-        pinterest: false, telegram: false, youtube: false, threads: false
-    });
-    
-    const [captions, setCaptions] = useState<CaptionState>({ 
-        master: '', instagram: '', facebook: '', linkedin: '',
-        tiktok: '', twitter: '', gmb: '', pinterest: '', telegram: '', youtube: '', threads: ''
-    });
-
-    const [activeTab, setActiveTab] = useState<ActiveTab>('master');
+    const [isPosting, setIsPosting] = useState(false);
     const [customImage, setCustomImage] = useState<string | null>(null);
     const [uploadFile, setUploadFile] = useState<File | null>(null);
-    
-    const [selectedTones, setSelectedTones] = useState<string[]>(['gritty']);
 
-    // Loading State
-    const [isLoading, setIsLoading] = useState({ ai: false, posting: false });
-
-    // --- DATA AGGREGATION (DYNAMIC DOMAIN) ---
-    const allItems = useMemo(() => {
-        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://kasirsolo.my.id';
-
-        const mappedProducts: SocialContentItem[] = products.map(p => ({
-            id: p.id, type: 'product', title: p.name, description: p.description, 
-            image: p.image, url: `${origin}/shop/${slugify(p.name)}`, originalData: p
-        }));
-
-        const mappedArticles: SocialContentItem[] = articles
-            .filter(a => a.status === 'published') 
-            .map(a => ({
-                id: a.id, type: 'article', title: a.title, description: a.excerpt, 
-                image: a.image, url: `${origin}/articles/${slugify(a.title)}`, originalData: a
-            }));
-
-        const mappedGallery: SocialContentItem[] = gallery.map(g => ({
-            id: g.id, type: 'gallery', title: g.title, description: g.description || 'Project Portfolio', 
-            image: g.image_url, url: `${origin}/gallery/${slugify(g.title)}`, originalData: g
-        }));
-
-        const mappedServices: SocialContentItem[] = SERVICE_CATALOG.map(s => ({
-            ...s,
-            url: s.url.startsWith('http') ? s.url : `${origin}${s.url}`
-        }));
-
-        return [...mappedServices, ...mappedProducts, ...mappedArticles, ...mappedGallery];
-    }, [products, articles, gallery]);
-
-    // --- FILTERING & PAGINATION ---
-    const filteredItems = useMemo(() => {
-        return allItems.filter(item => {
-            const matchesType = selectedSourceType === 'all' || item.type === selectedSourceType;
-            const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
-            return matchesType && matchesSearch;
-        });
-    }, [allItems, selectedSourceType, searchTerm]);
-
-    useEffect(() => {
-        setSourcePage(1);
-    }, [selectedSourceType, searchTerm]);
-
-    const totalSourcePages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-    const paginatedItems = useMemo(() => {
-        const start = (sourcePage - 1) * ITEMS_PER_PAGE;
-        return filteredItems.slice(start, start + ITEMS_PER_PAGE);
-    }, [filteredItems, sourcePage]);
-
-    // --- ACTIONS ---
-
-    const selectItem = (item: SocialContentItem) => {
-        setSelectedItem(item);
-        setCustomImage(null); 
+    const handleSelectItem = (item: any) => {
+        source.setSelectedItem(item);
+        setCustomImage(null);
         setUploadFile(null);
-        // Reset captions with basic info
-        const baseCaption = `${item.title}\n\n${item.description}\n\nInfo selengkapnya: ${item.url}`;
-        setCaptions({
-            master: baseCaption, instagram: baseCaption, facebook: baseCaption, linkedin: baseCaption,
-            tiktok: baseCaption, twitter: baseCaption, gmb: baseCaption, pinterest: baseCaption, telegram: baseCaption, youtube: baseCaption, threads: baseCaption
-        });
-        setActiveTab('master');
-    };
-
-    const toggleTone = (toneId: string) => {
-        setSelectedTones(prev => {
-            if (prev.includes(toneId)) {
-                if (prev.length === 1) return prev; 
-                return prev.filter(t => t !== toneId);
-            } else {
-                if (prev.length >= 3) {
-                    alert("Maksimal 3 kombinasi tone.");
-                    return prev;
-                }
-                return [...prev, toneId];
-            }
-        });
-    };
-
-    const handleImageUpload = (file: File) => {
-        setUploadFile(file);
-        setCustomImage(URL.createObjectURL(file));
-    };
-
-    // REFACTORED: Using SocialAI
-    const generateAICaption = async (platform: ActiveTab) => {
-        if (!selectedItem) return alert("Pilih konten dulu.");
-        setIsLoading(p => ({...p, ai: true}));
-
-        try {
-            const caption = await SocialAI.generateCaption(
-                platform,
-                selectedItem.title,
-                selectedItem.description,
-                selectedItem.url,
-                selectedTones
-            );
-            
-            setCaptions(prev => ({
-                ...prev,
-                [platform]: caption
-            }));
-
-        } catch (e: any) {
-            alert("Gagal generate AI: " + e.message);
-        } finally {
-            setIsLoading(p => ({...p, ai: false}));
-        }
+        composer.initCaptions(item);
+        composer.setActiveTab('master');
     };
 
     const broadcastPost = async () => {
-        if (!selectedItem) return;
-        setIsLoading(p => ({...p, posting: true}));
-
+        if (!source.selectedItem || isPosting) return;
+        setIsPosting(true);
         try {
-            let finalImageUrl = customImage || selectedItem.image;
-            if (uploadFile) {
-                finalImageUrl = await uploadToCloudinary(uploadFile);
-            }
+            let img = customImage || source.selectedItem.image;
+            if (uploadFile) img = await uploadToCloudinary(uploadFile);
 
-            const activePlatforms = Object.entries(platforms).filter(([k, v]) => v).map(([k]) => k);
-            
-            if (activePlatforms.length === 0) throw new Error("Pilih minimal 1 platform.");
+            const activePlats = Object.entries(composer.platforms).filter(([_, v]) => v).map(([k]) => k);
+            if (activePlats.length === 0) throw new Error("Pilih platform dulu.");
 
-            const promises = activePlatforms.map(async (plat) => {
-                let caption = captions[plat as keyof CaptionState] || captions.master;
+            await Promise.all(activePlats.map(plat => {
+                let cap = composer.captions[plat as keyof CaptionState] || composer.captions.master;
+                const utm = generateUtmUrl(source.selectedItem!.url, plat, 'social_studio', `broadcast_${slugify(source.selectedItem!.title)}`);
+                if (cap.includes(source.selectedItem!.url)) cap = cap.replace(source.selectedItem!.url, utm);
                 
-                // UTM INJECTION MAGIC
-                // 1. Generate Platform-Specific URL
-                const utmUrl = generateUtmUrl(
-                    selectedItem.url, 
-                    plat, // source = platform name (instagram, facebook)
-                    'social_studio', // medium
-                    `broadcast_${slugify(selectedItem.title)}` // campaign
-                );
-
-                // 2. Replace the plain URL in the text with the UTM URL
-                // Note: This logic assumes the plain URL exists in the caption. 
-                // If the user deleted the URL from the caption, this won't insert it (which is safer than forcing it randomly).
-                if (caption.includes(selectedItem.url)) {
-                    caption = caption.replace(selectedItem.url, utmUrl);
-                } else {
-                    // Option: Append URL if missing? For now let's respect user edit, 
-                    // but usually AI generator includes it.
-                    // If manually edited and link removed, we assume user knows what they are doing.
-                }
-
                 return fetch('/api/ayrshare', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        caption: caption,
-                        image_url: finalImageUrl,
-                        platforms: [plat],
-                        title: selectedItem.title
-                    })
+                    body: JSON.stringify({ caption: cap, image_url: img, platforms: [plat], title: source.selectedItem!.title })
                 });
-            });
-
-            await Promise.all(promises);
-            alert("Broadcast Berhasil Terkirim!");
-
-        } catch (e: any) {
-            console.error(e);
-            alert("Gagal Broadcast: " + e.message);
-        } finally {
-            setIsLoading(p => ({...p, posting: false}));
-        }
+            }));
+            alert("Broadcast Meluncur, Bos!");
+        } catch (e: any) { alert("Gagal: " + e.message); }
+        finally { setIsPosting(false); }
     };
 
     return {
-        state: { 
-            selectedSourceType, searchTerm, selectedItem, 
-            platforms, captions, activeTab, customImage, isLoading,
-            allItems, filteredItems, selectedTones,
-            paginatedItems, totalSourcePages, sourcePage
-        },
-        setters: {
-            setSelectedSourceType, setSearchTerm, setPlatforms, 
-            setCaptions, setActiveTab, setCustomImage, toggleTone,
-            setSourcePage
-        },
-        actions: {
-            selectItem,
-            handleImageUpload,
-            generateAICaption,
-            broadcastPost
+        source, composer,
+        state: { isPosting, customImage, uploadFile },
+        actions: { 
+            handleSelectItem, 
+            broadcastPost,
+            handleImageUpload: (f: File) => { setUploadFile(f); setCustomImage(URL.createObjectURL(f)); }
         }
     };
 };
