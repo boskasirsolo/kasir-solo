@@ -6,7 +6,10 @@ export interface ProductFormState {
     name: string;
     category: string;
     price: string;
-    weight_grams: string; // NEW: Berat barang dalam gram (string for input handling)
+    weight_grams: string; 
+    length_cm: string; 
+    width_cm: string;  
+    height_cm: string; 
     desc: string;
     shortDesc: string; // Keywords for AI context
     specsStr: string;

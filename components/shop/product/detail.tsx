@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ArrowLeft, Tag, Check, ShoppingCart, MessageCircle, ThumbsUp, ShieldCheck, Zap, PackageOpen, ExternalLink } from 'lucide-react';
+import { X, ArrowLeft, Tag, Check, ShoppingCart, MessageCircle, ThumbsUp, ShieldCheck, Zap, PackageOpen, ExternalLink, Weight, MoveHorizontal } from 'lucide-react';
 import { Product, SiteConfig } from '../../types';
 import { optimizeImage, formatRupiah } from '../../../utils';
 import { useCart } from '../../../context/cart-context';
@@ -74,7 +74,7 @@ interface ProductDetailProps {
 export const ProductDetailView = ({ product, onClose, isModal = false, config }: ProductDetailProps) => {
   const { addToCart } = useCart();
   const [isAnimating, setIsAnimating] = useState(false);
-  const waNumber = config?.whatsappNumber || "6282325103336";
+  const waNumber = config?.whatsapp_number || "6282325103336";
   
   const isExternal = !!product.affiliate_link;
   const buyButtonLabel = product.cta_text || (isExternal ? 'Beli di Marketplace' : 'ANGKUT SEKARANG');
@@ -92,7 +92,6 @@ export const ProductDetailView = ({ product, onClose, isModal = false, config }:
 
   const innerContent = (
     <>
-      {/* INJECT SCHEMA HERE */}
       <ProductSchema product={product} />
 
       <div className={`relative w-full max-w-6xl ${isModal ? 'h-[90vh]' : 'min-h-[600px] md:h-[80vh]'} bg-brand-dark shadow-2xl border border-white/10 flex flex-col md:flex-row overflow-hidden rounded-2xl`}>
@@ -128,6 +127,21 @@ export const ProductDetailView = ({ product, onClose, isModal = false, config }:
         <div className="w-full md:w-[40%] h-full overflow-y-auto custom-scrollbar bg-black/20 p-6 md:p-10">
             <div className="prose prose-invert prose-sm text-gray-300 leading-relaxed max-w-none">
                 
+                {/* LOGISTIC SPEC CARD */}
+                <div className="mb-8 p-4 bg-black/40 rounded-2xl border border-white/10 flex justify-around items-center">
+                    <div className="text-center">
+                        <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 mx-auto mb-1"><Weight size={16}/></div>
+                        <p className="text-[9px] text-gray-500 uppercase font-black">Berat</p>
+                        <p className="text-xs text-white font-bold">{product.weight_grams ? (product.weight_grams/1000).toFixed(1) : '2.0'} KG</p>
+                    </div>
+                    <div className="w-px h-10 bg-white/5"></div>
+                    <div className="text-center">
+                        <div className="w-8 h-8 rounded-full bg-brand-orange/10 flex items-center justify-center text-brand-orange mx-auto mb-1"><MoveHorizontal size={16}/></div>
+                        <p className="text-[9px] text-gray-500 uppercase font-black">Dimensi</p>
+                        <p className="text-xs text-white font-bold">{product.length_cm || 20}x{product.width_cm || 20}x{product.height_cm || 20} CM</p>
+                    </div>
+                </div>
+
                 {(product.why_buy && product.why_buy.length > 0) && (
                     <div className="mb-8 p-6 bg-brand-dark border border-brand-orange/30 rounded-2xl shadow-neon-text/20">
                         <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">

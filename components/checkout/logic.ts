@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../../context/cart-context';
 import { supabase, normalizePhone, formatRupiah } from '../../utils';
@@ -22,6 +23,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
     const [shippingRates, setShippingRates] = useState<any[]>([]);
     const [selectedRate, setSelectedRate] = useState<any>(null);
     const [isLoadingRates, setIsLoadingRates] = useState(false);
+    const [shippingError, setShippingError] = useState<string | null>(null);
 
     const searchTimeout = useRef<any>(null);
 
@@ -56,13 +58,20 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             if (!selectedArea || cart.length === 0) return;
             
             setIsLoadingRates(true);
+            setShippingError(null);
+            setShippingRates([]);
+            setSelectedRate(null);
+            
             try {
-                // Siapkan payload barang
+                // Siapkan payload barang dengan DATA ASLI DARI DATABASE
                 const items = cart.map(item => ({
                     name: item.name,
                     description: item.category,
                     value: item.price,
                     weight: item.weight_grams || 2000,
+                    length: item.length_cm || 20, 
+                    width: item.width_cm || 20,  
+                    height: item.height_cm || 20, 
                     quantity: item.quantity
                 }));
 
@@ -76,16 +85,26 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                 });
 
                 const data = await res.json();
-                if (data.pricing) {
-                    // Filter kurir yang familiar buat user (JNE, J&T, SiCepat)
+                
+                if (!res.ok) {
+                    throw new Error(data.error || "Gagal menarik ongkir.");
+                }
+
+                if (data.pricing && data.pricing.length > 0) {
+                    // Lock kurir sesuai instruksi juragan: jne, tiki, ninja, lion, sicepat, jnt, pos, anteraja
+                    const activeCouriers = ['jne', 'tiki', 'ninja', 'lion', 'sicepat', 'jnt', 'pos', 'anteraja'];
                     const filtered = data.pricing.filter((p: any) => 
-                        ['jne', 'jnt', 'sicepat'].includes(p.courier_code)
+                        activeCouriers.includes(p.courier_code)
                     );
                     setShippingRates(filtered);
                     if (filtered.length > 0) setSelectedRate(filtered[0]);
+                    else setShippingError("Kurir terpilih tidak tersedia di wilayah ini.");
+                } else {
+                    setShippingError("Tidak ada layanan pengiriman tersedia.");
                 }
-            } catch (e) {
+            } catch (e: any) {
                 console.error("Biteship Rates Error", e);
+                setShippingError(e.message || "Gagal menghubungkan ke server kurir.");
             } finally {
                 setIsLoadingRates(false);
             }
@@ -155,16 +174,14 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
         setShowTermsModal(false);
     };
 
-    // --- FIX: Added missing applyCoupon function ---
     const applyCoupon = async () => {
         if (!couponInput) return;
         setIsValidatingCoupon(true);
         
-        // Simulasi validasi kupon (Hardcoded or DB Check)
         setTimeout(() => {
             const code = couponInput.toUpperCase();
             if (code === 'KASIRSOLO2025' || code === 'MKSDEAL') {
-                const discountVal = 50000; // Potongan 50rb
+                const discountVal = 50000;
                 setDiscount({
                     code,
                     type: 'fixed',
@@ -190,8 +207,7 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
         isSubmitting, submitOrder, 
         orderSuccess, setOrderSuccess, clearCart,
         step, setStep,
-        // EXPOSE BITESHIP STUFF
         area: { query: areaQuery, setQuery: setAreaQuery, results: areaResults, isSearching: isSearchingArea, selected: selectedArea, setSelected: setSelectedArea },
-        shipping: { rates: shippingRates, selected: selectedRate, setSelected: setSelectedRate, isLoading: isLoadingRates, total: finalTotal }
+        shipping: { rates: shippingRates, selected: selectedRate, setSelected: setSelectedRate, isLoading: isLoadingRates, total: finalTotal, error: shippingError }
     };
 };

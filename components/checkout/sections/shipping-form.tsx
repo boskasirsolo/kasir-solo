@@ -112,7 +112,12 @@ export const ShippingForm = ({
                                             )}
                                         </button>
                                     ))}
-                                    {shipping.rates.length === 0 && (
+                                    {shipping.error && (
+                                        <div className="col-span-full p-4 text-center text-xs text-red-400 bg-red-900/10 border border-red-500/20 rounded-xl flex items-center gap-3">
+                                            <Info size={16}/> {shipping.error} Hubungi admin via WA.
+                                        </div>
+                                    )}
+                                    {!shipping.error && shipping.rates.length === 0 && (
                                         <div className="col-span-full p-4 text-center text-xs text-red-400 bg-red-900/10 border border-red-500/20 rounded-xl flex items-center gap-3">
                                             <Info size={16}/> Wilayah belum terjangkau kurir otomatis. Hubungi admin via WA.
                                         </div>

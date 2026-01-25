@@ -14,7 +14,10 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
         name: '',
         category: PRODUCT_CATEGORIES[0],
         price: '',
-        weight_grams: '2000', // Default 2kg
+        weight_grams: '2000', 
+        length_cm: '20',
+        width_cm: '20',
+        height_cm: '20',
         desc: '',
         shortDesc: '',
         specsStr: '',
@@ -50,7 +53,9 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
 
     const resetForm = () => {
         setForm({
-            id: null, name: '', category: PRODUCT_CATEGORIES[0], price: '', weight_grams: '2000', desc: '', shortDesc: '',
+            id: null, name: '', category: PRODUCT_CATEGORIES[0], price: '', weight_grams: '2000', 
+            length_cm: '20', width_cm: '20', height_cm: '20',
+            desc: '', shortDesc: '',
             specsStr: '', includesStr: '', whyBuyStr: '', imagePreview: '', uploadFile: null,
             galleryImages: [], newGalleryFiles: [], videoUrl: '',
             affiliateLink: '', ctaText: 'Beli Sekarang'
@@ -70,6 +75,9 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             category: p.category || PRODUCT_CATEGORIES[0],
             price: formatNumberInput(p.price),
             weight_grams: String(p.weight_grams || 2000),
+            length_cm: String(p.length_cm || 20),
+            width_cm: String(p.width_cm || 20),
+            height_cm: String(p.height_cm || 20),
             desc: p.description,
             shortDesc: '', 
             specsStr: specsString,
@@ -231,7 +239,10 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             const dbData = {
                 name: form.name,
                 price: cleanNumberInput(form.price),
-                weight_grams: parseInt(form.weight_grams) || 2000, // SYNC BERAT
+                weight_grams: parseInt(form.weight_grams) || 2000, 
+                length_cm: parseInt(form.length_cm) || 20,
+                width_cm: parseInt(form.width_cm) || 20,
+                height_cm: parseInt(form.height_cm) || 20,
                 category: form.category,
                 description: form.desc,
                 image_url: finalImageUrl,

@@ -58,6 +58,9 @@ export interface Product {
   affiliate_link?: string;
   cta_text?: string;
   weight_grams?: number;
+  length_cm?: number;
+  width_cm?: number;
+  height_cm?: number;
 }
 
 export interface Article {

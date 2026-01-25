@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, CheckCircle2, Copy } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, CheckCircle2, Copy, Weight } from 'lucide-react';
 import { formatRupiah } from '../../utils';
 import { CartItem } from '../../types';
 import { Button } from '../ui';
@@ -14,25 +14,34 @@ export const CartItemRow: React.FC<{
     item, 
     onUpdateQty, 
     onRemove 
-}) => (
-    <div className="flex gap-4 p-4 bg-brand-card border border-white/5 rounded-xl items-center">
-        <div className="w-20 h-20 bg-black rounded-lg shrink-0 overflow-hidden border border-white/10">
-            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+}) => {
+    const weightKg = item.weight_grams ? (item.weight_grams / 1000).toFixed(1) : '2.0';
+
+    return (
+        <div className="flex gap-4 p-4 bg-brand-card border border-white/5 rounded-xl items-center">
+            <div className="w-20 h-20 bg-black rounded-lg shrink-0 overflow-hidden border border-white/10">
+                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-white mb-0.5 truncate text-sm md:text-base">{item.name}</h4>
+                <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-brand-orange text-sm font-bold">{formatRupiah(item.price)}</span>
+                    <span className="text-[10px] text-gray-600 flex items-center gap-1 bg-white/5 px-1.5 rounded">
+                        <Weight size={10}/> {weightKg} KG
+                    </span>
+                </div>
+            </div>
+            <div className="flex items-center gap-3 bg-black/30 rounded-lg p-1 border border-white/5">
+                <button onClick={() => onUpdateQty(item.id, -1)} className="p-1 text-gray-400 hover:text-white"><Minus size={14} /></button>
+                <span className="text-white text-xs w-6 text-center font-bold">{item.quantity}</span>
+                <button onClick={() => onUpdateQty(item.id, 1)} className="p-1 text-gray-400 hover:text-white"><Plus size={14} /></button>
+            </div>
+            <button onClick={() => onRemove(item.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                <Trash2 size={18} />
+            </button>
         </div>
-        <div className="flex-1 min-w-0">
-            <h4 className="font-bold text-white mb-1 truncate text-sm md:text-base">{item.name}</h4>
-            <p className="text-brand-orange text-sm font-bold">{formatRupiah(item.price)}</p>
-        </div>
-        <div className="flex items-center gap-3 bg-black/30 rounded-lg p-1 border border-white/5">
-            <button onClick={() => onUpdateQty(item.id, -1)} className="p-1 text-gray-400 hover:text-white"><Minus size={14} /></button>
-            <span className="text-white text-xs w-6 text-center font-bold">{item.quantity}</span>
-            <button onClick={() => onUpdateQty(item.id, 1)} className="p-1 text-gray-400 hover:text-white"><Plus size={14} /></button>
-        </div>
-        <button onClick={() => onRemove(item.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-            <Trash2 size={18} />
-        </button>
-    </div>
-);
+    );
+};
 
 // --- ATOM: Bank Details Card ---
 export const BankTransferCard = ({ onCopy }: { onCopy: (text: string) => void }) => (

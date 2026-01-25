@@ -1,6 +1,6 @@
 
 import React, { useRef, useState } from 'react';
-import { Tag, Edit, ImageIcon, UploadCloud, ShieldCheck, Sparkles, DollarSign, Filter, X as XIcon, Link as LinkIcon, ExternalLink, FolderOpen, Box, Scale } from 'lucide-react';
+import { Tag, Edit, ImageIcon, UploadCloud, ShieldCheck, Sparkles, DollarSign, Filter, X as XIcon, Link as LinkIcon, ExternalLink, FolderOpen, Box, Scale, MoveHorizontal } from 'lucide-react';
 import { AdminInput, AdminSelect, AdminCheckbox, CmdButton } from '../admin/ui-shared/atoms';
 import { FieldGroup } from '../admin/ui-shared/molecules';
 import { PRODUCT_CATEGORIES } from './types';
@@ -123,6 +123,24 @@ export const EditorBasic = ({
                         </div>
                     </FieldGroup>
                 </div>
+
+                {/* ROW: DIMENSIONS */}
+                <FieldGroup label="Dimensi Paket (Centimeter)" icon={MoveHorizontal} helperText="Penting buat akurasi ongkir kargo/reguler.">
+                    <div className="grid grid-cols-3 gap-3">
+                        <div className="relative">
+                            <AdminInput value={form.length_cm} type="number" onChange={(e:any) => setForm((p:any) => ({...p, length_cm: e.target.value}))} placeholder="P" className="bg-black/40 text-center font-bold" />
+                            <span className="absolute right-2 bottom-1 text-[8px] text-gray-600 font-black uppercase">P</span>
+                        </div>
+                        <div className="relative">
+                            <AdminInput value={form.width_cm} type="number" onChange={(e:any) => setForm((p:any) => ({...p, width_cm: e.target.value}))} placeholder="L" className="bg-black/40 text-center font-bold" />
+                            <span className="absolute right-2 bottom-1 text-[8px] text-gray-600 font-black uppercase">L</span>
+                        </div>
+                        <div className="relative">
+                            <AdminInput value={form.height_cm} type="number" onChange={(e:any) => setForm((p:any) => ({...p, height_cm: e.target.value}))} placeholder="T" className="bg-black/40 text-center font-bold" />
+                            <span className="absolute right-2 bottom-1 text-[8px] text-gray-600 font-black uppercase">T</span>
+                        </div>
+                    </div>
+                </FieldGroup>
 
                 <div className="bg-blue-900/10 p-4 rounded-2xl border border-blue-500/20 space-y-4">
                     <FieldGroup label="Marketplace Link" icon={LinkIcon} className="text-blue-400">

@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ShoppingCart, Check, Scale, ExternalLink } from 'lucide-react';
+import { ShoppingCart, Check, Scale, ExternalLink, Weight } from 'lucide-react';
 import { Product } from '../../types';
 import { Badge, Card } from '../../ui';
 import { formatRupiah, optimizeImage } from '../../../utils';
@@ -19,7 +19,7 @@ const ProductImage = ({ image, name, category }: { image: string, name: string, 
       decoding="async"
     />
     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-60"></div>
-    <div className="absolute top-3 right-3">
+    <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
       <Badge className="backdrop-blur-md bg-black/50 border-white/10">{category}</Badge>
     </div>
   </div>
@@ -103,21 +103,30 @@ const ProductActions = ({ product, onDetail, onCompare, isSelected }: ProductCar
   );
 };
 
-export const ProductCard = (props: ProductCardProps) => (
-  <div onClick={() => props.onDetail(props.product)}>
-    <Card className={`flex flex-col h-full group cursor-pointer transition-all ${props.isSelected ? 'border-brand-orange shadow-neon' : 'hover:border-brand-orange hover:shadow-neon'}`}>
-      <ProductImage image={props.product.image} name={props.product.name} category={props.product.category} />
-      <div className="p-6 flex flex-col flex-grow relative">
-        <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-brand-orange transition-colors">{props.product.name}</h3>
-        <p className="text-gray-400 text-sm mb-6 line-clamp-3 flex-grow">{props.product.description}</p>
-        <div className="mt-auto pt-4 border-t border-white/5 space-y-4">
-          <div className="text-2xl font-display font-bold text-brand-orange">{formatRupiah(props.product.price)}</div>
-          <ProductActions {...props} />
+export const ProductCard = (props: ProductCardProps) => {
+    const weightKg = props.product.weight_grams ? (props.product.weight_grams / 1000).toFixed(1) : '2.0';
+
+    return (
+        <div onClick={() => props.onDetail(props.product)}>
+            <Card className={`flex flex-col h-full group cursor-pointer transition-all ${props.isSelected ? 'border-brand-orange shadow-neon' : 'hover:border-brand-orange hover:shadow-neon'}`}>
+            <ProductImage image={props.product.image} name={props.product.name} category={props.product.category} />
+            <div className="p-6 flex flex-col flex-grow relative">
+                <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-bold text-white line-clamp-2 min-h-[3.5rem] group-hover:text-brand-orange transition-colors">{props.product.name}</h3>
+                    <div className="flex items-center gap-1 text-gray-500 text-[9px] font-black uppercase bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                        <Weight size={10} /> {weightKg} KG
+                    </div>
+                </div>
+                <p className="text-gray-400 text-sm mb-6 line-clamp-3 flex-grow">{props.product.description}</p>
+                <div className="mt-auto pt-4 border-t border-white/5 space-y-4">
+                <div className="text-2xl font-display font-bold text-brand-orange">{formatRupiah(props.product.price)}</div>
+                <ProductActions {...props} />
+                </div>
+            </div>
+            </Card>
         </div>
-      </div>
-    </Card>
-  </div>
-);
+    );
+};
 
 export const ProductGrid = ({ children }: { children?: React.ReactNode }) => (
   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">

@@ -1,3 +1,4 @@
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -23,7 +24,8 @@ export default async function handler(req: any, res: any) {
       body: JSON.stringify({
         origin_area_id,
         destination_area_id,
-        couriers: 'jne,jnt,sicepat',
+        // Disesuaikan dengan instruksi: jne, tiki, ninja, lion, sicepat, jnt, pos, anteraja
+        couriers: 'jne,tiki,ninja,lion,sicepat,jnt,pos,anteraja',
         items
       })
     });
