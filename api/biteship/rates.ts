@@ -1,4 +1,3 @@
-
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -11,7 +10,7 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'Data pengiriman tidak lengkap.' });
   }
 
-  // Default Origin: Solo (IDNP3CL11666)
+  // Origin: Kartasura, Sukoharjo (Solo Raya HQ)
   const origin_area_id = 'IDNP3CL11666';
 
   try {
@@ -24,21 +23,31 @@ export default async function handler(req: any, res: any) {
       body: JSON.stringify({
         origin_area_id,
         destination_area_id,
-        // Disesuaikan dengan instruksi: jne, tiki, ninja, lion, sicepat, jnt, pos, anteraja
-        couriers: 'jne,tiki,ninja,lion,sicepat,jnt,pos,anteraja',
-        items
+        // TIPS: Jangan hardcode couriers di sini agar API tidak error 400 jika salah satu kurir tidak cover rute.
+        // Kita tarik semua yang tersedia, nanti filter di frontend.
+        items: items.map((item: any) => ({
+          name: item.name,
+          description: item.description || '',
+          value: Number(item.value) || 0,
+          weight: Number(item.weight) || 1000,
+          quantity: Number(item.quantity) || 1,
+          length: Number(item.length) || 20,
+          width: Number(item.width) || 20,
+          height: Number(item.height) || 20
+        }))
       })
     });
 
     const data = await response.json();
     
     if (!response.ok) {
+        // Balikin error asli dari Biteship buat debugging kalau masih mental
         return res.status(response.status).json(data);
     }
 
     return res.status(200).json(data);
   } catch (error) {
     console.error("Biteship API Error:", error);
-    return res.status(500).json({ error: 'Failed to calculate rates' });
+    return res.status(500).json({ error: 'Gagal terhubung ke sistem logistik.' });
   }
 }

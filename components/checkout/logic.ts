@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../../context/cart-context';
 import { supabase, normalizePhone, formatRupiah } from '../../utils';
@@ -63,7 +62,6 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
             setSelectedRate(null);
             
             try {
-                // Siapkan payload barang dengan DATA ASLI DARI DATABASE
                 const items = cart.map(item => ({
                     name: item.name,
                     description: item.category,
@@ -87,24 +85,32 @@ export const useCheckoutLogic = (setPage: (p: string) => void) => {
                 const data = await res.json();
                 
                 if (!res.ok) {
+                    // Jika dapet error "Route not found" dari Biteship, arahkan ke manual
+                    if (data.code === 40001004 || (data.error && data.error.includes('Route'))) {
+                        throw new Error("Rute otomatis tidak tersedia untuk wilayah ini.");
+                    }
                     throw new Error(data.error || "Gagal menarik ongkir.");
                 }
 
                 if (data.pricing && data.pricing.length > 0) {
-                    // Lock kurir sesuai instruksi juragan: jne, tiki, ninja, lion, sicepat, jnt, pos, anteraja
-                    const activeCouriers = ['jne', 'tiki', 'ninja', 'lion', 'sicepat', 'jnt', 'pos', 'anteraja'];
-                    const filtered = data.pricing.filter((p: any) => 
-                        activeCouriers.includes(p.courier_code)
-                    );
+                    // Lock kurir sesuai instruksi juragan
+                    // Note: 'pos' bisa jadi 'pos indonesia', 'jnt' bisa jadi 'j&t' tergantung mapping Biteship
+                    const activeCouriers = ['jne', 'jnt', 'sicepat', 'tiki', 'pos', 'anteraja', 'ninja', 'lion'];
+                    
+                    const filtered = data.pricing.filter((p: any) => {
+                        const code = p.courier_code.toLowerCase();
+                        return activeCouriers.some(c => code.includes(c));
+                    });
+
                     setShippingRates(filtered);
                     if (filtered.length > 0) setSelectedRate(filtered[0]);
-                    else setShippingError("Kurir terpilih tidak tersedia di wilayah ini.");
+                    else setShippingError("Ekspedisi pilihan Juragan tidak meng-cover area ini.");
                 } else {
-                    setShippingError("Tidak ada layanan pengiriman tersedia.");
+                    setShippingError("Tidak ada layanan pengiriman yang ditemukan.");
                 }
             } catch (e: any) {
                 console.error("Biteship Rates Error", e);
-                setShippingError(e.message || "Gagal menghubungkan ke server kurir.");
+                setShippingError(e.message || "Sistem kurir lagi error Bos.");
             } finally {
                 setIsLoadingRates(false);
             }
