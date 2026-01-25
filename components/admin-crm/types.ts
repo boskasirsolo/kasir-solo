@@ -8,6 +8,7 @@ export interface BehavioralIntel {
     last_activity_desc: string;
     avg_engagement_sec: number;
     top_category: 'Hardware' | 'Software' | 'Article' | 'Service' | 'Unknown';
+    last_seen_at: string;
 }
 
 export interface Customer {
@@ -33,9 +34,11 @@ export interface Customer {
     ai_probability?: number; // 0 - 100
     ai_closing_strategy?: string;
     ai_buyer_persona?: string;
-    // NEW FIELDS FROM RADAR VIEW
+    // SOURCE TRACKING
     source_origin?: 'shadow' | 'simulasi' | 'kontak';
     detected_category?: 'web' | 'webapp' | 'seo' | 'hardware';
+    // UI HELPERS
+    last_seen_label?: string;
 }
 
 export const PIPELINE_STAGES: { id: LeadStatus; label: string; color: string }[] = [

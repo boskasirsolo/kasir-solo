@@ -1,9 +1,11 @@
+
 import { useState, useMemo } from 'react';
 import { useCRMData } from './shared/use-crm-data';
 import { useShadowLogic } from './shadow/use-shadow';
 import { usePipelineLogic } from './pipeline/use-pipeline';
-import { Customer } from './types';
+import { Customer, LeadStatus, LeadTemperature } from './types';
 import { SibosAI } from '../../services/ai/sibos';
+import { supabase } from '../../utils';
 
 export const useCRMLogic = () => {
     const { customers, loading, refreshData } = useCRMData();
@@ -21,6 +23,30 @@ export const useCRMLogic = () => {
             (c.phone || '').includes(searchTerm)
         );
     }, [customers, searchTerm]);
+
+    const deleteCustomer = async (phone: string) => {
+        if (!confirm("Hapus juragan ini dari database? Tindakan ini gak bisa dibatalin.")) return;
+        if (!supabase) return;
+        try {
+            const { error } = await supabase.from('crm_profiles').delete().eq('phone', phone);
+            if (error) throw error;
+            refreshData();
+            setSelectedCustomer(null);
+        } catch (e) {
+            alert("Gagal hapus data juragan.");
+        }
+    };
+
+    const updateTemperature = async (phone: string, temp: LeadTemperature) => {
+        if (!supabase) return;
+        try {
+            const { error } = await supabase.from('crm_profiles').update({ lead_temperature: temp }).eq('phone', phone);
+            if (error) throw error;
+            refreshData();
+        } catch (e) {
+            alert("Gagal update suhu.");
+        }
+    };
 
     const runSurveillanceCheck = async () => {
         const indecisive = customers.filter(c => c.is_indecisive_buyer && c.lead_status === 'new');
@@ -44,6 +70,8 @@ export const useCRMLogic = () => {
         runRecoveryAI: shadow.runRecoveryAI,
         isGeneratingScript: shadow.isRescuing,
         updateStatus: pipeline.updateLeadStatus,
+        deleteCustomer,
+        updateTemperature,
         aiRecommendation,
         setAiRecommendation,
         selectedCustomer,

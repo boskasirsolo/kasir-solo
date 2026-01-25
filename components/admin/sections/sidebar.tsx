@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
     ShoppingBag, Package, LayoutGrid, Image, Settings, 
@@ -17,13 +18,13 @@ export const MENU_GROUPS: MenuCategory[] = [
 ];
 
 export const ICON_MAP: Record<string, any> = {
-    analytics: BarChart, sales: TrendingUp, seo: Globe, store: Package, rma: Wrench,
+    analytics: BarChart, sales: Zap, seo: Globe, store: Package, rma: Wrench,
     articles: FileText, gallery: Image, testimonials: Quote, media: Database, downloads: Download, social: Share2,
     career: Briefcase, siboy: Bot, documentation: BookOpen, settings: Settings
 };
 
 export const LABEL_MAP: Record<string, string> = {
-    analytics: 'Radar Trafik', sales: 'War Room Sales', seo: 'SEO Engine', store: 'Katalog Toko',
+    analytics: 'Radar Trafik', sales: 'Tactical War Room', seo: 'SEO Engine', store: 'Katalog Toko',
     rma: 'Klaim Garansi', articles: 'Intel Artikel', gallery: 'Portfolio Proyek',
     testimonials: 'Testimoni Klien',
     media: 'Digital Vault', downloads: 'File Center', social: 'Social Studio', career: 'HR Recruitment',

@@ -1,7 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
-import { Eye, MessageCircle, Filter, Database, Search } from 'lucide-react';
-import { Customer } from '../types';
+import { Filter, Database, Search, LayoutGrid, List } from 'lucide-react';
+import { Customer, LeadTemperature } from '../types';
+import { RadarJuraganCard } from '../shared/radar-card';
 
 interface DatabaseModuleProps {
     customers: Customer[];
@@ -9,126 +10,105 @@ interface DatabaseModuleProps {
     onRescue: (c: Customer) => void;
 }
 
-const CATEGORY_OPTIONS = [
-    { id: 'all', label: 'SEMUA KATEGORI' },
-    { id: 'hardware', label: 'HARDWARE KASIR' },
-    { id: 'web', label: 'WEBSITE' },
-    { id: 'webapp', label: 'WEB APP (SISTEM)' },
-    { id: 'seo', label: 'SEO & TRAFFIC' }
+const TEMPERATURE_OPTIONS = [
+    { id: 'all', label: 'SEMUA SUHU' },
+    { id: 'hot', label: '🔥 HOT' },
+    { id: 'warm', label: '🟠 WARM' },
+    { id: 'cold', label: '🔵 COLD' }
 ];
 
-export const DatabaseModule = ({ customers, onOpenDetail, onRescue }: DatabaseModuleProps) => {
-    const [catFilter, setCatFilter] = useState<string>('all');
+const STATUS_OPTIONS = [
+    { id: 'all', label: 'SEMUA STATUS' },
+    { id: 'new', label: '🆕 BARU' },
+    { id: 'contacted', label: '📞 DISAPA' },
+    { id: 'negotiating', label: '📑 NEGO' },
+    { id: 'closed', label: '🤝 DEAL' },
+    { id: 'lost', label: '❌ BATAL' }
+];
+
+export const DatabaseModule = ({ customers, onOpenDetail }: DatabaseModuleProps) => {
+    const [tempFilter, setTempFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
 
     const filteredList = useMemo(() => {
-        if (catFilter === 'all') return customers;
-        return customers.filter(c => c.detected_category === catFilter);
-    }, [customers, catFilter]);
+        return customers.filter(c => {
+            const matchesTemp = tempFilter === 'all' || c.lead_temperature === tempFilter;
+            const matchesStatus = statusFilter === 'all' || c.lead_status === statusFilter;
+            return matchesTemp && matchesStatus;
+        });
+    }, [customers, tempFilter, statusFilter]);
 
     return (
-        <div className="space-y-4 animate-fade-in">
-            {/* FILTER TOOLBAR */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-brand-card/20 p-4 rounded-2xl border border-white/5">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400 border border-purple-500/20">
-                        <Filter size={18} />
+        <div className="space-y-6 animate-fade-in">
+            {/* MULTI-FILTER RADAR */}
+            <div className="flex flex-col gap-4 bg-brand-card/20 p-5 rounded-3xl border border-white/5 shadow-inner">
+                <div className="flex flex-wrap items-center gap-6">
+                    {/* Status Filter Group */}
+                    <div className="space-y-2">
+                        <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest ml-1">Filter Progres</p>
+                        <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full">
+                            {STATUS_OPTIONS.map(opt => (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => setStatusFilter(opt.id)}
+                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap ${
+                                        statusFilter === opt.id
+                                        ? 'bg-white/10 text-white border-white/20 shadow-sm'
+                                        : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <div>
-                        <h4 className="text-white font-bold text-xs uppercase tracking-widest leading-none">Filter Intelijen</h4>
-                        <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold">Segmentasi Prospek Juragan</p>
-                    </div>
-                </div>
 
-                <div className="flex gap-2 w-full md:w-auto overflow-x-auto custom-scrollbar-hide">
-                    {CATEGORY_OPTIONS.map(opt => (
-                        <button
-                            key={opt.id}
-                            onClick={() => setCatFilter(opt.id)}
-                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap ${
-                                catFilter === opt.id
-                                ? 'bg-purple-600 text-white border-purple-500 shadow-neon'
-                                : 'bg-black/40 text-gray-500 border-white/5 hover:border-purple-500/30 hover:text-gray-300'
-                            }`}
-                        >
-                            {opt.label}
-                        </button>
-                    ))}
+                    <div className="h-10 w-px bg-white/5 hidden md:block"></div>
+
+                    {/* Temperature Filter Group */}
+                    <div className="space-y-2">
+                        <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest ml-1">Filter Suhu</p>
+                        <div className="flex gap-1 overflow-x-auto custom-scrollbar-hide max-w-full">
+                            {TEMPERATURE_OPTIONS.map(opt => (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => setTempFilter(opt.id)}
+                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all border whitespace-nowrap ${
+                                        tempFilter === opt.id
+                                        ? 'bg-brand-orange/20 text-brand-orange border-brand-orange/40 shadow-neon-text/5'
+                                        : 'bg-black/40 text-gray-500 border-white/5 hover:text-gray-300'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* DATABASE TABLE */}
-            <div className="bg-brand-card/30 border border-white/5 rounded-2xl overflow-hidden shadow-xl overflow-x-auto custom-scrollbar">
-                <table className="w-full text-left text-xs border-collapse min-w-[800px]">
-                    <thead className="bg-black/40 text-gray-500 font-bold uppercase tracking-widest">
-                        <tr>
-                            <th className="p-4 border-b border-white/5">Juragan</th>
-                            <th className="p-4 border-b border-white/5">Kategori</th>
-                            <th className="p-4 border-b border-white/5">Radar Intel (Real-time)</th>
-                            <th className="p-4 border-b border-white/5">Status</th>
-                            <th className="p-4 border-b border-white/5">Engagement</th>
-                            <th className="p-4 border-b border-white/5 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {filteredList.length === 0 ? (
-                            <tr>
-                                <td colSpan={6} className="p-20 text-center text-gray-600 italic">
-                                    <Database size={48} className="mx-auto mb-4 opacity-10" />
-                                    Gak ada data di kategori ini, Bos.
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredList.map(customer => (
-                                <tr key={customer.phone} className="hover:bg-white/5 transition-colors group cursor-pointer" onClick={() => onOpenDetail(customer)}>
-                                    <td className="p-4">
-                                        <div className="font-bold text-white group-hover:text-brand-orange transition-colors">{customer.name}</div>
-                                        <div className="text-[10px] text-gray-500 font-mono">{customer.phone}</div>
-                                    </td>
-                                    <td className="p-4">
-                                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${
-                                            customer.detected_category === 'hardware' ? 'text-green-400 border-green-500/20 bg-green-500/5' :
-                                            customer.detected_category === 'web' ? 'text-blue-400 border-blue-500/20 bg-blue-500/5' :
-                                            'text-purple-400 border-purple-500/20 bg-purple-500/5'
-                                        }`}>
-                                            {customer.detected_category || 'kontak'}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
-                                        {customer.intelligence ? (
-                                            <div className="flex items-center gap-2">
-                                                <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold uppercase tracking-tighter flex items-center gap-1 ${customer.is_indecisive_buyer ? 'text-red-400 border-red-500/20 bg-red-500/10' : 'text-blue-400 border-blue-500/20 bg-blue-500/10'}`}>
-                                                    <Eye size={8}/> {customer.is_indecisive_buyer ? 'BUTUH DORONGAN' : 'MONITORING'}
-                                                </span>
-                                                <span className="text-[9px] text-gray-500 truncate max-w-[120px] italic">last: {customer.intelligence.most_visited_path.split('/').pop() || 'Home'}</span>
-                                            </div>
-                                        ) : <span className="text-[9px] text-gray-700 italic">No radar data</span>}
-                                    </td>
-                                    <td className="p-4">
-                                        <span className="px-2 py-1 bg-white/5 rounded border border-white/10 text-[9px] font-bold uppercase text-gray-400">
-                                            {customer.lead_status}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 font-mono text-gray-400">
-                                        {Math.round((customer.intelligence?.avg_engagement_sec || 0) / 60)} min
-                                    </td>
-                                    <td className="p-4 text-right">
-                                        <button 
-                                            onClick={(e) => { e.stopPropagation(); onRescue(customer); }} 
-                                            className="p-2.5 bg-brand-orange/10 text-brand-orange border border-brand-orange/20 hover:bg-brand-orange hover:text-white rounded-xl transition-all shadow-neon-text/5"
-                                            title="Sapa SIBOS AI"
-                                        >
-                                            <MessageCircle size={16}/>
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+            {/* RADAR GRID (Replacing Table) */}
+            <div className="min-h-[500px]">
+                {filteredList.length === 0 ? (
+                    <div className="p-20 text-center text-gray-600 italic bg-black/10 rounded-3xl border-2 border-dashed border-white/5">
+                        <Database size={48} className="mx-auto mb-4 opacity-10" />
+                        Gak ada juragan yang cocok sama filter lo, Bos.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        {filteredList.map(customer => (
+                            <RadarJuraganCard 
+                                key={customer.phone} 
+                                customer={customer} 
+                                onClick={() => onOpenDetail(customer)} 
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
             
             <div className="bg-white/5 p-4 rounded-2xl border border-white/10 text-center">
-                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-[0.3em]">Arsip Intelijen V3.1 // Database Juragan Terpusat</p>
+                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-[0.3em]">Arsip Intelijen V3.1 // Mode Radar Card Aktif</p>
             </div>
         </div>
     );
