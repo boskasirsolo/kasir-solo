@@ -1,11 +1,10 @@
 
 import React, { useRef, useState } from 'react';
-import { Tag, Edit, ImageIcon, UploadCloud, ShieldCheck, Sparkles, DollarSign, Filter, X as XIcon, Link as LinkIcon, ExternalLink, FolderOpen, Box } from 'lucide-react';
+import { Tag, Edit, ImageIcon, UploadCloud, ShieldCheck, Sparkles, DollarSign, Filter, X as XIcon, Link as LinkIcon, ExternalLink, FolderOpen, Box, Scale } from 'lucide-react';
 import { AdminInput, AdminSelect, AdminCheckbox, CmdButton } from '../admin/ui-shared/atoms';
 import { FieldGroup } from '../admin/ui-shared/molecules';
 import { PRODUCT_CATEGORIES } from './types';
 import { MediaLibraryModal } from '../admin/media-library';
-// FIX: Added missing import for formatNumberInput from root utils
 import { formatNumberInput } from '../../utils';
 
 export const EditorBasic = ({ 
@@ -108,12 +107,22 @@ export const EditorBasic = ({
                     </FieldGroup>
                 </div>
 
-                <FieldGroup label="Mahar / Harga (IDR)" icon={DollarSign}>
-                    <div className="relative">
-                        <span className="absolute left-4 top-2.5 text-brand-orange font-black text-sm">Rp</span>
-                        <AdminInput value={form.price} onChange={(e:any) => setForm((p:any) => ({...p, price: formatNumberInput(e.target.value)}))} placeholder="0" className="pl-11 text-lg font-black tracking-widest bg-black/40" />
-                    </div>
-                </FieldGroup>
+                {/* ROW: PRICE & WEIGHT */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FieldGroup label="Mahar / Harga (IDR)" icon={DollarSign}>
+                        <div className="relative">
+                            <span className="absolute left-4 top-2.5 text-brand-orange font-black text-sm">Rp</span>
+                            <AdminInput value={form.price} onChange={(e:any) => setForm((p:any) => ({...p, price: formatNumberInput(e.target.value)}))} placeholder="0" className="pl-11 text-lg font-black tracking-widest bg-black/40" />
+                        </div>
+                    </FieldGroup>
+
+                    <FieldGroup label="Berat Barang (Gram)" icon={Scale}>
+                        <div className="relative">
+                            <AdminInput value={form.weight_grams} type="number" onChange={(e:any) => setForm((p:any) => ({...p, weight_grams: e.target.value}))} placeholder="2000" className="text-lg font-black tracking-widest bg-black/40 pr-12" />
+                            <span className="absolute right-4 top-2.5 text-gray-500 font-bold text-sm">gr</span>
+                        </div>
+                    </FieldGroup>
+                </div>
 
                 <div className="bg-blue-900/10 p-4 rounded-2xl border border-blue-500/20 space-y-4">
                     <FieldGroup label="Marketplace Link" icon={LinkIcon} className="text-blue-400">

@@ -14,6 +14,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
         name: '',
         category: PRODUCT_CATEGORIES[0],
         price: '',
+        weight_grams: '2000', // Default 2kg
         desc: '',
         shortDesc: '',
         specsStr: '',
@@ -49,7 +50,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
 
     const resetForm = () => {
         setForm({
-            id: null, name: '', category: PRODUCT_CATEGORIES[0], price: '', desc: '', shortDesc: '',
+            id: null, name: '', category: PRODUCT_CATEGORIES[0], price: '', weight_grams: '2000', desc: '', shortDesc: '',
             specsStr: '', includesStr: '', whyBuyStr: '', imagePreview: '', uploadFile: null,
             galleryImages: [], newGalleryFiles: [], videoUrl: '',
             affiliateLink: '', ctaText: 'Beli Sekarang'
@@ -68,6 +69,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             name: p.name,
             category: p.category || PRODUCT_CATEGORIES[0],
             price: formatNumberInput(p.price),
+            weight_grams: String(p.weight_grams || 2000),
             desc: p.description,
             shortDesc: '', 
             specsStr: specsString,
@@ -79,7 +81,7 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             newGalleryFiles: [],
             videoUrl: p.video_url || '',
             affiliateLink: p.affiliate_link || '',
-            ctaText: p.cta_text || 'Beli Sekarang'
+            cta_text: p.cta_text || 'Beli Sekarang'
         } as any);
         setShowMobileEditor(true);
     };
@@ -225,10 +227,11 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
             const includesArr = form.includesStr ? form.includesStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
             const whyBuyArr = form.whyBuyStr ? form.whyBuyStr.split('\n').map(s => s.trim()).filter(Boolean) : [];
 
-            // DB MAPPING: Pastikan field snake_case sesuai tabel Supabase
+            // DB MAPPING
             const dbData = {
                 name: form.name,
                 price: cleanNumberInput(form.price),
+                weight_grams: parseInt(form.weight_grams) || 2000, // SYNC BERAT
                 category: form.category,
                 description: form.desc,
                 image_url: finalImageUrl,
@@ -243,7 +246,6 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
 
             let savedProduct: any = null;
 
-            // 4. SUPABASE SYNC
             if (form.id) {
                 const { data, error } = await supabase
                     .from('products')
@@ -269,7 +271,6 @@ export const useProductLogic = (products: Product[], setProducts: React.Dispatch
                 setProducts(prev => [{ ...data, image: data.image_url }, ...prev]);
             }
 
-            // 5. Cloudinary Migration (Background)
             if (supabasePath && fileToMigrate && savedProduct) {
                 processBackgroundMigration(fileToMigrate, supabasePath, 'products', savedProduct.id, 'image_url')
                     .then((cloudUrl) => {
