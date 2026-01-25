@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, Cpu, MessageSquare, Zap, Clock, MapPin, DollarSign, Eye, Activity, Target } from 'lucide-react';
+import { ShoppingCart, Cpu, MessageSquare, Zap, Clock, MapPin, DollarSign, Eye, Activity, Globe, Target } from 'lucide-react';
 import { Customer } from '../types';
 import { parseIntel } from './utils';
 
@@ -21,11 +21,31 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
             ? 'border-brand-orange/40 bg-gradient-to-br from-[#1a1005] to-[#050505] shadow-[0_10px_30px_rgba(255,95,31,0.05)]' 
             : 'border-white/10 bg-gradient-to-br from-[#0c0e12] to-[#050505]';
 
-    const getSourceIcon = () => {
-        if (customer.source_origin === 'shadow') return <ShoppingCart size={12} />;
-        if (customer.source_origin === 'simulasi') return <Cpu size={12} />;
-        return <MessageSquare size={12} />;
+    // 1. Progress Status Info Mapper
+    const getStatusInfo = (status: string) => {
+        switch (status) {
+            case 'new': return { label: '🆕 BARU', color: 'text-blue-400 border-blue-400/30 bg-blue-400/5' };
+            case 'contacted': return { label: '📞 DISAPA', color: 'text-yellow-400 border-yellow-400/30 bg-yellow-500/5' };
+            case 'negotiating': return { label: '📑 NEGO', color: 'text-orange-400 border-orange-400/30 bg-brand-orange/5' };
+            case 'closed': return { label: '🤝 DEAL', color: 'text-green-400 border-green-400/30 bg-green-500/5' };
+            case 'lost': return { label: '❌ BATAL', color: 'text-red-400 border-red-400/30 bg-red-500/5' };
+            default: return { label: '⏳ RADAR', color: 'text-gray-500 border-white/5 bg-black/40' };
+        }
     };
+
+    // 2. Source Origin Info Mapper
+    const getSourceInfo = (source: string) => {
+        switch (source) {
+            case 'shadow': return { label: 'SHADOW', color: 'text-red-400', icon: ShoppingCart };
+            case 'simulasi': return { label: 'SIMULASI', color: 'text-blue-400', icon: Cpu };
+            case 'kontak': return { label: 'KONTAK', color: 'text-green-400', icon: MessageSquare };
+            default: return { label: 'DIRECT', color: 'text-gray-500', icon: Globe };
+        }
+    };
+
+    const statusInfo = getStatusInfo(customer.lead_status);
+    const sourceInfo = getSourceInfo(customer.source_origin || '');
+    const SourceIcon = sourceInfo.icon;
 
     return (
         <div 
@@ -101,13 +121,17 @@ export const RadarJuraganCard: React.FC<RadarJuraganCardProps> = ({ customer, on
                 </div>
             )}
 
-            {/* FOOTER INFO */}
+            {/* FOOTER INFO (UPDATED BASED ON IMAGE) */}
             <div className="mt-auto pt-4 border-t border-white/[0.08] flex justify-between items-center">
-                <div className="flex items-center gap-2 px-2 py-1 rounded bg-black/60 border border-white/5 text-[9px] font-black text-gray-400 uppercase tracking-[0.1em]">
-                    {getSourceIcon()} {customer.source_origin || 'DIRECT'}
+                {/* 1. INFORMASI PROGRESS */}
+                <div className={`px-2 py-1 rounded-lg border text-[9px] font-black uppercase tracking-wider shadow-inner ${statusInfo.color}`}>
+                    {statusInfo.label}
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold truncate max-w-[100px]">
-                    <MapPin size={10} className="text-gray-600" /> {customer.location || 'Unknown'}
+
+                {/* 2. INFORMASI ASAL LEADS */}
+                <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${sourceInfo.color} group-hover:scale-105 transition-transform`}>
+                    <SourceIcon size={12} className="opacity-70" />
+                    <span>{sourceInfo.label}</span>
                 </div>
             </div>
 
