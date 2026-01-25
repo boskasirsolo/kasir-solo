@@ -1,5 +1,4 @@
 
-
 // --- CORE INTERFACES ---
 
 export interface SiteConfig {
@@ -40,6 +39,7 @@ export interface SiteConfig {
   quota_digital_max?: number;
   quota_digital_used?: number;
   timezone?: string;
+  biteship_origin_area_id?: string;
 }
 
 export interface Product {
@@ -57,6 +57,7 @@ export interface Product {
   why_buy?: string[];
   affiliate_link?: string;
   cta_text?: string;
+  weight_grams?: number;
 }
 
 export interface Article {
@@ -84,7 +85,7 @@ export interface Article {
 export interface GalleryItem {
   id: number;
   title: string;
-  slug?: string; // Pastikan ada buat routing
+  slug?: string; 
   image_url: string;
   gallery_images?: string[];
   category_type: 'physical' | 'digital';
@@ -127,10 +128,6 @@ export interface CartItem extends Product {
   quantity: number;
 }
 
-/**
- * FIX: Added missing exported members to resolve TypeScript errors across multiple files
- */
-
 export interface Order {
   id: number;
   created_at: string;
@@ -143,6 +140,10 @@ export interface Order {
   payment_method: string;
   courier?: string;
   tracking_number?: string;
+  shipping_cost?: number;
+  shipping_courier?: string;
+  shipping_service?: string;
+  destination_area_id?: string;
 }
 
 export interface OrderItem {
