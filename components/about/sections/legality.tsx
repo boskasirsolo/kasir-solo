@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { ShieldCheck, BadgeCheck } from 'lucide-react';
+import { ShieldCheck, BadgeCheck, CreditCard } from 'lucide-react';
 import { SiteConfig } from '../../../types';
 
 export const AboutLegality = ({ config }: { config?: SiteConfig }) => (
@@ -36,6 +35,15 @@ export const AboutLegality = ({ config }: { config?: SiteConfig }) => (
                    <div className="flex justify-between items-center border-b border-white/5 pb-3">
                       <span className="text-gray-400 text-sm">NPWP Perusahaan</span>
                       <span className="text-white font-mono text-sm">{config.npwp_number}</span>
+                   </div>
+                )}
+                {config?.bank_account_number && (
+                   <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                      <span className="text-gray-400 text-sm">Rekening Sah ({config.bank_name || 'BNC'})</span>
+                      <div className="text-right">
+                        <span className="text-white font-mono text-sm font-bold block leading-none">{config.bank_account_number}</span>
+                        <span className="text-[10px] text-gray-500 uppercase font-black tracking-tighter">a.n {config.bank_account_name || config.company_legal_name}</span>
+                      </div>
                    </div>
                 )}
                 <div className="pt-2">
